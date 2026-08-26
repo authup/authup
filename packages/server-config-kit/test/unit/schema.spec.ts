@@ -389,6 +389,52 @@ describe('composeSchemas', () => {
         ])).toThrow(/different readers/);
     });
 
+    it('should refuse two different derived defaults and accept one shared declaration', () => {
+        // both are functions, so nothing but identity separates `() => 3001`
+        // from `() => 4000`, and the composer keeps whichever came first.
+        const build = () => ({
+            type: z.number(),
+            description: '',
+            env: 'PORT',
+            readEnv: () => undefined,
+        });
+
+        expect(() => composeSchemas([
+            { prefix: 'server.core', schema: { port: { ...build(), default: () => 3001 } } },
+            { prefix: 'server.core', schema: { port: { ...build(), default: () => 4000 } } },
+        ])).toThrow(/different defaults/);
+
+        const shared = () => 3001;
+        const readEnv = () => undefined;
+
+        expect(() => composeSchemas([
+            {
+                prefix: 'server.core',
+                schema: {
+                    port: {
+                        type: z.number(), 
+                        description: '', 
+                        default: shared, 
+                        env: 'PORT', 
+                        readEnv,
+                    },
+                },
+            },
+            {
+                prefix: 'server.core',
+                schema: {
+                    port: {
+                        type: z.number(), 
+                        description: '', 
+                        default: shared, 
+                        env: 'PORT', 
+                        readEnv,
+                    },
+                },
+            },
+        ])).not.toThrow();
+    });
+
     it('should refuse a derived default against a static one', () => {
         expect(() => composeSchemas([
             { prefix: 'server.core', schema: SCHEMA },

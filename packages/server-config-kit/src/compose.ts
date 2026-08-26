@@ -10,11 +10,16 @@ import type { ConfigSchemaEntryInput, ConfigSchemaInput } from './types.ts';
 
 function defaultsAgree(a: unknown, b: unknown) : boolean {
     if (typeof a === 'function' || typeof b === 'function') {
-        // A process-derived default is a closure, so the most two sides can
-        // agree on is that both derive their value.
-        return typeof a === 'function' && typeof b === 'function';
+        // A process-derived default is a closure, so identity is the only
+        // agreement there is: `() => 3001` and `() => 4000` are both derived
+        // and disagree, and the composer keeps whichever registry came first.
+        // Two packages reading one such key share the declaration.
+        return a === b;
     }
 
+    // Not the same, and a function must not reach it: JSON.stringify answers
+    // undefined for every function, so two different closures would compare
+    // equal here.
     return JSON.stringify(a) === JSON.stringify(b);
 }
 
