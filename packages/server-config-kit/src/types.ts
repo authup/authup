@@ -13,6 +13,11 @@ export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
  * The strict declaration shape a registry is written in: every key needs an
  * entry, a default is required unless K is one of the derived keys D, env
  * and readEnv are paired, and E narrows the environment variable name type.
+ *
+ * `type` is bound to the key's own output (`z.ZodType<T[K]>`) rather than a
+ * bare `z.ZodType`, so an entry whose schema parses to the wrong type fails
+ * the build where it is declared. Unbound, a `port: z.string()` would
+ * compile and only surface as a rejected value at runtime.
  */
 export type ConfigSchemaEntry<
     T,
@@ -20,7 +25,7 @@ export type ConfigSchemaEntry<
     D extends keyof T = never,
     E extends string = string,
 > = {
-    type: z.ZodType,
+    type: z.ZodType<T[K]>,
     description: string,
 } & (K extends D ?
     { default?: undefined } :
