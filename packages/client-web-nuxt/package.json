@@ -42,12 +42,12 @@
     "devDependencies": {
         "@nuxt/module-builder": "^1.0.3",
         "@nuxt/schema": "^4.0.0",
-        "@pinia/nuxt": "^1.0.1",
+        "@pinia/nuxt": "^1.0.2",
         "cross-env": "^10.1.0",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
         "nuxt": "^4.5.2",
-        "pinia": "^4.0.2",
+        "pinia": "^4.0.3",
         "rollup-plugin-dts": "^6.5.1",
         "strip-literal": "^4.0.0",
         "vitest": "^4.0.14",
@@ -56,7 +56,7 @@
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^4.0.2"
+        "pinia": "^4.0.3"
     },
     "keywords": [
         "auth",
