@@ -51,18 +51,28 @@ const serviceType = z.string()
 /**
  * The mapped ConfigSchema type is the compile-time exhaustiveness guard: a
  * Config key without an entry here fails the build.
+ *
+ * An entry's `path` is where the key lives in `authup.yml`. Only the keys
+ * that sit OUTSIDE this service's own section declare one: the
+ * deployment-wide values (`publicUrl`, `db`, `redis`, `smtp`,
+ * `trustedOrigins`, `theme.*`) and the per-console sections, whose names
+ * drop the console prefix the config key carries
+ * (`adminConsoleEnabled` reads `server.adminConsole.enabled`). Everything
+ * else resolves through CONFIG_SECTION to `server.core.<key>`.
  */
 export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, ConfigEnvironmentVariableName> = {
     env: {
         type: stringType,
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
         description: 'Application environment, e.g. production or development.',
+        path: 'env',
         env: ConfigEnvironmentVariableName.NODE_ENV,
         readEnv: readEnvString,
     },
     rootPath: {
         type: stringType,
         default: () => process.cwd(),
+        path: 'rootPath',
         description: 'Root directory every relative path key resolves against.',
     },
     writableDirectoryPath: {
@@ -83,6 +93,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         default: '',
         description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served at /theme, its theme.json injects CSS custom properties); an empty value disables theming. ' +
             'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
+        path: 'theme.directoryPath',
         env: ConfigEnvironmentVariableName.THEME_DIRECTORY_PATH,
         readEnv: readEnvString,
     },
@@ -91,6 +102,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         default: false,
         description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of both served consoles. ' +
             'SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.',
+        path: 'theme.fragmentsEnabled',
         env: ConfigEnvironmentVariableName.THEME_FRAGMENTS_ENABLED,
         readEnv: readEnvBool,
     },
@@ -99,6 +111,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         default: '',
         description: 'EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. ' +
             'The substitute replaces the login and consent implementation, not its styling.',
+        path: 'server.authConsole.path',
         env: ConfigEnvironmentVariableName.AUTH_CONSOLE_PATH,
         readEnv: readEnvString,
     },
@@ -106,6 +119,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         type: stringType,
         default: '',
         description: 'Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
+        path: 'server.accountConsole.path',
         env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_PATH,
         readEnv: readEnvString,
     },
@@ -113,6 +127,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         type: stringType,
         default: '',
         description: 'Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
+        path: 'server.adminConsole.path',
         env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_PATH,
         readEnv: readEnvString,
     },
@@ -130,11 +145,13 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
             (value) => isObject(value),
         ),
         description: 'Database connection (TypeORM data source options). Without one the better-sqlite3 driver default of typeorm-extension applies.',
+        path: 'db',
     },
     redis: {
         type: serviceType,
         default: false,
         description: 'Redis connection: a connection URL, client options, an existing client, or a boolean to use the default connection or run without Redis.',
+        path: 'redis',
         env: ConfigEnvironmentVariableName.REDIS,
         readEnv: readEnvBoolOrString,
     },
@@ -142,6 +159,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         type: serviceType,
         default: false,
         description: 'SMTP transport for outgoing mail: a connection URL, transport options, or a boolean to use the default transport or run without mail.',
+        path: 'smtp',
         env: ConfigEnvironmentVariableName.SMTP,
         readEnv: readEnvBoolOrString,
     },
@@ -178,6 +196,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
     publicUrl: {
         type: z.url(),
         description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
+        path: 'publicUrl',
         env: ConfigEnvironmentVariableName.PUBLIC_URL,
         readEnv: readEnvString,
     },
@@ -229,6 +248,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         default: [],
         description: 'Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. ' +
             'SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.',
+        path: 'trustedOrigins',
         env: ConfigEnvironmentVariableName.TRUSTED_ORIGINS,
         readEnv: readEnvArray,
     },
@@ -337,6 +357,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         type: booleanType,
         default: true,
         description: 'Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.',
+        path: 'server.accountConsole.enabled',
         env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_ENABLED,
         readEnv: readEnvBool,
     },
@@ -344,6 +365,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         type: booleanType,
         default: true,
         description: 'Serve the admin console at /console/admin. Off, the route answers with the disabled notice; a standalone-hosted console is unaffected.',
+        path: 'server.adminConsole.enabled',
         env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_ENABLED,
         readEnv: readEnvBool,
     },

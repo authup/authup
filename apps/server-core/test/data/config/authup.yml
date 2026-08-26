@@ -1,0 +1,17 @@
+publicUrl: https://idp.example.com
+
+db:
+    type: mysql
+    database: core
+
+theme:
+    directoryPath: /etc/authup/theme
+
+server:
+    core:
+        port: 4711
+        host: 127.0.0.1
+    adminConsole:
+        enabled: false
+    accountConsole:
+        enabled: false

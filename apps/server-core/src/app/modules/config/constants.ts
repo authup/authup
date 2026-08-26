@@ -10,6 +10,22 @@ import type { Config } from './types.ts';
 
 export const ConfigInjectionKey = new TypedToken<Config>('Config');
 
+/**
+ * The section of `authup.yml` this service reads. Every registry entry that
+ * declares no `path` of its own lives under it, so the deployment-wide keys
+ * (`publicUrl`, `db`, `redis`, `smtp`, `theme.*`) and the per-console
+ * sections are exactly the entries that spell a path out.
+ */
+export const CONFIG_SECTION = 'server.core';
+
+/**
+ * The one file the configuration is read from, and the extensions it may
+ * carry. `conf` is deliberately absent: the `authup.conf` family was retired
+ * in favour of a single `authup.yml` (plan 101 stage C).
+ */
+export const CONFIG_FILE_NAME = 'authup';
+export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
+
 export enum ConfigEnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',
     WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',

@@ -10,10 +10,10 @@ npm-debug.log*
 .output
 .temp
 .swc
-authup.conf
-authup.**.conf
-!**/test/**/authup.conf
-!**/test/**/authup.*.conf
+authup.yml
+authup.yaml
+!**/test/**/authup.yml
+!**/test/**/authup.yaml
 .vitepress/cache
 .nx
 coverage

@@ -7,14 +7,14 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { buildSchemaDefaults } from '@authup/server-config-kit';
+import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
-import { ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
+import { CONFIG_SECTION, ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
 import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
 import type { Config } from '../../../src/app/modules/config/types';
-import { DIST_PATH } from '../../../src/path';
+import { DIST_PATH, PACKAGE_PATH } from '../../../src/path';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
@@ -134,7 +134,7 @@ describe('src/config/registry.ts', () => {
         });
 
         it('should read a boolean or a connection string for a service', () => {
-            expect(readEnv('redis', '')).toEqual('');
+            expect(readEnv('redis', '')).toBeUndefined();
             expect(readEnv('redis', 'redis://x')).toEqual('redis://x');
             expect(readEnv('redis', 'false')).toEqual(false);
         });
@@ -161,36 +161,89 @@ describe('src/config/registry.ts', () => {
 
     describe('buildConfigJSONSchema', () => {
         const schema = buildConfigJSONSchema();
-        const properties = schema.properties as Record<string, Record<string, unknown>>;
 
-        it('should emit a draft-07 object schema with one property per registry key', () => {
+        // the document is shaped like authup.yml, so a property is reached at
+        // the path its registry entry declares (or derives from the section).
+        function resolveProperty(document: Record<string, unknown>, path: string) {
+            let node = document;
+
+            for (const segment of path.split('.')) {
+                const properties = node.properties as Record<string, Record<string, unknown>>;
+                expect(properties).toBeDefined();
+                node = properties[segment];
+                expect(node).toBeDefined();
+            }
+
+            return node;
+        }
+
+        function resolveKeyProperty(document: Record<string, unknown>, key: keyof Config) {
+            return resolveProperty(document, resolveSchemaPath(key, CONFIG_SCHEMA[key], CONFIG_SECTION));
+        }
+
+        it('should emit a draft-07 object schema', () => {
             expect(schema.$schema).toEqual('http://json-schema.org/draft-07/schema#');
             expect(schema.type).toEqual('object');
-            expect(Object.keys(properties)).toEqual(CONFIG_KEYS);
         });
 
-        it('should describe every property', () => {
+        it('should place every key at its declared path and describe it', () => {
             for (const key of CONFIG_KEYS) {
-                expect(properties[key].description).toEqual(expect.any(String));
-                expect((properties[key].description as string).length).toBeGreaterThan(0);
+                const property = resolveKeyProperty(schema, key);
+
+                expect(property.description).toEqual(expect.any(String));
+                expect((property.description as string).length).toBeGreaterThan(0);
             }
         });
 
-        it('should carry the env name and the static default, and omit a process-derived default', () => {
-            expect(properties.port['x-authup-env']).toEqual('PORT');
-            expect(properties.port.default).toEqual(3001);
+        it('should nest a section key and keep a shared one at the root', () => {
+            const properties = schema.properties as Record<string, Record<string, unknown>>;
 
-            expect(properties.rootPath).not.toHaveProperty('x-authup-env');
-            expect(properties.rootPath).not.toHaveProperty('default');
+            expect(Object.keys(properties).sort()).toEqual([
+                'db', 
+                'env', 
+                'publicUrl', 
+                'redis', 
+                'rootPath', 
+                'server', 
+                'smtp', 
+                'theme', 
+                'trustedOrigins',
+            ]);
+
+            expect(resolveProperty(schema, 'server.core.port')).toBeDefined();
+            expect(resolveProperty(schema, 'server.adminConsole.enabled')).toBeDefined();
+            expect(resolveProperty(schema, 'theme.directoryPath')).toBeDefined();
+        });
+
+        it('should carry the env name and the static default, and omit a process-derived default', () => {
+            const port = resolveProperty(schema, 'server.core.port');
+            expect(port['x-authup-env']).toEqual('PORT');
+            expect(port.default).toEqual(3001);
+
+            const rootPath = resolveProperty(schema, 'rootPath');
+            expect(rootPath).not.toHaveProperty('x-authup-env');
+            expect(rootPath).not.toHaveProperty('default');
         });
 
         it('should represent an enum type', () => {
-            expect(properties.certificateSource.enum).toEqual(['disabled', 'standard', 'forwarded']);
+            expect(resolveProperty(schema, 'server.core.certificateSource').enum)
+                .toEqual(['disabled', 'standard', 'forwarded']);
         });
 
         it('should keep a derived key with an unrepresentable type', () => {
-            expect(properties.db).toBeDefined();
-            expect(properties.db.description).toEqual(expect.any(String));
+            const db = resolveProperty(schema, 'db');
+            expect(db.description).toEqual(expect.any(String));
+        });
+
+        it('should serve the same document the authup.yml $schema line names', () => {
+            // committed rather than generated at docs build time (that job
+            // builds the documentation alone), so a registry change that
+            // forgets to rebuild leaves it stale. Run
+            // `npm run build:config-schema -w apps/server-core`.
+            const filePath = path.join(PACKAGE_PATH, '..', '..', 'docs', 'src', 'public', 'schema', 'config.json');
+            expect(existsSync(filePath)).toEqual(true);
+
+            expect(JSON.parse(readFileSync(filePath, 'utf8'))).toEqual(schema);
         });
 
         it('should be published as dist/config-schema.json by the build', () => {
@@ -198,7 +251,9 @@ describe('src/config/registry.ts', () => {
             expect(existsSync(filePath)).toEqual(true);
 
             const artifact = JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, unknown>;
-            expect(Object.keys(artifact.properties as Record<string, unknown>)).toEqual(CONFIG_KEYS);
+            for (const key of CONFIG_KEYS) {
+                expect(resolveKeyProperty(artifact, key)).toBeDefined();
+            }
         });
     });
 });

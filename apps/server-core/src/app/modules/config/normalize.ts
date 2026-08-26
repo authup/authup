@@ -39,6 +39,19 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
 
     const env = parsed.env || read('NODE_ENV', EnvironmentName.DEVELOPMENT);
 
+    // publicUrl is the issuer: it signs into every token, every discovery
+    // document, every mail deep link and every cookie scope. Derived from
+    // host and port it reads http://<host>:<port>, which is right on a
+    // laptop and wrong behind any proxy, and nothing downstream can tell
+    // the two apart afterwards.
+    if (env === EnvironmentName.PRODUCTION && !parsed.publicUrl) {
+        // eslint-disable-next-line no-console
+        console.warn(
+            `[authup] publicUrl is not configured and was derived as ${publicUrl}. ` +
+            'Set it to the URL the identity provider is reachable at.',
+        );
+    }
+
     // Canonicalize to bare origins (scheme://host[:port]) — a scheme-less
     // entry (e.g. `hub.local`) expands to both its http and https origin.
     // Downstream consumers (redirect allowlist, getAppOrigins) can rely on

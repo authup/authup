@@ -5,85 +5,73 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { readSchemaFromFileTree } from '@authup/server-config-kit';
+import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
-import { isObject, merge } from 'smob';
+import fs from 'node:fs';
+import process from 'node:process';
+import {
+    CONFIG_FILE_EXTENSIONS,
+    CONFIG_FILE_NAME,
+    CONFIG_SECTION,
+} from '../constants.ts';
+import { CONFIG_SCHEMA } from '../registry.ts';
 import type { ConfigInput } from '../types.ts';
 import type { ConfigReadFsOptions } from './types.ts';
 
 /**
- * Resolve one infrastructure section (`db`, `redis`, `smtp`), which may be
- * declared at the top level (shared), under `server.*` or under `server.core.*`.
- *
- * Keys are ordered **least specific first**. Two objects are merged, so a
- * shared base survives while the more specific declaration wins per key; a
- * scalar (a `redis://…` connection string, say) replaces whatever preceded it.
- * That is what "the most specific declaration wins" means for a section the
- * documentation explicitly describes as shared — `db.type` set once at the top
- * level still applies when only `db.database` is overridden per component.
- *
- * confinity v1 applied exactly this precedence inside `get([...keys])`; v2
- * removed the array form, so it is spelled out here instead.
+ * One file, `authup.yml`, never a family. confinity's default convention also
+ * discovers `authup.<name>.<ext>` and nests each such file under the name its
+ * filename carries; with the whole document read as one tree that would let a
+ * second file place keys at the document root, so discovery is narrowed to the
+ * root file and every loaded file is read as the root.
  */
-function readSection<T>(store: FSStore, keys: string[]) : T | undefined {
-    let output : unknown;
+const NAMING : INamingScheme = {
+    toPatterns: () => [`${CONFIG_FILE_NAME}.{${CONFIG_FILE_EXTENSIONS.join(',')}}`],
+    toName: () => '',
+};
 
-    for (const key of keys) {
-        const value = store.getSync(key);
-        if (typeof value === 'undefined') {
-            continue;
-        }
+const RETIRED_FILE_PATTERN = /^authup\.(.+\.)?conf$/;
 
-        output = isObject(value) && isObject(output) ?
-            merge(value, output) :
-            value;
+/**
+ * The `authup.conf` family stopped being read in favour of `authup.yml`. It is
+ * the one upgrade step an operator cannot notice from the outside: the server
+ * simply boots on its defaults, so say it once instead.
+ */
+function warnAboutRetiredConfigFiles(cwd?: string) {
+    let entries : string[];
+    try {
+        entries = fs.readdirSync(cwd || process.cwd());
+    } catch {
+        return;
     }
 
-    return output as T | undefined;
+    const retired = entries.filter((entry) => RETIRED_FILE_PATTERN.test(entry));
+    if (retired.length === 0) {
+        return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.warn(
+        `[authup] ${retired.join(', ')} is no longer read. Move the configuration to ${CONFIG_FILE_NAME}.yml.`,
+    );
 }
 
-export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) {
+export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
     const store = new FSStore({
-        prefix: 'authup',
         cwd: options.cwd,
+        naming: NAMING,
     });
 
     if (options.file) {
         await store.loadFile(options.file);
     } else {
         await store.load();
+        warnAboutRetiredConfigFiles(options.cwd);
     }
 
     // Read synchronously after the explicit load. `get` is asynchronous in
     // confinity v2, and a missing `await` would hand a Promise to code that
     // only checks whether it received an object.
-    const raw : ConfigInput = store.getSync<ConfigInput>('server.core') || {};
-
-    const db = readSection<ConfigInput['db']>(store, [
-        'db',
-        'server.db',
-        'server.core.db',
-    ]);
-    if (db) {
-        raw.db = db;
-    }
-
-    const redis = readSection<ConfigInput['redis']>(store, [
-        'redis',
-        'server.redis',
-        'server.core.redis',
-    ]);
-    if (redis) {
-        raw.redis = redis;
-    }
-
-    const smtp = readSection<ConfigInput['smtp']>(store, [
-        'smtp',
-        'server.smtp',
-        'server.core.smtp',
-    ]);
-    if (smtp) {
-        raw.smtp = smtp;
-    }
-
-    return raw;
+    return readSchemaFromFileTree(store.getSync(''), CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
 }
