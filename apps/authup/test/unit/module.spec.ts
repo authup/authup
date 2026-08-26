@@ -23,11 +23,11 @@ function createSetupContext(command: EntryPointCommand, positionals: string[]) {
 }
 
 describe('createCLIEntryPointCommand', () => {
-    it('carries the authup meta and the four role commands', async () => {
+    it('carries the authup meta, the four role commands and config', async () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['healthcheck', 'migration', 'start', 'worker']);
+            .toEqual(['config', 'healthcheck', 'migration', 'start', 'worker']);
     });
 
     it('refuses stray positionals on start and worker but not on migration', async () => {

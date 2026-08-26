@@ -50,6 +50,8 @@ $ authup start                 # serve the API and every console
 $ authup worker                # run the background sweeps alone, with no HTTP listener
 $ authup migration run         # apply pending database migrations
 $ authup healthcheck           # probe the running API
+$ authup config validate       # report what does not hold in the configuration
+$ authup config schema         # print the JSON Schema of authup.yml
 ```
 
 `start` and `worker` take no positional argument: the CLI starts exactly one
@@ -58,14 +60,23 @@ are refused.
 
 ## Configuration
 
-Configuration is read from an `authup.conf` file (current working directory, or
+Configuration is read from an `authup.yml` file (current working directory, or
 `--configDirectory <dir>` / `--configFile <file>`):
 
-```conf
-server.core.port=3001
-server.core.host=0.0.0.0
-server.core.publicUrl=http://localhost:3001
+```yaml
+# yaml-language-server: $schema=https://authup.org/schema/config.json
+publicUrl: http://localhost:3001
+
+server:
+    core:
+        port: 3001
+        host: 0.0.0.0
 ```
+
+The deployment-wide values (`publicUrl`, `db`, `redis`, `smtp`,
+`trustedOrigins`, `theme`) sit at the top level, everything the API itself
+reads under `server.core`, and each console under its own
+`server.<name>Console` section.
 
 Every option can be set in the environment instead, and the environment always
 wins over the file. `PORT` and `HOST` are ordinary options under that rule, so
