@@ -14,8 +14,10 @@ import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger-ui';
 import type { Options as BodyOptions } from '@routup/basic/body';
 import type { DataSourceOptions } from 'typeorm';
+import type { z } from 'zod';
 import type { SMTPOptions } from '../mail/adapter/smtp/types.ts';
 import type { CertificateSource } from '../../../adapters/http/request/index.ts';
+import type { ConfigEnvironmentVariableName } from './constants.ts';
 
 export type Config = {
     /**
@@ -525,3 +527,28 @@ export type Config = {
 export type ConfigInput = Partial<Config>;
 
 export type ConfigFactory = () => Promise<Config> | Config;
+
+export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
+
+/**
+ * Keys without a static default: publicUrl is derived from host and port in
+ * normalizeConfig, db falls back to typeorm-extension's driver default.
+ */
+export type ConfigSchemaDerivedKey = 'publicUrl' | 'db';
+
+export type ConfigSchemaEntry<K extends keyof Config = keyof Config> = {
+    type: z.ZodType,
+    description: string,
+} & (K extends ConfigSchemaDerivedKey ?
+    { default?: undefined } :
+    { default: Config[K] | (() => Config[K]) }
+) & (
+    { env: ConfigEnvironmentVariableName, readEnv: ConfigSchemaEnvReader } |
+    { env?: undefined, readEnv?: undefined }
+);
+
+/**
+ * `-?` strips the optional modifier an optional Config key (db) would
+ * otherwise carry over: every key needs an entry, derived or not.
+ */
+export type ConfigSchema = { [K in keyof Config]-?: ConfigSchemaEntry<K> };
