@@ -1,0 +1,71 @@
+{
+    "name": "@authup/server-auth-console",
+    "type": "module",
+    "version": "1.0.0-beta.63",
+    "description": "The SSR service behind authup's hosted auth pages: it renders the auth console bundle and hydrates it anonymously over HTTP.",
+    "license": "AGPL-3.0-only",
+    "bin": {
+        "authup-auth-console": "dist/bin.mjs"
+    },
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "check:types": "tsc -p tsconfig.test.json",
+        "start": "node dist/bin.mjs",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts"
+    },
+    "engines": {
+        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "console",
+        "server",
+        "ssr"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "apps/server-auth-console"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@authup/client-auth-console": "^1.0.0-beta.63",
+        "@authup/core-http-kit": "^1.0.0-beta.63",
+        "@authup/errors": "^1.0.0-beta.63",
+        "@authup/kit": "^1.0.0-beta.63",
+        "@authup/server-console-kit": "^1.0.0-beta.63",
+        "@routup/assets": "^5.0.0",
+        "@routup/basic": "^3.0.0",
+        "locter": "^4.1.1",
+        "routup": "^6.1.0"
+    },
+    "devDependencies": {
+        "cross-env": "^10.1.0",
+        "vitest": "^4.0.18"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
