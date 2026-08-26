@@ -9,6 +9,7 @@ import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-c
 import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
 import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 import {
     CONFIG_FILE_EXTENSIONS,
@@ -31,35 +32,71 @@ const NAMING : INamingScheme = {
     toName: () => '',
 };
 
-const RETIRED_FILE_PATTERN = /\.conf$/;
+function toExtension(name: string) : string {
+    return name.slice(name.lastIndexOf('.') + 1);
+}
+
+/**
+ * A file DISCOVERY would have picked up before and does not now: an
+ * `authup.conf`, or the per-component `authup.<name>.<ext>` family in any
+ * format. Scoped to the `authup.` prefix, because the directory it scans is
+ * the working directory and holds files belonging to other programs.
+ */
+function isRetiredConfigFileName(name: string) : boolean {
+    if (!name.startsWith(`${CONFIG_FILE_NAME}.`)) {
+        return false;
+    }
+
+    const extension = toExtension(name);
+    if (extension === 'conf') {
+        return true;
+    }
+
+    if (!CONFIG_FILE_EXTENSIONS.includes(extension)) {
+        return false;
+    }
+
+    return name.slice(0, -(extension.length + 1)) !== CONFIG_FILE_NAME;
+}
+
+/**
+ * A file the operator NAMED, where the prefix says nothing: `.conf` is the
+ * retired FORMAT whatever the file is called.
+ */
+function isRetiredConfigFilePath(filePath: string) : boolean {
+    const name = path.basename(filePath);
+
+    return toExtension(name) === 'conf' || isRetiredConfigFileName(name);
+}
 
 const RETIRED_FILE_HINT = `The authup.conf family is no longer read. Rewrite the configuration as ${CONFIG_FILE_NAME}.yml; the deployment-wide keys (publicUrl, db, redis, smtp, trustedOrigins, theme) moved out of the server.core section.`;
 
-let warnedAboutRetiredConfigFiles = false;
+const warnedAboutDirectories = new Set<string>();
 
 /**
  * A file left in the discovery directory is not read, which is invisible from
  * the outside (the server simply boots on its defaults), so say it once. Once
- * per process, since a command may read the document more than once.
+ * per directory, since a command may read the document more than once.
  */
 function warnAboutRetiredConfigFiles(cwd?: string) {
-    if (warnedAboutRetiredConfigFiles) {
+    const directory = cwd || process.cwd();
+    if (warnedAboutDirectories.has(directory)) {
         return;
     }
 
     let entries : string[];
     try {
-        entries = fs.readdirSync(cwd || process.cwd());
+        entries = fs.readdirSync(directory);
     } catch {
         return;
     }
 
-    const retired = entries.filter((entry) => RETIRED_FILE_PATTERN.test(entry) && entry.startsWith(`${CONFIG_FILE_NAME}.`));
+    const retired = entries.filter(isRetiredConfigFileName);
     if (retired.length === 0) {
         return;
     }
 
-    warnedAboutRetiredConfigFiles = true;
+    warnedAboutDirectories.add(directory);
 
     // eslint-disable-next-line no-console
     console.warn(`[authup] ${retired.join(', ')} is not read. ${RETIRED_FILE_HINT}`);
@@ -75,7 +112,7 @@ function warnAboutRetiredConfigFiles(cwd?: string) {
 function assertNoRetiredConfigFile(file: string | string[]) {
     const files = Array.isArray(file) ? file : [file];
 
-    const retired = files.filter((entry) => RETIRED_FILE_PATTERN.test(entry));
+    const retired = files.filter(isRetiredConfigFilePath);
     if (retired.length === 0) {
         return;
     }
@@ -88,40 +125,61 @@ function assertNoRetiredConfigFile(file: string | string[]) {
  * onto a Config key. `config validate` needs it to report what the read
  * deliberately ignores.
  */
-export async function readConfigFileTree(options: ConfigReadFsOptions = {}) : Promise<unknown> {
+export async function readConfigFileTree(
+    options: ConfigReadFsOptions = {},
+) : Promise<{ tree: unknown, files: string[] }> {
     const store = new FSStore({
         cwd: options.cwd,
         naming: NAMING,
     });
 
+    let files : string[];
     if (options.file) {
         assertNoRetiredConfigFile(options.file);
-        await store.loadFile(options.file);
+        files = await store.loadFile(options.file);
     } else {
-        await store.load();
+        files = await store.load();
         warnAboutRetiredConfigFiles(options.cwd);
     }
 
     // Read synchronously after the explicit load. `get` is asynchronous in
     // confinity v2, and a missing `await` would hand a Promise to code that
     // only checks whether it received an object.
-    return store.getSync('');
+    return { tree: store.getSync(''), files };
 }
 
 export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
-    const tree = await readConfigFileTree(options);
+    const { tree } = await readConfigFileTree(options);
 
     return readSchemaFromFileTree(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
 }
 
-/**
- * The paths the configuration document holds that no Config key claims: a key
- * left at a retired location, or a typo. The read itself is permissive (an
- * unclaimed path is skipped, so a document written for a newer version still
- * boots), which is exactly what makes the two indistinguishable at runtime.
- */
-export async function findUnknownConfigFilePaths(options: ConfigReadFsOptions = {}) : Promise<string[]> {
-    const tree = await readConfigFileTree(options);
+export type ConfigFileInspection = {
+    /**
+     * The files the read actually loaded. Empty means the configuration came
+     * from the environment alone, which is a valid deployment and a mistyped
+     * directory alike.
+     */
+    files: string[],
+    /**
+     * The paths the document holds that no Config key claims: a key left at a
+     * retired location, or a typo. The read itself is permissive (an
+     * unclaimed path is skipped, so a document written for a newer version
+     * still boots), which is exactly what makes the two indistinguishable at
+     * runtime.
+     */
+    unknown: string[]
+};
 
-    return findUnknownSchemaPaths(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
+/**
+ * What `config validate` reports about the file itself, as opposed to the
+ * configuration the file resolves to.
+ */
+export async function inspectConfigFile(options: ConfigReadFsOptions = {}) : Promise<ConfigFileInspection> {
+    const { tree, files } = await readConfigFileTree(options);
+
+    return {
+        files,
+        unknown: findUnknownSchemaPaths(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION }),
+    };
 }

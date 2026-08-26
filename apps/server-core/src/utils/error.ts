@@ -183,7 +183,12 @@ function describeCauseLink(input: object): string {
     return parts.join(' ');
 }
 
-function describeCauseChain(input: unknown): string | undefined {
+/**
+ * The `cause` chain of an error, rendered innermost-last. Exported because a
+ * CLI reports the reason without the stack `describeError` carries: a parse
+ * failure names the file, and only its cause says what is wrong inside it.
+ */
+export function describeCauseChain(input: unknown): string | undefined {
     const links: string[] = [];
     const seen = new Set<unknown>();
 

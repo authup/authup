@@ -36,6 +36,15 @@ function assertEntriesAgree(
     if (!defaultsAgree(a.default, b.default)) {
         throw new Error(`The config key "${key}" is declared twice, with different defaults.`);
     }
+
+    // The readers are module-level singletons, so reference equality is what
+    // "the same reader" means. Two registries agreeing on the environment
+    // variable and disagreeing here read one value differently: the strict
+    // boolean reader throws on `REDIS_ENABLED=yes` where the lenient one
+    // silently keeps the default.
+    if (a.readEnv !== b.readEnv) {
+        throw new Error(`The config key "${key}" is declared twice, reading ${a.env} with different readers.`);
+    }
 }
 
 /**

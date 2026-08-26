@@ -358,6 +358,37 @@ describe('composeSchemas', () => {
         ])).toThrow(/different defaults/);
     });
 
+    it('should refuse a duplicate reading the same variable with another reader', () => {
+        const readEnv = () => undefined;
+
+        expect(() => composeSchemas([
+            {
+                prefix: 'server.core',
+                schema: {
+                    port: {
+                        type: z.number(),
+                        description: '',
+                        default: 3001,
+                        env: 'PORT',
+                        readEnv,
+                    },
+                },
+            },
+            {
+                prefix: 'server.core',
+                schema: {
+                    port: {
+                        type: z.number(),
+                        description: '',
+                        default: 3001,
+                        env: 'PORT',
+                        readEnv: () => undefined,
+                    },
+                },
+            },
+        ])).toThrow(/different readers/);
+    });
+
     it('should refuse a derived default against a static one', () => {
         expect(() => composeSchemas([
             { prefix: 'server.core', schema: SCHEMA },

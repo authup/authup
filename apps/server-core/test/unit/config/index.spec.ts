@@ -21,7 +21,7 @@ import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
 import {
-    findUnknownConfigFilePaths,
+    inspectConfigFile,
     readConfigRawFromEnv,
     readConfigRawFromFS,
 } from '../../../src/app/modules/config/read';
@@ -484,6 +484,51 @@ describe('src/config/*.ts', () => {
             expect(config.port).toEqual(4020);
         });
 
+        it('should refuse a retired per component file in any format', async () => {
+            // the previous shape loaded authup.server.core.<ext> and nested it
+            // under the name the filename carried; read as one document its
+            // flat keys land at the root and almost all of them are dropped.
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.yml'),
+                'port: 4080\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory, file: 'authup.server.core.yml' }))
+                .rejects.toThrow(/authup\.yml/);
+
+            // and it is reported when it is merely left lying around
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            try {
+                expect((await readConfigRawFromFS({ cwd: directory })).port).toBeUndefined();
+                expect(warn.mock.calls[0]?.[0]).toContain('authup.server.core.yml');
+            } finally {
+                warn.mockRestore();
+            }
+        });
+
+        it('should report that no configuration file was found', async () => {
+            expect((await inspectConfigFile({ cwd: directory })).files).toEqual([]);
+
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    port: 4090\n',
+            );
+
+            expect((await inspectConfigFile({ cwd: directory })).files)
+                .toEqual([path.join(directory, 'authup.yml')]);
+        });
+
+        it('should name the reason a configuration file could not be parsed', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n   port: 1\n  bad: [unclosed\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory })).rejects.toSatisfy(
+                (error: Error) => typeof (error as { cause?: unknown }).cause !== 'undefined',
+            );
+        });
+
         it('should refuse an explicitly named retired conf file', async () => {
             // it would load, and every key that moved out of server.core would
             // be dropped in silence, leaving the service on a derived issuer
@@ -512,7 +557,7 @@ describe('src/config/*.ts', () => {
                 ].join('\n'),
             );
 
-            expect(await findUnknownConfigFilePaths({ cwd: directory })).toEqual([
+            expect((await inspectConfigFile({ cwd: directory })).unknown).toEqual([
                 'server.core.publicUrl',
                 'server.core.typo',
             ]);

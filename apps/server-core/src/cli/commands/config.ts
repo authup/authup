@@ -9,11 +9,12 @@ import type { ArgsDef, ParsedArgs } from 'citty';
 import { defineCommand } from 'citty';
 import process from 'node:process';
 import { isValidupError, stringifyPath } from 'validup';
+import { describeCauseChain } from '../../utils/index.ts';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
 import {
     ConfigModule,
     buildConfigJSONSchema,
-    findUnknownConfigFilePaths,
+    inspectConfigFile,
     readConfig,
 } from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
@@ -67,22 +68,34 @@ export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
  * The raw ValidupError message is a generic "Property <path> is invalid" and
  * names no reason, so every issue is rendered instead. Same shape as the
  * provisioning file loader.
+ *
+ * Anything else is rendered with its cause chain: confinity wraps a parse
+ * failure so that the file is always named, which leaves the reason (the line
+ * and column a YAML parser reports) one level down. The stack is deliberately
+ * left out, unlike the log-side describeError.
  */
 export function describeConfigError(error: unknown) : string {
-    if (!isValidupError(error)) {
-        return error instanceof Error ? error.message : String(error);
+    if (isValidupError(error)) {
+        const issues = error.issues
+            .map((issue) => `  ${stringifyPath(issue.path)}: ${issue.message}`)
+            .join('\n');
+
+        return `The configuration is invalid.\n${issues}`;
     }
 
-    const issues = error.issues
-        .map((issue) => `  ${stringifyPath(issue.path)}: ${issue.message}`)
-        .join('\n');
+    const message = error instanceof Error ? error.message : String(error);
 
-    return `The configuration is invalid.\n${issues}`;
+    const causes = describeCauseChain(error);
+
+    return causes ? `${message}\n  cause: ${causes}` : message;
 }
 
 export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
     return defineCommand({
-        meta: { name: 'config' },
+        meta: {
+            name: 'config',
+            description: 'Inspect the configuration the service would read.',
+        },
         subCommands: {
             validate: defineCommand({
                 meta: {
@@ -91,13 +104,23 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                 },
                 async run() {
                     try {
-                        // Unknown paths first: a key left at a retired
-                        // location is the mistake this command exists for,
-                        // and the read that follows would say nothing about
-                        // it, since it skips what it does not claim.
-                        const unknown = await findUnknownConfigFilePaths(configFs);
+                        // The file itself first: what it holds that nothing
+                        // reads, and whether it was found at all. The read
+                        // below reports neither, because it skips what it does
+                        // not claim and an absent file is a valid deployment.
+                        const { files, unknown } = await inspectConfigFile(configFs);
+
+                        if (files.length === 0 && (configFs.cwd || configFs.file)) {
+                            // Named a place and nothing was there: reporting
+                            // the environment as valid would answer a question
+                            // the operator did not ask.
+                            // eslint-disable-next-line no-console
+                            console.error(`No configuration file was found in ${configFs.cwd || process.cwd()}.`);
+                            process.exit(1);
+                        }
+
                         if (unknown.length > 0) {
-                            const paths = unknown.map((path) => `  ${path}`).join('\n');
+                            const paths = unknown.map((entry) => `  ${entry}`).join('\n');
 
                             // eslint-disable-next-line no-console
                             console.error(`The configuration file holds options that are not read.\n${paths}`);

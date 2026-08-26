@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { defineCommand, runCommand } from 'citty';
 import { Container } from 'eldin';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -20,6 +21,7 @@ import {
 import type { ConfigReadFsOptions } from '../../../src/app/index';
 import { ConfigInjectionKey } from '../../../src/app/index';
 import {
+    CLI_CONFIG_ARGS,
     applyCLIConfigArgs,
     createCLIConfigModule,
     defineCLIConfigCommand,
@@ -162,6 +164,76 @@ describe('src/cli/commands/config', () => {
             expect(Object.keys(command.subCommands ?? {}).sort()).toEqual(['schema', 'validate']);
         });
 
+        it('should reach a nested subcommand with the root config args', async () => {
+            // the whole design rests on citty running the ROOT setup before it
+            // recurses, so the shared options object the subcommands close over
+            // is already populated. Drive it through runCommand rather than
+            // calling run directly, or nothing pins that.
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    port: "not-a-port"\n',
+            );
+
+            const configFs : ConfigReadFsOptions = {};
+            const root = defineCommand({
+                meta: { name: 'authup' },
+                subCommands: { config: defineCLIConfigCommand(configFs) },
+                args: CLI_CONFIG_ARGS,
+                setup(context) {
+                    applyCLIConfigArgs(configFs, context.args as any);
+                },
+            });
+
+            const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+            try {
+                await runCommand(root, { rawArgs: ['--configDirectory', directory, 'config', 'validate'] });
+
+                expect(configFs.cwd).toEqual(directory);
+                expect(exit).toHaveBeenCalledWith(1);
+                expect(error.mock.calls[0][0]).toContain('port');
+            } finally {
+                error.mockRestore();
+                exit.mockRestore();
+            }
+        });
+
+        it('should refuse to call a mistyped config directory valid', async () => {
+            const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+            try {
+                await runSubCommand(defineCLIConfigCommand({ cwd: directory }), 'validate');
+
+                expect(exit).toHaveBeenCalledWith(1);
+                expect(error.mock.calls[0][0]).toContain('No configuration file');
+            } finally {
+                error.mockRestore();
+                exit.mockRestore();
+            }
+        });
+
+        it('should report the options the file holds that nothing reads', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    publicUrl: https://idp.example.com\n',
+            );
+
+            const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+            try {
+                await runSubCommand(defineCLIConfigCommand({ cwd: directory }), 'validate');
+
+                expect(exit).toHaveBeenCalledWith(1);
+                expect(error.mock.calls[0][0]).toContain('server.core.publicUrl');
+            } finally {
+                error.mockRestore();
+                exit.mockRestore();
+            }
+        });
+
         it('should stay silent for a valid configuration', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
@@ -226,6 +298,15 @@ describe('src/cli/commands/config', () => {
     describe('describeConfigError', () => {
         it('should pass a plain error message through', () => {
             expect(describeConfigError(new Error('nope'))).toEqual('nope');
+        });
+
+        it('should name the reason behind a wrapped failure', () => {
+            // confinity wraps a parse failure so the FILE is always named,
+            // which leaves the reason one level down; without the chain the
+            // command says a file could not be loaded and nothing else.
+            const error = new Error('The file "authup.yml" could not be loaded.', { cause: new Error('Nested mappings are not allowed at line 4') });
+
+            expect(describeConfigError(error)).toContain('line 4');
         });
     });
 });

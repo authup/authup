@@ -26,6 +26,10 @@ authup.mts
 !**/test/**/authup.cjs
 !**/test/**/authup.ts
 !**/test/**/authup.mts
+authup.conf
+authup.*.conf
+!**/test/**/authup.conf
+!**/test/**/authup.*.conf
 .vitepress/cache
 .nx
 coverage
