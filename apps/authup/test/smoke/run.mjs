@@ -80,9 +80,11 @@ function buildChildEnv(writableDirectory) {
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
 
-    // The environment beats the config file, so PORT has to name the port this
-    // scenario probes; the file written below agrees with it and additionally
-    // carries the publicUrl.
+    // PORT names the port this scenario probes. The config file written below
+    // names the same one, so nothing here observes which source wins. Neither
+    // half of that contract is this runner's job: apps/server-core's
+    // test/unit/cli/config.spec.ts covers both against createCLIConfigModule,
+    // the module every role command in this CLI builds its config from.
     env.PORT = `${SERVER_PORT}`;
     env.HOST = '0.0.0.0';
 
