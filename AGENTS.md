@@ -30,7 +30,8 @@ npm run lint:fix               # lint with auto-fix
 | Binary           | Source              |
 |------------------|---------------------|
 | `authup`         | apps/authup         |
-| `authup-server`  | apps/server-core    |
+
+`authup` is the only binary. It runs server-core in process (`start`, `worker`, `migration`, `healthcheck`); `apps/server-core` ships no `bin` field, and its `src/cli/` stays as dev-only tooling (`npm run cli -w apps/server-core` drives `migration generate`, `cli-dev` is the JIT route).
 
 The consoles (`apps/client-admin-console`, `apps/client-account-console`, `apps/client-auth-console`) ship no binary: server-core serves their built `dist/`.
 

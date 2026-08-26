@@ -128,7 +128,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   `/console/account`), `client-auth-console` (the auth console: the SSR auth
   workflow UI whose dist server-core renders on the IdP origin, plan 083),
   and the planned `server-core-worker` (optional background processor). The
-  `authup` CLI supervisor is the eponymous exception. The admin app carries
+  `authup` operator CLI is the eponymous exception. The admin app carries
   the full `admin-console` role (not bare `console`) because the UI
   surfaces are peers: admin console, account console and auth console.
   Console apps normally match their per-realm OAuth2 client rows
@@ -151,11 +151,12 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   per-realm OAuth2 client rows. App and package names deliberately do NOT
   mirror each other (hub precedent: app `client-ui`, library `client-vue`), so
   renaming an app never implies renaming a published package family.
-- **Operator-facing vocabulary is a separate, shorter layer**: binaries
-  (`authup-server`, `authup-admin-console`), the CLI package selectors and config sections
-  (`server.core`, `client.admin-console`; slash form `server/core` in the docker
-  entrypoint), and helm values keys. The grammar above governs workspace directory
-  and npm package identity only.
+- **Operator-facing vocabulary is a separate, shorter layer**: the binary
+  (`authup`, the only one; the retired `authup-server` and
+  `authup-admin-console` were the two before it), the configuration sections
+  (`server.core`; slash form `server/core` in the docker entrypoint), and helm
+  values keys. The grammar above governs workspace directory and npm package
+  identity only.
 
 History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
 `apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,

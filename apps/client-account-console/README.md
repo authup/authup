@@ -23,7 +23,7 @@ The dev server needs a running authup server to talk to.
    round-trip from the vite origin:
 
    ```sh
-   TRUSTED_ORIGINS=localhost:5173 authup-server start
+   TRUSTED_ORIGINS=localhost:5173 authup start
    ```
 
    From the repository, after `npm run build`:

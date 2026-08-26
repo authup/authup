@@ -5,8 +5,9 @@ This section will help you to spin up Authup directly on the **host** system.
 ::: tip Production
 For production, the recommended topology is a **container** running the
 `server/core` service. See [Docker](./docker) and
-[Docker Compose](./docker-compose). The `authup` CLI described here is the
-quickstart / bare-metal path: a small supervisor around the same service.
+[Docker Compose](./docker-compose). The `authup` CLI described here runs that
+same service, in the same process; it is the quickstart and bare-metal path to
+it.
 :::
 
 ## Requirements
@@ -96,43 +97,45 @@ The consoles are served by that same process:
 - Admin console: `http://127.0.0.1:3001/console/admin`
 - Account console: `http://127.0.0.1:3001/console/account`
 
-## Supervisor behavior
+## Process behavior
 
-`authup start` runs `server/core` as a **child process** and supervises it:
+`authup start` runs `server/core` **in the process you started**. There is no
+child process and no supervisor, so there is nothing between you and the
+service:
 
-- **Environment passthrough**: the supervisor's environment reaches the child
-  in full, so [server](./configuration-server-core) environment variables can
-  be set on the `authup` process itself. The exception is the overrides
-  below, which the supervisor always sets and which therefore win over an
-  inherited value.
-- **Overrides**: `PORT` and `HOST` are always set for the child, from the
-  `server.core` section of the configuration file or, when it names none,
-  from the defaults (`3001` and `0.0.0.0`).
-- **Signal forwarding**: `SIGINT`/`SIGTERM` are forwarded to the child, so
-  `Ctrl+C` and service managers (systemd, PM2, ...) shut the service down
-  cleanly.
-- **Exit code contract**: the supervisor exits with the child's exit code, so
-  a process manager can restart it.
+- **Environment**: the process environment is the server's environment. Every
+  [server](./configuration-server-core) variable can be set on the `authup`
+  process itself, and none of them is overridden. `PORT` and `HOST` follow the
+  ordinary [precedence](./configuration.md#layers-precedence): an environment
+  variable beats the value in the configuration file.
+- **Signals**: `SIGINT`/`SIGTERM` tear the application down and exit with the
+  outcome, so `Ctrl+C` and service managers (systemd, PM2, ...) shut the
+  service down cleanly. A second signal exits immediately, and a teardown that
+  outlasts 10 seconds is forced.
+- **Exit code**: the exit code is the server's own, so a process manager can
+  restart it.
 
-The service can also be named explicitly:
+The service cannot be named as an argument. `authup start server.core` and
+`authup start server/core` are refused: `start` and `worker` take no
+positional argument, because the CLI starts exactly one service.
 
-```shell
-$ authup start server/core
-```
-
-::: warning `client.admin-console` no longer starts anything
-The admin console is served by `server/core` at `<publicUrl>/console/admin`. The CLI
-still accepts `authup start client.admin-console` and a `client.admin-console`
-section in the configuration file, but both only print a deprecation warning;
-a selector naming the console alone exits without starting anything. Remove them.
-See [Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
+::: warning `client.admin-console` no longer exists
+The admin console is served by `server/core` at `<publicUrl>/console/admin`.
+`authup start client.admin-console` is refused as an unexpected argument, and a
+`client.admin-console` section in the configuration file is not read. Remove
+both. See
+[Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
 :::
 
 ## Other commands
 
-The `migration` and `healthcheck` commands are forwarded to `server/core`:
+The CLI carries three more commands, all against the same `server/core`
+service:
 
 ```shell
+# run the background sweeps alone, with no HTTP listener
+$ authup worker
+
 # apply / inspect / undo database migrations
 $ authup migration run
 $ authup migration status
@@ -142,4 +145,9 @@ $ authup migration revert
 $ authup healthcheck
 ```
 
-All commands honor `--configDirectory` / `--configFile`.
+`authup worker` is the second long-running role. It runs the cron sweeps and
+opens no port, so API replicas can hand them over; see
+[Worker](./worker.md).
+
+All commands honor `--configDirectory` / `--configFile`, and `migration` finds
+its migration files wherever it is started from.

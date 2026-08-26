@@ -7,6 +7,59 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### `authup` is the only binary, and it runs the server in process
+
+The `authup-server` binary is retired. The `@authup/server-core` package ships
+no binary at all now; the `authup` package (`npm install authup`) carries the
+one command and runs the server **inside its own process**, where it used to
+start it as a child and supervise it.
+
+| Was | Is |
+|---|---|
+| `authup-server start` | `authup start` |
+| `authup-server worker` | `authup worker` |
+| `authup-server migration run` | `authup migration run` |
+| `authup-server healthcheck` | `authup healthcheck` |
+
+**Containers need no change.** The entrypoint vocabulary is unchanged:
+`server/core start`, `server/core worker` and `server/core migration run` all
+still work, and the image runs the `authup` CLI underneath. A Compose file, a
+Helm values file or a `docker run` line that names `server/core <command>` is
+already correct.
+
+**Action required** for anything that invoked the binary by name: a systemd
+unit, a PM2 config, a Procfile, a CI step or an `npm` script naming
+`authup-server`. Install the `authup` package and use the commands in the
+table. `authup worker` is new on this path: the worker role was previously
+reachable through the `authup-server` binary only, and the CLI could not start
+it.
+
+**`PORT` and `HOST` now follow the normal precedence.** The supervisor always
+forced them onto the child, taking the value from the `server.core` section of
+the configuration file (or the defaults) and overriding whatever the
+environment said. They are ordinary options again, so the
+[layering](./configuration.md#layers-precedence) applies: an environment
+variable beats the configuration file. That is what a PaaS injecting `PORT`
+expects, and it is what every other option already did.
+
+**Action required** for a deployment that set `PORT` or `HOST` in the
+environment while ALSO naming `server.core.port` / `server.core.host` in the
+configuration file, and relied on the file winning. The two now disagree in
+the other direction. Drop one of them.
+
+**Package selectors are gone.** `authup start server.core` and
+`authup start client.admin-console` are refused as an unexpected argument;
+`start` and `worker` take no positional argument, because the CLI starts
+exactly one service. A `client.admin-console` section in the configuration
+file is not read (it printed a deprecation warning before). Remove both.
+
+Two smaller things need no action. `authup migration run` finds its migration
+files wherever it is started from, so the working directory no longer has to be
+the installed server package. And signal handling reaches the server directly
+instead of being forwarded: `SIGINT`/`SIGTERM` tear the application down and
+exit with its outcome, a second signal exits immediately, and a teardown
+outlasting 10 seconds is forced.
+
 ### The consoles moved under `/console`
 
 Every console `server-core` serves now lives under one `/console` prefix on
@@ -84,11 +137,9 @@ the way it serves the account console at `<publicUrl>/console/account` (the
   console workload, whose pods now crash-loop for the reason above. Remove or
   scale that workload to zero. A follow-up chart release drops it.
 - **Bare metal**: the command does not change. `authup start` starts
-  `server/core` alone. `authup start client.admin-console` and a
-  `client.admin-console` section in `authup.conf` are still parsed, print a
-  deprecation warning; `authup start client.admin-console` on its own exits
-  `0` having started nothing, so a leftover console unit stays harmless.
-  Remove them.
+  `server/core` alone. `authup start client.admin-console` is refused and a
+  `client.admin-console` section in `authup.conf` is not read (see the entry
+  above). Remove both.
 - **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
   now, but the provisioner keeps re-asserting every listed origin into the
   system clients' redirect allowlists on each boot.

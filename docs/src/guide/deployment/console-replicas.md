@@ -8,7 +8,7 @@ shells. Same image, same binary, same `PUBLIC_URL`, same database, one shared
 Redis.
 
 This page is the flag-only shape of that split. A dedicated
-`authup-server console [admin|account]` role, which additionally leaves the
+`authup console [admin|account]` role, which additionally leaves the
 management API unmounted on the console set, is planned and builds on exactly
 this recipe.
 
@@ -32,7 +32,7 @@ fails visibly rather than signing someone in on the wrong set.
 The other two flags are the [worker](./worker.md) rules applied to both sets.
 A console replica is a plain `start` process: with the defaults every console
 replica would run the cron sweeps and race its siblings for the DDL. So run
-`authup-server migration run` (container: `server/core migration run`) once,
+`authup migration run` (container: `server/core migration run`) once,
 before either set starts, and let a single [worker](./worker.md) own the
 sweeps.
 
