@@ -10,6 +10,7 @@ import {
     CLI_CONFIG_ARGS,
     applyCLIConfigArgs,
     assertNoStrayPositionals,
+    defineCLIConfigCommand,
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
     defineCLIStartCommand,
@@ -36,6 +37,7 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
+            config: defineCLIConfigCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
             start: defineCLIStartCommand(configFs),

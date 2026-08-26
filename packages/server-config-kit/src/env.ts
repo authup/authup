@@ -65,9 +65,9 @@ export const readEnvArray : ConfigSchemaEnvReader = (raw) => {
 
 /**
  * A boolean word switches the service on or off, anything else is a
- * connection string (an empty string included).
+ * connection string. An empty string is skipped, the key keeps its default.
  */
-export const readEnvBoolOrString : ConfigSchemaEnvReader = (raw) => toBool(raw) ?? raw;
+export const readEnvBoolOrString : ConfigSchemaEnvReader = (raw) => toBool(raw) ?? (raw || undefined);
 
 /**
  * The raw (untrimmed) string, skipped when blank. Canonicalized again in

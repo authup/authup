@@ -46,10 +46,9 @@ Follow the instructions for [configuring](./configuration.md) Authup using a
 configuration file or via environment variables.
 
 A configuration file is looked up in the directory the CLI is started from.
-Place it in the project root, or point the CLI elsewhere with
-`--configDirectory <path>` / `--configFile <path>`. A multi-section
-`authup.conf` carries the settings under `server.core`; environment variables
-always override file values.
+Place `authup.yml` in the project root, or point the CLI elsewhere with
+`--configDirectory <path>` / `--configFile <path>`. The server settings live
+under `server.core`; environment variables always override file values.
 
 ## Step. 4: Boot up
 

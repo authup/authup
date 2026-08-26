@@ -30,7 +30,7 @@ So when the authup container is run, the rule is as follows:
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.
-In case of a configuration file, mount it into the container's working directory using `-v ./authup.server.core.conf:/usr/src/app/authup.server.core.conf`.
+In case of a configuration file, mount it into the container's working directory using `-v ./authup.yml:/usr/src/app/authup.yml`.
 
 
 ## Step. 3: Boot up

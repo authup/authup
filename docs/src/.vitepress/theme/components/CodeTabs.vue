@@ -64,8 +64,7 @@ docker run -d \\
             {
                 id: 'configure',
                 label: '2. Configure',
-                snippet: `# authup.server.core.conf
-USER_ADMIN_NAME=admin
+                snippet: `# .env
 USER_ADMIN_PASSWORD=start123
 
 DB_TYPE=postgres
@@ -75,7 +74,7 @@ DB_USERNAME=authup
 DB_PASSWORD=secret
 DB_DATABASE=authup
 
-REDIS_URL=redis://redis:6379
+REDIS=redis://redis:6379
 PUBLIC_URL=https://auth.example.com`,
             },
             {

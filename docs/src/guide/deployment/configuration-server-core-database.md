@@ -9,7 +9,7 @@ superior performance, scalability and advanced features such as built-in replica
 The environment variables in the .env file variant can also be provided via runtime environment.
 ::: code-group
 
-```typescript{3-10} [authup.server.core.ts]
+```typescript{3-10} [authup.ts]
 
 export default {
     // ...
@@ -25,13 +25,14 @@ export default {
 }
 ```
 
-```dotenv [authup.server.core.conf]
-db.type=mysql
-db.host=127.0.0.1
-db.port=3306
-db.username=root
-db.password=start123
-db.database=app
+```yaml [authup.yml]
+db:
+  type: mysql
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: start123
+  database: app
 ```
 
 ```dotenv [.env]
@@ -50,7 +51,7 @@ The environment variables in the .env file variant can also be provided via runt
 
 ::: code-group
 
-```typescript{3-10} [authup.server.core.ts]
+```typescript{3-10} [authup.ts]
 
 export default {
     // ...
@@ -66,13 +67,14 @@ export default {
 }
 ```
 
-```dotenv [authup.server.core.conf]
-db.type=postgres
-db.host=127.0.0.1
-db.port=5432
-db.username=root
-db.password=start123
-db.database=app
+```yaml [authup.yml]
+db:
+  type: postgres
+  host: 127.0.0.1
+  port: 5432
+  username: root
+  password: start123
+  database: app
 ```
 
 ```dotenv [.env]

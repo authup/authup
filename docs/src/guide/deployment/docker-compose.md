@@ -119,13 +119,15 @@ services:
 This example shows how to configure the main backend service with non-default
 values via a mounted configuration file.
 
-Create a file called `authup.server.core.conf` and store it in the same directory. Paste the following content into
-the file which will configure the admin user of the API service (file keys are the
-camelCase option names — see [configuration](./configuration); environment variables
-override file values):
+Create a file called `authup.yml` and store it in the same directory. Paste the following content into
+the file which will configure the admin user of the API service (the options a service
+reads live in its own section, see [configuration](./configuration); environment
+variables override file values):
 
-```dotenv
-userAdminPassword=test-password
+```yaml
+server:
+  core:
+    userAdminPassword: test-password
 ```
 
 In the following compose file example you can see that the
@@ -141,7 +143,7 @@ services:
     container_name: authup
     restart: unless-stopped
     volumes:
-      - ./authup.server.core.conf:/usr/src/app/authup.server.core.conf
+      - ./authup.yml:/usr/src/app/authup.yml
     ports:
       - "3001:3000"
     environment:

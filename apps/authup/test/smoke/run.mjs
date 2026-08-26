@@ -100,10 +100,12 @@ function writeServerConfig(directory) {
     // stripped from the child env, and the value server-core would derive from
     // HOST/PORT reads http://localhost:<port> instead), so reading it back out
     // of a served console shell is what proves the file was found and applied.
-    fs.writeFileSync(path.join(directory, 'authup.conf'), [
-        `server.core.port=${CONFIG_FILE_PORT}`,
-        'server.core.host=127.0.0.1',
-        `server.core.publicUrl=${PUBLIC_URL}`,
+    fs.writeFileSync(path.join(directory, 'authup.yml'), [
+        `publicUrl: ${PUBLIC_URL}`,
+        'server:',
+        '    core:',
+        `        port: ${CONFIG_FILE_PORT}`,
+        '        host: 127.0.0.1',
     ].join('\n'));
 }
 
@@ -217,10 +219,10 @@ function assertConfigFileApplied(name, shell) {
     const marker = `"apiUrl":"${PUBLIC_URL}"`;
 
     if (!shell.includes(marker)) {
-        throw fail(`${name}: the console config does not carry ${marker}, so authup.conf from --configDirectory was not applied.`);
+        throw fail(`${name}: the console config does not carry ${marker}, so authup.yml from --configDirectory was not applied.`);
     }
 
-    log(`${name}: authup.conf was applied (publicUrl ${PUBLIC_URL}).`);
+    log(`${name}: authup.yml was applied (publicUrl ${PUBLIC_URL}).`);
 }
 
 async function waitUntilReady(name, url, child) {

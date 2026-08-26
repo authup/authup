@@ -6,7 +6,11 @@
  *
  * Writes the config registry as a JSON Schema document into dist/, so a
  * published install ships `config-schema.json` next to the code that
- * derives it.
+ * derives it, and into the documentation's public directory, from where it
+ * is served at the URL the `# yaml-language-server: $schema=` line of an
+ * `authup.yml` names. The docs copy is committed, so a registry change that
+ * forgets to rebuild leaves it stale; `test/unit/config/schema.spec.ts`
+ * fails on that.
  *
  * A thin writer over the built module: the builder lives in TypeScript
  * (`src/app/modules/config/json-schema.ts`) so a CLI command can reuse it
@@ -16,14 +20,22 @@
  *   node scripts/emit-config-schema.mjs
  */
 
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildConfigJSONSchema } from '../dist/app/modules/config/json-schema.mjs';
 
-const distPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
-const filePath = path.join(distPath, 'config-schema.json');
+const packagePath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const content = `${JSON.stringify(buildConfigJSONSchema(), null, 4)}\n`;
 
-await writeFile(filePath, `${JSON.stringify(buildConfigJSONSchema(), null, 4)}\n`);
+const filePaths = [
+    path.join(packagePath, 'dist', 'config-schema.json'),
+    path.join(packagePath, '..', '..', 'docs', 'src', 'public', 'schema', 'config.json'),
+];
 
-console.log(`[config-schema] wrote ${filePath}`);
+for (const filePath of filePaths) {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, content);
+
+    console.log(`[config-schema] wrote ${filePath}`);
+}

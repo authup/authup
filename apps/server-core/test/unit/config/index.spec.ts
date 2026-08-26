@@ -14,12 +14,17 @@ import {
     describe, 
     expect, 
     it,
+    vi,
 } from 'vitest';
 import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
-import { readConfigRawFromEnv, readConfigRawFromFS } from '../../../src/app/modules/config/read';
+import {
+    inspectConfigFile,
+    readConfigRawFromEnv,
+    readConfigRawFromFS,
+} from '../../../src/app/modules/config/read';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {
@@ -405,9 +410,18 @@ describe('src/config/*.ts', () => {
     it('should load config form fs', async () => {
         const config = await readConfigRawFromFS({ cwd: 'test/data/config' });
 
+        // the whole document, flattened onto the Config keys: the shared
+        // sections at the top level, this service's own under server.core,
+        // and a console section whose key name drops the console prefix.
         expect(config.db).toBeDefined();
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
+        expect(config.publicUrl).toEqual('https://idp.example.com');
+        expect(config.themeDirectoryPath).toEqual('/etc/authup/theme');
+        expect(config.port).toEqual(4711);
+        expect(config.host).toEqual('127.0.0.1');
+        expect(config.adminConsoleEnabled).toEqual(false);
+        expect(config.accountConsoleEnabled).toEqual(false);
     });
 
     describe('readConfig', () => {
@@ -434,8 +448,8 @@ describe('src/config/*.ts', () => {
 
         it('should resolve a file value through the fs read path', async () => {
             await fs.promises.writeFile(
-                path.join(directory, 'authup.server.core.conf'),
-                'port=4010\n',
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    port: 4010\n',
             );
 
             const config = await readConfig({ env: true, fs: { cwd: directory } });
@@ -445,8 +459,8 @@ describe('src/config/*.ts', () => {
 
         it('should let an env value win over the same key from file', async () => {
             await fs.promises.writeFile(
-                path.join(directory, 'authup.server.core.conf'),
-                'port=4010\n',
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    port: 4010\n',
             );
 
             process.env.PORT = '5055';
@@ -458,16 +472,119 @@ describe('src/config/*.ts', () => {
 
         it('should resolve an explicitly selected config file', async () => {
             await fs.promises.writeFile(
-                path.join(directory, 'authup.conf'),
-                'server.core.port=4020\n',
+                path.join(directory, 'deployment.yml'),
+                'server:\n  core:\n    port: 4020\n',
             );
 
             const config = await readConfig({
                 env: true,
-                fs: { cwd: directory, file: 'authup.conf' },
+                fs: { cwd: directory, file: 'deployment.yml' },
             });
 
             expect(config.port).toEqual(4020);
+        });
+
+        it('should refuse a retired per component file in any format', async () => {
+            // the previous shape loaded authup.server.core.<ext> and nested it
+            // under the name the filename carried; read as one document its
+            // flat keys land at the root and almost all of them are dropped.
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.yml'),
+                'port: 4080\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory, file: 'authup.server.core.yml' }))
+                .rejects.toThrow(/authup\.yml/);
+
+            // and it is reported when it is merely left lying around
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            try {
+                expect((await readConfigRawFromFS({ cwd: directory })).port).toBeUndefined();
+                expect(warn.mock.calls[0]?.[0]).toContain('authup.server.core.yml');
+            } finally {
+                warn.mockRestore();
+            }
+        });
+
+        it('should report that no configuration file was found', async () => {
+            expect((await inspectConfigFile({ cwd: directory })).files).toEqual([]);
+
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n    port: 4090\n',
+            );
+
+            expect((await inspectConfigFile({ cwd: directory })).files)
+                .toEqual([path.join(directory, 'authup.yml')]);
+        });
+
+        it('should name the reason a configuration file could not be parsed', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'server:\n  core:\n   port: 1\n  bad: [unclosed\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory })).rejects.toSatisfy(
+                (error: Error) => typeof (error as { cause?: unknown }).cause !== 'undefined',
+            );
+        });
+
+        it('should refuse an explicitly named retired conf file', async () => {
+            // it would load, and every key that moved out of server.core would
+            // be dropped in silence, leaving the service on a derived issuer
+            // and an empty database while the rest of the file applied.
+            await fs.promises.writeFile(
+                path.join(directory, 'legacy.conf'),
+                'server.core.port=4060\npublicUrl=https://idp.example.com\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory, file: 'legacy.conf' }))
+                .rejects.toThrow(/authup\.yml/);
+        });
+
+        it('should report a key the document places where nothing reads it', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                [
+                    'server:',
+                    '  core:',
+                    '    port: 4070',
+                    '    publicUrl: https://idp.example.com',
+                    '    typo: true',
+                    'x-anchors:',
+                    '  shared: 1',
+                    '',
+                ].join('\n'),
+            );
+
+            expect((await inspectConfigFile({ cwd: directory })).unknown).toEqual([
+                'server.core.publicUrl',
+                'server.core.typo',
+            ]);
+        });
+
+        it('should ignore a retired conf file and say so once', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.conf'),
+                'server.core.port=4030\n',
+            );
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.conf'),
+                'port=4040\n',
+            );
+
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            try {
+                const config = await readConfigRawFromFS({ cwd: directory });
+
+                expect(config.port).toBeUndefined();
+                expect(warn).toHaveBeenCalledTimes(1);
+                expect(warn.mock.calls[0][0]).toContain('authup.conf');
+                expect(warn.mock.calls[0][0]).toContain('authup.server.core.conf');
+            } finally {
+                warn.mockRestore();
+            }
         });
     });
 });

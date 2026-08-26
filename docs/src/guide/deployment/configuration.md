@@ -14,11 +14,16 @@ Configuration is layered. From lowest to highest precedence:
 2. **Configuration file(s)**
 3. **Environment variables** — an environment variable always beats the file value for the same option.
 
-## Configuration Files
+A variable set to an empty value counts as unset, so it leaves the file value (or
+the default) standing rather than overriding it with nothing. To turn an optional
+service off, say so: `REDIS=false`, not `REDIS=`.
 
-Configuration files are discovered in the **current working directory** of the process.
-Every CLI command (`start`, `worker`, `migration`, `healthcheck`) honors them, and the
-lookup can be redirected with two global CLI flags:
+## Configuration File
+
+One file holds the configuration: `authup.yml`, discovered in the **current working
+directory** of the process. Every CLI command (`start`, `worker`, `migration`,
+`healthcheck`, `config`) honors it, and the lookup can be redirected with two global
+CLI flags:
 
 - `--configDirectory <path>`: directory to search instead of the cwd.
 - `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
@@ -26,47 +31,90 @@ lookup can be redirected with two global CLI flags:
 `migration generate` is the one exception: it is a development tool for a
 repository checkout, targets the local compose databases and ignores both flags.
 
-Two file naming styles are supported (formats: `.conf`, `.json`, `.yml`/`.yaml`, `.js`, `.ts`):
+The extensions discovered are `yml`, `yaml`, `json`, `js`, `mjs`, `cjs`, `ts` and
+`mts`. Some options (nested middleware option objects, custom logger setups, ...)
+cannot be expressed in YAML: use the `js`/`ts` variant for those.
 
-- **Multi-section file** (`authup.conf`): one file for the whole stack, with options
-  namespaced per component (`server.core.*`). This is the natural companion of the
-  `authup` CLI.
-- **Per-component file** (`authup.server.core.conf`): the filename carries the
-  namespace, so keys inside are flat.
+Deployment-wide options sit at the top level, and everything a single service reads
+sits in that service's own section. `server/core` reads `server.core`:
+
+```yaml
+# yaml-language-server: $schema=https://authup.org/schema/config.json
+publicUrl: https://idp.example.com
+env: production
+
+db:
+  type: postgres
+  host: 127.0.0.1
+redis: redis://127.0.0.1
+smtp:
+  host: smtp.example.com
+
+trustedOrigins:
+  - https://app.example.com
+
+theme:
+  directoryPath: /etc/authup/theme
+
+server:
+  core:
+    port: 3001
+    host: 0.0.0.0
+    registrationEnabled: true
+  adminConsole:
+    enabled: true
+  accountConsole:
+    enabled: true
+```
+
+The first line is a comment for your editor. A YAML language server resolves the
+schema from it and gives you completion and validation while you type; the same
+document is printed by `authup config schema`.
+
+Every option not documented as living elsewhere belongs under `server.core`. The
+[server/core page](./configuration-server-core) shows each option at its place.
 
 A `client.admin-console` section is no longer read: the admin console is served by
 `server/core` and has no configuration of its own. See
 [Admin Console](./configuration-client-admin-console).
 
-In `.conf` files, keys are the camelCase option names and dots express nesting:
+::: warning YAML has teeth
+Two kinds of value need quoting, and neither of them fails loudly:
 
-::: code-group
+- A scalar starting with `*` is an **alias reference**, not a string. A bare-host
+  wildcard origin has to be quoted: `- "*.example.com"`.
+- `no`, `yes`, `on` and `off` are **booleans** in YAML 1.1 parsers. This is the
+  Norway problem: the country code `no` reads back as `false`. Quote any password,
+  host or name that happens to look like one: `"no"`.
 
-```dotenv [authup.conf]
-server.core.port=3001
-server.core.publicUrl=http://localhost:3001
-
-# shared infrastructure sections (apply to server.core)
-db.type=postgres
-db.host=127.0.0.1
-redis=redis://127.0.0.1
-```
-
-```dotenv [authup.server.core.conf]
-port=3001
-publicUrl=http://localhost:3001
-
-db.type=postgres
-db.host=127.0.0.1
-redis=redis://127.0.0.1
-```
+The `$schema` line above and `authup config validate` catch most of it before a
+deployment does.
 :::
 
-The infrastructure options `db`, `redis` & `smtp` may be declared at the top level
-(shared), under `server.*` or under `server.core.*` — the most specific declaration wins.
+## Checking the Configuration
 
-Some options (nested middleware option objects, custom logger setups, ...) cannot be
-expressed as flat strings — use the `.js`/`.ts` file variant for those.
+Two commands read exactly what the server reads:
+
+```shell
+$ authup config validate
+$ authup config schema
+```
+
+`authup config validate` loads the configuration file and the environment, normalizes
+the result and reports what does not hold: one line per issue, exit code `1`. A
+configuration that holds prints nothing and exits `0`. Both CLI flags apply, so a file
+can be checked before it is deployed.
+
+It reports an option the file places where nothing reads it, too. The server itself
+skips such a key in silence, so that a file written for a newer version still boots,
+which makes an option left at a retired location indistinguishable from one that was
+never set. A key prefixed `x-` is never reported, so a document shared with another
+tool can carry its own.
+
+`authup config schema` prints the JSON Schema (draft-07) document describing the file:
+every option at its place in the tree, with its description, its default and the name of
+its environment variable (`x-authup-env`). The same document ships in the server package
+as `dist/config-schema.json` and is published at the URL the `$schema` line above names.
 
 ## Component-Wise
 

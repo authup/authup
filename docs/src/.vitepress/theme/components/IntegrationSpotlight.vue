@@ -3,26 +3,40 @@
         <div class="au-section-inner au-spotlight">
             <div class="au-spotlight__copy">
                 <span class="au-spotlight__eyebrow">Flagship deployment</span>
-                <h2 class="au-spotlight__title">One docker-compose.yml, full stack ready</h2>
+                <h2 class="au-spotlight__title">
+                    One docker-compose.yml, full stack ready
+                </h2>
                 <p class="au-spotlight__lede">
                     The reference deployment wires the server, the consent UI, PostgreSQL and Redis into a single
                     compose file. Bring it up locally, point a reverse proxy at it in production.
                 </p>
                 <ul class="au-spotlight__bullets">
                     <li>
-                        <span class="au-spotlight__bullet" aria-hidden="true">✓</span>
-                        One Authup image provides all services via different entrypoint commands
+                        <span
+                            class="au-spotlight__bullet"
+                            aria-hidden="true"
+                        >✓</span>
+                        One Authup container serves the API, the login pages and both consoles
                     </li>
                     <li>
-                        <span class="au-spotlight__bullet" aria-hidden="true">✓</span>
+                        <span
+                            class="au-spotlight__bullet"
+                            aria-hidden="true"
+                        >✓</span>
                         PostgreSQL or MySQL persisted in a named volume, Redis for session caching
                     </li>
                     <li>
-                        <span class="au-spotlight__bullet" aria-hidden="true">✓</span>
-                        Configured via environment variables, a mounted <code>.conf</code> file, or both
+                        <span
+                            class="au-spotlight__bullet"
+                            aria-hidden="true"
+                        >✓</span>
+                        Configured via environment variables, a mounted <code>authup.yml</code> file, or both
                     </li>
                 </ul>
-                <a class="au-spotlight__cta" href="/guide/deployment/docker-compose">
+                <a
+                    class="au-spotlight__cta"
+                    href="/guide/deployment/docker-compose"
+                >
                     Read the Docker Compose guide →
                 </a>
             </div>
@@ -57,21 +71,12 @@ export default defineComponent({
     ports:
       - "3001:3000"
     environment:
+      - PUBLIC_URL=http://localhost:3001
       - DB_TYPE=postgres
       - DB_HOST=postgres
-      - REDIS_URL=redis://redis:6379
+      - REDIS=redis://redis:6379
     command: server/core start
     depends_on: [postgres, redis]
-
-  client-admin-console:
-    image: authup/authup:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NUXT_PUBLIC_API_URL=http://localhost:3001
-    command: client/admin-console start
-    depends_on: [server-core]
 
   postgres:
     image: postgres:16

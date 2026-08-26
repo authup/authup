@@ -317,8 +317,8 @@ server-core. The suite is split in two accordingly.
 
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
-  meta read from the package and exactly the four subcommands
-  (`healthcheck`, `migration`, `start`, `worker`), and its `setup` refuses a
+  meta read from the package and exactly the five subcommands
+  (`config`, `healthcheck`, `migration`, `start`, `worker`), and its `setup` refuses a
   stray positional on `start`/`worker` (the retired `authup start server.core`
   selector shape) while leaving `migration run`'s own positional alone. The
   supervisor-era specs are gone with the supervisor: there is no entrypoint to
@@ -328,7 +328,7 @@ server-core. The suite is split in two accordingly.
   served (`/logout`, `/console/account`, `/console/admin` each answer 200 with the injected
   `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the process
   exits and the CLI exits 0. It additionally pins **env-wins precedence**: the
-  run writes an `authup.conf` under `--configDirectory` naming a DIFFERENT port
+  run writes an `authup.yml` under `--configDirectory` naming a DIFFERENT port
   and passes the real one in the environment, so a regression that lets the
   file win moves the listener and the readiness probe never answers (the
   supervisor forced the file's port onto the child, which is exactly what D1

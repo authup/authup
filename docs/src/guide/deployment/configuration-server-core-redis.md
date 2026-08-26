@@ -7,7 +7,7 @@ The environment variables in the .env file variant can also be provided via runt
 
 ::: code-group
 
-```typescript{3-7} [authup.server.core.ts]
+```typescript{3-7} [authup.ts]
 
 export default {
     // ...
@@ -19,8 +19,8 @@ export default {
 }
 ```
 
-```dotenv [authup.server.core.conf]
-redis=redis://127.0.0.1
+```yaml [authup.yml]
+redis: redis://127.0.0.1
 ```
 
 ```dotenv [.env]
