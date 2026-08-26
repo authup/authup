@@ -8,7 +8,7 @@
 import { defineCommand } from 'citty';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
 import { createApplication } from '../../app/index.ts';
-import { createCLIConfigModule } from '../config.ts';
+import { createCLIConfigModule } from './config.ts';
 import { registerShutdownHandlers } from './shutdown.ts';
 
 export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {

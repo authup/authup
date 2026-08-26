@@ -8,7 +8,7 @@
 import { defineCommand } from 'citty';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
 import { createWorkerApplication } from '../../app/index.ts';
-import { createCLIConfigModule } from '../config.ts';
+import { createCLIConfigModule } from './config.ts';
 import { registerShutdownHandlers } from './shutdown.ts';
 
 export function defineCLIWorkerCommand(configFs: ConfigReadFsOptions = {}) {

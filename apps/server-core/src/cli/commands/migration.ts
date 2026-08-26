@@ -26,7 +26,7 @@ import {
 } from '../../app/index.ts';
 import type { IContainer } from 'eldin';
 import { CODE_PATH } from '../../path.ts';
-import { createCLIConfigModule } from '../config.ts';
+import { createCLIConfigModule } from './config.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',

@@ -5,31 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ParsedArgs } from 'citty';
 import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ConfigReadFsOptions } from '../app/index.ts';
 import { PACKAGE_PATH } from '../path.ts';
-import { CLI_CONFIG_ARGS, applyCLIConfigArgs } from './config.ts';
+import { CLI_CONFIG_ARGS, applyCLIConfigArgs, assertNoStrayPositionals } from './commands/config.ts';
 import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
     defineCLIStartCommand,
     defineCLIWorkerCommand,
 } from './commands/index.ts';
-
-const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['start', 'worker']);
-
-export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
-    const [command, ...rest] = args._;
-
-    if (!command || !CLI_COMMANDS_WITHOUT_POSITIONALS.has(command) || rest.length === 0) {
-        return;
-    }
-
-    throw new Error(`Unexpected argument "${rest[0]}" for command "${command}".`);
-}
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
