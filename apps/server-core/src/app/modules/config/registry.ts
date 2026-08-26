@@ -9,14 +9,6 @@ import { read } from 'envix';
 import process from 'node:process';
 import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { EnvironmentName, isObject } from '@authup/kit';
-import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
-import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
-import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
-import { z } from 'zod';
-import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/constants.ts';
-import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/entities/event/constants.ts';
-import { ConfigEnvironmentVariableName } from './constants.ts';
-import { expandToOrigins } from './origins.ts';
 import {
     readEnvArray,
     readEnvBool,
@@ -25,8 +17,16 @@ import {
     readEnvInt,
     readEnvRaw,
     readEnvString,
-} from './schema/index.ts';
-import type { ConfigSchema } from './schema/index.ts';
+} from '@authup/server-config-kit';
+import type { ConfigSchema } from '@authup/server-config-kit';
+import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
+import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
+import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
+import { z } from 'zod';
+import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/constants.ts';
+import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/entities/event/constants.ts';
+import { ConfigEnvironmentVariableName } from './constants.ts';
+import { expandToOrigins } from './origins.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigSchemaDerivedKey } from './types.ts';
 

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { readSchemaFromEnv } from '@authup/server-config-kit';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
 import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
 import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 import { CONFIG_SCHEMA } from '../registry.ts';
-import { readSchemaFromEnv } from '../schema/index.ts';
 import type { ConfigInput } from '../types.ts';
 
 export function readConfigRawFromEnv() : ConfigInput {

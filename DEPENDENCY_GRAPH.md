@@ -7,6 +7,7 @@ graph TD
     subgraph Foundation
         kit
         errors
+        server-config-kit
     end
 
     subgraph Layer 1
@@ -119,6 +120,7 @@ graph TD
     server-core --> errors
     server-core --> i18n
     server-core --> kit
+    server-core --> server-config-kit
     server-core --> server-kit
     server-core --> server-test-kit
     server-core --> specs

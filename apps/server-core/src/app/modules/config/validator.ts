@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { mountSchema } from '@authup/server-config-kit';
 import { Container } from 'validup';
 import { CONFIG_SCHEMA } from './registry.ts';
-import { mountSchema } from './schema/index.ts';
 import type { Config } from './types.ts';
 
 export class ConfigValidator extends Container<Config> {

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildSchemaJSONSchema } from '@authup/server-config-kit';
 import { CONFIG_SCHEMA } from './registry.ts';
-import { buildSchemaJSONSchema } from './schema/index.ts';
 
 /**
  * The server-core registry as a JSON Schema (draft-07) document, as the

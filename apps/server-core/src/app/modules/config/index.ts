@@ -12,5 +12,4 @@ export * from './module.ts';
 export * from './origins.ts';
 export * from './read/index.ts';
 export * from './registry.ts';
-export * from './schema/index.ts';
 export * from './types.ts';

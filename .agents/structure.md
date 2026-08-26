@@ -33,6 +33,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [server-adapter-node](../packages/server-adapter-node)| Library | A Node `IncomingMessage` middleware adapter for token verification.                                       |
 | [server-adapter-socket-io](../packages/server-adapter-socket-io)| Library | A socket.io middleware adapter for token verification.                                                |
 | [server-adapter-web](../packages/server-adapter-web)| Library   | A transport-neutral Web `Request` adapter primitive for token verification.                                |
+| [server-config-kit](../packages/server-config-kit)| Library   | The declarative configuration schema mechanism. A REGISTRY is a plain object mapping every key of a config type onto its zod type, its description, its default and (optionally) the environment variable name plus the reader that turns a raw string into a value; the package owns the declaration shape (`ConfigSchema` / `ConfigSchemaInput`, whose mapped `-?` form is the compile-time exhaustiveness guard: a config key with no entry fails the build), the environment readers (`readEnvString`/`readEnvBool`/`readEnvBoolStrict`/`readEnvInt`/`readEnvArray`/`readEnvBoolOrString`/`readEnvRaw`), and the four passes over such a registry: `readSchemaFromEnv` (environment), `buildSchemaDefaults` (defaults, function-valued ones called and arrays copied per call), `mountSchema` (one optional validup mount per key) and `buildSchemaJSONSchema` (a draft-07 document carrying the description, the static default and the env name under `x-authup-env`). WHICH keys exist is the caller's registry, never this package's business. It declares **no `@authup/*` dependency at all** (`envix`, `validup`, `@validup/zod`, `zod` only) and sits at the foundation layer: the upcoming `@authup/server-console` and `@authup/server-auth-console` service packages must read config without depending on server-core and without inheriting server-kit's tail (native `@node-rs/bcrypt` and `jsonwebtoken`, `winston`, `redis`, the socket.io emitter, `@rapiq/core`). Pinned by `packages/server-config-kit/test/unit/dependencies.spec.ts`. Plan 101 stage C; each server package declares the registry of the keys it reads and the `authup` CLI composes them. |
 | [server-kit](../packages/server-kit)            | Library     | Cryptographic algorithms, shared server-side primitives (`IEntityRepository`, `ActorContext`, `AbstractEntityService`), and reusable service abstractions. Layout mirrors PrivateAIM/hub's server-kit: one top-level folder per concern (`cache/`, `core/`, `crypto/`, `domain-event/`, `logger/`, `redis/`, `utils/`), each with `module.ts` (factory/class) + `types.ts` + `index.ts`. **No singletons** — `useLogger`/`setLoggerFactory` and the vault module (singleton + `@hapic/vault` re-export) are gone (`singa` dep dropped; vault consumers use `@hapic/vault` directly); services are created via factories (`createLogger`, `createNoopLogger`, `createRedisClient`) and passed down via constructor/context args (DIP). `Logger` is a winston-shaped structural type (`error/warn/info/http/verbose/debug`), so consumers don't depend on winston. `DomainEventPublisher` (ctx `{ logger? }`) aggregates `IDomainEventHandler`s (`DomainEventRedisHandler`, `DomainEventSocketHandler` under `domain-event/handlers/`; optional `dispose?()` for resource-owning handlers, invoked via `DomainEventPublisher.dispose()` in `DatabaseModule.teardown`) and exposes `publish` + `safePublish` (catch + log — event-bus failures must not fail the originating DB transaction). |
 | [server-test-kit](../packages/server-test-kit)  | Library     | Generic server-side test fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, actor factories). devDep-only; consumed by `apps/server-core`'s test suite and any future server-side app's tests. |
 
@@ -43,7 +44,9 @@ Internal `@authup/*` dependencies are declared in each package's `package.json` 
 
 ```
 Foundation (no internal @authup deps):
-  kit, errors
+  kit, errors, server-config-kit (envix, validup, @validup/zod, zod only; a service
+                      package must be able to read config without inheriting
+                      server-core's or server-kit's tail)
 
 Layer 1:
   specs             → kit, errors
@@ -77,7 +80,8 @@ Apps:
   client-admin-console → access, client-web-kit, kit, core-kit, core-http-kit, i18n, specs (all build-time
                       only — the published artifact is the static dist/; client-web-nuxt is NOT a dependency
                       any more, it stays the Nuxt integration for downstream apps such as hub)
-  server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
+  server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-config-kit,
+                      server-kit, specs (+ ilingo runtime dep)
                       (client-account-console, client-admin-console AND client-auth-console are RUNTIME
                        dependencies, resolved as packages whose built dist/ server-core serves — the /console/account
                        and /console/admin SPAs and the SSR auth pages; only the auth console's render-contract TYPES

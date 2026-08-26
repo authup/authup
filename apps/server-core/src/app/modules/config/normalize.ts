@@ -9,11 +9,11 @@ import { read } from 'envix';
 import path from 'node:path';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
+import { buildSchemaDefaults } from '@authup/server-config-kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
 import { CONFIG_SCHEMA } from './registry.ts';
-import { buildSchemaDefaults } from './schema/index.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigInput } from './types.ts';
 
