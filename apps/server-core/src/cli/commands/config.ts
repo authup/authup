@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ArgsDef } from 'citty';
-import type { ConfigReadFsOptions } from '../app/index.ts';
-import { ConfigModule, readConfig } from '../app/index.ts';
+import type { ArgsDef, ParsedArgs } from 'citty';
+import type { ConfigReadFsOptions } from '../../app/index.ts';
+import { ConfigModule, readConfig } from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
 
 export const CLI_CONFIG_ARGS = {
@@ -41,4 +41,16 @@ export function createCLIConfigModule(options: ConfigReadFsOptions = {}) : Confi
         env: true,
         fs: options,
     }));
+}
+
+const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['start', 'worker']);
+
+export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
+    const [command, ...rest] = args._;
+
+    if (!command || !CLI_COMMANDS_WITHOUT_POSITIONALS.has(command) || rest.length === 0) {
+        return;
+    }
+
+    throw new Error(`Unexpected argument "${rest[0]}" for command "${command}".`);
 }

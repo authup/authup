@@ -120,7 +120,7 @@ The repository contains the following runnable applications:
 
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
+| [authup](apps/authup)             | CLI         | The operator CLI, and the only binary. It runs server-core in the same process: `start`, `worker`, `migration` and `healthcheck`. |
 | [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/console/admin`. |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 

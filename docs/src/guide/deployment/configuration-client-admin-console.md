@@ -122,6 +122,6 @@ gone with them. Note that `PUBLIC_URL` is unrelated to the console and stays a
 the server, and the console's own address derives from it.
 
 The `client.admin-console` section of a configuration file and the
-`authup.client.admin-console.conf` file are no longer read either. The
-`authup` CLI still accepts `authup start client.admin-console`, prints a
-deprecation warning, and starts `server/core` alone.
+`authup.client.admin-console.conf` file are no longer read either, and
+`authup start client.admin-console` is refused: `authup start` takes no
+positional argument, because it starts exactly one service.

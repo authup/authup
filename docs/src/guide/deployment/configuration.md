@@ -17,17 +17,20 @@ Configuration is layered. From lowest to highest precedence:
 ## Configuration Files
 
 Configuration files are discovered in the **current working directory** of the process.
-Every CLI command (`start`, `migration`, `healthcheck`) honors them, and the lookup
-can be redirected with two global CLI flags:
+Every CLI command (`start`, `worker`, `migration`, `healthcheck`) honors them, and the
+lookup can be redirected with two global CLI flags:
 
 - `--configDirectory <path>`: directory to search instead of the cwd.
 - `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
+
+`migration generate` is the one exception: it is a development tool for a
+repository checkout, targets the local compose databases and ignores both flags.
 
 Two file naming styles are supported (formats: `.conf`, `.json`, `.yml`/`.yaml`, `.js`, `.ts`):
 
 - **Multi-section file** (`authup.conf`): one file for the whole stack, with options
   namespaced per component (`server.core.*`). This is the natural companion of the
-  `authup` quickstart CLI.
+  `authup` CLI.
 - **Per-component file** (`authup.server.core.conf`): the filename carries the
   namespace, so keys inside are flat.
 

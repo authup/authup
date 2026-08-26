@@ -852,7 +852,14 @@ into it):
   `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
   (verified: `cli-dev -- migration run` applies all 17 postgres migrations
   from `src/`); every documented migration workflow still runs from the
-  built CLI and CI pre-flights `dist/` for that reason.
+  built CLI and CI pre-flights `dist/` for that reason. Both arms are
+  anchored on the package path (`SRC_PATH` / `DIST_PATH` from
+  `src/path.ts`), never on the cwd, so `migration run` finds the chain
+  from any directory. `transformFilePath` cannot do that job: it rewrites
+  the `src` segment only when the whole string carries no `dist`
+  substring, so a package installed under a path such as
+  `/srv/my-dist-app/node_modules/@authup/server-core` would silently keep
+  the `src/` glob and report "No migrations are pending".
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:
@@ -1381,7 +1388,7 @@ choice"):
   nothing injected the app derives the API URL same-origin from its base
   path. Standalone hosting additionally needs the origin registered in
   `TRUSTED_ORIGINS` (drives the `account-console` client's
-  redirect/post-logout allowlists). The launcher never spawns it: no
+  redirect/post-logout allowlists). The CLI never starts it: no
   binary, no process.
 - **`ref` back link:** an optional `ref` query parameter names the
   application the visitor came from. `serveAccountConsolePage` validates
@@ -1533,7 +1540,7 @@ choice"):
   actor-scoped can leak into a (potentially cached) response, pinned in
   `account-pages.spec.ts`.
 - **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
-  it is packed in the launcher's `test:smoke:packed` workspace list so the
+  it is packed in the CLI's `test:smoke:packed` workspace list so the
   packed server-core install resolves it from the tarball.
 - **Link surface:** `<publicUrl>/console/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
@@ -1839,8 +1846,8 @@ same bootstrap. What differs from the account console, and why:
   `createColorMode()`, locale `installLocale` over `createCookieRef`), and
   every `NUXT_PUBLIC_*` / `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable
   (no successor: runtime config is injected by the serving side). The
-  `authup` launcher spawns server-core only and answers a
-  `client.admin-console` selector or config section with a warning;
+  `authup` CLI runs server-core only; a `client.admin-console` selector is
+  refused and a `client.admin-console` config section is not read;
   `entrypoint.sh client/admin-console` exits 1 with a notice.
   `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration for
   downstream apps (hub), which keep their own origin and the JS-token store.
@@ -2654,18 +2661,34 @@ Console*), the endpoint plan 078 recorded. Same-origin is what let plan 088
 Stage 2 apply the account console's cookie credential to it with no BFF.
 
 **Process topology:** one container running `server/core start` (plus the
-optional `server/core worker`) is the production topology. The `authup` CLI is
-the bare-metal / quickstart **supervisor**: it spawns server-core as a child
-process with full environment passthrough plus a `PORT`/`HOST` override
-derived from the `server.core` config section (so an ambient `PORT` never
-decides the listen address), forwards SIGINT/SIGTERM, and exits with the
-child's exit code; `migration` / `healthcheck` forward to it. A
-`client.admin-console` selector or config section is accepted for an existing
-invocation's sake and answered with a warning. The launcher knows nothing
-about the worker role below.
+optional `server/core worker`) is the production topology. There is exactly
+ONE process and ONE binary. `authup` (`apps/authup`) is an **in-process** CLI
+over `@authup/server-core` (plan 101 D1): it imports the package and calls the
+`defineCLI*Command` helpers it exports, so `start`, `worker`, `migration` and
+`healthcheck` run the service's own application factories inside the process
+the operator started. `apps/server-core` ships no `bin` field; its `src/cli/`
+stays as the command source plus dev-only tooling (`migration generate`, the
+JIT `cli-dev` script).
+
+Three properties follow from there being no child, and the last two were live
+defects of the supervisor it replaced. **Signals and the exit code are the
+runtime's**, not a forwarding contract: `registerShutdownHandlers` tears the
+application down on SIGINT/SIGTERM, exits `1` on a second signal, and forces
+the exit after a 10s teardown timeout. **Configuration takes the ordinary
+precedence** (environment beats the configuration file, invariant 8): the
+supervisor used to force `PORT`/`HOST` from the `server.core` section onto the
+child, so an ambient `PORT` could not reach the server at all. **Nothing is
+resolved at
+runtime**: the migrations glob is anchored on server-core's package path, so
+`authup migration run` works from any cwd, and no `node_modules` walk decides
+what gets launched. Package selectors are gone with the supervisor
+(`authup start server.core` is refused as a stray positional, and a
+`client.admin-console` config section is simply not read); the container
+entrypoint keeps `server/core <command>` as its own service vocabulary and
+runs the CLI underneath.
 
 **The worker role (plans 095/096/097)** is the same binary and the same image,
-started as `authup-server worker` (container: `server/core worker`). It is
+started as `authup worker` (container: `server/core worker`). It is
 `createWorkerApplication()` in `app/factory.ts`: config, logger, cache,
 database and components, and nothing else, so it opens no port and serves no
 request. Two config keys move the work: `componentsEnabled`
@@ -2709,9 +2732,10 @@ unconditional (a flag-off replica holding the dist still serves
 `/console/admin/assets/*`), and the auth pages plus `/console/auth/assets/*`
 are served by every replica, since no `authConsoleEnabled` exists by design
 (they are the issuance surface). `GET /` reports `features` per replica.
-The operator recipe is `docs/src/guide/deployment/console-replicas.md`; the
-`authup-server console [admin|account]` role (PR 1b) is sugar over the same
-two flags and additionally leaves the management API unmounted.
+The operator recipe is `docs/src/guide/deployment/console-replicas.md`. An
+`authup console [admin|account|auth]` role is planned (plan 101, stage D2-3)
+and not registered yet: the CLI offers `start`, `worker`, `migration` and
+`healthcheck` only.
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component

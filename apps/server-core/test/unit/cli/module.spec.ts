@@ -16,8 +16,8 @@ import {
     it,
     vi,
 } from 'vitest';
-import { CLI_CONFIG_ARGS } from '../../../src/cli/config';
-import { assertNoStrayPositionals, createCLIEntryPointCommand } from '../../../src/cli/module';
+import { CLI_CONFIG_ARGS, assertNoStrayPositionals } from '../../../src/cli/commands/config';
+import { createCLIEntryPointCommand } from '../../../src/cli/module';
 import { PACKAGE_PATH } from '../../../src/path';
 
 describe('src/cli/module', () => {

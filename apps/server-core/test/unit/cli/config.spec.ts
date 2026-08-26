@@ -18,9 +18,9 @@ import {
 } from 'vitest';
 import type { ConfigReadFsOptions } from '../../../src/app/index';
 import { ConfigInjectionKey } from '../../../src/app/index';
-import { applyCLIConfigArgs, createCLIConfigModule } from '../../../src/cli/config';
+import { applyCLIConfigArgs, createCLIConfigModule } from '../../../src/cli/commands/config';
 
-describe('src/cli/config', () => {
+describe('src/cli/commands/config', () => {
     describe('applyCLIConfigArgs', () => {
         it('should apply the config args onto the fs read options', () => {
             const options : ConfigReadFsOptions = {};

@@ -4,9 +4,11 @@
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-This package contains the CLI: a thin supervisor that boots the authup server
-(`@authup/server-core`) as a child process. The server serves the admin console,
-the account console and the hosted auth pages itself.
+This package contains the operator CLI. It runs the authup server
+(`@authup/server-core`) **in the same process**: there is no child process and
+no supervisor, so signals, the exit code and the environment reach the server
+directly. The server serves the admin console, the account console and the
+hosted auth pages itself.
 
 Authup is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
@@ -38,21 +40,21 @@ This launches the server with default settings:
 - Admin console: `http://localhost:3001/console/admin`
 - Account console: `http://localhost:3001/console/account`
 
-The server always receives its `PORT`/`HOST` from the CLI (see
-[Configuration](#configuration)), so an ambient `PORT` in the environment
-cannot decide where it listens.
-
-The CLI forwards `SIGINT`/`SIGTERM` to the server and exits `0` once it stops;
-when the server stops on its own, the CLI exits with its exit code.
+`SIGINT`/`SIGTERM` tear the server down and exit with its outcome. A second
+signal exits immediately, and a teardown that outlasts 10 seconds is forced.
 
 ## Commands
 
 ```shell
-$ authup start                 # start server-core (which serves every console)
-$ authup start server.core     # the same; `client.admin-console` alone warns and starts nothing
-$ authup migration run         # forwarded to server-core only
-$ authup healthcheck           # forwarded to server-core only
+$ authup start                 # serve the API and every console
+$ authup worker                # run the background sweeps alone, with no HTTP listener
+$ authup migration run         # apply pending database migrations
+$ authup healthcheck           # probe the running API
 ```
+
+`start` and `worker` take no positional argument: the CLI starts exactly one
+service. `authup start server.core` and `authup start client.admin-console`
+are refused.
 
 ## Configuration
 
@@ -65,22 +67,18 @@ server.core.host=0.0.0.0
 server.core.publicUrl=http://localhost:3001
 ```
 
-The `server.core` section is passed through to the server process
-(`--configFile`/`--configDirectory` are forwarded as well). A
-`client.admin-console` section is read and answered with a warning: the admin
-console is served by server-core at `<publicUrl>/console/admin` and no longer runs as
-its own process.
+Every option can be set in the environment instead, and the environment always
+wins over the file. `PORT` and `HOST` are ordinary options under that rule, so
+a platform that injects `PORT` decides where the server listens.
 
-The application otherwise inherits the CLI's environment, with one deliberate
-exception: `PORT` and `HOST` are **always** set, from the section above or
-from the defaults shown there. Without that, an ambient `PORT` (a PaaS
-injects one) would decide where the server listens and the
-second one would fail to bind.
+A `client.admin-console` section is not read: the admin console is served by
+server-core at `<publicUrl>/console/admin` and no longer runs as its own
+process.
 
 ## License
 
 Made with 💚
 
 Published under the [AGPL-3.0 License](./LICENSE).
-A commercial license is available for organizations that cannot meet the AGPL's conditions —
+A commercial license is available for organizations that cannot meet the AGPL's conditions,
 see [LICENSING.md](../../LICENSING.md) or contact **contact@tada5hi.net**.

@@ -146,7 +146,5 @@ graph TD
     client-admin-console --> i18n
     client-admin-console --> kit
     client-admin-console --> specs
-    authup --> errors
-    authup --> kit
     authup --> server-core
 ```

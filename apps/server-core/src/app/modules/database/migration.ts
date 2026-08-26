@@ -37,7 +37,7 @@ export async function assertNoPendingMigrations(dataSource: DataSource) : Promis
     // typeorm: true means pending migrations exist.
     const pending = await dataSource.showMigrations();
     if (pending) {
-        throw new AuthupError('The database has pending migrations, and this process applies no schema changes. Run the migration CLI command (authup-server migration run) and start again.');
+        throw new AuthupError('The database has pending migrations, and this process applies no schema changes. Run the migration CLI command (authup migration run) and start again.');
     }
 
     return true;

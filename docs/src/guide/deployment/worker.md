@@ -9,11 +9,11 @@ The worker is the same image and the same binary, started with a different
 subcommand:
 
 ```bash
-authup-server worker
+authup worker
 ```
 
 In a container that is `server/core worker`; on bare metal it is a second
-`authup-server` process next to the one running `start`.
+`authup` process next to the one running `start`.
 
 ## What it runs
 
@@ -83,7 +83,7 @@ schema like every other process.
 So a deployment that adds a worker also has to decide who migrates. The
 recommendation is to let neither long-running process do it:
 
-1. Run `authup-server migration run` (container: `server/core migration run`)
+1. Run `authup migration run` (container: `server/core migration run`)
    as a one-off step, and let it finish.
 2. Start the API replicas and the worker.
 

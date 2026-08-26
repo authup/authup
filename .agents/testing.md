@@ -309,25 +309,36 @@ cache miss. Assertions about the seeded first render must NOT
 `await flushPromises()`: the point is the render the markup is hydrated
 against, before the async lookup settles.
 
-## Launcher Tests (apps/authup)
+## CLI Tests (apps/authup)
 
-The `authup` CLI is a process supervisor, so its suite is split in two:
+The `authup` CLI runs server-core in process (plan 101 D1), so almost nothing
+is left to unit-test: the wiring is the assertion, and the behaviour lives in
+server-core. The suite is split in two accordingly.
 
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
-  every other workspace): entrypoint resolution against fixture `node_modules`
-  trees (bin-field reading, the resolution-preference regression, npx fallback),
-  the config-section → child-env mapping, and command routing (server-core is
-  the only child since plan 081; a `client.admin-console` selector or config
-  section is accepted and answered with a warning, never launched).
+  every other workspace): `createCLIEntryPointCommand` carries the `authup`
+  meta read from the package and exactly the four subcommands
+  (`healthcheck`, `migration`, `start`, `worker`), and its `setup` refuses a
+  stray positional on `start`/`worker` (the retired `authup start server.core`
+  selector shape) while leaving `migration run`'s own positional alone. The
+  supervisor-era specs are gone with the supervisor: there is no entrypoint to
+  resolve, no child environment to map and no routing table.
 - **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
   on a non-default port, waits for server-core, asserts all THREE consoles are
   served (`/logout`, `/console/account`, `/console/admin` each answer 200 with the injected
-  `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the child exits and the CLI
-  exits 0. `npm run test:smoke:packed` runs the same assertions against
-  `npm pack`ed tarballs installed into a temp project. **The packed variant is
-  the one that matters:** every launcher breakage found in plan 078 (the ESM
+  `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the process
+  exits and the CLI exits 0. It additionally pins **env-wins precedence**: the
+  run writes an `authup.conf` under `--configDirectory` naming a DIFFERENT port
+  and passes the real one in the environment, so a regression that lets the
+  file win moves the listener and the readiness probe never answers (the
+  supervisor forced the file's port onto the child, which is exactly what D1
+  removed). That the file was read at all is proven separately, by reading
+  `publicUrl` back out of the injected console config: it is the one key only
+  the file supplies. `npm run test:smoke:packed` runs the same assertions
+  against `npm pack`ed tarballs installed into a temp project. **The packed variant is
+  the one that matters:** every CLI breakage found in plan 078 (the ESM
   `__dirname` crash, the stale spawn path, and nitro's symlinked module store
-  being dropped by `npm pack`) reproduced ONLY from a packed artifact — a
+  being dropped by `npm pack`) reproduced ONLY from a packed artifact, where a
   workspace-dist run passes straight through all three. Both variants run in
   CI (`tests-launcher` job); the packed one needs `npm install --force` like
   every install in this repo.
@@ -436,7 +447,7 @@ DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD
 
 It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows — the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
 
-The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/` — without this guard, running the CLI from the wrong working directory results in typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure.
+The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is no longer part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
 
 Locally, run the same flow with a running compose stack:
 
