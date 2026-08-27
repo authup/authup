@@ -174,36 +174,37 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 `suite.client.permission.getOne(name)` resolves the provisioned permission by name. See `test/unit/http/controllers/entities/client-self-manage.spec.ts` for a working example asserting both allowed-field updates and ATTRIBUTE_NAMES policy rejections.
 
-### Testing the SSR'd UI pages (fake HTTP client)
+### Testing the hosted pages (they render in another workspace now)
 
-The seven SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`, `/logout`, and the federated callback's custom-scheme interstitial at `GET /identity-providers/:id/authorize-in`, which `login-completion.spec.ts` renders against the built bundle through the default internal client) render the bundled Vue app under `apps/client-auth-console/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
+Since plan 101 D2 the auth pages are NOT rendered by server-core, so its suite has no page assertions left: a hosted page GET is a redirect, and that is all server-core's specs check. The render itself belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port and asserts against the BUILT `@authup/client-auth-console` bundle. `/logout` is the honest smoke test there, because it is the one page the service can answer with no backend at all (it drives the end-session call from the browser, so the render is a pure shell); the other pages hydrate over HTTP from server-core and a spec that wants them needs a stub API, not a DI seam.
+
+That is the shape change worth internalizing: the service holds **no credential, no loopback and no database**, so there is nothing to inject a fake client into. It reads `GET /authorize/info` and `GET /` from whatever `apiUrl` names, and a spec stubs those by pointing `apiUrl` at a server it controls.
+
+Caveats that survive the move:
+- The service renders from the **built** bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules), so rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the specs exercise a stale bundle. The two static console services have the same requirement for their own dists.
+- There is no just-in-time branch any more: it was a vite dev server inside server-core and left with the rendering, so the dist path is the only path and the JIT gate now decides nothing but the migrations glob (architecture.md → *The `cli-dev` JIT gate*).
+- Icon bundling is asserted in `apps/client-auth-console/test/unit/icons.spec.ts` against that app's own built client entry, not through a rendered page (`@iconify/vue` resolves icons client-side, so an SSR'd page carries empty `<svg>` shells either way).
+
+### The internal HTTP client seam (server-core)
+
+server-core keeps ONE client for calls to its own API, and it was renamed with the UI it lost: `HTTPInjectionKey.InternalHttpClient` (was `UIHttpClient`), backed by `createInternalHttpClient` (was `createInternalUIHttpClient`) and handed to routes per request under `INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`. Its one consumer is the console login's token exchange. `HTTPModule.setup` registers the production default unless the token is ALREADY bound, so a fake registered before `suite.setup()` wins:
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
 import { HTTPInjectionKey } from '../../src/app';
 
 const suite = createTestApplication();
-suite.container.register(HTTPInjectionKey.UIHttpClient, {
-    useFactory: () => createFakeHTTPClient({
-        handlers: { 'GET /identity-providers': () => ({ data: [], meta: { total: 0 } }) },
-    }),
+suite.container.register(HTTPInjectionKey.InternalHttpClient, {
+    useFactory: () => createFakeHTTPClient({ handlers: { /* ... */ } }),
 }, { lifetime: 'transient' });
 await suite.setup();
-
-const response = await httpRequest(suite, 'GET', '/register');
 ```
 
-Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UIHttpClient` — `createInternalUIHttpClient`, whose transport rewrites requests targeting `publicUrl` onto the server's own listen address (see architecture.md → Auth Workflow UI) — unless the token is already bound, so a fake registered before `suite.setup()` wins. A per-request middleware stamps a resolve-thunk onto `event.store`; `renderAuthConsolePage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags) and `ui-pages-internal-client.spec.ts` for the default-client path (loopback dispatch, public hrefs, sub-path `publicUrl` — the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`).
-
-Caveats:
-- Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
-- The SSR renders from the **built** `@authup/client-auth-console` bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules) — rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the tests exercise a stale bundle. server-core itself no longer embeds any UI build. The suite always takes the dist branch: the JIT gate (architecture.md -> *The JIT gate and its entry point*) is false under vitest, so the vite-served dev path has no automated coverage.
-- The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
-- Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
+Register with `useFactory` + `lifetime: 'transient'` (eldin), never a singleton-lifetime instance: a client carries per-user Authorization state. Register **before** `suite.setup()`, since the middleware mount is decided at boot. Alias the import (`createFakeHTTPClient`), because `test/utils` already exports a `createFakeClient` entity factory. `test/unit/adapters/http/internal-client.spec.ts` covers the rewriter as a pure unit (dispatch onto the own listen address, prefixed and prefix-less `publicUrl`, wildcard hosts normalized to loopback). For a spec that needs the whole application on a different public URL, the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`.
 
 ### Capturing what the server logs
 
-`LoggerModule.setup` honors a pre-registered `LoggerInjectionKey` (test-fake-wins, the same rule as `MailInjectionKey` and `UIHttpClient`), so a spec asserting on log output registers its own recorder before `suite.setup()`:
+`LoggerModule.setup` honors a pre-registered `LoggerInjectionKey` (test-fake-wins, the same rule as `MailInjectionKey` and `InternalHttpClient`), so a spec asserting on log output registers its own recorder before `suite.setup()`:
 
 ```typescript
 const logLines: string[] = [];
@@ -311,55 +312,109 @@ against, before the async lookup settles.
 
 ## CLI Tests (apps/authup)
 
-The `authup` CLI runs server-core in process (plan 101 D1), so almost nothing
-is left to unit-test: the wiring is the assertion, and the behaviour lives in
-server-core. The suite is split in two accordingly.
+The `authup` CLI runs every service in process (plan 101 D1/D2), so almost
+nothing is left to unit-test: the wiring is the assertion, and the behaviour
+lives in the packages. The suite is split in two accordingly.
 
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
-  meta read from the package and exactly the five subcommands
-  (`config`, `healthcheck`, `migration`, `start`, `worker`), and its `setup` refuses a
-  stray positional on `start`/`worker` (the retired `authup start server.core`
-  selector shape) while leaving `migration run`'s own positional alone. The
-  supervisor-era specs are gone with the supervisor: there is no entrypoint to
+  meta read from the package and exactly the subcommands it should
+  (`config`, `console`, `core`, `healthcheck`, `migration`, `start`,
+  `worker`), and its `setup` refuses a stray positional on
+  `core`/`start`/`worker` (the retired `authup start server.core` selector
+  shape) while leaving the commands whose positional is real alone
+  (`migration run`, `console admin`). The composed-schema spec that sat here
+  is gone with `composeSchemas`: every configuration key is declared once in
+  `@authup/server-config` now, so there is no pair of declarations left to
+  prove consistent. The supervisor-era specs are gone with the supervisor: there is no entrypoint to
   resolve, no child environment to map and no routing table.
-- **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
-  on a non-default port, waits for server-core, asserts all THREE consoles are
-  served (`/logout`, `/console/account`, `/console/admin` each answer 200 with the injected
-  `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the process
-  exits and the CLI exits 0. It additionally pins **env-wins precedence**: the
-  run writes an `authup.yml` under `--configDirectory` naming a DIFFERENT port
-  and passes the real one in the environment, so a regression that lets the
-  file win moves the listener and the readiness probe never answers (the
-  supervisor forced the file's port onto the child, which is exactly what D1
-  removed). That the file was read at all is proven separately, by reading
-  `publicUrl` back out of the injected console config: it is the one key only
-  the file supplies. `npm run test:smoke:packed` runs the same assertions
-  against `npm pack`ed tarballs installed into a temp project. **The packed variant is
-  the one that matters:** every CLI breakage found in plan 078 (the ESM
-  `__dirname` crash, the stale spawn path, and nitro's symlinked module store
-  being dropped by `npm pack`) reproduced ONLY from a packed artifact, where a
-  workspace-dist run passes straight through all three. Both variants run in
-  CI (`tests-launcher` job); the packed one needs `npm install --force` like
+- **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
+  way the other cannot show.
+  - The **composed** scenario boots the built CLI's `start` against sqlite on
+    a non-default port and asserts all three consoles are served on that one
+    listener: `/logout` hands over to `/console/auth/logout` and the hop is
+    then followed (a forward that lands nowhere answers the API-side probe
+    exactly like a working one, so the hop and its target are checked
+    separately), `/console/account` and `/console/admin` each answer 200 with
+    the injected `window.__AUTHUP__`, and the first script asset each shell
+    references answers 200 as JavaScript, so a dist built for another base
+    fails here instead of serving a blank console. Then SIGTERM, a clean exit
+    and nothing still listening. It additionally pins **env-wins precedence**:
+    the run writes an `authup.yml` under `--configDirectory` naming a
+    DIFFERENT port and passes the real one in the environment, so a regression
+    that lets the file win moves the listener and the readiness probe never
+    answers. That the file was read at all is proven separately, by reading
+    `publicUrl` back out of the injected console config: it is the one key
+    only the file supplies.
+  - The **split** scenario runs `authup core` and `authup console` side by
+    side and asserts what only two processes can show: the API answers **404**
+    for every console page (the shed; a shell answered there would mean both
+    sides serve it, with whichever mounted first winning silently), `/logout`
+    still hands over to the console process, and each console serves its shell
+    and its own entry script. Its console urls carry **no path**, which is
+    what a prefix-stripping proxy delivers and what catches an asset rebase
+    that PREPENDS rather than replaces: a console published at its own vite
+    base looks identical either way.
+- `npm run test:smoke:packed` runs the composed scenario against `npm pack`ed
+  tarballs installed into a temp project. **The packed variant is the one that
+  matters:** every CLI breakage found in plan 078 (the ESM `__dirname` crash,
+  the stale spawn path, and nitro's symlinked module store being dropped by
+  `npm pack`) reproduced ONLY from a packed artifact, where a workspace-dist
+  run passes straight through all three. Its workspace list carries the three
+  console SERVICES as well as the three bundles: the CLI depends on the
+  services and each service resolves its bundle at runtime, so without both
+  halves a packed install reaches for the registry. Both variants run in CI
+  (`tests-launcher` job); the packed one needs `npm install --force` like
   every install in this repo.
 
-## Console Tests (apps/client-admin-console, apps/client-account-console)
+**One trap the split scenario surfaced, worth knowing for any runner that
+awaits a SECOND process:** `child.on('exit')` fires once, so a listener
+attached after the child already exited waits out the whole timeout. Check
+`exitCode`/`signalCode` first. That was harmless while one process was
+awaited and fatal for the second.
 
-Both static consoles carry a vitest suite (`npm run test -w apps/<console>`,
-config at `test/vitest.config.ts`, node environment). The admin console's
-`test/vitest.config.ts` registers `@vitejs/plugin-vue`, because its guard spec
-imports the kit (aliased to package source, which carries `.vue` files);
-`test/unit/config.spec.ts` pins the runtime-config contract (injected config,
-same-origin API derivation, the capability-AND-applicability rule behind
-`cookieSession`), `test/unit/guard.spec.ts` the routing guard (the login
-bounce with `redirect`, the three route-meta gates, the cookie-mode rules:
-`logout({ revoke: false })` on a failed or `RESTORING` resolve, never a code
-exchange). The server-side half, `/console/admin` serving and the cookie login
-round-trip for BOTH consoles, lives in server-core
-(`test/unit/http/controllers/workflows/admin-pages.spec.ts` and the
-`describe.each` over both consoles in
-`workflows/account/console-session.spec.ts`). Those specs need the built
-console dists, like the auth console specs need theirs.
+## Console Service Tests (apps/server-{admin,account,auth}-console)
+
+Each console service carries its own vitest suite (`npm run test -w
+apps/server-<name>-console`, config at `test/vitest.config.ts`, node
+environment). They boot the real handler on an ephemeral port and assert
+against the BUILT console dist: the health route, the shell with its runtime
+config injected, the same shell for a nested/sub route, the asset the shell
+references (which is what makes a marker or vite-base mismatch fail here
+rather than in a browser), and a missing asset answering 404 rather than the
+shell. The account console adds the `ref` verdicts (a trusted origin is
+injected, a foreign one is dropped). `test/unit/config.spec.ts` pins the
+registry-to-service mapping: the derived console url, an explicit one winning,
+the listen address, the boolean and list readers, and the refusal to start
+without `publicUrl`.
+
+The MECHANISM those services share is tested once, in
+`packages/server-console-kit` (`npm run test -w packages/server-console-kit`):
+`html.spec.ts` for the shell helpers (including the `$'`-expansion guard the
+`replaceTemplateMarker` rule exists for, asserted over all four expansion
+patterns, and the asset rebase over more than one vite base), plus
+`theme.spec.ts` and `theme-provider.spec.ts`,
+which moved out of server-core's suite with the code. A spec asserting theme
+BEHAVIOUR belongs there now; a spec asserting that a particular console
+applies it belongs to that console's service.
+
+## Console Bundle Tests (apps/client-admin-console, apps/client-account-console)
+
+Both static console bundles carry a vitest suite of their own. The admin
+console's `test/vitest.config.ts` registers `@vitejs/plugin-vue`, because its
+guard spec imports the kit (aliased to package source, which carries `.vue`
+files); `test/unit/config.spec.ts` pins the runtime-config contract (injected
+config, same-origin API derivation, the capability-AND-applicability rule
+behind `cookieSession`), `test/unit/guard.spec.ts` the routing guard (the
+login bounce with `redirect`, the three route-meta gates, the cookie-mode
+rules: `logout({ revoke: false })` on a failed or `RESTORING` resolve, never a
+code exchange). The server-side half is split by ownership now: the SERVING
+lives in each console service's suite (above), and the cookie login round-trip
+stays in server-core, as the `describe.each` over both consoles in
+`test/unit/http/controllers/workflows/account/console-session.spec.ts`. That
+file gained a **"console shell"** block asserting server-core answers 404 for
+`''`, `/login` and an arbitrary sub-path under each segment, which is the
+regression guard for the shed itself.
 
 ## Code Coverage
 

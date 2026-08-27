@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-/**
- * Default retention for persisted security events in days (hosted-provider
- * posture, Okta-parity; raise via eventLogRetentionDays /
- * EVENT_LOG_RETENTION_DAYS, 0 = keep forever).
- */
-export const EVENT_LOG_RETENTION_DAYS_DEFAULT = 90;
+// The default retention for persisted security events is declared with the
+// key it is the default of (eventLogRetentionDays, in
+// `@authup/server-config`), and re-exported here for this module's own
+// consumers.
+export { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '@authup/server-config';
 
 /**
  * Rows removed per statement by the retention sweep. The sweep runs every

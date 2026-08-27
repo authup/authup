@@ -38,6 +38,38 @@ const SERVER_URL = `${PUBLIC_URL}/`;
 // listener here and the readiness probe never answers.
 const CONFIG_FILE_PORT = SERVER_PORT + 2;
 
+// The split topology's three console listeners.
+//
+// Their public urls stay on publicUrl's own origin, which is the only shape
+// authup supports and what the reverse proxy in front of a real split
+// deployment presents. The proxy is what this runner stands in for: it
+// strips the console's base path and re-targets the console's own port,
+// which is exactly the hop `<segment>` -> the console set.
+const CONSOLE_PORTS = {
+    auth: SERVER_PORT + 10,
+    admin: SERVER_PORT + 11,
+    account: SERVER_PORT + 12,
+};
+
+const CONSOLE_SEGMENTS = {
+    auth: '/console/auth',
+    admin: '/console/admin',
+    account: '/console/account',
+};
+
+/**
+ * Route a PUBLIC url onto the console process that serves it, the way the
+ * reverse proxy would: strip the console's base path, keep the rest, and
+ * dial the console's own listener.
+ */
+function throughProxy(name, publicPath) {
+    const stripped = publicPath.startsWith(CONSOLE_SEGMENTS[name]) ?
+        publicPath.slice(CONSOLE_SEGMENTS[name].length) || '/' :
+        publicPath;
+
+    return `http://127.0.0.1:${CONSOLE_PORTS[name]}${stripped}`;
+}
+
 const READY_TIMEOUT_MS = 180_000;
 const EXIT_TIMEOUT_MS = 30_000;
 const RUN_TIMEOUT_MS = 600_000;
@@ -284,6 +316,13 @@ async function waitUntilReady(name, url, child) {
 }
 
 function waitForExit(child, timeoutMs) {
+    // Already gone: `exit` fired before this listener could attach, and it
+    // fires once. Waiting for it would sit out the whole timeout, which is
+    // what a scenario awaiting a SECOND process runs into.
+    if (child.exitCode !== null || child.signalCode !== null) {
+        return Promise.resolve({ code: child.exitCode, signal: child.signalCode });
+    }
+
     return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
             child.kill('SIGKILL');
@@ -455,14 +494,157 @@ async function executeWorkspaceScenario() {
     );
 }
 
+/**
+ * The split topology (plan 101 D2): the API and the consoles as separate
+ * processes, which is what an operator runs when `/console/**` is routed to
+ * its own replica set.
+ *
+ * Simulated by direct ports rather than a proxy, so the console urls carry
+ * no path and each service answers at its own root. That is exactly what a
+ * prefix-stripping proxy delivers, and it is the shape a proxy-less local
+ * run has anyway.
+ *
+ * What this proves that the composed scenario cannot: `authup core` serves
+ * no console at all (the shed), `authup console` serves all three on its
+ * own, and the hop between them lands. A regression in either half looks
+ * identical from inside one process.
+ */
+async function executeSplitScenario() {
+    const tempDirectory = createTempDirectory('authup-smoke-split');
+    const writableDirectory = path.join(tempDirectory, 'writable');
+    fs.mkdirSync(writableDirectory, { recursive: true });
+    writeServerConfig(tempDirectory);
+
+    const cliEntry = path.join(packageDirectory, 'dist', 'index.mjs');
+    const cwd = path.join(repositoryDirectory, 'apps', 'server-core');
+    const configArg = `--configDirectory=${tempDirectory}`;
+
+    // Only the listen addresses: every console url keeps its default, which
+    // is publicUrl plus the segment its bundle is built for.
+    const consoleEnv = {
+        AUTH_CONSOLE_PORT: `${CONSOLE_PORTS.auth}`,
+        ADMIN_CONSOLE_PORT: `${CONSOLE_PORTS.admin}`,
+        ACCOUNT_CONSOLE_PORT: `${CONSOLE_PORTS.account}`,
+    };
+
+    const api = spawn(process.execPath, [cliEntry, 'core', configArg], {
+        cwd,
+        env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
+        stdio: 'inherit',
+    });
+
+    const consoles = spawn(process.execPath, [cliEntry, 'console', configArg], {
+        cwd,
+        env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
+        stdio: 'inherit',
+    });
+
+    try {
+        await waitUntilReady('split/core', SERVER_URL, api);
+        await waitUntilReady('split/console', throughProxy('auth', '/healthy'), consoles);
+
+        // The shed: every console page is a 404 on the API now. A shell
+        // answered here would mean both sides serve it, with whichever
+        // mounted first winning silently.
+        for (const route of ['console/auth/logout', 'console/admin', 'console/account']) {
+            const response = await fetch(new URL(route, SERVER_URL).href, { redirect: 'manual' });
+            if (response.status !== 404) {
+                throw fail(`split/core: /${route} answered ${response.status}, expected 404: server-core serves no console.`);
+            }
+            await response.arrayBuffer();
+        }
+        log('split/core: the API serves no console page.');
+
+        // The hop, which is the only thing tying the two processes together.
+        const logout = await fetch(new URL('logout', SERVER_URL).href, { redirect: 'manual' });
+        // Drained like every other body here: an undrained response leaves
+        // the socket mid-write and `server.close()` waits for it, so the
+        // SIGTERM assertion below would only pass through the force-exit.
+        await logout.arrayBuffer();
+        const location = logout.headers.get('location') || '';
+        const expected = new URL(`${CONSOLE_SEGMENTS.auth}/logout`, SERVER_URL).href;
+        if (location !== expected) {
+            throw fail(`split/core: /logout redirected to "${location}", expected ${expected}.`);
+        }
+        log(`split/core: /logout handed over to ${location}.`);
+
+        for (const name of Object.keys(CONSOLE_PORTS)) {
+            // The page the proxy would forward: the auth console renders
+            // /logout with no backend at all, the static consoles their shell.
+            const publicPath = name === 'auth' ? `${CONSOLE_SEGMENTS.auth}/logout` : CONSOLE_SEGMENTS[name];
+            const target = throughProxy(name, publicPath);
+
+            const response = await fetch(target, { redirect: 'manual' });
+            if (response.status !== 200) {
+                throw fail(`split/console: ${target} answered ${response.status}, expected 200.`);
+            }
+
+            const body = await response.text();
+            if (!body.includes('window.__AUTHUP__')) {
+                throw fail(`split/console: ${target} answered 200 without the injected runtime config.`);
+            }
+
+            // The href the shell carries is the PUBLIC one, so it is routed
+            // the same way the page was. A console that emitted an href
+            // outside its own base would be dialled at a path its service
+            // does not serve.
+            const match = /<script[^>]+src="([^"]*\/assets\/[^"]+\.js)"/.exec(body);
+            if (!match) {
+                throw fail(`split/console/${name}: the shell references no script under assets/.`);
+            }
+
+            const asset = await fetch(throughProxy(name, match[1]), { redirect: 'manual' });
+            if (asset.status !== 200 || !(asset.headers.get('content-type') || '').includes('javascript')) {
+                throw fail(`split/console/${name}: ${match[1]} answered ${asset.status} (${asset.headers.get('content-type')}), expected JavaScript.`);
+            }
+            const bytes = await asset.arrayBuffer();
+
+            log(`split/console/${name}: ${match[1]} served the console entry script (${bytes.byteLength} bytes).`);
+        }
+
+        log('split: sending SIGTERM to both processes.');
+        api.kill('SIGTERM');
+        consoles.kill('SIGTERM');
+
+        const apiExit = await waitForExit(api, EXIT_TIMEOUT_MS);
+        if (apiExit.code !== 0) {
+            throw fail(`split/core: exited with code ${apiExit.code}, expected 0.`);
+        }
+
+        const consoleExit = await waitForExit(consoles, EXIT_TIMEOUT_MS);
+        if (consoleExit.code !== 0) {
+            throw fail(`split/console: exited with code ${consoleExit.code}, expected 0.`);
+        }
+
+        log('split: both processes exited cleanly.');
+    } finally {
+        for (const child of [api, consoles]) {
+            if (child.exitCode === null) {
+                child.kill('SIGTERM');
+            }
+        }
+        await sleep(2_000);
+        for (const child of [api, consoles]) {
+            if (child.exitCode === null) {
+                child.kill('SIGKILL');
+            }
+        }
+
+        fs.rmSync(tempDirectory, { recursive: true, force: true });
+    }
+}
+
 function collectPackWorkspaces() {
     const workspaces = [
         'apps/authup',
         'apps/server-core',
-        // server-core resolves the account console SPA bundle and the auth
-        // console SSR bundle from these packages at runtime — without their
-        // tarballs the packed install would try (and fail) to fetch them
-        // from the registry.
+        // The CLI depends on the three console SERVICES, and each of those
+        // resolves its console's built bundle at runtime. Without their
+        // tarballs the packed install would try (and fail) to fetch any of
+        // the six from the registry.
+        'apps/server-account-console',
+        'apps/server-admin-console',
+        'apps/server-auth-console',
         'apps/client-account-console',
         'apps/client-auth-console',
         'apps/client-admin-console',
@@ -544,6 +726,7 @@ try {
         await executePackedScenario();
     } else {
         await executeWorkspaceScenario();
+        await executeSplitScenario();
     }
 
     log(`done in ${Math.round((Date.now() - startedAt) / 1000)}s.`);

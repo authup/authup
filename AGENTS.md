@@ -27,13 +27,18 @@ npm run lint:fix               # lint with auto-fix
 
 ### CLI Entry Points
 
-| Binary           | Source              |
-|------------------|---------------------|
-| `authup`         | apps/authup         |
+| Binary                     | Source                          |
+|----------------------------|---------------------------------|
+| `authup`                   | apps/authup                     |
+| `authup-admin-console`     | apps/server-admin-console       |
+| `authup-account-console`   | apps/server-account-console     |
+| `authup-auth-console`      | apps/server-auth-console        |
 
-`authup` is the only binary. It runs server-core in process (`start`, `worker`, `migration`, `healthcheck`); `apps/server-core` ships no `bin` field, and its `src/cli/` stays as dev-only tooling (`npm run cli -w apps/server-core` drives `migration generate`, `cli-dev` is the JIT route).
+`authup` is the operator binary and the only one an ordinary deployment runs. It composes the whole ecosystem in process: `start` (server-core plus every enabled console on one listener), `core` (the API and the IdP alone), `console [admin|account|auth]` (one console service, or every enabled one, each on its own port), plus `worker`, `migration`, `healthcheck` and `config`. `apps/server-core` ships no `bin` field, and its `src/cli/` stays as the `defineCLI*Command` source plus dev-only tooling (`npm run cli -w apps/server-core` drives `migration generate`).
 
-The consoles (`apps/client-admin-console`, `apps/client-account-console`, `apps/client-auth-console`) ship no binary: server-core serves their built `dist/`.
+The three console SERVICES each ship a `bin` of their own, which starts that service alone against the environment (no `authup.yml`, since the composed document reaches them through the CLI roles). They are the escape hatch for a deployment that runs a console without the CLI; `authup console` is the supported route.
+
+The console BUNDLES (`apps/client-admin-console`, `apps/client-account-console`, `apps/client-auth-console`) ship no binary and no process: each is a built `dist/` that the matching `apps/server-*-console` service resolves out of `node_modules` and serves.
 
 ## Detailed Guides
 
@@ -52,4 +57,4 @@ The consoles (`apps/client-admin-console`, `apps/client-account-console`, `apps/
 
 ## Licensing
 
-Authup is dual-licensed (see [LICENSING.md](LICENSING.md)): the apps (`server-core`, `client-admin-console`, `client-account-console`, `client-auth-console`, `authup`) are `AGPL-3.0-only` (+ commercial); every package under `packages/` is `Apache-2.0`. When scaffolding a new workspace, copy the `LICENSE` file and `package.json` `license` field from an existing sibling in the same group — new packages default to Apache-2.0, new apps to AGPL-3.0-only. Releases up to and including `v1.0.0-beta.46` remain Apache-2.0 (the change is not retroactive).
+Authup is dual-licensed (see [LICENSING.md](LICENSING.md)): the apps (`server-core`, `server-admin-console`, `server-account-console`, `server-auth-console`, `client-admin-console`, `client-account-console`, `client-auth-console`, `authup`) are `AGPL-3.0-only` (+ commercial); every package under `packages/` is `Apache-2.0`. The blanket rule has a consequence worth stating outright: `@authup/server-console-kit` holds the console-serving MECHANISM (the shell splice, the security headers, `defineStaticConsole`, the whole theme subsystem), so that mechanism is permissively licensed, while the three console SERVICES built on it stay AGPL. That was accepted deliberately in plan 101 D2-2 rather than stumbled into. When scaffolding a new workspace, copy the `LICENSE` file and `package.json` `license` field from an existing sibling in the same group: new packages default to Apache-2.0, new apps to AGPL-3.0-only. Releases up to and including `v1.0.0-beta.46` remain Apache-2.0 (the change is not retroactive).

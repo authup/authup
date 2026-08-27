@@ -24,10 +24,21 @@ export type ConsoleLoginDefinition = {
     /**
      * The path the console is served under, relative to the deployment base
      * path (`console/account`, `console/admin`; it may carry a slash). It
-     * scopes the login cookie, builds the callback URL and names where the
-     * browser lands once the credential is issued.
+     * scopes the login cookie and builds the callback URL, both of which live
+     * on the API's own origin whatever the console url says.
      */
     segment: string,
+    /**
+     * Where the console itself is served (`server.<name>Console.url`). The
+     * browser lands there once the credential is issued, so a console under a
+     * path of its own is landed on correctly.
+     *
+     * Only its PATH is read, which is exact rather than a shortcut: a console
+     * on a foreign origin could never present the `SameSite=Strict`
+     * credential this flow issues, and normalizeConfig refuses that shape at
+     * boot for exactly that reason.
+     */
+    consoleUrl: string,
     /**
      * Where a refused callback lands, relative to the console root
      * (`login` -> `<base>/<segment>/login?error=...`). Defaults to the root:

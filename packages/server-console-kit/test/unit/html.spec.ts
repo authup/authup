@@ -43,8 +43,12 @@ describe('replaceTemplateMarker', () => {
 });
 
 describe('rebaseAssetURLs', () => {
-    it('prefixes script, stylesheet and preload references with the base path', () => {
-        const result = rebaseAssetURLs(HTML, '/auth', '/console/auth/');
+    // The invariant, and it is what makes this a REPLACE: the emitted url
+    // must be the public path the caller mounted the bundle's assets under.
+    // The vite base is fixed when the bundle is built and says nothing about
+    // where the thing serving it is published.
+    it('replaces the fixed vite base in every asset reference', () => {
+        const result = rebaseAssetURLs(HTML, '/console/auth/', '/auth/console/auth/');
 
         expect(result).toContain('href="/auth/console/auth/assets/chunk-abc.js"');
         expect(result).toContain('href="/auth/console/auth/assets/index-def.css"');
@@ -54,35 +58,44 @@ describe('rebaseAssetURLs', () => {
     });
 
     it('does not touch the hydration payload', () => {
-        const result = rebaseAssetURLs(HTML, '/auth', '/console/auth/');
+        const result = rebaseAssetURLs(HTML, '/console/auth/', '/auth/console/auth/');
 
         expect(result).toContain('"redirect":"/authorize?response_type=code"');
         expect(result).toContain('"baseURL":"https://example.com/auth"');
     });
 
-    it('returns the input unchanged for an empty base path', () => {
-        expect(rebaseAssetURLs(HTML, '', '/console/auth/')).toBe(HTML);
-    });
-
     it('rebases a different fixed vite base (account console)', () => {
         const input = '<script type="module" crossorigin src="/console/account/assets/index-jkl.js"></script>';
 
-        expect(rebaseAssetURLs(input, '/auth', '/console/account/'))
+        expect(rebaseAssetURLs(input, '/console/account/', '/auth/console/account/'))
             .toBe('<script type="module" crossorigin src="/auth/console/account/assets/index-jkl.js"></script>');
     });
 
-    it('does not expand replacement patterns carried by the base path', () => {
-        // basePath is publicUrl's pathname, which may legally contain a `$`.
+    it('does not expand replacement patterns carried by the target', () => {
+        // The target derives from publicUrl's pathname, which may legally
+        // contain a `$`.
         const input = '<script src="/console/auth/assets/a.js"></script>';
 
-        expect(rebaseAssetURLs(input, '/a$&b', '/console/auth/'))
-            .toBe('<script src="/a$&b/console/auth/assets/a.js"></script>');
+        expect(rebaseAssetURLs(input, '/console/auth/', '/a$&b/'))
+            .toBe('<script src="/a$&b/assets/a.js"></script>');
     });
 
-    it('treats regex metacharacters in the vite base literally', () => {
-        const input = '<script src="/assets.v2/assets/a.js"></script><script src="/assetsXv2/assets/b.js"></script>';
+    // The two callers and the four publication shapes each has to survive.
+    // A console SERVICE mounts the assets at its own `/assets`, so the whole
+    // vite base goes; server-core mounts them AT the vite base under the
+    // deployment sub-path, so the base is what it rebuilds.
+    it.each([
+        ['/console/auth', '/console/auth/assets/'],
+        ['/auth/console/auth', '/auth/console/auth/assets/'],
+        // published somewhere that does NOT end in the vite base: prefixing
+        // would emit /login/console/auth/assets/, which nothing serves once
+        // the proxy has stripped /login
+        ['/login', '/login/assets/'],
+        ['', '/assets/'],
+    ])('serves a console published at %s from %s', (basePath, expected) => {
+        const input = '<script src="/console/auth/assets/index-abc.js"></script>';
 
-        expect(rebaseAssetURLs(input, '/auth', '/assets.v2/'))
-            .toBe('<script src="/auth/assets.v2/assets/a.js"></script><script src="/assetsXv2/assets/b.js"></script>');
+        expect(rebaseAssetURLs(input, '/console/auth/', `${basePath}/`))
+            .toBe(`<script src="${expected}index-abc.js"></script>`);
     });
 });

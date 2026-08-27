@@ -40,6 +40,12 @@ import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils
  * whose guard would drop the error marker, so it lands on
  * /console/admin/login.
  *
+ * The kick has a path of its own, `<segment>/login/start` (098 C1). Since
+ * the console left server-core for its own service (plan 101 D2-3), the bare
+ * `<segment>/login` is the console's own page and this server does not serve
+ * it at all, so the kick can no longer be a `realmId`-carrying variant of
+ * one URL.
+ *
  * The segments are literals on purpose: they ARE the public URL surface
  * (plan 099), and a spec reading them off the constants would follow a
  * rename instead of catching it.
@@ -113,7 +119,7 @@ describe.each(CONSOLES)('$name console session', ({
 
         // 1) the kick: PKCE + state are minted server-side and parked behind
         //    a short-lived login cookie.
-        const kick = await request('GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await request('GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
         expect(kick.status).toEqual(302);
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeDefined();
 
@@ -298,7 +304,7 @@ describe.each(CONSOLES)('$name console session', ({
 
         const { data: realm } = await suite.client.realm.getOne('master');
 
-        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
         foreign.store(kick);
 
         const state = new URL(kick.headers.get('location') as string).searchParams.get('state') as string;
@@ -319,7 +325,7 @@ describe.each(CONSOLES)('$name console session', ({
         const { data: realm } = await suite.client.realm.getOne('master');
 
         const local = new TestCookieJar();
-        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
         local.store(kick);
 
         const mismatched = await httpRequest(suite, 'GET', `/${segment}/callback?code=whatever&state=not-the-state`, {
@@ -353,7 +359,11 @@ describe.each(CONSOLES)('$name console session', ({
 /**
  * Disabled means disabled on the server too (plan 099): the kick must not
  * mint a pending login, and the callback must not redeem a code, for a
- * surface that renders nothing but the notice. Both answer with the shell.
+ * console nothing is serving.
+ *
+ * They answer 404 rather than a rendered notice: since the console left
+ * server-core there is no shell here to answer with, and the route genuinely
+ * does not exist on a deployment that turned the console off.
  */
 describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable }) => {
     const suite = createTestApplication({ config: disable });
@@ -369,11 +379,9 @@ describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable 
     it('does not start a console login', async () => {
         const { data: realm } = await suite.client.realm.getOne('master');
 
-        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
-        expect(kick.status).toEqual(200);
-        expect(kick.headers.get('content-type')).toContain('text/html');
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+        expect(kick.status).toEqual(404);
         expect(kick.headers.get('set-cookie')).toBeNull();
-        expect(await kick.text()).toContain('window.__AUTHUP__');
     });
 
     it('does not redeem a callback', async () => {
@@ -381,8 +389,31 @@ describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable 
             redirect: 'manual',
             headers: { 'sec-fetch-site': 'same-origin' },
         });
-        expect(callback.status).toEqual(200);
-        expect(callback.headers.get('content-type')).toContain('text/html');
+        expect(callback.status).toEqual(404);
         expect(callback.headers.get('set-cookie')).toBeNull();
+    });
+});
+
+/**
+ * The console's own pages are NOT served here any more: the console service
+ * owns everything under its segment except the two routes above. A shell
+ * answered from server-core would mean the shed regressed and both would be
+ * served, with whichever mounted first winning silently.
+ */
+describe.each(CONSOLES)('$name console shell', ({ segment }) => {
+    const suite = createTestApplication();
+
+    beforeAll(async () => {
+        await suite.setup();
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    it.each(['', '/login', '/anything'])('does not serve %s', async (page) => {
+        const response = await httpRequest(suite, 'GET', `/${segment}${page}`, { redirect: 'manual' });
+
+        expect(response.status).toEqual(404);
     });
 });

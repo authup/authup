@@ -1,0 +1,65 @@
+{
+    "name": "@authup/server-config",
+    "type": "module",
+    "version": "1.0.0-beta.63",
+    "description": "The whole authup.yml document: every configuration key an authup deployment understands, declared once so a service selects keys instead of declaring them.",
+    "license": "Apache-2.0",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
+    },
+    "engines": {
+        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "config",
+        "configuration",
+        "schema",
+        "zod"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-config"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@authup/core-kit": "^1.0.0-beta.63",
+        "@authup/kit": "^1.0.0-beta.63",
+        "@authup/server-config-kit": "^1.0.0-beta.63",
+        "envix": "^1.5.0",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@types/node": "^26.0.0",
+        "cross-env": "^10.1.0",
+        "vitest": "^4.0.14"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

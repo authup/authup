@@ -13,10 +13,10 @@ import type { AuthConsoleConfig } from './types';
  * The standalone service: the same handler the CLI mounts in process,
  * behind a listener of its own.
  */
-export function createAuthConsoleServer(config: AuthConsoleConfig) : App {
+export async function createAuthConsoleServer(config: AuthConsoleConfig) : Promise<App> {
     const app = new App();
 
-    app.use(createAuthConsoleHandler(config));
+    app.use(await createAuthConsoleHandler(config));
 
     return app;
 }

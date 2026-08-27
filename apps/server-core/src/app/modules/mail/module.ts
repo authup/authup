@@ -29,7 +29,7 @@ export class MailModule implements IModule {
         }
 
         // A pre-registered client wins (test injection — mirrors the
-        // UIHttpClient pattern), so a fake can capture mailed OTP codes.
+        // InternalHttpClient pattern), so a fake can capture mailed OTP codes.
         if (container.has(MailInjectionKey)) {
             return;
         }
@@ -41,6 +41,8 @@ export class MailModule implements IModule {
             return;
         }
 
+        // the configuration surface is deliberately untyped: the object arm
+        // of `smtp` is opaque, and this adapter owns its real shape.
         container.register(MailInjectionKey, { useFactory: () => new SMTPMailClientAdapter(result.data.smtp) });
     }
 }

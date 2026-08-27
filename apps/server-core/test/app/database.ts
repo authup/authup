@@ -6,6 +6,7 @@
  */
 
 import { EnvironmentName } from '@authup/kit';
+import type { DatabaseConnectionOptions } from '@authup/server-config';
 import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -64,7 +65,9 @@ async function resolveDataSourceOptions(container: IContainer, database: string)
 
     const options = readDataSourceOptionsFromEnv();
     if (options) {
-        config.db = options;
+        // the configuration surface is deliberately untyped: `db` is authup's
+        // own loose shape and carries only the three supported dialects.
+        config.db = options as DatabaseConnectionOptions;
     } else {
         config.db = {
             type: 'better-sqlite3',
@@ -131,7 +134,7 @@ export function createTestDatabaseModuleForSecondaryInstance(name: string): Data
                 config.db = {
                     ...options,
                     database: buildSecondaryDatabaseName(name, options.database),
-                } as typeof options;
+                } as DatabaseConnectionOptions;
             } else {
                 config.db = {
                     type: 'better-sqlite3',

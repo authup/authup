@@ -18,7 +18,8 @@ import {
 } from 'vitest';
 import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
+import { expandToOrigins } from '@authup/server-config';
+import { getAppOrigins } from '../../../src/app/modules/config/app-origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
 import {
     inspectConfigFile,
@@ -417,7 +418,7 @@ describe('src/config/*.ts', () => {
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
         expect(config.publicUrl).toEqual('https://idp.example.com');
-        expect(config.themeDirectoryPath).toEqual('/etc/authup/theme');
+        expect(config.adminConsoleUrl).toEqual('https://console.example.com/admin');
         expect(config.port).toEqual(4711);
         expect(config.host).toEqual('127.0.0.1');
         expect(config.adminConsoleEnabled).toEqual(false);

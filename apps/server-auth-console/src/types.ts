@@ -5,6 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type {
+    AuthConsoleSectionConfig,
+    DeploymentConfig,
+    ThemeConfig,
+} from '@authup/server-config';
+
+/**
+ * What this service reads out of `authup.yml` and the environment: the
+ * sections it selects keys from, in the CONFIGURATION namespace's own
+ * vocabulary.
+ *
+ * The names are console-qualified because they belong to a document that
+ * describes a whole deployment, not to this service. Inside this package that
+ * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
+ * service's), so it is confined to the configuration layer:
+ * `resolveAuthConsoleConfig` maps it onto {@link AuthConsoleConfig} before
+ * anything else sees it.
+ */
+export type AuthConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl'> &
+    ThemeConfig &
+    AuthConsoleSectionConfig;
+
+/**
+ * The service's own configuration. This console is the primary context here
+ * and server-core is the external thing it calls, hence `url` for its own
+ * address and `apiUrl` for the API's.
+ */
 export type AuthConsoleConfig = {
     /**
      * The public URL this service is reachable at, e.g.
@@ -21,13 +48,20 @@ export type AuthConsoleConfig = {
      */
     apiUrl: string,
     /**
-     * Where the service listens.
+     * Where the standalone service listens. Unrelated to `url`: behind a
+     * reverse proxy the two always differ.
      */
-    port?: number,
-    host?: string,
+    port: number,
+    host: string,
     /**
      * A substituted console package to render instead of the resolved
      * `@authup/client-auth-console` (the `AUTH_CONSOLE_PATH` seam).
      */
-    distPath?: string,
+    distPath: string,
+    /**
+     * The operator theme directory, applied to the rendered pages. An empty
+     * value disables theming and creates no provider at all.
+     */
+    themeDirectoryPath: string,
+    themeFragmentsEnabled: boolean,
 };

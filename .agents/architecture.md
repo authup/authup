@@ -727,46 +727,62 @@ pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
 into the URL (the reset form asks for email/name).
 
-#### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
+#### Auth Workflow UI (the auth console service) + Status Endpoint
 
-Every auth workflow page is served by the SSR auth app
-(`apps/client-auth-console`, resolved and rendered by server-core — plan
-083), never by the admin console, which is an ordinary OAuth2 client of the
-IdP (served by server-core too since plan 081, but with no privileged channel
-into it):
+Every auth workflow page renders in its own SSR service,
+`@authup/server-auth-console` (`apps/server-auth-console`, plan 101 D2-2),
+which renders the `apps/client-auth-console` bundle through that package's
+render contract (plan 083). Never the admin console, which is an ordinary
+OAuth2 client of the IdP with no privileged channel into it.
+
+**server-core keeps the protocol; what moved is where a page RENDERS.** The
+endpoints, the issuer and every POST that mints or ends something stay on the
+API. The six page GETs became a stateless hop:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
-  `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
-  path remains the JSON API (plus `/logout`; the federated callback's
+  `/password-reset` and `/logout`. `POST` on each of those paths is still the
+  JSON API on server-core; `GET` answers a redirect to
+  `<authConsoleUrl><page>` carrying the request's own query verbatim
+  (`redirectToAuthConsole` in
+  `adapters/http/controllers/workflows/auth-console.ts`, which sets
+  `Cache-Control: no-store` because those parameters routinely carry an
+  `id_token_hint`, a token or a redirect). The federated callback's
   interstitial at `/identity-providers/:id/authorize-in` still exists in the
-  console package but nothing renders it since plan 094, see *Federated Login
-  Completion*). The render plumbing is shared:
-  `renderAuthConsolePage(event, { url, payload })` in
-  `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
-  manifest, preload links, headers), composing the cross-console helpers
-  in `adapters/http/ui/shared/` (cookie-derived html attrs, security
-  headers incl. `Cache-Control: no-store` on every served console page, since
-  they are login pages and the interstitial carries a fresh authorization
-  code, asset rebasing). The payload reaches the client as
-  `window.__AUTHUP__` — the ONE reserved window global every served
-  console shares (Nuxt's `__NUXT__` model; each console is its own
-  document, so the shapes never coexist — the account console injects its
-  runtime config under the same name).
+  console package but nothing renders it since plan 094 (see *Federated
+  Login Completion*).
+- **Stateless is the point.** There is no server-side handle for the pending
+  request, because the request IS the application's own public URL: a cookie
+  handle would clobber across tabs, and a TTL would break the mail-borne
+  `redirect=` chain that arrives days later.
+- **`/logout` forwards on BOTH methods.** GET and POST were the same handler
+  and both are browser NAVIGATIONS (the POST is the OIDC `form_post`
+  binding), so neither can consume a JSON answer and turning the POST into
+  the JSON API outright would have dropped a spec binding. The JSON call the
+  rendered page makes is discriminated by **content type**, which a
+  navigation can never satisfy. `Content-Type` is case-insensitive (RFC
+  9110), so the check is case-folded: an `Application/JSON` caller otherwise
+  took the navigation path and had its XHR answered with a redirect.
+- The rendered payload reaches the client as `window.__AUTHUP__`, the ONE
+  reserved window global every console shares (Nuxt's `__NUXT__` model; each
+  console is its own document, so the shapes never coexist, and the two
+  static consoles inject their runtime config under the same name).
 - **`GET /authorize/info` answers that page's render input as JSON**
   (`AuthorizeInfo` in `@authup/core-http-kit`, `client.authorize.getInfo()`;
   plan 101 D2-1). `AuthorizeController.buildAuthorizeInfo(event)` is the ONE
-  producer, so the page and the endpoint cannot report different things:
-  `serve()` is now nothing but the render around it, and a spec asserts the
-  two answers are equal for one query. It is anonymous and
+  producer, and since D2-2 it is the ONLY one: `serve()` is the hop to the
+  console service, so the endpoint IS the page's render input rather than a
+  second rendering of it. It is anonymous and
   `Cache-Control: no-store` like the page GET, takes the page's own query
   (`provider` and the closed `error` marker set included, since the answer
   is derived from all of it), and a REFUSED request is a 200 carrying the
   refusal under `error` rather than an error status. The page renders a
   refusal, so a caller must be able to as well. The shape is deliberately
-  the complete `payload.data`, `federatedLogin` included, so the SSR
-  service D2-2 puts in front of it needs no contract bump;
-  `config.baseURL` is the only other render input and is that service's own
-  api url. `requestPath` is anchored on `/authorize` rather than on the
+  the complete `payload.data`, `federatedLogin` included, so the SSR service
+  in front of it needs no contract bump; `config.baseURL` is the only other
+  render input and is that service's own api url. It is what the auth
+  console service hydrates `/authorize` from, forwarding the browser's query
+  verbatim (`readAuthorizeInfo` in `apps/server-auth-console/src/payload.ts`).
+  `requestPath` is anchored on `/authorize` rather than on the
   route that was called, because the page renders it as the `redirect`
   parameter leading back to the page.
   The trimmed anonymous DTOs (`ClientSummary`, `RealmSummary`) moved from
@@ -792,169 +808,165 @@ into it):
   No escaping helper can defend against this, because the expansion
   happens after the value has been built: the auth console payload is
   serialized inside the bundle (`serializePayload` in
-  `apps/client-auth-console/src/window.ts`), the account console config by
+  `apps/client-auth-console/src/window.ts`), a static console's config by
   `serializeInlineScriptJSON`, and both produce a string that
   `String.prototype.replace` then re-interprets. The same rule covers the
-  account console's `<!--account-config-->` splice.
+  `<!--account-config-->` and `<!--admin-config-->` splices, and the helper
+  lives in `@authup/server-console-kit` precisely so it exists once rather
+  than once per service.
 - **Serving seam (plan 083)**: the Vue app ships as
-  `@authup/client-auth-console` (a server-core runtime dependency),
-  resolved via `resolveAuthConsolePackagePath`/`-DistPath`
-  (`adapters/http/ui/auth-console/resolve.ts`, the same locter `locateUpSync`
-  walk as the account console). Production reads the built dist
+  `@authup/client-auth-console`, a runtime dependency of the auth console
+  SERVICE, resolved via `resolveAuthConsolePackagePath`/`-DistPath`
+  (`apps/server-auth-console/src/resolve.ts`, the locter `locateUpSync`
+  ancestor walk anchored on that package's own root, so it works for the
+  workspace symlink and a published install alike). It reads the built dist
   (`dist/client/index.html` + `.vite/ssr-manifest.json`,
-  `dist/server/server.js` for `render()`; the `dist/client/assets` directory
-  alone is mounted at `/console/auth/assets`, i.e. `<AUTH_CONSOLE_SEGMENT>/assets`
-  with `AUTH_CONSOLE_SEGMENT = 'console/auth'` in `adapters/http/ui/constants.ts`,
-  the same `<segment>/assets` shape as the two static consoles; `/console/auth`
-  itself serves nothing, and neither `index.html` nor `.vite/` is reachable
-  over HTTP); JIT dev mode roots the embedded vite dev server at the
-  package SOURCE dir (the workspace symlink — vite auto-loads the
-  package's own `vite.config.ts`; a published install has no JIT). The
-  boundary is typed by the package's `src/contract.ts`
-  (`HydrationPayload`, `RenderContext`, `RenderFunction`) — server-core
+  `dist/server/server.js` for `render()`), memoizing all three for the
+  process lifetime, and mounts `dist/client/assets` at its own `/assets`;
+  neither `index.html` nor `.vite/` is reachable over HTTP. There is no
+  just-in-time branch any more: it was a vite dev server embedded in
+  server-core, and it left with the rendering (the `vite` dependency with
+  it). The boundary is typed by the package's `src/contract.ts`
+  (`HydrationPayload`, `RenderContext`, `RenderFunction`); the service
   imports those TYPES only, the runtime stays a dist-file `read()`.
-  Substituting a package that fulfills the contract is the supported way
-  to replace the hosted auth UI (the Keycloak login-theme analog). A
-  missing bundle 500s with an actionable message (build
-  `apps/client-auth-console` first).
-- **JIT dev mode caveats.** `ssr.noExternal: true` is scoped to
-  `command === 'build'` in the auth console's `vite.config.ts`: it is what
-  makes the published `dist/server/server.js` self-contained, but applying
-  it in dev inlines `vue/server-renderer`, which resolves to its CJS build
-  under the node condition and cannot be evaluated by the SSR module
-  runner (`exports is not defined` through `ssrLoadModule` and the ssr
-  environment runner alike). The key is omitted rather than set to
-  `false`, which rolldown rejects. The app's `resolve.alias` list must
-  also cover every `@authup/*` package it pulls in transitively, so dev
-  resolution reaches package source instead of a possibly unbuilt dist
-  (and so the bundle agrees with the root tsconfig paths `vue-tsc`
-  checks). The vite dev server is created once in
-  `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
-  (it owns a file watcher plus an HMR websocket; vite binds the websocket
-  itself on `*:24678`, so two dev instances on one machine collide there).
-- **The JIT gate and its entry point (#3382).** The gate,
-  `isCodeTransformation(JUST_IN_TIME)` from typeorm-extension, is a
-  two-line wrapper over locter's `isTsNodeRuntimeEnvironment() ||
-  isTsxRuntimeEnvironment()`: a loader heuristic, not a config key. It is
-  reached by exactly one script, `cli-dev` in `apps/server-core`
-  (`node --loader ts-node/esm src/cli/index.ts`), the command
-  `docs/src/guide/development/quick-start.md` documents. ts-node is the
-  only runner of the three tried that can transpile the ESM graph: tsx is
-  esbuild and emits no `design:type`, so it dies with
-  `ColumnTypeUndefinedError` on the first of the 219 type-less `@Column`s
-  before `--help` even prints; `@swc-node/register` boots but needs a
-  scratch shim and nothing detects it; the bare `ts-node src/cli/index.ts`
-  form (the one hub ships) installs only the CJS hook, so Node's native
-  strip-only type stripping takes the `.ts` files and dies on the first
-  legacy decorator. Detection needs locter >= 4.1.1, which is why
-  server-core's `locter` floor is `^4.1.1` and load-bearing: the marker
-  symbol (`process[Symbol.for('ts-node.register.instance')]`) is only set
-  by main-thread forms (the bare bin, `--require ts-node/register`), and
-  since Node 20 the ESM hooks run on their own loader thread, so before
-  tada5hi/locter#885 (issue #884) the `--loader` form left the gate dark
-  and `cli-dev` carried a `--require ts-node/register` whose only job was
-  setting that symbol. locter now also consults the module-loading options
-  in `process.execArgv` (values of `--require`/`-r`, `--import`,
-  `--loader`, `--experimental-loader` only, so a custom export condition
-  like `--conditions=ts-node` does not count). Because the
-  gate is implicit, `registerAssetsMiddleware` logs which branch serves the
-  auth console at boot; a dark gate is otherwise indistinguishable from a
-  working one, which is how the branch stayed broken through #3380. Under
-  vitest the gate is always false (no marker, no `tsx` in `execArgv`), so
-  the suite exercises the dist branch only and the JIT branch has no
-  automated coverage. Deriving the gate from `CODE_PATH` (src vs dist)
-  instead was rejected: under vitest `CODE_PATH` IS `<pkg>/src`, so every
-  `createTestApplication` suite would spawn a polling vite dev server and
-  `assets.spec.ts`'s dist assertions fail outright. An explicit config key
-  was rejected as ~40 lines across ten files for a switch that is
-  monorepo-only by construction (`vite` is a devDependency and a published
-  install carries no auth console source). Known shape differences of the
-  dev render: no `<link rel="stylesheet">` (CSS rides the module graph, so
-  expect a flash of unstyled content), two benign `[Vue warn]
-  onScopeDispose()` lines per render, and a ~12s type-checked boot
-  (transpile-only is blocked by TS 6's `baseUrl` deprecation until the
-  root tsconfig carries `ignoreDeprecations`). The `--loader` flag prints
-  an `ExperimentalWarning`; the `--import` + `module.register` form avoids
-  it and behaves identically. Under the
-  gate the mysql/postgres migrations glob also switches to
-  `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
-  (verified: `cli-dev -- migration run` applies all 17 postgres migrations
-  from `src/`); every documented migration workflow still runs from the
-  built CLI and CI pre-flights `dist/` for that reason. Both arms are
-  anchored on the package path (`SRC_PATH` / `DIST_PATH` from
-  `src/path.ts`), never on the cwd, so `migration run` finds the chain
-  from any directory. `transformFilePath` cannot do that job: it rewrites
-  the `src` segment only when the whole string carries no `dist`
-  substring, so a package installed under a path such as
-  `/srv/my-dist-app/node_modules/@authup/server-core` would silently keep
-  the `src/` glob and report "No migrations are pending".
-- **Feature flags** ride the hydration payload (`data.features`,
-  `StatusResponseFeatures` shape) — pages render the form when the
-  workflow is enabled, otherwise a localized "disabled" notice (no 404:
-  stale email links should not dead-end). The same flags are exposed
-  publicly on the root status endpoint `GET /`
-  (`StatusController` → `{ version, date, features: { registration,
-  passwordRecovery, emailVerification } }`, typed `StatusResponse` in
-  `@authup/core-http-kit`, consumed via `client.status.get()`).
+  Substituting a package that fulfills the contract is the supported way to
+  replace the hosted auth UI (the Keycloak login-theme analog), via
+  `server.authConsole.path`. A missing bundle 500s with an actionable
+  message (build `apps/client-auth-console` first).
+- **The service hydrates ANONYMOUSLY.** It holds no credential and asks
+  server-core only for what an unauthenticated visitor may see, which is the
+  whole of what these pages render: `/authorize` from `GET /authorize/info`,
+  the four workflow pages from `GET /` plus their own query, and `/logout`
+  from nothing at all, since that page drives the end-session call itself.
+  No loopback, no database, no session. That is what retired the SSR
+  self-call machinery server-core used to carry (see *The internal HTTP
+  client* below).
 - **Flow continuity**: workflow links carry a same-origin `redirect` query
-  param (the original `/authorize` path + query) so "back to login"
-  restores the authorize request. `sanitizeRelativeRedirect()` in
-  `adapters/http/request/helpers/redirect.ts` rejects absolute / protocol-relative URLs
+  param (the original `/authorize` path + query) so "back to login" restores
+  the authorize request. `sanitizeRelativeRedirect()` moved to
+  `apps/server-auth-console/src/redirect.ts` with the payload assembly it
+  guards, and still rejects absolute / protocol-relative URLs
   (open-redirect guard).
-- **Internal HTTP client (SSR self-calls)**: the render's API calls
-  (session hydration, identity-provider/scope fetches) go through the
-  client registered under `HTTPInjectionKey.UIHttpClient`.
-  `HTTPModule.setup` registers the production default —
-  `createInternalUIHttpClient` (`adapters/http/ui/auth-console/http-client.ts`),
-  a `@authup/core-http-kit` `Client` whose hapic `FetchTransport` rewrites
-  every request targeting `publicUrl` (origin + sub-path prefix, wildcard
-  listen hosts normalized to loopback) onto the server's own listen
-  address (`HTTPInjectionKey.Server` → `server.url`, resolved lazily per
-  request). So SSR self-calls never round-trip through the reverse proxy:
-  no TLS (a self-signed `publicUrl` cert would fail Node's fetch with
-  `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`), no dependency on the public
-  hostname resolving from inside the deployment. The rewrite is
-  transport-level ONLY — `baseURL` stays `publicUrl` because rendered
-  hrefs (e.g. identity-provider authorize links via `getAuthorizeUri`)
-  derive from it and hydration does not patch attribute mismatches. The
-  registration is `lifetime: 'transient'` (fresh client per render — the
-  kit's auth hook writes per-user state) and is skipped when the token is
-  already bound (test fakes win; see testing.md). Relatedly, the kit's
-  entity-collection manager catches its own load errors and emits
-  `failed` instead of rejecting — a failed SSR fetch renders the page
-  degraded rather than killing the process via an unhandled rejection.
-- **Sub-path deployment**: the SSR UI works behind a prefix-stripping
-  reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
-  extra config — the prefix is derived from `publicUrl`'s pathname
-  (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
-  `base: '/console/auth/'` (assets under `assets/`, vite's default
-  `assetsDir`, so an href reads `/console/auth/assets/<hash>.js`);
-  `renderAuthConsolePage` rebases emitted asset URLs onto the
-  prefix per request (`rebaseAssetURLs` in
-  `adapters/http/ui/shared/html.ts`, so the prebuilt dist stays
-  deployment-agnostic). Inside the UI app the same prefix feeds the
-  vue-router history base (`src/app.ts`) and the `useBasePath()`
-  composable (`src/base-path.ts`) that pages use for inter-page hrefs
-  and rendered `redirect` values — `redirect`/`requestPath` params stay
-  server-local (prefix-free); the prefix is applied only when a path is
-  rendered as an href. Server-side `Location` redirects are unaffected
-  (built from full `publicUrl`). A true subdomain (no pathname) yields an
-  empty prefix and identical behavior to before.
+- **Feature flags** ride the hydration payload (`data.features`,
+  `StatusResponseFeatures` shape): pages render the form when the workflow
+  is enabled, otherwise a localized "disabled" notice (no 404, since stale
+  email links should not dead-end). The same flags are exposed publicly on
+  the root status endpoint `GET /` (`StatusController` →
+  `{ version, date, features: { registration, passwordRecovery,
+  emailVerification } }`, typed `StatusResponse` in
+  `@authup/core-http-kit`, consumed via `client.status.get()`), which is
+  where the auth console service reads them from.
+- **Sub-path deployment**: a console service works behind a
+  prefix-stripping reverse proxy with no extra config. Its own public path
+  is the path component of `server.<name>Console.url`
+  (`getURLBasePath` in `@authup/kit`), which feeds the vue-router history
+  base, the `useBasePath()` composable (`src/base-path.ts`) that pages use
+  for inter-page hrefs and rendered `redirect` values, and the asset rebase
+  below. `redirect` / `requestPath` params stay server-local (prefix-free);
+  the prefix is applied only when a path is rendered as an href. Server-side
+  `Location` redirects are unaffected (built from full URLs). A true
+  subdomain (no pathname) yields an empty prefix.
+- **Asset rebasing is a REPLACE, not a prefix** (`rebaseAssetURLs(html,
+  viteBase, assetBasePath)` in `@authup/server-console-kit`). A bundle emits
+  every `src`/`href` against a FIXED vite base (`/console/auth/`,
+  `/console/admin/`, `/console/account/`) decided when it was built, which
+  says nothing about where the thing serving it is published. So the base is
+  replaced, and the caller says what with, because only the caller knows
+  where it mounted the assets: each service passes its own public path,
+  since it mounts the bundle's `assets/` at its own `/assets`. Prefixing
+  happens to work while the service is published at exactly that vite base,
+  which is the default, and breaks everywhere else: a console at `/login`
+  emitted `/login/console/auth/assets/...`, and once the proxy stripped
+  `/login` the request arrived as `/console/auth/assets/...`, which nothing
+  serves. The smoke runner's split scenario publishes each console at a
+  path-less url for exactly this reason, since a console served AT its vite
+  base looks identical either way.
 - **Kit form components** (`@authup/client-web-kit`,
   `src/components/workflows/`): `ALoginForm` (renamed from `ALogin`,
   deprecated alias kept; optional `registerLink` / `passwordForgotLink`
-  `LinkProperties` props rendered via `<VCLink>` — presence shows the
-  link), `ARegisterForm` (embeds `AActivateForm` when the register
-  response is inactive), `AActivateForm`, `APasswordForgotForm`,
-  `APasswordResetForm`. All pure: `injectHTTPClient()` +
-  `done`/`failed` emits, inline permissive validup/zod validators (server
-  is authoritative). `AAuthShell` (utility) provides the shared aurora
-  backdrop + theme-token card + compact logo mark used by all SSR auth
-  pages (it replaced the legacy hardcoded `#E8E8E8` card in
-  `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link, realm
-  grid) lives in `@authup/client-web-kit-theme`
+  `LinkProperties` props rendered via `<VCLink>`, presence shows the link),
+  `ARegisterForm` (embeds `AActivateForm` when the register response is
+  inactive), `AActivateForm`, `APasswordForgotForm`, `APasswordResetForm`.
+  All pure: `injectHTTPClient()` + `done`/`failed` emits, inline permissive
+  validup/zod validators (server is authoritative). `AAuthShell` (utility)
+  provides the shared aurora backdrop + theme-token card + compact logo mark
+  used by all SSR auth pages (it replaced the legacy hardcoded `#E8E8E8`
+  card in `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link,
+  realm grid) lives in `@authup/client-web-kit-theme`
   (`assets/css/styles/{auth,realm}.css`, behind `--authup-auth-*` /
-  `--authup-realm-*` tokens) — kit components ship no `<style>` blocks.
+  `--authup-realm-*` tokens); kit components ship no `<style>` blocks.
+
+#### The `cli-dev` JIT gate (#3382)
+
+The gate, `isCodeTransformation(JUST_IN_TIME)` from typeorm-extension, is
+a two-line wrapper over locter's `isTsNodeRuntimeEnvironment() ||
+isTsxRuntimeEnvironment()`: a loader heuristic, not a config key. Since
+the auth console left server-core it decides exactly one thing, the
+mysql/postgres MIGRATIONS glob. It is reached by exactly one script,
+`cli-dev` in `apps/server-core` (`node --loader ts-node/esm
+src/cli/index.ts`), the command
+`docs/src/guide/development/quick-start.md` documents. ts-node is the only
+runner of the three tried that can transpile the ESM graph: tsx is esbuild
+and emits no `design:type`, so it dies with `ColumnTypeUndefinedError` on
+the first of the 219 type-less `@Column`s before `--help` even prints;
+`@swc-node/register` boots but needs a scratch shim and nothing detects
+it; the bare `ts-node src/cli/index.ts` form (the one hub ships) installs
+only the CJS hook, so Node's native strip-only type stripping takes the
+`.ts` files and dies on the first legacy decorator. Detection needs locter
+>= 4.1.1, which is why server-core's `locter` floor is `^4.1.1` and
+load-bearing: the marker symbol
+(`process[Symbol.for('ts-node.register.instance')]`) is only set by
+main-thread forms (the bare bin, `--require ts-node/register`), and since
+Node 20 the ESM hooks run on their own loader thread, so before
+tada5hi/locter#885 (issue #884) the `--loader` form left the gate dark and
+`cli-dev` carried a `--require ts-node/register` whose only job was
+setting that symbol. locter now also consults the module-loading options
+in `process.execArgv` (values of `--require`/`-r`, `--import`, `--loader`,
+`--experimental-loader` only, so a custom export condition like
+`--conditions=ts-node` does not count). A dark gate is indistinguishable
+from a working one, which is how the branch it used to guard stayed broken
+through #3380; boot is ~12s type-checked (transpile-only is blocked by TS
+6's `baseUrl` deprecation until the root tsconfig carries
+`ignoreDeprecations`), and the `--loader` flag prints an
+`ExperimentalWarning` the `--import` + `module.register` form avoids while
+behaving identically. Under vitest the gate is always false (no marker, no
+`tsx` in `execArgv`), so the suite exercises the dist arm only. Under the
+gate the mysql/postgres migrations glob switches to
+`src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
+(verified: `cli-dev -- migration run` applies all 17 postgres migrations
+from `src/`); every documented migration workflow still runs from the
+built CLI and CI pre-flights `dist/` for that reason. Both arms are
+anchored on the package path (`SRC_PATH` / `DIST_PATH` from
+`src/path.ts`), never on the cwd, so `migration run` finds the chain from
+any directory. `transformFilePath` cannot do that job: it rewrites the
+`src` segment only when the whole string carries no `dist` substring, so a
+package installed under a path such as
+`/srv/my-dist-app/node_modules/@authup/server-core` would silently keep
+the `src/` glob and report "No migrations are pending".
+
+#### The internal HTTP client (loopback self-calls)
+
+server-core keeps one client for calls to its own API, registered under
+`HTTPInjectionKey.InternalHttpClient` (`createInternalHttpClient` in
+`adapters/http/internal-client/`, handed to routes per request by
+`registerInternalHttpClientMiddleware` under
+`INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`). It lost its UI name with the UI:
+it used to be `UIHttpClient` / `createInternalUIHttpClient`, feeding the SSR
+render's own API calls, and **its one consumer now is the console login's
+token exchange** (`ConsoleLogin.callback` redeeming the authorization code).
+
+Its hapic `FetchTransport` rewrites every request targeting `publicUrl`
+(origin plus sub-path prefix, wildcard listen hosts normalized to loopback)
+onto the server's own listen address (`HTTPInjectionKey.Server` ->
+`server.url`, resolved lazily per request), so a self-call never round-trips
+through the reverse proxy: no TLS (a self-signed `publicUrl` certificate
+would fail Node's fetch with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`) and no
+dependency on the public hostname resolving from inside the deployment. The
+rewrite is transport-level ONLY, `baseURL` stays `publicUrl`, which is what
+makes the replayed `redirect_uri` at `/token` compare equal (RFC 6749
+section 4.1.3 compares the raw stored string). The registration is
+`lifetime: 'transient'`, and a registration made BEFORE `HTTPModule.setup`
+wins, which is the test-fake seam (see testing.md).
 
 ### Thin Controller Pattern (HTTP Adapter)
 
@@ -1237,13 +1249,14 @@ Every realm auto-provisions two public OAuth2 clients (plan 079;
 name constants in `@authup/core-kit`):
 
 - **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
-  console (`apps/client-admin-console`, served by server-core at
-  `<publicUrl>/console/admin`, served since plan 081 and under `/console` since plan 099; its server-side login kick sends
-  `client_id=admin-console`, and a standalone-hosted dist can inject another
-  client name through `window.__AUTHUP__.clientId`).
+  console (`apps/client-admin-console`, served at `<publicUrl>/console/admin`
+  since plan 081, under `/console` since plan 099, and by
+  `@authup/server-admin-console` since plan 101 D2-3; its server-side login
+  kick sends `client_id=admin-console`, and a standalone-hosted dist can
+  inject another client name through `window.__AUTHUP__.clientId`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
-  self-service surface served by server-core at `<publicUrl>/console/account`
-  (plan 080; see *Account Console* below).
+  self-service surface served at `<publicUrl>/console/account` by
+  `@authup/server-account-console` (plan 080; see *Account Console* below).
 
 The former third definition — `web`, a shared auto-consenting client for
 downstream RPs — was REMOVED (plan 082): it was default-on attack surface
@@ -1377,51 +1390,55 @@ no new endpoint — the `/authorize` verifier already resolves clients via
 
 ### Account Console (`/console/account`, plan 080)
 
-End-user self-service, shipped as its own app workspace
-`apps/client-account-console` (`@authup/client-account-console`): a
-client-only Vite/Vue SPA — deliberately NO SSR, since auth-gated content
-cannot server-render (header-only auth) and the SSR ui app's pages render
-a spinner until mounted anyway. server-core depends on the package at
-RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
-choice"):
+End-user self-service, split across two workspaces: the BUNDLE
+`apps/client-account-console` (`@authup/client-account-console`), a
+client-only Vite/Vue SPA (deliberately NO SSR, since auth-gated content
+cannot server-render under header-only auth, and the SSR pages would render
+a spinner until mounted anyway), and the SERVICE
+`apps/server-account-console` (`@authup/server-account-console`), which
+depends on the bundle at RUNTIME and serves its built `dist/` ("embedded by
+default, relocatable by choice"). Since plan 101 D2-3 server-core serves
+neither: it keeps the two cookie-mode routes under the same segment and
+nothing else.
 
-- **Serving seam** (`adapters/http/ui/account-console/module.ts`, one
-  `defineStaticConsole` instance — the factory in
-  `adapters/http/ui/static-console/` that the admin console shares, see
-  *Admin Console* below): `AccountController` (`@DController('/console/account')`, the `ACCOUNT_CONSOLE_SEGMENT` constant, `''` +
-  `'/:page'` — client-side routing owns sub-paths, every route returns the
-  same shell) calls
-  `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
-  which resolves the package via locter's
+- **Serving seam** (`apps/server-account-console/src/handler.ts`, one
+  `defineStaticConsole` instance from `@authup/server-console-kit`, which
+  the admin console service instantiates the same way): the handler declares
+  `''` + `'/*page'` (client-side routing owns sub-paths, every route returns
+  the same shell) and calls `staticConsole.serve(event, { basePath,
+  assetBasePath, theme, config })`. The instance resolves the package via
+  locter's
   `locateUpSync('node_modules/@authup/client-account-console/package.json',
-  { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
-  server-core's package root (works for the workspace symlink AND a
-  published install; only positive resolution is cached), injects the
-  runtime config by replacing the
-  `<!--account-config-->` marker in the built index.html
-  (`window.__AUTHUP__ = { apiUrl, basePath, features, ref }`: the shared
-  authup window global, escaped
-  like every inline script payload; `ref` is the server-validated back-link
-  origin, see below), stamps lang/color-mode html attrs from
-  the shared cookies (no FOUC), rebases the fixed `/console/account/` vite-base
-  asset hrefs when publicUrl carries a sub-path, and sets the same security
-  headers as `renderAuthConsolePage`. Static assets ride the assets middleware
-  (`/console/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
-  bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
-  actionable message (build `apps/client-account-console` first).
-- **Runtime config contract** (`src/config.ts`): a standalone host serves
-  the same dist under a base of its choice (`/console/account` by default) on its own origin and injects
-  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+ optional
-  `basePath` and an already-validated `ref` of its own, since only
-  server-core's serving path runs the trusted-origin check below); with
-  nothing injected the app derives the API URL same-origin from its base
-  path. Standalone hosting additionally needs the origin registered in
-  `TRUSTED_ORIGINS` (drives the `account-console` client's
-  redirect/post-logout allowlists). The CLI never starts it: no
-  binary, no process.
+  { cwd: PACKAGE_PATH })`, the node_modules ancestor walk from the SERVICE's
+  package root (works for the workspace symlink and a published install;
+  only a positive resolution is cached, so a dev building the bundle after
+  boot is picked up on the next request), reads the shell per request,
+  injects the runtime config by replacing the `<!--account-config-->` marker
+  (`window.__AUTHUP__ = { apiUrl, basePath, features, cookieSession, ref }`:
+  the shared authup window global, escaped like every inline script
+  payload), stamps lang/color-mode html attrs from the shared cookies (no
+  FOUC), rebases the fixed `/console/account/` vite base onto this service's
+  own path, applies the operator theme and sets the console security
+  headers. The bundle's `assets/` is mounted at the service's own `/assets`
+  (`immutable`, one year: every name carries a content hash, so a new build
+  means new names), and an asset request that reaches the wildcard shell
+  route is answered 404 rather than 200 HTML, since a module script served
+  as a document is a blank console with no error anywhere. A missing bundle
+  500s with an actionable message (build `apps/client-account-console`
+  first).
+- **Runtime config contract** (`src/config.ts` in the bundle): a standalone
+  host serves the same dist under a base of its choice on its own origin and
+  injects `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (plus
+  an optional `basePath` and an already-validated `ref` of its own, since
+  only a serving path that knows the trusted origins can run the check
+  below); with nothing injected the app derives the API URL same-origin from
+  its base path. Standalone hosting additionally needs the origin registered
+  in `TRUSTED_ORIGINS` (which drives the `account-console` client's
+  redirect/post-logout allowlists).
 - **`ref` back link:** an optional `ref` query parameter names the
-  application the visitor came from. `serveAccountConsolePage` validates
-  it against `getAppOrigins(config)` (each origin as an `<origin>/**`
+  application the visitor came from. The service validates
+  it against its own origin plus every `trustedOrigins` entry
+  (`buildAppOrigins`, mirroring server-core's `getAppOrigins`; each origin as an `<origin>/**`
   `isSimpleMatch` pattern, the same shape as the client redirect
   allowlist, after canonicalizing through `URL` so a case-differing host
   still matches) and injects the survivor into `window.__AUTHUP__.ref`;
@@ -1462,16 +1479,24 @@ choice"):
   cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
   root deployments; the two consoles still share one session because both
   scope to the same base path.
-- **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
-  default `true`): rides `StatusResponseFeatures.accountConsole`
-  (`buildUIFeatures` → status endpoint + the injected config); disabled →
-  the shell renders `AWorkflowDisabledNotice` client-side (no 404). Since
-  plan 099 the flag gates the sign-in routes too: `GET /console/account/login`
-  and `/callback` answer the shell with the notice instead of minting a
-  pending login and a session secret, the rule `AdminController` already
-  followed. Before, a disabled account console still did both on a direct
-  hit, and once the flags carve replica sets (below) a flag-off API replica
-  must not answer a console's login at all.
+- **Feature flag `accountConsoleEnabled`** (`server.accountConsole.enabled`,
+  env `ACCOUNT_CONSOLE_ENABLED`, default `true`) is read by BOTH sides,
+  because they answer different questions with it and neither can ask the
+  other. The console service injects it as
+  `window.__AUTHUP__.features.accountConsole`, since the service serving a
+  console is the authority on whether it is serving it, and the shell then
+  renders `AWorkflowDisabledNotice` client-side. server-core reads it to
+  gate the two cookie-mode routes: `GET /console/account/login/start` and
+  `/callback` answer **404** rather than minting a pending login and a
+  session secret for a console nothing is serving. The 404 is the D2-3
+  change (they used to answer the shell with the notice, which server-core
+  no longer has to answer with), and it is right in its own terms: on a
+  deployment that turned the console off, the route genuinely does not
+  exist. server-core still publishes the flag on `GET /`
+  (`buildUIFeatures` → `StatusResponseFeatures.accountConsole`), so a
+  reader can tell what the deployment intends. The flag is one declaration
+  in `@authup/server-config`, read by the console service and by server-core
+  alike.
 - **Login = full auth-code + PKCE against the per-realm `account-console`
   client** (Keycloak model — per-app attribution + access-policy
   enforceability), NOT bare reuse of the lingering kit-store session.
@@ -1563,23 +1588,31 @@ choice"):
   `store.logout()`, round-trip through `/logout` with `id_token_hint`,
   `post_logout_redirect_uri` back to the base path.
 - **No actor-scoped state in the response**: the shell is static; the
-  payload carries only operator-level config (`apiUrl`/`basePath`/
-  `features`) plus the server-validated `ref` echo, which is
-  request input the server already checked, not actor data. Nothing
-  actor-scoped can leak into a (potentially cached) response, pinned in
-  `account-pages.spec.ts`.
-- **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
-  it is packed in the CLI's `test:smoke:packed` workspace list so the
-  packed server-core install resolves it from the tarball.
+  payload carries only operator-level config (`apiUrl` / `basePath` /
+  `features` / `cookieSession`) plus the server-validated `ref` echo, which
+  is request input the service already checked, not actor data. Nothing
+  actor-scoped can leak into a (potentially cached) response. The service
+  has no actor to leak in the first place, since it holds no credential and
+  reads no database; its `test/unit/handler.spec.ts` pins the shell, the
+  injected config, the `ref` verdicts and the asset 404.
+- **Packaging:** the bundle package ships `dist/` only (`prepublishOnly`
+  builds). Both it and its SERVICE are in the CLI's `test:smoke:packed`
+  workspace list, since the CLI depends on the service and the service
+  resolves the bundle at runtime; without both tarballs a packed install
+  reaches for the registry.
 - **Link surface:** `<publicUrl>/console/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 
 #### Console session credential (cookie mode, plan 088 Stage 1)
 
-A console served from the API's own origin holds **no OAuth2 token in
+A console served on the API's own ORIGIN holds **no OAuth2 token in
 JavaScript at all**. It presents an opaque, `HttpOnly` credential naming its
 `auth_sessions` row, and every token the login produced dies inside the
-request that redeemed it. This is the BFF / token-handler pattern and the
+request that redeemed it. Origin, not process: since plan 101 D2-3 the
+console's pages come from their own service, and cookie mode is unaffected
+because `isSameOriginRequest` compares against `publicUrl` and the cookie's
+path is the deployment base path. Both are identical across processes behind
+one origin, which is what makes the split topology work with no code. This is the BFF / token-handler pattern and the
 shape Authentik uses (its browser session is an opaque Django cookie; OAuth2
 tokens exist for downstream applications, not for its own UI). It buys three
 things a JS-held JWT cannot: an XSS cannot walk off with a portable bearer
@@ -1659,12 +1692,23 @@ rather than trusted until `exp`.
   No deny-list can close that, because the console needs entity CRUD to
   function. Do not restate the wider claim in docs or release notes. The
   revocation and header-weight benefits are unaffected and unqualified.
-- **Four routes, all declared before `@DGet('/:page')`** (which matches any
-  single segment and would swallow them), on `AccountController`:
-  `GET /console/account/login` mints PKCE + `state`, parks them behind a 5-minute
-  `SameSite=Lax` login cookie (Lax, not Strict: the return leg may traverse
-  an external IdP chain) and 302s to `/authorize`; `GET /console/account/callback`
-  redeems the code and hands back the session cookie;
+- **Four routes, and only two of them are still on server-core.**
+  `GET /console/account/login/start` mints PKCE + `state`, parks them behind
+  a 5-minute `SameSite=Lax` login cookie (Lax, not Strict: the return leg may
+  traverse an external IdP chain) and 302s to `/authorize`;
+  `GET /console/account/callback` redeems the code and hands back the session
+  cookie. **They stay on the API deliberately** (plan 101 invariant 3): they
+  are sessions, keys and cache, and the pending-login cookie has to be issued
+  on the origin that reads it back. So a split deployment routes those two
+  exact paths to the API set and the rest of the console's segment to the
+  console set. The kick has a path of its own since 098 C1: one URL used to
+  mean two things, discriminated by whether a `realmId` was present (with one
+  the server-side kick, without one the console's own login PAGE), and the
+  page is served by the console service now, so the kick can no longer fall
+  back to it. `buildConsoleLoginURL` in `@authup/client-web-kit` builds it,
+  so a console dist older than its server keeps hitting the retired path:
+  rebuild the consoles, which the same release ships anyway. The remaining
+  two are ordinary API routes:
   `GET /sessions/@me/introspect` is what the console hydrates from and
   `DELETE /sessions/@me` is what it signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
   Without it an attacker who plants their own login cookie in the victim's
@@ -1713,22 +1757,23 @@ rather than trusted until `exp`.
   cross-origin callers are unaffected; no authup consumer sets
   `credentials: 'include'`.
 - **Wiring.** `cookieSession` needs TWO conditions, because they are different
-  facts and each alone is wrong. `serveAccountConsolePage` injects it as a
-  **capability** assertion — this server implements
-  `/console/account/login|callback|session` — which a console dist cannot determine for
-  itself: newer than its server, it would navigate to a `/console/account/login` that
-  does not exist, and a 404 on a top-level navigation is unrecoverable.
-  `resolveAccountConsoleConfig` then ANDs it with **applicability**,
-  `isSameOriginApiUrl(apiUrl, origin)`: the credential is `SameSite=Strict` and
-  the server also demands `Sec-Fetch-Site: same-origin`, so against a foreign
-  API every request is cross-site and refused. The injected flag alone made
-  that pairing representable and silently fatal (the kick redirects, the cookie
-  lands on the API's origin, the console loops back to sign-in with no
-  diagnostic); the derivation alone dropped the capability signal. Together
-  they are exactly the condition under which `${apiUrl}/console/account/login` is both
-  a real route and a usable one, which is what makes the kick in
-  `pages/index.vue` sound rather than conventional. It is never an operator
-  choice: there is no config key behind the injection. The resolved value
+  facts and each alone is wrong. The console SERVICE injects it as a
+  **capability** assertion (this deployment implements the cookie-mode
+  routes), which a console dist cannot determine for itself: newer than its
+  server, it would navigate to a `/console/account/login/start` that does not
+  exist, and a 404 on a top-level navigation is unrecoverable.
+  `resolveAccountConsoleConfig` in the BUNDLE then ANDs it with
+  **applicability**, `isSameOriginApiUrl(apiUrl, origin)`: the credential is
+  `SameSite=Strict` and the server also demands
+  `Sec-Fetch-Site: same-origin`, so against a foreign API every request is
+  cross-site and refused. The injected flag alone made that pairing
+  representable and silently fatal (the kick redirects, the cookie lands on
+  the API's origin, the console loops back to sign-in with no diagnostic);
+  the derivation alone dropped the capability signal. Together they are
+  exactly the condition under which the kick URL is both a real route and a
+  usable one, which is what makes the kick in `pages/index.vue` sound rather
+  than conventional. It is never an operator choice: there is no config key
+  behind the injection. The resolved value
   reaches BOTH the kit's `installStore` and its store factory. In `installStore` it skips the `readCookies()` seeding of
   the four token cookies, and **seeding nothing is the whole fix**: the
   hosted login writes them at path `/` on this same origin, so a seeded
@@ -1773,60 +1818,77 @@ rather than trusted until `exp`.
 ### Admin Console (`/console/admin`, plan 081)
 
 The admin console (`apps/client-admin-console`, `@authup/client-admin-console`)
-left Nuxt on 2026-08-25 and is the second static console server-core serves,
-in the account-console shape: a dist-only Vite/Vue SPA, `src/config.ts`
-resolving `window.__AUTHUP__` (`apiUrl`, `basePath` default `/console/admin`,
-`clientId` default `admin-console`, `cookieSession`, `features`) with the
-same capability-AND-applicability rule for cookie mode, `src/main.ts` the
-same bootstrap. What differs from the account console, and why:
+left Nuxt on 2026-08-25 and is the second static console, served since plan
+101 D2-3 by `@authup/server-admin-console` in the account-console shape: a
+dist-only Vite/Vue SPA, `src/config.ts` resolving `window.__AUTHUP__`
+(`apiUrl`, `basePath` default `/console/admin`, `clientId` default
+`admin-console`, `cookieSession`, `features`) with the same
+capability-AND-applicability rule for cookie mode, `src/main.ts` the same
+bootstrap. What differs from the account console, and why:
 
 - **The serving seam is one factory for both.** `defineStaticConsole({
-  packageName, marker, viteBase })` (`adapters/http/ui/static-console/`)
-  returns `{ packageName, marker, setPackagePath, resolveDistPath, serve }`
-  with a PER-INSTANCE dist/html cache: the account module used module-level
-  slots, and a second console sharing them would serve one bundle's shell
-  for the other. `serve(event, { baseURL, config })` takes the already-built
-  config object, so what a console injects stays its own business (the
-  account console's request-reflected `ref`). `bindConsolePackages` reads
-  the marker off the console object (`assertStaticConsoleContract`), so the
-  serving side and the boot-time assert cannot drift. It imports
-  `useRequestTheme` from the middleware FILE, not the barrel: the barrel
-  reaches `assets.ts`, which imports the console modules, which call the
-  factory at load time, and through the barrel that cycle leaves the
-  function undefined.
+  packageName, marker, viteBase, cwd, distPath? })`
+  (`@authup/server-console-kit`) returns
+  `{ packageName, marker, viteBase, resolveDistPath, serve }`, and EVERY
+  piece of state it holds is instance-scoped: the account module used
+  module-level slots, and a second console sharing them would serve one
+  bundle's shell for the other. That is also why the substituted package
+  path and the resolution anchor are definition FIELDS rather than a
+  `setPackagePath` mutator (098 C4): two handlers in one process must never
+  share a resolution. `serve(event, { basePath, assetBasePath, theme,
+  config })` takes the already-built config object, so what a console
+  injects stays its own business (the account console's request-reflected
+  `ref`), and takes the theme provider rather than reaching into a request
+  store for one, so the kit knows nothing about where a caller keeps its
+  theme. The shell is read per request: a few kilobytes per full document
+  load, which is what the retired just-in-time re-read bought at the price
+  of a typeorm-extension dependency inside a page-serving package.
 - **The login is one class for both.** `ConsoleLogin`
-  (`adapters/http/controllers/workflows/console-login/`) is the plan-088
-  kick + redemption lifted out of `AccountController`, parameterized by
-  `{ clientName, segment, refusalPath? }`: the login cookie is path-scoped
-  to `<base>/<segment>` (so two consoles keep separate logins in flight),
-  the callback URL and the landing URL derive from the segment, and a
-  refusal lands on `refusalPath` relative to the console root. The admin
-  console sets `refusalPath: 'login'`: its root is a logged-in page whose
-  guard would bounce to `/login` and drop the `?error=` marker on the way,
-  so `/console/admin/login?error=access_denied` is where the notice renders.
+  (`adapters/http/controllers/workflows/console-login/` in server-core, which
+  is where the two cookie-mode routes stayed) is the plan-088 kick +
+  redemption lifted out of `AccountController`, parameterized by
+  `{ clientName, segment, consoleUrl, refusalPath? }`: the login cookie is
+  path-scoped to `<base>/<segment>` (so two consoles keep separate logins in
+  flight) and the callback URL derives from the segment, both on the API's
+  own origin whatever the console url says, while the LANDING and REFUSAL
+  targets derive from `consoleUrl` (`server.<name>Console.url`), because the
+  console may be published at a path of its own and deriving it from
+  `publicUrl` would then send the browser nowhere. Only the url's path is
+  used: a console on a FOREIGN origin could never present the
+  `SameSite=Strict` credential this flow issues. The admin console sets
+  `refusalPath: 'login'`: its root is a logged-in page whose guard would
+  bounce to `/login` and drop the `?error=` marker on the way, so
+  `/console/admin/login?error=access_denied` is where the notice renders.
   `AccountController` and `AdminController` (`@DController('/console/admin')`)
-  both delegate; the `console-session.spec.ts` matrix runs over both.
+  both delegate; the `console-session.spec.ts` matrix runs over both, and its
+  "console shell" block asserts server-core answers 404 for every console
+  page, so a regression that re-added serving here would show up as both
+  sides serving it with whichever mounted first winning silently.
 - **The shell route is a wildcard.** The console's routes nest
-  (`/users/<id>/roles`), so `AdminController` declares `''` + `'/*page'`
-  (path-to-regexp v8 syntax; routup compiles it) where the account
-  controller's `/:page` matches one segment. `GET /console/admin/login` does double
-  duty on purpose: with a `realmId` it is the server-side kick, without one
-  it is the SPA's own login page (where the guard sends a signed-out visitor
-  and where a refused callback lands with its `?error=` marker; answering
-  that with the kick's "a realm is required" made every refusal a raw 400).
+  (`/users/<id>/roles`), so the admin console SERVICE declares `''` +
+  `'/*page'` (path-to-regexp v8 syntax; routup compiles it). The account
+  console service spells it the same way, though its routes are flat today.
   The segment is spelled ONCE, `ADMIN_CONSOLE_SEGMENT`
-  (`adapters/http/ui/constants.ts`, next to `ACCOUNT_CONSOLE_SEGMENT` and `AUTH_CONSOLE_SEGMENT`; the three mounts share the `/console` prefix by spelling, there is deliberately no prefix constant, plan 099): the controller mount, the
-  login cookie scope, the callback URL, the asset mount and the vite base
-  all derive from it. Assets are served `immutable` for a year (every name
-  carries a content hash; a new build means new names), for both static
+  (`adapters/http/constants.ts`, next to `ACCOUNT_CONSOLE_SEGMENT` and
+  `AUTH_CONSOLE_SEGMENT`; the three mounts share the `/console` prefix by
+  spelling, there is deliberately no prefix constant, plan 099): the
+  controller mount, the login cookie scope and the callback URL all derive
+  from it, and the console service's own base path plus vite base are the
+  same literal on its side. Assets are served `immutable` for a year (every
+  name carries a content hash; a new build means new names), for both static
   consoles. Config keys mirror the account console: `adminConsoleEnabled`
-  (`ADMIN_CONSOLE_ENABLED`, rides `StatusResponseFeatures.adminConsole`; off
-  means off on the SERVER too, the kick and the callback answer the shell
-  with the disabled notice instead of minting a pending login) and
-  `adminConsolePath` (`ADMIN_CONSOLE_PATH`, marker `<!--admin-config-->`,
-  and `bindConsolePackages` additionally requires the shell to reference
-  `/console/admin/assets/`, since a package built for another vite base serves and
-  then 404s every asset with no error anywhere).
+  (`server.adminConsole.enabled`, `ADMIN_CONSOLE_ENABLED`, declared in the
+  service's registry AND server-core's, riding
+  `StatusResponseFeatures.adminConsole` on the status endpoint; off means off
+  on the SERVER too, where the kick and the callback answer 404) and
+  `adminConsolePath` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
+  substituted-package seam), plus `server.adminConsole.url` and the listen
+  address `server.adminConsole.port` / `.host`. The marker
+  (`<!--admin-config-->`) and the vite base (`/console/admin/`) are constants
+  in the service, and they must agree with the bundle: a package built for
+  another vite base serves its shell and then 404s every asset with no error
+  anywhere, which is what the smoke runner's "follow the first script the
+  shell references" assertion catches.
 - **Route meta replaces `definePageMeta`.** `src/router.ts` is an explicit
   table (one lazy import per page, the `pages/` tree unchanged under
   `src/pages/`) carrying the former page meta as route `meta`
@@ -1862,24 +1924,26 @@ same bootstrap. What differs from the account console, and why:
   pages keep their `async setup()` (Nuxt wrapped every page in one). The
   bundle's runtime asset URLs (a lazy chunk's stylesheet, the fonts a
   stylesheet references) are chunk-relative via vite's `renderBuiltUrl` for
-  the `js` and `css` host types, because server-core rebases hrefs in
-  `index.html` only; `admin-pages.spec.ts` refuses the `/console/admin/` literal
-  in every built js/css file. Their record fetch is a
+  the `js` and `css` host types, because the serving side rebases hrefs in
+  `index.html` only. Their record fetch is a
   plain `ref(await ...)` in a try/catch that `router.replace`s back to the
   collection on failure, with `v-if="entity"` on the page root; nested
   `<RouterView :entity>` forwards attrs and listeners exactly as
   `<NuxtPage>` did. There is no SSR and no hydration handoff any more: the
   console renders like Keycloak's and Authentik's (spinner, then rows).
-- **What is gone with the process.** The `authup-admin-console` bin, the
-  nitro `.output`, `postbuild.mjs`, `@vuecs/nuxt` (color mode is the kit's
-  `createColorMode()`, locale `installLocale` over `createCookieRef`), and
-  every `NUXT_PUBLIC_*` / `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable
-  (no successor: runtime config is injected by the serving side). The
-  `authup` CLI runs server-core only; a `client.admin-console` selector is
-  refused and a `client.admin-console` config section is not read;
-  `entrypoint.sh client/admin-console` exits 1 with a notice.
-  `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration for
-  downstream apps (hub), which keep their own origin and the JS-token store.
+- **What is gone with the Nuxt process.** The nitro `.output`,
+  `postbuild.mjs`, `@vuecs/nuxt` (color mode is the kit's `createColorMode()`,
+  locale `installLocale` over `createCookieRef`), and every `NUXT_PUBLIC_*` /
+  `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable (no successor: runtime
+  config is injected by the serving side). A `client.admin-console` selector
+  is refused and a `client.admin-console` config section is not read;
+  `entrypoint.sh client/admin-console` exits 1 with a notice. The
+  `authup-admin-console` NAME came back in plan 101 D2-3, but as the bin of
+  the SERVICE (`apps/server-admin-console`), which serves the dist rather
+  than being a Nuxt server; `authup console admin` is the supported route to
+  it. `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration
+  for downstream apps (hub), which keep their own origin and the JS-token
+  store.
 
 ### File Structure
 
@@ -1890,6 +1954,55 @@ same bootstrap. What differs from the account console, and why:
   actor/types.ts                    — ActorContext type definition
   actor/index.ts                    — barrel export
   index.ts                          — barrel export
+
+@authup/server-console-kit (packages/server-console-kit/src/)
+  html.ts                           — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
+                                      applyUIPageHeaders (content-type + Vary + CSP frame-ancestors + XFO +
+                                      referrer + no-store), rebaseAssetURLs(html, viteBase, assetBasePath),
+                                      serializeInlineScriptJSON, replaceTemplateMarker (the ONLY way to splice a
+                                      value into a page template), injectHeadContent (splice before </head>),
+                                      stampDocumentTitle
+  static-console.ts                 — defineStaticConsole({ packageName, marker, viteBase, cwd, distPath? }):
+                                      the per-console serving closure (instance-scoped resolution + no shared
+                                      state; marker splice, attr stamping, asset rebase, theme, headers)
+  constants.ts                      — LOCALE_COOKIE / COLOR_MODE_COOKIE, the two cookies every console shares
+  types.ts                          — StaticConsole{,Definition,ServeOptions}, UIClientPreferences and the
+                                      structural ConsoleLogger (declared here, never imported from server-kit)
+  theme/contract/                   — what a theme IS: PORTABLE, no node/http imports (only validup+zod+errors),
+                                      so a browser theme editor or a CLI validator can share it verbatim
+    contract/constants.ts           — on-disk layout, manifest version, token grammar, asset kinds (the
+                                      extension allowlist is DERIVED from the content-type map), logo tokens
+    contract/types.ts               — ThemeManifest
+    contract/manifest.ts            — ThemeManifestValidator (validup + zod, like ConfigValidator) +
+                                      parseThemeManifest (async; rejects unknown keys explicitly, since
+                                      validup STRIPS them)
+    contract/head.ts                — buildThemeHead (token block + favicon/stylesheet links + fragment)
+    contract/utils.ts               — themeAssetExtension (hand-rolled so contract/ needs no node:path)
+  theme/module.ts                   — ThemeProvider: manifest load via locter, mtime revalidation, memoized head
+  theme/apply.ts                    — applyTheme (provider -> served document; outside contract/ because it
+                                      takes a filesystem-backed provider)
+  theme/assets.ts                   — createThemeAssetsHandler (hand-written, realpath-per-request)
+  theme/constants.ts                — SERVING only: revalidate interval, asset CSP
+
+apps/server-{admin,account}-console/src/   — one static console service each, same shape
+  config.ts                         — the registry (<Name>CONSOLE_CONFIG_SCHEMA) + resolve<Name>ConsoleConfig
+                                      (authup.yml namespace -> the service's own vocabulary) +
+                                      read<Name>ConsoleConfigFromEnv (the bin's own read)
+  constants.ts                      — vite base, default base path, package name, config marker, health path
+  handler.ts                        — create<Name>ConsoleHandler: the mountable App (theme, assets, shell routes)
+  server.ts / bin.ts                — the standalone listener and its entry point
+  types.ts                          — <Name>ConsoleConfigInput (the config NAMESPACE) + <Name>ConsoleConfig
+
+apps/server-auth-console/src/       — the SSR console service
+  config.ts / constants.ts / types.ts — as above, plus the page list
+  handler.ts                        — createAuthConsoleHandler: theme, assets, one route per rendered page
+  render.ts                         — renderAuthConsolePage(event, config, { url, data, theme }): template,
+                                      manifest and render entry memoized for the process lifetime
+  payload.ts                        — the anonymous hydration reads (authorize info, status features) + the
+                                      workflow-page payload assembly
+  resolve.ts                        — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of
+                                      @authup/client-auth-console, anchored on this package)
+  redirect.ts                       — sanitizeRelativeRedirect (open-redirect guard on the `redirect` param)
 
 apps/server-core/src/core/entities/
   {entity}/types.ts                 — I{Entity}Repository, I{Entity}Service interfaces
@@ -1930,55 +2043,29 @@ adapters/http/controllers/entities/
   {entity}/index.ts                 — exports module.ts only
 
 adapters/http/controllers/workflows/
-  register/module.ts                — RegisterController → IRegistrationService (POST API + GET serves SSR page)
-  activate/module.ts                — ActivateController → IRegistrationService (POST API + GET serves SSR page)
-  password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST API + GET serves SSR page)
-  password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
+  register/module.ts                — RegisterController → IRegistrationService (POST API + GET hops to the console)
+  activate/module.ts                — ActivateController → IRegistrationService (POST API + GET hops to the console)
+  password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST + GET as above)
+  password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST + GET as above)
+  auth-console.ts                   — redirectToAuthConsole(event, authConsoleUrl, page, params?): the ONE hop
+                                      every hosted page GET takes, re-carrying the request's own query
   status/module.ts                  — StatusController (GET / → version + feature flags)
-  account/module.ts                 — AccountController: serves the account console SPA shell and declares
-                                      its login routes, GET /console/account/login (kick) + /callback (redemption)
-  admin/module.ts                   — AdminController: the same for the admin console at /console/admin (plan 081),
-                                      with a wildcard shell route for the console's nested routes
+  account/module.ts                 — AccountController: the account console's two cookie-mode routes,
+                                      GET /console/account/login/start (kick) + /callback (redemption). It serves
+                                      no page: @authup/server-account-console does
+  admin/module.ts                   — AdminController: the same two routes for /console/admin (plan 081)
   console-login/module.ts           — ConsoleLogin: the plan-088 kick + redemption both controllers delegate
-                                      to, parameterized by client name, path segment and refusal path
+                                      to, parameterized by client name, path segment, console url and refusal path
 
-adapters/http/ui/                   — one folder per served console + shared serving helpers
-  constants.ts                      - ADMIN_CONSOLE_SEGMENT (console/admin), ACCOUNT_CONSOLE_SEGMENT (console/account) and
-                                      AUTH_CONSOLE_SEGMENT (console/auth, under which only <segment>/assets is mounted):
-                                      every console mount, the login cookie scopes, the callback URLs and the asset
-                                      mounts read these (plan 099)
-  shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
-                                      applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
-                                      rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
-                                      replaceTemplateMarker (the ONLY way to splice a value into a page template),
-                                      injectHeadContent (splice before </head>), stampDocumentTitle
-  console-packages/module.ts        — bindConsolePackages: binds authConsolePath/accountConsolePath and asserts
-                                      the render contract of a SUBSTITUTED package at boot (see Console Theming)
-  auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
-  auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
-  auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
-  auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
-  static-console/module.ts          — defineStaticConsole({ packageName, marker, viteBase }): the per-console
-                                      serving closure (own dist/html cache; marker splice, attr stamping, asset
-                                      rebase, theme, headers) both static consoles are built on
-  account-console/module.ts         — accountConsole instance + serveAccountConsolePage (adds the validated ref)
-  admin-console/module.ts           — adminConsole instance + serveAdminConsolePage
-  theme/contract/                   — what a theme IS: PORTABLE, no node/http imports (only validup+zod+errors),
-                                      so a browser theme editor or a CLI validator can share it verbatim. This
-                                      folder is the extraction boundary for the planned @authup/theme-kit.
-    contract/constants.ts           — on-disk layout, manifest version, token grammar, asset kinds (the
-                                      extension allowlist is DERIVED from the content-type map), logo tokens
-    contract/types.ts               — ThemeManifest
-    contract/manifest.ts            — ThemeManifestValidator (validup + zod, like ConfigValidator) +
-                                      parseThemeManifest (async; rejects unknown keys explicitly, since
-                                      validup STRIPS them)
-    contract/head.ts                — buildThemeHead (token block + favicon/stylesheet links + fragment)
-    contract/utils.ts               — themeAssetExtension (hand-rolled so contract/ needs no node:path)
-  theme/module.ts                   — ThemeProvider: manifest load via locter, mtime revalidation, memoized head
-  theme/apply.ts                    — applyTheme (provider -> served document; outside contract/ because it
-                                      takes a filesystem-backed provider)
-  theme/assets.ts                   — createThemeAssetsHandler (/theme; hand-written, realpath-per-request)
-  theme/constants.ts                — SERVING only: revalidate interval, asset CSP
+adapters/http/constants.ts          — ADMIN_CONSOLE_SEGMENT (console/admin), ACCOUNT_CONSOLE_SEGMENT (console/account)
+                                      and AUTH_CONSOLE_SEGMENT (console/auth): the controller mounts, the login
+                                      cookie scopes and the callback URLs read these (plan 099). server-core mounts
+                                      no console assets any more, so nothing here serves a file
+
+adapters/http/internal-client/      — the loopback client for calls to this server's own API
+  module.ts                         — createInternalHttpClient + createPublicToInternalURLRewriter (transport-level
+                                      rewrite onto the own listen address; baseURL stays publicUrl)
+  types.ts                          — InternalHttpClientContext { publicURL, internalURL }
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
@@ -1992,6 +2079,8 @@ adapters/http/middleware/built-in/
   authorization/module.ts           — AuthorizationMiddleware (bearer / Basic, plus the console session
                                       cookie branch; the header always wins)
   authorization/issuance.ts         — isOAuth2IssuancePath: the routes a cookie credential may NEVER reach
+  internal-http-client.ts           — registerInternalHttpClientMiddleware + INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY
+                                      (per-request handoff of the loopback client factory)
 
 app/modules/http/modules/
   controller.ts                     — Factory methods: creates repositories, services, and controllers
@@ -2021,11 +2110,18 @@ field is the detection hook. What is NOT up for change is the trust
 boundary below and the `--authup-*` token names (those belong to the theme
 packages).
 
-Operator rebranding of BOTH served consoles from one mounted directory
-(`adapters/http/ui/theme/`), with no image build and no rebuild. Config
-`themeDirectoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off, resolved
-against `rootPath`); a missing directory creates no provider, registers no
-middleware, and leaves both pages byte-identical.
+Operator rebranding of EVERY served console from one mounted directory, with
+no image build and no rebuild. The mechanism lives in
+`@authup/server-console-kit` (`src/theme/`) and each console SERVICE creates
+its own provider at boot; server-core carries no theme at all since plan 101
+D2-3, and the request-scoped provider handoff it used went with the serving.
+Config `theme.directoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off) is
+declared by all three console registries and resolved against server-core's
+`rootPath` when the CLI hands it over, so one document means one directory to
+every service; a missing directory creates no provider, mounts no route, and
+leaves every page byte-identical. The auth console applies it too since
+D2-3, which closes the one release window (D2-2) in which the hosted auth
+pages rendered unthemed.
 
 - **Layout.** `theme.json` (manifest) + `assets/` + `fragments/`. The HTTP
   mount root is `<root>/assets`, never the theme root, so the manifest and
@@ -2053,15 +2149,20 @@ middleware, and leaves both pages byte-identical.
   move, and can already be reused by a browser-side theme editor. Anything
   touching the filesystem or a response stays one level up. Keep it that
   way: `themeAssetExtension` exists only because `node:path`'s extname
-  would have broken the rule.
+  would have broken the rule. The rest of the kit is not node-free (the
+  provider stats and reads files, the asset handler streams them), which is
+  why `tsconfig.build.json` there pins `"types": ["node"]`: no dependency
+  emits a `/// <reference types="node" />`, so the globals are not
+  auto-discovered the way they are in the workspaces that pull typeorm.
 - **Token GRAMMAR, never a token allowlist.** Names match
   `^--[a-z][a-z0-9-]*$`; values are ≤256 chars and may not contain
   `} < > ; @ \ /* url( expression(`. A closed list would have to live in
-  server-core, which cannot depend on `client-web-kit-theme`, so nothing
-  could bind the two and it would rot in both directions. Same validator a
-  future untrusted (per-realm) token source would reuse unchanged.
+  the serving package, which cannot depend on `client-web-kit-theme`, so
+  nothing could bind the two and it would rot in both directions. Same
+  validator a future untrusted (per-realm) token source would reuse
+  unchanged.
 - **`logo` is a manifest FIELD, not a token** — its value needs `url()`,
-  which the grammar forbids. server-core derives
+  which the grammar forbids. `buildThemeHead` derives
   `--authup-{auth,account}-logo-image` + `-logo-mark-visibility` from the
   validated asset path; the kit theme paints the image onto the built-in
   mark's own `<svg>` box and hides only the mark's CHILDREN (`visibility`
@@ -2074,9 +2175,15 @@ middleware, and leaves both pages byte-identical.
   the ONE part that does not apply to already-published console packages:
   the kit theme CSS ships raw and is inlined by each console's Tailwind
   build.
-- **`/theme` is hand-written, NOT `@routup/assets`** (`theme/assets.ts`).
-  That plugin's `lookupPath` walks path SUFFIXES (`/theme/x/logo.svg` would
-  serve `/logo.svg`), probes `.html`/`index.html`, and does no realpath
+- **The theme asset route is hand-written, NOT `@routup/assets`**
+  (`theme/assets.ts`). It is mounted per console SERVICE under that
+  console's own base (`THEME_ASSET_MOUNT_PATH`, `theme`) rather than at one
+  root `/theme`, which needed no new mechanism: `getHead(basePath)` already
+  parameterised the prefix and memoizes per base path, so a themed
+  deployment needs no proxy rule of its own beyond the one that reaches the
+  console. That plugin's `lookupPath` walks path SUFFIXES
+  (`/theme/x/logo.svg` would serve `/logo.svg`), probes
+  `.html`/`index.html`, and does no realpath
   containment check. Symlinks MUST be followed (a Kubernetes ConfigMap
   volume is a symlink farm, `key -> ..data/key`), so containment is
   realpath-per-request against the mount root. Content types are pinned
@@ -2112,37 +2219,49 @@ middleware, and leaves both pages byte-identical.
   assets revalidate per request with a weak size+mtime ETag. No restart to
   change a colour. Kubernetes needs a WHOLE-volume mount — a `subPath`
   projection is frozen until the pod restarts.
-- **Per-request isolation.** The provider rides `event.store` via
-  `THEME_STORE_KEY` (`registerThemeMiddleware`, mirroring
-  `UI_HTTP_CLIENT_FACTORY_STORE_KEY`), not module-scope state, so two
-  applications in one process never share a theme.
+- **Per-instance isolation.** The provider is created by the handler factory
+  and captured in its closure, never module-scope state, and
+  `defineStaticConsole` takes it as a `serve()` argument rather than reaching
+  into a request store for one. So two applications in one process never
+  share a theme, and the kit knows nothing about where a caller keeps its
+  provider. That replaced the `event.store` handoff server-core used while
+  it served the consoles itself.
 
-### Console substitution (`authConsolePath` / `accountConsolePath` / `adminConsolePath`)
+### Console substitution (`server.<name>Console.path`)
 
-Theming cannot change markup. `authConsolePath` (`AUTH_CONSOLE_PATH`),
-`accountConsolePath` (`ACCOUNT_CONSOLE_PATH`) and `adminConsolePath`
+Theming cannot change markup. `server.authConsole.path`
+(`AUTH_CONSOLE_PATH`), `server.accountConsole.path`
+(`ACCOUNT_CONSOLE_PATH`) and `server.adminConsole.path`
 (`ADMIN_CONSOLE_PATH`) point at package directories consulted BEFORE the
-locter `node_modules` walk, so replacing a console no longer means mounting
-over a workspace symlink.
+locter `node_modules` walk, so replacing a console never means mounting over
+a workspace symlink. Each key is declared by the SERVICE that reads it and
+by nobody else: they moved out of server-core's registry with the serving
+(plan 101 D2-3), and they reach `defineStaticConsole` as the definition's
+`distPath` field rather than through a mutator, so two handlers in one
+process cannot share a substitution.
 
-`bindConsolePackages` (`adapters/http/ui/contract.ts`, called from
-`HTTPModule.setup` before any route mounts) asserts the contract — but
-**only for a package actually substituted**: with the default resolution
-the consoles ship from this repo with linked versions, so the assert would
-compare a constant against itself, and loading the SSR bundle at boot would
-turn a missing build into a failed start instead of an actionable page
-error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
-runtime value alongside `render()` (missing = version 1; version 2 added the
-federated callback's interstitial route and payload, version 3 the
-`federatedLogin` payload the page must redeem. Plan 094 stopped server-core
-rendering the interstitial route, but the floor only rises. The history lives
-in `src/contract.ts`); a static console's contract is its config marker
-(`<!--account-config-->`, `<!--admin-config-->`, read off the
-`defineStaticConsole` instance), whose absence silently degrades the SPA to
-same-origin API derivation. **Fail-closed**,
-unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
-handling, MFA ordering and `redirectUriVerified` gating, so drift must stop
-the container rather than render subtly wrong auth pages.
+**What a replacement owes is a CONTRACT, and the two console kinds carry
+different ones.** `@authup/client-auth-console` exports `CONTRACT_VERSION`
+as a runtime value alongside `render()` (missing = version 1; version 2
+added the federated callback's interstitial route and payload, version 3 the
+`federatedLogin` payload the page must redeem. Plan 094 stopped anything
+rendering the interstitial route, but the floor only rises. The history
+lives in `src/contract.ts`). A static console's contract is its config
+MARKER (`<!--account-config-->`, `<!--admin-config-->`) plus the vite base
+its asset hrefs carry, both spelled as constants in the serving service;
+a marker that does not match degrades the SPA silently to same-origin API
+derivation, and a vite base that does not match serves the shell and then
+404s every asset with no error anywhere.
+
+**The boot-time assert that used to check this is gone with the serving.**
+`bindConsolePackages` ran inside server-core's `HTTPModule.setup` and
+checked a SUBSTITUTED package only (with the default resolution it would
+have compared a constant against itself, and loading the SSR bundle at boot
+would have turned a missing build into a failed start instead of an
+actionable page error). A console service resolves and serves one package,
+so an equivalent check belongs there if it comes back. Until it does, the
+smoke runner is what catches the drift end to end: it follows the first
+script the served shell references and expects JavaScript back.
 
 ## Realm Scoping Model
 
@@ -2650,15 +2769,16 @@ Include authorization*.
 
 ## Deployment Topology & UI Boundary (plan 078)
 
-One runtime service since plan 081. **server-core is the IdP origin** — the OAuth2/OIDC
-protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
-`/activate`, `/password-forgot`, `/password-reset` and `/logout`).
-Those pages
-are **architectural, not incidental**, and must stay served by server-core
-(since plan 083 their Vue app lives in its own workspace,
-`apps/client-auth-console`, but that is an ownership/packaging split only —
-server-core resolves and renders the package on its own origin, and the
-standalone-hosting question stays rejected):
+**server-core is the IdP ORIGIN**: the OAuth2/OIDC protocol surface, plus the
+hosted auth pages (`/authorize`, `/register`, `/activate`,
+`/password-forgot`, `/password-reset` and `/logout`) served on that same
+origin. Those pages are **architectural, not incidental**, and the reasons
+below are why. What changed in plan 101 D2 is the PROCESS, never the origin:
+the pages render in `@authup/server-auth-console` and server-core's page GETs
+hand over to it, which is a packaging split (the origin is one whether the
+service rides server-core's listener under `authup start` or its own port
+behind a proxy rule). The standalone-hosting question, meaning the auth pages
+on a DIFFERENT origin than the IdP, stays rejected:
 
 - **WebAuthn origin binding** — the rpId/origin derives from `publicUrl`;
   hosted login means every RP's second factor runs on the one IdP origin with
@@ -2670,9 +2790,10 @@ standalone-hosting question stays rejected):
   still holds now that a console session cookie exists (plan 088): the
   OAuth2 issuance surface, `/authorize` included, is exactly what that
   credential is denied on.
-- **Same-path GET-HTML / POST-JSON workflow routes** — each workflow path
-  serves SSR HTML on GET while POST on the same path is the JSON API; the
-  pages are the render half of the API surface.
+- **Same-path GET-page / POST-JSON workflow routes**: each workflow path
+  answers a page on GET while POST on the same path is the JSON API; the
+  pages are the render half of the API surface, which is why the GET became
+  a hop to the render rather than moving the path.
 - **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
   these pages.
 - **Headless deployments** (`ADMIN_CONSOLE_ENABLED=false`) still need every
@@ -2685,19 +2806,45 @@ all serve login/consent from the IdP origin.
 authenticates against the per-realm public `admin-console` client (plan 079;
 downstream kit apps register their own clients — plan 082 removed the shared
 `web` client) with no privileged channel into server-core, and since plan 081
-server-core SERVES it as a static SPA at `<publicUrl>/console/admin` (see *Admin
-Console*), the endpoint plan 078 recorded. Same-origin is what let plan 088
-Stage 2 apply the account console's cookie credential to it with no BFF.
+it is SERVED at `<publicUrl>/console/admin` (by
+`@authup/server-admin-console` since plan 101 D2-3, see *Admin Console*), the
+endpoint plan 078 recorded. Same-ORIGIN is what let plan 088 Stage 2 apply
+the account console's cookie credential to it with no BFF, and that is a
+property of the URL rather than of which process answers it.
 
-**Process topology:** one container running `server/core start` (plus the
-optional `server/core worker`) is the production topology. There is exactly
-ONE process and ONE binary. `authup` (`apps/authup`) is an **in-process** CLI
-over `@authup/server-core` (plan 101 D1): it imports the package and calls the
-`defineCLI*Command` helpers it exports, so `start`, `worker`, `migration` and
-`healthcheck` run the service's own application factories inside the process
-the operator started. `apps/server-core` ships no `bin` field; its `src/cli/`
-stays as the command source plus dev-only tooling (`migration generate`, the
-JIT `cli-dev` script).
+**Process topology: one binary, several roles.** The batteries-included
+container runs `server/core start`, which is `authup start`: server-core plus
+every enabled console on ONE listener (plus the optional `server/core
+worker`). `authup` (`apps/authup`) is an **in-process** CLI over the service
+packages (plan 101 D1): it imports them and calls the `defineCLI*Command`
+helpers server-core exports, so `start`, `core`, `worker`, `migration` and
+`healthcheck` run the services' own factories inside the process the operator
+started. `apps/server-core` ships no `bin` field; its `src/cli/` stays as the
+command source plus dev-only tooling (`migration generate`, the `cli-dev`
+script).
+
+The split topology is the same binary with different roles: `authup core`
+(the API and the IdP alone, mounting nothing) next to `authup console
+[admin|account|auth]` (one console service, or every enabled one, each on
+its own port). The container entrypoint carries all three as its own service
+vocabulary (`server/core start`, `server/core core`, `server/core console
+admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
+the one place pretending otherwise; behind one origin the proxy routes each
+console's path to its port. `createApplication` grows a generic `mounts`
+seam and mounts whatever it is handed under a path it is told, learning
+nothing about consoles: the CLI knows about every piece and composes them,
+which is its job, and a controller for a console appearing inside server-core
+is the smell that seam exists to prevent. `buildApplicationMounts` refuses to
+reason loosely about origins: a console url on ANOTHER origin names a service
+someone else runs and is skipped rather than mounted locally, and one on this
+origin with no path would have to own the API's own root, where it shadows
+the protocol routes and the page GETs redirect to themselves, so it is
+refused by name rather than booted into a redirect loop. The factory is
+ASYNC because a console loads its operator theme before it serves a page, so
+an invalid manifest fails the boot rather than every render. The console
+role closes its listeners with active connections (`server.close(true)`): a
+console serves documents over keep-alive sockets, and waiting for them to go
+idle means waiting out the client's own timeout on every container stop.
 
 Three properties follow from there being no child, and the last two were live
 defects of the supervisor it replaced. **Signals and the exit code are the
@@ -2710,11 +2857,11 @@ child, so an ambient `PORT` could not reach the server at all. **Nothing is
 resolved at
 runtime**: the migrations glob is anchored on server-core's package path, so
 `authup migration run` works from any cwd, and no `node_modules` walk decides
-what gets launched. Package selectors are gone with the supervisor
-(`authup start server.core` is refused as a stray positional, and a
-`client.admin-console` config section is simply not read); the container
-entrypoint keeps `server/core <command>` as its own service vocabulary and
-runs the CLI underneath.
+what gets LAUNCHED (a console service still walks node_modules to find the
+BUNDLE it serves, anchored on its own package root for the same reason).
+Package selectors are gone with the supervisor (`authup start server.core` is
+refused as a stray positional, and a `client.admin-console` config section is
+simply not read).
 
 **The worker role (plans 095/096/097)** is the same binary and the same image,
 started as `authup worker` (container: `server/core worker`). It is
@@ -2737,36 +2884,39 @@ one info line naming what it registered, which on a worker is the only line a
 healthy boot writes (the sweeps log nothing per tick and the schema-verify
 lines are debug).
 
-**Console replica sets (plan 099 PR 1).** Every served console lives under
-the one `/console` prefix (`adapters/http/ui/constants.ts`), so the consoles
-can be served from their own replica set on the ONE origin with no code: an
-API set started with `ADMIN_CONSOLE_ENABLED=false
-ACCOUNT_CONSOLE_ENABLED=false`, a console set with them on, BOTH with
-`COMPONENTS_ENABLED=false MIGRATION_ENABLED=false` plus the one-off
-`migration run` (a console replica is a plain `start` process and would
-otherwise run the sweeps and race the DDL), and the proxy routing
-`/console/**` (plus `/theme/**` when themed) to the console set. Cookie mode
-holds because `isSameOriginRequest` compares against `publicUrl` and the
-session cookie path is the deployment base path, both identical across
-processes behind one origin. **Redis is a hard requirement for the split,
-and sticky routing is no substitute**: the authorization code is a cache
-entry minted at `POST /authorize` on whichever replica the API rule picked
-and popped by `/token` on the console replica that answered the callback
-(the redemption goes through the loopback client bound to its own listen
+**Console replica sets (plan 099 PR 1, made structural by plan 101 D2-3).**
+Every served console lives under the one `/console` prefix
+(`adapters/http/constants.ts` on the API side, the same literal as each
+service's base path), so the consoles are served from their own processes on
+the ONE origin: `authup core` for the API set, `authup console` for the
+console set, and the proxy routing `/console/**` to the latter. **The two
+cookie-mode paths per console are the exception and stay on the API set**
+(`/console/<name>/login/start` and `/console/<name>/callback`, plan 101
+invariant 3), because the pending-login cookie has to be issued on the
+origin that reads it back, so the proxy needs a rule for those two exact
+paths. Cookie mode otherwise holds unchanged, since `isSameOriginRequest`
+compares against `publicUrl` and the session cookie path is the deployment
+base path, both identical across processes behind one origin. The flag-based
+recipe still works for a plain `start` process on both sides
+(`ADMIN_CONSOLE_ENABLED=false ACCOUNT_CONSOLE_ENABLED=false` on the API set,
+BOTH sides with `COMPONENTS_ENABLED=false MIGRATION_ENABLED=false` plus the
+one-off `migration run`, or a console replica runs the sweeps and races the
+DDL), and the roles make it unnecessary: `core` mounts nothing regardless of
+the flags, and `console` runs neither components nor migrations because it
+has no database at all. **Redis is a hard requirement for the split, and
+sticky routing is no substitute**: the authorization code is a cache entry
+minted at `POST /authorize` on whichever replica the API rule picked and
+popped by `/token` on the API replica that answered the callback (the
+redemption goes through the loopback client bound to its own listen
 address), so no path-scoped affinity can keep the two on one process; the
 pending-login entry and the token blocklist ride the same cache. A sqlite
 deployment cannot split (one database file per container, the worker's
-caveat). Two things the flags do NOT do: the console asset mounts are
-unconditional (a flag-off replica holding the dist still serves
-`/console/admin/assets/*`), and the auth pages plus `/console/auth/assets/*`
-are served by every replica, since no `authConsoleEnabled` exists by design
-(they are the issuance surface). `GET /` reports `features` per replica.
-The operator recipe is `docs/src/guide/deployment/console-replicas.md`. An
-`authup console [admin|account|auth]` role is planned (plan 101, stage D2-3)
-and not registered yet: the CLI offers `start`, `worker`, `migration` and
-`healthcheck` only.
+caveat). The auth console is deliberately not gated: no `authConsoleEnabled`
+exists, because the hosted login, consent and workflow pages are the
+issuance surface. `GET /` reports `features` per replica. The operator
+recipe is `docs/src/guide/deployment/console-replicas.md`.
 
-**Configuration is layered:** server-core reads ONE file, `authup.yml`
+**Configuration is layered:** every service reads ONE file, `authup.yml`
 (plan 101 C-2, replacing the retired `authup.conf` family), on every CLI
 command; lookup defaults to the process cwd, overridable via
 `--configDirectory` / `--configFile`, and environment variables always beat
@@ -2800,17 +2950,28 @@ there), and `json-schema.ts` is `buildSchemaJSONSchema`.
 **Where a key sits in `authup.yml` is one entry field, `path`.** It is the
 absolute dotted location in the document; an entry without one resolves
 through the reading pass's prefix, which for server-core is
-`CONFIG_SECTION` = `server.core`. So only the 14 keys that live OUTSIDE
-this service's section spell a path out: the deployment-wide values
-(`publicUrl`, `db`, `redis`, `smtp`, `trustedOrigins`, `env`, `rootPath`)
-plus `theme.directoryPath` / `theme.fragmentsEnabled`, and the per-console
-sections, whose member names drop the console prefix the config key carries
-(`adminConsoleEnabled` reads `server.adminConsole.enabled`,
-`ADMIN_CONSOLE_PATH` reads `server.adminConsole.path`). A section is per
-CONSOLE, never per implementation package, and no environment variable name
-changed, so env-driven deployments feel nothing. The JSON Schema artifact is
-emitted in that same nested shape, so an editor's
-`# yaml-language-server: $schema=` line validates the real document.
+`CONFIG_SECTION` = `server.core`. So only the keys that live OUTSIDE this
+service's section spell a path out: the deployment-wide values (`publicUrl`,
+`db`, `redis`, `smtp`, `trustedOrigins`, `env`, `rootPath`) and the
+per-console sections, whose member names drop the console prefix the config
+key carries (`adminConsoleEnabled` reads `server.adminConsole.enabled`). A
+section is per CONSOLE, never per implementation package, and no environment
+variable name ever changed, so env-driven deployments feel nothing. The
+console services' own registries spell every path out, since they apply no
+prefix of their own. **Config follows the code** (plan 101 D2-3): the theme
+pair (`theme.directoryPath` / `theme.fragmentsEnabled`) and the three
+`server.<name>Console.path` keys LEFT server-core's registry for the
+packages that read them, while `server.adminConsole.url` and
+`server.accountConsole.url` JOINED it next to the auth console's, because
+the console login has to know where to send the browser once the credential
+is issued and deriving that from `publicUrl` would be wrong the moment a
+console is published at a path of its own. server-core keeps the two
+`.enabled` flags, which it reads to gate the cookie-mode routes and to
+report on `GET /`. The JSON Schema artifact is emitted in that same nested
+shape, so an editor's `# yaml-language-server: $schema=` line validates the
+real document; the one server-core BUILDS carries its own registry alone
+(that is the package it ships with), while `authup config schema` composes
+all four so the printed document is the one an operator actually writes.
 
 **`@authup/server-config-kit` is the mechanism, and it carries no
 `@authup/*` dependency at all.** It holds the declaration types, the
@@ -2818,26 +2979,67 @@ environment readers, those five passes and the composer, generic over any
 config type:
 server-core's `CONFIG_SCHEMA` is one instance of it, and the package sits
 at the foundation layer next to `kit` and `errors`. The dependency rule is
-the whole point rather than tidiness. The `@authup/server-console` and
-`@authup/server-auth-console` service packages must read config without
-depending on server-core, and putting the mechanism in `@authup/server-kit`
-instead would have made a static-file-serving console inherit native
-`@node-rs/bcrypt` and `@node-rs/jsonwebtoken` binaries, winston, redis, the
-socket.io emitter and `@rapiq/core`. `packages/server-config-kit/test/unit/dependencies.spec.ts`
+the whole point rather than tidiness. The three `@authup/server-*-console`
+service packages must read config without depending on server-core, and
+putting the mechanism in `@authup/server-kit` instead would have made a
+static-file-serving console inherit native `@node-rs/bcrypt` and
+`@node-rs/jsonwebtoken` binaries, winston, redis, the socket.io emitter and
+`@rapiq/core`. `packages/server-config-kit/test/unit/dependencies.spec.ts`
 pins the dependency set, the successor of the portability guard the folder
 carried before the extraction.
 
-Each server package will own the registry of the keys it reads while
-`apps/authup` composes them into one `authup.yml` schema and loader (plan
-101 stage C, the D2-3 correction). `composeSchemas` is that composer
-(shipped in C-2 with server-core's single registry as its only caller): it
-merges N `{ prefix, schema }` pairs into one schema whose every entry
-carries a RESOLVED absolute `path`, and refuses a key two registries
-declare with disagreeing path, environment variable or default, since the
-two packages would then read one configuration key differently. Zod types
-hold closures and are not value-comparable, so they are deliberately outside
-the agreement check. Cross-section invariants stay in `normalizeConfig`,
-next to the existing ones, rather than in the composer.
+**One document, one declaration per key** (`@authup/server-config`). Every
+key of `authup.yml` is declared exactly once, in the section it belongs to:
+`deployment/` (the root keys), `theme/`, `core/` (`server.core.*`) and one
+per console (`server.<name>Console.*`). A service does not declare anything.
+It SELECTS: its config type is an intersection of the section types it
+reads, and its registry a spread of the matching schemas. server-core takes
+deployment plus core plus the five console-reference keys it needs to
+redirect and to land a login; a console takes `publicUrl`, the theme pair
+and its own section.
+
+That is the whole point of the shape: a service that names key names cannot
+mis-spell a path, an environment variable or a reader, because it spells
+none of them. The predecessor had each package declare what it read and
+`composeSchemas` assert that overlapping declarations agreed. That held for
+path, environment variable, default and reader, and not for the zod type or
+the description (the account console's `trustedOrigins` accepted values
+server-core refused), and it could not see an OMISSION at all: a package
+that simply never declared a shared key read its default in silence.
+`composeSchemas` is gone with the problem it solved.
+
+**The document's types are authup's own.** Eleven keys used to be typed
+against the library that eventually consumes them: `db` against typeorm,
+`redis` against `@authup/server-kit`, `smtp` against server-core's mail
+adapter, the seven `middleware*` against six `@routup/*` packages. A leaf
+every console imports cannot carry that, so `DatabaseConnectionOptions`,
+`RedisConnectionOptions`, `SMTPConnectionOptions` and `MiddlewareOptions`
+are declared here and server-core casts at the boundary where it hands the
+value to the library. Nothing is lost at the configuration surface: those
+zod types are already `z.custom(isObject)` or
+`z.boolean().or(z.record(z.string(), z.any()))`, so the published JSON
+Schema said "any object" for every one of them before and after. The
+constants the declarations need travel with them: `expandToOrigins` next to
+`trustedOrigins`, `isValidTrustProxyListEntry` next to `trustProxy`,
+`CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` next to their
+keys, and server-core imports them back. The package depends on
+`@authup/core-kit` (two password bounds), `@authup/kit`,
+`@authup/server-config-kit`, `envix` and `zod`, and on nothing with a native
+binding.
+
+`apps/authup` is still the only workspace that knows about every service, so
+it is where the per-console configs are resolved (`src/roles/config.ts`),
+but `config schema` now prints the package and `config validate` checks the
+whole document against it, including keys no service in the process reads.
+Cross-section invariants stay in `normalizeConfig` rather than in the
+schema. One of them is that every console url must sit on publicUrl's own
+ORIGIN: a console under a path of its own is fully supported and is what
+those keys are for, but a console on another domain half-works rather than
+failing, since the static consoles authenticate with a `SameSite=Strict`
+credential re-checked against `Sec-Fetch-Site: same-origin` and the auth
+console holds the browser session every `prompt=none` decision reads.
+Different domains are the named stage-G follow-up and need WebAuthn origins,
+the federated-login cookie and credentialed CORS to move together.
 
 **Env semantics are per entry, not per type**: the seven security toggles
 (`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,
@@ -2860,7 +3062,9 @@ file and the environment, normalize, print every issue as
 `<path>: <message>` like the provisioning file loader, exit 1) are
 `defineCLIConfigCommand` in `apps/server-core/src/cli/commands/config.ts`:
 command bodies stay with the service, as every other CLI command does since
-D1, and `apps/authup` only mounts them. Keep `registry.ts` importable standalone: it reads
+D1, and `apps/authup` only mounts them, passing the console registries in as
+`options.schemas` so neither subcommand reports half a document. Keep
+`registry.ts` importable standalone: it reads
 `CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` from their
 constants FILES, never the request or core barrels (the request barrel
 reaches the x509 module, which needs `reflect-metadata` at import time),
@@ -3224,8 +3428,8 @@ mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
 onto a newly-authenticated user (plan 047.3). This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
 degrade to the click-gated confirm page. `apps/client-admin-console/src/pages/logout.vue`
-uses it on the standalone (JS-token) path; served by server-core the console
-is in cookie mode, holds no id_token, and signs out through
+uses it on the standalone (JS-token) path; served on the IdP origin the
+console is in cookie mode, holds no id_token, and signs out through
 `store.logout()` = `DELETE /sessions/@me` like the account console. The page
 deliberately does **not** carry `requireLoggedOut` route meta (that meta
 makes the routing guard run `store.logout()` before the page's setup,
@@ -3641,7 +3845,8 @@ reuses it (#3191). One `auth_sessions` row per federated login, `amr:
 The render contract is at **version 3** for this: the `/authorize` payload
 carries `federatedLogin: { providerId }` and the page has to complete it, so a
 substituted console built against version 2 would strand every federated login
-on the login form. That is exactly the drift `bindConsolePackages` fails closed on.
+on the login form. That is exactly the drift a substituted package must be
+checked for; see *Console substitution* for where that check lives now.
 
 The access-policy leg stays at the callback rather than moving into
 `authorizeInner` with the rest: it is already implemented and correct there,
@@ -4511,7 +4716,7 @@ it (drop on success). A code is only mailed to a user holding a **confirmed**
 email factor (no code-spray oracle), and the `POST /authenticators/challenge/send`
 route returns a uniform 200 regardless (no enrollment-status oracle). Mail deps
 are threaded into the service ctx; `MailModule.setup` now honors a pre-registered
-`MailInjectionKey` (test-fake-wins, mirroring `UIHttpClient`) so tests capture
+`MailInjectionKey` (test-fake-wins, mirroring `InternalHttpClient`) so tests capture
 mailed codes. Kit: `AMfaChallengeForm` gains an email branch (send-code button →
 code input) and the enroll picker an email option.
 Domain type `UserAuthenticator` (core-kit), TypeORM entity
@@ -5273,7 +5478,8 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   request by its registered route template (`/users/:id`,
   `/realms/:realmId/users/:id`), read from the router's own route table
   (routup flattens controller child-apps into the root with full patterns);
-  method-agnostic mounts label as `<mount>/**` (`/docs/**`, `/console/auth/assets/**`)
+  method-agnostic mounts label as `<mount>/**` (`/docs/**`, and a console
+  handler's own mount when one is composed onto this listener)
   and anything unregistered collapses into a single `/{unmatched}` bucket —
   raw ids/names never become label values, even on 401/404 probes.
 
@@ -5734,11 +5940,12 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
   hosts build a fresh payload per request (Nuxt's `payload.data`; every
-  `renderAuthConsolePage` caller passes a new payload literal, and the process-level
-  caches in `render.ts` hold only the immutable template / manifest / bundle),
-  and the store is provided on the per-request Vue app, so it is unreachable
-  once the render ends. Same reasoning as the `lifetime: 'transient'`
-  registration of the SSR UI HTTP client. Backing the store with anything
+  `renderAuthConsolePage` caller in the auth console service passes a new
+  payload literal, and the process-level caches in its `render.ts` hold only
+  the immutable template / manifest / bundle), and the store is provided on
+  the per-request Vue app, so it is unreachable once the render ends. Same
+  reasoning as the `lifetime: 'transient'` registration of server-core's
+  loopback client. Backing the store with anything
   shared between requests would serve one client's rows to another. As a second
   layer the kit's server path is **write-only**: `useHydratedValue` returns
   before its read, and the collection manager's server branch never adopts (it

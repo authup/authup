@@ -6,8 +6,8 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | auth console SSR builds (`apps/client-auth-console/`) and account console SPA builds (`apps/client-account-console/`) |
-| Nuxt             | client-admin-console builds                                 |
+| Vite             | every console BUNDLE: the auth console's SSR build (`apps/client-auth-console/`) and the two SPA builds (`apps/client-account-console/`, `apps/client-admin-console/`). The console SERVICES that serve them are tsdown like every other server package |
+| Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app has been a Nuxt app since plan 081 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
@@ -39,9 +39,10 @@
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
 - Every workspace splits `build` into `build:types` + `build:js` — packages emit
-  declarations (`tsc`/`vue-tsc --emitDeclarationOnly`), the console apps run a
-  pure type check (`vue-tsc --noEmit`, or `nuxi typecheck` in the admin
-  console) before bundling. The Vite console apps' tsconfigs deliberately
+  declarations (`tsc`/`vue-tsc --emitDeclarationOnly`), the console BUNDLES
+  run a pure type check (`vue-tsc --noEmit`) before bundling, and the console
+  SERVICES emit declarations like any other server package. The Vite console
+  bundles' tsconfigs deliberately
   declare **no local `paths`**: they inherit the root `tsconfig.json` map
   (`@authup/* → packages/*/src`), so the type check runs against package
   SOURCE, matching the vite/nuxt `@authup/* → src` aliases the bundles are
@@ -123,20 +124,29 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **`core-*` names the core service's domain surface** (domain types, HTTP and
   realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
-  `client-admin-console` (the admin console), `client-account-console` (the
-  account console: a static SPA whose dist server-core serves at
-  `/console/account`), `client-auth-console` (the auth console: the SSR auth
-  workflow UI whose dist server-core renders on the IdP origin, plan 083),
-  and the planned `server-core-worker` (optional background processor). The
-  `authup` operator CLI is the eponymous exception. The admin app carries
-  the full `admin-console` role (not bare `console`) because the UI
-  surfaces are peers: admin console, account console and auth console.
+  `client-admin-console` / `client-account-console` / `client-auth-console`
+  (the three console BUNDLES), `server-admin-console` /
+  `server-account-console` / `server-auth-console` (the three console
+  SERVICES that serve them, plan 101 D2), and the planned
+  `server-core-worker` (optional background processor). The `authup`
+  operator CLI is the eponymous exception. The admin app carries the full
+  `admin-console` role (not bare `console`) because the UI surfaces are
+  peers: admin console, account console and auth console.
   Console apps normally match their per-realm OAuth2 client rows
   (`admin-console`, `account-console`); **`client-auth-console` is the
   deliberate exception**. The auth pages ARE the IdP surface (they issue
   tokens rather than obtain them), so no client row exists for them. The
   name keeps the console-family symmetry anyway (settled 2026-08-02 with
   the maintainer, plan 083).
+- **A console's bundle and its service share a role and differ only in the
+  prefix**, which is the grammar working as intended rather than a
+  collision: the bundle is built FOR a browser (`client-`) and the service
+  runs on a server (`server-`), and the pair is exactly the client-server
+  split the prefix marks. Keep them in step, one to one. A second service
+  serving one bundle, or one service serving two, is the shape to argue
+  about before it is named. Note the prefix still does not mark where code
+  EXECUTES: `client-auth-console`'s code runs server-side, inside
+  `server-auth-console`'s render.
 - **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
   `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
   not just the console; `server-kit` / `server-adapter-*` serve any server-side
@@ -151,12 +161,15 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   per-realm OAuth2 client rows. App and package names deliberately do NOT
   mirror each other (hub precedent: app `client-ui`, library `client-vue`), so
   renaming an app never implies renaming a published package family.
-- **Operator-facing vocabulary is a separate, shorter layer**: the binary
-  (`authup`, the only one; the retired `authup-server` and
-  `authup-admin-console` were the two before it), the configuration sections
-  (`server.core`; slash form `server/core` in the docker entrypoint), and helm
-  values keys. The grammar above governs workspace directory and npm package
-  identity only.
+- **Operator-facing vocabulary is a separate, shorter layer**: the binaries
+  (`authup`, the one an ordinary deployment runs, plus a per-service
+  `authup-<name>-console` escape hatch), the CLI ROLES (`start`, `core`,
+  `console [admin|account|auth]`, `worker`), the configuration sections
+  (`server.core`, `server.<name>Console`; slash form `server/core` in the
+  docker entrypoint), and helm values keys. The grammar above governs
+  workspace directory and npm package identity only, which is why a role is
+  the bare console name (`authup console admin`) while the workspace behind
+  it is `server-admin-console`.
 
 History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
 `apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
@@ -177,6 +190,8 @@ Sort each runtime dependency of a **published** package by one question: **would
 - **`devDependencies` only** — build/test tooling (`@types/node`, `@vitejs/plugin-vue`, `vue-tsc`, `cross-env`), plus packages referenced **only** in `test/` or internal build code that never surface in the emitted `.d.ts`.
 
 **`import type` is NOT automatically `devDependencies`.** A type-only import erases from the emitted JS, but if the type is **re-exposed in the package's public `.d.ts`** — as the return / parameter / field type of a public export, a re-exported type, or a `declare module '<pkg>'` augmentation — then a *consumer* compiling against that `.d.ts` must resolve the package, so it belongs in `dependencies` (stateless leaf: `rapiq`'s `PaginationParseOutput` re-exposed by `server-kit`, `@authup/server-kit`'s `ActorContext` / `IEntityRepository` re-exposed by `server-test-kit`'s fakes) or `peerDependencies` (a singleton, or an augmentation of the consumer's own copy: `validup` in `i18n`, whose `declare module 'validup'` block augments the consumer's validup — optional, since it only matters when that feature is used). Only a type used **purely internally** (never in the emitted `.d.ts`) may be `devDependencies`-only. The monorepo build does **not** catch this — the demoted package is still hoisted for the workspace; verify per package with `rg '<pkg>' dist/**/*.d.ts` after building. `@authup/client-web-kit` re-exposed `vue-router`'s `LocationQuery` in `dist/components/workflows/authorize/helpers.d.ts` while declaring the package in no field at all; the omission only surfaced when a component started calling `useRoute()` at runtime.
+
+**An exported config registry is an ordinary value, and it drags `zod` with it.** Each service package exports its `ConfigSchema` for the CLI to compose, and every entry holds a live zod type, so `zod` and `@authup/server-config-kit` are plain `dependencies` there rather than devDependencies or peers: the CLI evaluates the object at runtime and never owns an instance of anything in it. This is also the reason a shared key is declared in each registry instead of imported from one: the import would be the dependency, and the whole point of the boundary is that neither side takes on the other's tree (see architecture.md → *Four registries, one document*).
 
 Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it — e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
 
@@ -211,14 +226,34 @@ lists `vue` needs this before merge; its own CI already shows the failure.
 - Boolean feature toggles use the `Enabled` suffix: `registrationEnabled`, `passwordRecoveryEnabled`, `emailVerificationEnabled`
 - Config keys in `app/modules/config/types.ts` match the service option names
 - Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
-- Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
+- Config file keys (`authup.yml`) use `camelCase` matching the TypeScript property name
+- **Every configuration key is declared once, in `@authup/server-config`**,
+  in the document section it belongs to; a service SELECTS the sections and
+  keys it reads rather than declaring them. A service that names key names
+  cannot mis-spell a path, an environment variable or a reader. The
+  predecessor had each package declare what it read: `composeSchemas`
+  asserted that overlapping declarations agreed on path, environment
+  variable, default and reader, but not on the zod type or the description,
+  and could not see a key a registry never declared at all.
+- **The configuration document's types are authup's own**, never borrowed
+  from the library that eventually consumes the value. `db`, `redis`, `smtp`
+  and the seven `middleware*` keys would otherwise drag typeorm,
+  `@authup/server-kit` and six `@routup/*` packages into a leaf that a
+  static file server imports. Their zod types are loose either way, so the
+  published JSON Schema is unchanged; server-core casts at the boundary
+  where it hands the value to the library.
 - **Every path key is resolved against `rootPath` after the `...parsed` spread**
   in `normalizeConfig`, so consumers receive an absolute path and none of them
-  has to know what the process cwd was: `writableDirectoryPath`,
-  `themeDirectoryPath`, `authConsolePath`, `accountConsolePath`. A new path key
-  joins that block; computing it *before* the spread reads a default `rootPath`
-  rather than the configured one (the `writableDirectoryPath` bug, fixed after
-  v1.0.0-beta.62 — it silently ignored `rootPath` and stayed relative).
+  has to know what the process cwd was. server-core's own is
+  `writableDirectoryPath`; the console-side path keys
+  (`theme.directoryPath`, `server.<name>Console.path`) live in the console
+  registries now and are resolved for them by the CLI (`resolvePaths` in
+  `apps/authup/src/roles/config.ts`), against server-core's `rootPath`, so one
+  document means the same directory to every service it configures. A new
+  server-core path key joins that block; computing it *before* the spread
+  reads a default `rootPath` rather than the configured one (the
+  `writableDirectoryPath` bug, fixed after v1.0.0-beta.62; it silently
+  ignored `rootPath` and stayed relative).
 - **`writableDirectoryPath` does not hold the database.** It holds the
   production log files and is where `<dir>/provisioning` is read from; that is
   the whole of it. The sqlite file comes from `db.database` / `DB_DATABASE`,

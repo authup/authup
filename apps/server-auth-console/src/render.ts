@@ -8,9 +8,12 @@
 import type { HydrationPayload, RenderFunction } from '@authup/client-auth-console';
 import { InternalError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
+import type { IThemeProvider } from '@authup/server-console-kit';
 import {
+    applyTheme,
     applyUIPageHeaders,
     readUIClientPreferences,
+    rebaseAssetURLs,
     replaceTemplateMarker,
     stampHtmlAttributes,
 } from '@authup/server-console-kit';
@@ -29,37 +32,14 @@ let cachedHtml: string | undefined;
 let cachedManifest: Record<string, any> | undefined;
 let cachedRender: RenderFunction | undefined;
 
-/**
- * Point the bundle's asset hrefs at where this service actually serves
- * them.
- *
- * There is one invariant to keep, and it is what makes this a rewrite
- * rather than a prefix: the public asset URL must be the service's own
- * public path plus the route the assets are mounted on, which is
- * `/assets`. The hrefs the bundle emits carry a FIXED vite base
- * (`/console/auth/`) instead, decided when the bundle was built and
- * unrelated to where the service is published, so the base is replaced
- * rather than prepended to.
- *
- * Prepending happens to work while the service is published at exactly
- * that vite base, which is the default. It breaks the moment it is not:
- * a service at `/login` would emit `/login/console/auth/assets/...`, and
- * once the proxy strips `/login` the request arrives as
- * `/console/auth/assets/...`, which nothing serves.
- */
-export function rebaseConsoleAssets(html: string, url: string) : string {
-    const basePath = getURLBasePath(url);
-
-    return html.replace(
-        new RegExp(`(src|href)="${AUTH_CONSOLE_VITE_BASE.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
-        (_match, attribute) => `${attribute}="${basePath}/`,
-    );
-}
-
 export async function renderAuthConsolePage(
     event: IAppEvent,
     config: AuthConsoleConfig,
-    ctx: { url: string, data: Record<string, any> },
+    ctx: {
+        url: string, 
+        data: Record<string, any>, 
+        theme?: IThemeProvider 
+    },
 ) : Promise<string> {
     const distPath = resolveAuthConsoleDistPath();
     if (!distPath) {
@@ -89,10 +69,12 @@ export async function renderAuthConsolePage(
     // is served, which is what the router and every inter-page href need.
     // Before the split the two were the same value; they are not any more,
     // so the console reads them separately.
+    const basePath = getURLBasePath(config.url);
+
     const payload : HydrationPayload = {
         config: {
             baseURL: config.apiUrl,
-            basePath: getURLBasePath(config.url),
+            basePath,
             colorMode: preferences.colorMode,
             locale: preferences.locale,
         },
@@ -110,7 +92,16 @@ export async function renderAuthConsolePage(
 
     body = stampHtmlAttributes(body, preferences);
 
-    body = rebaseConsoleAssets(body, config.url);
+    // This service mounts the bundle's assets at its own /assets, so the
+    // fixed vite base in every href is replaced by this service's public
+    // path. The vite base was decided when the bundle was built and says
+    // nothing about where the service is published.
+    body = rebaseAssetURLs(body, AUTH_CONSOLE_VITE_BASE, `${basePath}/`);
+
+    // The theme's own asset urls are built from the same base, and the
+    // service mounts them under it, so a themed deployment needs no rule of
+    // its own at the reverse proxy beyond the one that reaches this service.
+    body = await applyTheme(body, ctx.theme, basePath);
 
     applyUIPageHeaders(event);
 

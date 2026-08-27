@@ -10,9 +10,13 @@ import path from 'node:path';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
 import { buildSchemaDefaults } from '@authup/server-config-kit';
-import { AUTH_CONSOLE_SEGMENT } from '../../../adapters/http/ui/constants.ts';
+import {
+    ACCOUNT_CONSOLE_SEGMENT,
+    ADMIN_CONSOLE_SEGMENT,
+    AUTH_CONSOLE_SEGMENT,
+} from '../../../adapters/http/constants.ts';
 import { toPublicHost } from '../../../utils/host.ts';
-import { expandToOrigins } from './origins.ts';
+import { expandToOrigins } from '@authup/server-config';
 import { parseConfig } from './parse.ts';
 import { CONFIG_SCHEMA } from './registry.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
@@ -98,28 +102,27 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         config.writableDirectoryPath || 'writable',
     );
 
-    if (config.themeDirectoryPath) {
-        config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
-    }
-
-    if (config.authConsolePath) {
-        config.authConsolePath = path.resolve(config.rootPath, config.authConsolePath);
-    }
-
-    // The single-origin default: the auth console service is served under
+    // The single-origin default: each console service is served under
     // publicUrl at the segment its bundle is built for, which is where the
     // proxy routes /console/** in a split deployment too. An operator only
-    // sets this when the console lives somewhere else.
+    // sets these when a console lives under a path of its own.
+    //
+    // The derivation is spelled here rather than as the key's default,
+    // because a default cannot read another key. Each console service
+    // derives the same value from the same key when it resolves its own
+    // configuration.
+    const publicUrlTrimmed = config.publicUrl.replace(/\/+$/, '');
+
     if (!config.authConsoleUrl) {
-        config.authConsoleUrl = `${config.publicUrl.replace(/\/+$/, '')}/${AUTH_CONSOLE_SEGMENT}`;
+        config.authConsoleUrl = `${publicUrlTrimmed}/${AUTH_CONSOLE_SEGMENT}`;
     }
 
-    if (config.accountConsolePath) {
-        config.accountConsolePath = path.resolve(config.rootPath, config.accountConsolePath);
+    if (!config.accountConsoleUrl) {
+        config.accountConsoleUrl = `${publicUrlTrimmed}/${ACCOUNT_CONSOLE_SEGMENT}`;
     }
 
-    if (config.adminConsolePath) {
-        config.adminConsolePath = path.resolve(config.rootPath, config.adminConsolePath);
+    if (!config.adminConsoleUrl) {
+        config.adminConsoleUrl = `${publicUrlTrimmed}/${ADMIN_CONSOLE_SEGMENT}`;
     }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,
@@ -130,6 +133,26 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         config.trustProxy = canonicalizeTrustProxy(config.trustProxy);
     } else if (Array.isArray(config.trustProxy)) {
         config.trustProxy = config.trustProxy.map(canonicalizeTrustProxyListEntry);
+    }
+
+    // fail loud at boot: a console on another ORIGIN is a deliberate
+    // non-goal, and it half-works rather than failing on its own. The static
+    // consoles authenticate with a `SameSite=Strict` credential this server
+    // issues and re-checks with `Sec-Fetch-Site: same-origin`, so a foreign
+    // origin can never sign in; the auth console holds the browser session
+    // every prompt=none decision reads, so moving it off the issuer's origin
+    // breaks silent authentication. Another PATH is fully supported and is
+    // what this key is for. Different domains are the named stage-G
+    // follow-up, and turning this into a warning is not the way to get them:
+    // WebAuthn origins, the federated-login cookie and credentialed CORS all
+    // have to move together.
+    for (const key of ['authConsoleUrl', 'accountConsoleUrl', 'adminConsoleUrl'] as const) {
+        if (new URL(config[key]).origin !== new URL(config.publicUrl).origin) {
+            throw new AuthupError(
+                `${key} is ${config[key]}, which is not the origin of publicUrl (${config.publicUrl}). ` +
+                'A console may be served under a path of its own, but not under a domain of its own.',
+            );
+        }
     }
 
     // fail loud at boot: the throttle counts loginFailed rows in

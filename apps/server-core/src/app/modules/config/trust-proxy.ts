@@ -51,25 +51,16 @@ export function canonicalizeTrustProxy(raw: string): boolean | number | string {
 }
 
 /**
- * An entry of the explicit array (allowlist) form must be an address, CIDR,
- * or preset — an integer-string or boolean word there is a mis-typed scalar
- * form and must fail loud instead of compiling to a bogus `0.0.0.1`-style
- * allowlist entry.
- */
-export function isValidTrustProxyListEntry(value: string): boolean {
-    const normalized = canonicalizeTrustProxyListEntry(value);
-    return normalized.length > 0 &&
-        !INTEGER.test(normalized) &&
-        !BOOLEAN_TRUE_WORDS.has(normalized) &&
-        !BOOLEAN_FALSE_WORDS.has(normalized);
-}
-
-/**
  * The allowlist form needs the same trim + lowercase the scalar form gets:
  * proxy-addr trims a comma-separated scalar string itself and matches its
  * presets case-sensitively, so without this an array entry that PASSES
- * validation (which compares the canonicalized value) — ` 10.0.0.0/8 ` or
- * `LOOPBACK` — would still throw `invalid IP address` inside `new App`.
+ * validation would still throw `invalid IP address` inside `new App`.
+ *
+ * The validation half is `isValidTrustProxyListEntry` in
+ * `@authup/server-config`, since it is part of the key's declaration. It
+ * canonicalizes the same way before it judges, which is what makes an
+ * accepted entry usable here: ` 10.0.0.0/8 ` and `LOOPBACK` pass validation
+ * only because this normalizes them afterwards.
  */
 export function canonicalizeTrustProxyListEntry(value: string): string {
     return value.trim().toLowerCase();

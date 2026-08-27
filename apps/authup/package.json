@@ -50,11 +50,15 @@
     "dependencies": {
         "@authup/errors": "^1.0.0-beta.63",
         "@authup/kit": "^1.0.0-beta.63",
+        "@authup/server-account-console": "^1.0.0-beta.63",
+        "@authup/server-admin-console": "^1.0.0-beta.63",
         "@authup/server-auth-console": "^1.0.0-beta.63",
+        "@authup/server-config-kit": "^1.0.0-beta.63",
         "@authup/server-core": "^1.0.0-beta.63",
         "citty": "^0.2.2",
         "dotenv": "^17.4.1",
-        "reflect-metadata": "^0.2.2"
+        "reflect-metadata": "^0.2.2",
+        "routup": "^6.1.0"
     },
     "publishConfig": {
         "access": "public"

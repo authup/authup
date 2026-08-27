@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA } from '@authup/server-config';
+import { mountSchema, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { ArgsDef, ParsedArgs } from 'citty';
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import { isValidupError, stringifyPath } from 'validup';
+import { Container, isValidupError, stringifyPath } from 'validup';
 import { describeCauseChain } from '../../utils/index.ts';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
 import {
@@ -16,6 +18,7 @@ import {
     buildConfigJSONSchema,
     inspectConfigFile,
     readConfig,
+    readConfigFileTree,
 } from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
 
@@ -52,7 +55,7 @@ export function createCLIConfigModule(options: ConfigReadFsOptions = {}) : Confi
     }));
 }
 
-const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['start', 'worker']);
+const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['core', 'start', 'worker']);
 
 export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
     const [command, ...rest] = args._;
@@ -90,7 +93,22 @@ export function describeConfigError(error: unknown) : string {
     return causes ? `${message}\n  cause: ${causes}` : message;
 }
 
-export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
+/**
+ * Check every key of the document against the zod type its one declaration
+ * carries, not just the ones this service reads: an operator writing a
+ * console service's section is configuring the same file, and a value that
+ * service will reject has to be reported here.
+ */
+async function validateDocument(input: Record<string, unknown>) : Promise<void> {
+    const container = new Container<Record<string, unknown>>();
+    mountSchema(container, DOCUMENT_CONFIG_SCHEMA);
+
+    await container.run(input);
+}
+
+export function defineCLIConfigCommand(
+    configFs: ConfigReadFsOptions = {},
+) {
     return defineCommand({
         meta: {
             name: 'config',
@@ -128,6 +146,15 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                         }
 
                         await readConfig({ env: true, fs: configFs });
+
+                        // and then every key of the document, including the
+                        // ones only another service reads. The read above
+                        // covers this service's selection alone.
+                        const { tree } = await readConfigFileTree(configFs);
+                        await validateDocument({
+                            ...readSchemaFromFileTree(tree, DOCUMENT_CONFIG_SCHEMA),
+                            ...readSchemaFromEnv(DOCUMENT_CONFIG_SCHEMA),
+                        });
                     } catch (e) {
                         // eslint-disable-next-line no-console
                         console.error(describeConfigError(e));

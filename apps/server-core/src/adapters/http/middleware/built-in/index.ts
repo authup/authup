@@ -9,7 +9,6 @@ export * from './authorization/index.ts';
 export * from './loggedin/index.ts';
 export * from './realm-resolver/index.ts';
 
-export * from './assets.ts';
 export * from './basic.ts';
 export * from './cors.ts';
 export * from './error.ts';
@@ -17,6 +16,4 @@ export * from './logger.ts';
 export * from './prometheus.ts';
 export * from './rate-limit.ts';
 export * from './swagger.ts';
-export * from './theme.ts';
-export * from './types.ts';
-export * from './ui-http-client.ts';
+export * from './internal-http-client.ts';

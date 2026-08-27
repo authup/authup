@@ -24,7 +24,7 @@ export class LoggerModule implements IModule {
 
     async setup(container: IContainer): Promise<void> {
         // A pre-registered logger wins (test injection, mirroring the
-        // MailInjectionKey / UIHttpClient pattern), so a fake can capture
+        // MailInjectionKey / InternalHttpClient pattern), so a fake can capture
         // what the server writes.
         if (container.has(LoggerInjectionKey)) {
             return;

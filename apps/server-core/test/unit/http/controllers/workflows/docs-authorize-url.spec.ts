@@ -32,7 +32,7 @@ describe('http/controllers/workflows/docs-authorize-url', () => {
 
     beforeAll(async () => {
         suite.container.register(
-            HTTPInjectionKey.UIHttpClient,
+            HTTPInjectionKey.InternalHttpClient,
             { useFactory: () => createFakeHTTPClient({ handlers: { 'GET /identity-providers': () => ({ data: [], meta: { total: 0 } }) } }) },
             { lifetime: 'transient' },
         );

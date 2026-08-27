@@ -55,11 +55,14 @@
         "@authup/core-http-kit": "^1.0.0-beta.63",
         "@authup/errors": "^1.0.0-beta.63",
         "@authup/kit": "^1.0.0-beta.63",
+        "@authup/server-config-kit": "^1.0.0-beta.63",
+        "@authup/server-config": "^1.0.0-beta.63",
         "@authup/server-console-kit": "^1.0.0-beta.63",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.0",
         "locter": "^4.1.1",
-        "routup": "^6.1.0"
+        "routup": "^6.1.0",
+        "zod": "^4.4.3"
     },
     "devDependencies": {
         "cross-env": "^10.1.0",

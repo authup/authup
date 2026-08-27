@@ -169,7 +169,13 @@ export type BuildConsoleLoginURLContext = {
  * string at the call site is what this replaces.
  *
  * Every served console sits under the shared `/console/<name>` mount, and its
- * kick is that mount's `/login` route.
+ * kick is that mount's `/login/start` route. A path of its own rather than
+ * `/login`, because `/login` is the console's OWN page: it is where the
+ * routing guard sends a signed-out visitor and where a refused callback
+ * lands with its `?error=` marker. One URL used to mean both, discriminated
+ * by whether a `realmId` was present (098 C1); since the console left
+ * server-core the kick can no longer fall back to serving that page, so the
+ * two are separate routes.
  */
 export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
     const base = ctx.baseURL.replace(/\/+$/, '');
@@ -181,5 +187,5 @@ export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
     }
 
     const qs = params.toString();
-    return `${base}/console/${target}/login${qs ? `?${qs}` : ''}`;
+    return `${base}/console/${target}/login/start${qs ? `?${qs}` : ''}`;
 }

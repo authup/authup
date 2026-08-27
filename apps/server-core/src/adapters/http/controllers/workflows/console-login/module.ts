@@ -36,7 +36,7 @@ import type {
     ISessionRepository,
 } from '../../../../../core/index.ts';
 import { setSessionCookie } from '../../../cookie/index.ts';
-import { UI_HTTP_CLIENT_FACTORY_STORE_KEY } from '../../../middleware/index.ts';
+import { INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY } from '../../../middleware/index.ts';
 import { isSameOriginRequest } from '../../../request/index.ts';
 import type { ConsoleLoginContext, ConsoleLoginDefinition } from './types.ts';
 
@@ -270,7 +270,7 @@ export class ConsoleLogin {
     // ---------------------------------------------------------
 
     protected resolveHttpClient(event: IAppEvent) : IClient {
-        const factory = event.store[UI_HTTP_CLIENT_FACTORY_STORE_KEY] as (() => IClient) | undefined;
+        const factory = event.store[INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY] as (() => IClient) | undefined;
         if (!factory) {
             throw new InternalError('No http client is available to redeem the authorization code.');
         }
@@ -334,7 +334,7 @@ export class ConsoleLogin {
     }
 
     protected buildConsoleURL() : string {
-        return `${this.basePath()}/${this.definition.segment}`;
+        return getURLBasePath(this.definition.consoleUrl);
     }
 
     protected buildCallbackURL() : string {
@@ -364,7 +364,9 @@ export class ConsoleLogin {
      * cache entry.
      */
     protected buildLoginCookiePath() : string {
-        return this.buildConsoleURL();
+        // The API's own path, not the console's: this cookie is set and read
+        // by the two routes below, which stay on this origin.
+        return `${this.basePath()}/${this.definition.segment}`;
     }
 
     protected setLoginCookie(event: IAppEvent, value: string) : void {

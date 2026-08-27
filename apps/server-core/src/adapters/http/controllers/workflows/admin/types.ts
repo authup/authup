@@ -5,12 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { ConsoleLoginContext } from '../console-login/index.ts';
 
 export type AdminControllerOptions = {
     baseURL: string,
-    features: StatusResponseFeatures,
+    /**
+     * Where the console this authenticates for is served. The browser lands
+     * there once the credential is issued, and a refusal renders there.
+     */
+    consoleUrl: string,
+    enabled: boolean,
 };
 
 export type AdminControllerContext = Omit<ConsoleLoginContext, 'options'> & {

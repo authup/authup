@@ -13,13 +13,13 @@ export type HTTPServer = ReturnType<typeof serve>;
 
 export const HTTPInjectionKey : {
     Server: TypedToken<HTTPServer>,
-    UIHttpClient: TypedToken<IClient>,
+    InternalHttpClient: TypedToken<IClient>,
 } = {
     Server: new TypedToken<HTTPServer>('Server'),
     /**
      * HTTP client for the SSR'd UI pages. `HTTPModule.setup` registers a
      * default whose transport dispatches against the server's own listen
-     * address (see `createInternalUIHttpClient`); a registration made
+     * address (see `createInternalHttpClient`); a registration made
      * BEFORE setup wins (test injection). Register it with a
      * `useFactory` provider and `lifetime: 'transient'` so every
      * resolve yields a FRESH client: client-web-kit's authentication
@@ -27,5 +27,5 @@ export const HTTPInjectionKey : {
      * attaches to, so a singleton-lifetime instance shared across
      * concurrent renders would leak tokens between sessions.
      */
-    UIHttpClient: new TypedToken<IClient>('UIHttpClient'),
+    InternalHttpClient: new TypedToken<IClient>('InternalHttpClient'),
 } as const;
