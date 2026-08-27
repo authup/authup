@@ -45,76 +45,22 @@ export type Config = {
     writableDirectoryPath: string,
 
     /**
-     * EXPERIMENTAL. May change in a minor release: per-realm themes are
-     * likely to reshape the directory into `<root>/<theme name>/`. The
-     * manifest's `version` field makes a breaking change detectable.
+     * Where each console service is served, e.g.
+     * `https://example.com/console/auth`.
      *
-     * Directory holding the operator theme applied to the served consoles
-     * (the auth console and the account console). Relative paths resolve
-     * against the rootPath.
+     * The hosted page GETs redirect to the auth console's url: server-core
+     * owns the protocol, the service owns the render (plan 101 D2). The two
+     * static console urls are where the server-side login lands the browser
+     * once the session credential is issued. Empty derives each from
+     * `publicUrl`.
      *
-     * The directory is operator trust, exactly like the config file: its
-     * `assets/` sub-directory is served verbatim at `/theme`, and its
-     * `theme.json` injects CSS custom properties into both consoles.
-     * Mount it read-only and never from a source a tenant can write.
-     *
-     * default: '' (theming disabled)
-     */
-    themeDirectoryPath: string,
-
-    /**
-     * EXPERIMENTAL, alongside themeDirectoryPath.
-     *
-     * Opt in to reading `fragments/head.html` from the theme directory and
-     * splicing it into the `<head>` of both served consoles.
-     *
-     * The fragment is raw, unsanitized markup running on the IdP origin,
-     * so it must be a deliberate operator decision and never a consequence
-     * of a file appearing in the mounted directory.
-     *
-     * default: false
-     */
-    themeFragmentsEnabled: boolean,
-
-    /**
-     * EXPERIMENTAL. The render contract it verifies is itself versioned
-     * (CONTRACT_VERSION), but this key and the boot-time assert may change.
-     *
-     * Package directory of a substituted `@authup/client-auth-console`
-     * (the directory holding its package.json and dist/). Consulted before
-     * the node_modules resolution walk.
-     *
-     * This replaces the login/consent IMPLEMENTATION, not its styling: the
-     * substituted package owns the prompt ladder, PKCE and state handling,
-     * MFA ordering and redirect gating. Use the theme directory for
-     * branding.
-     *
-     * default: '' (resolve @authup/client-auth-console from node_modules)
-     */
-    authConsolePath: string,
-    /**
-     * Where the auth console service is served, e.g.
-     * `https://example.com/console/auth`. The hosted page GETs redirect
-     * here: server-core owns the protocol, the service owns the render
-     * (plan 101 D2). Empty derives it from `publicUrl`.
+     * The console SERVICE declares the same key, since it has to know where
+     * it is published; the composer refuses two declarations that disagree,
+     * so neither side can drift.
      */
     authConsoleUrl: string,
-
-    /**
-     * Package directory of a substituted
-     * `@authup/client-account-console`. Same contract as authConsolePath.
-     *
-     * default: '' (resolve @authup/client-account-console from node_modules)
-     */
-    accountConsolePath: string,
-
-    /**
-     * Package directory of a substituted
-     * `@authup/client-admin-console`. Same contract as accountConsolePath.
-     *
-     * default: '' (resolve @authup/client-admin-console from node_modules)
-     */
-    adminConsolePath: string,
+    accountConsoleUrl: string,
+    adminConsoleUrl: string,
 
     // ----------------------------------------------------
 

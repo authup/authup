@@ -205,14 +205,13 @@ describe('src/config/registry.ts', () => {
                 'redis', 
                 'rootPath', 
                 'server', 
-                'smtp', 
-                'theme', 
+                'smtp',
                 'trustedOrigins',
             ]);
 
             expect(resolveProperty(schema, 'server.core.port')).toBeDefined();
             expect(resolveProperty(schema, 'server.adminConsole.enabled')).toBeDefined();
-            expect(resolveProperty(schema, 'theme.directoryPath')).toBeDefined();
+            expect(resolveProperty(schema, 'server.adminConsole.url')).toBeDefined();
         });
 
         it('should carry the env name and the static default, and omit a process-derived default', () => {

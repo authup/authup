@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
     IConsoleLoginStore,
@@ -17,8 +16,12 @@ import type {
 
 export type AccountControllerOptions = {
     baseURL: string,
-    features: StatusResponseFeatures,
-    trustedOrigins: string[],
+    /**
+     * Where the console this authenticates for is served. The browser lands
+     * there once the credential is issued, and a refusal renders there.
+     */
+    consoleUrl: string,
+    enabled: boolean,
 };
 
 export type AccountControllerContext = {

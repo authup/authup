@@ -17,13 +17,12 @@ import {
     createRealmResolverMiddleware,
     createRequestEventContextMiddleware,
     createSwaggerMiddleware,
-    registerAssetsMiddleware,
     registerBasicMiddleware,
     registerCorsMiddleware,
     registerErrorMiddleware,
+    registerInternalHttpClientMiddleware,
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
-    registerUIHttpClientMiddleware,
 } from '../../../../adapters/http/index.ts';
 import { HTTPInjectionKey } from '../constants.ts';
 import { DIST_PATH } from '../../../../path.ts';
@@ -49,8 +48,7 @@ export class HTTPMiddlewareModule {
         await this.mountPrometheus(router, container);
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
-        await this.mountAssets(router, container);
-        await this.mountUIHttpClient(router, container);
+        await this.mountInternalHttpClient(router, container);
         await this.mountBasic(router);
         await this.mountRateLimit(router, container);
 
@@ -88,38 +86,12 @@ export class HTTPMiddlewareModule {
         router.use(middleware);
     }
 
-    async mountAssets(router: App, container: IContainer): Promise<void> {
-        const config = container.resolve(ConfigInjectionKey);
-
-        // Config is resolved HERE, in the app-module layer, and the value is
-        // passed down: adapters/http/ui/** must not read config itself.
-        this.viteServer = await registerAssetsMiddleware(router, {
-            themeDirectoryPath: config.themeDirectoryPath,
-            themeFragmentsEnabled: config.themeFragmentsEnabled,
-            logger: container.resolve(LoggerInjectionKey),
-        });
-    }
-
-    /**
-     * Release what the mounted middlewares own beyond the http listener. Only
-     * the JIT vite dev server qualifies: it keeps a file watcher and an HMR
-     * websocket alive, which would survive every setup/teardown cycle.
-     */
-    async teardown(): Promise<void> {
-        if (!this.viteServer) {
+    async mountInternalHttpClient(router: App, container: IContainer): Promise<void> {
+        if (!container.has(HTTPInjectionKey.InternalHttpClient)) {
             return;
         }
 
-        await this.viteServer.close();
-        this.viteServer = undefined;
-    }
-
-    async mountUIHttpClient(router: App, container: IContainer): Promise<void> {
-        if (!container.has(HTTPInjectionKey.UIHttpClient)) {
-            return;
-        }
-
-        registerUIHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.UIHttpClient));
+        registerInternalHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.InternalHttpClient));
     }
 
     async mountBasic(router: App): Promise<void> {

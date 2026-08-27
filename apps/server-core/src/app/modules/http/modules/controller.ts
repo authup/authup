@@ -472,7 +472,8 @@ export class HTTPControllerModule {
         return new AdminController({
             options: {
                 baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
+                consoleUrl: config.adminConsoleUrl,
+                enabled: config.adminConsoleEnabled,
             },
             loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
             sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),
@@ -489,8 +490,8 @@ export class HTTPControllerModule {
         return new AccountController({
             options: {
                 baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
-                trustedOrigins: getAppOrigins(config),
+                consoleUrl: config.accountConsoleUrl,
+                enabled: config.accountConsoleEnabled,
             },
             loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
             sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),

@@ -7,9 +7,9 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    createInternalUIHttpClient,
+    createInternalHttpClient,
     createPublicToInternalURLRewriter,
-} from '../../../../../src/adapters/http/ui/auth-console/http-client.ts';
+} from '../../../../src/adapters/http/internal-client/index.ts';
 
 describe('createPublicToInternalURLRewriter', () => {
     it('rewrites urls under a prefixed public url onto the internal address', () => {
@@ -103,9 +103,9 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 });
 
-describe('createInternalUIHttpClient', () => {
+describe('createInternalHttpClient', () => {
     it('keeps the public url as baseURL so rendered hrefs stay user-facing', () => {
-        const client = createInternalUIHttpClient({
+        const client = createInternalHttpClient({
             publicURL: 'https://hub.local/auth',
             internalURL: 'http://localhost:3010/',
         });

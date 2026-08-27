@@ -6,28 +6,27 @@
  */
 
 import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
 import {
     DContext,
     DController,
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { ACCOUNT_CONSOLE_SEGMENT, serveAccountConsolePage } from '../../../ui/index.ts';
+import { ACCOUNT_CONSOLE_SEGMENT } from '../../../constants.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AccountControllerContext, AccountControllerOptions } from './types.ts';
 
 /**
- * Serves the account console SPA (`@authup/client-account-console`) shell.
- * client-side routing owns the sub-paths, so every route returns the same
- * shell with the runtime config (apiUrl, base path, feature flags) injected.
- * The bundle's static assets ride the assets middleware
- * (/console/account/assets).
+ * The account console's server half (plan 088): the login kick and the code
+ * redemption, so no OAuth2 token ever reaches the console's JavaScript.
  *
- * It also owns the console's server-side login (plan 088): the kick and the
- * code redemption, so no OAuth2 token ever reaches the console's JavaScript.
- * Both are the shared {@link ConsoleLogin} bound to the `account-console`
- * client; the session endpoint the console hydrates from lives on the session
- * controller, since the credential is console-generic.
+ * The console itself is served by `@authup/server-account-console`, which
+ * owns everything else under `/console/account`. These two routes stay here
+ * because they are sessions, keys and cache, and because the pending-login
+ * cookie has to be issued on the origin that reads it back (plan 101
+ * invariant 3). A proxy therefore routes these two exact paths to the API
+ * set and the rest of the console's segment to the console set.
  */
 @DController(`/${ACCOUNT_CONSOLE_SEGMENT}`)
 export class AccountController {
@@ -41,6 +40,7 @@ export class AccountController {
             {
                 clientName: CLIENT_ACCOUNT_CONSOLE_NAME,
                 segment: ACCOUNT_CONSOLE_SEGMENT,
+                consoleUrl: ctx.options.consoleUrl,
             },
             {
                 options: { baseURL: ctx.options.baseURL },
@@ -54,49 +54,33 @@ export class AccountController {
         );
     }
 
-    // ---------------------------------------------------------
-    // The two routes below MUST stay declared before `/:page`,
-    // which matches any single segment and would swallow them.
-    // ---------------------------------------------------------
-
     /**
-     * Disabled means disabled on the server too: the kick must not mint a
-     * pending login and a session for a surface that renders nothing but the
-     * notice. The shell (and the notice) is what a visitor gets instead.
+     * A path of its own rather than a `realmId`-carrying `/login` (098 C1).
+     * The bare `/login` is the console's own page now, served by the console
+     * service, so there is nothing left here to dispatch against.
      */
-    @DGet('/login', [])
-    async login(@DContext() event: IAppEvent): Promise<Response | string> {
-        if (!this.options.features.accountConsole) {
-            return this.render(event);
-        }
+    @DGet('/login/start', [])
+    async login(@DContext() event: IAppEvent): Promise<Response> {
+        this.assertEnabled();
 
         return this.consoleLogin.login(event);
     }
 
     @DGet('/callback', [])
-    async callback(@DContext() event: IAppEvent): Promise<Response | string> {
-        if (!this.options.features.accountConsole) {
-            return this.render(event);
-        }
+    async callback(@DContext() event: IAppEvent): Promise<Response> {
+        this.assertEnabled();
 
         return this.consoleLogin.callback(event);
     }
 
-    @DGet('', [])
-    async serve(@DContext() event: IAppEvent): Promise<string> {
-        return this.render(event);
-    }
-
-    @DGet('/:page', [])
-    async servePage(@DContext() event: IAppEvent): Promise<string> {
-        return this.render(event);
-    }
-
-    protected render(event: IAppEvent): Promise<string> {
-        return serveAccountConsolePage(event, {
-            baseURL: this.options.baseURL,
-            features: this.options.features,
-            trustedOrigins: this.options.trustedOrigins,
-        });
+    /**
+     * Disabled means disabled on the server too: the kick must not mint a
+     * pending login and a session for a console nothing is serving. There is
+     * no shell to answer with any more, so the route simply does not exist.
+     */
+    protected assertEnabled(): void {
+        if (!this.options.enabled) {
+            throw new NotFoundError();
+        }
     }
 }

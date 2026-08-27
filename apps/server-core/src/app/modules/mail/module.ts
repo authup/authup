@@ -29,7 +29,7 @@ export class MailModule implements IModule {
         }
 
         // A pre-registered client wins (test injection — mirrors the
-        // UIHttpClient pattern), so a fake can capture mailed OTP codes.
+        // InternalHttpClient pattern), so a fake can capture mailed OTP codes.
         if (container.has(MailInjectionKey)) {
             return;
         }

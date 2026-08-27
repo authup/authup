@@ -8,7 +8,7 @@
 import { Client } from '@authup/core-http-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { FetchTransport, fetch } from 'hapic';
-import type { InternalUIHttpClientContext } from './types.ts';
+import type { InternalHttpClientContext } from './types.ts';
 
 /**
  * Build a rewriter that maps URLs under the public base URL
@@ -56,18 +56,17 @@ export function createPublicToInternalURLRewriter(
 }
 
 /**
- * HTTP client for the SSR'd UI pages: the render's API calls target the
- * server itself, so they are dispatched against its own listen address —
- * no reverse-proxy round-trip, no TLS (a self-signed publicUrl certificate
- * would otherwise fail Node's fetch), no dependency on the public hostname
- * resolving from inside the deployment.
+ * HTTP client for this server's calls to its own API: they are dispatched
+ * against its own listen address, so there is no reverse-proxy round-trip,
+ * no TLS (a self-signed publicUrl certificate would otherwise fail Node's
+ * fetch) and no dependency on the public hostname resolving from inside the
+ * deployment. Its one consumer is the console login's token exchange.
  *
  * The rewrite happens at the TRANSPORT layer only: `baseURL` must stay the
- * public URL because the rendered HTML derives user-facing URLs from it
- * (e.g. the identity-provider authorize hrefs via `getAuthorizeUri`), and
- * hydration does not patch attribute mismatches.
+ * public URL because the values derived from it are user-facing, and a
+ * `redirect_uri` in particular is compared byte for byte at redemption.
  */
-export function createInternalUIHttpClient(ctx: InternalUIHttpClientContext) : IClient {
+export function createInternalHttpClient(ctx: InternalHttpClientContext) : IClient {
     const rewriteURL = createPublicToInternalURLRewriter(ctx.publicURL, ctx.internalURL);
 
     return new Client({

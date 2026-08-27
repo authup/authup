@@ -12,7 +12,7 @@ import { serve } from 'routup/node';
 import type { ApplicationMountFactory } from '../../types.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
-import { bindConsolePackages, createInternalUIHttpClient } from '../../../adapters/http/ui/index.ts';
+import { createInternalHttpClient } from '../../../adapters/http/internal-client/index.ts';
 import { NoopAuthFlowMetrics } from '../../../core/index.ts';
 import { ModuleName } from '../constants.ts';
 import type { HTTPServer } from './constants.ts';
@@ -33,7 +33,7 @@ export class HTTPModule implements IModule {
 
     protected controller : HTTPControllerModule;
 
-    protected uiHttpClientRegistered : boolean;
+    protected internalHttpClientRegistered : boolean;
 
     protected mounts?: ApplicationMountFactory;
 
@@ -43,7 +43,7 @@ export class HTTPModule implements IModule {
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
         this.middleware = new HTTPMiddlewareModule();
-        this.uiHttpClientRegistered = false;
+        this.internalHttpClientRegistered = false;
     }
 
     // ----------------------------------------------------
@@ -69,16 +69,7 @@ export class HTTPModule implements IModule {
             );
         }
 
-        // Before any route is mounted: a substituted console package that
-        // no longer fulfills its contract must stop the boot, not surface
-        // as a confusing per-request failure on /authorize.
-        await bindConsolePackages({
-            authConsolePath: config.authConsolePath,
-            accountConsolePath: config.accountConsolePath,
-            adminConsolePath: config.adminConsolePath,
-        });
-
-        this.registerUIHttpClient(container);
+        this.registerInternalHttpClient(container);
         this.registerMetrics(container);
 
         await this.middleware.mountBefore(router, container);
@@ -125,19 +116,19 @@ export class HTTPModule implements IModule {
     // ----------------------------------------------------
 
     /**
-     * Default HTTP client for the SSR'd UI pages: dispatches against the
-     * server's own listen address instead of round-tripping through the
-     * reverse proxy at `publicUrl` (see `createInternalUIHttpClient`).
-     * Skipped when the token is already bound (test injection wins).
-     * Transient lifetime is mandatory — client-web-kit's authentication
-     * hook writes per-user Authorization state onto the client.
+     * Default HTTP client for this server's calls to its own API: dispatches
+     * against the server's own listen address instead of round-tripping
+     * through the reverse proxy at `publicUrl` (see
+     * `createInternalHttpClient`). Skipped when the token is already bound
+     * (test injection wins). Transient lifetime is mandatory: the
+     * authentication hook writes per-user Authorization state onto a client.
      */
-    protected registerUIHttpClient(container: IContainer): void {
-        if (container.has(HTTPInjectionKey.UIHttpClient)) {
+    protected registerInternalHttpClient(container: IContainer): void {
+        if (container.has(HTTPInjectionKey.InternalHttpClient)) {
             return;
         }
 
-        container.register(HTTPInjectionKey.UIHttpClient, {
+        container.register(HTTPInjectionKey.InternalHttpClient, {
             useFactory: (c) => {
                 const config = c.resolve(ConfigInjectionKey);
 
@@ -150,7 +141,7 @@ export class HTTPModule implements IModule {
                     undefined;
 
                 if (server && server.url) {
-                    return createInternalUIHttpClient({
+                    return createInternalHttpClient({
                         publicURL: config.publicUrl,
                         internalURL: server.url,
                     });
@@ -160,7 +151,7 @@ export class HTTPModule implements IModule {
             },
         }, { lifetime: 'transient' });
 
-        this.uiHttpClientRegistered = true;
+        this.internalHttpClientRegistered = true;
     }
 
     /**
@@ -186,14 +177,12 @@ export class HTTPModule implements IModule {
     // ----------------------------------------------------
 
     async teardown(container: IContainer): Promise<void> {
-        if (this.uiHttpClientRegistered) {
-            container.unregister(HTTPInjectionKey.UIHttpClient);
-            this.uiHttpClientRegistered = false;
+        if (this.internalHttpClientRegistered) {
+            container.unregister(HTTPInjectionKey.InternalHttpClient);
+            this.internalHttpClientRegistered = false;
         }
 
         container.unregister(MetricsInjectionKey);
-
-        await this.middleware.teardown();
 
         if (!this.instance) return;
 

@@ -417,7 +417,7 @@ describe('src/config/*.ts', () => {
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
         expect(config.publicUrl).toEqual('https://idp.example.com');
-        expect(config.themeDirectoryPath).toEqual('/etc/authup/theme');
+        expect(config.adminConsoleUrl).toEqual('https://console.example.com/admin');
         expect(config.port).toEqual(4711);
         expect(config.host).toEqual('127.0.0.1');
         expect(config.adminConsoleEnabled).toEqual(false);

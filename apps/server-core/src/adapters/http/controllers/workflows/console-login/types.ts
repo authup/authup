@@ -24,10 +24,18 @@ export type ConsoleLoginDefinition = {
     /**
      * The path the console is served under, relative to the deployment base
      * path (`console/account`, `console/admin`; it may carry a slash). It
-     * scopes the login cookie, builds the callback URL and names where the
-     * browser lands once the credential is issued.
+     * scopes the login cookie and builds the callback URL, both of which live
+     * on the API's own origin whatever the console url says.
      */
     segment: string,
+    /**
+     * Where the console itself is served (`server.<name>Console.url`). The
+     * browser lands there once the credential is issued. Only its path is
+     * used: a console on a FOREIGN origin could never present the
+     * `SameSite=Strict` credential this flow issues, so that shape is refused
+     * before it reaches here.
+     */
+    consoleUrl: string,
     /**
      * Where a refused callback lands, relative to the console root
      * (`login` -> `<base>/<segment>/login?error=...`). Defaults to the root:

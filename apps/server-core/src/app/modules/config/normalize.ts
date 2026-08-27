@@ -10,7 +10,11 @@ import path from 'node:path';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
 import { buildSchemaDefaults } from '@authup/server-config-kit';
-import { AUTH_CONSOLE_SEGMENT } from '../../../adapters/http/ui/constants.ts';
+import {
+    ACCOUNT_CONSOLE_SEGMENT,
+    ADMIN_CONSOLE_SEGMENT,
+    AUTH_CONSOLE_SEGMENT,
+} from '../../../adapters/http/constants.ts';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
@@ -98,28 +102,25 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         config.writableDirectoryPath || 'writable',
     );
 
-    if (config.themeDirectoryPath) {
-        config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
-    }
-
-    if (config.authConsolePath) {
-        config.authConsolePath = path.resolve(config.rootPath, config.authConsolePath);
-    }
-
-    // The single-origin default: the auth console service is served under
+    // The single-origin default: each console service is served under
     // publicUrl at the segment its bundle is built for, which is where the
     // proxy routes /console/** in a split deployment too. An operator only
-    // sets this when the console lives somewhere else.
+    // sets these when a console lives somewhere else. Every one of them is
+    // also declared by the console package that serves it, and the composer
+    // refuses a pair whose defaults disagree, so the derivation is spelled
+    // once per side and can never drift.
+    const publicUrlTrimmed = config.publicUrl.replace(/\/+$/, '');
+
     if (!config.authConsoleUrl) {
-        config.authConsoleUrl = `${config.publicUrl.replace(/\/+$/, '')}/${AUTH_CONSOLE_SEGMENT}`;
+        config.authConsoleUrl = `${publicUrlTrimmed}/${AUTH_CONSOLE_SEGMENT}`;
     }
 
-    if (config.accountConsolePath) {
-        config.accountConsolePath = path.resolve(config.rootPath, config.accountConsolePath);
+    if (!config.accountConsoleUrl) {
+        config.accountConsoleUrl = `${publicUrlTrimmed}/${ACCOUNT_CONSOLE_SEGMENT}`;
     }
 
-    if (config.adminConsolePath) {
-        config.adminConsolePath = path.resolve(config.rootPath, config.adminConsolePath);
+    if (!config.adminConsoleUrl) {
+        config.adminConsoleUrl = `${publicUrlTrimmed}/${ADMIN_CONSOLE_SEGMENT}`;
     }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,

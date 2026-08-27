@@ -83,36 +83,22 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         env: ConfigEnvironmentVariableName.WRITABLE_DIRECTORY_PATH,
         readEnv: readEnvString,
     },
-    themeDirectoryPath: {
-        type: stringType,
-        // '' = theming disabled. Deliberately NOT defaulted under
-        // writableDirectoryPath: that directory is process-writable, and
-        // pairing "process-writable" with "content injected into the login
-        // page" would turn any write primitive landing there into
-        // persistent branding control on the IdP origin.
+    adminConsoleUrl: {
+        type: z.union([z.literal(''), z.url()]),
         default: '',
-        description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served at /theme, its theme.json injects CSS custom properties); an empty value disables theming. ' +
-            'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
-        path: 'theme.directoryPath',
-        env: ConfigEnvironmentVariableName.THEME_DIRECTORY_PATH,
+        description: 'Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. ' +
+            'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
+        path: 'server.adminConsole.url',
+        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_URL,
         readEnv: readEnvString,
     },
-    themeFragmentsEnabled: {
-        type: booleanType,
-        default: false,
-        description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of both served consoles. ' +
-            'SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.',
-        path: 'theme.fragmentsEnabled',
-        env: ConfigEnvironmentVariableName.THEME_FRAGMENTS_ENABLED,
-        readEnv: readEnvBool,
-    },
-    authConsolePath: {
-        type: stringType,
+    accountConsoleUrl: {
+        type: z.union([z.literal(''), z.url()]),
         default: '',
-        description: 'EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. ' +
-            'The substitute replaces the login and consent implementation, not its styling.',
-        path: 'server.authConsole.path',
-        env: ConfigEnvironmentVariableName.AUTH_CONSOLE_PATH,
+        description: 'Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. ' +
+            'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
+        path: 'server.accountConsole.url',
+        env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_URL,
         readEnv: readEnvString,
     },
     authConsoleUrl: {
@@ -122,22 +108,6 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
             'The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.',
         path: 'server.authConsole.url',
         env: ConfigEnvironmentVariableName.AUTH_CONSOLE_URL,
-        readEnv: readEnvString,
-    },
-    accountConsolePath: {
-        type: stringType,
-        default: '',
-        description: 'Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
-        path: 'server.accountConsole.path',
-        env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_PATH,
-        readEnv: readEnvString,
-    },
-    adminConsolePath: {
-        type: stringType,
-        default: '',
-        description: 'Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
-        path: 'server.adminConsole.path',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_PATH,
         readEnv: readEnvString,
     },
 

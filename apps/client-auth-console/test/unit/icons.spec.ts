@@ -13,7 +13,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { resolveAuthConsoleDistPath } from '../../../../../src/adapters/http/ui/auth-console/resolve.ts';
+import { fileURLToPath } from 'node:url';
 
 /**
  * The SSR UI bundles only the icons it renders (`NuxtIconBundle` in
@@ -38,19 +38,20 @@ import { resolveAuthConsoleDistPath } from '../../../../../src/adapters/http/ui/
  * page carries empty `<svg>` shells whether or not the icon data was bundled
  * (verified against the pre-bundling build, which renders identically).
  */
-describe('http/controllers/workflows/ui-pages-icons', () => {
+describe('icons', () => {
     let bundle: string;
 
     beforeAll(async () => {
-        // The bundle ships as @authup/client-auth-console (built before
-        // server-core via the nx dependency); resolve it like the serving
-        // seam does. The entry is resolved through index.html rather than by
-        // globbing the assets directory, so a lingering asset from an older
-        // build can never be asserted against.
-        const distPath = resolveAuthConsoleDistPath();
-        expect(distPath, 'auth console bundle not built (npm run build -w apps/client-auth-console)').toBeDefined();
-
-        const root = path.join(distPath!, 'client');
+        // This app's own built bundle. The entry is resolved through
+        // index.html rather than by globbing the assets directory, so a
+        // lingering asset from an older build can never be asserted against.
+        const root = path.join(
+            path.dirname(fileURLToPath(import.meta.url)),
+            '..',
+            '..',
+            'dist',
+            'client',
+        );
         const html = await readFile(path.join(root, 'index.html'), 'utf-8');
         const entry = /(?:src|href)="[^"]*\/(assets\/[^"/]+\.js)"/.exec(html);
 
