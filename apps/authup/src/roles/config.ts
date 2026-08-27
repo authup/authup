@@ -79,12 +79,19 @@ export async function readConsoleConfigs(
     const read = <T extends { publicUrl: string }>(schema: ConfigSchemaInput<T>) : Partial<T> => ({
         ...readSchemaFromFileTree<T>(tree, schema),
         ...readSchemaFromEnv<T>(schema),
-        // Taken from the resolved core configuration rather than read again:
-        // server-core DERIVES it from host and port when the document names
+        // The two deployment-wide keys a console must NOT resolve for itself,
+        // taken from the resolved core configuration instead.
+        //
+        // `publicUrl` is DERIVED from host and port when the document names
         // none, and a console has no host and port of the API's to derive it
-        // from. Both packages declare the key, so what a console reads on its
-        // own is the same value whenever the document does name one.
+        // from. `trustedOrigins` is CANONICALIZED (a bare host expands to its
+        // http and its https origin, entries are deduped), which
+        // normalizeConfig owns; the raw list would leave the account console
+        // matching its `ref` back link against a scheme-less pattern that
+        // matches nothing, so the link would silently disappear for exactly
+        // the origins written in the short form.
         publicUrl: core.publicUrl,
+        trustedOrigins: core.trustedOrigins,
     });
 
     return {
