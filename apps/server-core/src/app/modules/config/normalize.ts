@@ -16,7 +16,7 @@ import {
     AUTH_CONSOLE_SEGMENT,
 } from '../../../adapters/http/constants.ts';
 import { toPublicHost } from '../../../utils/host.ts';
-import { expandToOrigins } from '@authup/server-config-base';
+import { expandToOrigins } from '@authup/server-config';
 import { parseConfig } from './parse.ts';
 import { CONFIG_SCHEMA } from './registry.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';

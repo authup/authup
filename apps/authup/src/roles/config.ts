@@ -17,26 +17,6 @@ import type { Config, ConfigReadFsOptions } from '@authup/server-core';
 import { readConfigFileTree } from '@authup/server-core';
 import path from 'node:path';
 
-/**
- * The registries `authup.yml` is the union of, beyond server-core's own.
- *
- * Each service package declares the keys it reads, and a key two packages
- * both read is declared in both. Nothing imports across the boundary in
- * either direction: server-core reaching into a console package would drag
- * that console's dist into an `authup core` deployment, and a console
- * package reaching into server-core would drag native crypto bindings,
- * winston and redis into a static file server. `composeSchemas` is what
- * keeps two independent declarations of one key honest instead, by refusing
- * a pair that disagrees on path, environment variable, default or reader.
- *
- * This CLI is the only place that knows about all four, which is its job.
- */
-export const CONSOLE_CONFIG_SCHEMAS : { schema: ConfigSchemaInput<any> }[] = [
-    { schema: AUTH_CONSOLE_CONFIG_SCHEMA },
-    { schema: ADMIN_CONSOLE_CONFIG_SCHEMA },
-    { schema: ACCOUNT_CONSOLE_CONFIG_SCHEMA },
-];
-
 export type ConsoleConfigs = {
     auth: AuthConsoleConfig,
     admin: AdminConsoleConfig,

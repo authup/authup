@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchemaInput } from '@authup/server-config-kit';
-import { composeSchemas, findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
+import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA } from '@authup/server-config';
+import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
 import fs from 'node:fs';
@@ -15,7 +15,6 @@ import process from 'node:process';
 import {
     CONFIG_FILE_EXTENSIONS,
     CONFIG_FILE_NAME,
-    CONFIG_SECTION,
 } from '../constants.ts';
 import { CONFIG_SCHEMA } from '../registry.ts';
 import type { ConfigInput } from '../types.ts';
@@ -152,7 +151,9 @@ export async function readConfigFileTree(
 export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
     const { tree } = await readConfigFileTree(options);
 
-    return readSchemaFromFileTree(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
+    // No prefix: every entry of the selection carries the absolute path its
+    // one declaration spells.
+    return readSchemaFromFileTree(tree, CONFIG_SCHEMA);
 }
 
 export type ConfigFileInspection = {
@@ -176,27 +177,18 @@ export type ConfigFileInspection = {
  * What `config validate` reports about the file itself, as opposed to the
  * configuration the file resolves to.
  *
- * `schemas` are the registries of the OTHER packages the same document
- * configures. One `authup.yml` is the union of every registry, so a key a
- * console service reads is not an unknown one just because server-core does
- * not read it. Composing also asserts the declarations agree, since a key
- * two packages read is declared in both (plan 101 stage C).
+ * Checked against the WHOLE document, not this service's selection: one
+ * `authup.yml` configures every service in the deployment, so a key a console
+ * service reads is not an unknown one just because server-core does not read
+ * it. Every entry carries its absolute path, so the pass needs no prefix.
  */
 export async function inspectConfigFile(
     options: ConfigReadFsOptions = {},
-    schemas: { prefix?: string, schema: ConfigSchemaInput<any> }[] = [],
 ) : Promise<ConfigFileInspection> {
     const { tree, files } = await readConfigFileTree(options);
 
-    const composed = composeSchemas([
-        { prefix: CONFIG_SECTION, schema: CONFIG_SCHEMA },
-        ...schemas,
-    ]);
-
     return {
         files,
-        // Every composed entry carries a resolved absolute path, so the pass
-        // needs no prefix of its own any more.
-        unknown: findUnknownSchemaPaths(tree, composed),
+        unknown: findUnknownSchemaPaths(tree, DOCUMENT_CONFIG_SCHEMA),
     };
 }

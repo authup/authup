@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CERTIFICATE_SOURCES } from './constants.ts';
-
-export type CertificateSource = typeof CERTIFICATE_SOURCES[number];
+// One definition, next to the `certificateSource` key whose vocabulary it is;
+// re-exported so the request layer keeps one import path for it.
+export type { CertificateSource } from '@authup/server-config';

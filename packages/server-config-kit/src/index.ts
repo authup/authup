@@ -10,16 +10,15 @@
  * NO `@authup/*` dependency at all, so a server package can read its own
  * configuration without depending on server-core and without inheriting
  * server-kit's tail. What it holds is the declaration shape, the
- * environment readers, the passes over a registry (environment, file tree,
- * defaults, validator mounts, JSON Schema) and the composer that merges
- * several registries into one; WHICH keys exist is the caller's registry,
- * not this package's business.
+ * environment readers and the passes over a registry (environment, file
+ * tree, defaults, validator mounts, JSON Schema); WHICH keys exist is the
+ * caller's registry, not this package's business.
  *
- * Plan 101 stage C: each server package declares the registry of the keys
- * it reads, and the `authup` CLI composes them.
+ * For authup itself that registry is `@authup/server-config`, which declares
+ * every key of `authup.yml` once and lets each service SELECT the keys it
+ * reads (plan 101 stage C).
  */
 
-export * from './compose.ts';
 export * from './defaults.ts';
 export * from './env.ts';
 export * from './file.ts';

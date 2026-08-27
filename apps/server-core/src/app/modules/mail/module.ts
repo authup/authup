@@ -41,6 +41,8 @@ export class MailModule implements IModule {
             return;
         }
 
+        // the configuration surface is deliberately untyped: the object arm
+        // of `smtp` is opaque, and this adapter owns its real shape.
         container.register(MailInjectionKey, { useFactory: () => new SMTPMailClientAdapter(result.data.smtp) });
     }
 }

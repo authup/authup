@@ -1495,8 +1495,8 @@ nothing else.
   exist. server-core still publishes the flag on `GET /`
   (`buildUIFeatures` → `StatusResponseFeatures.accountConsole`), so a
   reader can tell what the deployment intends. The flag is one declaration
-  in `@authup/server-config-base`, read by the console service and by
-  server-core alike.
+  in `@authup/server-config`, read by the console service and by server-core
+  alike.
 - **Login = full auth-code + PKCE against the per-realm `account-console`
   client** (Keycloak model — per-app attribution + access-policy
   enforceability), NOT bare reuse of the lingering kit-store session.
@@ -2988,58 +2988,58 @@ static-file-serving console inherit native `@node-rs/bcrypt` and
 pins the dependency set, the successor of the portability guard the folder
 carried before the extraction.
 
-**Four registries, one document.** Each server package owns the registry of
-the keys it reads, and `apps/authup` is the only workspace that knows about
-all four (`src/roles/config.ts`), so that is where they meet: `config
-validate` runs each package's keys against its own registry and `config
-schema` prints the composed document. `composeSchemas` merges N
-`{ prefix, schema }` pairs into one schema whose every entry carries a
-RESOLVED absolute `path`.
+**One document, one declaration per key** (`@authup/server-config`). Every
+key of `authup.yml` is declared exactly once, in the section it belongs to:
+`deployment/` (the root keys), `theme/`, `core/` (`server.core.*`) and one
+per console (`server.<name>Console.*`). A service does not declare anything.
+It SELECTS: its config type is an intersection of the section types it
+reads, and its registry a spread of the matching schemas. server-core takes
+deployment plus core plus the five console-reference keys it needs to
+redirect and to land a login; a console takes `publicUrl`, the theme pair
+and its own section.
 
-**A key more than one package reads is declared once, in
-`@authup/server-config-base`**, and the consumer spreads it into its own
-registry (`publicUrl: BASE_CONFIG_SCHEMA.publicUrl`). Nothing imports across
-the SERVICE boundary in either direction, which is what makes a leaf
-necessary: server-core reaching into a console package would drag that
-console's dist into an `authup core` deployment, and a console reaching into
-server-core would drag the native crypto bindings, winston and redis into a
-static file server. Declaring the key in each registry instead was the
-predecessor and is what `composeSchemas`' agreement rule was written for; it
-held for path, environment variable, default and reader, and not for the
-three things that matter as much. The zod type and the description are
-outside the check (a zod type holds closures and is not value-comparable),
-so the account console's `trustedOrigins` accepted values server-core
-refused. A process-derived default is a closure, so identity is the only
-agreement there is for one. And an OMISSION is invisible: a package that
-never declares a shared key reads its default with nothing to compare
-against, which is the failure mode a single declaration removes outright.
+That is the whole point of the shape: a service that names key names cannot
+mis-spell a path, an environment variable or a reader, because it spells
+none of them. The predecessor had each package declare what it read and
+`composeSchemas` assert that overlapping declarations agreed. That held for
+path, environment variable, default and reader, and not for the zod type or
+the description (the account console's `trustedOrigins` accepted values
+server-core refused), and it could not see an OMISSION at all: a package
+that simply never declared a shared key read its default in silence.
+`composeSchemas` is gone with the problem it solved.
 
-The set is `publicUrl`, `trustedOrigins`, the theme pair, the three
-`server.<name>Console.url` and the two `.enabled` (`packages/server-config-base`,
-`BASE_CONFIG_SCHEMA`). `expandToOrigins` lives there too, next to the
-`trustedOrigins` type whose refine calls it, so both readers validate an
-origin identically; `getAppOrigins` stays in server-core, since it takes a
-`Config`. The environment variable names travel with the keys
-(`BaseConfigEnvironmentVariableName`): a string enum is nominally typed, so
-a package narrowing its registry to its own enum cannot accept a plain
-literal from another package, and it unions the two instead. `publicUrl`
-carries no default at all, because server-core DERIVES it in
-`normalizeConfig` from host and port and a console has neither of the API's;
-`readConsoleConfigs` hands each console the resolved value, along with the
-canonicalized `trustedOrigins`.
+**The document's types are authup's own.** Eleven keys used to be typed
+against the library that eventually consumes them: `db` against typeorm,
+`redis` against `@authup/server-kit`, `smtp` against server-core's mail
+adapter, the seven `middleware*` against six `@routup/*` packages. A leaf
+every console imports cannot carry that, so `DatabaseConnectionOptions`,
+`RedisConnectionOptions`, `SMTPConnectionOptions` and `MiddlewareOptions`
+are declared here and server-core casts at the boundary where it hands the
+value to the library. Nothing is lost at the configuration surface: those
+zod types are already `z.custom(isObject)` or
+`z.boolean().or(z.record(z.string(), z.any()))`, so the published JSON
+Schema said "any object" for every one of them before and after. The
+constants the declarations need travel with them: `expandToOrigins` next to
+`trustedOrigins`, `isValidTrustProxyListEntry` next to `trustProxy`,
+`CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` next to their
+keys, and server-core imports them back. The package depends on
+`@authup/core-kit` (two password bounds), `@authup/kit`,
+`@authup/server-config-kit`, `envix` and `zod`, and on nothing with a native
+binding.
 
-`composeSchemas`' agreement rule stays, now guarding a registry authup does
-not own (a downstream embedder's) rather than authup's own four. Cross-section
-invariants stay in `normalizeConfig`, next to the existing ones, rather than
-in the composer. One of them is that every console url must sit on
-publicUrl's own ORIGIN: a console under a path of its own is fully supported
-and is what those keys are for, but a console on another domain half-works
-rather than failing, since the static consoles authenticate with a
-`SameSite=Strict` credential re-checked against `Sec-Fetch-Site:
-same-origin` and the auth console holds the browser session every
-`prompt=none` decision reads. Different domains are the named stage-G
-follow-up and need WebAuthn origins, the federated-login cookie and
-credentialed CORS to move together.
+`apps/authup` is still the only workspace that knows about every service, so
+it is where the per-console configs are resolved (`src/roles/config.ts`),
+but `config schema` now prints the package and `config validate` checks the
+whole document against it, including keys no service in the process reads.
+Cross-section invariants stay in `normalizeConfig` rather than in the
+schema. One of them is that every console url must sit on publicUrl's own
+ORIGIN: a console under a path of its own is fully supported and is what
+those keys are for, but a console on another domain half-works rather than
+failing, since the static consoles authenticate with a `SameSite=Strict`
+credential re-checked against `Sec-Fetch-Site: same-origin` and the auth
+console holds the browser session every `prompt=none` decision reads.
+Different domains are the named stage-G follow-up and need WebAuthn origins,
+the federated-login cookie and credentialed CORS to move together.
 
 **Env semantics are per entry, not per type**: the seven security toggles
 (`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,

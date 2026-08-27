@@ -5,58 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchema } from '@authup/server-config-kit';
-import { BASE_CONFIG_SCHEMA } from '@authup/server-config-base';
 import {
-    buildSchemaDefaults,
-    readEnvInt,
-    readEnvString,
-    readSchemaFromEnv,
-} from '@authup/server-config-kit';
-import { z } from 'zod';
+    ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
+    DEPLOYMENT_CONFIG_SCHEMA,
+    THEME_CONFIG_SCHEMA,
+} from '@authup/server-config';
+import type { ConfigSchema } from '@authup/server-config-kit';
+import { buildSchemaDefaults, readSchemaFromEnv } from '@authup/server-config-kit';
 import { ADMIN_CONSOLE_BASE_PATH } from './constants';
 import type { AdminConsoleConfig, AdminConsoleConfigInput } from './types';
 
-/**
- * The section of `authup.yml` this service's own keys live under. Keys it
- * SHARES with server-core (publicUrl, the theme pair) declare an absolute
- * path of their own instead, and their entries below are copies of
- * server-core's: `composeSchemas` refuses a key two registries declare with a
- * disagreeing path, environment variable or default, because the two would
- * then read one configuration key differently.
- */
-export const ADMIN_CONSOLE_CONFIG_SECTION = 'server.adminConsole';
+export { ADMIN_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
 
+/**
+ * The keys this service reads, SELECTED out of the document schema by name.
+ *
+ * Nothing is declared here: every key of `authup.yml` is declared once in
+ * `@authup/server-config`, so this service cannot spell a path, an
+ * environment variable, a default or a reader differently from server-core,
+ * which reads `publicUrl`, `adminConsoleUrl` and `adminConsoleEnabled` too.
+ * Neither package depends on the other; both depend on the declaration.
+ */
 export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
-    publicUrl: BASE_CONFIG_SCHEMA.publicUrl,
-    adminConsoleUrl: BASE_CONFIG_SCHEMA.adminConsoleUrl,
-    adminConsoleEnabled: BASE_CONFIG_SCHEMA.adminConsoleEnabled,
-    themeDirectoryPath: BASE_CONFIG_SCHEMA.themeDirectoryPath,
-    themeFragmentsEnabled: BASE_CONFIG_SCHEMA.themeFragmentsEnabled,
-    adminConsolePort: {
-        type: z.number().nonnegative(),
-        default: 3021,
-        description: 'TCP port the HTTP listener binds.',
-        path: 'server.adminConsole.port',
-        env: 'ADMIN_CONSOLE_PORT',
-        readEnv: readEnvInt,
-    },
-    adminConsoleHost: {
-        type: z.string(),
-        default: '',
-        description: 'Host address the HTTP listener binds; an empty value leaves the runtime default.',
-        path: 'server.adminConsole.host',
-        env: 'ADMIN_CONSOLE_HOST',
-        readEnv: readEnvString,
-    },
-    adminConsolePath: {
-        type: z.string(),
-        default: '',
-        description: 'Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
-        path: 'server.adminConsole.path',
-        env: 'ADMIN_CONSOLE_PATH',
-        readEnv: readEnvString,
-    },
+    ...ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
+    ...THEME_CONFIG_SCHEMA,
+    publicUrl: DEPLOYMENT_CONFIG_SCHEMA.publicUrl,
 } satisfies ConfigSchema<AdminConsoleConfigInput, 'publicUrl'>;
 
 /**

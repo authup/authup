@@ -46,7 +46,10 @@ async function runMigrationOperation(
 
     let options: DataSourceOptions;
     if (config.db) {
-        options = optionsBuilder.buildWith(config.db);
+        // the configuration surface is deliberately untyped: `db` is authup's
+        // own loose shape, so the driver union is applied here, at the
+        // boundary where the value reaches typeorm.
+        options = optionsBuilder.buildWith(config.db as DataSourceOptions);
     } else {
         options = optionsBuilder.buildWithEnv();
     }

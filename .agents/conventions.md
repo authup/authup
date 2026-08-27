@@ -227,15 +227,21 @@ lists `vue` needs this before merge; its own CI already shows the failure.
 - Config keys in `app/modules/config/types.ts` match the service option names
 - Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
 - Config file keys (`authup.yml`) use `camelCase` matching the TypeScript property name
-- **A configuration key more than one server package reads is declared ONCE**,
-  in `@authup/server-config-base`, and each reader spreads the entry into its
-  own registry. Nothing may import across the service boundary in either
-  direction (a console's dist must not reach an `authup core` deployment, and
-  server-kit's native tail must not reach a static file server), so a leaf is
-  the only place such a key can live. Declaring it per package was the
-  predecessor: `composeSchemas` compares path, environment variable, default
-  and reader, but not the zod type or the description, and cannot compare a
-  key a registry never declared at all.
+- **Every configuration key is declared once, in `@authup/server-config`**,
+  in the document section it belongs to; a service SELECTS the sections and
+  keys it reads rather than declaring them. A service that names key names
+  cannot mis-spell a path, an environment variable or a reader. The
+  predecessor had each package declare what it read: `composeSchemas`
+  asserted that overlapping declarations agreed on path, environment
+  variable, default and reader, but not on the zod type or the description,
+  and could not see a key a registry never declared at all.
+- **The configuration document's types are authup's own**, never borrowed
+  from the library that eventually consumes the value. `db`, `redis`, `smtp`
+  and the seven `middleware*` keys would otherwise drag typeorm,
+  `@authup/server-kit` and six `@routup/*` packages into a leaf that a
+  static file server imports. Their zod types are loose either way, so the
+  published JSON Schema is unchanged; server-core casts at the boundary
+  where it hands the value to the library.
 - **Every path key is resolved against `rootPath` after the `...parsed` spread**
   in `normalizeConfig`, so consumers receive an absolute path and none of them
   has to know what the process cwd was. server-core's own is

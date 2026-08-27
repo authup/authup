@@ -9,9 +9,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
-import { CONFIG_SECTION, ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
+import { CONFIG_SECTION } from '../../../src/app/modules/config/constants';
 import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
-import { BaseConfigEnvironmentVariableName } from '@authup/server-config-base';
+import {
+    CORE_CONFIG_SCHEMA,
+    ConfigEnvironmentVariableName,
+    DEPLOYMENT_CONFIG_SCHEMA,
+} from '@authup/server-config';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
 import type { Config } from '../../../src/app/modules/config/types';
@@ -44,23 +48,40 @@ describe('src/config/registry.ts', () => {
             // of them wins an implementation detail of the read order.
             expect([...new Set(envNames)].length).toEqual(envNames.length);
 
-            // The registry reads two enums: its own, and the one travelling
-            // with the keys `@authup/server-config-base` declares. Every name
-            // comes from one of them, so a typo cannot reach an operator.
-            const known = [
-                ...Object.values(ConfigEnvironmentVariableName),
-                ...Object.values(BaseConfigEnvironmentVariableName),
-            ] as string[];
+            // Every name comes from the one enum the document declares, so a
+            // typo cannot reach an operator. The enum is deliberately a
+            // superset: it also carries the keys only a console service
+            // reads.
+            const known = Object.values(ConfigEnvironmentVariableName) as string[];
             for (const name of envNames) {
                 expect(known).toContain(name);
             }
+        });
 
-            // Every name in THIS package's own enum is used, so a retired key
-            // cannot leave a name behind that reads as supported. The base
-            // enum is deliberately a superset: it also carries the keys only
-            // a console service reads.
-            expect([...envNames].sort())
-                .toEqual(expect.arrayContaining(Object.values(ConfigEnvironmentVariableName).sort()));
+        /**
+         * The selection is by NAME, so nothing stops it from quietly omitting
+         * a key of a section it reads in full: the omitted key is then read
+         * as its default, in silence. Both sections are asserted whole, and
+         * the surplus is exactly the five console keys server-core needs to
+         * answer a request.
+         */
+        it('should select both of its sections in full, plus five console keys', () => {
+            const sectioned = [
+                ...Object.keys(DEPLOYMENT_CONFIG_SCHEMA),
+                ...Object.keys(CORE_CONFIG_SCHEMA),
+            ];
+
+            for (const key of sectioned) {
+                expect(CONFIG_SCHEMA).toHaveProperty(key);
+            }
+
+            expect(CONFIG_KEYS.filter((key) => !sectioned.includes(key)).sort()).toEqual([
+                'accountConsoleEnabled',
+                'accountConsoleUrl',
+                'adminConsoleEnabled',
+                'adminConsoleUrl',
+                'authConsoleUrl',
+            ]);
         });
 
         it('should declare exactly the keys normalizeConfig() outputs', async () => {
@@ -216,23 +237,37 @@ describe('src/config/registry.ts', () => {
             }
         });
 
-        it('should nest a section key and keep a shared one at the root', () => {
+        it('should nest a section key and keep a deployment-wide one at the root', () => {
             const properties = schema.properties as Record<string, Record<string, unknown>>;
 
             expect(Object.keys(properties).sort()).toEqual([
-                'db', 
-                'env', 
-                'publicUrl', 
-                'redis', 
-                'rootPath', 
-                'server', 
+                'db',
+                'env',
+                'publicUrl',
+                'redis',
+                'rootPath',
+                'server',
                 'smtp',
+                'theme',
                 'trustedOrigins',
             ]);
 
             expect(resolveProperty(schema, 'server.core.port')).toBeDefined();
             expect(resolveProperty(schema, 'server.adminConsole.enabled')).toBeDefined();
             expect(resolveProperty(schema, 'server.adminConsole.url')).toBeDefined();
+        });
+
+        /**
+         * The document describes every key an operator may write, not just
+         * the ones this service reads: one `authup.yml` configures the whole
+         * deployment, and an operator writing a console service's section
+         * must not be told the key does not exist.
+         */
+        it('should describe the keys only another service reads', () => {
+            expect(resolveProperty(schema, 'theme.directoryPath')).toBeDefined();
+            expect(resolveProperty(schema, 'server.authConsole.port')).toBeDefined();
+            expect(resolveProperty(schema, 'server.adminConsole.path')).toBeDefined();
+            expect(resolveProperty(schema, 'server.accountConsole.host')).toBeDefined();
         });
 
         it('should carry the env name and the static default, and omit a process-derived default', () => {

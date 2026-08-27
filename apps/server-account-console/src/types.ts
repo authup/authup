@@ -5,29 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type {
+    AccountConsoleSectionConfig,
+    DeploymentConfig,
+    ThemeConfig,
+} from '@authup/server-config';
+
 /**
- * The `authup.yml` NAMESPACE: one field per registry key, spelled exactly as
- * the key is spelled there.
+ * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are console-qualified because a key several packages read has to
- * be spelled the same in every registry declaring it, which is what lets
- * `composeSchemas` assert the declarations agree on path, environment
- * variable and default. Inside this package that vocabulary reads backwards
- * (`publicUrl` here means the API's URL, not this service's), so it is
- * confined to the configuration layer and mapped onto
+ * The names are console-qualified because they belong to a document that
+ * describes a whole deployment, not to this service. Inside this package that
+ * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
+ * service's), so it is confined to the configuration layer and mapped onto
  * {@link AccountConsoleConfig} before anything else sees it.
  */
-export type AccountConsoleConfigInput = {
-    publicUrl: string,
-    accountConsoleUrl: string,
-    accountConsoleEnabled: boolean,
-    accountConsolePath: string,
-    accountConsolePort: number,
-    accountConsoleHost: string,
-    trustedOrigins: string[],
-    themeDirectoryPath: string,
-    themeFragmentsEnabled: boolean,
-};
+export type AccountConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl' | 'trustedOrigins'> &
+    ThemeConfig &
+    AccountConsoleSectionConfig;
 
 /**
  * The service's own vocabulary, which is what every consumer in this package

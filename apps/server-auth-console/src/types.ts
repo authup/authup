@@ -5,30 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type {
+    AuthConsoleSectionConfig,
+    DeploymentConfig,
+    ThemeConfig,
+} from '@authup/server-config';
+
 /**
- * What this service reads out of `authup.yml` and the environment: one field
- * per registry key, spelled the way the CONFIGURATION namespace spells it.
+ * What this service reads out of `authup.yml` and the environment: the
+ * sections it selects keys from, in the CONFIGURATION namespace's own
+ * vocabulary.
  *
- * The names are qualified because a key two packages both read has to be
- * declared identically in both registries, which is what lets the composer
- * assert the two declarations agree without either package depending on the
- * other. That namespace is not this service's own vocabulary, so nothing
- * outside `config.ts` sees this shape: `resolveAuthConsoleConfig` maps it
- * onto {@link AuthConsoleConfig}.
+ * The names are console-qualified because they belong to a document that
+ * describes a whole deployment, not to this service. Inside this package that
+ * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
+ * service's), so it is confined to the configuration layer:
+ * `resolveAuthConsoleConfig` maps it onto {@link AuthConsoleConfig} before
+ * anything else sees it.
  */
-export type AuthConsoleConfigInput = {
-    /**
-     * Server-core's public URL, the deployment-wide `publicUrl` key. It is
-     * the API this service talks to, so it becomes `apiUrl` below.
-     */
-    publicUrl: string,
-    authConsoleUrl: string,
-    authConsolePath: string,
-    authConsolePort: number,
-    authConsoleHost: string,
-    themeDirectoryPath: string,
-    themeFragmentsEnabled: boolean,
-};
+export type AuthConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl'> &
+    ThemeConfig &
+    AuthConsoleSectionConfig;
 
 /**
  * The service's own configuration. This console is the primary context here

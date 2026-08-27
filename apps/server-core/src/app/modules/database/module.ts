@@ -196,7 +196,10 @@ export class DatabaseModule implements IModule {
 
         let options : DataSourceOptions | undefined;
         if (config.db) {
-            options = this.optionsBuilder.buildWith(config.db);
+            // the configuration surface is deliberately untyped: `db` is
+            // authup's own loose shape, and the supported-dialect assertion
+            // below is what narrows it.
+            options = this.optionsBuilder.buildWith(config.db as DataSourceOptions);
         } else {
             options = this.optionsBuilder.buildWithEnv();
         }
@@ -247,6 +250,8 @@ export class DatabaseModule implements IModule {
         const publisher = new DomainEventPublisher({ logger });
         this.eventPublisher = publisher;
         if (config.redis) {
+            // the configuration surface is deliberately untyped: the object
+            // arm of `redis` is opaque, and the client owns its real shape.
             const client = createRedisClient(config.redis);
             if (client !== config.redis) {
                 this.eventRedisClient = client;

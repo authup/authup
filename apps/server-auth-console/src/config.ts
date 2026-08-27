@@ -5,66 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchema } from '@authup/server-config-kit';
-import { BASE_CONFIG_SCHEMA } from '@authup/server-config-base';
 import {
-    buildSchemaDefaults,
-    readEnvInt,
-    readEnvString,
-    readSchemaFromEnv,
-} from '@authup/server-config-kit';
-import { z } from 'zod';
+    AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
+    DEPLOYMENT_CONFIG_SCHEMA,
+    THEME_CONFIG_SCHEMA,
+} from '@authup/server-config';
+import type { ConfigSchema } from '@authup/server-config-kit';
+import { buildSchemaDefaults, readSchemaFromEnv } from '@authup/server-config-kit';
 import { AUTH_CONSOLE_BASE_PATH } from './constants';
 import type { AuthConsoleConfig, AuthConsoleConfigInput } from './types';
 
-/**
- * The section of `authup.yml` this service owns. Every key below spells its
- * own absolute `path`, so the section is documentation rather than a prefix
- * the reader applies.
- */
-export const AUTH_CONSOLE_CONFIG_SECTION = 'server.authConsole';
+export { AUTH_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
 
 /**
- * The keys this service reads, declared the same way server-core declares
- * its own (plan 101 stage C). Three of them are read by server-core too:
- * `publicUrl` and `themeDirectoryPath` / `themeFragmentsEnabled` are
- * deployment-wide, and `authConsoleUrl` is where server-core's page GETs
- * redirect. Those entries are therefore declared identically in both
- * registries: `composeSchemas` refuses a pair that disagrees on path,
- * environment variable, default or reader, which is what keeps two
- * independent declarations of one configuration key honest without either
- * package depending on the other.
+ * The keys this service reads, SELECTED out of the document schema by name.
+ *
+ * Nothing is declared here: every key of `authup.yml` is declared once in
+ * `@authup/server-config`, so this service cannot spell a path, an
+ * environment variable, a default or a reader differently from server-core,
+ * which reads `publicUrl` and `authConsoleUrl` too. Neither package depends
+ * on the other; both depend on the declaration.
  */
 export const AUTH_CONSOLE_CONFIG_SCHEMA = {
-    publicUrl: BASE_CONFIG_SCHEMA.publicUrl,
-    authConsoleUrl: BASE_CONFIG_SCHEMA.authConsoleUrl,
-    themeDirectoryPath: BASE_CONFIG_SCHEMA.themeDirectoryPath,
-    themeFragmentsEnabled: BASE_CONFIG_SCHEMA.themeFragmentsEnabled,
-    authConsolePath: {
-        type: z.string(),
-        default: '',
-        description: 'EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. ' +
-            'The substitute replaces the login and consent implementation, not its styling.',
-        path: 'server.authConsole.path',
-        env: 'AUTH_CONSOLE_PATH',
-        readEnv: readEnvString,
-    },
-    authConsolePort: {
-        type: z.number().nonnegative(),
-        default: 3020,
-        description: 'TCP port the standalone listener binds. Unrelated to the url above, which is the address a browser reaches.',
-        path: 'server.authConsole.port',
-        env: 'AUTH_CONSOLE_PORT',
-        readEnv: readEnvInt,
-    },
-    authConsoleHost: {
-        type: z.string(),
-        default: '0.0.0.0',
-        description: 'Host address the standalone listener binds.',
-        path: 'server.authConsole.host',
-        env: 'AUTH_CONSOLE_HOST',
-        readEnv: readEnvString,
-    },
+    ...AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
+    ...THEME_CONFIG_SCHEMA,
+    publicUrl: DEPLOYMENT_CONFIG_SCHEMA.publicUrl,
 } satisfies ConfigSchema<AuthConsoleConfigInput, 'publicUrl'>;
 
 /**

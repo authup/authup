@@ -5,11 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DatabaseConnectionOptions } from '@authup/server-config';
 import { readSchemaFromEnv } from '@authup/server-config-kit';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
-import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
-import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
-import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 import { CONFIG_SCHEMA } from '../registry.ts';
 import type { ConfigInput } from '../types.ts';
 
@@ -18,10 +16,11 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // The DB_* names come from typeorm-extension and stay outside the registry.
     if (hasEnvDataSourceOptions()) {
-        // todo: type casting should be avoided
-        options.db = readDataSourceOptionsFromEnv() as MysqlDataSourceOptions |
-        PostgresDataSourceOptions |
-        BetterSqlite3DataSourceOptions;
+        // the configuration surface is deliberately untyped here: `db` is
+        // authup's own loose shape, and typeorm's driver union carries
+        // dialects (mariadb) this service does not support anyway. The
+        // supported set is asserted at connect time.
+        options.db = readDataSourceOptionsFromEnv() as DatabaseConnectionOptions;
     }
 
     return options;

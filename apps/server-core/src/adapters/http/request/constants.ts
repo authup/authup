@@ -13,8 +13,8 @@ export enum RequestHandlerOperation {
     DELETE = 'delete',
 }
 
-export const CERTIFICATE_SOURCES = [
-    'disabled',
-    'standard',
-    'forwarded',
-] as const;
+// The certificate-source vocabulary is declared with the `certificateSource`
+// key it is the vocabulary of (in `@authup/server-config`), because the
+// configuration document has to be describable without importing this
+// service. Re-exported here so the request layer keeps one import path.
+export { CERTIFICATE_SOURCES } from '@authup/server-config';

@@ -24,7 +24,7 @@
             "@authup/server-account-console": ["apps/server-account-console/src"],
             "@authup/server-admin-console": ["apps/server-admin-console/src"],
             "@authup/server-config-kit": ["packages/server-config-kit/src"],
-            "@authup/server-config-base": ["packages/server-config-base/src"],
+            "@authup/server-config": ["packages/server-config/src"],
             "@authup/server-auth-console": ["apps/server-auth-console/src"],
             "@authup/server-console-kit": ["packages/server-console-kit/src"],
             "@authup/server-core": ["apps/server-core/src"],

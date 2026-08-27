@@ -20,7 +20,6 @@ import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
-import { CONSOLE_CONFIG_SCHEMAS } from './roles/config.ts';
 import { defineCLIConsoleCommand } from './roles/console.ts';
 import { buildApplicationMounts } from './roles/mounts.ts';
 
@@ -40,7 +39,10 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
-            config: defineCLIConfigCommand(configFs, { schemas: CONSOLE_CONFIG_SCHEMAS }),
+            // Every key of `authup.yml` is declared in `@authup/server-config`,
+            // which server-core reads directly, so the command already covers
+            // the console services' sections without being handed anything.
+            config: defineCLIConfigCommand(configFs),
             console: defineCLIConsoleCommand(configFs),
             // The API and the IdP alone: the page GETs still redirect to the
             // console service, which someone else runs.

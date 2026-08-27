@@ -323,11 +323,10 @@ lives in the packages. The suite is split in two accordingly.
   `worker`), and its `setup` refuses a stray positional on
   `core`/`start`/`worker` (the retired `authup start server.core` selector
   shape) while leaving the commands whose positional is real alone
-  (`migration run`, `console admin`). The registry
-  composition is pinned here too, because it is a static AUTHORING property
-  rather than a deployment one: `composeSchemas` over the four registries
-  either agrees or throws, and a spec is the cheapest place to find out. The
-  supervisor-era specs are gone with the supervisor: there is no entrypoint to
+  (`migration run`, `console admin`). The composed-schema spec that sat here
+  is gone with `composeSchemas`: every configuration key is declared once in
+  `@authup/server-config` now, so there is no pair of declarations left to
+  prove consistent. The supervisor-era specs are gone with the supervisor: there is no entrypoint to
   resolve, no child environment to map and no routing table.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.

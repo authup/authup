@@ -1,8 +1,8 @@
 {
-    "name": "@authup/server-config-base",
+    "name": "@authup/server-config",
     "type": "module",
     "version": "1.0.0-beta.63",
-    "description": "The configuration keys more than one authup server package reads, declared once so no service can read them differently or forget one.",
+    "description": "The whole authup.yml document: every configuration key an authup deployment understands, declared once so a service selects keys instead of declaring them.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
@@ -41,15 +41,17 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-config-base"
+        "directory": "packages/server-config"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
+        "@authup/core-kit": "^1.0.0-beta.63",
         "@authup/kit": "^1.0.0-beta.63",
         "@authup/server-config-kit": "^1.0.0-beta.63",
+        "envix": "^1.5.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {
