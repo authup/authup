@@ -38,19 +38,37 @@ const SERVER_URL = `${PUBLIC_URL}/`;
 // listener here and the readiness probe never answers.
 const CONFIG_FILE_PORT = SERVER_PORT + 2;
 
-// The split topology's three console listeners. Each console url carries no
-// path: a service reached directly is what a prefix-stripping proxy hands it
-// anyway, and it is the shape that catches an asset rebase that prefixes
-// rather than replaces.
-const AUTH_CONSOLE_PORT = SERVER_PORT + 10;
-const ADMIN_CONSOLE_PORT = SERVER_PORT + 11;
-const ACCOUNT_CONSOLE_PORT = SERVER_PORT + 12;
-
-const CONSOLE_URLS = {
-    auth: `http://127.0.0.1:${AUTH_CONSOLE_PORT}`,
-    admin: `http://127.0.0.1:${ADMIN_CONSOLE_PORT}`,
-    account: `http://127.0.0.1:${ACCOUNT_CONSOLE_PORT}`,
+// The split topology's three console listeners.
+//
+// Their public urls stay on publicUrl's own origin, which is the only shape
+// authup supports and what the reverse proxy in front of a real split
+// deployment presents. The proxy is what this runner stands in for: it
+// strips the console's base path and re-targets the console's own port,
+// which is exactly the hop `<segment>` -> the console set.
+const CONSOLE_PORTS = {
+    auth: SERVER_PORT + 10,
+    admin: SERVER_PORT + 11,
+    account: SERVER_PORT + 12,
 };
+
+const CONSOLE_SEGMENTS = {
+    auth: '/console/auth',
+    admin: '/console/admin',
+    account: '/console/account',
+};
+
+/**
+ * Route a PUBLIC url onto the console process that serves it, the way the
+ * reverse proxy would: strip the console's base path, keep the rest, and
+ * dial the console's own listener.
+ */
+function throughProxy(name, publicPath) {
+    const stripped = publicPath.startsWith(CONSOLE_SEGMENTS[name]) ?
+        publicPath.slice(CONSOLE_SEGMENTS[name].length) || '/' :
+        publicPath;
+
+    return `http://127.0.0.1:${CONSOLE_PORTS[name]}${stripped}`;
+}
 
 const READY_TIMEOUT_MS = 180_000;
 const EXIT_TIMEOUT_MS = 30_000;
@@ -501,13 +519,12 @@ async function executeSplitScenario() {
     const cwd = path.join(repositoryDirectory, 'apps', 'server-core');
     const configArg = `--configDirectory=${tempDirectory}`;
 
+    // Only the listen addresses: every console url keeps its default, which
+    // is publicUrl plus the segment its bundle is built for.
     const consoleEnv = {
-        AUTH_CONSOLE_URL: CONSOLE_URLS.auth,
-        AUTH_CONSOLE_PORT: `${AUTH_CONSOLE_PORT}`,
-        ADMIN_CONSOLE_URL: CONSOLE_URLS.admin,
-        ADMIN_CONSOLE_PORT: `${ADMIN_CONSOLE_PORT}`,
-        ACCOUNT_CONSOLE_URL: CONSOLE_URLS.account,
-        ACCOUNT_CONSOLE_PORT: `${ACCOUNT_CONSOLE_PORT}`,
+        AUTH_CONSOLE_PORT: `${CONSOLE_PORTS.auth}`,
+        ADMIN_CONSOLE_PORT: `${CONSOLE_PORTS.admin}`,
+        ACCOUNT_CONSOLE_PORT: `${CONSOLE_PORTS.account}`,
     };
 
     const api = spawn(process.execPath, [cliEntry, 'core', configArg], {
@@ -524,7 +541,7 @@ async function executeSplitScenario() {
 
     try {
         await waitUntilReady('split/core', SERVER_URL, api);
-        await waitUntilReady('split/console', `${CONSOLE_URLS.auth}/healthy`, consoles);
+        await waitUntilReady('split/console', throughProxy('auth', '/healthy'), consoles);
 
         // The shed: every console page is a 404 on the API now. A shell
         // answered here would mean both sides serve it, with whichever
@@ -545,13 +562,17 @@ async function executeSplitScenario() {
         // SIGTERM assertion below would only pass through the force-exit.
         await logout.arrayBuffer();
         const location = logout.headers.get('location') || '';
-        if (location !== `${CONSOLE_URLS.auth}/logout`) {
-            throw fail(`split/core: /logout redirected to "${location}", expected ${CONSOLE_URLS.auth}/logout.`);
+        const expected = new URL(`${CONSOLE_SEGMENTS.auth}/logout`, SERVER_URL).href;
+        if (location !== expected) {
+            throw fail(`split/core: /logout redirected to "${location}", expected ${expected}.`);
         }
         log(`split/core: /logout handed over to ${location}.`);
 
-        for (const [name, url] of Object.entries(CONSOLE_URLS)) {
-            const target = name === 'auth' ? `${url}/logout` : url;
+        for (const name of Object.keys(CONSOLE_PORTS)) {
+            // The page the proxy would forward: the auth console renders
+            // /logout with no backend at all, the static consoles their shell.
+            const publicPath = name === 'auth' ? `${CONSOLE_SEGMENTS.auth}/logout` : CONSOLE_SEGMENTS[name];
+            const target = throughProxy(name, publicPath);
 
             const response = await fetch(target, { redirect: 'manual' });
             if (response.status !== 200) {
@@ -563,11 +584,22 @@ async function executeSplitScenario() {
                 throw fail(`split/console: ${target} answered 200 without the injected runtime config.`);
             }
 
-            // The console's own public url carries no path here, so its
-            // asset hrefs must have lost the bundle's vite base entirely.
-            // Prefixing instead of replacing emits /console/<name>/assets/,
-            // which nothing serves on a service published at the root.
-            await assertConsoleAssetServed(`split/console/${name}`, target, body);
+            // The href the shell carries is the PUBLIC one, so it is routed
+            // the same way the page was. A console that emitted an href
+            // outside its own base would be dialled at a path its service
+            // does not serve.
+            const match = /<script[^>]+src="([^"]*\/assets\/[^"]+\.js)"/.exec(body);
+            if (!match) {
+                throw fail(`split/console/${name}: the shell references no script under assets/.`);
+            }
+
+            const asset = await fetch(throughProxy(name, match[1]), { redirect: 'manual' });
+            if (asset.status !== 200 || !(asset.headers.get('content-type') || '').includes('javascript')) {
+                throw fail(`split/console/${name}: ${match[1]} answered ${asset.status} (${asset.headers.get('content-type')}), expected JavaScript.`);
+            }
+            const bytes = await asset.arrayBuffer();
+
+            log(`split/console/${name}: ${match[1]} served the console entry script (${bytes.byteLength} bytes).`);
         }
 
         log('split: sending SIGTERM to both processes.');

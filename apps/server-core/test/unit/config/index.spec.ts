@@ -18,7 +18,8 @@ import {
 } from 'vitest';
 import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
+import { expandToOrigins } from '@authup/server-config-base';
+import { getAppOrigins } from '../../../src/app/modules/config/app-origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
 import {
     inspectConfigFile,

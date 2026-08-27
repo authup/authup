@@ -30,10 +30,13 @@ export type ConsoleLoginDefinition = {
     segment: string,
     /**
      * Where the console itself is served (`server.<name>Console.url`). The
-     * browser lands there once the credential is issued. Only its path is
-     * used: a console on a FOREIGN origin could never present the
-     * `SameSite=Strict` credential this flow issues, so that shape is refused
-     * before it reaches here.
+     * browser lands there once the credential is issued, so a console under a
+     * path of its own is landed on correctly.
+     *
+     * Only its PATH is read, which is exact rather than a shortcut: a console
+     * on a foreign origin could never present the `SameSite=Strict`
+     * credential this flow issues, and normalizeConfig refuses that shape at
+     * boot for exactly that reason.
      */
     consoleUrl: string,
     /**

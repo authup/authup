@@ -13,8 +13,8 @@ export const ConfigInjectionKey = new TypedToken<Config>('Config');
 /**
  * The section of `authup.yml` this service reads. Every registry entry that
  * declares no `path` of its own lives under it, so the deployment-wide keys
- * (`publicUrl`, `db`, `redis`, `smtp`, `theme.*`) and the per-console
- * sections are exactly the entries that spell a path out.
+ * (`db`, `redis`, `smtp`) and every entry taken from
+ * `@authup/server-config-base` are exactly the ones that spell a path out.
  */
 export const CONFIG_SECTION = 'server.core';
 
@@ -26,12 +26,14 @@ export const CONFIG_SECTION = 'server.core';
 export const CONFIG_FILE_NAME = 'authup';
 export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
 
+/**
+ * The environment variable names of the keys THIS package declares. The
+ * shared ones live with their declarations, in
+ * `BaseConfigEnvironmentVariableName`, and the registry unions the two.
+ */
 export enum ConfigEnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',
     WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',
-    AUTH_CONSOLE_URL = 'AUTH_CONSOLE_URL',
-    ACCOUNT_CONSOLE_URL = 'ACCOUNT_CONSOLE_URL',
-    ADMIN_CONSOLE_URL = 'ADMIN_CONSOLE_URL',
 
     REDIS = 'REDIS',
     SMTP = 'SMTP',
@@ -41,11 +43,9 @@ export enum ConfigEnvironmentVariableName {
 
     HOST = 'HOST',
     PORT = 'PORT',
-    PUBLIC_URL = 'PUBLIC_URL',
     MTLS_PUBLIC_URL = 'MTLS_PUBLIC_URL',
     CERTIFICATE_SOURCE = 'CERTIFICATE_SOURCE',
     TRUST_PROXY = 'TRUST_PROXY',
-    TRUSTED_ORIGINS = 'TRUSTED_ORIGINS',
     TOKEN_ACCESS_MAX_AGE = 'TOKEN_ACCESS_MAX_AGE',
     TOKEN_REFRESH_MAX_AGE = 'TOKEN_REFRESH_MAX_AGE',
     TOKEN_REFRESH_GRACE_PERIOD = 'TOKEN_REFRESH_GRACE_PERIOD',
@@ -55,8 +55,6 @@ export enum ConfigEnvironmentVariableName {
     EMAIL_VERIFICATION_ENABLED = 'EMAIL_VERIFICATION_ENABLED',
     PASSWORD_RECOVERY_ENABLED = 'PASSWORD_RECOVERY_ENABLED',
     PASSWORD_MIN_LENGTH = 'PASSWORD_MIN_LENGTH',
-    ACCOUNT_CONSOLE_ENABLED = 'ACCOUNT_CONSOLE_ENABLED',
-    ADMIN_CONSOLE_ENABLED = 'ADMIN_CONSOLE_ENABLED',
 
     EVENT_LOG_ENABLED = 'EVENT_LOG_ENABLED',
     EVENT_LOG_RETENTION_DAYS = 'EVENT_LOG_RETENTION_DAYS',

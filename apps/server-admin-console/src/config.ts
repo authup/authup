@@ -6,9 +6,9 @@
  */
 
 import type { ConfigSchema } from '@authup/server-config-kit';
+import { BASE_CONFIG_SCHEMA } from '@authup/server-config-base';
 import {
     buildSchemaDefaults,
-    readEnvBool,
     readEnvInt,
     readEnvString,
     readSchemaFromEnv,
@@ -28,22 +28,11 @@ import type { AdminConsoleConfig, AdminConsoleConfigInput } from './types';
 export const ADMIN_CONSOLE_CONFIG_SECTION = 'server.adminConsole';
 
 export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
-    publicUrl: {
-        type: z.url(),
-        description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
-        path: 'publicUrl',
-        env: 'PUBLIC_URL',
-        readEnv: readEnvString,
-    },
-    adminConsoleUrl: {
-        type: z.union([z.literal(''), z.url()]),
-        default: '',
-        description: 'Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. ' +
-            'An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.adminConsole.url',
-        env: 'ADMIN_CONSOLE_URL',
-        readEnv: readEnvString,
-    },
+    publicUrl: BASE_CONFIG_SCHEMA.publicUrl,
+    adminConsoleUrl: BASE_CONFIG_SCHEMA.adminConsoleUrl,
+    adminConsoleEnabled: BASE_CONFIG_SCHEMA.adminConsoleEnabled,
+    themeDirectoryPath: BASE_CONFIG_SCHEMA.themeDirectoryPath,
+    themeFragmentsEnabled: BASE_CONFIG_SCHEMA.themeFragmentsEnabled,
     adminConsolePort: {
         type: z.number().nonnegative(),
         default: 3021,
@@ -60,14 +49,6 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
         env: 'ADMIN_CONSOLE_HOST',
         readEnv: readEnvString,
     },
-    adminConsoleEnabled: {
-        type: z.boolean(),
-        default: true,
-        description: 'Serve the admin console at /console/admin. Off, the route answers with the disabled notice; a standalone-hosted console is unaffected.',
-        path: 'server.adminConsole.enabled',
-        env: 'ADMIN_CONSOLE_ENABLED',
-        readEnv: readEnvBool,
-    },
     adminConsolePath: {
         type: z.string(),
         default: '',
@@ -75,28 +56,6 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
         path: 'server.adminConsole.path',
         env: 'ADMIN_CONSOLE_PATH',
         readEnv: readEnvString,
-    },
-    themeDirectoryPath: {
-        type: z.string(),
-        // '' = theming disabled. Deliberately NOT defaulted under a
-        // process-writable directory: pairing "process-writable" with
-        // "content injected into a first-party page" would turn any write
-        // primitive landing there into persistent branding control.
-        default: '',
-        description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served at /theme, its theme.json injects CSS custom properties); an empty value disables theming. ' +
-            'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
-        path: 'theme.directoryPath',
-        env: 'THEME_DIRECTORY_PATH',
-        readEnv: readEnvString,
-    },
-    themeFragmentsEnabled: {
-        type: z.boolean(),
-        default: false,
-        description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of both served consoles. ' +
-            'SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.',
-        path: 'theme.fragmentsEnabled',
-        env: 'THEME_FRAGMENTS_ENABLED',
-        readEnv: readEnvBool,
     },
 } satisfies ConfigSchema<AdminConsoleConfigInput, 'publicUrl'>;
 

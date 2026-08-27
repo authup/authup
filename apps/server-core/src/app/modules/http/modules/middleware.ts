@@ -8,7 +8,6 @@
 import type { App } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
-import type { ViteDevServer } from 'vite';
 import type { Repository } from 'typeorm';
 import type { Realm } from '@authup/core-kit';
 import {
@@ -39,8 +38,6 @@ import {
 } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
-    protected viteServer : ViteDevServer | undefined;
-
     async mountBefore(router: App, container: IContainer): Promise<void> {
         // @routup/prometheus must be installed before any other plugin or
         // route so that its onion middleware can observe the full request

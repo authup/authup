@@ -3,18 +3,96 @@
     "title": "Authup configuration",
     "type": "object",
     "properties": {
-        "env": {
+        "publicUrl": {
             "type": "string",
-            "description": "Application environment, e.g. production or development.",
-            "x-authup-env": "NODE_ENV"
+            "format": "uri",
+            "description": "Externally reachable base URL of the API. Derived from host and port when unset.",
+            "x-authup-env": "PUBLIC_URL"
         },
-        "rootPath": {
-            "type": "string",
-            "description": "Root directory every relative path key resolves against."
+        "trustedOrigins": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.",
+            "default": [],
+            "x-authup-env": "TRUSTED_ORIGINS"
         },
         "server": {
             "type": "object",
             "properties": {
+                "authConsole": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "AUTH_CONSOLE_URL"
+                        }
+                    }
+                },
+                "accountConsole": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "ACCOUNT_CONSOLE_URL"
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.",
+                            "default": true,
+                            "x-authup-env": "ACCOUNT_CONSOLE_ENABLED"
+                        }
+                    }
+                },
+                "adminConsole": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "ADMIN_CONSOLE_URL"
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Serve the admin console at /console/admin. Off, the console renders the disabled notice and its server-side login answers 404; a standalone-hosted console is unaffected.",
+                            "default": true,
+                            "x-authup-env": "ADMIN_CONSOLE_ENABLED"
+                        }
+                    }
+                },
                 "core": {
                     "type": "object",
                     "properties": {
@@ -432,80 +510,17 @@
                             "x-authup-env": "PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT"
                         }
                     }
-                },
-                "adminConsole": {
-                    "type": "object",
-                    "properties": {
-                        "url": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "const": ""
-                                },
-                                {
-                                    "type": "string",
-                                    "format": "uri"
-                                }
-                            ],
-                            "description": "Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
-                            "default": "",
-                            "x-authup-env": "ADMIN_CONSOLE_URL"
-                        },
-                        "enabled": {
-                            "type": "boolean",
-                            "description": "Serve the admin console at /console/admin. Off, the route answers with the disabled notice; a standalone-hosted console is unaffected.",
-                            "default": true,
-                            "x-authup-env": "ADMIN_CONSOLE_ENABLED"
-                        }
-                    }
-                },
-                "accountConsole": {
-                    "type": "object",
-                    "properties": {
-                        "url": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "const": ""
-                                },
-                                {
-                                    "type": "string",
-                                    "format": "uri"
-                                }
-                            ],
-                            "description": "Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
-                            "default": "",
-                            "x-authup-env": "ACCOUNT_CONSOLE_URL"
-                        },
-                        "enabled": {
-                            "type": "boolean",
-                            "description": "Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.",
-                            "default": true,
-                            "x-authup-env": "ACCOUNT_CONSOLE_ENABLED"
-                        }
-                    }
-                },
-                "authConsole": {
-                    "type": "object",
-                    "properties": {
-                        "url": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "const": ""
-                                },
-                                {
-                                    "type": "string",
-                                    "format": "uri"
-                                }
-                            ],
-                            "description": "Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.",
-                            "default": "",
-                            "x-authup-env": "AUTH_CONSOLE_URL"
-                        }
-                    }
                 }
             }
+        },
+        "env": {
+            "type": "string",
+            "description": "Application environment, e.g. production or development.",
+            "x-authup-env": "NODE_ENV"
+        },
+        "rootPath": {
+            "type": "string",
+            "description": "Root directory every relative path key resolves against."
         },
         "db": {
             "description": "Database connection (TypeORM data source options). Without one the better-sqlite3 driver default of typeorm-extension applies."
@@ -545,21 +560,6 @@
             "description": "SMTP transport for outgoing mail: a connection URL, transport options, or a boolean to use the default transport or run without mail.",
             "default": false,
             "x-authup-env": "SMTP"
-        },
-        "publicUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "Externally reachable base URL of the API. Derived from host and port when unset.",
-            "x-authup-env": "PUBLIC_URL"
-        },
-        "trustedOrigins": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.",
-            "default": [],
-            "x-authup-env": "TRUSTED_ORIGINS"
         }
     }
 }

@@ -19,6 +19,8 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import type { ConfigSchema } from '@authup/server-config-kit';
+import type { BaseConfigEnvironmentVariableName } from '@authup/server-config-base';
+import { BASE_CONFIG_SCHEMA } from '@authup/server-config-base';
 import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
 import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
 import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
@@ -26,7 +28,6 @@ import { z } from 'zod';
 import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/constants.ts';
 import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/entities/event/constants.ts';
 import { ConfigEnvironmentVariableName } from './constants.ts';
-import { expandToOrigins } from './origins.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigSchemaDerivedKey } from './types.ts';
 
@@ -60,7 +61,22 @@ const serviceType = z.string()
  * (`adminConsoleEnabled` reads `server.adminConsole.enabled`). Everything
  * else resolves through CONFIG_SECTION to `server.core.<key>`.
  */
-export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, ConfigEnvironmentVariableName> = {
+export const CONFIG_SCHEMA : ConfigSchema<
+    Config,
+    ConfigSchemaDerivedKey,
+ConfigEnvironmentVariableName | BaseConfigEnvironmentVariableName
+> = {
+    // Declared once, in the package every reader shares, because no
+    // reader may import another and a key one registry quietly omits is
+    // read as its default with nothing to say so.
+    publicUrl: BASE_CONFIG_SCHEMA.publicUrl,
+    trustedOrigins: BASE_CONFIG_SCHEMA.trustedOrigins,
+    authConsoleUrl: BASE_CONFIG_SCHEMA.authConsoleUrl,
+    accountConsoleUrl: BASE_CONFIG_SCHEMA.accountConsoleUrl,
+    adminConsoleUrl: BASE_CONFIG_SCHEMA.adminConsoleUrl,
+    accountConsoleEnabled: BASE_CONFIG_SCHEMA.accountConsoleEnabled,
+    adminConsoleEnabled: BASE_CONFIG_SCHEMA.adminConsoleEnabled,
+
     env: {
         type: stringType,
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
@@ -81,33 +97,6 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         description: 'Directory the application writes to at runtime (production log files) and reads file-based provisioning from. ' +
             'The SQLite database is not placed here; a relative path resolves against rootPath.',
         env: ConfigEnvironmentVariableName.WRITABLE_DIRECTORY_PATH,
-        readEnv: readEnvString,
-    },
-    adminConsoleUrl: {
-        type: z.union([z.literal(''), z.url()]),
-        default: '',
-        description: 'Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. ' +
-            'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.adminConsole.url',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_URL,
-        readEnv: readEnvString,
-    },
-    accountConsoleUrl: {
-        type: z.union([z.literal(''), z.url()]),
-        default: '',
-        description: 'Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. ' +
-            'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.accountConsole.url',
-        env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_URL,
-        readEnv: readEnvString,
-    },
-    authConsoleUrl: {
-        type: z.union([z.literal(''), z.url()]),
-        default: '',
-        description: 'Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. ' +
-            'The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.authConsole.url',
-        env: ConfigEnvironmentVariableName.AUTH_CONSOLE_URL,
         readEnv: readEnvString,
     },
 
@@ -172,13 +161,6 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         env: ConfigEnvironmentVariableName.HOST,
         readEnv: readEnvString,
     },
-    publicUrl: {
-        type: z.url(),
-        description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
-        path: 'publicUrl',
-        env: ConfigEnvironmentVariableName.PUBLIC_URL,
-        readEnv: readEnvString,
-    },
     mtlsPublicUrl: {
         type: z.url().nullable(),
         default: null,
@@ -214,22 +196,6 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
             'SECURITY: with every hop trusted any direct client can spoof its IP into the login throttle, the audit log and the session inventory; pin the actual proxy when the listener is reachable without one.',
         env: ConfigEnvironmentVariableName.TRUST_PROXY,
         readEnv: readEnvRaw,
-    },
-    trustedOrigins: {
-        type: z.array(z.string().refine((value) => {
-            try {
-                expandToOrigins(value);
-                return true;
-            } catch {
-                return false;
-            }
-        }, 'must be a http(s) origin or a bare host[:port]')),
-        default: [],
-        description: 'Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. ' +
-            'SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.',
-        path: 'trustedOrigins',
-        env: ConfigEnvironmentVariableName.TRUSTED_ORIGINS,
-        readEnv: readEnvArray,
     },
 
     middlewareBody: {
@@ -331,22 +297,6 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         description: 'Minimum length for user-chosen passwords (user create and update, registration, password reset). The maximum is fixed at 512.',
         env: ConfigEnvironmentVariableName.PASSWORD_MIN_LENGTH,
         readEnv: readEnvInt,
-    },
-    accountConsoleEnabled: {
-        type: booleanType,
-        default: true,
-        description: 'Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.',
-        path: 'server.accountConsole.enabled',
-        env: ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_ENABLED,
-        readEnv: readEnvBool,
-    },
-    adminConsoleEnabled: {
-        type: booleanType,
-        default: true,
-        description: 'Serve the admin console at /console/admin. Off, the route answers with the disabled notice; a standalone-hosted console is unaffected.',
-        path: 'server.adminConsole.enabled',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_ENABLED,
-        readEnv: readEnvBool,
     },
 
     eventLogEnabled: {

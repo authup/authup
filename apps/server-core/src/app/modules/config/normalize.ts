@@ -16,7 +16,7 @@ import {
     AUTH_CONSOLE_SEGMENT,
 } from '../../../adapters/http/constants.ts';
 import { toPublicHost } from '../../../utils/host.ts';
-import { expandToOrigins } from './origins.ts';
+import { expandToOrigins } from '@authup/server-config-base';
 import { parseConfig } from './parse.ts';
 import { CONFIG_SCHEMA } from './registry.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
@@ -105,10 +105,12 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // The single-origin default: each console service is served under
     // publicUrl at the segment its bundle is built for, which is where the
     // proxy routes /console/** in a split deployment too. An operator only
-    // sets these when a console lives somewhere else. Every one of them is
-    // also declared by the console package that serves it, and the composer
-    // refuses a pair whose defaults disagree, so the derivation is spelled
-    // once per side and can never drift.
+    // sets these when a console lives under a path of its own.
+    //
+    // The derivation is spelled here rather than as the key's default,
+    // because a default cannot read another key. Each console service
+    // derives the same value from the same key when it resolves its own
+    // configuration.
     const publicUrlTrimmed = config.publicUrl.replace(/\/+$/, '');
 
     if (!config.authConsoleUrl) {
@@ -131,6 +133,26 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         config.trustProxy = canonicalizeTrustProxy(config.trustProxy);
     } else if (Array.isArray(config.trustProxy)) {
         config.trustProxy = config.trustProxy.map(canonicalizeTrustProxyListEntry);
+    }
+
+    // fail loud at boot: a console on another ORIGIN is a deliberate
+    // non-goal, and it half-works rather than failing on its own. The static
+    // consoles authenticate with a `SameSite=Strict` credential this server
+    // issues and re-checks with `Sec-Fetch-Site: same-origin`, so a foreign
+    // origin can never sign in; the auth console holds the browser session
+    // every prompt=none decision reads, so moving it off the issuer's origin
+    // breaks silent authentication. Another PATH is fully supported and is
+    // what this key is for. Different domains are the named stage-G
+    // follow-up, and turning this into a warning is not the way to get them:
+    // WebAuthn origins, the federated-login cookie and credentialed CORS all
+    // have to move together.
+    for (const key of ['authConsoleUrl', 'accountConsoleUrl', 'adminConsoleUrl'] as const) {
+        if (new URL(config[key]).origin !== new URL(config.publicUrl).origin) {
+            throw new AuthupError(
+                `${key} is ${config[key]}, which is not the origin of publicUrl (${config.publicUrl}). ` +
+                'A console may be served under a path of its own, but not under a domain of its own.',
+            );
+        }
     }
 
     // fail loud at boot: the throttle counts loginFailed rows in

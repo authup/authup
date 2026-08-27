@@ -11,6 +11,7 @@ import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-ki
 import { describe, expect, it } from 'vitest';
 import { CONFIG_SECTION, ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
 import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
+import { BaseConfigEnvironmentVariableName } from '@authup/server-config-base';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
 import type { Config } from '../../../src/app/modules/config/types';
@@ -39,7 +40,27 @@ describe('src/config/registry.ts', () => {
                 }
             }
 
-            expect([...envNames].sort()).toEqual(Object.values(ConfigEnvironmentVariableName).sort());
+            // No duplicates: two keys reading one variable would make which
+            // of them wins an implementation detail of the read order.
+            expect([...new Set(envNames)].length).toEqual(envNames.length);
+
+            // The registry reads two enums: its own, and the one travelling
+            // with the keys `@authup/server-config-base` declares. Every name
+            // comes from one of them, so a typo cannot reach an operator.
+            const known = [
+                ...Object.values(ConfigEnvironmentVariableName),
+                ...Object.values(BaseConfigEnvironmentVariableName),
+            ] as string[];
+            for (const name of envNames) {
+                expect(known).toContain(name);
+            }
+
+            // Every name in THIS package's own enum is used, so a retired key
+            // cannot leave a name behind that reads as supported. The base
+            // enum is deliberately a superset: it also carries the keys only
+            // a console service reads.
+            expect([...envNames].sort())
+                .toEqual(expect.arrayContaining(Object.values(ConfigEnvironmentVariableName).sort()));
         });
 
         it('should declare exactly the keys normalizeConfig() outputs', async () => {

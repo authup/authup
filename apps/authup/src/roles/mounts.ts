@@ -74,23 +74,17 @@ export function buildApplicationMounts(options: ConfigReadFsOptions) : Applicati
         const mounts : ApplicationMount[] = [];
 
         for (const candidate of candidates) {
-            // Only a console on THIS origin can be mounted here. A url
-            // pointing somewhere else names a service someone else runs, and
-            // mounting it locally would serve pages at a path the redirects
-            // never target.
-            if (!isSameOrigin(candidate.url, config.publicUrl)) {
-                continue;
-            }
-
             const path = getURLBasePath(candidate.url);
             if (!path) {
-                // Same origin and no path means the console would have to own
-                // the API's own root, where it would shadow the protocol
-                // routes, and the page GETs would redirect to themselves.
-                // Refuse it by name rather than booting into a redirect loop.
+                // A console with no path of its own would have to own the
+                // API's root, where it would shadow the protocol routes and
+                // the page GETs would redirect to themselves. Refuse it by
+                // name rather than booting into a redirect loop. The origin
+                // needs no check here: normalizeConfig already refused a
+                // console url that is not publicUrl's own origin.
                 throw new AuthupError(
                     `The ${candidate.name} url is ${candidate.url}, which is this deployment's own origin root. ` +
-                    'A console needs a path of its own (the defaults are under /console), or an origin of its own.',
+                    'A console needs a path of its own; the defaults are under /console.',
                 );
             }
 
@@ -101,10 +95,3 @@ export function buildApplicationMounts(options: ConfigReadFsOptions) : Applicati
     };
 }
 
-function isSameOrigin(a: string, b: string) : boolean {
-    try {
-        return new URL(a).origin === new URL(b).origin;
-    } catch {
-        return false;
-    }
-}

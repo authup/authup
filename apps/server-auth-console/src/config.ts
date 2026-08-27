@@ -6,9 +6,9 @@
  */
 
 import type { ConfigSchema } from '@authup/server-config-kit';
+import { BASE_CONFIG_SCHEMA } from '@authup/server-config-base';
 import {
     buildSchemaDefaults,
-    readEnvBool,
     readEnvInt,
     readEnvString,
     readSchemaFromEnv,
@@ -36,22 +36,10 @@ export const AUTH_CONSOLE_CONFIG_SECTION = 'server.authConsole';
  * package depending on the other.
  */
 export const AUTH_CONSOLE_CONFIG_SCHEMA = {
-    publicUrl: {
-        type: z.url(),
-        description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
-        path: 'publicUrl',
-        env: 'PUBLIC_URL',
-        readEnv: readEnvString,
-    },
-    authConsoleUrl: {
-        type: z.union([z.literal(''), z.url()]),
-        default: '',
-        description: 'Where this service is served, e.g. https://example.com/console/auth. ' +
-            'The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.authConsole.url',
-        env: 'AUTH_CONSOLE_URL',
-        readEnv: readEnvString,
-    },
+    publicUrl: BASE_CONFIG_SCHEMA.publicUrl,
+    authConsoleUrl: BASE_CONFIG_SCHEMA.authConsoleUrl,
+    themeDirectoryPath: BASE_CONFIG_SCHEMA.themeDirectoryPath,
+    themeFragmentsEnabled: BASE_CONFIG_SCHEMA.themeFragmentsEnabled,
     authConsolePath: {
         type: z.string(),
         default: '',
@@ -76,24 +64,6 @@ export const AUTH_CONSOLE_CONFIG_SCHEMA = {
         path: 'server.authConsole.host',
         env: 'AUTH_CONSOLE_HOST',
         readEnv: readEnvString,
-    },
-    themeDirectoryPath: {
-        type: z.string(),
-        default: '',
-        description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served at /theme, its theme.json injects CSS custom properties); an empty value disables theming. ' +
-            'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
-        path: 'theme.directoryPath',
-        env: 'THEME_DIRECTORY_PATH',
-        readEnv: readEnvString,
-    },
-    themeFragmentsEnabled: {
-        type: z.boolean(),
-        default: false,
-        description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of both served consoles. ' +
-            'SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.',
-        path: 'theme.fragmentsEnabled',
-        env: 'THEME_FRAGMENTS_ENABLED',
-        readEnv: readEnvBool,
     },
 } satisfies ConfigSchema<AuthConsoleConfigInput, 'publicUrl'>;
 

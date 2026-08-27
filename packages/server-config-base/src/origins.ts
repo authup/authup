@@ -7,7 +7,6 @@
 
 import { URL } from 'node:url';
 import { patternHasGlobstarInAuthority } from '@authup/kit';
-import type { Config } from './types.ts';
 
 const SCHEME_REGEX = /^[a-z][a-z0-9+.-]*:\/\//i;
 
@@ -50,22 +49,4 @@ export function expandToOrigins(value: string): string[] {
         new URL(`http://${value}`).origin,
         new URL(`https://${value}`).origin,
     ];
-}
-
-/**
- * Derive the set of trusted application origins (scheme://host[:port]).
- *
- * publicUrl may carry a path, so its origin is extracted; trustedOrigins
- * entries are canonical origins — normalizeConfig owns that invariant
- * (expansion + dedupe via expandToOrigins) — and are merged verbatim.
- */
-export function getAppOrigins(config: Pick<Config, 'publicUrl' | 'trustedOrigins'>): string[] {
-    const origins = new Set<string>();
-    origins.add(new URL(config.publicUrl).origin);
-
-    for (const origin of config.trustedOrigins ?? []) {
-        origins.add(origin);
-    }
-
-    return Array.from(origins);
 }
