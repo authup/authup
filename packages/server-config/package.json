@@ -55,7 +55,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@types/node": "^26.0.0",
+        "@types/node": "^26.3.0",
         "cross-env": "^10.1.0",
         "vitest": "^4.0.14"
     },

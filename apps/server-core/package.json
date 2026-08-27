@@ -76,7 +76,7 @@
         "@authup/server-console-kit": "^1.0.0-beta.63",
         "@authup/server-kit": "^1.0.0-beta.63",
         "@authup/specs": "^1.0.0-beta.63",
-        "@ebec/http": "^4.2.0",
+        "@ebec/http": "^4.3.2",
         "@hapic/oauth2": "^4.0.2",
         "@peculiar/x509": "^2.0.0",
         "@rapiq/adapter-memory": "^2.2.0",
@@ -105,7 +105,7 @@
         "ilingo": "^6.1.0",
         "ldapjs": "^3.0.7",
         "locter": "^4.1.1",
-        "mysql2": "^3.23.3",
+        "mysql2": "^3.24.2",
         "node-cron": "^4.6.0",
         "nodemailer": "^9.0.5",
         "orkos": "^1.1.1",
@@ -136,7 +136,7 @@
         "supertest": "^7.2.2",
         "testcontainers": "^12.1.0",
         "ts-node": "^10.8.2",
-        "unplugin-swc": "^1.5.10",
+        "unplugin-swc": "^1.5.11",
         "vitest": "^4.0.14"
     },
     "publishConfig": {

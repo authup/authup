@@ -59,7 +59,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@types/node": "^26.0.0",
+        "@types/node": "^26.3.0",
         "routup": "^6.1.0",
         "vitest": "^4.0.14"
     },
