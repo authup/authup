@@ -17,9 +17,9 @@ import {
     THEME_TOKEN_NAME_PATTERN,
     THEME_TOKEN_VALUE_FORBIDDEN_PATTERN,
     THEME_TOKEN_VALUE_MAX_LENGTH,
-} from './constants.ts';
-import type { ThemeManifest } from './types.ts';
-import { themeAssetExtension } from './utils.ts';
+} from './constants';
+import type { ThemeManifest } from './types';
+import { themeAssetExtension } from './utils';
 
 const assetPathSchema = z.string()
     .regex(

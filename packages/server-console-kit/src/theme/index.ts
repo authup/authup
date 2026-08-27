@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './contract/index.ts';
+export * from './contract/index';
 
-export * from './apply.ts';
-export * from './assets.ts';
-export * from './constants.ts';
-export * from './module.ts';
-export * from './types.ts';
+export * from './apply';
+export * from './assets';
+export * from './constants';
+export * from './module';
+export * from './types';

@@ -14,8 +14,8 @@ import {
     expect, 
     it, 
 } from 'vitest';
-import { ThemeProvider } from '../../../../../src/adapters/http/ui/theme/index.ts';
-import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../../../../src/adapters/http/ui/theme/constants.ts';
+import { ThemeProvider } from '../../src/theme/index';
+import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../src/theme/constants';
 
 const roots : string[] = [];
 
@@ -32,7 +32,7 @@ function createDirectory(files: Record<string, string>) : string {
     return root;
 }
 
-describe('adapters/http/ui/theme (ThemeProvider)', () => {
+describe('theme (ThemeProvider)', () => {
     afterEach(() => {
         while (roots.length > 0) {
             fs.rmSync(roots.pop() as string, { recursive: true, force: true });

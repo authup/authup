@@ -6,18 +6,10 @@
  */
 
 import { InternalError } from '@authup/errors';
-import { getURLBasePath } from '@authup/kit';
 import { locateUpSync } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
-import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { PACKAGE_PATH } from '../../../../path.ts';
-// The FILE, not the middleware barrel: the barrel reaches assets.ts, which
-// imports the console modules, which call defineStaticConsole at load time.
-// Through the barrel that is a cycle that leaves this function undefined.
-import { useRequestTheme } from '../../middleware/built-in/theme.ts';
-import { applyTheme } from '../theme/index.ts';
 import {
     applyUIPageHeaders,
     readUIClientPreferences,
@@ -25,38 +17,38 @@ import {
     replaceTemplateMarker,
     serializeInlineScriptJSON,
     stampHtmlAttributes,
-} from '@authup/server-console-kit';
+} from './html';
+import { applyTheme } from './theme/index';
 import type {
     StaticConsole,
     StaticConsoleDefinition,
     StaticConsoleServeOptions,
-} from './types.ts';
+} from './types';
 
 /**
  * A console shipped as a static SPA bundle (the account console, the admin
  * console): the package's built `index.html` served as the shell for every
  * sub-path, with the runtime configuration spliced in per request.
  *
- * One closure per console, so each keeps its OWN dist and html cache: two
- * consoles sharing a module-level slot would serve one bundle's shell for the
- * other.
+ * One closure per console AND per handler: every piece of state below is
+ * instance-scoped, so two applications in one process never share a
+ * substituted package path or a resolved dist.
  */
 export function defineStaticConsole(definition: StaticConsoleDefinition) : StaticConsole {
     let cachedDistPath : string | undefined;
-    let cachedHtml : string | undefined;
-    let overridePackagePath : string | undefined;
 
     const resolveDistPath = () : string | undefined => {
         if (cachedDistPath) {
             return cachedDistPath;
         }
 
-        // The node_modules ancestor walk from server-core's own package root
-        // finds the package for the workspace symlink and for a published
-        // install alike.
-        const packagePath = overridePackagePath ?? locateUpSync(
+        // The node_modules ancestor walk from the SERVING package's own root
+        // finds the console package for the workspace symlink and for a
+        // published install alike. The anchor is behavioural: it decides
+        // which node_modules tree is walked, so it is never the process cwd.
+        const packagePath = definition.distPath || locateUpSync(
             `node_modules/${definition.packageName}/package.json`,
-            { cwd: PACKAGE_PATH },
+            { cwd: definition.cwd },
         )?.directory;
 
         if (packagePath) {
@@ -78,18 +70,12 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
             );
         }
 
-        let html : string;
-        if (isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
-            // dev: re-read so a rebuilt bundle is picked up without a restart
-            html = await fs.promises.readFile(path.join(distPath, 'index.html'), 'utf-8');
-        } else {
-            html = (cachedHtml ??= await fs.promises.readFile(
-                path.join(distPath, 'index.html'),
-                'utf-8',
-            ));
-        }
-
-        const basePath = getURLBasePath(options.baseURL);
+        // Read per request rather than cached: the shell is a few kilobytes
+        // read once per full document load, and a rebuilt bundle is then
+        // picked up without a restart. That is what the retired just-in-time
+        // branch bought, at the price of a typeorm dependency inside a
+        // page-serving package.
+        const html = await fs.promises.readFile(path.join(distPath, 'index.html'), 'utf-8');
 
         // The splice below MUST stay `replaceTemplateMarker`. A plain
         // String.prototype.replace expands `$&`, "$`", `$'` and `$$` inside
@@ -105,9 +91,9 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         );
 
         body = stampHtmlAttributes(body, readUIClientPreferences(event));
-        body = rebaseAssetURLs(body, basePath, definition.viteBase);
+        body = rebaseAssetURLs(body, options.basePath, definition.viteBase);
 
-        body = await applyTheme(body, useRequestTheme(event), basePath);
+        body = await applyTheme(body, options.theme, options.basePath);
 
         applyUIPageHeaders(event);
 
@@ -118,11 +104,6 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         packageName: definition.packageName,
         marker: definition.marker,
         viteBase: definition.viteBase,
-        setPackagePath(value: string | undefined) {
-            overridePackagePath = value || undefined;
-            cachedDistPath = undefined;
-            cachedHtml = undefined;
-        },
         resolveDistPath,
         serve,
     };

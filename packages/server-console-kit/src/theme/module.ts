@@ -6,11 +6,10 @@
  */
 
 import { AuthupError, normalizeError } from '@authup/errors';
-import type { Logger } from '@authup/server-kit';
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import { THEME_MANIFEST_REVALIDATE_INTERVAL } from './constants.ts';
+import { THEME_MANIFEST_REVALIDATE_INTERVAL } from './constants';
 import {
     THEME_ASSETS_DIRECTORY_NAME,
     THEME_FRAGMENTS_DIRECTORY_NAME,
@@ -20,9 +19,10 @@ import {
     THEME_MANIFEST_VERSION,
     buildThemeHead,
     parseThemeManifest,
-} from './contract/index.ts';
-import type { ThemeManifest } from './contract/index.ts';
-import type { IThemeProvider, ThemeProviderContext } from './types.ts';
+} from './contract/index';
+import type { ThemeManifest } from './contract/index';
+import type { IThemeProvider, ThemeProviderContext } from './types';
+import type { ConsoleLogger } from '../types';
 
 /**
  * Owns the operator theme directory: manifest loading + validation, the
@@ -46,7 +46,7 @@ export class ThemeProvider implements IThemeProvider {
 
     protected readonly fragmentsEnabled : boolean;
 
-    protected readonly logger : Logger | undefined;
+    protected readonly logger : ConsoleLogger | undefined;
 
     protected manifest : ThemeManifest | undefined;
 

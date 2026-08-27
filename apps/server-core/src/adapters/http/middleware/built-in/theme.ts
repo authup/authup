@@ -7,7 +7,7 @@
 
 import type { App, IAppEvent } from 'routup';
 import { defineCoreHandler } from 'routup';
-import type { IThemeProvider } from '../../ui/theme/index.ts';
+import type { IThemeProvider } from '@authup/server-console-kit';
 
 /**
  * Per-request handoff of the operator theme into the two console serve

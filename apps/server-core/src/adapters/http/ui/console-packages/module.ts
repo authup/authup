@@ -9,13 +9,13 @@ import { AuthupError, normalizeError } from '@authup/errors';
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import { accountConsole } from '../account-console/index.ts';
-import { adminConsole } from '../admin-console/index.ts';
+import { setAccountConsolePackagePath, useAccountConsole } from '../account-console/index.ts';
+import { setAdminConsolePackagePath, useAdminConsole } from '../admin-console/index.ts';
 import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from '../auth-console/index.ts';
 // Type position only (see AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC below), so
 // the runtime stays a dist-file read and the layering rule holds.
 import type { CONTRACT_VERSION as AuthConsoleContractVersion } from '@authup/client-auth-console';
-import type { StaticConsole } from '../static-console/index.ts';
+import type { StaticConsole } from '@authup/server-console-kit';
 import type { ConsolePackageOptions } from './types.ts';
 
 /**
@@ -49,7 +49,7 @@ const AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC : AuthConsoleContractVersionInSync =
  * deriving its API URL from the origin. Read off the console definition, so
  * the serving side and this assert cannot drift.
  */
-export const ACCOUNT_CONSOLE_CONFIG_MARKER = accountConsole.marker;
+export const ACCOUNT_CONSOLE_CONFIG_MARKER = useAccountConsole().marker;
 
 /**
  * Bind the substituted console packages and verify they still fulfill the
@@ -68,19 +68,19 @@ export const ACCOUNT_CONSOLE_CONFIG_MARKER = accountConsole.marker;
  */
 export async function bindConsolePackages(options: ConsolePackageOptions = {}) : Promise<void> {
     setAuthConsolePackagePath(options.authConsolePath);
-    accountConsole.setPackagePath(options.accountConsolePath);
-    adminConsole.setPackagePath(options.adminConsolePath);
+    setAccountConsolePackagePath(options.accountConsolePath);
+    setAdminConsolePackagePath(options.adminConsolePath);
 
     if (options.authConsolePath) {
         await assertAuthConsoleContract(options.authConsolePath);
     }
 
     if (options.accountConsolePath) {
-        assertStaticConsoleContract(accountConsole, options.accountConsolePath);
+        assertStaticConsoleContract(useAccountConsole(), options.accountConsolePath);
     }
 
     if (options.adminConsolePath) {
-        assertStaticConsoleContract(adminConsole, options.adminConsolePath);
+        assertStaticConsoleContract(useAdminConsole(), options.adminConsolePath);
     }
 }
 

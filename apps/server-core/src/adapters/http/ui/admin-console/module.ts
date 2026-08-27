@@ -6,10 +6,18 @@
  */
 
 import { getURLBasePath } from '@authup/kit';
+import type { StaticConsole } from '@authup/server-console-kit';
+import { defineStaticConsole } from '@authup/server-console-kit';
 import type { IAppEvent } from 'routup';
+import { PACKAGE_PATH } from '../../../../path.ts';
+// The FILE, not the middleware barrel: the barrel reaches assets.ts, which
+// imports this module. Through the barrel that is a cycle.
+import { useRequestTheme } from '../../middleware/built-in/theme.ts';
 import { ADMIN_CONSOLE_SEGMENT } from '../constants.ts';
-import { defineStaticConsole } from '../static-console/index.ts';
 import type { AdminConsoleServeOptions } from './types.ts';
+
+let packagePath : string | undefined;
+let instance : StaticConsole | undefined;
 
 /**
  * The admin console SPA (`@authup/client-admin-console`), served at
@@ -17,22 +25,29 @@ import type { AdminConsoleServeOptions } from './types.ts';
  * the config marker in the built `index.html` is its runtime contract, the
  * bundle's static assets ride the assets middleware (`/console/admin/assets`).
  */
-export const adminConsole = defineStaticConsole({
-    packageName: '@authup/client-admin-console',
-    marker: '<!--admin-config-->',
-    viteBase: `/${ADMIN_CONSOLE_SEGMENT}/`,
-});
+export function useAdminConsole() : StaticConsole {
+    instance = instance || defineStaticConsole({
+        packageName: '@authup/client-admin-console',
+        marker: '<!--admin-config-->',
+        viteBase: `/${ADMIN_CONSOLE_SEGMENT}/`,
+        cwd: PACKAGE_PATH,
+        distPath: packagePath,
+    });
+
+    return instance;
+}
 
 /**
  * Point the resolution at a substituted package (config `adminConsolePath`)
  * instead of the node_modules walk. Called once at boot.
  */
 export function setAdminConsolePackagePath(value: string | undefined) : void {
-    adminConsole.setPackagePath(value);
+    packagePath = value || undefined;
+    instance = undefined;
 }
 
 export function resolveAdminConsoleDistPath() : string | undefined {
-    return adminConsole.resolveDistPath();
+    return useAdminConsole().resolveDistPath();
 }
 
 /**
@@ -46,8 +61,9 @@ export function serveAdminConsolePage(
 ) : Promise<string> {
     const basePath = getURLBasePath(options.baseURL);
 
-    return adminConsole.serve(event, {
-        baseURL: options.baseURL,
+    return useAdminConsole().serve(event, {
+        basePath,
+        theme: useRequestTheme(event),
         config: {
             apiUrl: options.baseURL,
             basePath: `${basePath}/${ADMIN_CONSOLE_SEGMENT}`,

@@ -24,7 +24,7 @@ import {
     ADMIN_CONSOLE_SEGMENT,
     AUTH_CONSOLE_SEGMENT,
 } from '../../ui/constants.ts';
-import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '../../ui/theme/index.ts';
+import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '@authup/server-console-kit';
 import { registerThemeMiddleware } from './theme.ts';
 import type { AssetsMiddlewareOptions } from './types.ts';
 

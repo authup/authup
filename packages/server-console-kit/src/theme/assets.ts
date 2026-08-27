@@ -10,13 +10,13 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import type { Handler } from 'routup';
 import { HeaderName, defineCoreHandler, sendFile } from 'routup';
-import { THEME_ASSET_CSP } from './constants.ts';
+import { THEME_ASSET_CSP } from './constants';
 import {
     THEME_ASSET_CONTENT_TYPES,
     THEME_ASSET_EXTENSIONS,
     themeAssetExtension,
-} from './contract/index.ts';
-import type { IThemeProvider } from './types.ts';
+} from './contract/index';
+import type { IThemeProvider } from './types';
 
 const REQUEST_PATH_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/i;
 

@@ -18,13 +18,13 @@ import type { IClient } from '@authup/core-http-kit';
 import { UI_HTTP_CLIENT_FACTORY_STORE_KEY, VITE_SERVER_STORE_KEY, useRequestTheme } from '../../middleware/index.ts';
 import { AUTH_CONSOLE_SEGMENT } from '../constants.ts';
 import {
+    applyTheme,
     applyUIPageHeaders,
     readUIClientPreferences,
     rebaseAssetURLs,
-    replaceTemplateMarker,
-    stampHtmlAttributes,
+    replaceTemplateMarker, 
+    stampHtmlAttributes, 
 } from '@authup/server-console-kit';
-import { applyTheme } from '../theme/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from './resolve.ts';
 import type { AuthConsoleRenderContext } from './types.ts';
 

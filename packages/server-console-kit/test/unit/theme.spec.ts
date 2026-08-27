@@ -10,12 +10,12 @@ import {
     applyTheme,
     buildThemeHead,
     parseThemeManifest,
-} from '../../../../../src/adapters/http/ui/theme/index.ts';
-import type { IThemeProvider, ThemeManifest } from '../../../../../src/adapters/http/ui/theme/index.ts';
+} from '../../src/theme/index';
+import type { IThemeProvider, ThemeManifest } from '../../src/theme/index';
 import {
     injectHeadContent,
     stampDocumentTitle,
-} from '@authup/server-console-kit';
+} from '../../src/html';
 
 function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
     return {
@@ -26,7 +26,7 @@ function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
     };
 }
 
-describe('adapters/http/ui/theme', () => {
+describe('theme', () => {
     describe('parseThemeManifest', () => {
         it('should accept a minimal manifest', async () => {
             const manifest = await parseThemeManifest({ version: 1 }, 'theme.json');

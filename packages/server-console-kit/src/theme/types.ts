@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
-import type { ThemeManifest } from './contract/index.ts';
+import type { ConsoleLogger } from '../types';
+import type { ThemeManifest } from './contract/index';
 
 export type ThemeProviderContext = {
     /**
@@ -21,7 +21,7 @@ export type ThemeProviderContext = {
      */
     fragmentsEnabled?: boolean,
 
-    logger?: Logger,
+    logger?: ConsoleLogger,
 };
 
 export interface IThemeProvider {

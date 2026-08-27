@@ -6,12 +6,20 @@
  */
 
 import { getURLBasePath } from '@authup/kit';
+import type { StaticConsole } from '@authup/server-console-kit';
+import { defineStaticConsole } from '@authup/server-console-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
+import { PACKAGE_PATH } from '../../../../path.ts';
+// The FILE, not the middleware barrel: the barrel reaches assets.ts, which
+// imports this module. Through the barrel that is a cycle.
+import { useRequestTheme } from '../../middleware/built-in/theme.ts';
 import { ACCOUNT_CONSOLE_SEGMENT } from '../constants.ts';
-import { defineStaticConsole } from '../static-console/index.ts';
 import { resolveAccountConsoleRef } from './ref.ts';
 import type { AccountConsoleServeOptions } from './types.ts';
+
+let packagePath : string | undefined;
+let instance : StaticConsole | undefined;
 
 /**
  * The account console SPA (`@authup/client-account-console`), served at
@@ -19,11 +27,17 @@ import type { AccountConsoleServeOptions } from './types.ts';
  * in the built `index.html`; the bundle's static assets ride the assets
  * middleware (`/console/account/assets`).
  */
-export const accountConsole = defineStaticConsole({
-    packageName: '@authup/client-account-console',
-    marker: '<!--account-config-->',
-    viteBase: `/${ACCOUNT_CONSOLE_SEGMENT}/`,
-});
+export function useAccountConsole() : StaticConsole {
+    instance = instance || defineStaticConsole({
+        packageName: '@authup/client-account-console',
+        marker: '<!--account-config-->',
+        viteBase: `/${ACCOUNT_CONSOLE_SEGMENT}/`,
+        cwd: PACKAGE_PATH,
+        distPath: packagePath,
+    });
+
+    return instance;
+}
 
 /**
  * Point the resolution at a substituted package (config
@@ -31,11 +45,12 @@ export const accountConsole = defineStaticConsole({
  * boot.
  */
 export function setAccountConsolePackagePath(value: string | undefined) : void {
-    accountConsole.setPackagePath(value);
+    packagePath = value || undefined;
+    instance = undefined;
 }
 
 export function resolveAccountConsoleDistPath() : string | undefined {
-    return accountConsole.resolveDistPath();
+    return useAccountConsole().resolveDistPath();
 }
 
 /**
@@ -51,8 +66,9 @@ export function serveAccountConsolePage(
 ) : Promise<string> {
     const basePath = getURLBasePath(options.baseURL);
 
-    return accountConsole.serve(event, {
-        baseURL: options.baseURL,
+    return useAccountConsole().serve(event, {
+        basePath,
+        theme: useRequestTheme(event),
         config: {
             apiUrl: options.baseURL,
             basePath: `${basePath}/${ACCOUNT_CONSOLE_SEGMENT}`,
