@@ -265,6 +265,7 @@ export class HTTPControllerModule {
         return new AuthorizeController({
             options: {
                 baseURL: config.publicUrl,
+                authConsoleUrl: config.authConsoleUrl,
                 features: this.buildUIFeatures(config),
                 promptLoginMaxAge: config.promptLoginMaxAge,
                 mfaFreshnessMaxAge: config.mfaFreshnessMaxAge,
@@ -379,10 +380,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new ActivateController({
-            options: {
-                baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
-            },
+            options: { authConsoleUrl: config.authConsoleUrl },
             service: this.createRegistrationService(container),
         });
     }
@@ -391,10 +389,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new PasswordForgotController({
-            options: {
-                baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
-            },
+            options: { authConsoleUrl: config.authConsoleUrl },
             service: this.createPasswordRecoveryService(container),
         });
     }
@@ -403,10 +398,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new PasswordResetController({
-            options: {
-                baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
-            },
+            options: { authConsoleUrl: config.authConsoleUrl },
             service: this.createPasswordRecoveryService(container),
         });
     }
@@ -441,10 +433,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new RegisterController({
-            options: {
-                baseURL: config.publicUrl,
-                features: this.buildUIFeatures(config),
-            },
+            options: { authConsoleUrl: config.authConsoleUrl },
             service: this.createRegistrationService(container),
         });
     }
@@ -466,7 +455,7 @@ export class HTTPControllerModule {
         });
 
         return new LogoutController({
-            options: { baseURL: config.publicUrl },
+            options: { authConsoleUrl: config.authConsoleUrl },
             endSessionService,
         });
     }

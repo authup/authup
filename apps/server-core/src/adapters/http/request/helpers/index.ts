@@ -13,7 +13,6 @@ export * from './locations.ts';
 export * from './mfa-login-ticket.ts';
 export * from './param-id.ts';
 export * from './realm-id.ts';
-export * from './redirect.ts';
 export * from './same-origin.ts';
 export * from './scopes.ts';
 export * from './session-id.ts';

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
 import { buildSchemaDefaults } from '@authup/server-config-kit';
+import { AUTH_CONSOLE_SEGMENT } from '../../../adapters/http/ui/constants.ts';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
@@ -103,6 +104,14 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
 
     if (config.authConsolePath) {
         config.authConsolePath = path.resolve(config.rootPath, config.authConsolePath);
+    }
+
+    // The single-origin default: the auth console service is served under
+    // publicUrl at the segment its bundle is built for, which is where the
+    // proxy routes /console/** in a split deployment too. An operator only
+    // sets this when the console lives somewhere else.
+    if (!config.authConsoleUrl) {
+        config.authConsoleUrl = `${config.publicUrl.replace(/\/+$/, '')}/${AUTH_CONSOLE_SEGMENT}`;
     }
 
     if (config.accountConsolePath) {

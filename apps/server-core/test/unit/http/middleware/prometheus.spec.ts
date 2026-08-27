@@ -37,7 +37,9 @@ describe('http/middleware/prometheus', () => {
                 password: 'not-a-password',
             },
         });
-        await httpRequest(suite, 'GET', '/authorize');
+        // the page GET forwards to the auth console service now, so it
+        // answers a 302 rather than a document; it is still a metered route
+        await httpRequest(suite, 'GET', '/authorize', { redirect: 'manual' });
 
         const response = await httpRequest(suite, 'GET', '/metrics');
         expect(response.status).toEqual(200);

@@ -7,11 +7,15 @@
 
 import type { LocaleCode } from '@authup/i18n';
 import { matchLocale } from '@authup/i18n';
+import { LOCALE_COOKIE } from '@authup/server-console-kit';
 import { useRequestCookie } from '@routup/basic/cookie';
 import type { IAppEvent } from 'routup';
 import { getRequestAcceptableLanguages } from 'routup';
 
-export const LOCALE_COOKIE = 'vc-locale';
+// The cookie name is owned by @authup/server-console-kit, which stamps the
+// served shells from it. Re-exported so this module stays the one place
+// server-core reads a request locale from.
+export { LOCALE_COOKIE };
 
 /**
  * Resolve the requester's preferred **authored** locale. The explicit UI

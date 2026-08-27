@@ -7,8 +7,9 @@
 
 import { Client } from '@authup/core-http-kit';
 import { AuthupError } from '@authup/errors';
-import { App } from 'routup';
+import { App, isHandler } from 'routup';
 import { serve } from 'routup/node';
+import type { ApplicationMountFactory } from '../../types.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
 import { bindConsolePackages, createInternalUIHttpClient } from '../../../adapters/http/ui/index.ts';
@@ -34,7 +35,10 @@ export class HTTPModule implements IModule {
 
     protected uiHttpClientRegistered : boolean;
 
-    constructor() {
+    protected mounts?: ApplicationMountFactory;
+
+    constructor(options: { mounts?: ApplicationMountFactory } = {}) {
+        this.mounts = options.mounts;
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
@@ -79,6 +83,21 @@ export class HTTPModule implements IModule {
 
         await this.middleware.mountBefore(router, container);
         await this.controller.mount(router, container);
+
+        // Composed handlers ride the same listener. They mount AFTER the
+        // controllers so nothing they carry can shadow a protocol route,
+        // and before the trailing middleware so they inherit the error
+        // handling every other route has.
+        for (const mount of this.mounts ? this.mounts(config) : []) {
+            // routup overloads `use` per mountable kind, so the union has
+            // to be narrowed before the call picks one.
+            if (isHandler(mount.handler)) {
+                router.use(mount.path, mount.handler);
+            } else {
+                router.use(mount.path, mount.handler);
+            }
+        }
+
         await this.middleware.mountAfter(router, container);
 
         const server = serve(router, {

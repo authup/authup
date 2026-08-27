@@ -22,6 +22,8 @@
             "@authup/server-adapter-socket-io": ["packages/server-adapter-socket-io/src"],
             "@authup/server-adapter-web": ["packages/server-adapter-web/src"],
             "@authup/server-config-kit": ["packages/server-config-kit/src"],
+            "@authup/server-auth-console": ["apps/server-auth-console/src"],
+            "@authup/server-console-kit": ["packages/server-console-kit/src"],
             "@authup/server-core": ["apps/server-core/src"],
             "@authup/server-kit": ["packages/server-kit/src"],
             "@authup/server-test-kit": ["packages/server-test-kit/src"],

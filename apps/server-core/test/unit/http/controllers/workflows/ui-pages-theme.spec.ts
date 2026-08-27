@@ -115,64 +115,10 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
         await suite.teardown();
     });
 
-    describe('auth console (SSR)', () => {
-        it('should inject the token block, favicon and stylesheet', async () => {
-            const response = await httpRequest(suite, 'GET', '/register');
-            expect(response.status).toEqual(200);
-
-            const body = await response.text();
-
-            expect(body).toContain('<style>@layer authup-theme{');
-            expect(body).toContain('--authup-periwinkle:#c0392b');
-            expect(body).toContain('.dark{--authup-auth-accent:#e06c5a}');
-            expect(body).toContain('<link rel="icon" href="/theme/favicon.svg">');
-            expect(body).toContain('<link rel="stylesheet" href="/theme/theme.css">');
-        });
-
-        it('should inject before </head>', async () => {
-            const response = await httpRequest(suite, 'GET', '/register');
-            const body = await response.text();
-
-            expect(body.indexOf('@layer authup-theme'))
-                .toBeLessThan(body.indexOf('</head>'));
-        });
-
-        it('should link the operator stylesheet AFTER the bundle stylesheet', async () => {
-            // The whole precedence model rests on this ordering: the
-            // operator sheet is unlayered, so it only wins if it comes last.
-            const response = await httpRequest(suite, 'GET', '/register');
-            const body = await response.text();
-
-            const bundle = /<link[^>]+rel="stylesheet"[^>]+href="\/console\/auth\/assets\/[^"]+"/.exec(body);
-            expect(bundle, 'the bundle stylesheet link was not found').not.toBeNull();
-
-            expect(body.indexOf(bundle![0]))
-                .toBeLessThan(body.indexOf('href="/theme/theme.css"'));
-        });
-
-        it('should replace the document title', async () => {
-            const response = await httpRequest(suite, 'GET', '/register');
-            const body = await response.text();
-
-            expect(body).toContain('<title>Sign in to ACME</title>');
-            expect(body).not.toContain('<title>Authup</title>');
-        });
-
-        it('should emit the logo tokens the shell CSS consumes', async () => {
-            const response = await httpRequest(suite, 'GET', '/register');
-            const body = await response.text();
-
-            expect(body).toContain('--authup-auth-logo-image:url("/theme/logo.svg")');
-            expect(body).toContain('--authup-auth-logo-mark-visibility:hidden');
-        });
-
-        it('should vary by cookie', async () => {
-            const response = await httpRequest(suite, 'GET', '/register');
-
-            expect(response.headers.get('vary')).toContain('cookie');
-        });
-    });
-
+    // The auth console pages render in @authup/server-auth-console since
+    // plan 101 D2-2, and theme application follows them in D2-3, so the
+    // SSR half of this suite lives there. What remains is what server-core
+    // still serves and still themes.
     describe('account console (SPA)', () => {
         it('should inject the same theme', async () => {
             const response = await httpRequest(suite, 'GET', '/console/account');

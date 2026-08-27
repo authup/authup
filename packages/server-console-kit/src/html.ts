@@ -7,14 +7,8 @@
 
 import { useRequestCookie } from '@routup/basic/cookie';
 import type { IAppEvent } from 'routup';
-import { LOCALE_COOKIE } from '../../request/helpers/locale.ts';
-
-const COLOR_MODE_COOKIE = 'vc-color-mode';
-
-export type UIClientPreferences = {
-    locale?: string,
-    colorMode?: string,
-};
+import { COLOR_MODE_COOKIE, LOCALE_COOKIE } from './constants';
+import type { UIClientPreferences } from './types';
 
 /**
  * Mirror @vuecs/nuxt's SSR plugins: resolve the shared cookies server-side
@@ -68,8 +62,8 @@ export function replaceTemplateMarker(html: string, marker: string, value: strin
  *
  * Deliberately not a template marker: injecting at the closing tag works
  * against console bundles that were built BEFORE this feature existed, so
- * server-core never silently loses theming when it runs against an older
- * console package. A shell without a `</head>` is returned unchanged.
+ * a console service never silently loses theming when it runs against an
+ * older console package. A shell without a `</head>` is returned unchanged.
  *
  * Function-replacement form for the same reason as replaceTemplateMarker.
  */
@@ -99,9 +93,9 @@ export function stampDocumentTitle(html: string, title: string) : string {
  *
  * Clickjacking guard: the pages mutate state behind explicit clicks and
  * hydrate first-party session state, so framing them would make
- * click-gating defeatable via overlay attacks — deny embedding entirely
+ * click-gating defeatable via overlay attacks. Deny embedding entirely
  * (iframe-based silent renew is therefore unsupported). The URLs routinely
- * carry sensitive query params (id_token_hint, code, redirect, state) —
+ * carry sensitive query params (id_token_hint, code, redirect, state), so
  * never leak them via Referer.
  */
 export function applyUIPageHeaders(event: IAppEvent) : void {
@@ -123,7 +117,8 @@ export function applyUIPageHeaders(event: IAppEvent) : void {
  * so they carry the path prefix under which authup is publicly served (e.g.
  * /auth/console/auth/assets/...).
  * The reverse proxy is expected to strip the prefix before the request
- * reaches authup, so the assets middleware keeps serving at the fixed base.
+ * reaches the service, so the assets middleware keeps serving at the fixed
+ * base.
  */
 export function rebaseAssetURLs(html: string, basePath: string, viteBase: string) : string {
     if (!basePath) {
@@ -140,7 +135,7 @@ export function rebaseAssetURLs(html: string, basePath: string, viteBase: string
  * Escape characters that would otherwise let a value break out of an inline
  * `<script>` context (`</script>`) or terminate the JS string literal via
  * the U+2028/U+2029 line separators. Every window-global config/payload a
- * console page inlines must pass through this — never rely on the VALUES
+ * console page inlines must pass through this. Never rely on the VALUES
  * staying benign.
  */
 export function serializeInlineScriptJSON(value: unknown) : string {

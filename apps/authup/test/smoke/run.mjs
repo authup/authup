@@ -163,6 +163,44 @@ async function assertConsoleServed(name, route, marker) {
 }
 
 /**
+ * A protocol page GET must hand over to the console service, and land on it.
+ *
+ * The hop is where plan 101 D2 put the boundary: server-core keeps the
+ * endpoint, the service keeps the render. A 302 into nothing answers the
+ * API probe just as happily as a working one, so the target is fetched
+ * separately by the caller.
+ */
+async function assertRedirectsToConsole(name, route, expectedPath) {
+    const url = new URL(route, SERVER_URL).href;
+
+    const response = await fetch(url, { redirect: 'manual' });
+    if (response.status < 300 || response.status >= 400) {
+        throw fail(`${name}: ${url} answered ${response.status}, expected a redirect to the console service.`);
+    }
+
+    const location = response.headers.get('location') || '';
+    const target = new URL(location, SERVER_URL);
+
+    // In the composed topology the console rides the API's own listener, so
+    // a hop leaving this origin means the mount was skipped and the console
+    // is not being served at all.
+    if (target.origin !== new URL(SERVER_URL).origin) {
+        throw fail(`${name}: ${url} redirected off-origin to ${location}, expected the composed console on ${SERVER_URL}.`);
+    }
+
+    if (target.pathname !== expectedPath) {
+        throw fail(`${name}: ${url} redirected to ${target.pathname}, expected exactly ${expectedPath}.`);
+    }
+
+    log(`${name}: ${url} handed over to ${location}.`);
+
+    // Returned so the caller follows the hop it just validated rather than
+    // a hard-coded path: a redirect somewhere unexpected would otherwise
+    // pass while the shell was fetched from the route it should have left.
+    return target;
+}
+
+/**
  * Follow the first script asset a static console shell references.
  *
  * The vite base (`/console/admin/`, `/console/account/`, `/console/auth/`) is
@@ -315,17 +353,24 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // All three consoles are RUNTIME dependencies of server-core, resolved
         // out of node_modules and served from their built dist. Probing the
         // root URL alone leaves that resolution untested.
+        // The auth console renders in its own service since plan 101 D2-2.
+        // `authup start` composes that service onto this listener, so the
+        // protocol route hands over and the console answers the hop. Both
+        // halves are asserted: a forward that lands nowhere would otherwise
+        // look exactly like a working one from the API side.
+        const authConsoleURL = await assertRedirectsToConsole(
+            `${name}/client-auth-console`,
+            'logout',
+            '/console/auth/logout',
+        );
         const authShell = await assertConsoleServed(
             `${name}/client-auth-console`,
-            'logout',
+            authConsoleURL.href,
             'window.__AUTHUP__',
         );
-        // The auth console's PAGES stay on their protocol routes; only its
-        // assets moved under `/console/auth/assets/` (plan 099), so the same
-        // stale-base check applies to the script the SSR shell references.
         await assertConsoleAssetServed(
             `${name}/client-auth-console`,
-            'logout',
+            authConsoleURL.href,
             authShell,
         );
         // window.__AUTHUP__ rather than the shell markup: it only appears if

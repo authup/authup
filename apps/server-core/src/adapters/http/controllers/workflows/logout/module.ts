@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EndSessionResponse } from '@authup/core-http-kit';
 import {
     DContext,
     DController,
@@ -13,11 +14,11 @@ import {
 } from '@routup/decorators';
 import { URL } from 'node:url';
 import type { IAppEvent } from 'routup';
-import { sendRedirect } from 'routup';
+import { getRequestHeader } from 'routup';
 import type { IOAuth2EndSessionService, OAuth2EndSessionRequest } from '../../../../../core/index.ts';
 import { OAuth2EndSessionRequestValidator } from '../../../../../core/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
-import { renderAuthConsolePage } from '../../../ui/index.ts';
+import { redirectToAuthConsole } from '../auth-console.ts';
 import type { LogoutControllerContext, LogoutControllerOptions } from './types.ts';
 
 @DController('/logout')
@@ -34,18 +35,69 @@ export class LogoutController {
         this.validator = new OAuth2EndSessionRequestValidator();
     }
 
+    /**
+     * `end_session_endpoint` keeps both of its OIDC bindings, and both are
+     * BROWSER NAVIGATIONS: the RP either redirects the user here (GET) or
+     * auto-submits a form at it (form_post). Neither can consume a JSON
+     * answer, so both hand over to the console service, carrying the
+     * request's own parameters.
+     *
+     * The revoke moved to the JSON call the rendered page makes (plan 101
+     * D2). It could not stay here: the page needs `serverRevoked`,
+     * `hintSub` and `hintSubKind` to decide whether to tear its own local
+     * session down, and those must reach it as the answer to its OWN
+     * request. Putting them in the redirect URL would let anyone craft
+     * them, which is exactly the forced-logout CSRF the client-side gate
+     * exists to refuse.
+     *
+     * The consequence to know: a browser with JavaScript disabled no
+     * longer revokes. It also never returns to the RP, so both sides stay
+     * consistent rather than the RP believing a logout it did not get.
+     */
     @DGet('', [])
-    async serve(@DContext() event: IAppEvent): Promise<string | Response> {
-        return this.handle(event);
+    async serve(@DContext() event: IAppEvent): Promise<Response> {
+        return this.forward(event);
     }
 
-    // OIDC RP-Initiated Logout allows form_post on the same endpoint.
     @DPost('', [])
-    async execute(@DContext() event: IAppEvent): Promise<string | Response> {
-        return this.handle(event);
+    async execute(@DContext() event: IAppEvent): Promise<Response | EndSessionResponse> {
+        // A JSON body is the console page asking us to end the session; a
+        // form body is the OIDC form_post binding, i.e. a navigation. A
+        // browser cannot navigate with a JSON body, so the two never blur.
+        if (this.isJSONRequest(event)) {
+            return this.endSession(event);
+        }
+
+        return this.forward(event);
     }
 
-    protected async handle(event: IAppEvent): Promise<string | Response> {
+    protected isJSONRequest(event: IAppEvent) : boolean {
+        const contentType = getRequestHeader(event, 'content-type');
+
+        // Media types are case-insensitive (RFC 9110), and the header
+        // routinely carries parameters (`; charset=UTF-8`). Reading it
+        // literally would send an `Application/JSON` caller down the
+        // navigation path and answer its XHR with a redirect.
+        return typeof contentType === 'string' &&
+            contentType.toLowerCase().includes('application/json');
+    }
+
+    protected async forward(event: IAppEvent): Promise<Response> {
+        // Both bindings merge body and query, so the form_post parameters
+        // survive the hop (a 302 turns the POST into a GET).
+        const merged = await readFromLocations(event, ['body', 'query']);
+
+        return redirectToAuthConsole(event, this.options.authConsoleUrl, '/logout', merged);
+    }
+
+    /**
+     * The end-session work itself, unchanged from when it ran on the page
+     * GET: validate, verify the hint, revoke the session it references, and
+     * validate the post-logout redirect. Only the reply is different, and
+     * only because the caller is now the page rather than the browser's
+     * address bar.
+     */
+    protected async endSession(event: IAppEvent): Promise<EndSessionResponse> {
         const merged = await readFromLocations(event, ['body', 'query']);
 
         // Malformed input (oversized / duplicated params) must never dead-end
@@ -59,8 +111,7 @@ export class LogoutController {
         // falls back to the hint's sole `aud`, scoped by the hint's own realm
         // claim — the dropped request params only affected the confirm page's
         // client name and the redirect, which is dropped anyway). Only a
-        // malformed hint itself falls through to the parameter-less confirm
-        // page.
+        // malformed hint itself falls through to the parameter-less answer.
         let data: OAuth2EndSessionRequest;
         try {
             data = await this.validator.run(merged);
@@ -76,7 +127,7 @@ export class LogoutController {
 
         // A signature-verified id_token_hint proves possession — revoke the
         // referenced session server-side immediately (only if it belongs to the
-        // hint's subject). Without a hint we mutate nothing; the SSR page's
+        // hint's subject). Without a hint we mutate nothing; the page's
         // sign-out is a click-gated, bearer-authenticated action.
         let serverRevoked = false;
         if (result.hintVerified && result.sessionId && result.sub && result.subKind) {
@@ -99,36 +150,24 @@ export class LogoutController {
             redirect = url.href;
         }
 
-        // Bounce straight back to the RP ONLY when the logout was actually
-        // performed server-side (a verified hint revoked the session). A
-        // hint-less or forged request MUST NOT silently redirect without ending
-        // the session — otherwise the RP treats a no-op round-trip as a
-        // successful logout while the authup session survives. Instead render
-        // the click-gated confirm page, which performs the bearer-authenticated
-        // sign-out and then redirects.
-        if (serverRevoked && redirect) {
-            return sendRedirect(event, redirect);
-        }
+        // `redirect` rides along whether or not the session was revoked
+        // here, because the page navigates it only AFTER its own sign-out
+        // has run. That is the same rule as before: what was gated on
+        // `serverRevoked` was the server's automatic 302, so that a
+        // hint-less round-trip could not make an RP believe a logout it
+        // never got. A hint-less request still reaches the RP, but only
+        // once a human has clicked and the local session is actually gone.
+        event.response.headers.set('cache-control', 'no-store');
 
-        const requestURL = new URL(event.request.url);
-
-        return renderAuthConsolePage(event, {
-            url: '/logout',
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: {
-                    client: result.clientName ? { name: result.clientName } : undefined,
-                    hintVerified: result.hintVerified,
-                    // never reflect an unverified hint's claims
-                    hintSub: result.hintVerified ? result.sub : undefined,
-                    hintSubKind: result.hintVerified ? result.subKind : undefined,
-                    serverRevoked,
-                    // the (already validated) uri to return to after a click-gated
-                    // sign-out; carries `state` when present
-                    redirect,
-                    requestPath: `${requestURL.pathname}${requestURL.search}`,
-                },
-            },
-        });
+        return {
+            clientName: result.clientName,
+            hintVerified: result.hintVerified,
+            // never reflect an unverified hint's claims: they are the
+            // operands of the page's own auto-clear gate
+            hintSub: result.hintVerified ? result.sub : undefined,
+            hintSubKind: result.hintVerified ? result.subKind : undefined,
+            serverRevoked,
+            redirect,
+        };
     }
 }

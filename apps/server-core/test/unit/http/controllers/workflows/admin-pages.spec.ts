@@ -140,23 +140,11 @@ describe('src/http/controllers/workflows/admin (SPA shell)', () => {
             }
         });
 
-        it('should serve the auth console assets under /console/auth/assets', async () => {
-            const page = await httpRequest(suite, 'GET', '/logout');
-            expect(page.status).toEqual(200);
-
-            const shell = await page.text();
-            const match = shell.match(/src="(\/console\/auth\/assets\/[^"]+\.js)"/);
-            expect(match).toBeTruthy();
-            // The vite base is /console/auth/ and vite's default assetsDir is
-            // assets/, so one segment, never /console/auth/assets/assets/.
-            expect(match![1]).not.toContain('/assets/assets/');
-            expect(shell).not.toContain('/assets/assets/');
-
-            const response = await httpRequest(suite, 'GET', match![1]);
-            expect(response.status).toEqual(200);
-            expect(response.headers.get('content-type')).toContain('javascript');
-        });
-
+        // The auth console's own shell (and therefore the href this case
+        // used to read) renders in @authup/server-auth-console since plan
+        // 101 D2-2; its asset mount is pinned in that package's suite.
+        // server-core still serves the assets themselves, which the next
+        // case covers from the other side.
         it('should not expose the auth console template or manifest', async () => {
             for (const path of [
                 '/console/auth/index.html',

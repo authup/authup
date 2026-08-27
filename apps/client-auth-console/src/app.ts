@@ -14,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
-import { getURLBasePath, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp, ref } from 'vue';
@@ -38,6 +38,7 @@ import './tailwind.css';
 import 'virtual:nuxt-icon-bundle/register';
 
 import type { Router } from 'vue-router';
+import { resolveBasePath } from './base-path';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
 import IdentityProviderCallback from './pages/identity-provider-callback.vue';
@@ -64,10 +65,17 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
 
     const isClient = typeof window !== 'undefined';
 
-    // When authup is publicly served under a sub-path (baseURL carries a
-    // pathname), the browser location includes the prefix — the router base
-    // strips it so route matching keeps working on hydration.
-    const basePath = getURLBasePath(payload?.config?.baseURL);
+    // Where this console is served, which is what the browser location
+    // carries and therefore what the router base has to strip for route
+    // matching to keep working on hydration.
+    //
+    // `basePath` and `baseURL` were the same value while server-core
+    // rendered these pages on its own origin path. They are not any more:
+    // `baseURL` is the API, which the http client and the cookie path come
+    // from, while the pages are served by the console service under a path
+    // of its own. A host that sends only `baseURL` (an older one) still
+    // gets the previous behaviour.
+    const basePath = resolveBasePath(payload);
 
     const router = createRouter({
         history: isClient ?

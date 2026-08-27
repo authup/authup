@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { rebaseAssetURLs, replaceTemplateMarker } from '../../../../../../src/adapters/http/ui/shared/html.ts';
+import { rebaseAssetURLs, replaceTemplateMarker } from '../../src';
 
 const HTML = `<!doctype html>
 <html lang="en">

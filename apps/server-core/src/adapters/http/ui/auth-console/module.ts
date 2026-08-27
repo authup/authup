@@ -23,7 +23,7 @@ import {
     rebaseAssetURLs,
     replaceTemplateMarker,
     stampHtmlAttributes,
-} from '../shared/index.ts';
+} from '@authup/server-console-kit';
 import { applyTheme } from '../theme/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from './resolve.ts';
 import type { AuthConsoleRenderContext } from './types.ts';
