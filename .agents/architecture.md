@@ -60,7 +60,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 | Folder                       | Responsibility                                                                                             |
 |------------------------------|------------------------------------------------------------------------------------------------------------|
-| app/modules/config           | Reads environment variables and configuration files. `registry.ts` declares every `Config` key once (zod type, default, description, env name + reader) and `@authup/server-config-kit` is the generic mechanism over it; the env reader, the validator, the static defaults and the `dist/config-schema.json` artifact all derive from the registry (plan 101 C-1) |
+| app/modules/config           | Reads environment variables and configuration files. `constants.ts` SELECTS this service's keys out of `@authup/server-config` (which declares every key of the document once) and `@authup/server-config-kit` is the generic mechanism over such a registry; the env reader, the file reader, the validator and the static defaults all derive from the selection (plan 101 C-1) |
 | app/modules/database         | Implement repositories based on adapters/database typeorm (entities & repositories), bootstrap connections |
 | app/modules/http             | Configure and initialize controllers with concrete implementations                                         |
 | app/modules/authentication   | Authentication feature wiring                                                                              |
@@ -2834,7 +2834,7 @@ console's path to its port. `createApplication` grows a generic `mounts`
 seam and mounts whatever it is handed under a path it is told, learning
 nothing about consoles: the CLI knows about every piece and composes them,
 which is its job, and a controller for a console appearing inside server-core
-is the smell that seam exists to prevent. `buildApplicationMounts` refuses to
+is the smell that seam exists to prevent. `buildConsoleMounts` refuses to
 reason loosely about origins: a console url on ANOTHER origin names a service
 someone else runs and is skipped rather than mounted locally, and one on this
 origin with no path would have to own the API's own root, where it shadows
@@ -2930,13 +2930,14 @@ on startup, because the failure is otherwise silent (the server simply
 boots on its defaults).
 
 **The config schema is one registry (plan 101 C-1).**
-`app/modules/config/registry.ts` declares every `Config` key once as a
-`ConfigSchemaEntry`: the zod `type`, the `default` (a static value, or a
+`@authup/server-config` declares every key of the document once as a
+`ConfigSchemaEntry`, and `app/modules/config/constants.ts` selects the ones
+this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
 the second falls back to typeorm-extension's driver default), an
 operator-facing `description`, and for the 51 env-backed keys the
-`ConfigEnvironmentVariableName` plus a `readEnv` reader. The mapped
+`EnvironmentVariable` plus a `readEnv` reader. The mapped
 `ConfigSchema` type is the exhaustiveness guard: a `Config` key with no
 entry fails the build. Five passes derive from the registry and nothing
 else may re-declare a key: `read/env.ts` is `readSchemaFromEnv` plus the
@@ -2967,11 +2968,12 @@ the console login has to know where to send the browser once the credential
 is issued and deriving that from `publicUrl` would be wrong the moment a
 console is published at a path of its own. server-core keeps the two
 `.enabled` flags, which it reads to gate the cookie-mode routes and to
-report on `GET /`. The JSON Schema artifact is emitted in that same nested
-shape, so an editor's `# yaml-language-server: $schema=` line validates the
-real document; the one server-core BUILDS carries its own registry alone
-(that is the package it ships with), while `authup config schema` composes
-all four so the printed document is the one an operator actually writes.
+report on `GET /`. The JSON Schema is emitted in that same nested shape, so
+an editor's `# yaml-language-server: $schema=` line validates the real
+document, and `authup config schema` prints the WHOLE document rather than
+any one service's selection of it: an operator writes one file, so a
+console's key must be neither missing from the schema nor reported as
+unread.
 
 **`@authup/server-config-kit` is the mechanism, and it carries no
 `@authup/*` dependency at all.** It holds the declaration types, the
@@ -3028,9 +3030,10 @@ keys, and server-core imports them back. The package depends on
 binding.
 
 `apps/authup` is still the only workspace that knows about every service, so
-it is where the per-console configs are resolved (`src/roles/config.ts`),
-but `config schema` now prints the package and `config validate` checks the
-whole document against it, including keys no service in the process reads.
+it is where the per-console configs are resolved (`src/roles/config.ts`) and
+where the `config` command lives: `config schema` prints the package and
+`config validate` checks the whole document against it, including keys no
+service in the process reads.
 Cross-section invariants stay in `normalizeConfig` rather than in the
 schema. One of them is that every console url must sit on publicUrl's own
 ORIGIN: a console under a path of its own is fully supported and is what
@@ -3051,24 +3054,35 @@ which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 A new key needs its reader chosen deliberately, not inferred from the zod
 type.
 
-`buildSchemaJSONSchema` renders a registry as JSON Schema draft-07 (zod's
-`toJSONSchema`, `unrepresentable: 'any'`, static defaults only, so a
-process-derived thunk is omitted, `x-authup-env` per property) and
-`scripts/emit-config-schema.mjs` writes server-core's to
-`dist/config-schema.json` at build (the last `build:server` step); the
-builder lives in TypeScript so the `authup config schema` command reuses it
-in process. That command and its sibling `authup config validate` (read the
-file and the environment, normalize, print every issue as
-`<path>: <message>` like the provisioning file loader, exit 1) are
-`defineCLIConfigCommand` in `apps/server-core/src/cli/commands/config.ts`:
-command bodies stay with the service, as every other CLI command does since
-D1, and `apps/authup` only mounts them, passing the console registries in as
-`options.schemas` so neither subcommand reports half a document. Keep
-`registry.ts` importable standalone: it reads
-`CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` from their
-constants FILES, never the request or core barrels (the request barrel
-reaches the x509 module, which needs `reflect-metadata` at import time),
-so the emit script runs under plain node.
+**The published JSON Schema is generated, never committed.**
+`buildSchemaJSONSchema` (`@authup/server-config-kit`) renders a registry as
+JSON Schema draft-07 (zod's `toJSONSchema`, `unrepresentable: 'any'`, static
+defaults only, so a process-derived thunk is omitted, `x-authup-env` per
+property), and `authup config schema`
+(`apps/authup/src/commands/config.ts`) runs it over the WHOLE document,
+`CONFIG_SCHEMA` from `@authup/server-config`, so the printed file is the one
+an operator actually writes rather than one service's selection of it. The
+docs workflow (`.github/workflows/docs.yml`) builds the CLI, writes that
+output to `docs/src/public/schema/config.json` and then builds the site, so
+the document served at the URL a `# yaml-language-server: $schema=` line
+names cannot lag behind the keys. The file is gitignored and server-core
+ships no `dist/config-schema.json` any more: both were a copy that a
+registry change could leave stale, which is why the workflow triggers on
+`packages/server-config{,-kit}/**` and `apps/authup/**` as well as `docs/**`.
+The shape of the emitted document is pinned by
+`packages/server-config/test/unit/schema.spec.ts`. **`config` is the one
+command whose body does NOT stay with the service**, unlike `start`,
+`worker`, `migration` and `healthcheck`: both subcommands are about the
+whole document, and the whole document is only assembled where every
+service meets, which is `apps/authup`. `config validate` reads the file and
+the environment, reports a path nothing reads, runs server-core's own read
+(its `normalizeConfig` is where the cross-section invariants live) and then
+checks every key of the document against the zod type its one declaration
+carries, printing each issue as `<path>: <message>` like the provisioning
+file loader and exiting 1. server-core keeps the pieces its own dev CLI
+needs next to it (`CLI_CONFIG_ARGS`, `applyCLIConfigArgs`,
+`createCLIConfigModule`, `assertNoStrayPositionals`, `describeConfigError`)
+and no config command of its own.
 
 **Unsupported:** sharing one cookie domain between a standalone-hosted
 console (or a downstream kit app on its own origin) and the hosted auth

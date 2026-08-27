@@ -23,7 +23,8 @@ import {
 } from '../../../../../../src';
 import type { Config } from '../../../../../../src';
 import { normalizeConfig } from '../../../../../../src/app/modules/config/normalize.ts';
-import { readConfigRawFromEnv } from '../../../../../../src/app/modules/config/read/index.ts';
+import { readConfigRawFromEnv } from '@authup/server-config';
+import { CONFIG_SCHEMA } from '../../../../../../src/app/modules/config/constants.ts';
 import { TestHTTPApplication } from '../../../../../app/http.ts';
 import {
     createFakeClient,
@@ -57,7 +58,7 @@ const CODE_VERIFIER = 'aVeryLongCodeVerifierValueUsedByThePublicClient1234567890
 function createUpstreamApplication(): TestHTTPApplication {
     const modules = new ApplicationBuilder()
         .withConfig(new ConfigModule(async () => {
-            const config = await normalizeConfig(readConfigRawFromEnv()) as Config;
+            const config = await normalizeConfig(readConfigRawFromEnv<Config>(CONFIG_SCHEMA)) as Config;
             config.port = 0;
             config.middlewareRateLimit = false;
             config.middlewarePrometheus = false;

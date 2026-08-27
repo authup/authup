@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildSchemaDefaults, readSchemaFromFileTree } from '@authup/server-config-kit';
+import { buildSchemaDefaults, buildSchemaJSONSchema, readSchemaFromFileTree } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
     ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
@@ -161,6 +161,83 @@ describe('CONFIG_SCHEMA', () => {
         expect(type.safeParse(['1']).success).toBe(false);
         expect(type.safeParse(['true']).success).toBe(false);
         expect(type.safeParse(['']).success).toBe(false);
+    });
+});
+
+/**
+ * The document `authup config schema` prints, which the docs workflow
+ * publishes at the URL an `authup.yml` names in its
+ * `# yaml-language-server: $schema=` line. Nothing is committed any more, so
+ * this is the only place its shape is pinned.
+ */
+describe('buildSchemaJSONSchema(CONFIG_SCHEMA)', () => {
+    const schema = buildSchemaJSONSchema(CONFIG_SCHEMA, { title: 'Authup configuration' });
+
+    function resolveProperty(path: string) {
+        let node = schema as Record<string, any>;
+
+        for (const segment of path.split('.')) {
+            expect(node.properties).toBeDefined();
+            node = node.properties[segment];
+            expect(node).toBeDefined();
+        }
+
+        return node as Record<string, unknown>;
+    }
+
+    it('emits a draft-07 object schema carrying the title', () => {
+        expect(schema.$schema).toEqual('http://json-schema.org/draft-07/schema#');
+        expect(schema.type).toEqual('object');
+        expect(schema.title).toEqual('Authup configuration');
+    });
+
+    /**
+     * A section per service, and the deployment-wide keys at the root: an
+     * operator writes ONE file, so the document has to describe every key,
+     * including the ones only another service reads.
+     */
+    it('nests every key at the path its entry spells', () => {
+        expect(Object.keys(schema.properties as Record<string, unknown>).sort()).toEqual([
+            'db',
+            'env',
+            'publicUrl',
+            'redis',
+            'rootPath',
+            'server',
+            'smtp',
+            'theme',
+            'trustedOrigins',
+        ]);
+
+        expect(resolveProperty('server.core.port')).toBeDefined();
+        expect(resolveProperty('server.authConsole.port')).toBeDefined();
+        expect(resolveProperty('server.adminConsole.path')).toBeDefined();
+        expect(resolveProperty('server.accountConsole.host')).toBeDefined();
+        expect(resolveProperty('theme.directoryPath')).toBeDefined();
+    });
+
+    it('describes every key of the document', () => {
+        for (const key of KEYS) {
+            const property = resolveProperty(CONFIG_SCHEMA[key].path as string);
+
+            expect(property.description).toEqual(expect.any(String));
+            expect((property.description as string).length).toBeGreaterThan(0);
+        }
+    });
+
+    it('carries the env name and the static default, and omits a process-derived one', () => {
+        const port = resolveProperty('server.core.port');
+        expect(port['x-authup-env']).toEqual('PORT');
+        expect(port.default).toEqual(3001);
+
+        // rootPath defaults to the cwd, which is no value to publish.
+        const rootPath = resolveProperty('rootPath');
+        expect(rootPath).not.toHaveProperty('default');
+    });
+
+    it('represents an enum type', () => {
+        expect(resolveProperty('server.core.certificateSource').enum)
+            .toEqual(['disabled', 'standard', 'forwarded']);
     });
 });
 

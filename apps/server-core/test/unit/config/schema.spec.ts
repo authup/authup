@@ -5,20 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-kit';
+import { buildSchemaDefaults } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
-import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import {
     CORE_CONFIG_SCHEMA,
-    CORE_CONFIG_SECTION,
     EnvironmentVariable,
     ROOT_CONFIG_SCHEMA,
 } from '@authup/server-config';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import type { Config } from '../../../src/app/modules/config/types';
-import { DIST_PATH, PACKAGE_PATH } from '../../../src/path';
 import { CONFIG_SCHEMA } from '../../../src';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
@@ -32,7 +27,7 @@ function readEnv(key: keyof Config, raw: string) : unknown {
     return entry.readEnv(raw, entry.env);
 }
 
-describe('src/config/registry.ts', () => {
+describe('src/app/modules/config/constants.ts', () => {
     describe('registry', () => {
         it('should map every environment variable name onto exactly one key', () => {
             const envNames : string[] = [];
@@ -198,117 +193,6 @@ describe('src/config/registry.ts', () => {
 
         it('should skip an empty string', () => {
             expect(readEnv('host', '')).toBeUndefined();
-        });
-    });
-
-    describe('buildConfigJSONSchema', () => {
-        const schema = buildConfigJSONSchema();
-
-        // the document is shaped like authup.yml, so a property is reached at
-        // the path its registry entry declares (or derives from the section).
-        function resolveProperty(document: Record<string, unknown>, path: string) {
-            let node = document;
-
-            for (const segment of path.split('.')) {
-                const properties = node.properties as Record<string, Record<string, unknown>>;
-                expect(properties).toBeDefined();
-                node = properties[segment];
-                expect(node).toBeDefined();
-            }
-
-            return node;
-        }
-
-        function resolveKeyProperty(document: Record<string, unknown>, key: keyof Config) {
-            return resolveProperty(document, resolveSchemaPath(key, CONFIG_SCHEMA[key], CORE_CONFIG_SECTION));
-        }
-
-        it('should emit a draft-07 object schema', () => {
-            expect(schema.$schema).toEqual('http://json-schema.org/draft-07/schema#');
-            expect(schema.type).toEqual('object');
-        });
-
-        it('should place every key at its declared path and describe it', () => {
-            for (const key of CONFIG_KEYS) {
-                const property = resolveKeyProperty(schema, key);
-
-                expect(property.description).toEqual(expect.any(String));
-                expect((property.description as string).length).toBeGreaterThan(0);
-            }
-        });
-
-        it('should nest a section key and keep a deployment-wide one at the root', () => {
-            const properties = schema.properties as Record<string, Record<string, unknown>>;
-
-            expect(Object.keys(properties).sort()).toEqual([
-                'db',
-                'env',
-                'publicUrl',
-                'redis',
-                'rootPath',
-                'server',
-                'smtp',
-                'theme',
-                'trustedOrigins',
-            ]);
-
-            expect(resolveProperty(schema, 'server.core.port')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.enabled')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.url')).toBeDefined();
-        });
-
-        /**
-         * The document describes every key an operator may write, not just
-         * the ones this service reads: one `authup.yml` configures the whole
-         * deployment, and an operator writing a console service's section
-         * must not be told the key does not exist.
-         */
-        it('should describe the keys only another service reads', () => {
-            expect(resolveProperty(schema, 'theme.directoryPath')).toBeDefined();
-            expect(resolveProperty(schema, 'server.authConsole.port')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.path')).toBeDefined();
-            expect(resolveProperty(schema, 'server.accountConsole.host')).toBeDefined();
-        });
-
-        it('should carry the env name and the static default, and omit a process-derived default', () => {
-            const port = resolveProperty(schema, 'server.core.port');
-            expect(port['x-authup-env']).toEqual('PORT');
-            expect(port.default).toEqual(3001);
-
-            const rootPath = resolveProperty(schema, 'rootPath');
-            expect(rootPath).not.toHaveProperty('x-authup-env');
-            expect(rootPath).not.toHaveProperty('default');
-        });
-
-        it('should represent an enum type', () => {
-            expect(resolveProperty(schema, 'server.core.certificateSource').enum)
-                .toEqual(['disabled', 'standard', 'forwarded']);
-        });
-
-        it('should keep a derived key with an unrepresentable type', () => {
-            const db = resolveProperty(schema, 'db');
-            expect(db.description).toEqual(expect.any(String));
-        });
-
-        it('should serve the same document the authup.yml $schema line names', () => {
-            // committed rather than generated at docs build time (that job
-            // builds the documentation alone), so a registry change that
-            // forgets to rebuild leaves it stale. Run
-            // `npm run build:config-schema -w apps/server-core`.
-            const filePath = path.join(PACKAGE_PATH, '..', '..', 'docs', 'src', 'public', 'schema', 'config.json');
-            expect(existsSync(filePath)).toEqual(true);
-
-            expect(JSON.parse(readFileSync(filePath, 'utf8'))).toEqual(schema);
-        });
-
-        it('should be published as dist/config-schema.json by the build', () => {
-            const filePath = path.join(DIST_PATH, 'config-schema.json');
-            expect(existsSync(filePath)).toEqual(true);
-
-            const artifact = JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, unknown>;
-            for (const key of CONFIG_KEYS) {
-                expect(resolveKeyProperty(artifact, key)).toBeDefined();
-            }
         });
     });
 });

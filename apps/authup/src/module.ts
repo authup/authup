@@ -8,6 +8,7 @@
 import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
 import {
     assertNoStrayPositionals,
+    defineCLIMigrationCommand,
     defineCLIWorkerCommand,
 } from '@authup/server-core';
 import { type ArgsDef, defineCommand } from 'citty';
@@ -69,9 +70,10 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
-            config: defineCLIConfigCommand(),
+            config: defineCLIConfigCommand(configFs),
             console: defineCLIConsoleCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
+            migration: defineCLIMigrationCommand(configFs),
             start: defineCLIStartCommand(configFs),
 
             // The API and the IdP alone: the page GETs still redirect to the
