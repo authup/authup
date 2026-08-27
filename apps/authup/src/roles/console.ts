@@ -116,7 +116,12 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
 
             registerShutdownHandlers({
                 teardown: async () => {
-                    await Promise.all(servers.map((server) => server.close()));
+                    // `true` closes active connections. A console serves
+                    // documents and assets over keep-alive sockets, so
+                    // waiting for them to go idle means waiting out the
+                    // client's own timeout: a container stop would sit at
+                    // the force-exit deadline every time.
+                    await Promise.all(servers.map((server) => server.close(true)));
                 },
             });
         },

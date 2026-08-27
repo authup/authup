@@ -76,9 +76,15 @@ export async function readConsoleConfigs(
 ) : Promise<ConsoleConfigs> {
     const { tree } = await readConfigFileTree(options);
 
-    const read = <T>(schema: ConfigSchemaInput<T>) : Partial<T> => ({
+    const read = <T extends { publicUrl: string }>(schema: ConfigSchemaInput<T>) : Partial<T> => ({
         ...readSchemaFromFileTree<T>(tree, schema),
         ...readSchemaFromEnv<T>(schema),
+        // Taken from the resolved core configuration rather than read again:
+        // server-core DERIVES it from host and port when the document names
+        // none, and a console has no host and port of the API's to derive it
+        // from. Both packages declare the key, so what a console reads on its
+        // own is the same value whenever the document does name one.
+        publicUrl: core.publicUrl,
     });
 
     return {
