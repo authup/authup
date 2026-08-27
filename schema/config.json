@@ -12,6 +12,77 @@
             "type": "string",
             "description": "Root directory every relative path key resolves against."
         },
+        "publicUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Externally reachable base URL of the API. Derived from host and port when unset.",
+            "x-authup-env": "PUBLIC_URL"
+        },
+        "trustedOrigins": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.",
+            "default": [],
+            "x-authup-env": "TRUSTED_ORIGINS"
+        },
+        "db": {
+            "description": "Database connection (TypeORM data source options). Without one the better-sqlite3 driver default of typeorm-extension applies."
+        },
+        "redis": {
+            "anyOf": [
+                {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                {}
+            ],
+            "description": "Redis connection: a connection URL, client options, an existing client, or a boolean to use the default connection or run without Redis.",
+            "default": false,
+            "x-authup-env": "REDIS"
+        },
+        "smtp": {
+            "anyOf": [
+                {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                {}
+            ],
+            "description": "SMTP transport for outgoing mail: a connection URL, transport options, or a boolean to use the default transport or run without mail.",
+            "default": false,
+            "x-authup-env": "SMTP"
+        },
+        "theme": {
+            "type": "object",
+            "properties": {
+                "directoryPath": {
+                    "type": "string",
+                    "description": "EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served under each console, its theme.json injects CSS custom properties); an empty value disables theming. SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.",
+                    "default": "",
+                    "x-authup-env": "THEME_DIRECTORY_PATH"
+                },
+                "fragmentsEnabled": {
+                    "type": "boolean",
+                    "description": "EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of every served console. SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.",
+                    "default": false,
+                    "x-authup-env": "THEME_FRAGMENTS_ENABLED"
+                }
+            }
+        },
         "server": {
             "type": "object",
             "properties": {
@@ -436,12 +507,6 @@
                 "authConsole": {
                     "type": "object",
                     "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. The substitute replaces the login and consent implementation, not its styling.",
-                            "default": "",
-                            "x-authup-env": "AUTH_CONSOLE_PATH"
-                        },
                         "url": {
                             "anyOf": [
                                 {
@@ -456,115 +521,119 @@
                             "description": "Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.",
                             "default": "",
                             "x-authup-env": "AUTH_CONSOLE_URL"
-                        }
-                    }
-                },
-                "accountConsole": {
-                    "type": "object",
-                    "properties": {
+                        },
                         "path": {
                             "type": "string",
-                            "description": "Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.",
+                            "description": "EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. The substitute replaces the login and consent implementation, not its styling.",
                             "default": "",
-                            "x-authup-env": "ACCOUNT_CONSOLE_PATH"
+                            "x-authup-env": "AUTH_CONSOLE_PATH"
                         },
-                        "enabled": {
-                            "type": "boolean",
-                            "description": "Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.",
-                            "default": true,
-                            "x-authup-env": "ACCOUNT_CONSOLE_ENABLED"
+                        "port": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "TCP port the standalone listener binds. Unrelated to the url above, which is the address a browser reaches.",
+                            "default": 3020,
+                            "x-authup-env": "AUTH_CONSOLE_PORT"
+                        },
+                        "host": {
+                            "type": "string",
+                            "description": "Host address the standalone listener binds.",
+                            "default": "0.0.0.0",
+                            "x-authup-env": "AUTH_CONSOLE_HOST"
                         }
                     }
                 },
                 "adminConsole": {
                     "type": "object",
                     "properties": {
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "ADMIN_CONSOLE_URL"
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Serve the admin console at /console/admin. Off, the console renders the disabled notice and its server-side login answers 404; a standalone-hosted console is unaffected.",
+                            "default": true,
+                            "x-authup-env": "ADMIN_CONSOLE_ENABLED"
+                        },
                         "path": {
                             "type": "string",
                             "description": "Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.",
                             "default": "",
                             "x-authup-env": "ADMIN_CONSOLE_PATH"
                         },
+                        "port": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "TCP port the HTTP listener binds.",
+                            "default": 3021,
+                            "x-authup-env": "ADMIN_CONSOLE_PORT"
+                        },
+                        "host": {
+                            "type": "string",
+                            "description": "Host address the HTTP listener binds; an empty value leaves the runtime default.",
+                            "default": "",
+                            "x-authup-env": "ADMIN_CONSOLE_HOST"
+                        }
+                    }
+                },
+                "accountConsole": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "ACCOUNT_CONSOLE_URL"
+                        },
                         "enabled": {
                             "type": "boolean",
-                            "description": "Serve the admin console at /console/admin. Off, the route answers with the disabled notice; a standalone-hosted console is unaffected.",
+                            "description": "Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.",
                             "default": true,
-                            "x-authup-env": "ADMIN_CONSOLE_ENABLED"
+                            "x-authup-env": "ACCOUNT_CONSOLE_ENABLED"
+                        },
+                        "path": {
+                            "type": "string",
+                            "description": "Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.",
+                            "default": "",
+                            "x-authup-env": "ACCOUNT_CONSOLE_PATH"
+                        },
+                        "port": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "TCP port the HTTP listener binds.",
+                            "default": 3022,
+                            "x-authup-env": "ACCOUNT_CONSOLE_PORT"
+                        },
+                        "host": {
+                            "type": "string",
+                            "description": "Host address the HTTP listener binds; an empty value leaves the runtime default.",
+                            "default": "",
+                            "x-authup-env": "ACCOUNT_CONSOLE_HOST"
                         }
                     }
                 }
             }
-        },
-        "theme": {
-            "type": "object",
-            "properties": {
-                "directoryPath": {
-                    "type": "string",
-                    "description": "EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served at /theme, its theme.json injects CSS custom properties); an empty value disables theming. SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.",
-                    "default": "",
-                    "x-authup-env": "THEME_DIRECTORY_PATH"
-                },
-                "fragmentsEnabled": {
-                    "type": "boolean",
-                    "description": "EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of both served consoles. SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.",
-                    "default": false,
-                    "x-authup-env": "THEME_FRAGMENTS_ENABLED"
-                }
-            }
-        },
-        "db": {
-            "description": "Database connection (TypeORM data source options). Without one the better-sqlite3 driver default of typeorm-extension applies."
-        },
-        "redis": {
-            "anyOf": [
-                {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "boolean"
-                        }
-                    ]
-                },
-                {}
-            ],
-            "description": "Redis connection: a connection URL, client options, an existing client, or a boolean to use the default connection or run without Redis.",
-            "default": false,
-            "x-authup-env": "REDIS"
-        },
-        "smtp": {
-            "anyOf": [
-                {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "boolean"
-                        }
-                    ]
-                },
-                {}
-            ],
-            "description": "SMTP transport for outgoing mail: a connection URL, transport options, or a boolean to use the default transport or run without mail.",
-            "default": false,
-            "x-authup-env": "SMTP"
-        },
-        "publicUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "Externally reachable base URL of the API. Derived from host and port when unset.",
-            "x-authup-env": "PUBLIC_URL"
-        },
-        "trustedOrigins": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.",
-            "default": [],
-            "x-authup-env": "TRUSTED_ORIGINS"
         }
     }
 }
