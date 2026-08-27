@@ -21,6 +21,8 @@
             "@authup/server-adapter-node": ["packages/server-adapter-node/src"],
             "@authup/server-adapter-socket-io": ["packages/server-adapter-socket-io/src"],
             "@authup/server-adapter-web": ["packages/server-adapter-web/src"],
+            "@authup/server-account-console": ["apps/server-account-console/src"],
+            "@authup/server-admin-console": ["apps/server-admin-console/src"],
             "@authup/server-config-kit": ["packages/server-config-kit/src"],
             "@authup/server-auth-console": ["apps/server-auth-console/src"],
             "@authup/server-console-kit": ["packages/server-console-kit/src"],

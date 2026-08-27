@@ -112,22 +112,24 @@ export function applyUIPageHeaders(event: IAppEvent) : void {
 }
 
 /**
- * Rewrite root-absolute asset references (script/link/preload tags emitted
- * with a fixed vite base, e.g. /console/auth/ or /console/account/)
- * so they carry the path prefix under which authup is publicly served (e.g.
- * /auth/console/auth/assets/...).
- * The reverse proxy is expected to strip the prefix before the request
- * reaches the service, so the assets middleware keeps serving at the fixed
- * base.
+ * Point the bundle's asset references at where they are actually served.
+ *
+ * A console bundle emits its `src`/`href` attributes against a FIXED vite
+ * base (`/console/admin/`, `/console/auth/`), decided when the bundle was
+ * built and unrelated to where the thing serving it is published. So the
+ * base is REPLACED rather than prepended to, and the caller says what it is
+ * replaced with, because only the caller knows where it mounted the assets.
+ *
+ * Prepending happens to work while the server publishes the console at
+ * exactly that vite base, which is the default. It breaks the moment it does
+ * not: a service at `/login` would emit `/login/console/auth/assets/...`, and
+ * once the proxy strips `/login` the request arrives as
+ * `/console/auth/assets/...`, which nothing serves.
  */
-export function rebaseAssetURLs(html: string, basePath: string, viteBase: string) : string {
-    if (!basePath) {
-        return html;
-    }
-
+export function rebaseAssetURLs(html: string, viteBase: string, assetBasePath: string) : string {
     return html.replace(
         new RegExp(`(src|href)="${viteBase.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
-        (_match, attribute) => `${attribute}="${basePath}${viteBase}`,
+        (_match, attribute) => `${attribute}="${assetBasePath}`,
     );
 }
 

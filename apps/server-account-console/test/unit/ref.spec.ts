@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolveAccountConsoleRef } from '../../../../src/adapters/http/ui/account-console/ref.ts';
+import { resolveAccountConsoleRef } from '../../src/ref';
 
 const TRUSTED = ['https://admin.example.com', 'http://localhost:3000'];
 

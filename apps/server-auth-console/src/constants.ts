@@ -32,4 +32,11 @@ export const AUTH_CONSOLE_PAGES = [
     '/logout',
 ] as const;
 
+/**
+ * Where this service mounts the bundle's `assets/` directory. The public
+ * asset URL is the service's own public path plus this route, which is what
+ * the bundle's fixed vite base is rebased onto.
+ */
+export const ASSETS_PATH = '/assets';
+
 export const HEALTH_PATH = '/healthy';

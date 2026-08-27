@@ -28,6 +28,8 @@
         "packages/server-adapter-web": {"component": "server-adapter-web"},
         "packages/server-config-kit": {"component": "server-config-kit"},
         "packages/server-console-kit": {"component": "server-console-kit"},
+        "apps/server-account-console": {"component": "server-account-console"},
+        "apps/server-admin-console": {"component": "server-admin-console"},
         "apps/server-auth-console": {"component": "server-auth-console"},
         "packages/server-kit": {"component": "server-kit"},
         "packages/server-test-kit": {"component": "server-test-kit"},
@@ -49,6 +51,9 @@
                 "client-account-console",
                 "client-admin-console",
                 "client-auth-console",
+                "server-account-console",
+                "server-admin-console",
+                "server-auth-console",
                 "server-core",
 
                 "access",

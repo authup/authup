@@ -1,11 +1,11 @@
 {
-    "name": "@authup/server-auth-console",
+    "name": "@authup/server-admin-console",
     "type": "module",
     "version": "1.0.0-beta.63",
-    "description": "The SSR service behind authup's hosted auth pages: it renders the auth console bundle and hydrates it anonymously over HTTP.",
+    "description": "The service behind authup's admin console: it serves the admin console bundle with its runtime configuration injected.",
     "license": "AGPL-3.0-only",
     "bin": {
-        "authup-auth-console": "dist/bin.mjs"
+        "authup-admin-console": "dist/bin.mjs"
     },
     "exports": {
         "./package.json": "./package.json",
@@ -33,8 +33,7 @@
     "keywords": [
         "auth",
         "console",
-        "server",
-        "ssr"
+        "server"
     ],
     "author": {
         "name": "Peter Placzek",
@@ -44,26 +43,25 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "apps/server-auth-console"
+        "directory": "apps/server-admin-console"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-auth-console": "^1.0.0-beta.63",
-        "@authup/core-http-kit": "^1.0.0-beta.63",
-        "@authup/errors": "^1.0.0-beta.63",
+        "@authup/client-admin-console": "^1.0.0-beta.63",
         "@authup/kit": "^1.0.0-beta.63",
         "@authup/server-config-kit": "^1.0.0-beta.63",
         "@authup/server-console-kit": "^1.0.0-beta.63",
+        "@ebec/http": "^4.2.0",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.0",
-        "locter": "^4.1.1",
         "routup": "^6.1.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {
+        "@types/node": "^26.0.0",
         "cross-env": "^10.1.0",
         "vitest": "^4.0.18"
     },

@@ -91,7 +91,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         );
 
         body = stampHtmlAttributes(body, readUIClientPreferences(event));
-        body = rebaseAssetURLs(body, options.basePath, definition.viteBase);
+        body = rebaseAssetURLs(body, definition.viteBase, options.assetBasePath);
 
         body = await applyTheme(body, options.theme, options.basePath);
 

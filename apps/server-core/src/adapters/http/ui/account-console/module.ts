@@ -6,6 +6,9 @@
  */
 
 import { getURLBasePath } from '@authup/kit';
+// The `ref` guard moved to the account console service (plan 101 D2-3); a
+// later commit sheds this import with the serving path it belongs to.
+import { resolveAccountConsoleRef } from '@authup/server-account-console';
 import type { StaticConsole } from '@authup/server-console-kit';
 import { defineStaticConsole } from '@authup/server-console-kit';
 import { useRequestQuery } from '@routup/basic/query';
@@ -15,7 +18,6 @@ import { PACKAGE_PATH } from '../../../../path.ts';
 // imports this module. Through the barrel that is a cycle.
 import { useRequestTheme } from '../../middleware/built-in/theme.ts';
 import { ACCOUNT_CONSOLE_SEGMENT } from '../constants.ts';
-import { resolveAccountConsoleRef } from './ref.ts';
 import type { AccountConsoleServeOptions } from './types.ts';
 
 let packagePath : string | undefined;
@@ -68,6 +70,10 @@ export function serveAccountConsolePage(
 
     return useAccountConsole().serve(event, {
         basePath,
+        // This server mounts the bundle's assets AT its vite base, under the
+        // deployment's own sub-path, so that is what the hrefs are rebased
+        // onto. A console SERVICE mounts them at its own /assets instead.
+        assetBasePath: `${basePath}/${ACCOUNT_CONSOLE_SEGMENT}/`,
         theme: useRequestTheme(event),
         config: {
             apiUrl: options.baseURL,

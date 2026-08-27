@@ -63,10 +63,18 @@ export type StaticConsoleDefinition = {
 
 export type StaticConsoleServeOptions = {
     /**
-     * The path the console is publicly served under. Asset hrefs are rebased
-     * onto it and the theme's asset URLs are built from it.
+     * The path the console is publicly served under. The theme's own asset
+     * URLs are built from it, so it is where the theme route is mounted.
      */
     basePath: string,
+    /**
+     * What the bundle's fixed vite base is replaced with in every asset
+     * reference: the public path the bundle's own `assets/` directory hangs
+     * off, with a trailing slash. A console service mounting them at its own
+     * `/assets` passes its base path; a server mounting them AT the vite base
+     * passes that. Only the caller knows which it did.
+     */
+    assetBasePath: string,
     /**
      * The operator theme applied to the rendered shell, if any.
      */

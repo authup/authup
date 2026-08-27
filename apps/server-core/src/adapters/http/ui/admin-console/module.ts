@@ -63,6 +63,10 @@ export function serveAdminConsolePage(
 
     return useAdminConsole().serve(event, {
         basePath,
+        // This server mounts the bundle's assets AT its vite base, under the
+        // deployment's own sub-path, so that is what the hrefs are rebased
+        // onto. A console SERVICE mounts them at its own /assets instead.
+        assetBasePath: `${basePath}/${ADMIN_CONSOLE_SEGMENT}/`,
         theme: useRequestTheme(event),
         config: {
             apiUrl: options.baseURL,

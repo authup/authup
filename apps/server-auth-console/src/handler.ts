@@ -5,10 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IThemeProvider } from '@authup/server-console-kit';
+import {
+    THEME_ASSET_MOUNT_PATH,
+    ThemeProvider,
+    createThemeAssetsHandler,
+} from '@authup/server-console-kit';
 import { createHandler } from '@routup/assets';
+import { basic } from '@routup/basic';
+import fs from 'node:fs';
 import path from 'node:path';
 import { App, defineCoreHandler } from 'routup';
-import { HEALTH_PATH } from './constants';
+import { ASSETS_PATH, HEALTH_PATH } from './constants';
 import {
     buildWorkflowPageData,
     createAPIClient,
@@ -20,17 +28,17 @@ import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from './resolve
 import type { AuthConsoleConfig } from './types';
 
 const WORKFLOW_PAGES : {
-    url: string, 
-    realmAware?: boolean, 
-    tokenAware?: boolean 
+    url: string,
+    realmAware?: boolean,
+    tokenAware?: boolean
 }[] = [
     { url: '/register', realmAware: true },
     { url: '/activate', tokenAware: true },
     { url: '/password-forgot', realmAware: true },
     {
-        url: '/password-reset', 
-        realmAware: true, 
-        tokenAware: true, 
+        url: '/password-reset',
+        realmAware: true,
+        tokenAware: true,
     },
 ];
 
@@ -43,11 +51,38 @@ const WORKFLOW_PAGES : {
  * proxy, so a service published at `<origin>/console/auth` receives
  * `/authorize`, exactly as server-core received it before the split.
  */
-export function createAuthConsoleHandler(config: AuthConsoleConfig) : App {
+export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Promise<App> {
     setAuthConsolePackagePath(config.distPath);
 
     const app = new App();
     const client = createAPIClient(config);
+
+    // The shell is stamped from the vc-locale / vc-color-mode cookies, and
+    // without the plugin every cookie read answers undefined, which is a
+    // silent flash of the wrong color mode on every full load. server-core
+    // registers it globally, so a mounted handler inherits one; a standalone
+    // service has nothing above it.
+    app.use(basic({ cookie: true, query: true }));
+
+    // A missing directory disables theming entirely: no provider is created
+    // and the rendered pages are byte-identical to the un-themed ones, so the
+    // default configuration pays nothing. An invalid manifest throws here and
+    // fails the boot rather than surfacing per request.
+    let theme : IThemeProvider | undefined;
+    if (config.themeDirectoryPath && fs.existsSync(config.themeDirectoryPath)) {
+        const provider = new ThemeProvider({
+            directoryPath: config.themeDirectoryPath,
+            fragmentsEnabled: config.themeFragmentsEnabled,
+            // The boot inventory this logs (resolved path, token counts,
+            // every servable file) is the antidote to the feature's dominant
+            // failure mode, which is silence.
+            logger: console,
+        });
+
+        await provider.load();
+
+        theme = provider;
+    }
 
     app.use(defineCoreHandler({
         method: 'get',
@@ -55,12 +90,17 @@ export function createAuthConsoleHandler(config: AuthConsoleConfig) : App {
         fn: () => ({ status: 'ok' }),
     }));
 
+    if (theme) {
+        app.use(THEME_ASSET_MOUNT_PATH, createThemeAssetsHandler(theme));
+    }
+
     app.use(defineCoreHandler({
         method: 'get',
         path: '/authorize',
         fn: async (event) => renderAuthConsolePage(event, config, {
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
+            theme,
         }),
     }));
 
@@ -74,6 +114,7 @@ export function createAuthConsoleHandler(config: AuthConsoleConfig) : App {
                 return renderAuthConsolePage(event, config, {
                     url: page.url,
                     data: buildWorkflowPageData(event, features, page),
+                    theme,
                 });
             },
         }));
@@ -88,6 +129,7 @@ export function createAuthConsoleHandler(config: AuthConsoleConfig) : App {
         fn: async (event) => renderAuthConsolePage(event, config, {
             url: '/logout',
             data: {},
+            theme,
         }),
     }));
 
@@ -97,7 +139,7 @@ export function createAuthConsoleHandler(config: AuthConsoleConfig) : App {
     // report the actionable error.
     const distPath = resolveAuthConsoleDistPath();
     if (distPath) {
-        app.use('/assets', createHandler(
+        app.use(ASSETS_PATH, createHandler(
             path.posix.join(distPath, 'client', 'assets'),
             {
                 fallthrough: false,

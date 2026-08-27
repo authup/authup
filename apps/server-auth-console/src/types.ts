@@ -5,6 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/**
+ * What this service reads out of `authup.yml` and the environment: one field
+ * per registry key, spelled the way the CONFIGURATION namespace spells it.
+ *
+ * The names are qualified because a key two packages both read has to be
+ * declared identically in both registries, which is what lets the composer
+ * assert the two declarations agree without either package depending on the
+ * other. That namespace is not this service's own vocabulary, so nothing
+ * outside `config.ts` sees this shape: `resolveAuthConsoleConfig` maps it
+ * onto {@link AuthConsoleConfig}.
+ */
+export type AuthConsoleConfigInput = {
+    /**
+     * Server-core's public URL, the deployment-wide `publicUrl` key. It is
+     * the API this service talks to, so it becomes `apiUrl` below.
+     */
+    publicUrl: string,
+    authConsoleUrl: string,
+    authConsolePath: string,
+    authConsolePort: number,
+    authConsoleHost: string,
+    themeDirectoryPath: string,
+    themeFragmentsEnabled: boolean,
+};
+
+/**
+ * The service's own configuration. This console is the primary context here
+ * and server-core is the external thing it calls, hence `url` for its own
+ * address and `apiUrl` for the API's.
+ */
 export type AuthConsoleConfig = {
     /**
      * The public URL this service is reachable at, e.g.
@@ -21,13 +51,20 @@ export type AuthConsoleConfig = {
      */
     apiUrl: string,
     /**
-     * Where the service listens.
+     * Where the standalone service listens. Unrelated to `url`: behind a
+     * reverse proxy the two always differ.
      */
-    port?: number,
-    host?: string,
+    port: number,
+    host: string,
     /**
      * A substituted console package to render instead of the resolved
      * `@authup/client-auth-console` (the `AUTH_CONSOLE_PATH` seam).
      */
-    distPath?: string,
+    distPath: string,
+    /**
+     * The operator theme directory, applied to the rendered pages. An empty
+     * value disables theming and creates no provider at all.
+     */
+    themeDirectoryPath: string,
+    themeFragmentsEnabled: boolean,
 };

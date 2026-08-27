@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { serve } from 'routup/node';
-import { createAuthConsoleHandler, rebaseConsoleAssets } from '../../src';
+import { createAuthConsoleHandler, resolveAuthConsoleConfig } from '../../src';
 
 /**
  * The service renders the BUILT `@authup/client-auth-console` bundle, so
@@ -27,13 +27,10 @@ describe('createAuthConsoleHandler', () => {
     let baseURL : string;
     let server : ReturnType<typeof serve>;
 
-    const config = {
-        url: 'https://example.com/console/auth',
-        apiUrl: 'https://example.com',
-    };
+    const config = resolveAuthConsoleConfig({ publicUrl: 'https://example.com' });
 
     beforeAll(async () => {
-        server = serve(createAuthConsoleHandler(config), { port: 0, silent: true });
+        server = serve(await createAuthConsoleHandler(config), { port: 0, silent: true });
         await server.ready();
 
         baseURL = (server.url ?? '').replace(/\/+$/, '');
@@ -87,32 +84,5 @@ describe('createAuthConsoleHandler', () => {
 
         expect(asset.status).toEqual(200);
         expect(asset.headers.get('content-type')).toContain('javascript');
-    });
-});
-
-describe('rebaseConsoleAssets', () => {
-    const SHELL = '<script src="/console/auth/assets/index-abc.js"></script>' +
-        '<link href="/console/auth/assets/index-def.css">';
-
-    // The invariant: the emitted href must be the service's own public path
-    // plus the route the assets are mounted on, which is /assets. The vite
-    // base in the bundle is fixed at build time and says nothing about where
-    // the service is published, so it is replaced rather than prefixed.
-    it.each([
-        // the default: published at the vite base, so the href is unchanged
-        ['https://example.com/console/auth', '/console/auth/assets/'],
-        // authup under a sub-path
-        ['https://example.com/auth/console/auth', '/auth/console/auth/assets/'],
-        // published somewhere that does NOT end in the vite base: prefixing
-        // would emit /login/console/auth/assets/, which nothing serves once
-        // the proxy has stripped /login
-        ['https://example.com/login', '/login/assets/'],
-        // at the origin root
-        ['https://example.com', '/assets/'],
-    ])('rebases %s onto %s', (url, expected) => {
-        const html = rebaseConsoleAssets(SHELL, url);
-
-        expect(html).toContain(`src="${expected}index-abc.js"`);
-        expect(html).toContain(`href="${expected}index-def.css"`);
     });
 });
