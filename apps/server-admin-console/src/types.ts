@@ -7,7 +7,7 @@
 
 import type {
     AdminConsoleSectionConfig,
-    DeploymentConfig,
+    RootConfig,
     ThemeConfig,
 } from '@authup/server-config';
 
@@ -20,7 +20,7 @@ import type {
  * service's), so it is confined to the configuration layer and mapped onto
  * {@link AdminConsoleConfig} before anything else sees it.
  */
-export type AdminConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl'> &
+export type AdminConsoleConfigInput = Pick<RootConfig, 'publicUrl'> &
     ThemeConfig &
     AdminConsoleSectionConfig;
 

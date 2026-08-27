@@ -13,15 +13,15 @@ import {
     AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
     CONFIG_SCHEMA,
     CORE_CONFIG_SCHEMA,
-    ConfigEnvironmentVariableName,
-    DEPLOYMENT_CONFIG_SCHEMA,
+    EnvironmentVariable,
+    ROOT_CONFIG_SCHEMA,
     THEME_CONFIG_SCHEMA,
     expandToOrigins,
 } from '../../src';
 import type { AuthupConfig } from '../../src';
 
 const SECTIONS = {
-    deployment: DEPLOYMENT_CONFIG_SCHEMA,
+    root: ROOT_CONFIG_SCHEMA,
     theme: THEME_CONFIG_SCHEMA,
     core: CORE_CONFIG_SCHEMA,
     authConsole: AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
@@ -74,7 +74,7 @@ describe('CONFIG_SCHEMA', () => {
         }
 
         expect(new Set(names).size).toEqual(names.length);
-        expect([...names].sort()).toEqual(Object.values(ConfigEnvironmentVariableName).sort());
+        expect([...names].sort()).toEqual(Object.values(EnvironmentVariable).sort());
     });
 
     it('reads every key at the path the document spells', () => {

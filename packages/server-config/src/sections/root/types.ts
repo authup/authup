@@ -53,7 +53,7 @@ export type SMTPConnectionOptions = string | boolean | Record<string, any>;
  * describe the deployment rather than any one service, and which every service
  * in it therefore agrees on.
  */
-export type DeploymentConfig = {
+export type RootConfig = {
     /**
      * Application environment (e.g. 'production').
      * default: 'development'

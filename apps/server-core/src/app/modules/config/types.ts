@@ -10,7 +10,7 @@ import type {
     AdminConsoleSectionConfig,
     AuthConsoleSectionConfig,
     CoreConfig,
-    DeploymentConfig,
+    RootConfig,
 } from '@authup/server-config';
 
 /**
@@ -27,7 +27,7 @@ import type {
  * The theme section is deliberately absent. Theming applies to a served
  * console, and since plan 101 D2 no console is served from this process.
  */
-export type Config = DeploymentConfig &
+export type Config = RootConfig &
     CoreConfig &
     Pick<AuthConsoleSectionConfig, 'authConsoleUrl'> &
     Pick<AdminConsoleSectionConfig, 'adminConsoleUrl' | 'adminConsoleEnabled'> &

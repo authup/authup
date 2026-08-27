@@ -8,8 +8,8 @@
 import type { ConfigSchema } from '@authup/server-config-kit';
 import { readEnvBool, readEnvInt, readEnvString } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { ConfigEnvironmentVariableName } from '../constants.ts';
-import { urlOrEmpty } from '../utils.ts';
+import { EnvironmentVariable } from '../../constants.ts';
+import { urlOrEmpty } from '../../utils.ts';
 import type { AdminConsoleSectionConfig } from './types.ts';
 
 export const ADMIN_CONSOLE_CONFIG_SECTION = 'server.adminConsole';
@@ -21,7 +21,7 @@ export const ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA = {
         description: 'Where the admin console service (@authup/server-admin-console) is served, e.g. https://example.com/console/admin. ' +
             'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
         path: 'server.adminConsole.url',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_URL,
+        env: EnvironmentVariable.ADMIN_CONSOLE_URL,
         readEnv: readEnvString,
     },
     adminConsoleEnabled: {
@@ -29,7 +29,7 @@ export const ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA = {
         default: true,
         description: 'Serve the admin console at /console/admin. Off, the console renders the disabled notice and its server-side login answers 404; a standalone-hosted console is unaffected.',
         path: 'server.adminConsole.enabled',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_ENABLED,
+        env: EnvironmentVariable.ADMIN_CONSOLE_ENABLED,
         readEnv: readEnvBool,
     },
     adminConsolePath: {
@@ -37,7 +37,7 @@ export const ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA = {
         default: '',
         description: 'Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
         path: 'server.adminConsole.path',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_PATH,
+        env: EnvironmentVariable.ADMIN_CONSOLE_PATH,
         readEnv: readEnvString,
     },
     adminConsolePort: {
@@ -45,7 +45,7 @@ export const ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA = {
         default: 3021,
         description: 'TCP port the HTTP listener binds.',
         path: 'server.adminConsole.port',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_PORT,
+        env: EnvironmentVariable.ADMIN_CONSOLE_PORT,
         readEnv: readEnvInt,
     },
     adminConsoleHost: {
@@ -53,7 +53,7 @@ export const ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA = {
         default: '',
         description: 'Host address the HTTP listener binds; an empty value leaves the runtime default.',
         path: 'server.adminConsole.host',
-        env: ConfigEnvironmentVariableName.ADMIN_CONSOLE_HOST,
+        env: EnvironmentVariable.ADMIN_CONSOLE_HOST,
         readEnv: readEnvString,
     },
-} satisfies ConfigSchema<AdminConsoleSectionConfig, never, ConfigEnvironmentVariableName>;
+} satisfies ConfigSchema<AdminConsoleSectionConfig, never, EnvironmentVariable>;

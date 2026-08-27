@@ -7,9 +7,9 @@
 
 import { Client } from '@authup/core-http-kit';
 import { AuthupError } from '@authup/errors';
-import { App, isHandler } from 'routup';
+import type { IApp } from 'routup';
+import { App } from 'routup';
 import { serve } from 'routup/node';
-import type { ApplicationMountFactory } from '../../types.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
 import { createInternalHttpClient } from '../../../adapters/http/internal-client/index.ts';
@@ -35,10 +35,7 @@ export class HTTPModule implements IModule {
 
     protected internalHttpClientRegistered : boolean;
 
-    protected mounts?: ApplicationMountFactory;
-
-    constructor(options: { mounts?: ApplicationMountFactory } = {}) {
-        this.mounts = options.mounts;
+    constructor() {
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
@@ -57,9 +54,9 @@ export class HTTPModule implements IModule {
         // Every request helper deriving proxy-dependent request facts
         // (getRequestIP, hostname, protocol) resolves the trust contract from
         // the app options — call sites must NOT pass their own `trustProxy`.
-        let router : App;
+        let app : IApp;
         try {
-            router = new App({ options: { trustProxy: config.trustProxy } });
+            app = new App({ options: { trustProxy: config.trustProxy } });
         } catch (e) {
             // proxy-addr compiles the allowlist form inside the App
             // constructor; its error ("invalid IP address: …") does not name
@@ -72,26 +69,12 @@ export class HTTPModule implements IModule {
         this.registerInternalHttpClient(container);
         this.registerMetrics(container);
 
-        await this.middleware.mountBefore(router, container);
-        await this.controller.mount(router, container);
+        await this.middleware.mountBefore(app, container);
+        await this.controller.mount(app, container);
 
-        // Composed handlers ride the same listener. They mount AFTER the
-        // controllers so nothing they carry can shadow a protocol route,
-        // and before the trailing middleware so they inherit the error
-        // handling every other route has.
-        for (const mount of this.mounts ? await this.mounts(config) : []) {
-            // routup overloads `use` per mountable kind, so the union has
-            // to be narrowed before the call picks one.
-            if (isHandler(mount.handler)) {
-                router.use(mount.path, mount.handler);
-            } else {
-                router.use(mount.path, mount.handler);
-            }
-        }
+        await this.middleware.mountAfter(app, container);
 
-        await this.middleware.mountAfter(router, container);
-
-        const server = serve(router, {
+        const server = serve(app, {
             port: config.port,
             hostname: config.host,
             silent: true,
@@ -108,6 +91,7 @@ export class HTTPModule implements IModule {
             logger.debug(`Listening on ${server.url}`);
         }
 
+        container.register(HTTPInjectionKey.App, { useValue: app });
         container.register(HTTPInjectionKey.Server, { useValue: server });
 
         logger.debug('Started http server.');

@@ -13,8 +13,8 @@ import type { AuthConsoleConfig, AuthConsoleConfigInput } from '@authup/server-a
 import { AUTH_CONSOLE_CONFIG_SCHEMA, resolveAuthConsoleConfig } from '@authup/server-auth-console';
 import { readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { ConfigSchemaInput } from '@authup/server-config-kit';
-import type { Config, ConfigReadFsOptions } from '@authup/server-core';
-import { readConfigFileTree } from '@authup/server-core';
+import type { AuthupConfig, ConfigReadFsOptions  } from '@authup/server-config';
+import { CONFIG_SCHEMA, readConfigFileTree  } from '@authup/server-config';
 import path from 'node:path';
 
 export type ConsoleConfigs = {
@@ -51,12 +51,16 @@ function resolvePaths<T extends { distPath: string, themeDirectoryPath: string }
  * the environment wins over the file, as it does everywhere else.
  */
 export async function readConsoleConfigs(
-    options: ConfigReadFsOptions,
-    core: Config,
+    options: ConfigReadFsOptions<AuthupConfig>,
 ) : Promise<ConsoleConfigs> {
     const { tree } = await readConfigFileTree(options);
 
-    const read = <T extends { publicUrl: string }>(schema: ConfigSchemaInput<T>) : Partial<T> => ({
+    const core = { ...readSchemaFromFileTree(tree, CONFIG_SCHEMA), ...readSchemaFromEnv(CONFIG_SCHEMA) };
+    const rootPath = core.rootPath || process.cwd();
+
+    const read = <T extends { publicUrl: string }>(
+        schema: ConfigSchemaInput<T>,
+    ) : Partial<T> => ({
         ...readSchemaFromFileTree<T>(tree, schema),
         ...readSchemaFromEnv<T>(schema),
         // The two deployment-wide keys a console must NOT resolve for itself,
@@ -77,15 +81,15 @@ export async function readConsoleConfigs(
     return {
         auth: resolvePaths(
             resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
+            rootPath,
         ),
         admin: resolvePaths(
             resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
+            rootPath,
         ),
         account: resolvePaths(
             resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
+            rootPath,
         ),
     };
 }

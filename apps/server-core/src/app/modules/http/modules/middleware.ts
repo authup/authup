@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
@@ -38,7 +38,7 @@ import {
 } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
-    async mountBefore(router: App, container: IContainer): Promise<void> {
+    async mountBefore(router: IApp, container: IContainer): Promise<void> {
         // @routup/prometheus must be installed before any other plugin or
         // route so that its onion middleware can observe the full request
         // lifecycle (the v3 README is explicit on this).
@@ -56,12 +56,12 @@ export class HTTPMiddlewareModule {
     }
 
 
-    async mountAfter(router: App, container: IContainer): Promise<void> {
+    async mountAfter(router: IApp, container: IContainer): Promise<void> {
         registerErrorMiddleware(router, { logger: container.resolve(LoggerInjectionKey) });
     }
 
     // ----------------------------------------------------
-    async mountCors(router: App, container: IContainer): Promise<void> {
+    async mountCors(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareCors)) {
@@ -73,7 +73,7 @@ export class HTTPMiddlewareModule {
         registerCorsMiddleware(router, options, { baseURL: config.publicUrl });
     }
 
-    async mountLogger(router: App, container: IContainer): Promise<void> {
+    async mountLogger(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const middleware = createLoggerMiddleware({
             env: config.env,
@@ -83,7 +83,7 @@ export class HTTPMiddlewareModule {
         router.use(middleware);
     }
 
-    async mountInternalHttpClient(router: App, container: IContainer): Promise<void> {
+    async mountInternalHttpClient(router: IApp, container: IContainer): Promise<void> {
         if (!container.has(HTTPInjectionKey.InternalHttpClient)) {
             return;
         }
@@ -91,11 +91,11 @@ export class HTTPMiddlewareModule {
         registerInternalHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.InternalHttpClient));
     }
 
-    async mountBasic(router: App): Promise<void> {
+    async mountBasic(router: IApp): Promise<void> {
         registerBasicMiddleware(router);
     }
 
-    async mountPrometheus(router: App, container: IContainer): Promise<void> {
+    async mountPrometheus(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewarePrometheus)) {
@@ -105,7 +105,7 @@ export class HTTPMiddlewareModule {
         registerPrometheusMiddleware(router, this.transformBoolToEmptyObject(config.middlewarePrometheus));
     }
 
-    async mountRateLimit(router: App, container: IContainer): Promise<void> {
+    async mountRateLimit(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareRateLimit)) {
@@ -115,7 +115,7 @@ export class HTTPMiddlewareModule {
         registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
     }
 
-    async mountSwagger(router: App, container: IContainer): Promise<void> {
+    async mountSwagger(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         if (!this.isEnabled(config.middlewareSwagger)) {
             return;
@@ -129,7 +129,7 @@ export class HTTPMiddlewareModule {
         router.use('/docs', middleware);
     }
 
-    async mountRealmResolver(router: App, container: IContainer): Promise<void> {
+    async mountRealmResolver(router: IApp, container: IContainer): Promise<void> {
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const middleware = createRealmResolverMiddleware({ realmRepository: new RealmRepositoryAdapter(realmRepository) });
 
@@ -141,7 +141,7 @@ export class HTTPMiddlewareModule {
         router.use('/realms/:realmId/:nested', middleware);
     }
 
-    async mountAuthorization(router: App, container: IContainer): Promise<void> {
+    async mountAuthorization(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
@@ -172,7 +172,7 @@ export class HTTPMiddlewareModule {
         router.use(middleware);
     }
 
-    async mountRequestEventContext(router: App): Promise<void> {
+    async mountRequestEventContext(router: IApp): Promise<void> {
         // mounted immediately AFTER the authorization middleware — the
         // identity must already be resolved for actor attribution.
         router.use(createRequestEventContextMiddleware());

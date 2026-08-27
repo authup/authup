@@ -15,12 +15,12 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { ConfigEnvironmentVariableName } from '../constants.ts';
-import { expandToOrigins } from './origins.ts';
+import { EnvironmentVariable } from '../../constants.ts';
+import { expandToOrigins } from '../../helpers/index.ts';
 import type {
     DatabaseConnectionOptions,
-    DeploymentConfig,
     RedisConnectionOptions,
+    RootConfig,
     SMTPConnectionOptions,
 } from './types.ts';
 
@@ -40,13 +40,13 @@ const serviceType = z.string()
  * host and port by whoever owns a listener, the second falls back to
  * typeorm-extension's driver default.
  */
-export const DEPLOYMENT_CONFIG_SCHEMA = {
+export const ROOT_CONFIG_SCHEMA = {
     env: {
         type: z.string(),
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
         description: 'Application environment, e.g. production or development.',
         path: 'env',
-        env: ConfigEnvironmentVariableName.NODE_ENV,
+        env: EnvironmentVariable.NODE_ENV,
         readEnv: readEnvString,
     },
     rootPath: {
@@ -59,7 +59,7 @@ export const DEPLOYMENT_CONFIG_SCHEMA = {
         type: z.url(),
         description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
         path: 'publicUrl',
-        env: ConfigEnvironmentVariableName.PUBLIC_URL,
+        env: EnvironmentVariable.PUBLIC_URL,
         readEnv: readEnvString,
     },
     trustedOrigins: {
@@ -75,7 +75,7 @@ export const DEPLOYMENT_CONFIG_SCHEMA = {
         description: 'Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. ' +
             'SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.',
         path: 'trustedOrigins',
-        env: ConfigEnvironmentVariableName.TRUSTED_ORIGINS,
+        env: EnvironmentVariable.TRUSTED_ORIGINS,
         readEnv: readEnvArray,
     },
     // The DB_* variables come from typeorm-extension
@@ -91,7 +91,7 @@ export const DEPLOYMENT_CONFIG_SCHEMA = {
         default: false,
         description: 'Redis connection: a connection URL, client options, an existing client, or a boolean to use the default connection or run without Redis.',
         path: 'redis',
-        env: ConfigEnvironmentVariableName.REDIS,
+        env: EnvironmentVariable.REDIS,
         readEnv: readEnvBoolOrString,
     },
     smtp: {
@@ -99,7 +99,7 @@ export const DEPLOYMENT_CONFIG_SCHEMA = {
         default: false,
         description: 'SMTP transport for outgoing mail: a connection URL, transport options, or a boolean to use the default transport or run without mail.',
         path: 'smtp',
-        env: ConfigEnvironmentVariableName.SMTP,
+        env: EnvironmentVariable.SMTP,
         readEnv: readEnvBoolOrString,
     },
-} satisfies ConfigSchema<DeploymentConfig, 'publicUrl' | 'db', ConfigEnvironmentVariableName>;
+} satisfies ConfigSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>;

@@ -7,7 +7,7 @@
 
 import {
     AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
-    DEPLOYMENT_CONFIG_SCHEMA,
+    ROOT_CONFIG_SCHEMA,
     THEME_CONFIG_SCHEMA,
 } from '@authup/server-config';
 import type { ConfigSchema } from '@authup/server-config-kit';
@@ -29,7 +29,7 @@ export { AUTH_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
 export const AUTH_CONSOLE_CONFIG_SCHEMA = {
     ...AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
     ...THEME_CONFIG_SCHEMA,
-    publicUrl: DEPLOYMENT_CONFIG_SCHEMA.publicUrl,
+    publicUrl: ROOT_CONFIG_SCHEMA.publicUrl,
 } satisfies ConfigSchema<AuthConsoleConfigInput, 'publicUrl'>;
 
 /**

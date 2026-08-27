@@ -17,7 +17,7 @@
  * The names are the operator-facing contract and never change with a
  * refactor.
  */
-export enum ConfigEnvironmentVariableName {
+export enum EnvironmentVariable {
     // deployment
     NODE_ENV = 'NODE_ENV',
     PUBLIC_URL = 'PUBLIC_URL',
@@ -98,3 +98,12 @@ export enum ConfigEnvironmentVariableName {
     ACCOUNT_CONSOLE_PORT = 'ACCOUNT_CONSOLE_PORT',
     ACCOUNT_CONSOLE_HOST = 'ACCOUNT_CONSOLE_HOST',
 }
+
+/**
+ * The one file the configuration is read from, and the extensions it may
+ * carry. `conf` is deliberately absent: the `authup.conf` family was retired
+ * in favour of a single `authup.yml` (plan 101 stage C).
+ */
+export const CONFIG_FILE_NAME = 'authup';
+export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
+

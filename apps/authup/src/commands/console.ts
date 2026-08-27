@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2026.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
+ *  Author Peter Placzek (tada5hi)
+ *  For the full copyright and license information,
+ *  view the LICENSE file that was distributed with this source code.
  */
 
 import { createAccountConsoleServer } from '@authup/server-account-console';
 import { createAdminConsoleServer } from '@authup/server-admin-console';
 import { createAuthConsoleServer } from '@authup/server-auth-console';
-import type { ConfigReadFsOptions } from '@authup/server-core';
-import { readConfig, registerShutdownHandlers } from '@authup/server-core';
+import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
+import {  registerShutdownHandlers } from '@authup/server-core';
 import { defineCommand } from 'citty';
 import type { IApp } from 'routup';
 import { serve } from 'routup/node';
-import { readConsoleConfigs } from './config.ts';
+import { readConsoleConfigs } from '../roles/config.ts';
 
 const CONSOLE_NAMES = ['admin', 'account', 'auth'] as const;
 
@@ -36,7 +36,7 @@ type ConsoleService = {
  * to its port; the alternative single-container shape is `authup start`,
  * which composes them onto server-core's listener instead.
  */
-export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
+export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
         meta: {
             name: 'console',
@@ -54,11 +54,7 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
         async setup(context) {
             const selected = context.args.name as ConsoleName | undefined;
 
-            // The consoles read `authup.yml` through their own registries, but
-            // the paths in it resolve against server-core's `rootPath`, so the
-            // core configuration is read here too. It is the same document.
-            const core = await readConfig({ env: true, fs: configFs });
-            const consoles = await readConsoleConfigs(configFs, core);
+            const consoles = await readConsoleConfigs(configFs);
 
             const services : ConsoleService[] = [
                 {

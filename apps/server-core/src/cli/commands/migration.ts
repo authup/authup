@@ -10,14 +10,15 @@ import path from 'node:path';
 import process from 'node:process';
 import {
     checkDatabase,
-    createDatabase, 
-    dropDatabase, 
-    generateMigration, 
+    createDatabase,
+    dropDatabase,
+    generateMigration,
     transformFilePath,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
-import type { ConfigReadFsOptions } from '../../app/index.ts';
+import type { ConfigReadFsOptions } from '@authup/server-config';
+import type { Config } from '../../app/index.ts';
 import {
     ApplicationBuilder,
     ConfigInjectionKey,
@@ -73,7 +74,7 @@ async function runMigrationOperation(
         await createDatabase({
             options,
             synchronize: false,
-            ifNotExist: true, 
+            ifNotExist: true,
         });
     }
 
@@ -140,7 +141,7 @@ async function generateMigrations(): Promise<void> {
         await dropDatabase({ options: dataSourceOptions });
         await createDatabase({
             options: dataSourceOptions,
-            synchronize: false, 
+            synchronize: false,
         });
 
         const dataSource = new DataSource(dataSourceOptions);
@@ -170,7 +171,7 @@ async function generateMigrations(): Promise<void> {
     }
 }
 
-export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions = {}) {
+export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions<Config> = {}) {
     return defineCommand({
         meta: { name: 'migration' },
         args: {

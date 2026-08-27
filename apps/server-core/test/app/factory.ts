@@ -7,18 +7,21 @@
 
 import {
     ApplicationBuilder,
+    CONFIG_SCHEMA,
     ConfigModule,
 } from '../../src/index.ts';
 import type { Config } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
-import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
+import { readConfigRawFromEnv } from '@authup/server-config';
 
 import { TestApplication } from './module.ts';
 import { TestHTTPApplication } from './http.ts';
 import { createTestDatabaseModuleForSuite } from './database.ts';
 
 async function buildTestConfig(alter?: (config: Config) => void): Promise<Config> {
-    const raw = readConfigRawFromEnv();
+    const raw = readConfigRawFromEnv(
+        CONFIG_SCHEMA,
+    );
     const config = await normalizeConfig(raw);
 
     config.port = 0;

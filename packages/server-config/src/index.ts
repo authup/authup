@@ -30,13 +30,10 @@
  * know where it is published.
  */
 
-export * from './account-console/index.ts';
-export * from './admin-console/index.ts';
-export * from './auth-console/index.ts';
 export * from './constants.ts';
-export * from './core/index.ts';
-export * from './deployment/index.ts';
+export * from './helpers/index.ts';
+export * from './read/index.ts';
 export * from './schema.ts';
-export * from './theme/index.ts';
+export * from './sections/index.ts';
 export * from './types.ts';
 export * from './utils.ts';

@@ -18,9 +18,9 @@ import {
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from '@authup/server-config';
 import { parseConfig } from './parse.ts';
-import { CONFIG_SCHEMA } from './registry.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigInput } from './types.ts';
+import { CONFIG_SCHEMA } from './constants.ts';
 
 export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> {
     const parsed = await parseConfig(input);

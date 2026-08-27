@@ -16,7 +16,7 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { ConfigEnvironmentVariableName } from '../constants.ts';
+import { EnvironmentVariable } from '../../constants.ts';
 import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { CoreConfig, MiddlewareOptions } from './types.ts';
@@ -50,7 +50,7 @@ export const CORE_CONFIG_SCHEMA = {
         description: 'Directory the application writes to at runtime (production log files) and reads file-based provisioning from. ' +
             'The SQLite database is not placed here; a relative path resolves against rootPath.',
         path: 'server.core.writableDirectoryPath',
-        env: ConfigEnvironmentVariableName.WRITABLE_DIRECTORY_PATH,
+        env: EnvironmentVariable.WRITABLE_DIRECTORY_PATH,
         readEnv: readEnvString,
     },
 
@@ -66,7 +66,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Run the background components (the cron sweeps) in this process. Set false on API replicas when a dedicated worker process runs them.',
         path: 'server.core.componentsEnabled',
-        env: ConfigEnvironmentVariableName.COMPONENTS_ENABLED,
+        env: EnvironmentVariable.COMPONENTS_ENABLED,
         readEnv: readEnvBoolStrict,
     },
     migrationEnabled: {
@@ -74,7 +74,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Apply pending schema migrations at startup. When false, startup runs no DDL and fails loud when migrations are pending; the migration CLI command is unaffected and sqlite always synchronizes.',
         path: 'server.core.migrationEnabled',
-        env: ConfigEnvironmentVariableName.MIGRATION_ENABLED,
+        env: EnvironmentVariable.MIGRATION_ENABLED,
         readEnv: readEnvBoolStrict,
     },
 
@@ -83,7 +83,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 3001,
         description: 'TCP port the HTTP listener binds.',
         path: 'server.core.port',
-        env: ConfigEnvironmentVariableName.PORT,
+        env: EnvironmentVariable.PORT,
         readEnv: readEnvInt,
     },
     host: {
@@ -91,7 +91,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: '0.0.0.0',
         description: 'Host address the HTTP listener binds.',
         path: 'server.core.host',
-        env: ConfigEnvironmentVariableName.HOST,
+        env: EnvironmentVariable.HOST,
         readEnv: readEnvString,
     },
     mtlsPublicUrl: {
@@ -99,7 +99,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: null,
         description: 'Optional externally reachable base URL dedicated to endpoints that request TLS client certificates, published as RFC 8705 mTLS endpoint aliases. The reverse proxy may route it to the same backend listener.',
         path: 'server.core.mtlsPublicUrl',
-        env: ConfigEnvironmentVariableName.MTLS_PUBLIC_URL,
+        env: EnvironmentVariable.MTLS_PUBLIC_URL,
         readEnv: readEnvString,
     },
     certificateSource: {
@@ -108,7 +108,7 @@ export const CORE_CONFIG_SCHEMA = {
         description: 'Trusted-proxy client-certificate header contract: the RFC 9440 Client-Cert headers (standard) or the X-Forwarded-Tls-Client-Cert header (forwarded). ' +
             'Enabling a source asserts that the backend listener is reachable only through a proxy that removes or overwrites the selected headers.',
         path: 'server.core.certificateSource',
-        env: ConfigEnvironmentVariableName.CERTIFICATE_SOURCE,
+        env: EnvironmentVariable.CERTIFICATE_SOURCE,
         readEnv: readEnvString,
     },
     trustProxy: {
@@ -130,7 +130,7 @@ export const CORE_CONFIG_SCHEMA = {
         description: 'Which upstream proxies to trust when deriving the client IP from X-Forwarded-For: true trusts every hop, false trusts none, a number trusts that many hops, a string or string list is a proxy-addr allowlist (IPs, CIDRs, or the presets loopback, linklocal, uniquelocal). ' +
             'SECURITY: with every hop trusted any direct client can spoof its IP into the login throttle, the audit log and the session inventory; pin the actual proxy when the listener is reachable without one.',
         path: 'server.core.trustProxy',
-        env: ConfigEnvironmentVariableName.TRUST_PROXY,
+        env: EnvironmentVariable.TRUST_PROXY,
         readEnv: readEnvRaw,
     },
 
@@ -185,7 +185,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 259_200,
         description: 'Refresh token validity in seconds.',
         path: 'server.core.tokenRefreshMaxAge',
-        env: ConfigEnvironmentVariableName.TOKEN_REFRESH_MAX_AGE,
+        env: EnvironmentVariable.TOKEN_REFRESH_MAX_AGE,
         readEnv: readEnvInt,
     },
     tokenAccessMaxAge: {
@@ -193,7 +193,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 900,
         description: 'Access token validity in seconds.',
         path: 'server.core.tokenAccessMaxAge',
-        env: ConfigEnvironmentVariableName.TOKEN_ACCESS_MAX_AGE,
+        env: EnvironmentVariable.TOKEN_ACCESS_MAX_AGE,
         readEnv: readEnvInt,
     },
     tokenRefreshGracePeriod: {
@@ -201,7 +201,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 0,
         description: 'Grace period in seconds during which a just-rotated refresh token is still accepted, minting new chain-linked tokens instead of triggering replay detection. Absorbs multi-tab and mobile refresh races; zero is strict (first use wins).',
         path: 'server.core.tokenRefreshGracePeriod',
-        env: ConfigEnvironmentVariableName.TOKEN_REFRESH_GRACE_PERIOD,
+        env: EnvironmentVariable.TOKEN_REFRESH_GRACE_PERIOD,
         readEnv: readEnvInt,
     },
     promptLoginMaxAge: {
@@ -209,7 +209,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 60,
         description: 'Max age in seconds of the authentication a prompt=login or max_age authorize request accepts before forcing re-authentication, judged against the session creation time.',
         path: 'server.core.promptLoginMaxAge',
-        env: ConfigEnvironmentVariableName.PROMPT_LOGIN_MAX_AGE,
+        env: EnvironmentVariable.PROMPT_LOGIN_MAX_AGE,
         readEnv: readEnvInt,
     },
     endSessionHintGracePeriod: {
@@ -217,7 +217,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 0,
         description: 'Seconds past its expiry an expired id_token_hint presented at the RP-initiated logout endpoint is still accepted for a server-side session revoke. Zero accepts any expired hint; beyond the window the click-gated confirm page still works.',
         path: 'server.core.endSessionHintGracePeriod',
-        env: ConfigEnvironmentVariableName.END_SESSION_HINT_GRACE_PERIOD,
+        env: EnvironmentVariable.END_SESSION_HINT_GRACE_PERIOD,
         readEnv: readEnvInt,
     },
 
@@ -226,7 +226,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Enable user self-registration.',
         path: 'server.core.registrationEnabled',
-        env: ConfigEnvironmentVariableName.REGISTRATION_ENABLED,
+        env: EnvironmentVariable.REGISTRATION_ENABLED,
         readEnv: readEnvBool,
     },
     emailVerificationEnabled: {
@@ -234,7 +234,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Require email verification for registration or login.',
         path: 'server.core.emailVerificationEnabled',
-        env: ConfigEnvironmentVariableName.EMAIL_VERIFICATION_ENABLED,
+        env: EnvironmentVariable.EMAIL_VERIFICATION_ENABLED,
         readEnv: readEnvBool,
     },
     passwordRecoveryEnabled: {
@@ -242,7 +242,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Allow password reset via email.',
         path: 'server.core.passwordRecoveryEnabled',
-        env: ConfigEnvironmentVariableName.PASSWORD_RECOVERY_ENABLED,
+        env: EnvironmentVariable.PASSWORD_RECOVERY_ENABLED,
         readEnv: readEnvBool,
     },
     passwordMinLength: {
@@ -250,7 +250,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: USER_PASSWORD_MIN_LENGTH,
         description: 'Minimum length for user-chosen passwords (user create and update, registration, password reset). The maximum is fixed at 512.',
         path: 'server.core.passwordMinLength',
-        env: ConfigEnvironmentVariableName.PASSWORD_MIN_LENGTH,
+        env: EnvironmentVariable.PASSWORD_MIN_LENGTH,
         readEnv: readEnvInt,
     },
 
@@ -259,7 +259,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Persist security audit events (login, authorize, replay detection) to the auth_events table. When disabled only the structured log line is emitted.',
         path: 'server.core.eventLogEnabled',
-        env: ConfigEnvironmentVariableName.EVENT_LOG_ENABLED,
+        env: EnvironmentVariable.EVENT_LOG_ENABLED,
         readEnv: readEnvBoolStrict,
     },
     eventLogRetentionDays: {
@@ -267,7 +267,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: EVENT_LOG_RETENTION_DAYS_DEFAULT,
         description: 'Per-row retention for persisted audit events in days, stamped at write time and swept by the event cleaner. Zero keeps rows forever.',
         path: 'server.core.eventLogRetentionDays',
-        env: ConfigEnvironmentVariableName.EVENT_LOG_RETENTION_DAYS,
+        env: EnvironmentVariable.EVENT_LOG_RETENTION_DAYS,
         readEnv: readEnvInt,
     },
     eventLogEntityEnabled: {
@@ -275,7 +275,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Additionally mirror every entity create, update and delete published on the domain-event bus into the auth_events table. Only effective while eventLogEnabled is true.',
         path: 'server.core.eventLogEntityEnabled',
-        env: ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_ENABLED,
+        env: EnvironmentVariable.EVENT_LOG_ENTITY_ENABLED,
         readEnv: readEnvBoolStrict,
     },
     eventLogEntityRetentionDays: {
@@ -283,7 +283,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 7,
         description: 'Per-row retention for entity-CRUD audit events in days, deliberately short so entity churn self-prunes. Zero keeps rows forever.',
         path: 'server.core.eventLogEntityRetentionDays',
-        env: ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_RETENTION_DAYS,
+        env: EnvironmentVariable.EVENT_LOG_ENTITY_RETENTION_DAYS,
         readEnv: readEnvInt,
     },
     loginAttemptThrottleEnabled: {
@@ -291,7 +291,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Throttle failed interactive logins per (identifier, ip) pair by counting recent loginFailed audit events. Requires eventLogEnabled.',
         path: 'server.core.loginAttemptThrottleEnabled',
-        env: ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED,
+        env: EnvironmentVariable.LOGIN_ATTEMPT_THROTTLE_ENABLED,
         readEnv: readEnvBoolStrict,
     },
     loginAttemptThreshold: {
@@ -299,7 +299,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 5,
         description: 'Failed attempts per (identifier, ip) pair within the window before the pair is throttled.',
         path: 'server.core.loginAttemptThreshold',
-        env: ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THRESHOLD,
+        env: EnvironmentVariable.LOGIN_ATTEMPT_THRESHOLD,
         readEnv: readEnvInt,
     },
     loginAttemptWindow: {
@@ -307,7 +307,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 900,
         description: 'Sliding login-throttle window in seconds.',
         path: 'server.core.loginAttemptWindow',
-        env: ConfigEnvironmentVariableName.LOGIN_ATTEMPT_WINDOW,
+        env: EnvironmentVariable.LOGIN_ATTEMPT_WINDOW,
         readEnv: readEnvInt,
     },
 
@@ -319,7 +319,7 @@ export const CORE_CONFIG_SCHEMA = {
         description: 'Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the realm key store material at rest; an empty value leaves the material unwrapped (Keycloak and authentik parity). ' +
             'SECURITY: setting it later wraps rows lazily on read, and removing it while wrapped rows exist fails loud at first use.',
         path: 'server.core.secretsEncryptionKey',
-        env: ConfigEnvironmentVariableName.SECRETS_ENCRYPTION_KEY,
+        env: EnvironmentVariable.SECRETS_ENCRYPTION_KEY,
         readEnv: readEnvString,
     },
 
@@ -328,7 +328,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Multi-factor authentication feature toggle. When enabled, users can enroll authenticator devices, and a user holding a confirmed device must present a second factor on interactive authorization and the password grant.',
         path: 'server.core.mfaEnabled',
-        env: ConfigEnvironmentVariableName.MFA_ENABLED,
+        env: EnvironmentVariable.MFA_ENABLED,
         readEnv: readEnvBoolStrict,
     },
     mfaRequired: {
@@ -336,7 +336,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Enforce MFA for every user: a user without a confirmed device is routed to inline enrollment at the next interactive login. Requires mfaEnabled.',
         path: 'server.core.mfaRequired',
-        env: ConfigEnvironmentVariableName.MFA_REQUIRED,
+        env: EnvironmentVariable.MFA_REQUIRED,
         readEnv: readEnvBoolStrict,
     },
     mfaFreshnessMaxAge: {
@@ -344,7 +344,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 60,
         description: 'Max age in seconds of the session second-factor proof an acr_values=urn:authup:mfa step-up request accepts before forcing a fresh challenge. The window absorbs the hosted challenge round-trip.',
         path: 'server.core.mfaFreshnessMaxAge',
-        env: ConfigEnvironmentVariableName.MFA_FRESHNESS_MAX_AGE,
+        env: EnvironmentVariable.MFA_FRESHNESS_MAX_AGE,
         readEnv: readEnvInt,
     },
     mfaTicketMaxAge: {
@@ -352,7 +352,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 600,
         description: 'Lifetime in seconds of the MFA-pending login ticket the password grant issues when the second factor cannot ride the single POST (email, WebAuthn), and of the pending session backing it. Sized to cover the email OTP window.',
         path: 'server.core.mfaTicketMaxAge',
-        env: ConfigEnvironmentVariableName.MFA_TICKET_MAX_AGE,
+        env: EnvironmentVariable.MFA_TICKET_MAX_AGE,
         readEnv: readEnvInt,
     },
 
@@ -361,7 +361,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Accept HTTP Basic authentication with client credentials on the management API.',
         path: 'server.core.clientAuthBasic',
-        env: ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC,
+        env: EnvironmentVariable.CLIENT_AUTH_BASIC,
         readEnv: readEnvBool,
     },
     clientSystemEnabled: {
@@ -369,7 +369,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Provision the system client in the master realm.',
         path: 'server.core.clientSystemEnabled',
-        env: ConfigEnvironmentVariableName.CLIENT_SYSTEM_ENABLED,
+        env: EnvironmentVariable.CLIENT_SYSTEM_ENABLED,
         readEnv: readEnvBool,
     },
     clientSystemSecret: {
@@ -377,7 +377,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 'start123',
         description: 'Secret of the system client.',
         path: 'server.core.clientSystemSecret',
-        env: ConfigEnvironmentVariableName.CLIENT_SYSTEM_SECRET,
+        env: EnvironmentVariable.CLIENT_SYSTEM_SECRET,
         readEnv: readEnvString,
     },
     clientSystemSecretReset: {
@@ -385,7 +385,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Reset the system client secret on application startup.',
         path: 'server.core.clientSystemSecretReset',
-        env: ConfigEnvironmentVariableName.CLIENT_SYSTEM_SECRET_RESET,
+        env: EnvironmentVariable.CLIENT_SYSTEM_SECRET_RESET,
         readEnv: readEnvBool,
     },
 
@@ -394,7 +394,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Accept HTTP Basic authentication with user credentials on the management API.',
         path: 'server.core.userAuthBasic',
-        env: ConfigEnvironmentVariableName.USER_AUTH_BASIC,
+        env: EnvironmentVariable.USER_AUTH_BASIC,
         readEnv: readEnvBool,
     },
     userAdminEnabled: {
@@ -402,7 +402,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Provision the default admin user.',
         path: 'server.core.userAdminEnabled',
-        env: ConfigEnvironmentVariableName.USER_ADMIN_ENABLED,
+        env: EnvironmentVariable.USER_ADMIN_ENABLED,
         readEnv: readEnvBool,
     },
     userAdminPassword: {
@@ -410,7 +410,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: 'start123',
         description: 'Password of the default admin user.',
         path: 'server.core.userAdminPassword',
-        env: ConfigEnvironmentVariableName.USER_ADMIN_PASSWORD,
+        env: EnvironmentVariable.USER_ADMIN_PASSWORD,
         readEnv: readEnvString,
     },
     userAdminPasswordReset: {
@@ -418,7 +418,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: false,
         description: 'Reset the admin password on application startup.',
         path: 'server.core.userAdminPasswordReset',
-        env: ConfigEnvironmentVariableName.USER_ADMIN_PASSWORD_RESET,
+        env: EnvironmentVariable.USER_ADMIN_PASSWORD_RESET,
         readEnv: readEnvBool,
     },
 
@@ -427,7 +427,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: [],
         description: 'Additional permission names to provision, as a list or a comma-separated string.',
         path: 'server.core.permissions',
-        env: ConfigEnvironmentVariableName.PERMISSIONS,
+        env: EnvironmentVariable.PERMISSIONS,
         readEnv: readEnvArray,
     },
     permissionsDefaultPolicyAssignment: {
@@ -435,7 +435,7 @@ export const CORE_CONFIG_SCHEMA = {
         default: true,
         description: 'Auto-assign the system.default policy to new permissions without policies. Deprecated, to be removed in v2.0.0: external systems should assign policies explicitly.',
         path: 'server.core.permissionsDefaultPolicyAssignment',
-        env: ConfigEnvironmentVariableName.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT,
+        env: EnvironmentVariable.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT,
         readEnv: readEnvBool,
     },
-} satisfies ConfigSchema<CoreConfig, never, ConfigEnvironmentVariableName>;
+} satisfies ConfigSchema<CoreConfig, never, EnvironmentVariable>;

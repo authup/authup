@@ -7,7 +7,7 @@
 
 import type {
     AuthConsoleSectionConfig,
-    DeploymentConfig,
+    RootConfig,
     ThemeConfig,
 } from '@authup/server-config';
 
@@ -23,7 +23,7 @@ import type {
  * `resolveAuthConsoleConfig` maps it onto {@link AuthConsoleConfig} before
  * anything else sees it.
  */
-export type AuthConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl'> &
+export type AuthConsoleConfigInput = Pick<RootConfig, 'publicUrl'> &
     ThemeConfig &
     AuthConsoleSectionConfig;
 

@@ -8,28 +8,26 @@
 import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
-import type { ConfigReadFsOptions } from '@authup/server-config';
-import type { Config } from '../../app/index.ts';
-import { ApplicationBuilder, ConfigInjectionKey  } from '../../app/index.ts';
-import { createCLIConfigModule } from './config.ts';
+import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
+import { CONFIG_SCHEMA, readConfigFileTree  } from '@authup/server-config';
+import { buildSchemaDefaults, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
 
-export function defineCLIHealthCheckCommand(configFs: ConfigReadFsOptions<Config> = {}) {
+export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
         meta: { name: 'healthcheck' },
         async setup() {
-            const app = new ApplicationBuilder()
-                .withConfig(createCLIConfigModule(configFs))
-                .build();
-
-            await app.setup();
-
-            const config = app.container.resolve(ConfigInjectionKey);
+            const { tree } = await readConfigFileTree(options);
+            const config = {
+                ...readSchemaFromFileTree(tree, CONFIG_SCHEMA),
+                ...readSchemaFromEnv(CONFIG_SCHEMA),
+                ...buildSchemaDefaults(CONFIG_SCHEMA),
+            };
 
             const healthCheck = http.request(
                 {
-                    path: '/metrics',
+                    path: '/',
                     host: '0.0.0.0',
-                    port: config.port,
+                    port: config.port || 3000,
                     timeout: 2000,
                 },
                 (res) => {

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AccountConsoleSectionConfig } from './account-console/index.ts';
-import type { AdminConsoleSectionConfig } from './admin-console/index.ts';
-import type { AuthConsoleSectionConfig } from './auth-console/index.ts';
-import type { CoreConfig } from './core/index.ts';
-import type { DeploymentConfig } from './deployment/index.ts';
-import type { ThemeConfig } from './theme/index.ts';
+import type { AccountConsoleSectionConfig } from './sections/account-console/index.ts';
+import type { AdminConsoleSectionConfig } from './sections/admin-console/index.ts';
+import type { AuthConsoleSectionConfig } from './sections/auth-console/index.ts';
+import type { CoreConfig } from './sections/core/index.ts';
+import type { RootConfig } from './sections/root/index.ts';
+import type { ThemeConfig } from './sections/theme/index.ts';
 
 /**
  * The WHOLE `authup.yml` document: every key an authup deployment
@@ -20,7 +20,7 @@ import type { ThemeConfig } from './theme/index.ts';
  * what makes it impossible for a service to mis-declare a path, an environment
  * variable or a reader for a key another service also reads.
  */
-export type AuthupConfig = DeploymentConfig &
+export type AuthupConfig = RootConfig &
     ThemeConfig &
     CoreConfig &
     AuthConsoleSectionConfig &

@@ -9,14 +9,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterEach, 
-    beforeEach, 
-    describe, 
-    expect, 
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
     it,
     vi,
 } from 'vitest';
-import { readConfig } from '../../../src/app/modules/config/helpers';
+import { readConfig } from '../../../src/app/modules/config/read.ts';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins } from '@authup/server-config';
 import { getAppOrigins } from '../../../src/app/modules/config/app-origins';

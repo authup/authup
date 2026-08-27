@@ -9,9 +9,9 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
-import { readConfig } from './helpers.ts';
-import type { ConfigRawReadOptions } from './read/index.ts';
+import { readConfig } from './read.ts';
 import type { Config, ConfigFactory } from './types.ts';
+import type { ConfigRawReadOptions } from '@authup/server-config';
 
 export class ConfigModule implements IModule {
     readonly name: string;
@@ -47,7 +47,7 @@ export class ConfigModule implements IModule {
      *
      * @param options
      */
-    async read(options: ConfigRawReadOptions = {}) : Promise<Config> {
+    async read(options: ConfigRawReadOptions<Config> = {}) : Promise<Config> {
         return readConfig(options);
     }
 }

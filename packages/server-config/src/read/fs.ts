@@ -6,6 +6,7 @@
  */
 
 import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA } from '@authup/server-config';
+import type { ConfigSchemaInput } from '@authup/server-config-kit';
 import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
@@ -16,9 +17,8 @@ import {
     CONFIG_FILE_EXTENSIONS,
     CONFIG_FILE_NAME,
 } from '../constants.ts';
-import { CONFIG_SCHEMA } from '../registry.ts';
-import type { ConfigInput } from '../types.ts';
 import type { ConfigReadFsOptions } from './types.ts';
+import type { ObjectLiteral } from '@authup/kit';
 
 /**
  * One file, `authup.yml`, never a family. confinity's default convention also
@@ -125,8 +125,8 @@ function assertNoRetiredConfigFile(file: string | string[]) {
  * onto a Config key. `config validate` needs it to report what the read
  * deliberately ignores.
  */
-export async function readConfigFileTree(
-    options: ConfigReadFsOptions = {},
+export async function readConfigFileTree<T extends ObjectLiteral>(
+    options: ConfigReadFsOptions<T> = {},
 ) : Promise<{ tree: unknown, files: string[] }> {
     const store = new FSStore({
         cwd: options.cwd,
@@ -148,12 +148,15 @@ export async function readConfigFileTree(
     return { tree: store.getSync(''), files };
 }
 
-export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
+export async function readConfigRawFromFS<T extends ObjectLiteral>(
+    schema: ConfigSchemaInput<T>,
+    options: ConfigReadFsOptions<T> = {},
+) : Promise<Partial<T>> {
     const { tree } = await readConfigFileTree(options);
 
     // No prefix: every entry of the selection carries the absolute path its
     // one declaration spells.
-    return readSchemaFromFileTree(tree, CONFIG_SCHEMA);
+    return readSchemaFromFileTree(tree, schema);
 }
 
 export type ConfigFileInspection = {
@@ -182,8 +185,8 @@ export type ConfigFileInspection = {
  * service reads is not an unknown one just because server-core does not read
  * it. Every entry carries its absolute path, so the pass needs no prefix.
  */
-export async function inspectConfigFile(
-    options: ConfigReadFsOptions = {},
+export async function inspectConfigFile<T extends ObjectLiteral>(
+    options: ConfigReadFsOptions<T> = {},
 ) : Promise<ConfigFileInspection> {
     const { tree, files } = await readConfigFileTree(options);
 

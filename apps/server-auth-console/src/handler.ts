@@ -15,6 +15,7 @@ import { createHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { IApp } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import { ASSETS_PATH, HEALTH_PATH } from './constants';
 import {
@@ -51,7 +52,7 @@ const WORKFLOW_PAGES : {
  * proxy, so a service published at `<origin>/console/auth` receives
  * `/authorize`, exactly as server-core received it before the split.
  */
-export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Promise<App> {
+export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Promise<IApp> {
     setAuthConsolePackagePath(config.distPath);
 
     const app = new App();

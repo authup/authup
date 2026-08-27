@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import { decorators } from '@routup/decorators';
 import type {
     Client,
@@ -174,7 +174,7 @@ import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/i
 import { MetricsInjectionKey } from '../../metrics/index.ts';
 
 export class HTTPControllerModule {
-    async mount(router: App, container: IContainer): Promise<void> {
+    async mount(router: IApp, container: IContainer): Promise<void> {
         const eventController = this.createEventController(container);
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
@@ -879,9 +879,9 @@ export class HTTPControllerModule {
 
         let issuer : string | undefined;
         let webauthn : {
-            rpId: string, 
-            rpName: string, 
-            origin: string 
+            rpId: string,
+            rpName: string,
+            origin: string
         } | undefined;
         try {
             const url = new URL(config.publicUrl);

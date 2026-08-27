@@ -7,7 +7,7 @@
 
 import type {
     AccountConsoleSectionConfig,
-    DeploymentConfig,
+    RootConfig,
     ThemeConfig,
 } from '@authup/server-config';
 
@@ -20,7 +20,7 @@ import type {
  * service's), so it is confined to the configuration layer and mapped onto
  * {@link AccountConsoleConfig} before anything else sees it.
  */
-export type AccountConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl' | 'trustedOrigins'> &
+export type AccountConsoleConfigInput = Pick<RootConfig, 'publicUrl' | 'trustedOrigins'> &
     ThemeConfig &
     AccountConsoleSectionConfig;
 

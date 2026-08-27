@@ -6,13 +6,13 @@
  */
 
 import type { ConfigSchema } from '@authup/server-config-kit';
-import { ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA } from './account-console/index.ts';
-import { ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA } from './admin-console/index.ts';
-import { AUTH_CONSOLE_SECTION_CONFIG_SCHEMA } from './auth-console/index.ts';
-import { CORE_CONFIG_SCHEMA } from './core/index.ts';
-import type { ConfigEnvironmentVariableName } from './constants.ts';
-import { DEPLOYMENT_CONFIG_SCHEMA } from './deployment/index.ts';
-import { THEME_CONFIG_SCHEMA } from './theme/index.ts';
+import { ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA } from './sections/account-console/index.ts';
+import { ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA } from './sections/admin-console/index.ts';
+import { AUTH_CONSOLE_SECTION_CONFIG_SCHEMA } from './sections/auth-console/index.ts';
+import { CORE_CONFIG_SCHEMA } from './sections/core/index.ts';
+import type { EnvironmentVariable } from './constants.ts';
+import { ROOT_CONFIG_SCHEMA } from './sections/root/index.ts';
+import { THEME_CONFIG_SCHEMA } from './sections/theme/index.ts';
 import type { AuthupConfig, AuthupConfigDerivedKey } from './types.ts';
 
 /**
@@ -31,9 +31,9 @@ import type { AuthupConfig, AuthupConfigDerivedKey } from './types.ts';
 export const CONFIG_SCHEMA : ConfigSchema<
     AuthupConfig,
     AuthupConfigDerivedKey,
-    ConfigEnvironmentVariableName
+    EnvironmentVariable
 > = {
-    ...DEPLOYMENT_CONFIG_SCHEMA,
+    ...ROOT_CONFIG_SCHEMA,
     ...THEME_CONFIG_SCHEMA,
     ...CORE_CONFIG_SCHEMA,
     ...AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,

@@ -7,7 +7,7 @@
 
 import {
     ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-    DEPLOYMENT_CONFIG_SCHEMA,
+    ROOT_CONFIG_SCHEMA,
     THEME_CONFIG_SCHEMA,
 } from '@authup/server-config';
 import type { ConfigSchema } from '@authup/server-config-kit';
@@ -30,8 +30,8 @@ export { ACCOUNT_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
 export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = {
     ...ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
     ...THEME_CONFIG_SCHEMA,
-    publicUrl: DEPLOYMENT_CONFIG_SCHEMA.publicUrl,
-    trustedOrigins: DEPLOYMENT_CONFIG_SCHEMA.trustedOrigins,
+    publicUrl: ROOT_CONFIG_SCHEMA.publicUrl,
+    trustedOrigins: ROOT_CONFIG_SCHEMA.trustedOrigins,
 } satisfies ConfigSchema<AccountConsoleConfigInput, 'publicUrl'>;
 
 /**

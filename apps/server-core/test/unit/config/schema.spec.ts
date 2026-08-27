@@ -9,17 +9,17 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
-import { CONFIG_SECTION } from '../../../src/app/modules/config/constants';
 import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import {
     CORE_CONFIG_SCHEMA,
-    ConfigEnvironmentVariableName,
-    DEPLOYMENT_CONFIG_SCHEMA,
+    CORE_CONFIG_SECTION,
+    EnvironmentVariable,
+    ROOT_CONFIG_SCHEMA,
 } from '@authup/server-config';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
 import type { Config } from '../../../src/app/modules/config/types';
 import { DIST_PATH, PACKAGE_PATH } from '../../../src/path';
+import { CONFIG_SCHEMA } from '../../../src';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
@@ -52,7 +52,7 @@ describe('src/config/registry.ts', () => {
             // typo cannot reach an operator. The enum is deliberately a
             // superset: it also carries the keys only a console service
             // reads.
-            const known = Object.values(ConfigEnvironmentVariableName) as string[];
+            const known = Object.values(EnvironmentVariable) as string[];
             for (const name of envNames) {
                 expect(known).toContain(name);
             }
@@ -67,7 +67,7 @@ describe('src/config/registry.ts', () => {
          */
         it('should select both of its sections in full, plus five console keys', () => {
             const sectioned = [
-                ...Object.keys(DEPLOYMENT_CONFIG_SCHEMA),
+                ...Object.keys(ROOT_CONFIG_SCHEMA),
                 ...Object.keys(CORE_CONFIG_SCHEMA),
             ];
 
@@ -220,7 +220,7 @@ describe('src/config/registry.ts', () => {
         }
 
         function resolveKeyProperty(document: Record<string, unknown>, key: keyof Config) {
-            return resolveProperty(document, resolveSchemaPath(key, CONFIG_SCHEMA[key], CONFIG_SECTION));
+            return resolveProperty(document, resolveSchemaPath(key, CONFIG_SCHEMA[key], CORE_CONFIG_SECTION));
         }
 
         it('should emit a draft-07 object schema', () => {

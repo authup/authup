@@ -5,20 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA } from '@authup/server-config';
-import { mountSchema, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
+import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA, inspectConfigFile, readConfigFileTree } from '@authup/server-config';
+import {
+    buildSchemaJSONSchema,
+    mountSchema,
+    readSchemaFromEnv,
+    readSchemaFromFileTree,
+} from '@authup/server-config-kit';
 import type { ArgsDef, ParsedArgs } from 'citty';
 import { defineCommand } from 'citty';
 import process from 'node:process';
 import { Container, isValidupError, stringifyPath } from 'validup';
 import { describeCauseChain } from '../../utils/index.ts';
-import type { ConfigReadFsOptions } from '../../app/index.ts';
+import type { ConfigReadFsOptions } from '@authup/server-config';
+import type { Config } from '../../app/index.ts';
 import {
+    CONFIG_SCHEMA,
     ConfigModule,
-    buildConfigJSONSchema,
-    inspectConfigFile,
     readConfig,
-    readConfigFileTree,
 } from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
 
@@ -34,9 +38,9 @@ export const CLI_CONFIG_ARGS = {
 } satisfies ArgsDef;
 
 export function applyCLIConfigArgs(
-    options: ConfigReadFsOptions,
+    options: ConfigReadFsOptions<Config>,
     args: CLIConfigArgs,
-) : ConfigReadFsOptions {
+) : ConfigReadFsOptions<Config> {
     if (args.configDirectory) {
         options.cwd = args.configDirectory;
     }
@@ -48,7 +52,7 @@ export function applyCLIConfigArgs(
     return options;
 }
 
-export function createCLIConfigModule(options: ConfigReadFsOptions = {}) : ConfigModule {
+export function createCLIConfigModule(options: ConfigReadFsOptions<Config> = {}) : ConfigModule {
     return new ConfigModule(() => readConfig({
         env: true,
         fs: options,
@@ -107,7 +111,7 @@ async function validateDocument(input: Record<string, unknown>) : Promise<void> 
 }
 
 export function defineCLIConfigCommand(
-    configFs: ConfigReadFsOptions = {},
+    configFs: ConfigReadFsOptions<Config> = {},
 ) {
     return defineCommand({
         meta: {
@@ -169,7 +173,16 @@ export function defineCLIConfigCommand(
                 },
                 run() {
                     // eslint-disable-next-line no-console
-                    console.log(JSON.stringify(buildConfigJSONSchema(), null, 4));
+                    console.log(
+                        JSON.stringify(
+                            buildSchemaJSONSchema(
+                                CONFIG_SCHEMA,
+                                { title: 'Core' },
+                            ),
+                            null,
+                            4,
+                        ),
+                    );
                 },
             }),
         },
