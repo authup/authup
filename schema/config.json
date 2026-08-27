@@ -441,6 +441,21 @@
                             "description": "EXPERIMENTAL. Package directory of a substituted @authup/client-auth-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules. The substitute replaces the login and consent implementation, not its styling.",
                             "default": "",
                             "x-authup-env": "AUTH_CONSOLE_PATH"
+                        },
+                        "url": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": ""
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            ],
+                            "description": "Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.",
+                            "default": "",
+                            "x-authup-env": "AUTH_CONSOLE_URL"
                         }
                     }
                 },
