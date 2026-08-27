@@ -179,11 +179,25 @@ async function assertRedirectsToConsole(name, route, expectedPath) {
     }
 
     const location = response.headers.get('location') || '';
-    if (!new URL(location, SERVER_URL).pathname.endsWith(expectedPath)) {
-        throw fail(`${name}: ${url} redirected to ${location}, expected it to end in ${expectedPath}.`);
+    const target = new URL(location, SERVER_URL);
+
+    // In the composed topology the console rides the API's own listener, so
+    // a hop leaving this origin means the mount was skipped and the console
+    // is not being served at all.
+    if (target.origin !== new URL(SERVER_URL).origin) {
+        throw fail(`${name}: ${url} redirected off-origin to ${location}, expected the composed console on ${SERVER_URL}.`);
+    }
+
+    if (target.pathname !== expectedPath) {
+        throw fail(`${name}: ${url} redirected to ${target.pathname}, expected exactly ${expectedPath}.`);
     }
 
     log(`${name}: ${url} handed over to ${location}.`);
+
+    // Returned so the caller follows the hop it just validated rather than
+    // a hard-coded path: a redirect somewhere unexpected would otherwise
+    // pass while the shell was fetched from the route it should have left.
+    return target;
 }
 
 /**
@@ -344,19 +358,19 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // protocol route hands over and the console answers the hop. Both
         // halves are asserted: a forward that lands nowhere would otherwise
         // look exactly like a working one from the API side.
-        await assertRedirectsToConsole(
+        const authConsoleURL = await assertRedirectsToConsole(
             `${name}/client-auth-console`,
             'logout',
-            'console/auth/logout',
+            '/console/auth/logout',
         );
         const authShell = await assertConsoleServed(
             `${name}/client-auth-console`,
-            'console/auth/logout',
+            authConsoleURL.href,
             'window.__AUTHUP__',
         );
         await assertConsoleAssetServed(
             `${name}/client-auth-console`,
-            'console/auth/logout',
+            authConsoleURL.href,
             authShell,
         );
         // window.__AUTHUP__ rather than the shell markup: it only appears if

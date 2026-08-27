@@ -11,7 +11,6 @@ import { getURLBasePath } from '@authup/kit';
 import {
     applyUIPageHeaders,
     readUIClientPreferences,
-    rebaseAssetURLs,
     replaceTemplateMarker,
     stampHtmlAttributes,
 } from '@authup/server-console-kit';
@@ -31,30 +30,30 @@ let cachedManifest: Record<string, any> | undefined;
 let cachedRender: RenderFunction | undefined;
 
 /**
- * How much of the service's public path has to be prepended to the asset
- * hrefs the bundle emits.
+ * Point the bundle's asset hrefs at where this service actually serves
+ * them.
  *
- * Those hrefs carry the fixed vite base (`/console/auth/`), which IS the
- * public asset path for the default deployment: the service is published at
- * `<origin>/console/auth`, the proxy strips that prefix, and the assets are
- * mounted here at `/assets`. Nothing to rebase.
+ * There is one invariant to keep, and it is what makes this a rewrite
+ * rather than a prefix: the public asset URL must be the service's own
+ * public path plus the route the assets are mounted on, which is
+ * `/assets`. The hrefs the bundle emits carry a FIXED vite base
+ * (`/console/auth/`) instead, decided when the bundle was built and
+ * unrelated to where the service is published, so the base is replaced
+ * rather than prepended to.
  *
- * It stops being true when authup itself sits under a sub-path, e.g.
- * `https://example.com/auth/console/auth`. The href then has to become
- * `/auth/console/auth/assets/...`, so what gets prepended is the public
- * path MINUS the vite base it already ends with. A service published
- * somewhere that does not end in the vite base keeps its whole path, since
- * none of it is spelled in the href.
+ * Prepending happens to work while the service is published at exactly
+ * that vite base, which is the default. It breaks the moment it is not:
+ * a service at `/login` would emit `/login/console/auth/assets/...`, and
+ * once the proxy strips `/login` the request arrives as
+ * `/console/auth/assets/...`, which nothing serves.
  */
-export function resolveAssetPrefix(url: string) : string {
+export function rebaseConsoleAssets(html: string, url: string) : string {
     const basePath = getURLBasePath(url);
-    const viteBase = AUTH_CONSOLE_VITE_BASE.replace(/\/$/, '');
 
-    if (basePath.endsWith(viteBase)) {
-        return basePath.slice(0, basePath.length - viteBase.length);
-    }
-
-    return basePath;
+    return html.replace(
+        new RegExp(`(src|href)="${AUTH_CONSOLE_VITE_BASE.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
+        (_match, attribute) => `${attribute}="${basePath}/`,
+    );
 }
 
 export async function renderAuthConsolePage(
@@ -111,7 +110,7 @@ export async function renderAuthConsolePage(
 
     body = stampHtmlAttributes(body, preferences);
 
-    body = rebaseAssetURLs(body, resolveAssetPrefix(config.url), AUTH_CONSOLE_VITE_BASE);
+    body = rebaseConsoleAssets(body, config.url);
 
     applyUIPageHeaders(event);
 

@@ -116,7 +116,7 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         readEnv: readEnvString,
     },
     authConsoleUrl: {
-        type: stringType,
+        type: z.union([z.literal(''), z.url()]),
         default: '',
         description: 'Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. ' +
             'The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.',

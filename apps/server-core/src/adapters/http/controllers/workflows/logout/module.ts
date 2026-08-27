@@ -74,7 +74,12 @@ export class LogoutController {
     protected isJSONRequest(event: IAppEvent) : boolean {
         const contentType = getRequestHeader(event, 'content-type');
 
-        return typeof contentType === 'string' && contentType.includes('application/json');
+        // Media types are case-insensitive (RFC 9110), and the header
+        // routinely carries parameters (`; charset=UTF-8`). Reading it
+        // literally would send an `Application/JSON` caller down the
+        // navigation path and answer its XHR with a redirect.
+        return typeof contentType === 'string' &&
+            contentType.toLowerCase().includes('application/json');
     }
 
     protected async forward(event: IAppEvent): Promise<Response> {
