@@ -88,7 +88,7 @@ export class HTTPModule implements IModule {
         // controllers so nothing they carry can shadow a protocol route,
         // and before the trailing middleware so they inherit the error
         // handling every other route has.
-        for (const mount of this.mounts ? this.mounts(config) : []) {
+        for (const mount of this.mounts ? await this.mounts(config) : []) {
             // routup overloads `use` per mountable kind, so the union has
             // to be narrowed before the call picks one.
             if (isHandler(mount.handler)) {

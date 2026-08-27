@@ -31,8 +31,13 @@ export type ApplicationMount = {
  * Resolved from the application's own config, because a mount path is a
  * config value (the path component of each console's url) and config is
  * not known until the modules set up.
+ *
+ * Asynchronous because building a handler may have to read something first:
+ * a console service loads its operator theme before it serves a page, so an
+ * invalid manifest fails the boot rather than every render.
  */
-export type ApplicationMountFactory = (config: Config) => ApplicationMount[];
+export type ApplicationMountFactory = (config: Config) =>
+ApplicationMount[] | Promise<ApplicationMount[]>;
 
 export type CreateApplicationContext = {
     config?: ConfigModule,

@@ -6,7 +6,6 @@
  */
 
 import process from 'node:process';
-import type { IApplication } from 'orkos';
 
 const FORCE_EXIT_TIMEOUT_MS = 10_000;
 
@@ -17,8 +16,12 @@ const FORCE_EXIT_TIMEOUT_MS = 10_000;
  * second one exits immediately, and a teardown outlasting the timeout is
  * forced. Every command that keeps a process alive shares this, so a worker
  * answers a container stop exactly like the server does.
+ *
+ * Typed structurally rather than against orkos' `IApplication`: a console
+ * role owns listeners rather than a module graph, and teardown is the whole
+ * of what this needs.
  */
-export function registerShutdownHandlers(app: IApplication) : void {
+export function registerShutdownHandlers(app: { teardown(): Promise<unknown> }) : void {
     let shuttingDown = false;
     const shutdown = async (signal: NodeJS.Signals) => {
         if (shuttingDown) {

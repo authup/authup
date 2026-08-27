@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ConfigSchemaInput } from '@authup/server-config-kit';
+import { mountSchema, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { ArgsDef, ParsedArgs } from 'citty';
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import { isValidupError, stringifyPath } from 'validup';
+import { Container, isValidupError, stringifyPath } from 'validup';
 import { describeCauseChain } from '../../utils/index.ts';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
 import {
@@ -16,6 +18,7 @@ import {
     buildConfigJSONSchema,
     inspectConfigFile,
     readConfig,
+    readConfigFileTree,
 } from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
 
@@ -52,7 +55,7 @@ export function createCLIConfigModule(options: ConfigReadFsOptions = {}) : Confi
     }));
 }
 
-const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['start', 'worker']);
+const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['core', 'start', 'worker']);
 
 export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
     const [command, ...rest] = args._;
@@ -90,7 +93,41 @@ export function describeConfigError(error: unknown) : string {
     return causes ? `${message}\n  cause: ${causes}` : message;
 }
 
-export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
+export type CLIConfigCommandOptions = {
+    /**
+     * The registries of the OTHER packages the same `authup.yml` configures.
+     *
+     * One document is the union of every registry, so both subcommands take
+     * them: `validate` must not report a console service's key as unread, and
+     * `schema` must describe the whole document an operator writes. The CLI
+     * supplies them, since it is the only place that knows about every
+     * package (plan 101 stage C).
+     */
+    schemas?: { prefix?: string, schema: ConfigSchemaInput<any> }[],
+};
+
+/**
+ * Validate a raw configuration against one registry alone.
+ *
+ * Each package's keys are checked on their own rather than against the
+ * composed schema, because a composed run would need the whole document
+ * merged into one object first, and every key already carries the zod type
+ * that decides it.
+ */
+async function validateSchema(
+    input: Record<string, unknown>,
+    schema: ConfigSchemaInput<any>,
+) : Promise<void> {
+    const container = new Container<Record<string, unknown>>();
+    mountSchema(container, schema);
+
+    await container.run(input);
+}
+
+export function defineCLIConfigCommand(
+    configFs: ConfigReadFsOptions = {},
+    options: CLIConfigCommandOptions = {},
+) {
     return defineCommand({
         meta: {
             name: 'config',
@@ -108,7 +145,7 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                         // reads, and whether it was found at all. The read
                         // below reports neither, because it skips what it does
                         // not claim and an absent file is a valid deployment.
-                        const { files, unknown } = await inspectConfigFile(configFs);
+                        const { files, unknown } = await inspectConfigFile(configFs, options.schemas);
 
                         if (files.length === 0 && (configFs.cwd || configFs.file)) {
                             // Named a place and nothing was there: reporting
@@ -128,6 +165,17 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                         }
 
                         await readConfig({ env: true, fs: configFs });
+
+                        // Every other package's keys, each against its own
+                        // registry. server-core's own read above already
+                        // covers the keys it declares, shared ones included.
+                        const { tree } = await readConfigFileTree(configFs);
+                        for (const entry of options.schemas || []) {
+                            await validateSchema({
+                                ...readSchemaFromFileTree(tree, entry.schema, { prefix: entry.prefix }),
+                                ...readSchemaFromEnv(entry.schema),
+                            }, entry.schema);
+                        }
                     } catch (e) {
                         // eslint-disable-next-line no-console
                         console.error(describeConfigError(e));
@@ -142,7 +190,7 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                 },
                 run() {
                     // eslint-disable-next-line no-console
-                    console.log(JSON.stringify(buildConfigJSONSchema(), null, 4));
+                    console.log(JSON.stringify(buildConfigJSONSchema(options.schemas), null, 4));
                 },
             }),
         },
