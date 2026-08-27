@@ -20,6 +20,7 @@ import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
+import { buildApplicationMounts } from './roles/mounts.ts';
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
@@ -40,7 +41,7 @@ export async function createCLIEntryPointCommand() {
             config: defineCLIConfigCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
-            start: defineCLIStartCommand(configFs),
+            start: defineCLIStartCommand(configFs, { mounts: buildApplicationMounts }),
             worker: defineCLIWorkerCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,

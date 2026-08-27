@@ -6,16 +6,31 @@
  */
 
 import { defineCommand } from 'citty';
-import type { ConfigReadFsOptions } from '../../app/index.ts';
+import type { ApplicationMountFactory, ConfigReadFsOptions } from '../../app/index.ts';
 import { createApplication } from '../../app/index.ts';
 import { createCLIConfigModule } from './config.ts';
 import { registerShutdownHandlers } from './shutdown.ts';
 
-export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
+export type CLIStartCommandOptions = {
+    /**
+     * Handlers to compose onto the same listener, so one process can serve
+     * more than server-core does. The CLI supplies them: server-core is
+     * deliberately ignorant of what it mounts (plan 101 D2).
+     */
+    mounts?: ApplicationMountFactory,
+};
+
+export function defineCLIStartCommand(
+    configFs: ConfigReadFsOptions = {},
+    options: CLIStartCommandOptions = {},
+) {
     return defineCommand({
         meta: { name: 'start' },
         async setup() {
-            const app = createApplication({ config: createCLIConfigModule(configFs) });
+            const app = createApplication({
+                config: createCLIConfigModule(configFs),
+                mounts: options.mounts,
+            });
 
             await app.setup();
 

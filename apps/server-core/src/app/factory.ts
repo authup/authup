@@ -12,6 +12,7 @@ import {
     ComponentsModule,
     DatabaseModule,
     DefaultProvisioningSource,
+    HTTPModule,
     LoggerInjectionKey,
     ProvisionerModule,
     verifySchemaOrSynchronize,
@@ -34,7 +35,7 @@ export function createApplication(context: CreateApplicationContext = {}) {
         .withIdentity()
         .withOAuth2()
         .withComponents()
-        .withHTTP()
+        .withHTTP(new HTTPModule({ mounts: context.mounts }))
         .build();
 }
 
