@@ -12,6 +12,7 @@ import {
     toInt,
 } from 'envix';
 import type { ConfigSchemaEnvReader, ConfigSchemaInput } from './types.ts';
+import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
 const BOOLEAN_TRUE_VALUES = new Set(['true', 't', '1', 'yes', 'y', 'on']);
 const BOOLEAN_FALSE_VALUES = new Set(['false', 'f', '0', 'no', 'n', 'off']);
@@ -77,6 +78,18 @@ export const readEnvBoolOrString : ConfigSchemaEnvReader = (raw) => toBool(raw) 
 export const readEnvRaw : ConfigSchemaEnvReader = (raw) => (raw.trim().length > 0 ? raw : undefined);
 
 /**
+ * Every environment variable a key may be read from, in the order they are
+ * tried. A single declared name is a chain of one.
+ */
+export function resolveSchemaEnvNames(entry: { env?: string | string[] }) : string[] {
+    if (typeof entry.env === 'undefined') {
+        return [];
+    }
+
+    return Array.isArray(entry.env) ? entry.env : [entry.env];
+}
+
+/**
  * The values every schema key carrying an environment variable name reads
  * from the environment. A key without one, an unset variable, and a reader
  * answering undefined are all skipped, so the caller's own defaults stand.
@@ -87,18 +100,30 @@ export function readSchemaFromEnv<T>(schema: ConfigSchemaInput<T>) : Partial<T> 
     const keys = Object.keys(schema) as (keyof T)[];
     for (const key of keys) {
         const entry = schema[key];
-        if (!entry.env || !entry.readEnv) {
-            continue;
+        if (isConfigSchemaEntryInput(entry)) {
+            if (!entry.env || !entry.readEnv) {
+                continue;
+            }
+
+            // a chain is tried in order, first set wins, and the reader is told
+            // which variable the value came from: its diagnostics name the
+            // variable an operator actually set.
+            for (const name of resolveSchemaEnvNames(entry)) {
+                const raw = read(name);
+                if (typeof raw !== 'string') {
+                    continue;
+                }
+
+                const value = entry.readEnv(raw, name);
+                if (typeof value !== 'undefined') {
+                    options[key as string] = value;
+                    break;
+                }
+            }
         }
 
-        const raw = read(entry.env);
-        if (typeof raw !== 'string') {
-            continue;
-        }
-
-        const value = entry.readEnv(raw, entry.env);
-        if (typeof value !== 'undefined') {
-            options[key as string] = value;
+        if (isConfigSchemaInput(entry)) {
+            options[key as string] = readSchemaFromEnv(entry);
         }
     }
 

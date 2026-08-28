@@ -5,12 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildSchemaDefaults, buildSchemaJSONSchema, readSchemaFromFileTree } from '@authup/server-config-kit';
+import {
+    buildSchemaDefaults,
+    buildSchemaJSONSchema,
+    readSchemaFromFileTree,
+    resolveSchemaEnvNames,
+    resolveSchemaPath,
+    resolveSchemaPaths,
+} from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
-    ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-    ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
-    AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
+    ACCOUNT_CONSOLE_CONFIG_SCHEMA,
+    ADMIN_CONSOLE_CONFIG_SCHEMA,
+    AUTH_CONSOLE_CONFIG_SCHEMA,
     CONFIG_SCHEMA,
     CORE_CONFIG_SCHEMA,
     EnvironmentVariable,
@@ -20,14 +27,19 @@ import {
 } from '../../src';
 import type { AuthupConfig } from '../../src';
 
+/**
+ * The DOCUMENT projection of every section: a section declares its keys the
+ * way it names them (`host`, not `adminConsoleHost`), and the merge below is
+ * what qualifies them.
+ */
 const SECTIONS = {
     root: ROOT_CONFIG_SCHEMA,
     theme: THEME_CONFIG_SCHEMA,
     core: CORE_CONFIG_SCHEMA,
-    authConsole: AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
-    adminConsole: ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
-    accountConsole: ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-} as Record<string, Record<string, { path?: string, env?: string }>>;
+    authConsole: AUTH_CONSOLE_CONFIG_SCHEMA,
+    adminConsole: ADMIN_CONSOLE_CONFIG_SCHEMA,
+    accountConsole: ACCOUNT_CONSOLE_CONFIG_SCHEMA,
+} as Record<string, Record<string, { path?: string | string[], env?: string | string[] }>>;
 
 const KEYS = Object.keys(CONFIG_SCHEMA) as (keyof AuthupConfig)[];
 
@@ -52,10 +64,27 @@ describe('CONFIG_SCHEMA', () => {
      * claim the same one.
      */
     it('places every key at its own absolute path', () => {
-        const paths = KEYS.map((key) => CONFIG_SCHEMA[key].path);
+        const paths = KEYS.map((key) => resolveSchemaPath(key, CONFIG_SCHEMA[key]));
 
         expect(paths.filter((path) => typeof path === 'undefined')).toEqual([]);
         expect(new Set(paths).size).toEqual(paths.length);
+    });
+
+    /**
+     * A fallback may only reach a location another key already owns: an
+     * inherited value has to be one an operator can look up, and one the
+     * published schema describes.
+     */
+    it('falls back only onto locations the document declares', () => {
+        const owned = new Set(KEYS.map((key) => resolveSchemaPath(key, CONFIG_SCHEMA[key])));
+
+        for (const key of KEYS) {
+            const [, ...fallbacks] = resolveSchemaPaths(key, CONFIG_SCHEMA[key]);
+
+            for (const fallback of fallbacks) {
+                expect(owned).toContain(fallback);
+            }
+        }
     });
 
     /**
@@ -67,9 +96,19 @@ describe('CONFIG_SCHEMA', () => {
         const names : string[] = [];
         for (const key of KEYS) {
             const entry = CONFIG_SCHEMA[key];
-            if (typeof entry.env !== 'undefined') {
-                names.push(entry.env);
+            const [name, ...fallbacks] = resolveSchemaEnvNames(entry);
+
+            if (typeof name !== 'undefined') {
+                names.push(name);
                 expect(typeof entry.readEnv).toEqual('function');
+            }
+
+            // a chain borrows another key's variable, so it may not introduce
+            // a name of its own: HOST means one thing in this document.
+            for (const fallback of fallbacks) {
+                expect(names.concat(
+                    KEYS.map((other) => resolveSchemaEnvNames(CONFIG_SCHEMA[other])[0]),
+                )).toContain(fallback);
             }
         }
 
@@ -96,15 +135,23 @@ describe('CONFIG_SCHEMA', () => {
         expect(readSchemaFromFileTree<AuthupConfig>(tree, CONFIG_SCHEMA)).toEqual({
             publicUrl: 'https://idp.example.com',
             trustedOrigins: ['https://app.example.com'],
-            themeDirectoryPath: '/etc/authup/theme',
-            themeFragmentsEnabled: true,
-            port: 4001,
-            authConsoleUrl: 'https://idp.example.com/console/auth',
-            authConsolePort: 4020,
-            adminConsoleUrl: 'https://idp.example.com/console/admin',
-            accountConsoleUrl: 'https://idp.example.com/console/account',
-            adminConsoleEnabled: false,
-            accountConsoleEnabled: false,
+            theme: {
+                directoryPath: '/etc/authup/theme',
+                fragmentsEnabled: true,
+            },
+            core: { port: 4001 },
+            authConsole: {
+                url: 'https://idp.example.com/console/auth',
+                port: 4020,
+            },
+            adminConsole: {
+                url: 'https://idp.example.com/console/admin',
+                enabled: false,
+            },
+            accountConsole: {
+                url: 'https://idp.example.com/console/account',
+                enabled: false,
+            },
         });
     });
 
@@ -128,8 +175,8 @@ describe('CONFIG_SCHEMA', () => {
         expect(defaults.env).toEqual(expect.any(String));
         expect(defaults.rootPath).toEqual(process.cwd());
         expect(defaults.trustedOrigins).toEqual([]);
-        expect(defaults.adminConsoleEnabled).toEqual(true);
-        expect(defaults.authConsoleUrl).toEqual('');
+        expect(defaults.adminConsole?.enabled).toEqual(true);
+        expect(defaults.authConsole?.url).toEqual('');
     });
 
     /**

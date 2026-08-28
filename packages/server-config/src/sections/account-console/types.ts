@@ -8,16 +8,16 @@
 /**
  * The `server.accountConsole.*` section.
  *
- * The field names carry the console prefix the CONFIGURATION key carries,
- * while the document path drops it (`accountConsoleEnabled` reads
- * `server.accountConsole.enabled`). The section is per CONSOLE, never per
- * implementation package, so substituting the package leaves the document
- * untouched.
+ * The field names are the section's own, exactly as the document spells
+ * them under `server.accountConsole.*`, so the console service reads them
+ * unchanged. The section is per CONSOLE, never per implementation package,
+ * so substituting the package leaves the document untouched.
  *
  * `Section` distinguishes it from `AccountConsoleConfig`, the service's own
- * vocabulary, which is what everything inside that package reads.
+ * vocabulary, which carries what the section cannot say (the API's url,
+ * the resolved dist path).
  */
-export type AccountConsoleSectionConfig = {
+export type AccountConsoleConfig = {
     /**
      * Where the account console service is served, e.g.
      * `https://example.com/console/account`.
@@ -27,7 +27,7 @@ export type AccountConsoleSectionConfig = {
      * login lands the browser there once the session credential is issued.
      * Empty derives it from publicUrl, which is the single-origin default.
      */
-    accountConsoleUrl: string,
+    url: string,
 
     /**
      * Whether the console is served at all.
@@ -36,19 +36,20 @@ export type AccountConsoleSectionConfig = {
      * disabled notice from) and by server-core (a console nothing serves must
      * not get a server-side login either).
      */
-    accountConsoleEnabled: boolean,
+    enabled: boolean,
 
     /**
      * A substituted console package to serve instead of the resolved
      * `@authup/client-account-console`. Empty resolves the package through
      * the node_modules walk.
      */
-    accountConsolePath: string,
+    path: string,
 
     /**
      * Where the standalone service listens. Unrelated to the url above:
      * behind a reverse proxy the two always differ.
      */
-    accountConsolePort: number,
-    accountConsoleHost: string,
+    port: number,
+
+    host: string,
 };

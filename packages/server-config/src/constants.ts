@@ -99,6 +99,14 @@ export enum EnvironmentVariable {
     ACCOUNT_CONSOLE_HOST = 'ACCOUNT_CONSOLE_HOST',
 }
 
+export enum CONFIG_SECTION_KEY {
+    ACCOUNT_CONSOLE = 'accountConsole',
+    ADMIN_CONSOLE = 'adminConsole',
+    AUTH_CONSOLE = 'authConsole',
+    CORE = 'core',
+    THEME = 'theme',
+}
+
 /**
  * The one file the configuration is read from, and the extensions it may
  * carry. `conf` is deliberately absent: the `authup.conf` family was retired
@@ -107,3 +115,11 @@ export enum EnvironmentVariable {
 export const CONFIG_FILE_NAME = 'authup';
 export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
 
+/**
+ * The deployment-wide bind address, at the root of the document.
+ *
+ * Every listener's own `host` key falls back to it, so an operator running
+ * the API and the three console services binds them all with one line. `port`
+ * deliberately has no counterpart: three listeners cannot share one.
+ */
+export const DEFAULT_HOST_CONFIG_PATH = 'host';

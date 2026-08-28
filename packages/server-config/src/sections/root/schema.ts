@@ -15,7 +15,7 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { EnvironmentVariable } from '../../constants.ts';
+import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
 import { expandToOrigins } from '../../helpers/index.ts';
 import type {
     DatabaseConnectionOptions,
@@ -54,6 +54,13 @@ export const ROOT_CONFIG_SCHEMA = {
         default: () => process.cwd(),
         path: 'rootPath',
         description: 'Root directory every relative path key resolves against.',
+    },
+    defaultHost: {
+        type: z.string(),
+        default: '0.0.0.0',
+        description: 'Default host address every listener this deployment starts binds: server-core and each console service, unless its own section names one. ' +
+            'The environment equivalent is HOST, which server.core.host declares and every console falls back to.',
+        path: DEFAULT_HOST_CONFIG_PATH,
     },
     publicUrl: {
         type: z.url(),

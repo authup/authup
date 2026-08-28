@@ -6,23 +6,29 @@
  */
 
 import type {
-    AdminConsoleSectionConfig,
+    AdminConsoleConfig,
+    CONFIG_SECTION_KEY,
     RootConfig,
     ThemeConfig,
+    ToObjectLiteral,
 } from '@authup/server-config';
 
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are console-qualified because they belong to a document that
- * describes a whole deployment, not to this service. Inside this package that
- * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
- * service's), so it is confined to the configuration layer and mapped onto
+ * The names are the section's own, so most of them arrive as this service
+ * reads them. The deployment-wide ones do not: `publicUrl` here means the
+ * API's URL, not this service's, and `path` means the console package to
+ * serve. Both are confined to the configuration layer and mapped onto
  * {@link AdminConsoleConfig} before anything else sees it.
  */
-export type AdminConsoleConfigInput = Pick<RootConfig, 'publicUrl'> &
-    ThemeConfig &
-    AdminConsoleSectionConfig;
+export type AdminConsoleConfigInput = ToObjectLiteral<
+    Pick<RootConfig, 'publicUrl'> &
+    {
+        [CONFIG_SECTION_KEY.THEME]: ThemeConfig,
+    }    &
+    AdminConsoleConfig
+>;
 
 /**
  * The service's own vocabulary, which is what every consumer in this package
@@ -59,14 +65,6 @@ export type AdminConsoleConfig = {
      * node_modules walk.
      */
     distPath: string,
-    /**
-     * The operator theme directory. Empty disables theming entirely: no
-     * provider is created and no route is mounted.
-     */
-    themeDirectoryPath: string,
-    /**
-     * Opt in to splicing `fragments/head.html` from the theme directory into
-     * the served shell.
-     */
-    themeFragmentsEnabled: boolean,
+
+    theme: ThemeConfig,
 };

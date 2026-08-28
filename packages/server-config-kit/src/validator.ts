@@ -6,8 +6,9 @@
  */
 
 import { createValidator } from '@validup/zod';
-import type { Container } from 'validup';
+import { Container } from 'validup';
 import type { ConfigSchemaInput } from './types.ts';
+import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
 /**
  * Mount one optional validator per schema key onto the container, so the
@@ -17,8 +18,17 @@ export function mountSchema<T extends Record<string, any>>(
     container: Container<T>,
     schema: ConfigSchemaInput<T>,
 ) : void {
-    const keys = Object.keys(schema) as (keyof T)[];
+    const keys = Object.keys(schema) as (keyof ConfigSchemaInput<T>)[];
     for (const key of keys) {
-        container.mount(key as string, { optional: true }, createValidator(schema[key].type));
+        const entry = schema[key];
+        if (isConfigSchemaEntryInput(entry)) {
+            container.mount(key as string, { optional: true }, createValidator(entry.type));
+            continue;
+        }
+
+        if (isConfigSchemaInput(entry)) {
+            const child = new Container();
+            mountSchema(child, entry);
+        }
     }
 }

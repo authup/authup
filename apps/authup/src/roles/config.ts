@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AccountConsoleConfig, AccountConsoleConfigInput } from '@authup/server-account-console';
+import type { Config, ConfigInput } from '@authup/server-account-console';
 import { ACCOUNT_CONSOLE_CONFIG_SCHEMA, resolveAccountConsoleConfig } from '@authup/server-account-console';
 import type { AdminConsoleConfig, AdminConsoleConfigInput } from '@authup/server-admin-console';
 import { ADMIN_CONSOLE_CONFIG_SCHEMA, resolveAdminConsoleConfig } from '@authup/server-admin-console';
@@ -20,7 +20,7 @@ import path from 'node:path';
 export type ConsoleConfigs = {
     auth: AuthConsoleConfig,
     admin: AdminConsoleConfig,
-    account: AccountConsoleConfig,
+    account: Config,
 };
 
 /**
@@ -88,7 +88,7 @@ export async function readConsoleConfigs(
             rootPath,
         ),
         account: resolvePaths(
-            resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
+            resolveAccountConsoleConfig(read<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
             rootPath,
         ),
     };

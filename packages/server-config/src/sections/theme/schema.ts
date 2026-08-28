@@ -6,33 +6,38 @@
  */
 
 import type { ConfigSchema } from '@authup/server-config-kit';
-import { readEnvBool, readEnvString } from '@authup/server-config-kit';
+import {
+    readEnvBool,
+    readEnvString,
+    withSectionPaths,
+} from '@authup/server-config-kit';
 import { z } from 'zod';
-import { EnvironmentVariable } from '../../constants.ts';
+import { CONFIG_SECTION_KEY, EnvironmentVariable } from '../../constants.ts';
 import type { ThemeConfig } from './types.ts';
 
-export const THEME_CONFIG_SCHEMA = {
-    themeDirectoryPath: {
-        type: z.string(),
-        // '' = theming disabled. Deliberately NOT defaulted under a
-        // process-writable directory: pairing "process-writable" with
-        // "content injected into the login page" would turn any write
-        // primitive landing there into persistent branding control on the
-        // IdP origin.
-        default: '',
-        description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served under each console, its theme.json injects CSS custom properties); an empty value disables theming. ' +
+export const THEME_CONFIG_SCHEMA = withSectionPaths(
+    CONFIG_SECTION_KEY.THEME,
+    {
+        directoryPath: {
+            type: z.string(),
+            // '' = theming disabled. Deliberately NOT defaulted under a
+            // process-writable directory: pairing "process-writable" with
+            // "content injected into the login page" would turn any write
+            // primitive landing there into persistent branding control on the
+            // IdP origin.
+            default: '',
+            description: 'EXPERIMENTAL. Directory holding the operator theme applied to the served consoles (its assets are served under each console, its theme.json injects CSS custom properties); an empty value disables theming. ' +
             'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
-        path: 'theme.directoryPath',
-        env: EnvironmentVariable.THEME_DIRECTORY_PATH,
-        readEnv: readEnvString,
-    },
-    themeFragmentsEnabled: {
-        type: z.boolean(),
-        default: false,
-        description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of every served console. ' +
+            env: EnvironmentVariable.THEME_DIRECTORY_PATH,
+            readEnv: readEnvString,
+        },
+        fragmentsEnabled: {
+            type: z.boolean(),
+            default: false,
+            description: 'EXPERIMENTAL. Opt in to splicing fragments/head.html from the theme directory into the head of every served console. ' +
             'SECURITY: the fragment is raw, unsanitized markup running on the IdP origin, so enabling it must be a deliberate operator decision.',
-        path: 'theme.fragmentsEnabled',
-        env: EnvironmentVariable.THEME_FRAGMENTS_ENABLED,
-        readEnv: readEnvBool,
+            env: EnvironmentVariable.THEME_FRAGMENTS_ENABLED,
+            readEnv: readEnvBool,
+        },
     },
-} satisfies ConfigSchema<ThemeConfig, never, EnvironmentVariable>;
+) satisfies ConfigSchema<ThemeConfig, never, EnvironmentVariable>;

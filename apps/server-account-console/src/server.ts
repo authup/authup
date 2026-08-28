@@ -7,13 +7,13 @@
 
 import { App } from 'routup';
 import { createAccountConsoleHandler } from './handler';
-import type { AccountConsoleConfig } from './types';
+import type { Config } from './types';
 
 /**
  * The standalone service: the same handler the CLI mounts in process, behind
  * a listener of its own.
  */
-export async function createAccountConsoleServer(config: AccountConsoleConfig) : Promise<App> {
+export async function createAccountConsoleServer(config: Config) : Promise<App> {
     const app = new App();
 
     app.use(await createAccountConsoleHandler(config));

@@ -6,8 +6,10 @@
  */
 
 import { z } from 'zod';
+import { resolveSchemaEnvNames } from './env.ts';
 import { resolveSchemaPath } from './file.ts';
 import type { ConfigSchemaEntryInput, ConfigSchemaInput } from './types.ts';
+import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
 const JSON_SCHEMA_DRAFT_7 = 'http://json-schema.org/draft-07/schema#';
 
@@ -28,8 +30,11 @@ function buildProperty<T, K extends keyof T>(entry: ConfigSchemaEntryInput<T, K>
         property.default = value;
     }
 
-    if (typeof entry.env !== 'undefined') {
-        property['x-authup-env'] = entry.env;
+    // the key's OWN variable, never the ones a fallback chain borrows: those
+    // belong to the keys that declare them, and are documented there.
+    const [env] = resolveSchemaEnvNames(entry);
+    if (typeof env !== 'undefined') {
+        property['x-authup-env'] = env;
     }
 
     return property;
@@ -60,35 +65,48 @@ export function buildSchemaJSONSchema<T>(
     for (const key of keys) {
         const entry = schema[key];
 
-        const path = resolveSchemaPath(key as string, entry, options.prefix);
-        const segments = path.split('.');
-        const name = segments.pop() as string;
+        if (isConfigSchemaEntryInput(entry)) {
+            const path = resolveSchemaPath(key as string, entry, options.prefix);
+            const segments = path.split('.');
+            const name = segments.pop() as string;
 
-        let container = properties;
-        let walked = '';
+            let container = properties;
+            let walked = '';
 
-        for (const segment of segments) {
-            walked = walked ? `${walked}.${segment}` : segment;
+            for (const segment of segments) {
+                walked = walked ? `${walked}.${segment}` : segment;
 
-            if (leaves.has(walked)) {
-                throw new Error(`The config key "${String(key)}" can not be placed at "${path}", because "${walked}" already holds a value.`);
+                if (leaves.has(walked)) {
+                    throw new Error(`The config key "${String(key)}" can not be placed at "${path}", because "${walked}" already holds a value.`);
+                }
+
+                if (!intermediates.has(walked)) {
+                    container[segment] = { type: 'object', properties: {} };
+                    intermediates.add(walked);
+                }
+
+                container = (container[segment] as { properties: Record<string, unknown> }).properties;
             }
 
-            if (!intermediates.has(walked)) {
-                container[segment] = { type: 'object', properties: {} };
-                intermediates.add(walked);
+            const leaf = walked ? `${walked}.${name}` : name;
+            if (intermediates.has(leaf) || leaves.has(leaf)) {
+                throw new Error(`The config key "${String(key)}" can not be placed at "${path}", because the location is already taken.`);
             }
 
-            container = (container[segment] as { properties: Record<string, unknown> }).properties;
+            container[name] = buildProperty(entry);
+            leaves.add(leaf);
+
+            continue;
         }
 
-        const leaf = walked ? `${walked}.${name}` : name;
-        if (intermediates.has(leaf) || leaves.has(leaf)) {
-            throw new Error(`The config key "${String(key)}" can not be placed at "${path}", because the location is already taken.`);
-        }
+        if (isConfigSchemaInput(entry)) {
+            const child = buildSchemaJSONSchema(entry, options);
 
-        container[name] = buildProperty(entry);
-        leaves.add(leaf);
+            properties[key as string] = {
+                type: 'object',
+                properties: child.properties,
+            };
+        }
     }
 
     // No $id or additionalProperties until a consumer needs one.

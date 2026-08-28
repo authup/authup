@@ -6,7 +6,8 @@
  */
 
 import {
-    ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
+    ADMIN_CONSOLE_CONFIG_SCHEMA,
+    CONFIG_SECTION_KEY,
     ROOT_CONFIG_SCHEMA,
     THEME_CONFIG_SCHEMA,
 } from '@authup/server-config';
@@ -27,15 +28,15 @@ export { ADMIN_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
  * Neither package depends on the other; both depend on the declaration.
  */
 export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
-    ...ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
-    ...THEME_CONFIG_SCHEMA,
-    publicUrl: ROOT_CONFIG_SCHEMA.publicUrl,
+    ...ADMIN_CONSOLE_CONFIG_SCHEMA,
+    ...ROOT_CONFIG_SCHEMA,
+    [CONFIG_SECTION_KEY.THEME]: THEME_CONFIG_SCHEMA,
 } satisfies ConfigSchema<AdminConsoleConfigInput, 'publicUrl'>;
 
 /**
  * Turn the configuration namespace into the service's own shape: fill the
  * defaults, derive the one key that is derived rather than configured, and
- * rename. An empty `adminConsoleUrl` means the console sits on server-core's
+ * rename. An empty `url` means the console sits on server-core's
  * own origin under the default segment, which is the single-origin
  * deployment.
  */
@@ -54,15 +55,14 @@ export function resolveAdminConsoleConfig(
     }
 
     return {
-        url: values.adminConsoleUrl ||
+        url: values.url ||
             `${values.publicUrl.replace(/\/+$/, '')}${ADMIN_CONSOLE_BASE_PATH}`,
         apiUrl: values.publicUrl,
-        enabled: values.adminConsoleEnabled,
-        port: values.adminConsolePort,
-        host: values.adminConsoleHost,
-        distPath: values.adminConsolePath,
-        themeDirectoryPath: values.themeDirectoryPath,
-        themeFragmentsEnabled: values.themeFragmentsEnabled,
+        enabled: values.enabled,
+        port: values.port,
+        host: values.host,
+        distPath: values.path,
+        theme: values.theme,
     };
 }
 

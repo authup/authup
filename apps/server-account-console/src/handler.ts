@@ -30,7 +30,7 @@ import {
 } from './constants';
 import { PACKAGE_PATH } from './path';
 import { resolveAccountConsoleRef } from './ref';
-import type { AccountConsoleConfig } from './types';
+import type { Config } from './types';
 
 const ASSETS_PATH = '/assets';
 
@@ -43,7 +43,7 @@ const ASSETS_PATH = '/assets';
  * Resolved once per handler rather than per request: the list is operator
  * configuration and cannot change while the service runs.
  */
-function buildAppOrigins(config: AccountConsoleConfig) : string[] {
+function buildAppOrigins(config: Config) : string[] {
     const origins = new Set<string>();
     origins.add(new URL(config.apiUrl).origin);
 
@@ -61,7 +61,7 @@ function buildAppOrigins(config: AccountConsoleConfig) : string[] {
  * no route is mounted, and the served shell stays byte-identical to an
  * un-themed one. So the default configuration pays nothing.
  */
-async function createThemeProvider(config: AccountConsoleConfig) : Promise<IThemeProvider | undefined> {
+async function createThemeProvider(config: Config) : Promise<IThemeProvider | undefined> {
     if (!config.themeDirectoryPath || !fs.existsSync(config.themeDirectoryPath)) {
         return undefined;
     }
@@ -89,7 +89,7 @@ async function createThemeProvider(config: AccountConsoleConfig) : Promise<IThem
  * so a service published at `<origin>/console/account` receives `/sessions`,
  * exactly as the console's own router sees it.
  */
-export async function createAccountConsoleHandler(config: AccountConsoleConfig) : Promise<App> {
+export async function createAccountConsoleHandler(config: Config) : Promise<App> {
     const app = new App();
 
     // The shell is stamped from the vc-locale / vc-color-mode cookies and the
@@ -146,7 +146,7 @@ export async function createAccountConsoleHandler(config: AccountConsoleConfig) 
         // public path. The vite base was decided when the bundle was
         // built and says nothing about where the service is published.
         assetBasePath: `${basePath}/`,
-        theme,
+        THEME: theme,
         config: {
             apiUrl: config.apiUrl,
             basePath,

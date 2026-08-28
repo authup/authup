@@ -55,6 +55,15 @@ export type SMTPConnectionOptions = string | boolean | Record<string, any>;
  */
 export type RootConfig = {
     /**
+     * The bind address every listener of the deployment falls back to.
+     *
+     * Read by nobody directly: each listener's own `host` key reaches it
+     * through its fallback chain, so setting it once configures server-core
+     * and all three console services.
+     */
+    defaultHost: string,
+
+    /**
      * Application environment (e.g. 'production').
      * default: 'development'
      */

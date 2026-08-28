@@ -6,29 +6,36 @@
  */
 
 import type {
-    AccountConsoleSectionConfig,
+    CONFIG_SECTION_KEY,
+    CoreConfig,
     RootConfig,
     ThemeConfig,
+    ToObjectLiteral,
 } from '@authup/server-config';
 
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are console-qualified because they belong to a document that
- * describes a whole deployment, not to this service. Inside this package that
- * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
- * service's), so it is confined to the configuration layer and mapped onto
- * {@link AccountConsoleConfig} before anything else sees it.
+ * The names are the section's own, so most of them arrive as this service
+ * reads them. The deployment-wide ones do not: `publicUrl` here means the
+ * API's URL, not this service's, and `path` means the console package to
+ * serve. Both are confined to the configuration layer and mapped onto
+ * {@link Config} before anything else sees it.
  */
-export type AccountConsoleConfigInput = Pick<RootConfig, 'publicUrl' | 'trustedOrigins'> &
-    ThemeConfig &
-    AccountConsoleSectionConfig;
+export type ConfigInput = ToObjectLiteral<
+    RootConfig &
+    {
+        [CONFIG_SECTION_KEY.THEME]: ThemeConfig,
+        [CONFIG_SECTION_KEY.CORE]: CoreConfig
+    } &
+    Config
+>;
 
 /**
  * The service's own vocabulary, which is what every consumer in this package
  * reads.
  */
-export type AccountConsoleConfig = {
+export type Config = {
     /**
      * This console's own public URL, e.g.
      * `https://example.com/console/account`. Its path component is the base
@@ -49,7 +56,7 @@ export type AccountConsoleConfig = {
     enabled: boolean,
     /**
      * Where the standalone service listens. Unrelated to
-     * {@link AccountConsoleConfig.url}: behind a reverse proxy the two always
+     * {@link Config.url}: behind a reverse proxy the two always
      * differ.
      */
     port: number,
@@ -66,14 +73,6 @@ export type AccountConsoleConfig = {
      * canonical http(s) origins.
      */
     trustedOrigins: string[],
-    /**
-     * The operator theme directory. Empty disables theming entirely: no
-     * provider is created and no route is mounted.
-     */
-    themeDirectoryPath: string,
-    /**
-     * Opt in to splicing `fragments/head.html` from the theme directory into
-     * the served shell.
-     */
-    themeFragmentsEnabled: boolean,
+
+    theme: ThemeConfig
 };

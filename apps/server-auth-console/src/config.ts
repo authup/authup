@@ -6,7 +6,8 @@
  */
 
 import {
-    AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
+    AUTH_CONSOLE_CONFIG_SCHEMA,
+    CONFIG_SECTION_KEY,
     ROOT_CONFIG_SCHEMA,
     THEME_CONFIG_SCHEMA,
 } from '@authup/server-config';
@@ -27,8 +28,8 @@ export { AUTH_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
  * on the other; both depend on the declaration.
  */
 export const AUTH_CONSOLE_CONFIG_SCHEMA = {
-    ...AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
-    ...THEME_CONFIG_SCHEMA,
+    ...AUTH_CONSOLE_CONFIG_SCHEMA,
+    [CONFIG_SECTION_KEY.THEME]: THEME_CONFIG_SCHEMA,
     publicUrl: ROOT_CONFIG_SCHEMA.publicUrl,
 } satisfies ConfigSchema<AuthConsoleConfigInput, 'publicUrl'>;
 
@@ -54,14 +55,13 @@ export function resolveAuthConsoleConfig(input: Partial<AuthConsoleConfigInput>)
     }
 
     return {
-        url: resolved.authConsoleUrl ||
+        url: resolved.url ||
             `${resolved.publicUrl.replace(/\/+$/, '')}${AUTH_CONSOLE_BASE_PATH}`,
         apiUrl: resolved.publicUrl,
-        port: resolved.authConsolePort,
-        host: resolved.authConsoleHost,
-        distPath: resolved.authConsolePath,
-        themeDirectoryPath: resolved.themeDirectoryPath,
-        themeFragmentsEnabled: resolved.themeFragmentsEnabled,
+        port: resolved.port,
+        host: resolved.host,
+        distPath: resolved.path,
+        theme: resolved.theme,
     };
 }
 

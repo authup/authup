@@ -9,9 +9,9 @@ import type { Config, ConfigSchemaDerivedKey } from './types.ts';
 import type { ConfigSchema } from '@authup/server-config-kit';
 import type { EnvironmentVariable } from '@authup/server-config';
 import {
-    ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-    ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA,
-    AUTH_CONSOLE_SECTION_CONFIG_SCHEMA,
+    ACCOUNT_CONSOLE_DOCUMENT_CONFIG_SCHEMA,
+    ADMIN_CONSOLE_DOCUMENT_CONFIG_SCHEMA,
+    AUTH_CONSOLE_DOCUMENT_CONFIG_SCHEMA,
     CORE_CONFIG_SCHEMA,
     ROOT_CONFIG_SCHEMA,
 } from '@authup/server-config';
@@ -29,10 +29,13 @@ export const ConfigInjectionKey = new TypedToken<Config>('Config');
  * with no entry fails the build too.
  *
  * The two whole-section spreads are the sections this service reads in full.
- * The five console keys are picked one by one, because a console section is
- * mostly the console service's own business (where it listens, which package
- * it serves); server-core only needs where a browser reaches it, and whether
- * a static console is served at all.
+ * The five console keys are picked one by one, out of each console's DOCUMENT
+ * projection: a console section names its keys `url` and `enabled`, which
+ * three consoles cannot do at once in one flat bag, so the merged view
+ * qualifies them. They are picked rather than spread because a console
+ * section is mostly the console service's own business (where it listens,
+ * which package it serves); server-core only needs where a browser reaches
+ * it, and whether a static console is served at all.
  */
 export const CONFIG_SCHEMA: ConfigSchema<
     Config,
@@ -43,12 +46,12 @@ export const CONFIG_SCHEMA: ConfigSchema<
     ...CORE_CONFIG_SCHEMA,
 
     // where the hosted page GETs redirect to
-    authConsoleUrl: AUTH_CONSOLE_SECTION_CONFIG_SCHEMA.authConsoleUrl,
+    authConsoleUrl: AUTH_CONSOLE_DOCUMENT_CONFIG_SCHEMA.authConsoleUrl,
 
     // where the server-side console login lands the browser, and whether that
     // login is minted at all
-    adminConsoleUrl: ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA.adminConsoleUrl,
-    adminConsoleEnabled: ADMIN_CONSOLE_SECTION_CONFIG_SCHEMA.adminConsoleEnabled,
-    accountConsoleUrl: ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA.accountConsoleUrl,
-    accountConsoleEnabled: ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA.accountConsoleEnabled,
+    adminConsoleUrl: ADMIN_CONSOLE_DOCUMENT_CONFIG_SCHEMA.adminConsoleUrl,
+    adminConsoleEnabled: ADMIN_CONSOLE_DOCUMENT_CONFIG_SCHEMA.adminConsoleEnabled,
+    accountConsoleUrl: ACCOUNT_CONSOLE_DOCUMENT_CONFIG_SCHEMA.accountConsoleUrl,
+    accountConsoleEnabled: ACCOUNT_CONSOLE_DOCUMENT_CONFIG_SCHEMA.accountConsoleEnabled,
 };

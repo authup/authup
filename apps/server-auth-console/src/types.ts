@@ -6,9 +6,11 @@
  */
 
 import type {
-    AuthConsoleSectionConfig,
+    AuthConsoleConfig,
+    CONFIG_SECTION_KEY,
     RootConfig,
     ThemeConfig,
+    ToObjectLiteral,
 } from '@authup/server-config';
 
 /**
@@ -23,9 +25,13 @@ import type {
  * `resolveAuthConsoleConfig` maps it onto {@link AuthConsoleConfig} before
  * anything else sees it.
  */
-export type AuthConsoleConfigInput = Pick<RootConfig, 'publicUrl'> &
-    ThemeConfig &
-    AuthConsoleSectionConfig;
+export type AuthConsoleConfigInput = ToObjectLiteral<
+    Pick<RootConfig, 'publicUrl'> &
+    {
+        [CONFIG_SECTION_KEY.THEME]: ThemeConfig
+    } &
+    AuthConsoleConfig
+>;
 
 /**
  * The service's own configuration. This console is the primary context here
@@ -58,10 +64,6 @@ export type AuthConsoleConfig = {
      * `@authup/client-auth-console` (the `AUTH_CONSOLE_PATH` seam).
      */
     distPath: string,
-    /**
-     * The operator theme directory, applied to the rendered pages. An empty
-     * value disables theming and creates no provider at all.
-     */
-    themeDirectoryPath: string,
-    themeFragmentsEnabled: boolean,
+
+    theme: ThemeConfig
 };

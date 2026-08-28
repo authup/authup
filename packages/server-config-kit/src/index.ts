@@ -19,9 +19,11 @@
  * reads (plan 101 stage C).
  */
 
+export * from './check.ts';
 export * from './defaults.ts';
 export * from './env.ts';
 export * from './file.ts';
 export * from './json-schema.ts';
+export * from './section.ts';
 export * from './types.ts';
 export * from './validator.ts';

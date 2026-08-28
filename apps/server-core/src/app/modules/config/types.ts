@@ -6,9 +6,9 @@
  */
 
 import type {
-    AccountConsoleSectionConfig,
-    AdminConsoleSectionConfig,
-    AuthConsoleSectionConfig,
+    AccountConsoleDocumentConfig,
+    AdminConsoleDocumentConfig,
+    AuthConsoleDocumentConfig,
     CoreConfig,
     RootConfig,
 } from '@authup/server-config';
@@ -29,9 +29,9 @@ import type {
  */
 export type Config = RootConfig &
     CoreConfig &
-    Pick<AuthConsoleSectionConfig, 'authConsoleUrl'> &
-    Pick<AdminConsoleSectionConfig, 'adminConsoleUrl' | 'adminConsoleEnabled'> &
-    Pick<AccountConsoleSectionConfig, 'accountConsoleUrl' | 'accountConsoleEnabled'>;
+    Pick<AuthConsoleDocumentConfig, 'authConsoleUrl'> &
+    Pick<AdminConsoleDocumentConfig, 'adminConsoleUrl' | 'adminConsoleEnabled'> &
+    Pick<AccountConsoleDocumentConfig, 'accountConsoleUrl' | 'accountConsoleEnabled'>;
 
 export type ConfigInput = Partial<Config>;
 

@@ -8,16 +8,16 @@
 /**
  * The `server.authConsole.*` section.
  *
- * The field names carry the console prefix the CONFIGURATION key carries,
- * while the document path drops it (`authConsoleUrl` reads
- * `server.authConsole.url`). The section is per CONSOLE, never per
- * implementation package, so substituting the package leaves the document
- * untouched.
+ * The field names are the section's own, the ones the document spells under
+ * `server.authConsole.*`, so the console service reads them unchanged. The
+ * section is per CONSOLE, never per implementation package, so substituting
+ * the package leaves the document untouched.
  *
  * `Section` distinguishes it from `AuthConsoleConfig`, the service's own
- * vocabulary, which is what everything inside that package reads.
+ * vocabulary, which carries what the section cannot say (the API's url, the
+ * resolved dist path).
  */
-export type AuthConsoleSectionConfig = {
+export type AuthConsoleConfig = {
     /**
      * Where the auth console service is served, e.g.
      * `https://example.com/console/auth`.
@@ -27,19 +27,19 @@ export type AuthConsoleSectionConfig = {
      * consent and workflow page GETs redirect there. Empty derives it from
      * publicUrl, which is the single-origin default.
      */
-    authConsoleUrl: string,
+    url: string,
 
     /**
      * A substituted console package to render instead of the resolved
      * `@authup/client-auth-console`. Empty resolves the package through the
      * node_modules walk.
      */
-    authConsolePath: string,
+    path: string,
 
     /**
      * Where the standalone service listens. Unrelated to the url above:
      * behind a reverse proxy the two always differ.
      */
-    authConsolePort: number,
-    authConsoleHost: string,
+    port: number,
+    host: string,
 };

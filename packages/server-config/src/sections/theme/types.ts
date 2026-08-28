@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PrefixKeys } from '@authup/server-config-kit';
+
 /**
  * The `theme.*` section: the operator theme every console service applies.
  *
@@ -19,7 +21,7 @@ export type ThemeConfig = {
      *
      * default: '' (off)
      */
-    themeDirectoryPath: string,
+    directoryPath: string,
 
     /**
      * Opt in to splicing `fragments/head.html` from the theme directory into
@@ -27,5 +29,5 @@ export type ThemeConfig = {
      *
      * default: false
      */
-    themeFragmentsEnabled: boolean,
+    fragmentsEnabled: boolean,
 };

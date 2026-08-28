@@ -6,54 +6,63 @@
  */
 
 import type { ConfigSchema } from '@authup/server-config-kit';
-import { readEnvBool, readEnvInt, readEnvString } from '@authup/server-config-kit';
+import {
+    prefixSchemaKeys,
+    readEnvBool,
+    readEnvInt,
+    readEnvString,
+    withSectionPaths,
+} from '@authup/server-config-kit';
 import { z } from 'zod';
-import { EnvironmentVariable } from '../../constants.ts';
+import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
 import { urlOrEmpty } from '../../utils.ts';
-import type { AccountConsoleSectionConfig } from './types.ts';
+import type { AccountConsoleConfig } from './types.ts';
 
 export const ACCOUNT_CONSOLE_CONFIG_SECTION = 'server.accountConsole';
 
-export const ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA = {
-    accountConsoleUrl: {
-        type: urlOrEmpty,
-        default: '',
-        description: 'Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. ' +
+export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
+    ACCOUNT_CONSOLE_CONFIG_SECTION,
+    {
+        url: {
+            type: urlOrEmpty,
+            default: '',
+            description: 'Where the account console service (@authup/server-account-console) is served, e.g. https://example.com/console/account. ' +
             'The server-side login lands the browser there once the session credential is issued. An empty value derives it from publicUrl, which is the single-origin default.',
-        path: 'server.accountConsole.url',
-        env: EnvironmentVariable.ACCOUNT_CONSOLE_URL,
-        readEnv: readEnvString,
+            env: EnvironmentVariable.ACCOUNT_CONSOLE_URL,
+            readEnv: readEnvString,
+        },
+        enabled: {
+            type: z.boolean(),
+            default: true,
+            description: 'Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.',
+            env: EnvironmentVariable.ACCOUNT_CONSOLE_ENABLED,
+            readEnv: readEnvBool,
+        },
+        path: {
+            type: z.string(),
+            default: '',
+            description: 'Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
+            env: EnvironmentVariable.ACCOUNT_CONSOLE_PATH,
+            readEnv: readEnvString,
+        },
+        port: {
+            type: z.number().nonnegative(),
+            default: 3022,
+            description: 'TCP port the HTTP listener binds.',
+            env: EnvironmentVariable.ACCOUNT_CONSOLE_PORT,
+            readEnv: readEnvInt,
+        },
+        host: {
+            type: z.string(),
+            default: '',
+            description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host` (HOST); unset everywhere, it leaves the runtime default.',
+            // its own location first, then the deployment-wide one. Three
+            // listeners behind one proxy bind the same address far more often
+            // than not, and `port` has no such fallback because they cannot
+            // share one.
+            path: [`${ACCOUNT_CONSOLE_CONFIG_SECTION}.host`, DEFAULT_HOST_CONFIG_PATH],
+            env: [EnvironmentVariable.ACCOUNT_CONSOLE_HOST, EnvironmentVariable.HOST],
+            readEnv: readEnvString,
+        },
     },
-    accountConsoleEnabled: {
-        type: z.boolean(),
-        default: true,
-        description: 'Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.',
-        path: 'server.accountConsole.enabled',
-        env: EnvironmentVariable.ACCOUNT_CONSOLE_ENABLED,
-        readEnv: readEnvBool,
-    },
-    accountConsolePath: {
-        type: z.string(),
-        default: '',
-        description: 'Package directory of a substituted @authup/client-account-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.',
-        path: 'server.accountConsole.path',
-        env: EnvironmentVariable.ACCOUNT_CONSOLE_PATH,
-        readEnv: readEnvString,
-    },
-    accountConsolePort: {
-        type: z.number().nonnegative(),
-        default: 3022,
-        description: 'TCP port the HTTP listener binds.',
-        path: 'server.accountConsole.port',
-        env: EnvironmentVariable.ACCOUNT_CONSOLE_PORT,
-        readEnv: readEnvInt,
-    },
-    accountConsoleHost: {
-        type: z.string(),
-        default: '',
-        description: 'Host address the HTTP listener binds; an empty value leaves the runtime default.',
-        path: 'server.accountConsole.host',
-        env: EnvironmentVariable.ACCOUNT_CONSOLE_HOST,
-        readEnv: readEnvString,
-    },
-} satisfies ConfigSchema<AccountConsoleSectionConfig, never, EnvironmentVariable>;
+) satisfies ConfigSchema<AccountConsoleConfig, never, EnvironmentVariable>;

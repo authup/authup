@@ -6,6 +6,7 @@
  */
 
 import type { z } from 'zod';
+import type { ObjectLiteral } from '@authup/kit';
 
 export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
 
@@ -30,13 +31,26 @@ export type ConfigSchemaEntry<
     /**
      * The absolute dotted location of the key in the configuration document.
      * Absent means it is derived from the pass prefix and the key name.
+     *
+     * A LIST is a fallback chain, read in order, first defined wins: the
+     * key's own location, then the deployment-wide one it inherits from when
+     * the document says nothing about it (`server.adminConsole.host`, then
+     * `host`). Every location in the chain counts as claimed, so a document
+     * writing the shared one is not reported as unread; only the first is
+     * published in the JSON Schema, since that is where the key belongs.
      */
-    path?: string,
+    path?: string | string[],
 } & (K extends D ?
     { default?: undefined } :
     { default: T[K] | (() => T[K]) }
 ) & (
-    { env: E, readEnv: ConfigSchemaEnvReader } |
+    /**
+     * A list is a fallback chain here too, read in the same order as the
+     * paths above (`ADMIN_CONSOLE_HOST`, then `HOST`). Only the first name is
+     * this key's own: the rest belong to the keys they are borrowed from, so
+     * a registry still maps each variable onto exactly one key.
+     */
+    { env: E | E[], readEnv: ConfigSchemaEnvReader } |
     { env?: undefined, readEnv?: undefined }
 );
 
@@ -48,7 +62,11 @@ export type ConfigSchema<
     T,
     D extends keyof T = never,
     E extends string = string,
-> = { [K in keyof T]-?: ConfigSchemaEntry<T, K, D, E> };
+> = {
+    [K in keyof T]-?: T[K] extends ObjectLiteral ?
+        ConfigSchemaEntry<T, K, D, E> | ConfigSchema<T[K]> :
+        ConfigSchemaEntry<T, K, D, E>
+};
 
 /**
  * The loose consumption shape the helpers take. Every strict schema is
@@ -58,10 +76,14 @@ export type ConfigSchema<
 export type ConfigSchemaEntryInput<T, K extends keyof T> = {
     type: z.ZodType,
     description: string,
-    path?: string,
+    path?: string | string[],
     default?: T[K] | (() => T[K]),
-    env?: string,
+    env?: string | string[],
     readEnv?: ConfigSchemaEnvReader
 };
 
-export type ConfigSchemaInput<T> = { [K in keyof T]-?: ConfigSchemaEntryInput<T, K> };
+export type ConfigSchemaInput<T> = {
+    [K in keyof T]-?: T[K] extends ObjectLiteral ?
+        ConfigSchemaInput<T[K]> | ConfigSchemaEntryInput<T, K> :
+        ConfigSchemaEntryInput<T, K>
+};

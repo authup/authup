@@ -6,13 +6,37 @@
  */
 
 import type { ConfigSchemaInput } from './types.ts';
+import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
 /**
- * Where a key lives in the configuration document: its own declared path
- * when it carries one, else the pass prefix plus the key name.
+ * Every location a key may be read from, in the order they are tried: its own
+ * declared path (or the pass prefix plus the key name), then the
+ * deployment-wide locations it falls back to. A single declared path is a
+ * chain of one.
  */
-export function resolveSchemaPath(key: string, entry: { path?: string }, prefix?: string) : string {
-    return entry.path ?? (prefix ? `${prefix}.${key}` : key);
+export function resolveSchemaPaths(
+    key: string,
+    entry: { path?: string | string[] },
+    prefix?: string,
+) : string[] {
+    if (typeof entry.path === 'undefined') {
+        return [prefix ? `${prefix}.${key}` : key];
+    }
+
+    return Array.isArray(entry.path) ? entry.path : [entry.path];
+}
+
+/**
+ * Where a key BELONGS in the configuration document: the first location of
+ * the chain above. The rest are borrowed from another key, so this is what a
+ * published schema and a diagnostic name.
+ */
+export function resolveSchemaPath(
+    key: string,
+    entry: { path?: string | string[] },
+    prefix?: string,
+) : string {
+    return resolveSchemaPaths(key, entry, prefix)[0];
 }
 
 function isRecord(value: unknown) : value is Record<string, unknown> {
@@ -57,11 +81,22 @@ export function readSchemaFromFileTree<T>(
 
     const keys = Object.keys(schema) as (keyof T)[];
     for (const key of keys) {
-        const path = resolveSchemaPath(key as string, schema[key], options.prefix);
+        const entry = schema[key];
 
-        const value = readTreePath(tree, path);
-        if (typeof value !== 'undefined') {
-            data[key as string] = value;
+        if (isConfigSchemaEntryInput(entry)) {
+            const paths = resolveSchemaPaths(key as string, entry, options.prefix);
+
+            for (const path of paths) {
+                const value = readTreePath(tree, path);
+                if (typeof value !== 'undefined') {
+                    data[key as string] = value;
+                    break;
+                }
+            }
+        }
+
+        if (isConfigSchemaInput(entry)) {
+            data[key as string] = readSchemaFromFileTree(tree, entry, options);
         }
     }
 
@@ -93,18 +128,34 @@ export function findUnknownSchemaPaths<T>(
     const claimed = new Set<string>();
     const traversed = new Set<string>();
 
+
+    const unknown : string[] = [];
+
     const keys = Object.keys(schema) as (keyof T)[];
     for (const key of keys) {
-        const path = resolveSchemaPath(key as string, schema[key], options.prefix);
-        claimed.add(path);
+        const entry = schema[key];
 
-        const segments = path.split('.');
-        for (let i = 1; i < segments.length; i++) {
-            traversed.add(segments.slice(0, i).join('.'));
+        if (isConfigSchemaEntryInput(entry)) {
+            // every location of a fallback chain, not just the key's own: a
+            // document setting the shared one is read, so reporting it as unread
+            // would be a lie.
+            const paths = resolveSchemaPaths(key as string, schema[key], options.prefix);
+
+            for (const path of paths) {
+                claimed.add(path);
+
+                const segments = path.split('.');
+                for (let i = 1; i < segments.length; i++) {
+                    traversed.add(segments.slice(0, i).join('.'));
+                }
+            }
+        }
+
+        if (isConfigSchemaInput(entry)) {
+            unknown.push(...findUnknownSchemaPaths(tree, entry, options));
         }
     }
 
-    const unknown : string[] = [];
 
     const walk = (node: Record<string, unknown>, prefix: string) => {
         for (const name of Object.keys(node)) {

@@ -122,7 +122,7 @@ export async function createAdminConsoleHandler(config: AdminConsoleConfig) : Pr
         // public path. The vite base was decided when the bundle was
         // built and says nothing about where the service is published.
         assetBasePath: `${basePath}/`,
-        theme,
+        THEME: theme,
         config: {
             apiUrl: config.apiUrl,
             basePath,
