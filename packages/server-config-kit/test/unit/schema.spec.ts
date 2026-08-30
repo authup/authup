@@ -13,7 +13,6 @@ import {
     findUnknownSchemaPaths,
     readEnvBoolOrString,
     readSchemaFromFileTree,
-    resolveSchemaPath,
 } from '../../src';
 
 type Fixture = {
@@ -49,21 +48,6 @@ const SCHEMA : ConfigSchemaInput<Fixture> = {
     },
 };
 
-describe('resolveSchemaPath', () => {
-    it('should prefer an explicit path', () => {
-        expect(resolveSchemaPath('adminConsoleEnabled', { path: 'server.adminConsole.enabled' }, 'server.core'))
-            .toEqual('server.adminConsole.enabled');
-    });
-
-    it('should apply the prefix', () => {
-        expect(resolveSchemaPath('port', {}, 'server.core')).toEqual('server.core.port');
-    });
-
-    it('should fall back to the bare key', () => {
-        expect(resolveSchemaPath('port', {})).toEqual('port');
-    });
-});
-
 describe('readSchemaFromFileTree', () => {
     it('should read every key at its resolved path', () => {
         const data = readSchemaFromFileTree({
@@ -73,7 +57,7 @@ describe('readSchemaFromFileTree', () => {
                 core: { port: 3002 },
                 adminConsole: { enabled: false },
             },
-        }, SCHEMA, { prefix: 'server.core' });
+        }, SCHEMA);
 
         expect(data).toEqual({
             port: 3002,
@@ -84,7 +68,7 @@ describe('readSchemaFromFileTree', () => {
     });
 
     it('should skip a key the document says nothing about', () => {
-        const data = readSchemaFromFileTree({ publicUrl: 'https://idp.example.com' }, SCHEMA, { prefix: 'server.core' });
+        const data = readSchemaFromFileTree({ publicUrl: 'https://idp.example.com' }, SCHEMA);
 
         expect(data).toEqual({ publicUrl: 'https://idp.example.com' });
         expect(data).not.toHaveProperty('port');
@@ -94,12 +78,12 @@ describe('readSchemaFromFileTree', () => {
         const data = readSchemaFromFileTree({
             publicUrl: '',
             server: { core: { port: 0 }, adminConsole: { enabled: false } },
-        }, SCHEMA, { prefix: 'server.core' });
+        }, SCHEMA);
 
         expect(data).toEqual({
-            port: 0, 
-            publicUrl: '', 
-            adminConsoleEnabled: false, 
+            port: 0,
+            publicUrl: '',
+            adminConsoleEnabled: false,
         });
     });
 
@@ -139,14 +123,14 @@ describe('readSchemaFromFileTree', () => {
     it('should not descend onto the prototype', () => {
         const schema : ConfigSchemaInput<{ polluted: string, name: string }> = {
             polluted: {
-                type: z.string(), 
-                description: '', 
-                path: '__proto__.polluted', 
+                type: z.string(),
+                description: '',
+                path: '__proto__.polluted',
             },
             name: {
-                type: z.string(), 
-                description: '', 
-                path: 'constructor.name', 
+                type: z.string(),
+                description: '',
+                path: 'constructor.name',
             },
         };
 
@@ -250,14 +234,14 @@ describe('buildSchemaJSONSchema', () => {
     it('should refuse to overwrite an existing location', () => {
         const schema : ConfigSchemaInput<{ server: string, port: number }> = {
             server: {
-                type: z.string(), 
-                description: '', 
-                path: 'server', 
+                type: z.string(),
+                description: '',
+                path: 'server',
             },
             port: {
-                type: z.number(), 
-                description: '', 
-                path: 'server.core.port', 
+                type: z.number(),
+                description: '',
+                path: 'server.core.port',
             },
         };
 
@@ -265,14 +249,14 @@ describe('buildSchemaJSONSchema', () => {
 
         const inverse : ConfigSchemaInput<{ port: number, server: string }> = {
             port: {
-                type: z.number(), 
-                description: '', 
-                path: 'server.core.port', 
+                type: z.number(),
+                description: '',
+                path: 'server.core.port',
             },
             server: {
-                type: z.string(), 
-                description: '', 
-                path: 'server', 
+                type: z.string(),
+                description: '',
+                path: 'server',
             },
         };
 

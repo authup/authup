@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PrefixKeys } from '@authup/server-config-kit';
-
 /**
  * The `theme.*` section: the operator theme every console service applies.
  *

@@ -108,5 +108,5 @@ export const ROOT_CONFIG_SCHEMA = {
         path: 'smtp',
         env: EnvironmentVariable.SMTP,
         readEnv: readEnvBoolOrString,
-    },
-} satisfies ConfigSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>;
+    } satisfies ConfigSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>,
+};

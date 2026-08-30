@@ -36,15 +36,15 @@ import type { AuthupConfig, AuthupConfigDerivedKey } from './types.ts';
  * The mapped `ConfigSchema` type is the exhaustiveness guard: a key of
  * {@link AuthupConfig} with no entry fails the build.
  */
-export const CONFIG_SCHEMA : ConfigSchema<
-    AuthupConfig,
-    AuthupConfigDerivedKey,
-    EnvironmentVariable
-> = {
+export const CONFIG_SCHEMA = {
     ...ROOT_CONFIG_SCHEMA,
     [CONFIG_SECTION_KEY.THEME]: THEME_CONFIG_SCHEMA,
     [CONFIG_SECTION_KEY.CORE]: CORE_CONFIG_SCHEMA,
     [CONFIG_SECTION_KEY.AUTH_CONSOLE]: AUTH_CONSOLE_CONFIG_SCHEMA,
     [CONFIG_SECTION_KEY.ADMIN_CONSOLE]: ADMIN_CONSOLE_CONFIG_SCHEMA,
     [CONFIG_SECTION_KEY.ACCOUNT_CONSOLE]: ACCOUNT_CONSOLE_CONFIG_SCHEMA,
-};
+} satisfies ConfigSchema<
+    AuthupConfig,
+    AuthupConfigDerivedKey,
+    EnvironmentVariable
+>;

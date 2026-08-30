@@ -7,7 +7,6 @@
 
 import { z } from 'zod';
 import { resolveSchemaEnvNames } from './env.ts';
-import { resolveSchemaPath } from './file.ts';
 import type { ConfigSchemaEntryInput, ConfigSchemaInput } from './types.ts';
 import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
@@ -66,7 +65,7 @@ export function buildSchemaJSONSchema<T>(
         const entry = schema[key];
 
         if (isConfigSchemaEntryInput(entry)) {
-            const path = resolveSchemaPath(key as string, entry, options.prefix);
+            const path = entry.path ? String(entry.path) : String(key);
             const segments = path.split('.');
             const name = segments.pop() as string;
 

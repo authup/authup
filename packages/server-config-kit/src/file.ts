@@ -8,37 +8,6 @@
 import type { ConfigSchemaInput } from './types.ts';
 import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
-/**
- * Every location a key may be read from, in the order they are tried: its own
- * declared path (or the pass prefix plus the key name), then the
- * deployment-wide locations it falls back to. A single declared path is a
- * chain of one.
- */
-export function resolveSchemaPaths(
-    key: string,
-    entry: { path?: string | string[] },
-    prefix?: string,
-) : string[] {
-    if (typeof entry.path === 'undefined') {
-        return [prefix ? `${prefix}.${key}` : key];
-    }
-
-    return Array.isArray(entry.path) ? entry.path : [entry.path];
-}
-
-/**
- * Where a key BELONGS in the configuration document: the first location of
- * the chain above. The rest are borrowed from another key, so this is what a
- * published schema and a diagnostic name.
- */
-export function resolveSchemaPath(
-    key: string,
-    entry: { path?: string | string[] },
-    prefix?: string,
-) : string {
-    return resolveSchemaPaths(key, entry, prefix)[0];
-}
-
 function isRecord(value: unknown) : value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -71,7 +40,6 @@ function readTreePath(tree: Record<string, unknown>, path: string) : unknown {
 export function readSchemaFromFileTree<T>(
     tree: unknown,
     schema: ConfigSchemaInput<T>,
-    options: { prefix?: string } = {},
 ) : Partial<T> {
     if (!isRecord(tree)) {
         return {};
@@ -84,19 +52,17 @@ export function readSchemaFromFileTree<T>(
         const entry = schema[key];
 
         if (isConfigSchemaEntryInput(entry)) {
-            const paths = resolveSchemaPaths(key as string, entry, options.prefix);
+            const path = entry.path || String(key);
 
-            for (const path of paths) {
-                const value = readTreePath(tree, path);
-                if (typeof value !== 'undefined') {
-                    data[key as string] = value;
-                    break;
-                }
+            const value = readTreePath(tree, path);
+            if (typeof value !== 'undefined') {
+                data[key as string] = value;
+                break;
             }
         }
 
         if (isConfigSchemaInput(entry)) {
-            data[key as string] = readSchemaFromFileTree(tree, entry, options);
+            data[key as string] = readSchemaFromFileTree(tree, entry);
         }
     }
 
@@ -119,7 +85,6 @@ export function readSchemaFromFileTree<T>(
 export function findUnknownSchemaPaths<T>(
     tree: unknown,
     schema: ConfigSchemaInput<T>,
-    options: { prefix?: string } = {},
 ) : string[] {
     if (!isRecord(tree)) {
         return [];
@@ -127,7 +92,6 @@ export function findUnknownSchemaPaths<T>(
 
     const claimed = new Set<string>();
     const traversed = new Set<string>();
-
 
     const unknown : string[] = [];
 
@@ -139,20 +103,22 @@ export function findUnknownSchemaPaths<T>(
             // every location of a fallback chain, not just the key's own: a
             // document setting the shared one is read, so reporting it as unread
             // would be a lie.
-            const paths = resolveSchemaPaths(key as string, schema[key], options.prefix);
+            const path = schema[key].path ?
+                String(schema[key].path) :
+                String(key);
 
-            for (const path of paths) {
-                claimed.add(path);
+            claimed.add(path);
 
-                const segments = path.split('.');
-                for (let i = 1; i < segments.length; i++) {
-                    traversed.add(segments.slice(0, i).join('.'));
-                }
+            const segments = path.split('.');
+            for (let i = 1; i < segments.length; i++) {
+                traversed.add(segments.slice(0, i).join('.'));
             }
+
+            continue;
         }
 
         if (isConfigSchemaInput(entry)) {
-            unknown.push(...findUnknownSchemaPaths(tree, entry, options));
+            unknown.push(...findUnknownSchemaPaths(tree, entry));
         }
     }
 

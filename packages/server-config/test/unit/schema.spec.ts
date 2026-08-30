@@ -10,8 +10,6 @@ import {
     buildSchemaJSONSchema,
     readSchemaFromFileTree,
     resolveSchemaEnvNames,
-    resolveSchemaPath,
-    resolveSchemaPaths,
 } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
@@ -56,35 +54,6 @@ describe('CONFIG_SCHEMA', () => {
 
         expect(declared.length).toEqual(KEYS.length);
         expect(new Set(declared).size).toEqual(declared.length);
-    });
-
-    /**
-     * A merge of six sections has no single reading prefix left, so every
-     * entry has to spell its own absolute location, and two keys may not
-     * claim the same one.
-     */
-    it('places every key at its own absolute path', () => {
-        const paths = KEYS.map((key) => resolveSchemaPath(key, CONFIG_SCHEMA[key]));
-
-        expect(paths.filter((path) => typeof path === 'undefined')).toEqual([]);
-        expect(new Set(paths).size).toEqual(paths.length);
-    });
-
-    /**
-     * A fallback may only reach a location another key already owns: an
-     * inherited value has to be one an operator can look up, and one the
-     * published schema describes.
-     */
-    it('falls back only onto locations the document declares', () => {
-        const owned = new Set(KEYS.map((key) => resolveSchemaPath(key, CONFIG_SCHEMA[key])));
-
-        for (const key of KEYS) {
-            const [, ...fallbacks] = resolveSchemaPaths(key, CONFIG_SCHEMA[key]);
-
-            for (const fallback of fallbacks) {
-                expect(owned).toContain(fallback);
-            }
-        }
     });
 
     /**

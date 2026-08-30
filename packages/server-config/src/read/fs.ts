@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CONFIG_SCHEMA as DOCUMENT_CONFIG_SCHEMA } from '@authup/server-config';
 import type { ConfigSchemaInput } from '@authup/server-config-kit';
 import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { INamingScheme } from 'confinity';
@@ -19,6 +18,7 @@ import {
 } from '../constants.ts';
 import type { ConfigReadFsOptions } from './types.ts';
 import type { ObjectLiteral } from '@authup/kit';
+import { CONFIG_SCHEMA } from '../schema.ts';
 
 /**
  * One file, `authup.yml`, never a family. confinity's default convention also
@@ -192,6 +192,6 @@ export async function inspectConfigFile<T extends ObjectLiteral>(
 
     return {
         files,
-        unknown: findUnknownSchemaPaths(tree, DOCUMENT_CONFIG_SCHEMA),
+        unknown: findUnknownSchemaPaths(tree, CONFIG_SCHEMA),
     };
 }

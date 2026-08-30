@@ -11,7 +11,7 @@ import {
     toBool,
     toInt,
 } from 'envix';
-import type { ConfigSchemaEnvReader, ConfigSchemaInput } from './types.ts';
+import type { ConfigSchemaEntryInput, ConfigSchemaEnvReader, ConfigSchemaInput } from './types.ts';
 import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
 
 const BOOLEAN_TRUE_VALUES = new Set(['true', 't', '1', 'yes', 'y', 'on']);
@@ -89,6 +89,33 @@ export function resolveSchemaEnvNames(entry: { env?: string | string[] }) : stri
     return Array.isArray(entry.env) ? entry.env : [entry.env];
 }
 
+export function readSchemaEntryFromEnv<T, K extends keyof T>(entry: ConfigSchemaEntryInput<T, any>) : T[K] | undefined {
+    if (!entry.env || !entry.readEnv) {
+        return undefined;
+    }
+
+    const raw = read(entry.env);
+    if (typeof raw !== 'string') {
+        return undefined;
+    }
+
+    const value = entry.readEnv(raw, entry.env);
+    if (typeof value !== 'undefined') {
+        return value as T[K];
+    }
+
+    if (entry.alt) {
+        const alts = Array.isArray(entry.alt) ? entry.alt : [entry.alt];
+        for (const alt of alts) {
+            const value = readSchemaEntryFromEnv(alt);
+            if (typeof value !== 'undefined') {
+                return value as T[K];
+            }
+        }
+    }
+
+    return undefined;
+}
 /**
  * The values every schema key carrying an environment variable name reads
  * from the environment. A key without one, an unset variable, and a reader
@@ -101,25 +128,12 @@ export function readSchemaFromEnv<T>(schema: ConfigSchemaInput<T>) : Partial<T> 
     for (const key of keys) {
         const entry = schema[key];
         if (isConfigSchemaEntryInput(entry)) {
-            if (!entry.env || !entry.readEnv) {
-                continue;
+            const value = readSchemaEntryFromEnv(entry);
+            if (typeof value !== 'undefined') {
+                options[key as string] = value;
             }
 
-            // a chain is tried in order, first set wins, and the reader is told
-            // which variable the value came from: its diagnostics name the
-            // variable an operator actually set.
-            for (const name of resolveSchemaEnvNames(entry)) {
-                const raw = read(name);
-                if (typeof raw !== 'string') {
-                    continue;
-                }
-
-                const value = entry.readEnv(raw, name);
-                if (typeof value !== 'undefined') {
-                    options[key as string] = value;
-                    break;
-                }
-            }
+            continue;
         }
 
         if (isConfigSchemaInput(entry)) {

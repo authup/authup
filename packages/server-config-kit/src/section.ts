@@ -10,19 +10,6 @@ import type { ConfigSchemaEntryInput } from './types.ts';
 type AnySchema = Record<string, ConfigSchemaEntryInput<any, any>>;
 
 /**
- * A section's keys as they appear in a FLAT configuration bag: each name
- * gains the section's own qualifier, so `host` under `adminConsole` becomes
- * `adminConsoleHost`.
- */
-export type PrefixKeys<P extends string, T> = {
-    [K in keyof T & string as `${P}${Capitalize<K>}`]: T[K]
-};
-
-function capitalize(value: string) : string {
-    return value.length > 0 ? value.charAt(0).toUpperCase() + value.slice(1) : value;
-}
-
-/**
  * Fill in the document location of every entry that does not spell one: the
  * section it belongs to, plus its own key name.
  *
@@ -46,27 +33,4 @@ export function withSectionPaths<S extends AnySchema>(section: string, schema: S
     }
 
     return output as S;
-}
-
-/**
- * Qualify every key of a section registry with the section's own name.
- *
- * Everything that merges several sections into one bag needs unique names:
- * the document schema itself, and server-core, which reads five console keys
- * next to its own. The section keeps declaring `url` and `host`; only the
- * merged view says `adminConsoleUrl` and `adminConsoleHost`, and it says so
- * by derivation rather than by a second declaration.
- */
-export function prefixSchemaKeys<P extends string, S extends AnySchema>(
-    prefix: P,
-    schema: S,
-) : PrefixKeys<P, S> {
-    const output : AnySchema = {};
-
-    const keys = Object.keys(schema);
-    for (const key of keys) {
-        output[`${prefix}${capitalize(key)}`] = schema[key];
-    }
-
-    return output as PrefixKeys<P, S>;
 }

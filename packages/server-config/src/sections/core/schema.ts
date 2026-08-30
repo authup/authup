@@ -93,7 +93,7 @@ export const CORE_CONFIG_SCHEMA = withSectionPaths(
             type: stringType,
             default: '0.0.0.0',
             description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host`, which every console service falls back to as well.',
-            path: [`${CORE_CONFIG_SECTION}.host`, DEFAULT_HOST_CONFIG_PATH],
+            path: DEFAULT_HOST_CONFIG_PATH,
             env: EnvironmentVariable.HOST,
             readEnv: readEnvString,
         },
@@ -400,5 +400,5 @@ export const CORE_CONFIG_SCHEMA = withSectionPaths(
             env: EnvironmentVariable.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT,
             readEnv: readEnvBool,
         },
-    },
-) satisfies ConfigSchema<CoreConfig, never, EnvironmentVariable>;
+    } satisfies ConfigSchema<CoreConfig, never, EnvironmentVariable>,
+);

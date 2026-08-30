@@ -13,9 +13,11 @@ import {
     withSectionPaths,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
+import { EnvironmentVariable } from '../../constants.ts';
 import { urlOrEmpty } from '../../utils.ts';
 import type { AdminConsoleConfig } from './types.ts';
+import { ROOT_CONFIG_SCHEMA } from '../root';
+import { CORE_CONFIG_SCHEMA } from '../core';
 
 export const ADMIN_CONSOLE_CONFIG_SECTION = 'server.adminConsole';
 
@@ -59,9 +61,13 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
             // listeners behind one proxy bind the same address far more often
             // than not, and `port` has no such fallback because they cannot
             // share one.
-            path: [`${ADMIN_CONSOLE_CONFIG_SECTION}.host`, DEFAULT_HOST_CONFIG_PATH],
-            env: [EnvironmentVariable.ADMIN_CONSOLE_HOST, EnvironmentVariable.HOST],
+            path: `${ADMIN_CONSOLE_CONFIG_SECTION}.host`,
+            env: EnvironmentVariable.ADMIN_CONSOLE_HOST,
             readEnv: readEnvString,
+            alt: [
+                ROOT_CONFIG_SCHEMA.defaultHost,
+                CORE_CONFIG_SCHEMA.host,
+            ],
         },
-    },
-) satisfies ConfigSchema<AdminConsoleConfig, never, EnvironmentVariable>;
+    } satisfies ConfigSchema<AdminConsoleConfig, never, EnvironmentVariable>,
+);

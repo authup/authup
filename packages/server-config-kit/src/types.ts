@@ -22,11 +22,11 @@ export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
  */
 export type ConfigSchemaEntry<
     T,
-    K extends keyof T,
-    D extends keyof T = never,
-    E extends string = string,
+    KEY extends keyof T,
+    DEFAULT_KEY extends keyof T = never,
+    ENV_KEY extends string = string,
 > = {
-    type: z.ZodType<T[K]>,
+    type: z.ZodType<T[KEY]>,
     description: string,
     /**
      * The absolute dotted location of the key in the configuration document.
@@ -39,10 +39,15 @@ export type ConfigSchemaEntry<
      * writing the shared one is not reported as unread; only the first is
      * published in the JSON Schema, since that is where the key belongs.
      */
-    path?: string | string[],
-} & (K extends D ?
+    path?: string,
+    alt?: ConfigSchemaEntry<{
+        [Key in KEY]: T[KEY]
+    }, KEY> | ConfigSchemaEntry<{
+        [Key in KEY]: T[KEY]
+    }, KEY>[]
+} & (KEY extends DEFAULT_KEY ?
     { default?: undefined } :
-    { default: T[K] | (() => T[K]) }
+    { default: T[KEY] | (() => T[KEY]) }
 ) & (
     /**
      * A list is a fallback chain here too, read in the same order as the
@@ -50,7 +55,7 @@ export type ConfigSchemaEntry<
      * this key's own: the rest belong to the keys they are borrowed from, so
      * a registry still maps each variable onto exactly one key.
      */
-    { env: E | E[], readEnv: ConfigSchemaEnvReader } |
+    { env: ENV_KEY, readEnv: ConfigSchemaEnvReader } |
     { env?: undefined, readEnv?: undefined }
 );
 
@@ -76,10 +81,15 @@ export type ConfigSchema<
 export type ConfigSchemaEntryInput<T, K extends keyof T> = {
     type: z.ZodType,
     description: string,
-    path?: string | string[],
+    path?: string,
     default?: T[K] | (() => T[K]),
-    env?: string | string[],
-    readEnv?: ConfigSchemaEnvReader
+    env?: string,
+    readEnv?: ConfigSchemaEnvReader,
+    alt?: ConfigSchemaEntryInput<{
+        [Key in K]: T[K]
+    }, K> | ConfigSchemaEntryInput<{
+        [Key in K]: T[K]
+    }, K>[]
 };
 
 export type ConfigSchemaInput<T> = {

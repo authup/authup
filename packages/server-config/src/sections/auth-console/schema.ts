@@ -15,6 +15,8 @@ import { z } from 'zod';
 import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
 import { urlOrEmpty } from '../../utils.ts';
 import type { AuthConsoleConfig } from './types.ts';
+import { ROOT_CONFIG_SCHEMA } from '../root';
+import { CORE_CONFIG_SCHEMA } from '../core';
 
 export const AUTH_CONSOLE_CONFIG_SECTION = 'server.authConsole';
 
@@ -52,9 +54,13 @@ export const AUTH_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
             // listeners behind one proxy bind the same address far more often
             // than not, and `port` has no such fallback because they cannot
             // share one.
-            path: [`${AUTH_CONSOLE_CONFIG_SECTION}.host`, DEFAULT_HOST_CONFIG_PATH],
-            env: [EnvironmentVariable.AUTH_CONSOLE_HOST, EnvironmentVariable.HOST],
+            path: DEFAULT_HOST_CONFIG_PATH,
+            env: EnvironmentVariable.AUTH_CONSOLE_HOST,
             readEnv: readEnvString,
+            alt: [
+                ROOT_CONFIG_SCHEMA.defaultHost,
+                CORE_CONFIG_SCHEMA.host,
+            ],
         },
-    },
-) satisfies ConfigSchema<AuthConsoleConfig, never, EnvironmentVariable>;
+    } satisfies ConfigSchema<AuthConsoleConfig, never, EnvironmentVariable>,
+);
