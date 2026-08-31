@@ -38,7 +38,11 @@ describe('createAuthConsoleHandler', () => {
     });
 
     afterAll(async () => {
-        await server.close();
+        // `true` closes active connections, the same rule the module's own
+        // teardown follows: a console answers over keep-alive sockets, so
+        // waiting for them to go idle means waiting out the client's timeout,
+        // which under a loaded parallel run outlasts the hook budget.
+        await server.close(true);
     });
 
     it('should answer the health route', async () => {
