@@ -6,17 +6,20 @@
  */
 
 import {
-    ADMIN_CONSOLE_CONFIG_SCHEMA,
-    CONFIG_SECTION_KEY,
-    ROOT_CONFIG_SCHEMA,
-    THEME_CONFIG_SCHEMA,
+    ADMIN_CONSOLE_SCHEMA,
+    CORE_SCHEMA,
+    ROOT_SCHEMA,
+    SECTION_KEY,
+    THEME_SCHEMA,
 } from '@authup/server-config';
-import type { ConfigSchema } from '@authup/server-config-kit';
-import { buildSchemaDefaults, readSchemaFromEnv } from '@authup/server-config-kit';
+import {
+    buildSchemaDefaults,
+    defineSchema,
+    mergeSchemaData,
+    readSchemaFromEnv,
+} from '@authup/server-config-kit';
 import { ADMIN_CONSOLE_BASE_PATH } from './constants';
-import type { AdminConsoleConfig, AdminConsoleConfigInput } from './types';
-
-export { ADMIN_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
+import type { Config, ConfigInput } from './types';
 
 /**
  * The keys this service reads, SELECTED out of the document schema by name.
@@ -24,29 +27,38 @@ export { ADMIN_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
  * Nothing is declared here: every key of `authup.yml` is declared once in
  * `@authup/server-config`, so this service cannot spell a path, an
  * environment variable, a default or a reader differently from server-core,
- * which reads `publicUrl`, `adminConsoleUrl` and `adminConsoleEnabled` too.
- * Neither package depends on the other; both depend on the declaration.
+ * which reads several of the same keys. Neither package depends on the other;
+ * both depend on the declaration.
+ *
+ * Its own section is spread, so this service reads it in its own vocabulary
+ * (`url`, `port`, `host`); every other section stays under the key the
+ * document nests it at.
  */
-export const ADMIN_CONSOLE_CONFIG_SCHEMA = {
-    ...ADMIN_CONSOLE_CONFIG_SCHEMA,
-    ...ROOT_CONFIG_SCHEMA,
-    [CONFIG_SECTION_KEY.THEME]: THEME_CONFIG_SCHEMA,
-} satisfies ConfigSchema<AdminConsoleConfigInput, 'publicUrl'>;
+export const ADMIN_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+    ...ADMIN_CONSOLE_SCHEMA,
+    ...ROOT_SCHEMA,
+    [SECTION_KEY.THEME]: THEME_SCHEMA,
+    [SECTION_KEY.CORE]: CORE_SCHEMA,
+});
 
 /**
  * Turn the configuration namespace into the service's own shape: fill the
  * defaults, derive the one key that is derived rather than configured, and
- * rename. An empty `url` means the console sits on server-core's
- * own origin under the default segment, which is the single-origin
- * deployment.
+ * rename. An empty `url` means the console sits on server-core's own origin
+ * under the default segment, which is the single-origin deployment.
+ *
+ * The defaults are layered SECTION-AWARE ({@link mergeSchemaData}): a spread
+ * would let an input carrying one key of a section replace the whole section
+ * and take every other key's default with it.
  */
 export function resolveAdminConsoleConfig(
-    input: Partial<AdminConsoleConfigInput>,
-) : AdminConsoleConfig {
-    const values = {
-        ...buildSchemaDefaults<AdminConsoleConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA),
-        ...input,
-    } as AdminConsoleConfigInput;
+    input: Partial<ConfigInput>,
+) : Config {
+    const values = mergeSchemaData<ConfigInput>(
+        ADMIN_CONSOLE_CONFIG_SCHEMA,
+        buildSchemaDefaults<ConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA),
+        input,
+    ) as ConfigInput;
 
     if (!values.publicUrl) {
         throw new Error(
@@ -71,13 +83,11 @@ export function resolveAdminConsoleConfig(
  * `authup.yml` reaches this service through the CLI roles, which compose this
  * very registry into the one document loader.
  */
-export function readAdminConsoleConfigFromEnv() : AdminConsoleConfig {
+export function readAdminConsoleConfigFromEnv() : Config {
     // The explicit type argument is load-bearing: inferred from the schema
     // object, a key declared without a default (the derived publicUrl) comes
     // back as unknown.
-    const input : Partial<AdminConsoleConfigInput> = readSchemaFromEnv<AdminConsoleConfigInput>(
-        ADMIN_CONSOLE_CONFIG_SCHEMA,
-    );
+    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA);
 
     return resolveAdminConsoleConfig(input);
 }

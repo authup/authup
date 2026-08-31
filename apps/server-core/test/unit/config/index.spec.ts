@@ -413,18 +413,18 @@ describe('src/config/*.ts', () => {
     it('should load config form fs', async () => {
         const config = await readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: 'test/data/config' });
 
-        // the whole document, flattened onto the Config keys: the shared
-        // sections at the top level, this service's own under server.core,
-        // and a console section whose key name drops the console prefix.
+        // the whole document read onto this service's config: the shared
+        // section and its own at the top level, and a console section under
+        // the console it belongs to.
         expect(config.db).toBeDefined();
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
         expect(config.publicUrl).toEqual('https://idp.example.com');
-        expect(config.adminConsoleUrl).toEqual('https://console.example.com/admin');
+        expect(config.adminConsole!.url).toEqual('https://console.example.com/admin');
         expect(config.port).toEqual(4711);
         expect(config.host).toEqual('127.0.0.1');
-        expect(config.adminConsoleEnabled).toEqual(false);
-        expect(config.accountConsoleEnabled).toEqual(false);
+        expect(config.adminConsole!.enabled).toEqual(false);
+        expect(config.accountConsole!.enabled).toEqual(false);
     });
 
     describe('readConfig', () => {
@@ -496,7 +496,7 @@ describe('src/config/*.ts', () => {
                 'port: 4080\n',
             );
 
-            await expect(readConfigRawFromFS(CONFIG_SCHEMA, { cwd: directory, file: 'authup.server.core.yml' }))
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory, file: 'authup.server.core.yml' }))
                 .rejects.toThrow(/authup\.yml/);
 
             // and it is reported when it is merely left lying around
@@ -527,7 +527,7 @@ describe('src/config/*.ts', () => {
                 'server:\n  core:\n   port: 1\n  bad: [unclosed\n',
             );
 
-            await expect(readConfigRawFromFS(CONFIG_SCHEMA, { cwd: directory })).rejects.toSatisfy(
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory })).rejects.toSatisfy(
                 (error: Error) => typeof (error as { cause?: unknown }).cause !== 'undefined',
             );
         });
@@ -541,7 +541,7 @@ describe('src/config/*.ts', () => {
                 'server.core.port=4060\npublicUrl=https://idp.example.com\n',
             );
 
-            await expect(readConfigRawFromFS(CONFIG_SCHEMA, { cwd: directory, file: 'legacy.conf' }))
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory, file: 'legacy.conf' }))
                 .rejects.toThrow(/authup\.yml/);
         });
 

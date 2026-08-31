@@ -12,7 +12,7 @@ import type { CoreConfig } from './sections/core/index.ts';
 import type { RootConfig } from './sections/root/index.ts';
 import type { ThemeConfig } from './sections/theme/index.ts';
 import type { ObjectLiteral } from '@authup/kit';
-import type { CONFIG_SECTION_KEY } from './constants.ts';
+import type { SECTION_KEY } from './constants.ts';
 
 export type ToObjectLiteral<T extends ObjectLiteral> = {
     [K in keyof T as `${K & string}`]: T[K];
@@ -26,21 +26,23 @@ export type ToObjectLiteral<T extends ObjectLiteral> = {
  * what makes it impossible for a service to mis-declare a path, an environment
  * variable or a reader for a key another service also reads.
  *
- * The keys are FLAT and section-qualified, while the file they describe is
- * nested: a section declares `host`, the document says `adminConsoleHost` and
- * the entry's path says `server.adminConsole.host`. Flat is what keeps
- * precedence a single spread (environment over file over default), and the
- * qualifier is derived from the section rather than declared, so no section
- * carries a name that belongs to the merge.
+ * The type NESTS one key per qualified section, mirroring the file it
+ * describes: a section declares `host` and the entry's path says
+ * `server.adminConsole.host`, so the three consoles keep one vocabulary
+ * without colliding on the shared names. The predecessor flattened them
+ * behind a derived qualifier (`adminConsoleHost`) to keep precedence a
+ * single spread; precedence is `mergeSchemaData` now, which layers the
+ * passes section-aware, so the qualifier bought nothing and the document and
+ * the type read alike.
  */
 export type AuthupConfig = ToObjectLiteral<
     RootConfig &
     {
-        [CONFIG_SECTION_KEY.THEME]: ThemeConfig,
-        [CONFIG_SECTION_KEY.CORE]: CoreConfig,
-        [CONFIG_SECTION_KEY.AUTH_CONSOLE]: AuthConsoleConfig,
-        [CONFIG_SECTION_KEY.ADMIN_CONSOLE]: AdminConsoleConfig,
-        [CONFIG_SECTION_KEY.ACCOUNT_CONSOLE]: AccountConsoleConfig,
+        [SECTION_KEY.THEME]: ThemeConfig,
+        [SECTION_KEY.CORE]: CoreConfig,
+        [SECTION_KEY.AUTH_CONSOLE]: AuthConsoleConfig,
+        [SECTION_KEY.ADMIN_CONSOLE]: AdminConsoleConfig,
+        [SECTION_KEY.ACCOUNT_CONSOLE]: AccountConsoleConfig,
     }
 >;
 

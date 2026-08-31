@@ -6,11 +6,12 @@
  */
 
 import type {
-    AccountConsoleDocumentConfig,
-    AdminConsoleDocumentConfig,
-    AuthConsoleDocumentConfig,
+    AccountConsoleConfig,
+    AdminConsoleConfig,
+    AuthConsoleConfig,
     CoreConfig,
     RootConfig,
+    SECTION_KEY,
 } from '@authup/server-config';
 
 /**
@@ -26,12 +27,20 @@ import type {
  *
  * The theme section is deliberately absent. Theming applies to a served
  * console, and since plan 101 D2 no console is served from this process.
+ *
+ * Its own two sections are read WHOLE and therefore flat, in the vocabulary
+ * the service itself uses (`port`, not `core.port`). The console keys stay
+ * under the section they belong to: three consoles each declare a `url` and
+ * an `enabled`, which no flat bag can hold at once, and the nesting says
+ * whose is whose.
  */
 export type Config = RootConfig &
     CoreConfig &
-    Pick<AuthConsoleDocumentConfig, 'authConsoleUrl'> &
-    Pick<AdminConsoleDocumentConfig, 'adminConsoleUrl' | 'adminConsoleEnabled'> &
-    Pick<AccountConsoleDocumentConfig, 'accountConsoleUrl' | 'accountConsoleEnabled'>;
+    {
+        [SECTION_KEY.AUTH_CONSOLE]: Pick<AuthConsoleConfig, 'url'>,
+        [SECTION_KEY.ADMIN_CONSOLE]: Pick<AdminConsoleConfig, 'url' | 'enabled'>,
+        [SECTION_KEY.ACCOUNT_CONSOLE]: Pick<AccountConsoleConfig, 'url' | 'enabled'>
+    };
 
 export type ConfigInput = Partial<Config>;
 

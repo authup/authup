@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchemaInput } from './types.ts';
-import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
+import type { SchemaInput } from '../types.ts';
+import { isSchemaEntryInput } from '../entry/check.ts';
+import { assertSchemaValue, isSchemaInput } from '../schema/check.ts';
 import { hasOwnProperty } from '@authup/kit';
 
 /**
@@ -15,10 +16,10 @@ import { hasOwnProperty } from '@authup/kit';
  * An array-valued default is copied, so two configurations built from one
  * schema never share the same instance.
  */
-export function buildSchemaDefaults<T>(schema: ConfigSchemaInput<T>) : Partial<T> {
+export function buildSchemaDefaults<T>(schema: SchemaInput<T>) : Partial<T> {
     const defaults : Record<string, unknown> = {};
 
-    const keys = Object.keys(schema) as (keyof ConfigSchemaInput<T>)[];
+    const keys = Object.keys(schema) as (keyof SchemaInput<T>)[];
     for (const key of keys) {
         if (!hasOwnProperty(schema, key)) {
             continue;
@@ -26,7 +27,7 @@ export function buildSchemaDefaults<T>(schema: ConfigSchemaInput<T>) : Partial<T
 
         const data = schema[key];
 
-        if (isConfigSchemaEntryInput(data)) {
+        if (isSchemaEntryInput(data)) {
             const value: unknown = data.default;
             if (typeof value === 'undefined') {
                 continue;
@@ -39,9 +40,12 @@ export function buildSchemaDefaults<T>(schema: ConfigSchemaInput<T>) : Partial<T
             continue;
         }
 
-        if (isConfigSchemaInput(data)) {
-            defaults[key as string] = buildSchemaDefaults(data);
+        if (isSchemaInput(data)) {
+            defaults[key as string] = buildSchemaDefaults<any>(data);
+            continue;
         }
+
+        assertSchemaValue(key as string);
     }
 
     return defaults as Partial<T>;

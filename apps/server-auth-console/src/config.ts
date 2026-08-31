@@ -6,17 +6,20 @@
  */
 
 import {
-    AUTH_CONSOLE_CONFIG_SCHEMA,
-    CONFIG_SECTION_KEY,
-    ROOT_CONFIG_SCHEMA,
-    THEME_CONFIG_SCHEMA,
+    AUTH_CONSOLE_SCHEMA,
+    CORE_SCHEMA,
+    ROOT_SCHEMA,
+    SECTION_KEY,
+    THEME_SCHEMA,
 } from '@authup/server-config';
-import type { ConfigSchema } from '@authup/server-config-kit';
-import { buildSchemaDefaults, readSchemaFromEnv } from '@authup/server-config-kit';
+import {
+    buildSchemaDefaults,
+    defineSchema,
+    mergeSchemaData,
+    readSchemaFromEnv,
+} from '@authup/server-config-kit';
 import { AUTH_CONSOLE_BASE_PATH } from './constants';
-import type { AuthConsoleConfig, AuthConsoleConfigInput } from './types';
-
-export { AUTH_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
+import type { Config, ConfigInput } from './types';
 
 /**
  * The keys this service reads, SELECTED out of the document schema by name.
@@ -24,58 +27,66 @@ export { AUTH_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
  * Nothing is declared here: every key of `authup.yml` is declared once in
  * `@authup/server-config`, so this service cannot spell a path, an
  * environment variable, a default or a reader differently from server-core,
- * which reads `publicUrl` and `authConsoleUrl` too. Neither package depends
- * on the other; both depend on the declaration.
+ * which reads several of the same keys. Neither package depends on the other;
+ * both depend on the declaration.
+ *
+ * Its own section is spread, so this service reads it in its own vocabulary
+ * (`url`, `port`, `host`); every other section stays under the key the
+ * document nests it at.
  */
-export const AUTH_CONSOLE_CONFIG_SCHEMA = {
-    ...AUTH_CONSOLE_CONFIG_SCHEMA,
-    [CONFIG_SECTION_KEY.THEME]: THEME_CONFIG_SCHEMA,
-    publicUrl: ROOT_CONFIG_SCHEMA.publicUrl,
-} satisfies ConfigSchema<AuthConsoleConfigInput, 'publicUrl'>;
+export const AUTH_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+    ...AUTH_CONSOLE_SCHEMA,
+    ...ROOT_SCHEMA,
+    [SECTION_KEY.THEME]: THEME_SCHEMA,
+    [SECTION_KEY.CORE]: CORE_SCHEMA,
+});
 
 /**
- * Fill in what the raw input left out and map the configuration namespace
- * onto this service's own vocabulary.
+ * Turn the configuration namespace into the service's own shape: fill the
+ * defaults, derive the one key that is derived rather than configured, and
+ * rename. An empty `url` means the console sits on server-core's own origin
+ * under the default segment, which is the single-origin deployment.
  *
- * Relative paths resolve against the CALLER's root, so they arrive absolute.
- * A standalone bin resolves them against the process working directory; the
- * CLI resolves them against server-core's `rootPath`, which is the same value
- * unless the operator moved it.
+ * The defaults are layered SECTION-AWARE ({@link mergeSchemaData}): a spread
+ * would let an input carrying one key of a section replace the whole section
+ * and take every other key's default with it.
  */
-export function resolveAuthConsoleConfig(input: Partial<AuthConsoleConfigInput>) : AuthConsoleConfig {
-    const resolved = {
-        ...buildSchemaDefaults<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA),
-        ...input,
-    } as AuthConsoleConfigInput;
+export function resolveAuthConsoleConfig(
+    input: Partial<ConfigInput>,
+) : Config {
+    const values = mergeSchemaData<ConfigInput>(
+        AUTH_CONSOLE_CONFIG_SCHEMA,
+        buildSchemaDefaults<ConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA),
+        input,
+    ) as ConfigInput;
 
-    if (!resolved.publicUrl) {
+    if (!values.publicUrl) {
         throw new Error(
             'The auth console service needs the public URL of server-core. Set PUBLIC_URL.',
         );
     }
 
     return {
-        url: resolved.url ||
-            `${resolved.publicUrl.replace(/\/+$/, '')}${AUTH_CONSOLE_BASE_PATH}`,
-        apiUrl: resolved.publicUrl,
-        port: resolved.port,
-        host: resolved.host,
-        distPath: resolved.path,
-        theme: resolved.theme,
+        url: values.url ||
+            `${values.publicUrl.replace(/\/+$/, '')}${AUTH_CONSOLE_BASE_PATH}`,
+        apiUrl: values.publicUrl,
+        port: values.port,
+        host: values.host,
+        distPath: values.path,
+        theme: values.theme,
     };
 }
 
 /**
- * The standalone entry's own read. `authup.yml` reaches this service through
- * the CLI roles, which hand each factory its section; a bin started by hand
- * reads the environment alone.
- *
- * The explicit type argument is load-bearing: inferred from the schema
- * object, a key with no default (`publicUrl` is derived) comes back as
- * `unknown`.
+ * The standalone entry's configuration, read from the environment alone.
+ * `authup.yml` reaches this service through the CLI roles, which compose this
+ * very registry into the one document loader.
  */
-export function readAuthConsoleConfigFromEnv() : AuthConsoleConfig {
-    const input = readSchemaFromEnv<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA);
+export function readAuthConsoleConfigFromEnv() : Config {
+    // The explicit type argument is load-bearing: inferred from the schema
+    // object, a key declared without a default (the derived publicUrl) comes
+    // back as unknown.
+    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA);
 
     return resolveAuthConsoleConfig(input);
 }

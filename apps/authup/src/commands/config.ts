@@ -7,12 +7,13 @@
 
 import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
 import {
-    CONFIG_SCHEMA,
+    SCHEMA,
     inspectConfigFile,
     readConfigFileTree,
 } from '@authup/server-config';
 import {
     buildSchemaJSONSchema,
+    mergeSchemaData,
     mountSchema,
     readSchemaFromEnv,
     readSchemaFromFileTree,
@@ -28,15 +29,15 @@ import { Container } from 'validup';
  * file for the whole deployment, so a value a console service will reject has
  * to be reported here.
  */
-async function validateDocument(input: Record<string, unknown>) : Promise<void> {
-    const container = new Container<Record<string, unknown>>();
-    mountSchema(container, CONFIG_SCHEMA);
+async function validateDocument(input: Partial<AuthupConfig>) : Promise<void> {
+    const container = new Container<AuthupConfig>();
+    mountSchema(container, SCHEMA);
 
     await container.run(input);
 }
 
 export function defineCLIConfigCommand(
-    configFs: ConfigReadFsOptions<AuthupConfig> = {},
+    configFs: ConfigReadFsOptions = {},
 ) {
     return defineCommand({
         meta: {
@@ -85,10 +86,11 @@ export function defineCLIConfigCommand(
                         // ones only a console service reads. The read above
                         // covers server-core's selection alone.
                         const { tree } = await readConfigFileTree({ ...configFs });
-                        await validateDocument({
-                            ...readSchemaFromFileTree(tree, CONFIG_SCHEMA),
-                            ...readSchemaFromEnv(CONFIG_SCHEMA),
-                        });
+                        await validateDocument(mergeSchemaData<AuthupConfig>(
+                            SCHEMA,
+                            readSchemaFromFileTree<AuthupConfig>(tree, SCHEMA),
+                            readSchemaFromEnv<AuthupConfig>(SCHEMA),
+                        ));
                     } catch (e) {
                         // eslint-disable-next-line no-console
                         console.error(describeConfigError(e));
@@ -103,7 +105,7 @@ export function defineCLIConfigCommand(
                 },
                 run() {
                     const schema = buildSchemaJSONSchema(
-                        CONFIG_SCHEMA,
+                        SCHEMA,
                         { title: 'Authup configuration' },
                     );
 

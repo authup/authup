@@ -5,23 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchema } from '@authup/server-config-kit';
 import {
+    defineSchema,
     readEnvInt,
     readEnvString,
-    withSectionPaths,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
+import { EnvironmentVariable } from '../../constants.ts';
 import { urlOrEmpty } from '../../utils.ts';
 import type { AuthConsoleConfig } from './types.ts';
-import { ROOT_CONFIG_SCHEMA } from '../root';
-import { CORE_CONFIG_SCHEMA } from '../core';
+import { ROOT_SCHEMA } from '../root/index.ts';
 
-export const AUTH_CONSOLE_CONFIG_SECTION = 'server.authConsole';
-
-export const AUTH_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
-    AUTH_CONSOLE_CONFIG_SECTION,
+export const AUTH_CONSOLE_SCHEMA = defineSchema<
+    AuthConsoleConfig,
+    never,
+    EnvironmentVariable
+>(
     {
         url: {
             type: urlOrEmpty,
@@ -50,17 +49,14 @@ export const AUTH_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
             type: z.string(),
             default: '0.0.0.0',
             description: 'Host address the standalone listener binds. Falls back to the deployment-wide `host` (HOST).',
-            // its own location first, then the deployment-wide one. Three
-            // listeners behind one proxy bind the same address far more often
-            // than not, and `port` has no such fallback because they cannot
-            // share one.
-            path: DEFAULT_HOST_CONFIG_PATH,
             env: EnvironmentVariable.AUTH_CONSOLE_HOST,
             readEnv: readEnvString,
-            alt: [
-                ROOT_CONFIG_SCHEMA.defaultHost,
-                CORE_CONFIG_SCHEMA.host,
-            ],
+            // its own location and variable first, then the
+            // deployment-wide one. Three listeners behind one proxy bind
+            // the same address far more often than not, and `port` has no
+            // such fallback because they cannot share one.
+            alt: ROOT_SCHEMA.defaultHost,
         },
-    } satisfies ConfigSchema<AuthConsoleConfig, never, EnvironmentVariable>,
+    },
+    { pathPrefix: 'server.authConsole' },
 );

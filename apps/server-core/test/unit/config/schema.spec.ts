@@ -5,12 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildSchemaDefaults } from '@authup/server-config-kit';
+import {
+    buildSchemaDefaults,
+    isSchemaEntryInput,
+    readSchemaEntryFromEnv,
+} from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
-    CORE_CONFIG_SCHEMA,
+    CORE_SCHEMA,
     EnvironmentVariable,
-    ROOT_CONFIG_SCHEMA,
+    ROOT_SCHEMA,
 } from '@authup/server-config';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import type { Config } from '../../../src/app/modules/config/types';
@@ -20,7 +24,7 @@ const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
 function readEnv(key: keyof Config, raw: string) : unknown {
     const entry = CONFIG_SCHEMA[key];
-    if (!entry.env || !entry.readEnv) {
+    if (!isSchemaEntryInput(entry) || !entry.env || !entry.readEnv) {
         throw new Error(`The config key ${key} carries no env reader.`);
     }
 
@@ -33,7 +37,7 @@ describe('src/app/modules/config/constants.ts', () => {
             const envNames : string[] = [];
             for (const key of CONFIG_KEYS) {
                 const entry = CONFIG_SCHEMA[key];
-                if (typeof entry.env !== 'undefined') {
+                if (isSchemaEntryInput(entry) && typeof entry.env !== 'undefined') {
                     envNames.push(entry.env);
                     expect(typeof entry.readEnv).toEqual('function');
                 }
@@ -57,13 +61,13 @@ describe('src/app/modules/config/constants.ts', () => {
          * The selection is by NAME, so nothing stops it from quietly omitting
          * a key of a section it reads in full: the omitted key is then read
          * as its default, in silence. Both sections are asserted whole, and
-         * the surplus is exactly the five console keys server-core needs to
-         * answer a request.
+         * the surplus is exactly the three console sections server-core needs
+         * to answer a request.
          */
-        it('should select both of its sections in full, plus five console keys', () => {
+        it('should select both of its sections in full, plus three console sections', () => {
             const sectioned = [
-                ...Object.keys(ROOT_CONFIG_SCHEMA),
-                ...Object.keys(CORE_CONFIG_SCHEMA),
+                ...Object.keys(ROOT_SCHEMA),
+                ...Object.keys(CORE_SCHEMA),
             ];
 
             for (const key of sectioned) {
@@ -71,12 +75,16 @@ describe('src/app/modules/config/constants.ts', () => {
             }
 
             expect(CONFIG_KEYS.filter((key) => !sectioned.includes(key)).sort()).toEqual([
-                'accountConsoleEnabled',
-                'accountConsoleUrl',
-                'adminConsoleEnabled',
-                'adminConsoleUrl',
-                'authConsoleUrl',
+                'accountConsole',
+                'adminConsole',
+                'authConsole',
             ]);
+
+            // and out of each console only what a request needs: where a
+            // browser reaches it, and whether it is served at all.
+            expect(Object.keys(CONFIG_SCHEMA.authConsole)).toEqual(['url']);
+            expect(Object.keys(CONFIG_SCHEMA.adminConsole).sort()).toEqual(['enabled', 'url']);
+            expect(Object.keys(CONFIG_SCHEMA.accountConsole).sort()).toEqual(['enabled', 'url']);
         });
 
         it('should declare exactly the keys normalizeConfig() outputs', async () => {
@@ -88,7 +96,7 @@ describe('src/app/modules/config/constants.ts', () => {
         });
 
         it('should build a default for every key except the derived ones', () => {
-            const defaults = buildSchemaDefaults(CONFIG_SCHEMA);
+            const defaults = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
 
             for (const key of CONFIG_KEYS) {
                 if (key === 'publicUrl' || key === 'db') {
@@ -104,8 +112,8 @@ describe('src/app/modules/config/constants.ts', () => {
         });
 
         it('should hand out a fresh array default per call', () => {
-            const first = buildSchemaDefaults(CONFIG_SCHEMA);
-            const second = buildSchemaDefaults(CONFIG_SCHEMA);
+            const first = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
+            const second = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
 
             expect(first.permissions).toEqual(second.permissions);
             expect(first.permissions).not.toBe(second.permissions);
@@ -192,7 +200,27 @@ describe('src/app/modules/config/constants.ts', () => {
         });
 
         it('should skip an empty string', () => {
-            expect(readEnv('host', '')).toBeUndefined();
+            expect(readEnv('writableDirectoryPath', '')).toBeUndefined();
+        });
+
+        /**
+         * HOST is declared once, on the deployment-wide `host`, and every
+         * listener reaches it through its own key's fallback. So this
+         * service's `host` carries no reader of its own, and the variable
+         * still sets it.
+         */
+        it('should read the deployment-wide host through the fallback', () => {
+            const entry = CONFIG_SCHEMA.host;
+
+            expect(entry.env).toBeUndefined();
+
+            process.env.HOST = '127.0.0.1';
+
+            try {
+                expect(readSchemaEntryFromEnv(entry)).toEqual('127.0.0.1');
+            } finally {
+                delete process.env.HOST;
+            }
         });
     });
 });

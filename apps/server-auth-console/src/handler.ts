@@ -26,7 +26,7 @@ import {
 } from './payload';
 import { renderAuthConsolePage } from './render';
 import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from './resolve';
-import type { AuthConsoleConfig } from './types';
+import type { Config } from './types';
 
 const WORKFLOW_PAGES : {
     url: string,
@@ -52,7 +52,7 @@ const WORKFLOW_PAGES : {
  * proxy, so a service published at `<origin>/console/auth` receives
  * `/authorize`, exactly as server-core received it before the split.
  */
-export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Promise<IApp> {
+export async function createAuthConsoleHandler(config: Config) : Promise<IApp> {
     setAuthConsolePackagePath(config.distPath);
 
     const app = new App();
@@ -70,10 +70,10 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
     // default configuration pays nothing. An invalid manifest throws here and
     // fails the boot rather than surfacing per request.
     let theme : IThemeProvider | undefined;
-    if (config.themeDirectoryPath && fs.existsSync(config.themeDirectoryPath)) {
+    if (config.theme.directoryPath && fs.existsSync(config.theme.directoryPath)) {
         const provider = new ThemeProvider({
-            directoryPath: config.themeDirectoryPath,
-            fragmentsEnabled: config.themeFragmentsEnabled,
+            directoryPath: config.theme.directoryPath,
+            fragmentsEnabled: config.theme.fragmentsEnabled,
             // The boot inventory this logs (resolved path, token counts,
             // every servable file) is the antidote to the feature's dominant
             // failure mode, which is silence.

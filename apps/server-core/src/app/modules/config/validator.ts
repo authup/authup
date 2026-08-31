@@ -14,7 +14,7 @@ export class ConfigValidator extends Container<Config> {
     protected override initialize() {
         super.initialize();
 
-        // The mapped ConfigSchema type is the exhaustiveness guard: a Config
+        // The mapped Schema type is the exhaustiveness guard: a Config
         // key without a registry entry fails the build.
         mountSchema(this, CONFIG_SCHEMA);
     }

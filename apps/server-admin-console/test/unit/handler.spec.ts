@@ -30,8 +30,10 @@ describe('createAdminConsoleHandler', () => {
         port: 3021,
         host: '',
         distPath: '',
-        themeDirectoryPath: '',
-        themeFragmentsEnabled: false,
+        theme: {
+            directoryPath: '',
+            fragmentsEnabled: false,
+        },
     };
 
     beforeAll(async () => {

@@ -62,13 +62,13 @@ function buildAppOrigins(config: Config) : string[] {
  * un-themed one. So the default configuration pays nothing.
  */
 async function createThemeProvider(config: Config) : Promise<IThemeProvider | undefined> {
-    if (!config.themeDirectoryPath || !fs.existsSync(config.themeDirectoryPath)) {
+    if (!config.theme.directoryPath || !fs.existsSync(config.theme.directoryPath)) {
         return undefined;
     }
 
     const provider = new ThemeProvider({
-        directoryPath: config.themeDirectoryPath,
-        fragmentsEnabled: config.themeFragmentsEnabled,
+        directoryPath: config.theme.directoryPath,
+        fragmentsEnabled: config.theme.fragmentsEnabled,
         // The boot inventory this logs (resolved path, token counts, every
         // servable file) is the antidote to the feature's dominant failure
         // mode, which is silence.
@@ -146,7 +146,7 @@ export async function createAccountConsoleHandler(config: Config) : Promise<App>
         // public path. The vite base was decided when the bundle was
         // built and says nothing about where the service is published.
         assetBasePath: `${basePath}/`,
-        THEME: theme,
+        theme,
         config: {
             apiUrl: config.apiUrl,
             basePath,

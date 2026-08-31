@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
+import type { ConfigReadFsOptions } from '@authup/server-config';
 import {
     assertNoStrayPositionals,
     defineCLIMigrationCommand,
@@ -18,6 +18,7 @@ import { PACKAGE_PATH } from './path.ts';
 import {
     defineCLIConfigCommand,
     defineCLIConsoleCommand,
+    defineCLICoreCommand,
     defineCLIHealthCheckCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
@@ -61,7 +62,9 @@ export async function createCLIEntryPointCommand() {
     );
     const pkg = JSON.parse(pkgRaw);
 
-    const configFs : ConfigReadFsOptions<AuthupConfig> = {};
+    // untyped on purpose: these options travel to every service, and each
+    // reads its own selection of the document.
+    const configFs : ConfigReadFsOptions = {};
 
     return defineCommand({
         meta: {
@@ -74,12 +77,15 @@ export async function createCLIEntryPointCommand() {
             console: defineCLIConsoleCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
+
+            // The batteries-included single container: server-core plus every
+            // enabled console on one listener.
             start: defineCLIStartCommand(configFs),
 
-            // The API and the IdP alone: the page GETs still redirect to the
-            // console service, which someone else runs.
-            core: defineCLIStartCommand(configFs),
-            // The batteries-included single container: server-core plus every
+            // The API and the IdP alone, mounting nothing: the page GETs
+            // still redirect to the console service, which someone else runs.
+            core: defineCLICoreCommand(configFs),
+
             worker: defineCLIWorkerCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,

@@ -7,13 +7,13 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 
-export type ConfigReadFsOptions<T> = {
+export type ConfigReadFsOptions<T extends ObjectLiteral = ObjectLiteral> = {
     cwd?: string,
     file?: string | string[],
     fn?: (config: Partial<T>) => void
 };
 
-export type ConfigReadEvnOptions<T> = {
+export type ConfigReadEvnOptions<T extends ObjectLiteral = ObjectLiteral> = {
     fn?: (config: Partial<T>) => void
 };
 

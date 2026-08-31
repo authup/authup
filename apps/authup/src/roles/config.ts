@@ -5,22 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config, ConfigInput } from '@authup/server-account-console';
+import type {
+    Config as AccountConsoleConfig,
+    ConfigInput as AccountConsoleConfigInput,
+} from '@authup/server-account-console';
 import { ACCOUNT_CONSOLE_CONFIG_SCHEMA, resolveAccountConsoleConfig } from '@authup/server-account-console';
-import type { AdminConsoleConfig, AdminConsoleConfigInput } from '@authup/server-admin-console';
+import type {
+    Config as AdminConsoleConfig,
+    ConfigInput as AdminConsoleConfigInput,
+} from '@authup/server-admin-console';
 import { ADMIN_CONSOLE_CONFIG_SCHEMA, resolveAdminConsoleConfig } from '@authup/server-admin-console';
-import type { AuthConsoleConfig, AuthConsoleConfigInput } from '@authup/server-auth-console';
+import type {
+    Config as AuthConsoleConfig,
+    ConfigInput as AuthConsoleConfigInput,
+} from '@authup/server-auth-console';
 import { AUTH_CONSOLE_CONFIG_SCHEMA, resolveAuthConsoleConfig } from '@authup/server-auth-console';
-import { readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
-import type { ConfigSchemaInput } from '@authup/server-config-kit';
-import type { AuthupConfig, ConfigReadFsOptions  } from '@authup/server-config';
-import { CONFIG_SCHEMA, readConfigFileTree  } from '@authup/server-config';
+import { mergeSchemaData, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
+import type { SchemaInput } from '@authup/server-config-kit';
+import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
+import { readConfigFileTree } from '@authup/server-config';
+import type { Config } from '@authup/server-core';
 import path from 'node:path';
 
 export type ConsoleConfigs = {
     auth: AuthConsoleConfig,
     admin: AdminConsoleConfig,
-    account: Config,
+    account: AccountConsoleConfig,
 };
 
 /**
@@ -30,16 +40,19 @@ export type ConsoleConfigs = {
  * started through its own bin has no `rootPath` and resolves against the cwd,
  * which is the same directory unless the operator moved it.
  */
-function resolvePaths<T extends { distPath: string, themeDirectoryPath: string }>(
+function resolvePaths<T extends { distPath: string, theme: { directoryPath: string } }>(
     config: T,
     rootPath: string,
 ) : T {
     return {
         ...config,
         distPath: config.distPath ? path.resolve(rootPath, config.distPath) : '',
-        themeDirectoryPath: config.themeDirectoryPath ?
-            path.resolve(rootPath, config.themeDirectoryPath) :
-            '',
+        theme: {
+            ...config.theme,
+            directoryPath: config.theme.directoryPath ?
+                path.resolve(rootPath, config.theme.directoryPath) :
+                '',
+        },
     };
 }
 
@@ -48,21 +61,32 @@ function resolvePaths<T extends { distPath: string, themeDirectoryPath: string }
  * and the same environment server-core read, each through its own registry.
  *
  * The document is read once and every registry takes its own keys out of it;
- * the environment wins over the file, as it does everywhere else.
+ * the environment wins over the file, as it does everywhere else. The two
+ * passes are layered SECTION-AWARE, since a spread would let an environment
+ * value for one key of a section replace the whole section the file supplied.
+ *
+ * `core` is server-core's RESOLVED configuration, not a raw read of the same
+ * document, and the caller has to supply one. Three of the values below are
+ * products of `normalizeConfig` rather than of any key: `publicUrl` is
+ * DERIVED from host and port when the document names none, `trustedOrigins`
+ * is canonicalized and dev-seeded, and `rootPath` is absolute. Reading the
+ * document again here would hand a console the raw values and silently lose
+ * all three.
  */
 export async function readConsoleConfigs(
     options: ConfigReadFsOptions<AuthupConfig>,
+    core: Config,
 ) : Promise<ConsoleConfigs> {
     const { tree } = await readConfigFileTree(options);
 
-    const core = { ...readSchemaFromFileTree(tree, CONFIG_SCHEMA), ...readSchemaFromEnv(CONFIG_SCHEMA) };
-    const rootPath = core.rootPath || process.cwd();
-
-    const read = <T extends { publicUrl: string }>(
-        schema: ConfigSchemaInput<T>,
+    const read = <T extends { publicUrl: string, trustedOrigins: string[] }>(
+        schema: SchemaInput<T>,
     ) : Partial<T> => ({
-        ...readSchemaFromFileTree<T>(tree, schema),
-        ...readSchemaFromEnv<T>(schema),
+        ...mergeSchemaData<T>(
+            schema,
+            readSchemaFromFileTree<T>(tree, schema),
+            readSchemaFromEnv<T>(schema),
+        ),
         // The two deployment-wide keys a console must NOT resolve for itself,
         // taken from the resolved core configuration instead.
         //
@@ -81,15 +105,15 @@ export async function readConsoleConfigs(
     return {
         auth: resolvePaths(
             resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA)),
-            rootPath,
+            core.rootPath,
         ),
         admin: resolvePaths(
             resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA)),
-            rootPath,
+            core.rootPath,
         ),
         account: resolvePaths(
-            resolveAccountConsoleConfig(read<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
-            rootPath,
+            resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
+            core.rootPath,
         ),
     };
 }

@@ -7,8 +7,9 @@
 
 import type {
     AdminConsoleConfig,
-    CONFIG_SECTION_KEY,
+    CoreConfig,
     RootConfig,
+    SECTION_KEY,
     ThemeConfig,
     ToObjectLiteral,
 } from '@authup/server-config';
@@ -16,17 +17,18 @@ import type {
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are the section's own, so most of them arrive as this service
- * reads them. The deployment-wide ones do not: `publicUrl` here means the
- * API's URL, not this service's, and `path` means the console package to
- * serve. Both are confined to the configuration layer and mapped onto
- * {@link AdminConsoleConfig} before anything else sees it.
+ * Its OWN section is spread flat, because those keys are already this
+ * service's vocabulary; every other section keeps the key the document nests
+ * it at. What the two vocabularies do not share stays out: `apiUrl` and
+ * `distPath` below are this service's names for values the document calls
+ * something else, so they belong to {@link Config} alone.
  */
-export type AdminConsoleConfigInput = ToObjectLiteral<
-    Pick<RootConfig, 'publicUrl'> &
+export type ConfigInput = ToObjectLiteral<
+    RootConfig &
     {
-        [CONFIG_SECTION_KEY.THEME]: ThemeConfig,
-    }    &
+        [SECTION_KEY.THEME]: ThemeConfig,
+        [SECTION_KEY.CORE]: CoreConfig
+    } &
     AdminConsoleConfig
 >;
 
@@ -34,7 +36,7 @@ export type AdminConsoleConfigInput = ToObjectLiteral<
  * The service's own vocabulary, which is what every consumer in this package
  * reads.
  */
-export type AdminConsoleConfig = {
+export type Config = {
     /**
      * This console's own public URL, e.g. `https://example.com/console/admin`.
      * Its path component is the base every asset href and the injected
@@ -54,7 +56,7 @@ export type AdminConsoleConfig = {
     enabled: boolean,
     /**
      * Where the standalone service listens. Unrelated to
-     * {@link AdminConsoleConfig.url}: behind a reverse proxy the two always
+     * {@link Config.url}: behind a reverse proxy the two always
      * differ.
      */
     port: number,

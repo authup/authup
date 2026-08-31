@@ -6,13 +6,14 @@
  */
 
 import {
-    read,
     toArray,
     toBool,
     toInt,
 } from 'envix';
-import type { ConfigSchemaEntryInput, ConfigSchemaEnvReader, ConfigSchemaInput } from './types.ts';
-import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
+import type { SchemaEnvReader, SchemaInput } from '../types.ts';
+import { isSchemaEntryInput } from '../entry/check.ts';
+import { readSchemaEntryFromEnv } from '../entry/env.ts';
+import { assertSchemaValue, isSchemaInput } from '../schema/check.ts';
 
 const BOOLEAN_TRUE_VALUES = new Set(['true', 't', '1', 'yes', 'y', 'on']);
 const BOOLEAN_FALSE_VALUES = new Set(['false', 'f', '0', 'no', 'n', 'off']);
@@ -20,13 +21,13 @@ const BOOLEAN_FALSE_VALUES = new Set(['false', 'f', '0', 'no', 'n', 'off']);
 /**
  * An empty string is skipped, the key keeps its default.
  */
-export const readEnvString : ConfigSchemaEnvReader = (raw) => (raw || undefined);
+export const readEnvString : SchemaEnvReader = (raw) => (raw || undefined);
 
 /**
  * Lenient boolean: only true/t/1 and false/f/0 are recognized, anything
  * else is silently skipped.
  */
-export const readEnvBool : ConfigSchemaEnvReader = (raw) => toBool(raw);
+export const readEnvBool : SchemaEnvReader = (raw) => toBool(raw);
 
 /**
  * Boolean env reader that FAILS LOUD on a set-but-unrecognized value instead
@@ -34,7 +35,7 @@ export const readEnvBool : ConfigSchemaEnvReader = (raw) => toBool(raw);
  * `MFA_REQUIRED=yes`). Reserved for security-relevant toggles where a silent
  * default is a weakened posture. Returns `undefined` when the var is blank.
  */
-export const readEnvBoolStrict : ConfigSchemaEnvReader = (raw, name) => {
+export const readEnvBoolStrict : SchemaEnvReader = (raw, name) => {
     if (raw.trim().length === 0) {
         return undefined;
     }
@@ -50,12 +51,12 @@ export const readEnvBoolStrict : ConfigSchemaEnvReader = (raw, name) => {
     throw new Error(`The environment variable ${name} must be a boolean value (received "${raw}").`);
 };
 
-export const readEnvInt : ConfigSchemaEnvReader = (raw) => toInt(raw);
+export const readEnvInt : SchemaEnvReader = (raw) => toInt(raw);
 
 /**
  * A comma-separated list; an empty list is skipped.
  */
-export const readEnvArray : ConfigSchemaEnvReader = (raw) => {
+export const readEnvArray : SchemaEnvReader = (raw) => {
     const value = toArray(raw);
     if (value && value.length > 0) {
         return value;
@@ -68,66 +69,27 @@ export const readEnvArray : ConfigSchemaEnvReader = (raw) => {
  * A boolean word switches the service on or off, anything else is a
  * connection string. An empty string is skipped, the key keeps its default.
  */
-export const readEnvBoolOrString : ConfigSchemaEnvReader = (raw) => toBool(raw) ?? (raw || undefined);
+export const readEnvBoolOrString : SchemaEnvReader = (raw) => toBool(raw) ?? (raw || undefined);
 
 /**
  * The raw (untrimmed) string, skipped when blank. Canonicalized again in
  * normalizeConfig for every config surface; the env read keeps the raw
  * string, the shared canonicalizer decides.
  */
-export const readEnvRaw : ConfigSchemaEnvReader = (raw) => (raw.trim().length > 0 ? raw : undefined);
+export const readEnvRaw : SchemaEnvReader = (raw) => (raw.trim().length > 0 ? raw : undefined);
 
-/**
- * Every environment variable a key may be read from, in the order they are
- * tried. A single declared name is a chain of one.
- */
-export function resolveSchemaEnvNames(entry: { env?: string | string[] }) : string[] {
-    if (typeof entry.env === 'undefined') {
-        return [];
-    }
-
-    return Array.isArray(entry.env) ? entry.env : [entry.env];
-}
-
-export function readSchemaEntryFromEnv<T, K extends keyof T>(entry: ConfigSchemaEntryInput<T, any>) : T[K] | undefined {
-    if (!entry.env || !entry.readEnv) {
-        return undefined;
-    }
-
-    const raw = read(entry.env);
-    if (typeof raw !== 'string') {
-        return undefined;
-    }
-
-    const value = entry.readEnv(raw, entry.env);
-    if (typeof value !== 'undefined') {
-        return value as T[K];
-    }
-
-    if (entry.alt) {
-        const alts = Array.isArray(entry.alt) ? entry.alt : [entry.alt];
-        for (const alt of alts) {
-            const value = readSchemaEntryFromEnv(alt);
-            if (typeof value !== 'undefined') {
-                return value as T[K];
-            }
-        }
-    }
-
-    return undefined;
-}
 /**
  * The values every schema key carrying an environment variable name reads
  * from the environment. A key without one, an unset variable, and a reader
  * answering undefined are all skipped, so the caller's own defaults stand.
  */
-export function readSchemaFromEnv<T>(schema: ConfigSchemaInput<T>) : Partial<T> {
+export function readSchemaFromEnv<T>(schema: SchemaInput<T>) : Partial<T> {
     const options : Record<string, unknown> = {};
 
     const keys = Object.keys(schema) as (keyof T)[];
     for (const key of keys) {
         const entry = schema[key];
-        if (isConfigSchemaEntryInput(entry)) {
+        if (isSchemaEntryInput(entry)) {
             const value = readSchemaEntryFromEnv(entry);
             if (typeof value !== 'undefined') {
                 options[key as string] = value;
@@ -136,9 +98,12 @@ export function readSchemaFromEnv<T>(schema: ConfigSchemaInput<T>) : Partial<T> 
             continue;
         }
 
-        if (isConfigSchemaInput(entry)) {
-            options[key as string] = readSchemaFromEnv(entry);
+        if (isSchemaInput(entry)) {
+            options[key as string] = readSchemaFromEnv<any>(entry);
+            continue;
         }
+
+        assertSchemaValue(key as string);
     }
 
     return options as Partial<T>;

@@ -23,7 +23,7 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { AUTH_CONSOLE_VITE_BASE } from './constants';
 import { resolveAuthConsoleDistPath } from './resolve';
-import type { AuthConsoleConfig } from './types';
+import type { Config } from './types';
 
 // Process-lifetime caches for the immutable production SSR assets. The dist
 // template, manifest and server bundle don't change after boot, so read them
@@ -34,7 +34,7 @@ let cachedRender: RenderFunction | undefined;
 
 export async function renderAuthConsolePage(
     event: IAppEvent,
-    config: AuthConsoleConfig,
+    config: Config,
     ctx: {
         url: string, 
         data: Record<string, any>, 

@@ -9,25 +9,31 @@ import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
 import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
-import { CONFIG_SCHEMA, readConfigFileTree  } from '@authup/server-config';
-import { buildSchemaDefaults, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
+import { SCHEMA, readConfigFileTree  } from '@authup/server-config';
+import {
+    buildSchemaDefaults,
+    mergeSchemaData,
+    readSchemaFromEnv,
+    readSchemaFromFileTree,
+} from '@authup/server-config-kit';
 
 export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
         meta: { name: 'healthcheck' },
         async setup() {
             const { tree } = await readConfigFileTree(options);
-            const config = {
-                ...readSchemaFromFileTree(tree, CONFIG_SCHEMA),
-                ...readSchemaFromEnv(CONFIG_SCHEMA),
-                ...buildSchemaDefaults(CONFIG_SCHEMA),
-            };
+            const config = mergeSchemaData<AuthupConfig>(
+                SCHEMA,
+                buildSchemaDefaults<AuthupConfig>(SCHEMA),
+                readSchemaFromFileTree<AuthupConfig>(tree, SCHEMA),
+                readSchemaFromEnv<AuthupConfig>(SCHEMA),
+            );
 
             const healthCheck = http.request(
                 {
                     path: '/',
                     host: '0.0.0.0',
-                    port: config.port || 3000,
+                    port: config.core?.port || 3000,
                     timeout: 2000,
                 },
                 (res) => {

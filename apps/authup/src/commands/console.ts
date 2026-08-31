@@ -8,8 +8,8 @@
 import { createAccountConsoleServer } from '@authup/server-account-console';
 import { createAdminConsoleServer } from '@authup/server-admin-console';
 import { createAuthConsoleServer } from '@authup/server-auth-console';
-import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
-import {  registerShutdownHandlers } from '@authup/server-core';
+import type { ConfigReadFsOptions } from '@authup/server-config';
+import { readConfig, registerShutdownHandlers } from '@authup/server-core';
 import { defineCommand } from 'citty';
 import type { IApp } from 'routup';
 import { serve } from 'routup/node';
@@ -36,7 +36,7 @@ type ConsoleService = {
  * to its port; the alternative single-container shape is `authup start`,
  * which composes them onto server-core's listener instead.
  */
-export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions<AuthupConfig> = {}) {
+export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
     return defineCommand({
         meta: {
             name: 'console',
@@ -54,7 +54,16 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions<AuthupConf
         async setup(context) {
             const selected = context.args.name as ConsoleName | undefined;
 
-            const consoles = await readConsoleConfigs(configFs);
+            // The consoles read `authup.yml` through their own registries,
+            // but three values are products of server-core's normalization
+            // rather than of any key (a derived publicUrl, the canonicalized
+            // trusted origins, an absolute rootPath), so the core
+            // configuration is read here too. It is the same document, and
+            // normalizing it is also where the cross-section invariants live:
+            // a console url on another origin is refused here rather than
+            // half-working at runtime.
+            const core = await readConfig({ env: true, fs: { ...configFs } });
+            const consoles = await readConsoleConfigs(configFs, core);
 
             const services : ConsoleService[] = [
                 {

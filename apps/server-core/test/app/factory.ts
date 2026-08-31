@@ -19,7 +19,7 @@ import { TestHTTPApplication } from './http.ts';
 import { createTestDatabaseModuleForSuite } from './database.ts';
 
 async function buildTestConfig(alter?: (config: Config) => void): Promise<Config> {
-    const raw = readConfigRawFromEnv(
+    const raw = readConfigRawFromEnv<Config>(
         CONFIG_SCHEMA,
     );
     const config = await normalizeConfig(raw);

@@ -99,7 +99,7 @@ export enum EnvironmentVariable {
     ACCOUNT_CONSOLE_HOST = 'ACCOUNT_CONSOLE_HOST',
 }
 
-export enum CONFIG_SECTION_KEY {
+export enum SECTION_KEY {
     ACCOUNT_CONSOLE = 'accountConsole',
     ADMIN_CONSOLE = 'adminConsole',
     AUTH_CONSOLE = 'authConsole',
@@ -112,8 +112,8 @@ export enum CONFIG_SECTION_KEY {
  * carry. `conf` is deliberately absent: the `authup.conf` family was retired
  * in favour of a single `authup.yml` (plan 101 stage C).
  */
-export const CONFIG_FILE_NAME = 'authup';
-export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
+export const FILE_NAME = 'authup';
+export const FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
 
 /**
  * The deployment-wide bind address, at the root of the document.
@@ -122,4 +122,4 @@ export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs'
  * the API and the three console services binds them all with one line. `port`
  * deliberately has no counterpart: three listeners cannot share one.
  */
-export const DEFAULT_HOST_CONFIG_PATH = 'host';
+export const DEFAULT_HOST_PATH = 'host';

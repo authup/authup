@@ -32,8 +32,10 @@ describe('createAccountConsoleHandler', () => {
         host: '',
         distPath: '',
         trustedOrigins: ['https://admin.example.com'],
-        themeDirectoryPath: '',
-        themeFragmentsEnabled: false,
+        theme: {
+            directoryPath: '',
+            fragmentsEnabled: false,
+        },
     };
 
     beforeAll(async () => {

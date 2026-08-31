@@ -5,18 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchema } from '@authup/server-config-kit';
 import {
+    defineSchema,
     readEnvBool,
     readEnvString,
-    withSectionPaths,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { CONFIG_SECTION_KEY, EnvironmentVariable } from '../../constants.ts';
+import { EnvironmentVariable } from '../../constants.ts';
 import type { ThemeConfig } from './types.ts';
 
-export const THEME_CONFIG_SCHEMA = withSectionPaths(
-    CONFIG_SECTION_KEY.THEME,
+export const THEME_SCHEMA = defineSchema<
+    ThemeConfig,
+    never,
+    EnvironmentVariable
+>(
     {
         directoryPath: {
             type: z.string(),
@@ -40,4 +42,5 @@ export const THEME_CONFIG_SCHEMA = withSectionPaths(
             readEnv: readEnvBool,
         },
     },
-) satisfies ConfigSchema<ThemeConfig, never, EnvironmentVariable>;
+    { pathPrefix: 'theme' },
+);

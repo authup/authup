@@ -8,14 +8,14 @@
 import { read } from 'envix';
 import process from 'node:process';
 import { EnvironmentName, isObject } from '@authup/kit';
-import type { ConfigSchema } from '@authup/server-config-kit';
 import {
+    defineSchema,
     readEnvArray,
     readEnvBoolOrString,
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
+import { DEFAULT_HOST_PATH, EnvironmentVariable } from '../../constants.ts';
 import { expandToOrigins } from '../../helpers/index.ts';
 import type {
     DatabaseConnectionOptions,
@@ -40,7 +40,7 @@ const serviceType = z.string()
  * host and port by whoever owns a listener, the second falls back to
  * typeorm-extension's driver default.
  */
-export const ROOT_CONFIG_SCHEMA = {
+export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>({
     env: {
         type: z.string(),
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
@@ -59,8 +59,10 @@ export const ROOT_CONFIG_SCHEMA = {
         type: z.string(),
         default: '0.0.0.0',
         description: 'Default host address every listener this deployment starts binds: server-core and each console service, unless its own section names one. ' +
-            'The environment equivalent is HOST, which server.core.host declares and every console falls back to.',
-        path: DEFAULT_HOST_CONFIG_PATH,
+            'HOST sets it for all of them at once.',
+        path: DEFAULT_HOST_PATH,
+        env: EnvironmentVariable.HOST,
+        readEnv: readEnvString,
     },
     publicUrl: {
         type: z.url(),
@@ -108,5 +110,5 @@ export const ROOT_CONFIG_SCHEMA = {
         path: 'smtp',
         env: EnvironmentVariable.SMTP,
         readEnv: readEnvBoolOrString,
-    } satisfies ConfigSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>,
-};
+    },
+});

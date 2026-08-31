@@ -5,24 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchema } from '@authup/server-config-kit';
 import {
+    defineSchema,
     readEnvBool,
     readEnvInt,
     readEnvString,
-    withSectionPaths,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
 import { EnvironmentVariable } from '../../constants.ts';
 import { urlOrEmpty } from '../../utils.ts';
 import type { AdminConsoleConfig } from './types.ts';
-import { ROOT_CONFIG_SCHEMA } from '../root';
-import { CORE_CONFIG_SCHEMA } from '../core';
+import { ROOT_SCHEMA } from '../root/index.ts';
 
-export const ADMIN_CONSOLE_CONFIG_SECTION = 'server.adminConsole';
 
-export const ADMIN_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
-    ADMIN_CONSOLE_CONFIG_SECTION,
+export const ADMIN_CONSOLE_SCHEMA = defineSchema<
+    AdminConsoleConfig,
+    never,
+    EnvironmentVariable
+>(
     {
         url: {
             type: urlOrEmpty,
@@ -57,17 +57,14 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = withSectionPaths(
             type: z.string(),
             default: '',
             description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host` (HOST); unset everywhere, it leaves the runtime default.',
-            // its own location first, then the deployment-wide one. Three
-            // listeners behind one proxy bind the same address far more often
-            // than not, and `port` has no such fallback because they cannot
-            // share one.
-            path: `${ADMIN_CONSOLE_CONFIG_SECTION}.host`,
             env: EnvironmentVariable.ADMIN_CONSOLE_HOST,
             readEnv: readEnvString,
-            alt: [
-                ROOT_CONFIG_SCHEMA.defaultHost,
-                CORE_CONFIG_SCHEMA.host,
-            ],
+            // its own location and variable first, then the
+            // deployment-wide one. Three listeners behind one proxy bind
+            // the same address far more often than not, and `port` has no
+            // such fallback because they cannot share one.
+            alt: ROOT_SCHEMA.defaultHost,
         },
-    } satisfies ConfigSchema<AdminConsoleConfig, never, EnvironmentVariable>,
+    },
+    { pathPrefix: 'server.adminConsole' },
 );

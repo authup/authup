@@ -8,13 +8,13 @@
 import { merge } from 'smob';
 import { readConfigFileTree } from './fs.ts';
 import type { ConfigRawReadOptions } from './types.ts';
-import type { ConfigSchemaInput } from '@authup/server-config-kit';
+import type { SchemaInput } from '@authup/server-config-kit';
 import { readSchemaFromFileTree  } from '@authup/server-config-kit';
 import { readConfigRawFromEnv } from './env.ts';
 import type { ObjectLiteral } from '@authup/kit';
 
 export async function readConfigRaw<T extends ObjectLiteral>(
-    schema: ConfigSchemaInput<T>,
+    schema: SchemaInput<T>,
     options: ConfigRawReadOptions<T> = {},
 ) : Promise<Partial<T>> {
     let fs : Partial<T> | undefined;

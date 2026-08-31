@@ -1332,7 +1332,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   origins (no path) and `getAppOrigins` does not re-expand. Config validation
   runs through `ConfigValidator` (validup + zod,
   `app/modules/config/validator.ts`, whose container is `mountSchema` over
-  `CONFIG_SCHEMA` (`app/modules/config/registry.ts`); the registry's mapped `ConfigSchema` type is the
+  `CONFIG_SCHEMA` (`app/modules/config/registry.ts`); the registry's mapped `Schema` type is the
   compile-time exhaustiveness guard: a Config key without an entry fails the
   build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
@@ -1479,7 +1479,7 @@ nothing else.
   cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
   root deployments; the two consoles still share one session because both
   scope to the same base path.
-- **Feature flag `accountConsoleEnabled`** (`server.accountConsole.enabled`,
+- **Feature flag `accountConsole.enabled`** (`server.accountConsole.enabled`,
   env `ACCOUNT_CONSOLE_ENABLED`, default `true`) is read by BOTH sides,
   because they answer different questions with it and neither can ask the
   other. The console service injects it as
@@ -1876,12 +1876,12 @@ bootstrap. What differs from the account console, and why:
   from it, and the console service's own base path plus vite base are the
   same literal on its side. Assets are served `immutable` for a year (every
   name carries a content hash; a new build means new names), for both static
-  consoles. Config keys mirror the account console: `adminConsoleEnabled`
+  consoles. Config keys mirror the account console: `adminConsole.enabled`
   (`server.adminConsole.enabled`, `ADMIN_CONSOLE_ENABLED`, declared in the
   service's registry AND server-core's, riding
   `StatusResponseFeatures.adminConsole` on the status endpoint; off means off
   on the SERVER too, where the kick and the callback answer 404) and
-  `adminConsolePath` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
+  `adminConsole.path` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
   substituted-package seam), plus `server.adminConsole.url` and the listen
   address `server.adminConsole.port` / `.host`. The marker
   (`<!--admin-config-->`) and the vite base (`/console/admin/`) are constants
@@ -2830,18 +2830,30 @@ its own port). The container entrypoint carries all three as its own service
 vocabulary (`server/core start`, `server/core core`, `server/core console
 admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
 the one place pretending otherwise; behind one origin the proxy routes each
-console's path to its port. `createApplication` grows a generic `mounts`
-seam and mounts whatever it is handed under a path it is told, learning
-nothing about consoles: the CLI knows about every piece and composes them,
-which is its job, and a controller for a console appearing inside server-core
-is the smell that seam exists to prevent. `buildConsoleMounts` refuses to
-reason loosely about origins: a console url on ANOTHER origin names a service
-someone else runs and is skipped rather than mounted locally, and one on this
-origin with no path would have to own the API's own root, where it shadows
-the protocol routes and the page GETs redirect to themselves, so it is
-refused by name rather than booted into a redirect loop. The factory is
-ASYNC because a console loads its operator theme before it serves a page, so
-an invalid manifest fails the boot rather than every render. The console
+console's path to its port. `HTTPModule` takes a generic `mounts` list
+(`ApplicationMount[]` = `{ path, handler }`, reached through
+`createApplication({ http })`) and mounts whatever it is handed under the
+path it is told, learning nothing about consoles: the CLI knows about every
+piece and composes them, which is its job, and a controller for a console
+appearing inside server-core is the smell that seam exists to prevent.
+**The seam exists because the ORDER is not the caller's to get right**, and
+that is the whole of its justification: a mount belongs AFTER the
+controllers, so a console's wildcard shell route cannot shadow a protocol
+route (`/console/<name>/login/start` is server-core's), and BEFORE the
+trailing middleware, so it inherits the error handling and the not-found
+answer every other route has. A caller mounting on the resolved
+`HTTPInjectionKey.App` after `setup()` lands after both, on an
+already-listening server. `buildConsoleMounts` (`commands/start.ts`) is the
+CLI's half and does one thing beyond building handlers: the mount path is
+`getURLBasePath(url)`, never the url, since a console url carries the origin
+a BROWSER reaches it at while the listener only ever sees a path, and a
+console url with no path at all would have to own the API's own root, where
+it shadows the protocol routes and the page GETs redirect to themselves, so
+it is refused by name rather than booted into a redirect loop. It needs no
+origin check of its own: `normalizeConfig` already refused a console url
+that is not publicUrl's own origin. It is ASYNC because a console loads its
+operator theme before it serves a page, so an invalid manifest fails the
+boot rather than every render. The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
@@ -2931,35 +2943,58 @@ boots on its defaults).
 
 **The config schema is one registry (plan 101 C-1).**
 `@authup/server-config` declares every key of the document once as a
-`ConfigSchemaEntry`, and `app/modules/config/constants.ts` selects the ones
+`SchemaEntry`, and `app/modules/config/constants.ts` selects the ones
 this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
 the second falls back to typeorm-extension's driver default), an
 operator-facing `description`, and for the 51 env-backed keys the
 `EnvironmentVariable` plus a `readEnv` reader. The mapped
-`ConfigSchema` type is the exhaustiveness guard: a `Config` key with no
-entry fails the build. Five passes derive from the registry and nothing
+`Schema` type is the exhaustiveness guard: a `Config` key with no
+entry fails the build. Six passes derive from the registry and nothing
 else may re-declare a key: `read/env.ts` is `readSchemaFromEnv` plus the
 untouched `DB_*` block (those names come from typeorm-extension and stay
 special-cased outside the registry), `read/fs.ts` is
 `readSchemaFromFileTree`, `validator.ts` is `mountSchema`,
-`normalizeConfig` spreads `buildSchemaDefaults(CONFIG_SCHEMA)` under the
-parsed input (path resolution and the cross-key invariants stay imperative
-there), and `json-schema.ts` is `buildSchemaJSONSchema`.
+`normalizeConfig` layers `buildSchemaDefaults(CONFIG_SCHEMA)` under the
+parsed input with `mergeSchemaData` (path resolution and the cross-key
+invariants stay imperative there), and `json-schema.ts` is
+`buildSchemaJSONSchema`.
 
-**Where a key sits in `authup.yml` is one entry field, `path`.** It is the
-absolute dotted location in the document; an entry without one resolves
-through the reading pass's prefix, which for server-core is
-`CONFIG_SECTION` = `server.core`. So only the keys that live OUTSIDE this
-service's section spell a path out: the deployment-wide values (`publicUrl`,
-`db`, `redis`, `smtp`, `trustedOrigins`, `env`, `rootPath`) and the
-per-console sections, whose member names drop the console prefix the config
-key carries (`adminConsoleEnabled` reads `server.adminConsole.enabled`). A
+**A registry is shaped like the config it describes, and a SECTION is a
+nested registry.** So server-core reads its own two sections flat, in its
+own vocabulary (`config.port`, never `config.core.port`), and keeps the five
+console keys it borrows under the console they belong to
+(`config.adminConsole.url`), because three consoles each declare a `url` and
+an `enabled` and no flat bag holds them at once. `withSectionPaths` fills in
+each entry's absolute path from the section it was declared in, so a section
+declares its keys once, in one vocabulary, and cannot spell a location its
+section does not own. The passes split along that line: the ones working in
+CONFIG space (defaults, environment, validator mounts) mirror the nesting,
+and the ones working in DOCUMENT space (the file read, the unknown-path
+scan, the JSON Schema) flatten it, since every entry carries an absolute
+path. **Composition is `mergeSchemaData`, never a spread**: a later pass
+holding one key of a section would otherwise replace the whole section and
+take every other key's file value and default with it.
+
+**A key inherits another key's declaration through `alt`.** Every listener's
+`host` falls back to the deployment-wide `host` at the document root (env
+`HOST`, declared exactly once there), so one line binds server-core and all
+three console services, and a listener that names its own wins. The
+alternative is the other key's real entry rather than a copy of its path and
+variable, so the two cannot drift; the fallback applies to the file and the
+environment alike, and the published JSON Schema still shows each variable
+on the key that declares it. `port` deliberately has no counterpart: three
+listeners cannot share one.
+
+**Where a key sits in `authup.yml` follows from the section it is declared
+in.** `withSectionPaths(section, schema)` stamps the absolute dotted
+location onto every entry that does not spell one, so `server.core.port` and
+`server.adminConsole.enabled` are written down once, next to the section
+name, rather than repeated per key. An entry spells a `path` of its own only
+to sit outside its section, which today is the deployment-wide `host`. A
 section is per CONSOLE, never per implementation package, and no environment
-variable name ever changed, so env-driven deployments feel nothing. The
-console services' own registries spell every path out, since they apply no
-prefix of their own. **Config follows the code** (plan 101 D2-3): the theme
+variable name ever changed, so env-driven deployments feel nothing. **Config follows the code** (plan 101 D2-3): the theme
 pair (`theme.directoryPath` / `theme.fragmentsEnabled`) and the three
 `server.<name>Console.path` keys LEFT server-core's registry for the
 packages that read them, while `server.adminConsole.url` and

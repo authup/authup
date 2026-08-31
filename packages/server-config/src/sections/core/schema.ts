@@ -6,19 +6,19 @@
  */
 
 import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
-import type { ConfigSchema } from '@authup/server-config-kit';
 import {
+    defineSchema,
     readEnvArray,
     readEnvBool,
     readEnvBoolStrict,
     readEnvInt,
     readEnvRaw,
     readEnvString,
-    withSectionPaths,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
-import { DEFAULT_HOST_CONFIG_PATH, EnvironmentVariable } from '../../constants.ts';
-import { CERTIFICATE_SOURCES, CORE_CONFIG_SECTION, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
+import { EnvironmentVariable } from '../../constants.ts';
+import { ROOT_SCHEMA } from '../root/index.ts';
+import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { CoreConfig, MiddlewareOptions } from './types.ts';
 
@@ -40,17 +40,12 @@ const middlewareType = z.boolean().or(z.record(z.string(), z.any()));
 /**
  * The `server.core.*` section: the API and IdP service's own keys.
  *
- * An entry declares no location of its own: {@link withSectionPaths} derives
+ * An entry declares no location of its own derives
  * it from the section and the key name, so a key cannot end up at a path this
- * section does not own. The one exception is `host`, whose location is a
- * fallback chain reaching outside the section.
- *
- * The keys need no qualifier either, unlike a console section's: server-core
- * reads this section whole, and the flat document merge takes these names as
- * they are.
+ * section does not own. `host` reaches outside it only through `alt`, the
+ * deployment-wide declaration it falls back to.
  */
-export const CORE_CONFIG_SCHEMA = withSectionPaths(
-    CORE_CONFIG_SECTION,
+export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
     {
         writableDirectoryPath: {
             type: stringType,
@@ -92,10 +87,8 @@ export const CORE_CONFIG_SCHEMA = withSectionPaths(
         host: {
             type: stringType,
             default: '0.0.0.0',
-            description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host`, which every console service falls back to as well.',
-            path: DEFAULT_HOST_CONFIG_PATH,
-            env: EnvironmentVariable.HOST,
-            readEnv: readEnvString,
+            description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host` (HOST), which every console service falls back to as well.',
+            alt: ROOT_SCHEMA.defaultHost,
         },
         mtlsPublicUrl: {
             type: z.url().nullable(),
@@ -400,5 +393,6 @@ export const CORE_CONFIG_SCHEMA = withSectionPaths(
             env: EnvironmentVariable.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT,
             readEnv: readEnvBool,
         },
-    } satisfies ConfigSchema<CoreConfig, never, EnvironmentVariable>,
+    },
+    { pathPrefix: 'server.core' },
 );

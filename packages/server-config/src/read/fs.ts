@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchemaInput } from '@authup/server-config-kit';
+import type { SchemaInput } from '@authup/server-config-kit';
 import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
@@ -13,12 +13,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import {
-    CONFIG_FILE_EXTENSIONS,
-    CONFIG_FILE_NAME,
+    FILE_EXTENSIONS,
+    FILE_NAME,
 } from '../constants.ts';
 import type { ConfigReadFsOptions } from './types.ts';
 import type { ObjectLiteral } from '@authup/kit';
-import { CONFIG_SCHEMA } from '../schema.ts';
+import { SCHEMA } from '../schema.ts';
+import type { AuthupConfig } from '../types.ts';
 
 /**
  * One file, `authup.yml`, never a family. confinity's default convention also
@@ -28,7 +29,7 @@ import { CONFIG_SCHEMA } from '../schema.ts';
  * root file and every loaded file is read as the root.
  */
 const NAMING : INamingScheme = {
-    toPatterns: () => [`${CONFIG_FILE_NAME}.{${CONFIG_FILE_EXTENSIONS.join(',')}}`],
+    toPatterns: () => [`${FILE_NAME}.{${FILE_EXTENSIONS.join(',')}}`],
     toName: () => '',
 };
 
@@ -43,7 +44,7 @@ function toExtension(name: string) : string {
  * the working directory and holds files belonging to other programs.
  */
 function isRetiredConfigFileName(name: string) : boolean {
-    if (!name.startsWith(`${CONFIG_FILE_NAME}.`)) {
+    if (!name.startsWith(`${FILE_NAME}.`)) {
         return false;
     }
 
@@ -52,11 +53,11 @@ function isRetiredConfigFileName(name: string) : boolean {
         return true;
     }
 
-    if (!CONFIG_FILE_EXTENSIONS.includes(extension)) {
+    if (!FILE_EXTENSIONS.includes(extension)) {
         return false;
     }
 
-    return name.slice(0, -(extension.length + 1)) !== CONFIG_FILE_NAME;
+    return name.slice(0, -(extension.length + 1)) !== FILE_NAME;
 }
 
 /**
@@ -69,7 +70,7 @@ function isRetiredConfigFilePath(filePath: string) : boolean {
     return toExtension(name) === 'conf' || isRetiredConfigFileName(name);
 }
 
-const RETIRED_FILE_HINT = `The authup.conf family is no longer read. Rewrite the configuration as ${CONFIG_FILE_NAME}.yml; the deployment-wide keys (publicUrl, db, redis, smtp, trustedOrigins, theme) moved out of the server.core section.`;
+const RETIRED_FILE_HINT = `The authup.conf family is no longer read. Rewrite the configuration as ${FILE_NAME}.yml; the deployment-wide keys (publicUrl, db, redis, smtp, trustedOrigins, theme) moved out of the server.core section.`;
 
 const warnedAboutDirectories = new Set<string>();
 
@@ -149,7 +150,7 @@ export async function readConfigFileTree<T extends ObjectLiteral>(
 }
 
 export async function readConfigRawFromFS<T extends ObjectLiteral>(
-    schema: ConfigSchemaInput<T>,
+    schema: SchemaInput<T>,
     options: ConfigReadFsOptions<T> = {},
 ) : Promise<Partial<T>> {
     const { tree } = await readConfigFileTree(options);
@@ -192,6 +193,11 @@ export async function inspectConfigFile<T extends ObjectLiteral>(
 
     return {
         files,
-        unknown: findUnknownSchemaPaths(tree, CONFIG_SCHEMA),
+        // The document type is supplied rather than inferred: inference
+        // runs backwards through the mapped `SchemaInput<T>`, and a derived
+        // key's entry declares `default?: undefined`, so it reconstructs
+        // `publicUrl` and `db` as `undefined` and then rejects the registry
+        // that produced it.
+        unknown: findUnknownSchemaPaths<AuthupConfig>(tree, SCHEMA),
     };
 }

@@ -5,30 +5,57 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
-import type { ConfigSchemaInput } from '../../src';
+import { Container } from 'validup';
 import {
+    afterEach,
+    describe,
+    expect,
+    it,
+} from 'vitest';
+import { z } from 'zod';
+import type { SchemaInput } from '../../src';
+import {
+    buildSchemaDefaults,
     buildSchemaJSONSchema,
+    defineSchema,
     findUnknownSchemaPaths,
+    mergeSchemaData,
+    mountSchema,
     readEnvBoolOrString,
+    readEnvInt,
+    readEnvString,
+    readSchemaFromEnv,
     readSchemaFromFileTree,
 } from '../../src';
 
+/**
+ * The document shape every registry has: deployment-wide keys at the root,
+ * and one section per service, declared in that service's own vocabulary.
+ */
 type Fixture = {
-    port: number,
     publicUrl: string,
     trustedOrigins: string[],
-    adminConsoleEnabled: boolean
+    host: string,
+    core: {
+        port: number,
+        host: string
+    },
+    adminConsole: {
+        enabled: boolean,
+        host: string
+    }
 };
 
-const SCHEMA : ConfigSchemaInput<Fixture> = {
-    port: {
-        type: z.number(),
-        description: 'The port to listen on.',
-        default: 3001,
-        env: 'PORT',
-    },
+const HOST = {
+    type: z.string(),
+    description: 'The address every listener binds.',
+    default: '0.0.0.0',
+    path: 'host',
+    env: 'HOST',
+    readEnv: readEnvString,
+};
+
+const SCHEMA : SchemaInput<Fixture> = {
     publicUrl: {
         type: z.string(),
         description: 'The public url.',
@@ -40,12 +67,37 @@ const SCHEMA : ConfigSchemaInput<Fixture> = {
         default: [],
         path: 'trustedOrigins',
     },
-    adminConsoleEnabled: {
-        type: z.boolean(),
-        description: 'Serve the admin console.',
-        default: true,
-        path: 'server.adminConsole.enabled',
-    },
+    host: HOST,
+    core: defineSchema( {
+        port: {
+            type: z.number(),
+            description: 'The port to listen on.',
+            default: 3001,
+            env: 'PORT',
+            readEnv: readEnvInt,
+        },
+        host: {
+            type: z.string(),
+            description: 'The address this listener binds.',
+            default: '0.0.0.0',
+            alt: HOST,
+        },
+    }, { pathPrefix: 'server.core' }),
+    adminConsole: defineSchema( {
+        enabled: {
+            type: z.boolean(),
+            description: 'Serve the admin console.',
+            default: true,
+        },
+        host: {
+            type: z.string(),
+            description: 'The address this listener binds.',
+            default: '',
+            env: 'ADMIN_CONSOLE_HOST',
+            readEnv: readEnvString,
+            alt: HOST,
+        },
+    }, { pathPrefix: 'server.adminConsole' }),
 };
 
 describe('readSchemaFromFileTree', () => {
@@ -60,18 +112,49 @@ describe('readSchemaFromFileTree', () => {
         }, SCHEMA);
 
         expect(data).toEqual({
-            port: 3002,
             publicUrl: 'https://idp.example.com',
             trustedOrigins: ['https://app.example.com'],
-            adminConsoleEnabled: false,
+            core: { port: 3002 },
+            adminConsole: { enabled: false },
+        });
+    });
+
+    /**
+     * The whole point of a section: one key per listener, and the document
+     * says where it lives once.
+     */
+    it('should read a section into a value of its own', () => {
+        const data = readSchemaFromFileTree({ server: { core: { port: 4001, host: '10.0.0.1' } } }, SCHEMA);
+
+        expect(data).toEqual({
+            core: { port: 4001, host: '10.0.0.1' },
+            adminConsole: {},
+        });
+    });
+
+    it('should fall back onto the location an alternative declares', () => {
+        const data = readSchemaFromFileTree({
+            host: '127.0.0.1',
+            server: { adminConsole: { host: '10.0.0.1' } },
+        }, SCHEMA);
+
+        // its own location wins where the document names one, and the
+        // deployment-wide one answers for the listener that does not.
+        expect(data).toEqual({
+            host: '127.0.0.1',
+            core: { host: '127.0.0.1' },
+            adminConsole: { host: '10.0.0.1' },
         });
     });
 
     it('should skip a key the document says nothing about', () => {
         const data = readSchemaFromFileTree({ publicUrl: 'https://idp.example.com' }, SCHEMA);
 
-        expect(data).toEqual({ publicUrl: 'https://idp.example.com' });
-        expect(data).not.toHaveProperty('port');
+        expect(data).toEqual({
+            publicUrl: 'https://idp.example.com',
+            core: {},
+            adminConsole: {},
+        });
     });
 
     it('should collect a falsy value', () => {
@@ -81,9 +164,9 @@ describe('readSchemaFromFileTree', () => {
         }, SCHEMA);
 
         expect(data).toEqual({
-            port: 0,
             publicUrl: '',
-            adminConsoleEnabled: false,
+            core: { port: 0 },
+            adminConsole: { enabled: false },
         });
     });
 
@@ -98,7 +181,7 @@ describe('readSchemaFromFileTree', () => {
         // dies on its next segment anyway), it is a key the document does not
         // carry: without an own-property check a polluted Object.prototype
         // answers for it and silently becomes the configured value.
-        const schema : ConfigSchemaInput<{ port: number }> = {
+        const schema : SchemaInput<{ port: number }> = {
             port: {
                 type: z.number(),
                 description: '',
@@ -121,7 +204,7 @@ describe('readSchemaFromFileTree', () => {
     });
 
     it('should not descend onto the prototype', () => {
-        const schema : ConfigSchemaInput<{ polluted: string, name: string }> = {
+        const schema : SchemaInput<{ polluted: string, name: string }> = {
             polluted: {
                 type: z.string(),
                 description: '',
@@ -138,6 +221,115 @@ describe('readSchemaFromFileTree', () => {
     });
 });
 
+describe('readSchemaFromEnv', () => {
+    afterEach(() => {
+        delete process.env.HOST;
+        delete process.env.ADMIN_CONSOLE_HOST;
+        delete process.env.PORT;
+    });
+
+    it('should read every key carrying a variable', () => {
+        process.env.PORT = '4001';
+        process.env.HOST = '127.0.0.1';
+
+        expect(readSchemaFromEnv(SCHEMA)).toEqual({
+            host: '127.0.0.1',
+            core: { port: 4001, host: '127.0.0.1' },
+            adminConsole: { host: '127.0.0.1' },
+        });
+    });
+
+    /**
+     * The case the fallback exists for: the shared variable is set and the
+     * listener's own is not, which is how an operator binds every listener at
+     * once.
+     */
+    it('should fall back onto the variable an alternative declares', () => {
+        process.env.HOST = '10.0.0.1';
+
+        expect(readSchemaFromEnv(SCHEMA).adminConsole).toEqual({ host: '10.0.0.1' });
+    });
+
+    it('should prefer the key own variable over the alternative', () => {
+        process.env.HOST = '10.0.0.1';
+        process.env.ADMIN_CONSOLE_HOST = '127.0.0.1';
+
+        expect(readSchemaFromEnv(SCHEMA).adminConsole).toEqual({ host: '127.0.0.1' });
+    });
+
+    it('should skip a key whose variables are all unset', () => {
+        expect(readSchemaFromEnv(SCHEMA)).toEqual({ core: {}, adminConsole: {} });
+    });
+});
+
+describe('buildSchemaDefaults', () => {
+    it('should build a default per key, sections included', () => {
+        expect(buildSchemaDefaults(SCHEMA)).toEqual({
+            trustedOrigins: [],
+            host: '0.0.0.0',
+            core: { port: 3001, host: '0.0.0.0' },
+            adminConsole: { enabled: true, host: '' },
+        });
+    });
+});
+
+describe('mergeSchemaData', () => {
+    /**
+     * The precedence every service composes its configuration with. A plain
+     * spread would let the environment's `core` object replace the file's,
+     * and the file's replace the defaults, so one variable would blank every
+     * other key of that listener.
+     */
+    it('should layer a section key by key rather than wholesale', () => {
+        const defaults = buildSchemaDefaults(SCHEMA);
+        const file = readSchemaFromFileTree({
+            publicUrl: 'https://idp.example.com',
+            server: { core: { host: '10.0.0.1' } },
+        }, SCHEMA);
+        const env = { core: { port: 4001 } };
+
+        expect(mergeSchemaData(SCHEMA, defaults, file, env)).toEqual({
+            publicUrl: 'https://idp.example.com',
+            trustedOrigins: [],
+            host: '0.0.0.0',
+            core: { port: 4001, host: '10.0.0.1' },
+            adminConsole: { enabled: true, host: '' },
+        });
+    });
+
+    it('should replace a value rather than merge into it', () => {
+        const merged = mergeSchemaData(
+            SCHEMA,
+            { trustedOrigins: ['https://a.example.com', 'https://b.example.com'] },
+            { trustedOrigins: ['https://c.example.com'] },
+        );
+
+        expect(merged.trustedOrigins).toEqual(['https://c.example.com']);
+    });
+});
+
+describe('mountSchema', () => {
+    it('should validate a section rather than drop it', async () => {
+        const container = new Container<Record<string, any>>();
+        mountSchema(container, SCHEMA);
+
+        await expect(container.run({
+            publicUrl: 'https://idp.example.com',
+            core: { port: 'not-a-port' },
+        })).rejects.toThrow();
+
+        // a mounted section is also what carries the value over: validup
+        // strips whatever nothing claims.
+        expect(await container.run({
+            publicUrl: 'https://idp.example.com',
+            core: { port: 4001 },
+        })).toEqual({
+            publicUrl: 'https://idp.example.com',
+            core: { port: 4001 },
+        });
+    });
+});
+
 describe('findUnknownSchemaPaths', () => {
     it('should report a key at a path no entry claims', () => {
         expect(findUnknownSchemaPaths({
@@ -149,7 +341,7 @@ describe('findUnknownSchemaPaths', () => {
                     typo: true,
                 },
             },
-        }, SCHEMA, { prefix: 'server.core' })).toEqual([
+        }, SCHEMA)).toEqual([
             'server.core.publicUrl',
             'server.core.typo',
         ]);
@@ -158,29 +350,30 @@ describe('findUnknownSchemaPaths', () => {
     it('should report nothing for a document that only holds claimed paths', () => {
         expect(findUnknownSchemaPaths({
             publicUrl: 'https://idp.example.com',
+            host: '0.0.0.0',
             server: {
                 core: { port: 3002 },
                 adminConsole: { enabled: false },
             },
-        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+        }, SCHEMA)).toEqual([]);
     });
 
     it('should not walk into the value of a claimed key', () => {
         expect(findUnknownSchemaPaths({
             trustedOrigins: ['https://app.example.com'],
             server: { core: { port: 3002 } },
-        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+        }, SCHEMA)).toEqual([]);
     });
 
     it('should report a whole section no entry reaches', () => {
-        expect(findUnknownSchemaPaths({ client: { adminConsole: { port: 3000 } } }, SCHEMA, { prefix: 'server.core' })).toEqual(['client']);
+        expect(findUnknownSchemaPaths({ client: { adminConsole: { port: 3000 } } }, SCHEMA)).toEqual(['client']);
     });
 
     it('should never report an x- extension key', () => {
         expect(findUnknownSchemaPaths({
             'x-common': { anything: true },
             server: { core: { 'x-anchor': 1 } },
-        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+        }, SCHEMA)).toEqual([]);
     });
 
     it('should report nothing for a non object tree', () => {
@@ -205,7 +398,7 @@ describe('readEnvBoolOrString', () => {
 
 describe('buildSchemaJSONSchema', () => {
     it('should nest every key at its resolved path', () => {
-        const document = buildSchemaJSONSchema(SCHEMA, { title: 'authup', prefix: 'server.core' });
+        const document = buildSchemaJSONSchema(SCHEMA, { title: 'authup' });
 
         expect(document.$schema).toEqual('http://json-schema.org/draft-07/schema#');
         expect(document.title).toEqual('authup');
@@ -218,8 +411,21 @@ describe('buildSchemaJSONSchema', () => {
         expect(properties.server.properties.adminConsole.properties.enabled.type).toEqual('boolean');
     });
 
+    /**
+     * A section describes locations of the same document its parent does, so
+     * it must not become a property of its own: the emitted schema is what an
+     * editor validates a real file against.
+     */
+    it('should describe a section by its path, never by its key', () => {
+        const properties = buildSchemaJSONSchema(SCHEMA, { title: 'authup' }).properties as Record<string, any>;
+
+        expect(properties).not.toHaveProperty('core');
+        expect(properties).not.toHaveProperty('adminConsole');
+        expect(properties.server.properties.core.properties).not.toHaveProperty('server');
+    });
+
     it('should carry the description, default and env name on the leaf', () => {
-        const document = buildSchemaJSONSchema(SCHEMA, { title: 'authup', prefix: 'server.core' });
+        const document = buildSchemaJSONSchema(SCHEMA, { title: 'authup' });
         const properties = document.properties as Record<string, any>;
 
         expect(properties.server.properties.core.properties.port).toMatchObject({
@@ -231,8 +437,21 @@ describe('buildSchemaJSONSchema', () => {
         expect(properties.publicUrl).not.toHaveProperty('x-authup-env');
     });
 
+    /**
+     * An alternative belongs to the key that declares it, and is published
+     * there: repeating it would say this key owns a variable it borrows.
+     */
+    it('should publish the key own variable, never an alternative', () => {
+        const properties = buildSchemaJSONSchema(SCHEMA, { title: 'authup' }).properties as Record<string, any>;
+
+        expect(properties.server.properties.adminConsole.properties.host['x-authup-env'])
+            .toEqual('ADMIN_CONSOLE_HOST');
+        expect(properties.server.properties.core.properties.host).not.toHaveProperty('x-authup-env');
+        expect(properties.host['x-authup-env']).toEqual('HOST');
+    });
+
     it('should refuse to overwrite an existing location', () => {
-        const schema : ConfigSchemaInput<{ server: string, port: number }> = {
+        const schema : SchemaInput<{ server: string, port: number }> = {
             server: {
                 type: z.string(),
                 description: '',
@@ -247,7 +466,7 @@ describe('buildSchemaJSONSchema', () => {
 
         expect(() => buildSchemaJSONSchema(schema, { title: 'authup' })).toThrow(/"port"/);
 
-        const inverse : ConfigSchemaInput<{ port: number, server: string }> = {
+        const inverse : SchemaInput<{ port: number, server: string }> = {
             port: {
                 type: z.number(),
                 description: '',
@@ -263,4 +482,3 @@ describe('buildSchemaJSONSchema', () => {
         expect(() => buildSchemaJSONSchema(inverse, { title: 'authup' })).toThrow(/"server"/);
     });
 });
-

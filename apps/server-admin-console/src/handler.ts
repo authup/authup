@@ -27,7 +27,7 @@ import {
     HEALTH_PATH,
 } from './constants';
 import { PACKAGE_PATH } from './path';
-import type { AdminConsoleConfig } from './types';
+import type { Config } from './types';
 
 const ASSETS_PATH = '/assets';
 
@@ -38,14 +38,14 @@ const ASSETS_PATH = '/assets';
  * no route is mounted, and the served shell stays byte-identical to an
  * un-themed one. So the default configuration pays nothing.
  */
-async function createThemeProvider(config: AdminConsoleConfig) : Promise<IThemeProvider | undefined> {
-    if (!config.themeDirectoryPath || !fs.existsSync(config.themeDirectoryPath)) {
+async function createThemeProvider(config: Config) : Promise<IThemeProvider | undefined> {
+    if (!config.theme.directoryPath || !fs.existsSync(config.theme.directoryPath)) {
         return undefined;
     }
 
     const provider = new ThemeProvider({
-        directoryPath: config.themeDirectoryPath,
-        fragmentsEnabled: config.themeFragmentsEnabled,
+        directoryPath: config.theme.directoryPath,
+        fragmentsEnabled: config.theme.fragmentsEnabled,
         // The boot inventory this logs (resolved path, token counts, every
         // servable file) is the antidote to the feature's dominant failure
         // mode, which is silence.
@@ -66,7 +66,7 @@ async function createThemeProvider(config: AdminConsoleConfig) : Promise<IThemeP
  * so a service published at `<origin>/console/admin` receives `/users/<id>`,
  * exactly as the console's own router sees it.
  */
-export async function createAdminConsoleHandler(config: AdminConsoleConfig) : Promise<App> {
+export async function createAdminConsoleHandler(config: Config) : Promise<App> {
     const app = new App();
 
     // The shell is stamped from the vc-locale / vc-color-mode cookies, and
@@ -122,7 +122,7 @@ export async function createAdminConsoleHandler(config: AdminConsoleConfig) : Pr
         // public path. The vite base was decided when the bundle was
         // built and says nothing about where the service is published.
         assetBasePath: `${basePath}/`,
-        THEME: theme,
+        theme,
         config: {
             apiUrl: config.apiUrl,
             basePath,

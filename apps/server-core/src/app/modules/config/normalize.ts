@@ -9,7 +9,7 @@ import { read } from 'envix';
 import path from 'node:path';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
-import { buildSchemaDefaults } from '@authup/server-config-kit';
+import { buildSchemaDefaults, mergeSchemaData } from '@authup/server-config-kit';
 import {
     ACCOUNT_CONSOLE_SEGMENT,
     ADMIN_CONSOLE_SEGMENT,
@@ -84,12 +84,18 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         }
     }
 
+    // Layered section-aware: a spread would let a parsed console section
+    // holding one key replace the whole section and drop the other key's
+    // default.
     const config : Config = {
-        ...buildSchemaDefaults(CONFIG_SCHEMA),
-        publicUrl,
-        ...parsed,
+        ...mergeSchemaData<Config>(
+            CONFIG_SCHEMA,
+            buildSchemaDefaults<Config>(CONFIG_SCHEMA),
+            { publicUrl } as Partial<Config>,
+            parsed,
+        ),
 
-        // After the spread so the canonicalized + dev-seeded list wins over
+        // After the merge so the canonicalized + dev-seeded list wins over
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
     } as Config;
@@ -113,16 +119,16 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // configuration.
     const publicUrlTrimmed = config.publicUrl.replace(/\/+$/, '');
 
-    if (!config.authConsoleUrl) {
-        config.authConsoleUrl = `${publicUrlTrimmed}/${AUTH_CONSOLE_SEGMENT}`;
+    if (!config.authConsole.url) {
+        config.authConsole.url = `${publicUrlTrimmed}/${AUTH_CONSOLE_SEGMENT}`;
     }
 
-    if (!config.accountConsoleUrl) {
-        config.accountConsoleUrl = `${publicUrlTrimmed}/${ACCOUNT_CONSOLE_SEGMENT}`;
+    if (!config.accountConsole.url) {
+        config.accountConsole.url = `${publicUrlTrimmed}/${ACCOUNT_CONSOLE_SEGMENT}`;
     }
 
-    if (!config.adminConsoleUrl) {
-        config.adminConsoleUrl = `${publicUrlTrimmed}/${ADMIN_CONSOLE_SEGMENT}`;
+    if (!config.adminConsole.url) {
+        config.adminConsole.url = `${publicUrlTrimmed}/${ADMIN_CONSOLE_SEGMENT}`;
     }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,
@@ -146,10 +152,12 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // follow-up, and turning this into a warning is not the way to get them:
     // WebAuthn origins, the federated-login cookie and credentialed CORS all
     // have to move together.
-    for (const key of ['authConsoleUrl', 'accountConsoleUrl', 'adminConsoleUrl'] as const) {
-        if (new URL(config[key]).origin !== new URL(config.publicUrl).origin) {
+    for (const key of ['authConsole', 'accountConsole', 'adminConsole'] as const) {
+        const { url } = config[key];
+
+        if (new URL(url).origin !== new URL(config.publicUrl).origin) {
             throw new AuthupError(
-                `${key} is ${config[key]}, which is not the origin of publicUrl (${config.publicUrl}). ` +
+                `server.${key}.url is ${url}, which is not the origin of publicUrl (${config.publicUrl}). ` +
                 'A console may be served under a path of its own, but not under a domain of its own.',
             );
         }

@@ -21,6 +21,7 @@ import type { IContainer } from 'eldin';
 import { MetricsInjectionKey, PromAuthFlowMetrics } from '../metrics/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
+import type { ApplicationMount } from '../../types.ts';
 
 export class HTTPModule implements IModule {
     readonly name: string;
@@ -35,7 +36,10 @@ export class HTTPModule implements IModule {
 
     protected internalHttpClientRegistered : boolean;
 
-    constructor() {
+    protected mounts : ApplicationMount[];
+
+    constructor(options: { mounts?: ApplicationMount[] } = {}) {
+        this.mounts = options.mounts || [];
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
@@ -71,6 +75,19 @@ export class HTTPModule implements IModule {
 
         await this.middleware.mountBefore(app, container);
         await this.controller.mount(app, container);
+
+        // Composed sub-applications ride the same listener. The order is
+        // load-bearing and is why they are handed to this module rather than
+        // mounted by the caller afterwards: AFTER the controllers, so nothing
+        // a console carries can shadow a protocol route (every console
+        // declares a wildcard shell route, and `/console/<name>/login/start`
+        // is server-core's), and BEFORE the trailing middleware, so they
+        // inherit the error handling and the not-found answer every other
+        // route has. A caller mounting after `setup()` would land after both,
+        // on an already-listening server.
+        for (const mount of this.mounts) {
+            app.use(mount.path, mount.handler);
+        }
 
         await this.middleware.mountAfter(app, container);
 

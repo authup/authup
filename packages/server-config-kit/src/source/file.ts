@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigSchemaInput } from './types.ts';
-import { isConfigSchemaEntryInput, isConfigSchemaInput } from './check.ts';
+import type { SchemaInput } from '../types.ts';
+import { isSchemaEntryInput } from '../entry/check.ts';
+import { resolveSchemaEntryPaths } from '../entry/path.ts';
+import { assertSchemaValue, isSchemaInput } from '../schema/check.ts';
 
 function isRecord(value: unknown) : value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -32,14 +34,19 @@ function readTreePath(tree: Record<string, unknown>, path: string) : unknown {
 
 /**
  * The values a parsed configuration document holds for the schema's keys,
- * each read at its resolved path. A key the document says nothing about is
+ * each read at its resolved path, and at the location of each `alt` when the
+ * document says nothing about its own. A key the document is silent about is
  * absent, so the caller's own defaults stand; a key explicitly set to
  * `false`, `null` or `0` is collected. Values are taken verbatim: coercion
  * and validation happen downstream, against the declared zod types.
+ *
+ * A nested schema is read into a nested value, so the result mirrors the
+ * config type rather than the document: the entries carry absolute paths, so
+ * a section is read out of the same tree its parent was.
  */
 export function readSchemaFromFileTree<T>(
     tree: unknown,
-    schema: ConfigSchemaInput<T>,
+    schema: SchemaInput<T>,
 ) : Partial<T> {
     if (!isRecord(tree)) {
         return {};
@@ -51,22 +58,69 @@ export function readSchemaFromFileTree<T>(
     for (const key of keys) {
         const entry = schema[key];
 
-        if (isConfigSchemaEntryInput(entry)) {
-            const path = entry.path || String(key);
+        if (isSchemaEntryInput(entry)) {
+            const paths = resolveSchemaEntryPaths(key as string, entry);
 
-            const value = readTreePath(tree, path);
-            if (typeof value !== 'undefined') {
-                data[key as string] = value;
-                break;
+            for (const path of paths) {
+                const value = readTreePath(tree, path);
+                if (typeof value !== 'undefined') {
+                    data[key as string] = value;
+                    break;
+                }
             }
+
+            continue;
         }
 
-        if (isConfigSchemaInput(entry)) {
-            data[key as string] = readSchemaFromFileTree(tree, entry);
+        if (isSchemaInput(entry)) {
+            data[key as string] = readSchemaFromFileTree<any>(tree, entry);
+            continue;
         }
+
+        assertSchemaValue(key as string);
     }
 
     return data as Partial<T>;
+}
+
+/**
+ * Every location the schema reads from, its nested sections included, plus
+ * the locations walked through on the way there.
+ */
+function collectSchemaPaths<T>(
+    schema: SchemaInput<T>,
+    claimed: Set<string>,
+    traversed: Set<string>,
+) : void {
+    const keys = Object.keys(schema) as (keyof T)[];
+    for (const key of keys) {
+        const entry = schema[key];
+
+        if (isSchemaEntryInput(entry)) {
+            // every location of a fallback chain, not just the key's own: a
+            // document setting the shared one is read, so reporting it as
+            // unread would be a lie.
+            const paths = resolveSchemaEntryPaths(key as string, entry);
+
+            for (const path of paths) {
+                claimed.add(path);
+
+                const segments = path.split('.');
+                for (let i = 1; i < segments.length; i++) {
+                    traversed.add(segments.slice(0, i).join('.'));
+                }
+            }
+
+            continue;
+        }
+
+        if (isSchemaInput(entry)) {
+            collectSchemaPaths<any>(entry, claimed, traversed);
+            continue;
+        }
+
+        assertSchemaValue(key as string);
+    }
 }
 
 /**
@@ -76,6 +130,11 @@ export function readSchemaFromFileTree<T>(
  * retired location indistinguishable from one that was never set. This is what
  * a `config validate` command reports so the difference is visible.
  *
+ * The whole schema is collected before the document is walked, sections
+ * included: each entry carries an absolute path, so a section claims
+ * locations of the same tree its parent does, and walking once per section
+ * would report every other section's keys as unknown.
+ *
  * A path is walked no deeper than the schema does, so an option whose VALUE is
  * an object (a logger setup, middleware options) contributes its own path, not
  * its contents. A key prefixed `x-` is the established extension convention
@@ -84,7 +143,7 @@ export function readSchemaFromFileTree<T>(
  */
 export function findUnknownSchemaPaths<T>(
     tree: unknown,
-    schema: ConfigSchemaInput<T>,
+    schema: SchemaInput<T>,
 ) : string[] {
     if (!isRecord(tree)) {
         return [];
@@ -93,35 +152,9 @@ export function findUnknownSchemaPaths<T>(
     const claimed = new Set<string>();
     const traversed = new Set<string>();
 
+    collectSchemaPaths(schema, claimed, traversed);
+
     const unknown : string[] = [];
-
-    const keys = Object.keys(schema) as (keyof T)[];
-    for (const key of keys) {
-        const entry = schema[key];
-
-        if (isConfigSchemaEntryInput(entry)) {
-            // every location of a fallback chain, not just the key's own: a
-            // document setting the shared one is read, so reporting it as unread
-            // would be a lie.
-            const path = schema[key].path ?
-                String(schema[key].path) :
-                String(key);
-
-            claimed.add(path);
-
-            const segments = path.split('.');
-            for (let i = 1; i < segments.length; i++) {
-                traversed.add(segments.slice(0, i).join('.'));
-            }
-
-            continue;
-        }
-
-        if (isConfigSchemaInput(entry)) {
-            unknown.push(...findUnknownSchemaPaths(tree, entry));
-        }
-    }
-
 
     const walk = (node: Record<string, unknown>, prefix: string) => {
         for (const name of Object.keys(node)) {

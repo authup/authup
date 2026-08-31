@@ -6,9 +6,10 @@
  */
 
 import type {
-    CONFIG_SECTION_KEY,
+    AccountConsoleConfig,
     CoreConfig,
     RootConfig,
+    SECTION_KEY,
     ThemeConfig,
     ToObjectLiteral,
 } from '@authup/server-config';
@@ -16,19 +17,19 @@ import type {
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are the section's own, so most of them arrive as this service
- * reads them. The deployment-wide ones do not: `publicUrl` here means the
- * API's URL, not this service's, and `path` means the console package to
- * serve. Both are confined to the configuration layer and mapped onto
- * {@link Config} before anything else sees it.
+ * Its OWN section is spread flat, because those keys are already this
+ * service's vocabulary; every other section keeps the key the document nests
+ * it at. What the two vocabularies do not share stays out: `apiUrl` and
+ * `distPath` below are this service's names for values the document calls
+ * something else, so they belong to {@link Config} alone.
  */
 export type ConfigInput = ToObjectLiteral<
     RootConfig &
     {
-        [CONFIG_SECTION_KEY.THEME]: ThemeConfig,
-        [CONFIG_SECTION_KEY.CORE]: CoreConfig
+        [SECTION_KEY.THEME]: ThemeConfig,
+        [SECTION_KEY.CORE]: CoreConfig
     } &
-    Config
+    AccountConsoleConfig
 >;
 
 /**

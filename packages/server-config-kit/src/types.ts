@@ -6,9 +6,8 @@
  */
 
 import type { z } from 'zod';
-import type { ObjectLiteral } from '@authup/kit';
 
-export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
+export type SchemaEnvReader = (raw: string, name: string) => unknown;
 
 /**
  * The strict declaration shape a registry is written in: every key needs an
@@ -20,7 +19,7 @@ export type ConfigSchemaEnvReader = (raw: string, name: string) => unknown;
  * the build where it is declared. Unbound, a `port: z.string()` would
  * compile and only surface as a rejected value at runtime.
  */
-export type ConfigSchemaEntry<
+export type SchemaEntry<
     T,
     KEY extends keyof T,
     DEFAULT_KEY extends keyof T = never,
@@ -30,32 +29,30 @@ export type ConfigSchemaEntry<
     description: string,
     /**
      * The absolute dotted location of the key in the configuration document.
-     * Absent means it is derived from the pass prefix and the key name.
-     *
-     * A LIST is a fallback chain, read in order, first defined wins: the
-     * key's own location, then the deployment-wide one it inherits from when
-     * the document says nothing about it (`server.adminConsole.host`, then
-     * `host`). Every location in the chain counts as claimed, so a document
-     * writing the shared one is not reported as unread; only the first is
-     * published in the JSON Schema, since that is where the key belongs.
+     * Absent means it is derived from the key name, or from the section the
+     * entry was declared in (see `withSectionPaths`).
      */
     path?: string,
-    alt?: ConfigSchemaEntry<{
+    /**
+     * The declarations this key FALLS BACK to, read in order once its own
+     * location and variable say nothing: a console's `host` inherits the
+     * deployment-wide one rather than repeating its path and variable.
+     *
+     * An alternative is another key's real declaration, never a copy of it,
+     * so the two cannot drift. Only the key's own location and variable are
+     * published in the JSON Schema: an alternative belongs to the key that
+     * declares it, and is documented there.
+     */
+    alt?: SchemaEntry<{
         [Key in KEY]: T[KEY]
-    }, KEY> | ConfigSchemaEntry<{
+    }, KEY> | SchemaEntry<{
         [Key in KEY]: T[KEY]
     }, KEY>[]
 } & (KEY extends DEFAULT_KEY ?
     { default?: undefined } :
     { default: T[KEY] | (() => T[KEY]) }
 ) & (
-    /**
-     * A list is a fallback chain here too, read in the same order as the
-     * paths above (`ADMIN_CONSOLE_HOST`, then `HOST`). Only the first name is
-     * this key's own: the rest belong to the keys they are borrowed from, so
-     * a registry still maps each variable onto exactly one key.
-     */
-    { env: ENV_KEY, readEnv: ConfigSchemaEnvReader } |
+    { env: ENV_KEY, readEnv: SchemaEnvReader } |
     { env?: undefined, readEnv?: undefined }
 );
 
@@ -63,14 +60,27 @@ export type ConfigSchemaEntry<
  * `-?` strips the optional modifier an optional key would otherwise carry
  * over: every key needs an entry, derived or not.
  */
-export type ConfigSchema<
+/**
+ * Whether a key's value could be described by a nested SCHEMA rather than by
+ * one entry: only a plain object could, so a string, a number, a boolean, an
+ * array or a union of them leaves the entry as the sole possibility.
+ *
+ * The `[V]` tuple stops the check distributing over a union, which is what a
+ * key like `redis` (a URL, a boolean or an options object) needs: distributed,
+ * its object arm alone would make the key ambiguous.
+ */
+type IsSchema<V> = [V] extends [readonly any[]] ?
+    false :
+    [V] extends [Record<string, any>] ? true : false;
+
+export type Schema<
     T,
     D extends keyof T = never,
     E extends string = string,
 > = {
-    [K in keyof T]-?: T[K] extends ObjectLiteral ?
-        ConfigSchemaEntry<T, K, D, E> | ConfigSchema<T[K]> :
-        ConfigSchemaEntry<T, K, D, E>
+    [K in keyof T]-?: IsSchema<T[K]> extends true ?
+        SchemaEntry<T, K, D, E> | Schema<T[K], never, E> :
+        SchemaEntry<T, K, D, E>
 };
 
 /**
@@ -78,22 +88,26 @@ export type ConfigSchema<
  * assignable to it, so a helper needs to know neither which keys are
  * derived nor which environment variable names exist.
  */
-export type ConfigSchemaEntryInput<T, K extends keyof T> = {
+export type SchemaEntryInput<T, K extends keyof T> = {
     type: z.ZodType,
     description: string,
     path?: string,
     default?: T[K] | (() => T[K]),
     env?: string,
-    readEnv?: ConfigSchemaEnvReader,
-    alt?: ConfigSchemaEntryInput<{
+    readEnv?: SchemaEnvReader,
+    alt?: SchemaEntryInput<{
         [Key in K]: T[K]
-    }, K> | ConfigSchemaEntryInput<{
+    }, K> | SchemaEntryInput<{
         [Key in K]: T[K]
     }, K>[]
 };
 
-export type ConfigSchemaInput<T> = {
-    [K in keyof T]-?: T[K] extends ObjectLiteral ?
-        ConfigSchemaInput<T[K]> | ConfigSchemaEntryInput<T, K> :
-        ConfigSchemaEntryInput<T, K>
+export type SchemaInput<T> = {
+    [K in keyof T]-?: IsSchema<T[K]> extends true ?
+        SchemaEntryInput<T, K> | SchemaInput<T[K]> :
+        SchemaEntryInput<T, K>
+};
+
+export type SchemaDefineOptions = {
+    pathPrefix?: string
 };

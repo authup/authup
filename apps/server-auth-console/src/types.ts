@@ -7,28 +7,27 @@
 
 import type {
     AuthConsoleConfig,
-    CONFIG_SECTION_KEY,
+    CoreConfig,
     RootConfig,
+    SECTION_KEY,
     ThemeConfig,
     ToObjectLiteral,
 } from '@authup/server-config';
 
 /**
- * What this service reads out of `authup.yml` and the environment: the
- * sections it selects keys from, in the CONFIGURATION namespace's own
- * vocabulary.
+ * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are console-qualified because they belong to a document that
- * describes a whole deployment, not to this service. Inside this package that
- * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
- * service's), so it is confined to the configuration layer:
- * `resolveAuthConsoleConfig` maps it onto {@link AuthConsoleConfig} before
- * anything else sees it.
+ * Its OWN section is spread flat, because those keys are already this
+ * service's vocabulary; every other section keeps the key the document nests
+ * it at. What the two vocabularies do not share stays out: `apiUrl` and
+ * `distPath` below are this service's names for values the document calls
+ * something else, so they belong to {@link Config} alone.
  */
-export type AuthConsoleConfigInput = ToObjectLiteral<
-    Pick<RootConfig, 'publicUrl'> &
+export type ConfigInput = ToObjectLiteral<
+    RootConfig &
     {
-        [CONFIG_SECTION_KEY.THEME]: ThemeConfig
+        [SECTION_KEY.THEME]: ThemeConfig,
+        [SECTION_KEY.CORE]: CoreConfig
     } &
     AuthConsoleConfig
 >;
@@ -38,7 +37,7 @@ export type AuthConsoleConfigInput = ToObjectLiteral<
  * and server-core is the external thing it calls, hence `url` for its own
  * address and `apiUrl` for the API's.
  */
-export type AuthConsoleConfig = {
+export type Config = {
     /**
      * The public URL this service is reachable at, e.g.
      * `https://example.com/console/auth`. Its path component becomes the

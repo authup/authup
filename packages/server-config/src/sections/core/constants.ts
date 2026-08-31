@@ -6,14 +6,6 @@
  */
 
 /**
- * The section of `authup.yml` server-core's own keys live under. Every entry
- * below spells its own absolute `path`, so the section is documentation and
- * the anchor those paths are written from, rather than a prefix a reader has
- * to remember to apply.
- */
-export const CORE_CONFIG_SECTION = 'server.core';
-
-/**
  * The trusted-proxy client-certificate header contracts.
  *
  * Declared here rather than in server-core's request layer because the
