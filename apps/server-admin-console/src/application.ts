@@ -24,5 +24,8 @@ import type { Config } from './types';
 export function createAdminConsoleApplication(
     config: Config | (() => Config | Promise<Config>) = readAdminConsoleConfigFromEnv,
 ) : Application {
-    return createApplication<Config>(config, { createHandler: (resolved) => createAdminConsoleHandler(resolved) });
+    return createApplication<Config>({
+        config,
+        createHandler: (resolved, theme) => createAdminConsoleHandler(resolved, theme),
+    });
 }

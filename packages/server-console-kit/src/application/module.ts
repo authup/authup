@@ -9,7 +9,7 @@ import { Application } from 'orkos';
 import { ConfigModule } from './config';
 import { HTTPModule } from './http';
 import { ThemeModule } from './theme';
-import type { Config, ConfigFactory, HTTPModuleContext } from './types';
+import type { Config, CreateApplicationContext } from './types';
 
 /**
  * A console as an APPLICATION: a module graph with its own configuration,
@@ -27,14 +27,13 @@ import type { Config, ConfigFactory, HTTPModuleContext } from './types';
  * next one — slots in without any caller changing.
  */
 export function createApplication<C extends Config>(
-    config: C | ConfigFactory<C>,
-    ctx: HTTPModuleContext<C>,
+    context: CreateApplicationContext<C>,
 ) : Application {
     return new Application({
         modules: [
-            new ConfigModule<C>(config),
+            new ConfigModule<C>(context.config),
             new ThemeModule(),
-            new HTTPModule<C>(ctx),
+            new HTTPModule<C>(context),
         ],
     });
 }

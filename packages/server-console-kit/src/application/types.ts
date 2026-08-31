@@ -43,3 +43,17 @@ export type HTTPModuleContext<C extends Config = Config> = {
      */
     createHandler: (config: C, theme?: IThemeProvider) => Promise<IApp>,
 };
+
+/**
+ * Everything a console application is composed from. One context rather than
+ * a config argument plus an options bag: both are configuration of the same
+ * graph, and the shape then matches server-core's own `createApplication`.
+ */
+export type CreateApplicationContext<C extends Config = Config> = HTTPModuleContext<C> & {
+    /**
+     * A FACTORY is the useful form: resolving reads the document, and a
+     * console started alongside others must not do that at construction time,
+     * before the caller has said where to look.
+     */
+    config: C | ConfigFactory<C>,
+};

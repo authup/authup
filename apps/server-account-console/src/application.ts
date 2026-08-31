@@ -24,5 +24,8 @@ import type { Config } from './types';
 export function createAccountConsoleApplication(
     config: Config | (() => Config | Promise<Config>) = readAccountConsoleConfigFromEnv,
 ) : Application {
-    return createApplication<Config>(config, { createHandler: (resolved) => createAccountConsoleHandler(resolved) });
+    return createApplication<Config>({
+        config,
+        createHandler: (resolved, theme) => createAccountConsoleHandler(resolved, theme),
+    });
 }
