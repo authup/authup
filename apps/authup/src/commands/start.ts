@@ -16,30 +16,37 @@ import {
     readConfig,
     registerShutdownHandlers,
 } from '@authup/server-core';
-import type { IApp } from 'routup';
 import type { ConsoleConfigs } from '../roles/config.ts';
 import { readConsoleConfigs } from '../roles/config.ts';
-import { createAuthConsoleHandler } from '@authup/server-auth-console';
-import { createAdminConsoleHandler } from '@authup/server-admin-console';
-import { createAccountConsoleHandler } from '@authup/server-account-console';
+import { createApplication as createAuthConsoleApplication } from '@authup/server-auth-console';
+import { createApplication as createAdminConsoleApplication } from '@authup/server-admin-console';
+import { createApplication as createAccountConsoleApplication } from '@authup/server-account-console';
+import { InjectionKey } from '@authup/server-console-kit';
+import type { Application } from 'orkos';
 
 /**
  * The single-container composition (plan 101 D2): every enabled console on
  * server-core's own listener.
  *
+ * Each console is set up as the APPLICATION it is, with `listen: false`, and
+ * what gets mounted is the app its own graph built. The alternative -- asking
+ * each console for a bare handler -- would run neither its config module nor
+ * its theme module, so `authup start` would be a third way to start a console
+ * that only resembles the two supported ones. A console owns its listener
+ * everywhere except here, and here it is composed rather than reduced.
+ *
  * The mount PATH is the path component of the console's url, never the url
  * itself. A console url is where a BROWSER reaches the console, so it carries
  * the origin the proxy publishes; the listener only ever sees the path.
- *
- * The list is handed to {@link HTTPModule} rather than mounted afterwards,
- * because the order relative to the protocol routes and the trailing
- * middleware is load-bearing and belongs to the module that owns them.
  */
-async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: string, handler: IApp }[]> {
+async function buildConsoleApplications(consoles: ConsoleConfigs) : Promise<{
+    path: string,
+    application: Application,
+}[]> {
     const candidates : {
         name: string,
         url: string,
-        create: () => Promise<IApp>
+        create: () => Application
     }[] = [
         // The auth console is not gated. The hosted login, consent and
         // workflow pages are the issuance surface, so no flag turns them off
@@ -47,7 +54,7 @@ async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: st
         {
             name: 'auth console',
             url: consoles.auth.url,
-            create: () => createAuthConsoleHandler(consoles.auth),
+            create: () => createAuthConsoleApplication({ config: consoles.auth, listen: false }),
         },
     ];
 
@@ -55,7 +62,7 @@ async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: st
         candidates.push({
             name: 'admin console',
             url: consoles.admin.url,
-            create: () => createAdminConsoleHandler(consoles.admin),
+            create: () => createAdminConsoleApplication({ config: consoles.admin, listen: false }),
         });
     }
 
@@ -63,11 +70,11 @@ async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: st
         candidates.push({
             name: 'account console',
             url: consoles.account.url,
-            create: () => createAccountConsoleHandler(consoles.account),
+            create: () => createAccountConsoleApplication({ config: consoles.account, listen: false }),
         });
     }
 
-    const mounts : { path: string, handler: IApp }[] = [];
+    const applications : { path: string, application: Application }[] = [];
 
     for (const candidate of candidates) {
         const path = getURLBasePath(candidate.url);
@@ -76,18 +83,22 @@ async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: st
             // root, where it would shadow the protocol routes and the page
             // GETs would redirect to themselves. Refuse it by name rather
             // than booting into a redirect loop. The origin needs no check
-            // here: normalizeConfig already refused a console url that is not
-            // publicUrl's own origin.
+            // here: every console url is already refused unless it is
+            // publicUrl's own origin, by the key that resolves it.
             throw new AuthupError(
                 `The ${candidate.name} url is ${candidate.url}, which is this deployment's own origin root. ` +
                 'A console needs a path of its own; the defaults are under /console.',
             );
         }
 
-        mounts.push({ path, handler: await candidate.create() });
+        const application = candidate.create();
+
+        await application.setup();
+
+        applications.push({ path, application });
     }
 
-    return mounts;
+    return applications;
 }
 
 /**
@@ -121,18 +132,25 @@ function defineApplicationCommand(
                 fs: { ...configFs },
             });
 
+            const consoles : { path: string, application: Application }[] = [];
+
             const app = createApplication({
                 config: new ConfigModule(config),
                 http: new HTTPModule({
-                    mount: async (app) => {
-                        if (!role.consoles) return;
+                    mount: async (router) => {
+                        if (!role.consoles) {
+                            return;
+                        }
 
-                        const mounts = await buildConsoleMounts(
+                        consoles.push(...await buildConsoleApplications(
                             await readConsoleConfigs(configFs),
-                        );
+                        ));
 
-                        for (const mount of mounts) {
-                            app.use(mount.path, mount.handler);
+                        for (const mount of consoles) {
+                            router.use(
+                                mount.path,
+                                mount.application.container.resolve(InjectionKey.App),
+                            );
                         }
                     },
                 }),
@@ -140,7 +158,16 @@ function defineApplicationCommand(
 
             await app.setup();
 
-            registerShutdownHandlers(app);
+            registerShutdownHandlers({
+                teardown: async () => {
+                    // The consoles first: they are mounted ON this listener,
+                    // so tearing the listener down under them would leave
+                    // their modules to unwind against a socket that is gone.
+                    await Promise.all(consoles.map((mount) => mount.application.teardown()));
+
+                    await app.teardown();
+                },
+            });
         },
     });
 }

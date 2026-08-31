@@ -7,8 +7,8 @@
  */
 
 import { serve } from 'routup/node';
-import { readAuthConsoleConfigFromEnv } from './config';
-import { createAuthConsoleServer } from './server';
+import { readConfigFromEnv } from './config';
+import { createServer } from './server';
 
 /**
  * The standalone entry. It reads the keys this service declares from the
@@ -16,8 +16,8 @@ import { createAuthConsoleServer } from './server';
  * (`authup console auth`), which hand each factory its own section, and that
  * is also how it is started in practice.
  */
-const config = readAuthConsoleConfigFromEnv();
-const app = await createAuthConsoleServer(config);
+const config = readConfigFromEnv();
+const app = await createServer(config);
 
 const server = serve(app, {
     port: config.port,

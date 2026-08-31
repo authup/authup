@@ -8,13 +8,15 @@
 import { InjectionKey } from '@authup/server-console-kit';
 import type { IThemeProvider } from '@authup/server-console-kit';
 import type { Application } from 'orkos';
+import { App } from 'routup';
+import { serve } from 'routup/node';
 import { 
     afterEach, 
     describe, 
     expect, 
     it, 
 } from 'vitest';
-import { createAccountConsoleApplication } from '../../src';
+import { createApplication } from '../../src';
 
 const MARKER = '/*INJECTED-THEME-MARKER*/';
 
@@ -44,7 +46,7 @@ function buildConfig() {
     };
 }
 
-describe('createAccountConsoleApplication', () => {
+describe('createApplication', () => {
     let application : Application | undefined;
 
     afterEach(async () => {
@@ -53,7 +55,7 @@ describe('createAccountConsoleApplication', () => {
     });
 
     it('should resolve the configuration a caller registered', async () => {
-        application = createAccountConsoleApplication(() => {
+        application = createApplication(() => {
             throw new Error('the factory must not run when a config is registered');
         });
 
@@ -67,7 +69,7 @@ describe('createAccountConsoleApplication', () => {
     });
 
     it('should serve the page through the theme provider the graph resolved', async () => {
-        application = createAccountConsoleApplication(buildConfig);
+        application = createApplication(buildConfig);
         application.container.register(InjectionKey.Theme, { useValue: provider });
 
         await application.setup();
@@ -77,5 +79,43 @@ describe('createAccountConsoleApplication', () => {
 
         expect(response.status).toEqual(200);
         expect(await response.text()).toContain(MARKER);
+    });
+
+    /**
+     * The mounted mode `authup start` uses. The application is set up
+     * COMPLETELY -- config resolved, theme resolved, handler built and
+     * registered -- it just does not own a socket, so a composing caller can
+     * put it on someone else's. Asking a console for a bare handler instead
+     * would run neither module, which is what this guards.
+     */
+    it('should build without a listener when it is to be mounted', async () => {
+        application = createApplication({ config: buildConfig, listen: false });
+        application.container.register(InjectionKey.Theme, { useValue: provider });
+
+        await application.setup();
+
+        expect(application.container.has(InjectionKey.Server)).toBe(false);
+
+        const mounted = application.container.resolve(InjectionKey.App);
+
+        const outer = new App();
+        outer.use('/console/account', mounted);
+
+        const server = serve(outer, {
+            port: 0, 
+            hostname: '127.0.0.1', 
+            silent: true, 
+        });
+        await server.ready();
+
+        try {
+            const response = await fetch(`${server.url}console/account`);
+
+            expect(response.status).toEqual(200);
+            // the theme the console graph resolved, on someone else's listener
+            expect(await response.text()).toContain(MARKER);
+        } finally {
+            await server.close(true);
+        }
     });
 });

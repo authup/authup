@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readAccountConsoleConfigFromEnv } from '../../src';
+import { readConfigFromEnv } from '../../src';
 
 const KEYS = [
     'PUBLIC_URL',
@@ -27,7 +27,7 @@ const KEYS = [
     'PORT',
 ];
 
-describe('readAccountConsoleConfigFromEnv', () => {
+describe('readConfigFromEnv', () => {
     afterEach(() => {
         for (const key of KEYS) {
             delete process.env[key];
@@ -42,12 +42,12 @@ describe('readAccountConsoleConfigFromEnv', () => {
      * server-core process happened to be reading it.
      */
     it('should derive the public URL from the core listener keys', () => {
-        expect(readAccountConsoleConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
+        expect(readConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
 
         process.env.HOST = '127.0.0.1';
         process.env.PORT = '4711';
 
-        const config = readAccountConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.apiUrl).toEqual('http://127.0.0.1:4711');
         expect(config.url).toEqual('http://127.0.0.1:4711/console/account');
@@ -56,7 +56,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
     it('should derive the console URL from the public URL', () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readAccountConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.url).toEqual('https://example.com/console/account');
         expect(config.apiUrl).toEqual('https://example.com');
@@ -65,7 +65,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
     it('should derive the console URL from a public URL carrying a sub-path', () => {
         process.env.PUBLIC_URL = 'https://example.com/auth/';
 
-        expect(readAccountConsoleConfigFromEnv().url)
+        expect(readConfigFromEnv().url)
             .toEqual('https://example.com/auth/console/account');
     });
 
@@ -73,7 +73,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_URL = 'https://example.com/account';
 
-        expect(readAccountConsoleConfigFromEnv().url)
+        expect(readConfigFromEnv().url)
             .toEqual('https://example.com/account');
     });
 
@@ -88,14 +88,14 @@ describe('readAccountConsoleConfigFromEnv', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_URL = 'https://account.example.com';
 
-        expect(() => readAccountConsoleConfigFromEnv()).toThrow(/not the origin of publicUrl/);
+        expect(() => readConfigFromEnv()).toThrow(/not the origin of publicUrl/);
     });
 
     it('should read the disabled flag as a boolean', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_ENABLED = 'false';
 
-        expect(readAccountConsoleConfigFromEnv().enabled).toEqual(false);
+        expect(readConfigFromEnv().enabled).toEqual(false);
     });
 
     it('should read the listen address as a number and a string', () => {
@@ -103,7 +103,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
         process.env.ACCOUNT_CONSOLE_PORT = '4022';
         process.env.ACCOUNT_CONSOLE_HOST = '127.0.0.1';
 
-        const config = readAccountConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.port).toEqual(4022);
         expect(config.host).toEqual('127.0.0.1');
@@ -112,7 +112,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
     it('should fall back to the default listen address', () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readAccountConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.port).toEqual(3022);
         expect(config.host).toEqual('0.0.0.0');
@@ -124,7 +124,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
 
         // canonicalized and dev-seeded by the key's own resolver, so this
         // service gets the same list server-core does without being handed one
-        expect(readAccountConsoleConfigFromEnv().trustedOrigins).toEqual([
+        expect(readConfigFromEnv().trustedOrigins).toEqual([
             'https://admin.example.com',
             'https://hub.example.com',
             'http://localhost:3010',
@@ -142,7 +142,7 @@ describe('readAccountConsoleConfigFromEnv', () => {
         process.env.NODE_ENV = 'production';
         process.env.TRUSTED_ORIGINS = 'hub.local';
 
-        expect(readAccountConsoleConfigFromEnv().trustedOrigins)
+        expect(readConfigFromEnv().trustedOrigins)
             .toEqual(['http://hub.local', 'https://hub.local']);
 
         delete process.env.NODE_ENV;

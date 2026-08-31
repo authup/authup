@@ -35,7 +35,7 @@ import type { Config, ConfigInput } from './types';
  * (`url`, `port`, `host`); every other section stays under the key the
  * document nests it at.
  */
-export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
     ...ACCOUNT_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,
@@ -61,14 +61,14 @@ export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUr
  * would let an input carrying one key of a section replace the whole section
  * and take every other key's default with it.
  */
-export function resolveAccountConsoleConfig(
+export function resolveConfig(
     input: Partial<ConfigInput>,
 ) : Config {
     const values = resolveSchemaData<ConfigInput>(
-        ACCOUNT_CONSOLE_CONFIG_SCHEMA,
+        CONFIG_SCHEMA,
         mergeSchemaData<ConfigInput>(
-            ACCOUNT_CONSOLE_CONFIG_SCHEMA,
-            buildSchemaDefaults<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA),
+            CONFIG_SCHEMA,
+            buildSchemaDefaults<ConfigInput>(CONFIG_SCHEMA),
             input,
         ),
     ) as ConfigInput;
@@ -90,11 +90,11 @@ export function resolveAccountConsoleConfig(
  * `authup.yml` reaches this service through the CLI roles, which compose this
  * very registry into the one document loader.
  */
-export function readAccountConsoleConfigFromEnv() : Config {
+export function readConfigFromEnv() : Config {
     // The explicit type argument is load-bearing: inferred from the schema
     // object, a key declared without a default (the derived publicUrl) comes
     // back as unknown.
-    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA);
+    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(CONFIG_SCHEMA);
 
-    return resolveAccountConsoleConfig(input);
+    return resolveConfig(input);
 }

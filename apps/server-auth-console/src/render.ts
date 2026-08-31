@@ -21,8 +21,8 @@ import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
-import { AUTH_CONSOLE_VITE_BASE } from './constants';
-import { resolveAuthConsoleDistPath } from './resolve';
+import { VITE_BASE } from './constants';
+import { resolveDistPath } from './resolve';
 import type { Config } from './types';
 
 // Process-lifetime caches for the immutable production SSR assets. The dist
@@ -32,7 +32,7 @@ let cachedHtml: string | undefined;
 let cachedManifest: Record<string, any> | undefined;
 let cachedRender: RenderFunction | undefined;
 
-export async function renderAuthConsolePage(
+export async function renderPage(
     event: IAppEvent,
     config: Config,
     ctx: {
@@ -41,7 +41,7 @@ export async function renderAuthConsolePage(
         theme?: IThemeProvider 
     },
 ) : Promise<string> {
-    const distPath = resolveAuthConsoleDistPath();
+    const distPath = resolveDistPath();
     if (!distPath) {
         throw new InternalError(
             'The auth console bundle (@authup/client-auth-console) is not built or installed.',
@@ -96,7 +96,7 @@ export async function renderAuthConsolePage(
     // fixed vite base in every href is replaced by this service's public
     // path. The vite base was decided when the bundle was built and says
     // nothing about where the service is published.
-    body = rebaseAssetURLs(body, AUTH_CONSOLE_VITE_BASE, `${basePath}/`);
+    body = rebaseAssetURLs(body, VITE_BASE, `${basePath}/`);
 
     // The theme's own asset urls are built from the same base, and the
     // service mounts them under it, so a themed deployment needs no rule of

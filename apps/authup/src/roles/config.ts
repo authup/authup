@@ -9,17 +9,26 @@ import type {
     Config as AccountConsoleConfig,
     ConfigInput as AccountConsoleConfigInput,
 } from '@authup/server-account-console';
-import { ACCOUNT_CONSOLE_CONFIG_SCHEMA, resolveAccountConsoleConfig } from '@authup/server-account-console';
+import {
+    CONFIG_SCHEMA as ACCOUNT_CONSOLE_SCHEMA,
+    resolveConfig as resolveAccountConsoleConfig,
+} from '@authup/server-account-console';
 import type {
     Config as AdminConsoleConfig,
     ConfigInput as AdminConsoleConfigInput,
 } from '@authup/server-admin-console';
-import { ADMIN_CONSOLE_CONFIG_SCHEMA, resolveAdminConsoleConfig } from '@authup/server-admin-console';
+import {
+    CONFIG_SCHEMA as ADMIN_CONSOLE_SCHEMA,
+    resolveConfig as resolveAdminConsoleConfig,
+} from '@authup/server-admin-console';
 import type {
     Config as AuthConsoleConfig,
     ConfigInput as AuthConsoleConfigInput,
 } from '@authup/server-auth-console';
-import { AUTH_CONSOLE_CONFIG_SCHEMA, resolveAuthConsoleConfig } from '@authup/server-auth-console';
+import {
+    CONFIG_SCHEMA as AUTH_CONSOLE_SCHEMA,
+    resolveConfig as resolveAuthConsoleConfig,
+} from '@authup/server-auth-console';
 import { mergeSchemaData, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { SchemaInput } from '@authup/server-config-kit';
 import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
@@ -61,8 +70,8 @@ export async function readConsoleConfigs(
     );
 
     return {
-        auth: resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA)),
-        admin: resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA)),
-        account: resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
+        auth: resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_SCHEMA)),
+        admin: resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_SCHEMA)),
+        account: resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_SCHEMA)),
     };
 }

@@ -23,11 +23,11 @@ export class HTTPModule<C extends Config = Config> implements IModule {
 
     readonly dependencies: string[];
 
-    protected ctx : HTTPModuleContext<C>;
+    protected ctx : HTTPModuleContext<C> & { listen?: boolean };
 
     protected instance : HTTPServer | undefined;
 
-    constructor(ctx: HTTPModuleContext<C>) {
+    constructor(ctx: HTTPModuleContext<C> & { listen?: boolean }) {
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.THEME];
         this.ctx = ctx;
@@ -40,6 +40,12 @@ export class HTTPModule<C extends Config = Config> implements IModule {
 
         const app = await this.ctx.createHandler(config, theme);
 
+        container.register(InjectionKey.App, { useValue: app });
+
+        if (this.ctx.listen === false) {
+            return;
+        }
+
         const server = serve(app, {
             port: config.port,
             hostname: config.host,
@@ -50,7 +56,6 @@ export class HTTPModule<C extends Config = Config> implements IModule {
 
         this.instance = server;
 
-        container.register(InjectionKey.App, { useValue: app });
         container.register(InjectionKey.Server, { useValue: server });
     }
 

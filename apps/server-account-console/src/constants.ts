@@ -10,16 +10,16 @@
  * shell are emitted against it, so the service rewrites them onto the path
  * it actually serves them under.
  */
-export const ACCOUNT_CONSOLE_VITE_BASE = '/console/account/';
+export const VITE_BASE = '/console/account/';
 
 /**
  * The path the service is served under by default, i.e. the path component
  * of `server.accountConsole.url`. It is the same segment server-core mounted
  * the console at before the split, so a built bundle needs no rebuild.
  */
-export const ACCOUNT_CONSOLE_BASE_PATH = '/console/account';
+export const BASE_PATH = '/console/account';
 
-export const ACCOUNT_CONSOLE_PACKAGE_NAME = '@authup/client-account-console';
+export const PACKAGE_NAME = '@authup/client-account-console';
 
 /**
  * The marker in the built `index.html` the runtime configuration script
@@ -27,6 +27,6 @@ export const ACCOUNT_CONSOLE_PACKAGE_NAME = '@authup/client-account-console';
  * injected `window.__AUTHUP__` never lands and the SPA silently degrades to
  * deriving its API url from its own origin.
  */
-export const ACCOUNT_CONSOLE_CONFIG_MARKER = '<!--account-config-->';
+export const CONFIG_MARKER = '<!--account-config-->';
 
 export const HEALTH_PATH = '/healthy';

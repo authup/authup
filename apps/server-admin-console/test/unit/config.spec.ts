@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readAdminConsoleConfigFromEnv } from '../../src';
+import { readConfigFromEnv } from '../../src';
 
 const KEYS = [
     'PUBLIC_URL',
@@ -30,7 +30,7 @@ const KEYS = [
     'PORT',
 ];
 
-describe('readAdminConsoleConfigFromEnv', () => {
+describe('readConfigFromEnv', () => {
     afterEach(() => {
         for (const key of KEYS) {
             delete process.env[key];
@@ -45,12 +45,12 @@ describe('readAdminConsoleConfigFromEnv', () => {
      * server-core process happened to be reading it.
      */
     it('should derive the public URL from the core listener keys', () => {
-        expect(readAdminConsoleConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
+        expect(readConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
 
         process.env.HOST = '127.0.0.1';
         process.env.PORT = '4711';
 
-        const config = readAdminConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.apiUrl).toEqual('http://127.0.0.1:4711');
         expect(config.url).toEqual('http://127.0.0.1:4711/console/admin');
@@ -59,7 +59,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
     it('should derive the console URL from the public URL', () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readAdminConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.url).toEqual('https://example.com/console/admin');
         expect(config.apiUrl).toEqual('https://example.com');
@@ -68,7 +68,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
     it('should derive the console URL from a public URL carrying a sub-path', () => {
         process.env.PUBLIC_URL = 'https://example.com/auth/';
 
-        expect(readAdminConsoleConfigFromEnv().url)
+        expect(readConfigFromEnv().url)
             .toEqual('https://example.com/auth/console/admin');
     });
 
@@ -76,7 +76,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_URL = 'https://example.com/console';
 
-        expect(readAdminConsoleConfigFromEnv().url)
+        expect(readConfigFromEnv().url)
             .toEqual('https://example.com/console');
     });
 
@@ -91,14 +91,14 @@ describe('readAdminConsoleConfigFromEnv', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_URL = 'https://console.example.com';
 
-        expect(() => readAdminConsoleConfigFromEnv()).toThrow(/not the origin of publicUrl/);
+        expect(() => readConfigFromEnv()).toThrow(/not the origin of publicUrl/);
     });
 
     it('should read the disabled flag as a boolean', () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_ENABLED = 'false';
 
-        expect(readAdminConsoleConfigFromEnv().enabled).toEqual(false);
+        expect(readConfigFromEnv().enabled).toEqual(false);
     });
 
     it('should read the listen address as a number and a string', () => {
@@ -106,7 +106,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
         process.env.ADMIN_CONSOLE_PORT = '4021';
         process.env.ADMIN_CONSOLE_HOST = '127.0.0.1';
 
-        const config = readAdminConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.port).toEqual(4021);
         expect(config.host).toEqual('127.0.0.1');
@@ -115,7 +115,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
     it('should fall back to the default listen address', () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readAdminConsoleConfigFromEnv();
+        const config = readConfigFromEnv();
 
         expect(config.port).toEqual(3021);
         expect(config.host).toEqual('0.0.0.0');
@@ -140,7 +140,7 @@ describe('readAdminConsoleConfigFromEnv', () => {
             Object.assign(process.env, env);
 
             try {
-                expect(() => readAdminConsoleConfigFromEnv()).not.toThrow();
+                expect(() => readConfigFromEnv()).not.toThrow();
             } finally {
                 for (const key of Object.keys(env)) {
                     delete process.env[key];

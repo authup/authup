@@ -13,17 +13,17 @@ import {
     createThemeProvider,
     defineStaticConsole,
 } from '@authup/server-console-kit';
-import { createHandler } from '@routup/assets';
+import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import { NotFoundError } from '@ebec/http';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import {
-    ADMIN_CONSOLE_CONFIG_MARKER,
-    ADMIN_CONSOLE_PACKAGE_NAME,
-    ADMIN_CONSOLE_VITE_BASE,
+    CONFIG_MARKER,
     HEALTH_PATH,
+    PACKAGE_NAME,
+    VITE_BASE,
 } from './constants';
 import { PACKAGE_PATH } from './path';
 import type { Config } from './types';
@@ -40,7 +40,7 @@ const ASSETS_PATH = '/assets';
  * so a service published at `<origin>/console/admin` receives `/users/<id>`,
  * exactly as the console's own router sees it.
  */
-export async function createAdminConsoleHandler(
+export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
 ) : Promise<App> {
@@ -70,9 +70,9 @@ export async function createAdminConsoleHandler(
     // is instance-scoped, so two applications in one process never share a
     // substituted package path or a resolved dist.
     const staticConsole = defineStaticConsole({
-        packageName: ADMIN_CONSOLE_PACKAGE_NAME,
-        marker: ADMIN_CONSOLE_CONFIG_MARKER,
-        viteBase: ADMIN_CONSOLE_VITE_BASE,
+        packageName: PACKAGE_NAME,
+        marker: CONFIG_MARKER,
+        viteBase: VITE_BASE,
         cwd: PACKAGE_PATH,
         distPath: config.distPath || undefined,
     });
@@ -83,7 +83,7 @@ export async function createAdminConsoleHandler(
     // re-requested all 140+ files on every full document load.
     const distPath = staticConsole.resolveDistPath();
     if (distPath) {
-        app.use(ASSETS_PATH, createHandler(
+        app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'assets'),
             {
                 fallthrough: false,

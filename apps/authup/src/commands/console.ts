@@ -5,9 +5,9 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { createAccountConsoleApplication } from '@authup/server-account-console';
-import { createAdminConsoleApplication } from '@authup/server-admin-console';
-import { createAuthConsoleApplication } from '@authup/server-auth-console';
+import { createApplication as createAccountConsoleApplication } from '@authup/server-account-console';
+import { createApplication as createAdminConsoleApplication } from '@authup/server-admin-console';
+import { createApplication as createAuthConsoleApplication } from '@authup/server-auth-console';
 import { InjectionKey } from '@authup/server-console-kit';
 import type { Application } from 'orkos';
 import type { ConfigReadFsOptions } from '@authup/server-config';
@@ -60,21 +60,21 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
             const services : ConsoleService[] = [
                 {
                     name: 'auth',
-                    create: () => createAuthConsoleApplication(consoles.auth),
+                    create: () => createAuthConsoleApplication({ config: consoles.auth }),
                 },
             ];
 
             if (consoles.admin.enabled) {
                 services.push({
                     name: 'admin',
-                    create: () => createAdminConsoleApplication(consoles.admin),
+                    create: () => createAdminConsoleApplication({ config: consoles.admin }),
                 });
             }
 
             if (consoles.account.enabled) {
                 services.push({
                     name: 'account',
-                    create: () => createAccountConsoleApplication(consoles.account),
+                    create: () => createAccountConsoleApplication({ config: consoles.account }),
                 });
             }
 

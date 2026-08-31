@@ -18,7 +18,7 @@ let overridePackagePath: string | undefined;
  * Point the resolution at a substituted package (config `distPath`)
  * instead of the node_modules walk. Called once at boot.
  */
-export function setAuthConsolePackagePath(value: string | undefined) : void {
+export function setPackagePath(value: string | undefined) : void {
     overridePackagePath = value || undefined;
     cachedPackagePath = undefined;
     cachedDistPath = undefined;
@@ -36,7 +36,7 @@ export function setAuthConsolePackagePath(value: string | undefined) : void {
  * node_modules tree is walked, so it stays pinned to this package rather
  * than to the process cwd.
  */
-export function resolveAuthConsolePackagePath() : string | undefined {
+export function resolvePackagePath() : string | undefined {
     if (cachedPackagePath) {
         return cachedPackagePath;
     }
@@ -64,12 +64,12 @@ export function resolveAuthConsolePackagePath() : string | undefined {
  * so a dev building the package after boot is picked up on the next
  * request.
  */
-export function resolveAuthConsoleDistPath() : string | undefined {
+export function resolveDistPath() : string | undefined {
     if (cachedDistPath) {
         return cachedDistPath;
     }
 
-    const packagePath = resolveAuthConsolePackagePath();
+    const packagePath = resolvePackagePath();
     if (packagePath) {
         const distPath = path.join(packagePath, 'dist');
 

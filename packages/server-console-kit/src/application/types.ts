@@ -51,6 +51,17 @@ export type HTTPModuleContext<C extends Config = Config> = {
  */
 export type CreateApplicationContext<C extends Config = Config> = HTTPModuleContext<C> & {
     /**
+     * `false` builds the console fully and registers its app under
+     * {@link InjectionKey.App} WITHOUT a listener, which is how a composing
+     * caller puts it on someone else's.
+     *
+     * Not a lifecycle split: the application is completely set up either way,
+     * it just does not own the socket. That is what lets `authup start` run
+     * the same module graph `authup console` and the per-console bin run,
+     * instead of reaching past it for a bare handler.
+     */
+    listen?: boolean,
+    /**
      * A FACTORY is the useful form: resolving reads the document, and a
      * console started alongside others must not do that at construction time,
      * before the caller has said where to look.

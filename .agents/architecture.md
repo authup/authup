@@ -816,7 +816,7 @@ API. The six page GETs became a stateless hop:
   than once per service.
 - **Serving seam (plan 083)**: the Vue app ships as
   `@authup/client-auth-console`, a runtime dependency of the auth console
-  SERVICE, resolved via `resolveAuthConsolePackagePath`/`-DistPath`
+  SERVICE, resolved via `resolvePackagePath`/`resolveDistPath`
   (`apps/server-auth-console/src/resolve.ts`, the locter `locateUpSync`
   ancestor walk anchored on that package's own root, so it works for the
   workspace symlink and a published install alike). It reads the built dist
@@ -1298,7 +1298,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   `https://*.example.com/**` covers every subdomain but not
   `https://a.example.com.evil.test/cb`, `https://a.example.com@evil.test/cb`
   or a differing port. Matching is case sensitive, so a caller comparing URLs
-  canonicalizes first (`resolveAccountConsoleRef`). The matcher walks value
+  canonicalizes first (`resolveRef`). The matcher walks value
   and pattern on separate indices with ONE backtrack point (the last `*`),
   which bounds it at O(value x pattern) and keeps it regex-free, so no
   pattern can be turned into a ReDoS. A property test pins it against a
@@ -1995,12 +1995,12 @@ apps/server-{admin,account}-console/src/   — one static console service each, 
 
 apps/server-auth-console/src/       — the SSR console service
   config.ts / constants.ts / types.ts — as above, plus the page list
-  handler.ts                        — createAuthConsoleHandler: theme, assets, one route per rendered page
-  render.ts                         — renderAuthConsolePage(event, config, { url, data, theme }): template,
+  handler.ts                        — createHandler: theme, assets, one route per rendered page
+  render.ts                         — renderPage(event, config, { url, data, theme }): template,
                                       manifest and render entry memoized for the process lifetime
   payload.ts                        — the anonymous hydration reads (authorize info, status features) + the
                                       workflow-page payload assembly
-  resolve.ts                        — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of
+  resolve.ts                        — resolvePackagePath/resolveDistPath (locter locateUp resolution of
                                       @authup/client-auth-console, anchored on this package)
   redirect.ts                       — sanitizeRelativeRedirect (open-redirect guard on the `redirect` param)
 
@@ -5995,7 +5995,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
   hosts build a fresh payload per request (Nuxt's `payload.data`; every
-  `renderAuthConsolePage` caller in the auth console service passes a new
+  `renderPage` caller in the auth console service passes a new
   payload literal, and the process-level caches in its `render.ts` hold only
   the immutable template / manifest / bundle), and the store is provided on
   the per-request Vue app, so it is unreachable once the render ends. Same

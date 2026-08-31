@@ -11,7 +11,7 @@ import {
     createThemeAssetsHandler,
     createThemeProvider,
 } from '@authup/server-console-kit';
-import { createHandler } from '@routup/assets';
+import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import path from 'node:path';
 import type { IApp } from 'routup';
@@ -23,8 +23,8 @@ import {
     readAuthorizeInfo,
     readFeatures,
 } from './payload';
-import { renderAuthConsolePage } from './render';
-import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from './resolve';
+import { renderPage } from './render';
+import { resolveDistPath, setPackagePath } from './resolve';
 import type { Config } from './types';
 
 const WORKFLOW_PAGES : {
@@ -51,11 +51,11 @@ const WORKFLOW_PAGES : {
  * proxy, so a service published at `<origin>/console/auth` receives
  * `/authorize`, exactly as server-core received it before the split.
  */
-export async function createAuthConsoleHandler(
+export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
 ) : Promise<IApp> {
-    setAuthConsolePackagePath(config.distPath);
+    setPackagePath(config.distPath);
 
     const app = new App();
     const client = createAPIClient(config);
@@ -88,7 +88,7 @@ export async function createAuthConsoleHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/authorize',
-        fn: async (event) => renderAuthConsolePage(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
             theme,
@@ -102,7 +102,7 @@ export async function createAuthConsoleHandler(
             fn: async (event) => {
                 const features = await readFeatures(client);
 
-                return renderAuthConsolePage(event, config, {
+                return renderPage(event, config, {
                     url: page.url,
                     data: buildWorkflowPageData(event, features, page),
                     theme,
@@ -117,7 +117,7 @@ export async function createAuthConsoleHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/logout',
-        fn: async (event) => renderAuthConsolePage(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/logout',
             data: {},
             theme,
@@ -128,9 +128,9 @@ export async function createAuthConsoleHandler(
     // template and the ssr manifest are inputs of the render, not files to
     // serve. A missing bundle only disables the mount; the page routes
     // report the actionable error.
-    const distPath = resolveAuthConsoleDistPath();
+    const distPath = resolveDistPath();
     if (distPath) {
-        app.use(ASSETS_PATH, createHandler(
+        app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'client', 'assets'),
             {
                 fallthrough: false,

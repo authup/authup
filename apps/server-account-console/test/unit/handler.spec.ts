@@ -13,14 +13,14 @@ import {
     it,
 } from 'vitest';
 import { serve } from 'routup/node';
-import { createAccountConsoleHandler } from '../../src';
+import { createHandler } from '../../src';
 
 /**
  * The service serves the BUILT `@authup/client-account-console` bundle, so
  * this suite needs it built, like every console page spec that came before
  * it.
  */
-describe('createAccountConsoleHandler', () => {
+describe('createHandler', () => {
     let baseURL : string;
     let server : ReturnType<typeof serve>;
 
@@ -39,7 +39,7 @@ describe('createAccountConsoleHandler', () => {
     };
 
     beforeAll(async () => {
-        server = serve(await createAccountConsoleHandler(config), { port: 0, silent: true });
+        server = serve(await createHandler(config), { port: 0, silent: true });
         await server.ready();
 
         baseURL = (server.url ?? '').replace(/\/+$/, '');

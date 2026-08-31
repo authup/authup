@@ -171,6 +171,21 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   the bare console name (`authup console admin`) while the workspace behind
   it is `server-admin-console`.
 
+- **An export does not repeat its package's name.** The package IS the
+  namespace, so `@authup/server-account-console` exports `createApplication`,
+  `createHandler`, `createServer`, `resolveConfig`, `readConfigFromEnv` and
+  `CONFIG_SCHEMA`, not `createAccountConsoleApplication` and its siblings.
+  Identical names across sibling packages are the intended outcome, not a
+  collision (`server-adapter-node` and `server-adapter-socket-io` have both
+  exported `createMiddleware` since long before the consoles existed): the two
+  only ever meet in a consumer that imports several, and there an alias at the
+  import site says which is which. `apps/authup` is that consumer for the three
+  consoles. This applies to the SERVICE packages only. The client BUNDLES keep
+  a qualified `resolveAccountConsoleConfig`, because that is a module-internal
+  function rather than a package export, and `@authup/server-config` keeps its
+  `ACCOUNT_CONSOLE_BASE_PATH` constants, because it declares all three sections
+  and the console name is what tells them apart.
+
 History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
 `apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
 with no aliases kept. The `client-web-*` packages keep their names on purpose.

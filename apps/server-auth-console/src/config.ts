@@ -35,7 +35,7 @@ import type { Config, ConfigInput } from './types';
  * (`url`, `port`, `host`); every other section stays under the key the
  * document nests it at.
  */
-export const AUTH_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
     ...AUTH_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,
@@ -61,14 +61,14 @@ export const AUTH_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' 
  * would let an input carrying one key of a section replace the whole section
  * and take every other key's default with it.
  */
-export function resolveAuthConsoleConfig(
+export function resolveConfig(
     input: Partial<ConfigInput>,
 ) : Config {
     const values = resolveSchemaData<ConfigInput>(
-        AUTH_CONSOLE_CONFIG_SCHEMA,
+        CONFIG_SCHEMA,
         mergeSchemaData<ConfigInput>(
-            AUTH_CONSOLE_CONFIG_SCHEMA,
-            buildSchemaDefaults<ConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA),
+            CONFIG_SCHEMA,
+            buildSchemaDefaults<ConfigInput>(CONFIG_SCHEMA),
             input,
         ),
     ) as ConfigInput;
@@ -88,11 +88,11 @@ export function resolveAuthConsoleConfig(
  * `authup.yml` reaches this service through the CLI roles, which compose this
  * very registry into the one document loader.
  */
-export function readAuthConsoleConfigFromEnv() : Config {
+export function readConfigFromEnv() : Config {
     // The explicit type argument is load-bearing: inferred from the schema
     // object, a key declared without a default (the derived publicUrl) comes
     // back as unknown.
-    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA);
+    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(CONFIG_SCHEMA);
 
-    return resolveAuthConsoleConfig(input);
+    return resolveConfig(input);
 }

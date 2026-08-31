@@ -13,7 +13,7 @@ import {
     createThemeProvider,
     defineStaticConsole,
 } from '@authup/server-console-kit';
-import { createHandler } from '@routup/assets';
+import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import { useRequestQuery } from '@routup/basic/query';
 import { NotFoundError } from '@ebec/http';
@@ -22,13 +22,13 @@ import { URL } from 'node:url';
 import type { IAppEvent } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import {
-    ACCOUNT_CONSOLE_CONFIG_MARKER,
-    ACCOUNT_CONSOLE_PACKAGE_NAME,
-    ACCOUNT_CONSOLE_VITE_BASE,
+    CONFIG_MARKER,
     HEALTH_PATH,
+    PACKAGE_NAME,
+    VITE_BASE,
 } from './constants';
 import { PACKAGE_PATH } from './path';
-import { resolveAccountConsoleRef } from './ref';
+import { resolveRef } from './ref';
 import { expandToOrigins } from '@authup/server-config';
 import type { Config } from './types';
 
@@ -73,7 +73,7 @@ function buildAppOrigins(config: Config) : string[] {
  * so a service published at `<origin>/console/account` receives `/sessions`,
  * exactly as the console's own router sees it.
  */
-export async function createAccountConsoleHandler(
+export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
 ) : Promise<App> {
@@ -104,9 +104,9 @@ export async function createAccountConsoleHandler(
     // is instance-scoped, so two applications in one process never share a
     // substituted package path or a resolved dist.
     const staticConsole = defineStaticConsole({
-        packageName: ACCOUNT_CONSOLE_PACKAGE_NAME,
-        marker: ACCOUNT_CONSOLE_CONFIG_MARKER,
-        viteBase: ACCOUNT_CONSOLE_VITE_BASE,
+        packageName: PACKAGE_NAME,
+        marker: CONFIG_MARKER,
+        viteBase: VITE_BASE,
         cwd: PACKAGE_PATH,
         distPath: config.distPath || undefined,
     });
@@ -117,7 +117,7 @@ export async function createAccountConsoleHandler(
     // re-requested all 140+ files on every full document load.
     const distPath = staticConsole.resolveDistPath();
     if (distPath) {
-        app.use(ASSETS_PATH, createHandler(
+        app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'assets'),
             {
                 fallthrough: false,
@@ -150,7 +150,7 @@ export async function createAccountConsoleHandler(
             // Everything else here is operator config, but `ref` is
             // request-reflected, so it is validated against the trusted
             // app origins before it goes anywhere near the page.
-            ref: resolveAccountConsoleRef(useRequestQuery(event, 'ref'), appOrigins),
+            ref: resolveRef(useRequestQuery(event, 'ref'), appOrigins),
         },
     });
 

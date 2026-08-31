@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { resolveAccountConsoleConfig } from '@authup/server-account-console';
+import { resolveConfig as resolveAccountConsoleConfig } from '@authup/server-account-console';
 import { readConfig } from '@authup/server-core';
 import {
     afterEach,
