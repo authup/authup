@@ -23,7 +23,7 @@ header / verifier rejection.
 import { verifyRequest } from '@authup/server-adapter-web';
 import { TokenVerifier } from '@authup/server-adapter-kit';
 
-const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001/' });
+const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3000/' });
 
 // routup v5
 router.use(async (event) => {

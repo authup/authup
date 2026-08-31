@@ -7,7 +7,6 @@
 
 import type { SchemaInput } from '../types.ts';
 import { isSchemaEntryInput } from '../entry/check.ts';
-import { resolveSchemaEntryPaths } from '../entry/path.ts';
 import { assertSchemaValue, isSchemaInput } from '../schema/check.ts';
 
 function isRecord(value: unknown) : value is Record<string, unknown> {
@@ -34,8 +33,7 @@ function readTreePath(tree: Record<string, unknown>, path: string) : unknown {
 
 /**
  * The values a parsed configuration document holds for the schema's keys,
- * each read at its resolved path, and at the location of each `alt` when the
- * document says nothing about its own. A key the document is silent about is
+ * each read at its resolved path. A key the document is silent about is
  * absent, so the caller's own defaults stand; a key explicitly set to
  * `false`, `null` or `0` is collected. Values are taken verbatim: coercion
  * and validation happen downstream, against the declared zod types.
@@ -59,14 +57,9 @@ export function readSchemaFromFileTree<T>(
         const entry = schema[key];
 
         if (isSchemaEntryInput(entry)) {
-            const paths = resolveSchemaEntryPaths(key as string, entry);
-
-            for (const path of paths) {
-                const value = readTreePath(tree, path);
-                if (typeof value !== 'undefined') {
-                    data[key as string] = value;
-                    break;
-                }
+            const value = readTreePath(tree, entry.path || (key as string));
+            if (typeof value !== 'undefined') {
+                data[key as string] = value;
             }
 
             continue;
@@ -97,18 +90,12 @@ function collectSchemaPaths<T>(
         const entry = schema[key];
 
         if (isSchemaEntryInput(entry)) {
-            // every location of a fallback chain, not just the key's own: a
-            // document setting the shared one is read, so reporting it as
-            // unread would be a lie.
-            const paths = resolveSchemaEntryPaths(key as string, entry);
+            const path = entry.path || (key as string);
+            claimed.add(path);
 
-            for (const path of paths) {
-                claimed.add(path);
-
-                const segments = path.split('.');
-                for (let i = 1; i < segments.length; i++) {
-                    traversed.add(segments.slice(0, i).join('.'));
-                }
+            const segments = path.split('.');
+            for (let i = 1; i < segments.length; i++) {
+                traversed.add(segments.slice(0, i).join('.'));
             }
 
             continue;

@@ -6,7 +6,7 @@ This section of the Developer Guide offers an overview of the API's structure, i
 ## Swagger
 The full API reference is available via the built-in Swagger documentation.  
 Once the backend is running, the Swagger interface can be accessed at:
-**http://<BACKEND_URL>/docs** (e.g. `http://localhost:3001/docs`)
+**http://<BACKEND_URL>/docs** (e.g. `http://localhost:3000/docs`)
 
 ## What You'll Learn
 This section is structured as follows:

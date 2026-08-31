@@ -11,7 +11,7 @@ import {
     ConfigModule,
 } from '../../src/index.ts';
 import type { Config } from '../../src/index.ts';
-import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
+import { normalizeConfig } from '../../src/app/modules/config/read.ts';
 import { readConfigRawFromEnv } from '@authup/server-config';
 
 import { TestApplication } from './module.ts';

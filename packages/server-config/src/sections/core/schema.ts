@@ -20,7 +20,6 @@ import { resolveRootRelativePath } from '../../helpers/index.ts';
 import { assertSecretsEncryptionKey } from './secrets-encryption-key.ts';
 import { canonicalizeTrustProxyValue } from './trust-proxy-canonicalize.ts';
 import { EnvironmentVariable } from '../../constants.ts';
-import { ROOT_SCHEMA } from '../root/index.ts';
 import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { CoreConfig, MiddlewareOptions } from './types.ts';
@@ -93,9 +92,12 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         },
         host: {
             type: stringType,
-            default: '0.0.0.0',
-            description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host` (HOST), which every console service falls back to as well.',
-            alt: ROOT_SCHEMA.defaultHost,
+            // '' means unset, which is what makes the inheritance below
+            // reachable: a real default would BE the value, and the
+            // deployment-wide one could never reach this listener.
+            default: '',
+            description: 'Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.',
+            resolve: ({ value, get }) => (value as string) || get('host') as string,
         },
         mtlsPublicUrl: {
             type: z.url().nullable(),

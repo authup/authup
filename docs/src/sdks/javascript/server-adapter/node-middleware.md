@@ -59,7 +59,7 @@ const router = new Router();
 
 // create token verifier
 const tokenVerifier = new TokenVerifier({
-    baseURL: 'http://localhost:3001/',
+    baseURL: 'http://localhost:3000/',
     creator: {
         type: 'user',
         name: 'admin',

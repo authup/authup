@@ -17,7 +17,6 @@ import { urlOrEmpty } from '../../utils.ts';
 import { ACCOUNT_CONSOLE_BASE_PATH } from './constants.ts';
 import { assertConsoleOrigin, resolveRootRelativePath } from '../../helpers/index.ts';
 import type { AccountConsoleConfig } from './types.ts';
-import { ROOT_SCHEMA } from '../root/index.ts';
 
 export const ACCOUNT_CONSOLE_SCHEMA = defineSchema<
     AccountConsoleConfig,
@@ -77,15 +76,14 @@ export const ACCOUNT_CONSOLE_SCHEMA = defineSchema<
         },
         host: {
             type: z.string(),
-            default: '0.0.0.0',
-            description: 'Host address the HTTP listener binds. Falls back to the deployment-wide `host` (HOST).',
+            // '' means unset, which is what makes the inheritance below
+            // reachable: a real default would BE the value, and the
+            // deployment-wide one could never reach this listener.
+            default: '',
+            description: 'Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.',
             env: EnvironmentVariable.ACCOUNT_CONSOLE_HOST,
             readEnv: readEnvString,
-            // its own location and variable first, then the
-            // deployment-wide one. Three listeners behind one proxy bind
-            // the same address far more often than not, and `port` has no
-            // such fallback because they cannot share one.
-            alt: ROOT_SCHEMA.defaultHost,
+            resolve: ({ value, get }) => (value as string) || get('host') as string,
         },
     },
     { pathPrefix: 'server.accountConsole' },

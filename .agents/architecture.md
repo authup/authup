@@ -2970,7 +2970,7 @@ nested registry.** So server-core reads its own two sections flat, in its
 own vocabulary (`config.port`, never `config.core.port`), and keeps the five
 console keys it borrows under the console they belong to
 (`config.adminConsole.url`), because three consoles each declare a `url` and
-an `enabled` and no flat bag holds them at once. `withSectionPaths` fills in
+an `enabled` and no flat bag holds them at once. `defineSchema`'s `pathPrefix` fills in
 each entry's absolute path from the section it was declared in, so a section
 declares its keys once, in one vocabulary, and cannot spell a location its
 section does not own. The passes split along that line: the ones working in
@@ -2981,18 +2981,20 @@ path. **Composition is `mergeSchemaData`, never a spread**: a later pass
 holding one key of a section would otherwise replace the whole section and
 take every other key's file value and default with it.
 
-**A key inherits another key's declaration through `alt`.** Every listener's
-`host` falls back to the deployment-wide `host` at the document root (env
-`HOST`, declared exactly once there), so one line binds server-core and all
-three console services, and a listener that names its own wins. The
-alternative is the other key's real entry rather than a copy of its path and
-variable, so the two cannot drift; the fallback applies to the file and the
-environment alike, and the published JSON Schema still shows each variable
-on the key that declares it. `port` deliberately has no counterpart: three
-listeners cannot share one.
+**A key inherits another key's VALUE through `resolve`.** Every listener's
+`host` defaults to `''`, which means unset, and resolves to the
+deployment-wide `host` at the document root (env `HOST`, declared exactly
+once there) unless it names its own. So one line binds server-core and all
+three console services. Inheritance settles in `resolveSchemaData`, over
+merged data, because seeing what the other key RESOLVED to is the whole
+point: the predecessor `alt` was a source-address chain applied during the
+file and environment reads, so it could only borrow another key's path and
+variable, never its computed value, and it needed its own recursion in three
+passes to do it. `port` deliberately has no counterpart: three listeners
+cannot share one.
 
 **Where a key sits in `authup.yml` follows from the section it is declared
-in.** `withSectionPaths(section, schema)` stamps the absolute dotted
+in.** `defineSchema(schema, { pathPrefix })` stamps the absolute dotted
 location onto every entry that does not spell one, so `server.core.port` and
 `server.adminConsole.enabled` are written down once, next to the section
 name, rather than repeated per key. An entry spells a `path` of its own only

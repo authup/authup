@@ -16,7 +16,7 @@ The following guide is based on some shared assumptions:
 - Node.js `v22.13` (minimum)
 - Min. `2` cores
 - Min. `5G` hard disk
-- One available port (default: `3001`)
+- One available port (default: `3000`)
 
 ## Step. 1: Create a new project
 
@@ -75,8 +75,8 @@ i Server: Starting...
 √ Server: Started
 i Server: Environment: production
 i Server: WritableDirectoryPath: xxx
-i Server: URL: http://127.0.0.1:3001
-i Server: Docs-URL: http://127.0.0.1:3001/docs/
+i Server: URL: http://127.0.0.1:3000
+i Server: Docs-URL: http://127.0.0.1:3000/docs/
 i Server: Generating documentation...
 i Server: Generated documentation.
 i Server: Establishing database connection...
@@ -90,11 +90,11 @@ i Server: Started http server.
 Now all should be set up, and you are ready to go :tada:
 
 This will launch one service with default settings:
-- Backend (server/core): `http://127.0.0.1:3001/`
+- Backend (server/core): `http://127.0.0.1:3000/`
 
 The consoles are served by that same process:
-- Admin console: `http://127.0.0.1:3001/console/admin`
-- Account console: `http://127.0.0.1:3001/console/account`
+- Admin console: `http://127.0.0.1:3000/console/admin`
+- Account console: `http://127.0.0.1:3000/console/account`
 
 ## Process behavior
 

@@ -58,7 +58,7 @@ import { install } from '@authup/client-web-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 
 install(app, {
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:3000',
     httpClient: createFakeClient({ handlers: { /* ... */ } }),
     pinia,
 });

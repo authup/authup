@@ -13,10 +13,10 @@ export type SchemaResolveContext = {
     /**
      * What defaults, the file and the environment produced for this key.
      * Deliberately `unknown` rather than `T[K]`: the context is referenced
-     * from both entry shapes and from the `alt` recursion, and threading the
-     * key's type through all three pushes the comparison past TS's depth
-     * limit. The RETURN type still carries it, which is the half that catches
-     * a resolver producing the wrong thing.
+     * from both entry shapes, and threading the key's type through both
+     * pushes the comparison past TS's depth limit. The RETURN type still
+     * carries it, which is the half that catches a resolver producing the
+     * wrong thing.
      */
     value: unknown,
     /**
@@ -50,24 +50,9 @@ export type SchemaEntry<
     /**
      * The absolute dotted location of the key in the configuration document.
      * Absent means it is derived from the key name, or from the section the
-     * entry was declared in (see `withSectionPaths`).
+     * entry was declared in (see `defineSchema`'s `pathPrefix`).
      */
     path?: string,
-    /**
-     * The declarations this key FALLS BACK to, read in order once its own
-     * location and variable say nothing: a console's `host` inherits the
-     * deployment-wide one rather than repeating its path and variable.
-     *
-     * An alternative is another key's real declaration, never a copy of it,
-     * so the two cannot drift. Only the key's own location and variable are
-     * published in the JSON Schema: an alternative belongs to the key that
-     * declares it, and is documented there.
-     */
-    alt?: SchemaEntry<{
-        [Key in KEY]: T[KEY]
-    }, KEY> | SchemaEntry<{
-        [Key in KEY]: T[KEY]
-    }, KEY>[],
     /**
      * Derive this key from the document, after the passes have merged.
      *
@@ -134,11 +119,6 @@ export type SchemaEntryInput<T, K extends keyof T> = {
     default?: T[K] | (() => T[K]),
     env?: string,
     readEnv?: SchemaEnvReader,
-    alt?: SchemaEntryInput<{
-        [Key in K]: T[K]
-    }, K> | SchemaEntryInput<{
-        [Key in K]: T[K]
-    }, K>[],
     resolve?: SchemaEntryResolver<T[K]>
 };
 

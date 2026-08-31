@@ -8,7 +8,6 @@
 import {
     buildSchemaDefaults,
     isSchemaEntryInput,
-    readSchemaEntryFromEnv,
 } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
@@ -16,7 +15,7 @@ import {
     EnvironmentVariable,
     ROOT_SCHEMA,
 } from '@authup/server-config';
-import { normalizeConfig } from '../../../src/app/modules/config/normalize';
+import { normalizeConfig } from '../../../src/app/modules/config/read';
 import type { Config } from '../../../src/app/modules/config/types';
 import { CONFIG_SCHEMA } from '../../../src';
 
@@ -205,22 +204,21 @@ describe('src/app/modules/config/constants.ts', () => {
 
         /**
          * HOST is declared once, on the deployment-wide `host`, and every
-         * listener reaches it through its own key's fallback. So this
-         * service's `host` carries no reader of its own, and the variable
-         * still sets it.
+         * listener INHERITS it rather than declaring a variable of its own.
+         * The inheritance settles in `resolveSchemaData`, over merged data,
+         * so it is asserted through a normalized config rather than through
+         * a single entry's environment read.
          */
-        it('should read the deployment-wide host through the fallback', () => {
-            const entry = CONFIG_SCHEMA.host;
+        it('should let this service inherit the deployment-wide host', async () => {
+            // no variable of its own: HOST belongs to the root key
+            expect(CONFIG_SCHEMA.host.env).toBeUndefined();
 
-            expect(entry.env).toBeUndefined();
+            expect((await normalizeConfig({ defaultHost: '127.0.0.1' })).host)
+                .toEqual('127.0.0.1');
 
-            process.env.HOST = '127.0.0.1';
-
-            try {
-                expect(readSchemaEntryFromEnv(entry)).toEqual('127.0.0.1');
-            } finally {
-                delete process.env.HOST;
-            }
+            // and a listener naming its own keeps it
+            expect((await normalizeConfig({ defaultHost: '127.0.0.1', host: '10.0.0.5' })).host)
+                .toEqual('10.0.0.5');
         });
     });
 });

@@ -29,9 +29,6 @@ function buildProperty<T, K extends keyof T>(entry: SchemaEntryInput<T, K>) : Re
         property.default = value;
     }
 
-    // the key's OWN variable, never one an `alt` borrows: that belongs to the
-    // key declaring it, is published there, and would otherwise read as two
-    // properties owning one variable.
     if (typeof entry.env !== 'undefined') {
         property['x-authup-env'] = entry.env;
     }

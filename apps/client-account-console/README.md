@@ -35,7 +35,7 @@ The dev server needs a running authup server to talk to.
 2. Run the dev server with the API URL injected:
 
    ```sh
-   VITE_API_URL=http://localhost:3001 npm run dev
+   VITE_API_URL=http://localhost:3000 npm run dev
    ```
 
    (`VITE_API_URL` can also live in a local `.env.local`. Without it the

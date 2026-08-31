@@ -6,11 +6,10 @@
  */
 
 /**
- * The ENTRY primitive: what one config key's declaration is, and the two
- * reads that resolve it on its own. A whole-schema pass lives under
- * `source/` and calls into these.
+ * The ENTRY primitive: what one config key's declaration is, and the read
+ * that resolves it on its own. A whole-schema pass lives under `source/` and
+ * calls into these.
  */
 
 export * from './check.ts';
 export * from './env.ts';
-export * from './path.ts';

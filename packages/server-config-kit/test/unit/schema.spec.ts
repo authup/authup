@@ -26,6 +26,7 @@ import {
     readEnvString,
     readSchemaFromEnv,
     readSchemaFromFileTree,
+    resolveSchemaData,
 } from '../../src';
 
 /**
@@ -79,8 +80,8 @@ const SCHEMA : SchemaInput<Fixture> = {
         host: {
             type: z.string(),
             description: 'The address this listener binds.',
-            default: '0.0.0.0',
-            alt: HOST,
+            default: '',
+            resolve: ({ value, get }) => (value as string) || get('host') as string,
         },
     }, { pathPrefix: 'server.core' }),
     adminConsole: defineSchema( {
@@ -95,7 +96,7 @@ const SCHEMA : SchemaInput<Fixture> = {
             default: '',
             env: 'ADMIN_CONSOLE_HOST',
             readEnv: readEnvString,
-            alt: HOST,
+            resolve: ({ value, get }) => (value as string) || get('host') as string,
         },
     }, { pathPrefix: 'server.adminConsole' }),
 };
@@ -129,21 +130,6 @@ describe('readSchemaFromFileTree', () => {
         expect(data).toEqual({
             core: { port: 4001, host: '10.0.0.1' },
             adminConsole: {},
-        });
-    });
-
-    it('should fall back onto the location an alternative declares', () => {
-        const data = readSchemaFromFileTree({
-            host: '127.0.0.1',
-            server: { adminConsole: { host: '10.0.0.1' } },
-        }, SCHEMA);
-
-        // its own location wins where the document names one, and the
-        // deployment-wide one answers for the listener that does not.
-        expect(data).toEqual({
-            host: '127.0.0.1',
-            core: { host: '127.0.0.1' },
-            adminConsole: { host: '10.0.0.1' },
         });
     });
 
@@ -232,29 +218,45 @@ describe('readSchemaFromEnv', () => {
         process.env.PORT = '4001';
         process.env.HOST = '127.0.0.1';
 
+        // the READ fills only the keys that declare a variable of their own.
+        // A listener inheriting the deployment-wide host does it in
+        // `resolveSchemaData`, over merged data, not here.
         expect(readSchemaFromEnv(SCHEMA)).toEqual({
             host: '127.0.0.1',
-            core: { port: 4001, host: '127.0.0.1' },
-            adminConsole: { host: '127.0.0.1' },
+            core: { port: 4001 },
+            adminConsole: {},
         });
     });
 
     /**
-     * The case the fallback exists for: the shared variable is set and the
-     * listener's own is not, which is how an operator binds every listener at
-     * once.
+     * What the fallback is for: the shared variable is set and the listener's
+     * own is not, which is how an operator binds every listener at once. It
+     * settles in `resolveSchemaData`, because inheriting another key's VALUE
+     * means seeing what that key resolved to.
      */
-    it('should fall back onto the variable an alternative declares', () => {
-        process.env.HOST = '10.0.0.1';
+    it('should let a listener inherit the deployment-wide host', () => {
+        process.env.HOST = '127.0.0.1';
 
-        expect(readSchemaFromEnv(SCHEMA).adminConsole).toEqual({ host: '10.0.0.1' });
+        const resolved = resolveSchemaData(
+            SCHEMA,
+            mergeSchemaData(SCHEMA, buildSchemaDefaults(SCHEMA), readSchemaFromEnv(SCHEMA)),
+        ) as any;
+
+        expect(resolved.core.host).toEqual('127.0.0.1');
+        expect(resolved.adminConsole.host).toEqual('127.0.0.1');
     });
 
-    it('should prefer the key own variable over the alternative', () => {
-        process.env.HOST = '10.0.0.1';
-        process.env.ADMIN_CONSOLE_HOST = '127.0.0.1';
+    it('should prefer a listener own variable over the deployment-wide one', () => {
+        process.env.HOST = '127.0.0.1';
+        process.env.ADMIN_CONSOLE_HOST = '10.0.0.5';
 
-        expect(readSchemaFromEnv(SCHEMA).adminConsole).toEqual({ host: '127.0.0.1' });
+        const resolved = resolveSchemaData(
+            SCHEMA,
+            mergeSchemaData(SCHEMA, buildSchemaDefaults(SCHEMA), readSchemaFromEnv(SCHEMA)),
+        ) as any;
+
+        expect(resolved.core.host).toEqual('127.0.0.1');
+        expect(resolved.adminConsole.host).toEqual('10.0.0.5');
     });
 
     it('should skip a key whose variables are all unset', () => {
@@ -267,7 +269,7 @@ describe('buildSchemaDefaults', () => {
         expect(buildSchemaDefaults(SCHEMA)).toEqual({
             trustedOrigins: [],
             host: '0.0.0.0',
-            core: { port: 3001, host: '0.0.0.0' },
+            core: { port: 3001, host: '' },
             adminConsole: { enabled: true, host: '' },
         });
     });

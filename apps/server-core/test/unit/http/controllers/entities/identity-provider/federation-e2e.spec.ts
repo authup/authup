@@ -22,7 +22,7 @@ import {
     ProvisionerModule,
 } from '../../../../../../src';
 import type { Config } from '../../../../../../src';
-import { normalizeConfig } from '../../../../../../src/app/modules/config/normalize.ts';
+import { normalizeConfig } from '../../../../../../src/app/modules/config/read.ts';
 import { readConfigRawFromEnv } from '@authup/server-config';
 import { CONFIG_SCHEMA } from '../../../../../../src/app/modules/config/constants.ts';
 import { TestHTTPApplication } from '../../../../../app/http.ts';

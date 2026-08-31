@@ -20,7 +20,7 @@ import {
     createWorkerApplication,
 } from '../../../src/app';
 import type { Config } from '../../../src/app';
-import { normalizeConfig } from '../../../src/app/modules/config/normalize';
+import { normalizeConfig } from '../../../src/app/modules/config/read';
 import { PACKAGE_PATH } from '../../../src/path';
 
 // The worker preset builds its own DatabaseModule, so the suite's database

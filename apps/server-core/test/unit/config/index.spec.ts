@@ -17,7 +17,7 @@ import {
     vi,
 } from 'vitest';
 import { readConfig } from '../../../src/app/modules/config/read.ts';
-import { normalizeConfig } from '../../../src/app/modules/config/normalize';
+import { normalizeConfig } from '../../../src/app/modules/config/read';
 import {
     expandToOrigins,
     inspectConfigFile,

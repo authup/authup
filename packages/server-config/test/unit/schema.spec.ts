@@ -11,9 +11,9 @@ import {
     buildSchemaJSONSchema,
     isSchemaEntryInput,
     isSchemaInput,
+    mergeSchemaData,
     readSchemaFromFileTree,
-    resolveSchemaEntryPaths,
-    resolveSchemaEnvNames,
+    resolveSchemaData,
 } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
@@ -78,7 +78,7 @@ describe('SCHEMA', () => {
      */
     it('places every key at its own absolute path', () => {
         const paths = DECLARATIONS.map(({ key, entry }) => {
-            const [path] = resolveSchemaEntryPaths(key, entry);
+            const path = entry.path || key.split('.').pop() as string;
 
             expect(path).toEqual(expect.any(String));
 
@@ -88,24 +88,6 @@ describe('SCHEMA', () => {
         expect(new Set(paths).size).toEqual(paths.length);
     });
 
-    /**
-     * A fallback may only reach a location another key already owns: an
-     * inherited value has to be one an operator can look up, and one the
-     * published schema describes.
-     */
-    it('falls back only onto locations the document declares', () => {
-        const owned = new Set(DECLARATIONS.map(
-            ({ key, entry }) => resolveSchemaEntryPaths(key, entry)[0],
-        ));
-
-        for (const { key, entry } of DECLARATIONS) {
-            const [, ...fallbacks] = resolveSchemaEntryPaths(key, entry);
-
-            for (const fallback of fallbacks) {
-                expect(owned).toContain(fallback);
-            }
-        }
-    });
 
     /**
      * One enum, and the complete list: a name a schema spells without an
@@ -129,21 +111,31 @@ describe('SCHEMA', () => {
     });
 
     /**
-     * Every variable an `alt` chain reaches is one another key declares, so
-     * an operator setting it is setting a documented variable.
+     * What `alt` used to do, and what replaced it: a listener with no host of
+     * its own takes the deployment-wide one, and one that names its own keeps
+     * it. It settles in `resolveSchemaData` rather than during the reads,
+     * because inheriting another key's VALUE means seeing what that key
+     * resolved to.
      */
-    it('borrows only variables the document declares', () => {
-        const owned = new Set(DECLARATIONS
-            .map(({ entry }) => entry.env)
-            .filter((name) : name is string => typeof name !== 'undefined'));
+    it('lets every listener inherit the deployment-wide host', () => {
+        const resolve = (input: Partial<AuthupConfig>) => resolveSchemaData<AuthupConfig>(
+            SCHEMA,
+            mergeSchemaData<AuthupConfig>(SCHEMA, buildSchemaDefaults<AuthupConfig>(SCHEMA), input),
+        );
 
-        for (const { entry } of DECLARATIONS) {
-            const [, ...borrowed] = resolveSchemaEnvNames(entry);
+        const inherited = resolve({ defaultHost: '10.0.0.5' } as Partial<AuthupConfig>);
 
-            for (const name of borrowed) {
-                expect(owned).toContain(name);
-            }
+        for (const section of ['core', 'authConsole', 'adminConsole', 'accountConsole'] as const) {
+            expect((inherited as any)[section].host).toEqual('10.0.0.5');
         }
+
+        const named = resolve({
+            defaultHost: '10.0.0.5',
+            adminConsole: { host: '127.0.0.1' },
+        } as Partial<AuthupConfig>);
+
+        expect((named as any).adminConsole.host).toEqual('127.0.0.1');
+        expect((named as any).core.host).toEqual('10.0.0.5');
     });
 
     it('reads every key at the path the document spells', () => {
@@ -301,7 +293,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
 
     it('describes every key of the document', () => {
         for (const { key, entry } of DECLARATIONS) {
-            const property = resolveProperty(resolveSchemaEntryPaths(key, entry)[0]);
+            const property = resolveProperty(entry.path || key.split('.').pop() as string);
 
             expect(property.description).toEqual(expect.any(String));
             expect((property.description as string).length).toBeGreaterThan(0);
