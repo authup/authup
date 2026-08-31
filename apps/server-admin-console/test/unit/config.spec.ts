@@ -20,6 +20,10 @@ const KEYS = [
     'ADMIN_CONSOLE_HOST',
     'ADMIN_CONSOLE_ENABLED',
     'ADMIN_CONSOLE_PATH',
+    // read by the publicUrl derivation, so a case that sets them must not
+    // leak into the next one
+    'HOST',
+    'PORT',
 ];
 
 describe('readAdminConsoleConfigFromEnv', () => {
@@ -29,8 +33,23 @@ describe('readAdminConsoleConfigFromEnv', () => {
         }
     });
 
-    it('should refuse to start without the public URL', () => {
-        expect(() => readAdminConsoleConfigFromEnv()).toThrow(/PUBLIC_URL/);
+    /**
+     * The document is self-sufficient: with no publicUrl anywhere, this
+     * service derives the same issuer server-core derives, from the same two
+     * document keys, so it can stand alone. It used to refuse to start, which
+     * made the same authup.yml mean different things depending on whether a
+     * server-core process happened to be reading it.
+     */
+    it('should derive the public URL from the core listener keys', () => {
+        expect(readAdminConsoleConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
+
+        process.env.HOST = '127.0.0.1';
+        process.env.PORT = '4711';
+
+        const config = readAdminConsoleConfigFromEnv();
+
+        expect(config.apiUrl).toEqual('http://127.0.0.1:4711');
+        expect(config.url).toEqual('http://127.0.0.1:4711/console/admin');
     });
 
     it('should derive the console URL from the public URL', () => {
@@ -51,10 +70,24 @@ describe('readAdminConsoleConfigFromEnv', () => {
 
     it('should prefer an explicit console URL', () => {
         process.env.PUBLIC_URL = 'https://example.com';
-        process.env.ADMIN_CONSOLE_URL = 'https://console.example.com';
+        process.env.ADMIN_CONSOLE_URL = 'https://example.com/console';
 
         expect(readAdminConsoleConfigFromEnv().url)
-            .toEqual('https://console.example.com');
+            .toEqual('https://example.com/console');
+    });
+
+    /**
+     * A path of its own is what the key is for; a DOMAIN of its own
+     * half-works rather than failing, so it fails here. server-core has
+     * refused it at boot for a while, but a console started through its own
+     * bin never runs that normalization and used to boot into exactly the
+     * state the refusal describes.
+     */
+    it('should refuse a console published on another origin', () => {
+        process.env.PUBLIC_URL = 'https://example.com';
+        process.env.ADMIN_CONSOLE_URL = 'https://console.example.com';
+
+        expect(() => readAdminConsoleConfigFromEnv()).toThrow(/not the origin of publicUrl/);
     });
 
     it('should read the disabled flag as a boolean', () => {
@@ -81,6 +114,6 @@ describe('readAdminConsoleConfigFromEnv', () => {
         const config = readAdminConsoleConfigFromEnv();
 
         expect(config.port).toEqual(3021);
-        expect(config.host).toEqual('');
+        expect(config.host).toEqual('0.0.0.0');
     });
 });

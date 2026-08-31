@@ -11,6 +11,7 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
+import { resolveRootRelativePath } from '../../helpers/index.ts';
 import { EnvironmentVariable } from '../../constants.ts';
 import type { ThemeConfig } from './types.ts';
 
@@ -32,6 +33,10 @@ export const THEME_SCHEMA = defineSchema<
             'SECURITY: the directory is operator trust, mount it read-only and never from a source a tenant can write.',
             env: EnvironmentVariable.THEME_DIRECTORY_PATH,
             readEnv: readEnvString,
+            // Relative to `rootPath`, so one document means the same directory
+            // to every service it configures, whichever process cwd each was
+            // started from.
+            resolve: ({ value, get }) => resolveRootRelativePath(value as string, get('rootPath') as string),
         },
         fragmentsEnabled: {
             type: z.boolean(),

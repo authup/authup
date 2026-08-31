@@ -21,7 +21,26 @@ import type { IContainer } from 'eldin';
 import { MetricsInjectionKey, PromAuthFlowMetrics } from '../metrics/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
-import type { ApplicationMount } from '../../types.ts';
+
+export type HTTPModuleOptions = {
+    /**
+     * Anything else that rides this listener, mounted in the one window where
+     * it belongs.
+     *
+     * A callback rather than a list, because the ORDER is not negotiable and
+     * is this module's business: it runs AFTER the controllers, so nothing it
+     * carries can shadow a protocol route (every console declares a wildcard
+     * shell route, and `/console/<name>/login/start` is server-core's), and
+     * BEFORE the error middleware, so it inherits the error handling every
+     * other route has. A caller mounting on the resolved app after `setup()`
+     * lands after both, on an already-listening server.
+     *
+     * server-core learns nothing from this: it hands over the app and the
+     * caller composes. A controller for a console appearing in this package
+     * is the smell the hook exists to prevent (plan 101 D2).
+     */
+    mount?: (app: IApp) => Promise<void> | void;
+};
 
 export class HTTPModule implements IModule {
     readonly name: string;
@@ -36,10 +55,10 @@ export class HTTPModule implements IModule {
 
     protected internalHttpClientRegistered : boolean;
 
-    protected mounts : ApplicationMount[];
+    protected options : HTTPModuleOptions;
 
-    constructor(options: { mounts?: ApplicationMount[] } = {}) {
-        this.mounts = options.mounts || [];
+    constructor(options: HTTPModuleOptions = {}) {
+        this.options = options;
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
@@ -74,19 +93,10 @@ export class HTTPModule implements IModule {
         this.registerMetrics(container);
 
         await this.middleware.mountBefore(app, container);
-        await this.controller.mount(app, container);
 
-        // Composed sub-applications ride the same listener. The order is
-        // load-bearing and is why they are handed to this module rather than
-        // mounted by the caller afterwards: AFTER the controllers, so nothing
-        // a console carries can shadow a protocol route (every console
-        // declares a wildcard shell route, and `/console/<name>/login/start`
-        // is server-core's), and BEFORE the trailing middleware, so they
-        // inherit the error handling and the not-found answer every other
-        // route has. A caller mounting after `setup()` would land after both,
-        // on an already-listening server.
-        for (const mount of this.mounts) {
-            app.use(mount.path, mount.handler);
+        await this.controller.mount(app, container);
+        if (this.options.mount) {
+            await this.options.mount(app);
         }
 
         await this.middleware.mountAfter(app, container);
@@ -108,10 +118,10 @@ export class HTTPModule implements IModule {
             logger.debug(`Listening on ${server.url}`);
         }
 
+        logger.debug('Started http server.');
+
         container.register(HTTPInjectionKey.App, { useValue: app });
         container.register(HTTPInjectionKey.Server, { useValue: server });
-
-        logger.debug('Started http server.');
     }
 
     // ----------------------------------------------------

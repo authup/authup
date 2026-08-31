@@ -9,6 +9,26 @@ import type { z } from 'zod';
 
 export type SchemaEnvReader = (raw: string, name: string) => unknown;
 
+export type SchemaResolveContext = {
+    /**
+     * What defaults, the file and the environment produced for this key.
+     * Deliberately `unknown` rather than `T[K]`: the context is referenced
+     * from both entry shapes and from the `alt` recursion, and threading the
+     * key's type through all three pushes the comparison past TS's depth
+     * limit. The RETURN type still carries it, which is the half that catches
+     * a resolver producing the wrong thing.
+     */
+    value: unknown,
+    /**
+     * Any other key of the document, by its absolute dotted path. Resolved on
+     * demand, so the declaration order of a registry never matters; a
+     * reference cycle throws rather than deadlocking or returning undefined.
+     */
+    get: (path: string) => unknown,
+};
+
+export type SchemaEntryResolver<V> = (ctx: SchemaResolveContext) => V;
+
 /**
  * The strict declaration shape a registry is written in: every key needs an
  * entry, a default is required unless K is one of the derived keys D, env
@@ -47,7 +67,26 @@ export type SchemaEntry<
         [Key in KEY]: T[KEY]
     }, KEY> | SchemaEntry<{
         [Key in KEY]: T[KEY]
-    }, KEY>[]
+    }, KEY>[],
+    /**
+     * Derive this key from the document, after the passes have merged.
+     *
+     * `value` is what defaults, file and environment produced, and `get`
+     * reaches ANY other key by its absolute document path, resolving it
+     * first if it derives too. So normalization is declared next to the key
+     * it normalizes, and every service reading the same document computes
+     * the same answer without calling anything itself:
+     *
+     *   publicUrl:      ({ value, get }) => value ?? derive(get('server.core.host'), …)
+     *   url (console):  ({ value, get }) => value || `${get('publicUrl')}/console/account`
+     *
+     * By PATH rather than by entry reference: {@link defineSchema} clones an
+     * entry when it stamps a path prefix, so an object held from elsewhere is
+     * not the object in the schema, and a service composes its own selection
+     * by spreading, which flattens sections. The absolute path is the one
+     * address that survives both.
+     */
+    resolve?: SchemaEntryResolver<T[KEY]>
 } & (KEY extends DEFAULT_KEY ?
     { default?: undefined } :
     { default: T[KEY] | (() => T[KEY]) }
@@ -99,7 +138,8 @@ export type SchemaEntryInput<T, K extends keyof T> = {
         [Key in K]: T[K]
     }, K> | SchemaEntryInput<{
         [Key in K]: T[K]
-    }, K>[]
+    }, K>[],
+    resolve?: SchemaEntryResolver<T[K]>
 };
 
 export type SchemaInput<T> = {

@@ -30,15 +30,23 @@ import {
 } from './constants';
 import { PACKAGE_PATH } from './path';
 import { resolveAccountConsoleRef } from './ref';
+import { expandToOrigins } from '@authup/server-config';
 import type { Config } from './types';
 
 const ASSETS_PATH = '/assets';
 
 /**
  * The origins the `ref` back-link parameter is validated against: the API's
- * own origin plus every trusted one. Mirrors server-core's `getAppOrigins`,
- * and expects the configured entries to be canonical origins already, which
- * is what server-core's config normalization guarantees for the CLI path.
+ * own origin plus every trusted one. Mirrors server-core's `getAppOrigins`.
+ *
+ * The configured entries are expanded HERE rather than assumed canonical. A
+ * bare host is a supported way to write the key, and it expands to both its
+ * http and its https origin; taken verbatim it becomes the pattern
+ * `hub.local/**`, which is matched against an absolute URL and therefore
+ * matches nothing, so the back link disappears for exactly the origins
+ * written in the short form, with no diagnostic anywhere. `expandToOrigins`
+ * is idempotent, so an already-canonical list passes through untouched and
+ * this service no longer depends on someone else having normalized for it.
  *
  * Resolved once per handler rather than per request: the list is operator
  * configuration and cannot change while the service runs.
@@ -47,8 +55,10 @@ function buildAppOrigins(config: Config) : string[] {
     const origins = new Set<string>();
     origins.add(new URL(config.apiUrl).origin);
 
-    for (const origin of config.trustedOrigins ?? []) {
-        origins.add(origin);
+    for (const value of config.trustedOrigins ?? []) {
+        for (const origin of expandToOrigins(value)) {
+            origins.add(origin);
+        }
     }
 
     return Array.from(origins);

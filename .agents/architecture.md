@@ -2830,30 +2830,34 @@ its own port). The container entrypoint carries all three as its own service
 vocabulary (`server/core start`, `server/core core`, `server/core console
 admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
 the one place pretending otherwise; behind one origin the proxy routes each
-console's path to its port. `HTTPModule` takes a generic `mounts` list
-(`ApplicationMount[]` = `{ path, handler }`, reached through
-`createApplication({ http })`) and mounts whatever it is handed under the
-path it is told, learning nothing about consoles: the CLI knows about every
-piece and composes them, which is its job, and a controller for a console
-appearing inside server-core is the smell that seam exists to prevent.
-**The seam exists because the ORDER is not the caller's to get right**, and
-that is the whole of its justification: a mount belongs AFTER the
-controllers, so a console's wildcard shell route cannot shadow a protocol
-route (`/console/<name>/login/start` is server-core's), and BEFORE the
-trailing middleware, so it inherits the error handling and the not-found
-answer every other route has. A caller mounting on the resolved
-`HTTPInjectionKey.App` after `setup()` lands after both, on an
-already-listening server. `buildConsoleMounts` (`commands/start.ts`) is the
-CLI's half and does one thing beyond building handlers: the mount path is
-`getURLBasePath(url)`, never the url, since a console url carries the origin
-a BROWSER reaches it at while the listener only ever sees a path, and a
-console url with no path at all would have to own the API's own root, where
-it shadows the protocol routes and the page GETs redirect to themselves, so
-it is refused by name rather than booted into a redirect loop. It needs no
-origin check of its own: `normalizeConfig` already refused a console url
-that is not publicUrl's own origin. It is ASYNC because a console loads its
-operator theme before it serves a page, so an invalid manifest fails the
-boot rather than every render. The console
+console's path to its port. **Every console is a runnable SERVICE, not a
+handler someone else owns**: each exports `create<Name>ConsoleApplication`
+over the shared `defineConsoleApplication` in `@authup/server-console-kit`,
+which is the whole of its lifecycle (build the handler, listen, close). That
+is what `authup console` starts and what the `authup-<name>-console` bin
+starts, so the two paths cannot diverge, and server-core neither imports nor
+mounts any of it.
+
+`authup start` is the one composition, and the CLI performs it, because the
+CLI is the only thing that knows about every piece. server-core exposes
+BUILD and LISTEN as two steps (`new HTTPModule({ listen: false })`, then
+`http.listen(container)`) and learns nothing about consoles; the CLI mounts
+the console handlers on `HTTPInjectionKey.App` in between. The window is the
+point: a sub-application must land AFTER the controllers, so its routes
+cannot shadow a protocol one (every console declares a wildcard shell route,
+and `/console/<name>/login/start` is server-core's), and BEFORE the error
+middleware, so it inherits the error handling every other route has. A caller
+mounting after `setup()` lands after both, on an already-listening server,
+which is why the two steps exist rather than a `mounts` seam server-core
+would have to own. `buildConsoleMounts` (`commands/start.ts`) derives each
+mount path with `getURLBasePath(url)`, never the url itself, since a console
+url carries the origin a BROWSER reaches it at while the listener only ever
+sees a path; a console url with no path at all would have to own the API's
+own root, where it shadows the protocol routes and the page GETs redirect to
+themselves, so it is refused by name. It needs no origin check of its own:
+`normalizeConfig` and each console's own `resolve*ConsoleConfig` already
+refuse a console url that is not publicUrl's origin. The console
+The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
@@ -2947,7 +2951,7 @@ boots on its defaults).
 this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
-the second falls back to typeorm-extension's driver default), an
+the second falls back to typeorm-extension's driver default; `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `server.core.host` + `server.core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
 operator-facing `description`, and for the 51 env-backed keys the
 `EnvironmentVariable` plus a `readEnv` reader. The mapped
 `Schema` type is the exhaustiveness guard: a `Config` key with no

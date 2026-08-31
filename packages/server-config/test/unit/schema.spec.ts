@@ -311,7 +311,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
     it('carries the env name and the static default, and omits a process-derived one', () => {
         const port = resolveProperty('server.core.port');
         expect(port['x-authup-env']).toEqual('PORT');
-        expect(port.default).toEqual(3001);
+        expect(port.default).toEqual(3000);
 
         // rootPath defaults to the cwd, which is no value to publish.
         const rootPath = resolveProperty('rootPath');

@@ -15,3 +15,4 @@ export * from './defaults.ts';
 export * from './env.ts';
 export * from './file.ts';
 export * from './merge.ts';
+export * from './resolve.ts';

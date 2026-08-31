@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
 
 const BOOLEAN_TRUE_WORDS = new Set(['true', 't', 'yes', 'y', 'on']);
 const BOOLEAN_FALSE_WORDS = new Set(['false', 'f', 'no', 'n', 'off']);
@@ -33,7 +32,7 @@ export function canonicalizeTrustProxy(raw: string): boolean | number | string {
         // saturates a huge digit string into an unsafe integer / Infinity,
         // which routup reads as "trust every hop".
         if (!Number.isSafeInteger(hops)) {
-            throw new AuthupError(`The trustProxy hop count "${normalized}" exceeds the safe integer range.`);
+            throw new Error(`The trustProxy hop count "${normalized}" exceeds the safe integer range.`);
         }
 
         return hops;
@@ -64,4 +63,20 @@ export function canonicalizeTrustProxy(raw: string): boolean | number | string {
  */
 export function canonicalizeTrustProxyListEntry(value: string): string {
     return value.trim().toLowerCase();
+}
+
+/**
+ * The declared value in the one shape every consumer expects: a string form
+ * is canonicalized, a list form entry by entry, and a boolean passes through.
+ */
+export function canonicalizeTrustProxyValue(value: unknown) : any {
+    if (typeof value === 'string') {
+        return canonicalizeTrustProxy(value);
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(canonicalizeTrustProxyListEntry);
+    }
+
+    return value;
 }

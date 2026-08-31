@@ -9,7 +9,6 @@ import { AuthupError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
 import { defineCommand } from 'citty';
 import type { ConfigReadFsOptions } from '@authup/server-config';
-import type { ApplicationMount } from '@authup/server-core';
 import {
     ConfigModule,
     HTTPModule,
@@ -17,6 +16,7 @@ import {
     readConfig,
     registerShutdownHandlers,
 } from '@authup/server-core';
+import type { IApp } from 'routup';
 import type { ConsoleConfigs } from '../roles/config.ts';
 import { readConsoleConfigs } from '../roles/config.ts';
 import { createAuthConsoleHandler } from '@authup/server-auth-console';
@@ -35,11 +35,11 @@ import { createAccountConsoleHandler } from '@authup/server-account-console';
  * because the order relative to the protocol routes and the trailing
  * middleware is load-bearing and belongs to the module that owns them.
  */
-async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<ApplicationMount[]> {
+async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<{ path: string, handler: IApp }[]> {
     const candidates : {
-        name: string, 
-        url: string, 
-        create: () => Promise<ApplicationMount['handler']> 
+        name: string,
+        url: string,
+        create: () => Promise<IApp>
     }[] = [
         // The auth console is not gated. The hosted login, consent and
         // workflow pages are the issuance surface, so no flag turns them off
@@ -67,7 +67,7 @@ async function buildConsoleMounts(consoles: ConsoleConfigs) : Promise<Applicatio
         });
     }
 
-    const mounts : ApplicationMount[] = [];
+    const mounts : { path: string, handler: IApp }[] = [];
 
     for (const candidate of candidates) {
         const path = getURLBasePath(candidate.url);
@@ -121,19 +121,21 @@ function defineApplicationCommand(
                 fs: { ...configFs },
             });
 
-            let mounts : ApplicationMount[] = [];
-            if (role.consoles) {
-                // The consoles read the same document through their own
-                // registries, but the values normalizeConfig derives
-                // (publicUrl, the canonicalized trusted origins, an absolute
-                // rootPath) are products of this read, so it is handed over
-                // rather than redone.
-                mounts = await buildConsoleMounts(await readConsoleConfigs(configFs, config));
-            }
-
             const app = createApplication({
                 config: new ConfigModule(config),
-                http: new HTTPModule({ mounts }),
+                http: new HTTPModule({
+                    mount: async (app) => {
+                        if (!role.consoles) return;
+
+                        const mounts = await buildConsoleMounts(
+                            await readConsoleConfigs(configFs),
+                        );
+
+                        for (const mount of mounts) {
+                            app.use(mount.path, mount.handler);
+                        }
+                    },
+                }),
             });
 
             await app.setup();

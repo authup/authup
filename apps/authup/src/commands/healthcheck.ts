@@ -29,11 +29,16 @@ export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupC
                 readSchemaFromEnv<AuthupConfig>(SCHEMA),
             );
 
+            // Both come from the same read the server does, so a probe cannot
+            // drift from the listener it is probing. The former literals (a
+            // hard-coded host and a port default of 3000 against a schema
+            // default of 3001) were dead only because buildSchemaDefaults
+            // always supplies both.
             const healthCheck = http.request(
                 {
                     path: '/',
-                    host: '0.0.0.0',
-                    port: config.core?.port || 3000,
+                    host: config.core?.host,
+                    port: config.core?.port,
                     timeout: 2000,
                 },
                 (res) => {

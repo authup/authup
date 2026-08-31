@@ -17,8 +17,8 @@ import {
     defineSchema,
     mergeSchemaData,
     readSchemaFromEnv,
+    resolveSchemaData,
 } from '@authup/server-config-kit';
-import { ACCOUNT_CONSOLE_BASE_PATH } from './constants';
 import type { Config, ConfigInput } from './types';
 
 /**
@@ -54,21 +54,17 @@ export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUr
 export function resolveAccountConsoleConfig(
     input: Partial<ConfigInput>,
 ) : Config {
-    const values = mergeSchemaData<ConfigInput>(
+    const values = resolveSchemaData<ConfigInput>(
         ACCOUNT_CONSOLE_CONFIG_SCHEMA,
-        buildSchemaDefaults<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA),
-        input,
+        mergeSchemaData<ConfigInput>(
+            ACCOUNT_CONSOLE_CONFIG_SCHEMA,
+            buildSchemaDefaults<ConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA),
+            input,
+        ),
     ) as ConfigInput;
 
-    if (!values.publicUrl) {
-        throw new Error(
-            'The account console service needs the public URL of server-core. Set PUBLIC_URL.',
-        );
-    }
-
     return {
-        url: values.url ||
-            `${values.publicUrl.replace(/\/+$/, '')}${ACCOUNT_CONSOLE_BASE_PATH}`,
+        url: values.url,
         apiUrl: values.publicUrl,
         enabled: values.enabled,
         port: values.port,

@@ -17,8 +17,8 @@ import {
     defineSchema,
     mergeSchemaData,
     readSchemaFromEnv,
+    resolveSchemaData,
 } from '@authup/server-config-kit';
-import { ADMIN_CONSOLE_BASE_PATH } from './constants';
 import type { Config, ConfigInput } from './types';
 
 /**
@@ -54,21 +54,17 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl'
 export function resolveAdminConsoleConfig(
     input: Partial<ConfigInput>,
 ) : Config {
-    const values = mergeSchemaData<ConfigInput>(
+    const values = resolveSchemaData<ConfigInput>(
         ADMIN_CONSOLE_CONFIG_SCHEMA,
-        buildSchemaDefaults<ConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA),
-        input,
+        mergeSchemaData<ConfigInput>(
+            ADMIN_CONSOLE_CONFIG_SCHEMA,
+            buildSchemaDefaults<ConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA),
+            input,
+        ),
     ) as ConfigInput;
 
-    if (!values.publicUrl) {
-        throw new Error(
-            'The admin console service needs the public URL of server-core. Set PUBLIC_URL.',
-        );
-    }
-
     return {
-        url: values.url ||
-            `${values.publicUrl.replace(/\/+$/, '')}${ADMIN_CONSOLE_BASE_PATH}`,
+        url: values.url,
         apiUrl: values.publicUrl,
         enabled: values.enabled,
         port: values.port,

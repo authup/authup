@@ -5,14 +5,13 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { createAccountConsoleServer } from '@authup/server-account-console';
-import { createAdminConsoleServer } from '@authup/server-admin-console';
-import { createAuthConsoleServer } from '@authup/server-auth-console';
+import { createAccountConsoleApplication } from '@authup/server-account-console';
+import { createAdminConsoleApplication } from '@authup/server-admin-console';
+import { createAuthConsoleApplication } from '@authup/server-auth-console';
+import type { ConsoleApplication } from '@authup/server-console-kit';
 import type { ConfigReadFsOptions } from '@authup/server-config';
-import { readConfig, registerShutdownHandlers } from '@authup/server-core';
+import { registerShutdownHandlers } from '@authup/server-core';
 import { defineCommand } from 'citty';
-import type { IApp } from 'routup';
-import { serve } from 'routup/node';
 import { readConsoleConfigs } from '../roles/config.ts';
 
 const CONSOLE_NAMES = ['admin', 'account', 'auth'] as const;
@@ -21,9 +20,7 @@ type ConsoleName = typeof CONSOLE_NAMES[number];
 
 type ConsoleService = {
     name: ConsoleName,
-    port: number,
-    host: string,
-    create: () => Promise<IApp>,
+    create: () => ConsoleApplication,
 };
 
 /**
@@ -54,41 +51,29 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
         async setup(context) {
             const selected = context.args.name as ConsoleName | undefined;
 
-            // The consoles read `authup.yml` through their own registries,
-            // but three values are products of server-core's normalization
-            // rather than of any key (a derived publicUrl, the canonicalized
-            // trusted origins, an absolute rootPath), so the core
-            // configuration is read here too. It is the same document, and
-            // normalizing it is also where the cross-section invariants live:
-            // a console url on another origin is refused here rather than
-            // half-working at runtime.
-            const core = await readConfig({ env: true, fs: { ...configFs } });
-            const consoles = await readConsoleConfigs(configFs, core);
+            // Nothing of server-core's: every value a console needs is declared
+            // on its own key and resolved from the document, so this reads the
+            // same file a console's own bin would.
+            const consoles = await readConsoleConfigs(configFs);
 
             const services : ConsoleService[] = [
                 {
                     name: 'auth',
-                    port: consoles.auth.port,
-                    host: consoles.auth.host,
-                    create: () => createAuthConsoleServer(consoles.auth),
+                    create: () => createAuthConsoleApplication(consoles.auth),
                 },
             ];
 
             if (consoles.admin.enabled) {
                 services.push({
                     name: 'admin',
-                    port: consoles.admin.port,
-                    host: consoles.admin.host,
-                    create: () => createAdminConsoleServer(consoles.admin),
+                    create: () => createAdminConsoleApplication(consoles.admin),
                 });
             }
 
             if (consoles.account.enabled) {
                 services.push({
                     name: 'account',
-                    port: consoles.account.port,
-                    host: consoles.account.host,
-                    create: () => createAccountConsoleServer(consoles.account),
+                    create: () => createAccountConsoleApplication(consoles.account),
                 });
             }
 
@@ -103,30 +88,21 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
                 throw new Error(`The ${selected} console is disabled, so there is nothing to serve.`);
             }
 
-            const servers : ReturnType<typeof serve>[] = [];
+            const applications : ConsoleApplication[] = [];
             for (const service of wanted) {
-                const server = serve(await service.create(), {
-                    port: service.port,
-                    hostname: service.host,
-                    silent: true,
-                });
+                const application = service.create();
 
-                await server.ready();
+                await application.setup();
 
-                servers.push(server);
+                applications.push(application);
 
                 // eslint-disable-next-line no-console
-                console.log(`Serving the ${service.name} console on ${server.url}`);
+                console.log(`Serving the ${service.name} console on ${application.url}`);
             }
 
             registerShutdownHandlers({
                 teardown: async () => {
-                    // `true` closes active connections. A console serves
-                    // documents and assets over keep-alive sockets, so
-                    // waiting for them to go idle means waiting out the
-                    // client's own timeout: a container stop would sit at
-                    // the force-exit deadline every time.
-                    await Promise.all(servers.map((server) => server.close(true)));
+                    await Promise.all(applications.map((application) => application.teardown()));
                 },
             });
         },

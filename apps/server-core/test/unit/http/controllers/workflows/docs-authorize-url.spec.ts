@@ -51,7 +51,7 @@ describe('http/controllers/workflows/docs-authorize-url', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/authorize/info?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F',
+            '/authorize/info?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F',
         );
 
         expect(response.status).toEqual(200);

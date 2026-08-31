@@ -114,13 +114,13 @@ links and the login backdrop at once.
 **3. Run it.**
 
 ```bash
-docker run --rm -p 3001:3001 \
+docker run --rm -p 3000:3000 \
   -e THEME_DIRECTORY_PATH=/etc/authup/theme \
   -v ~/authup-theme:/etc/authup/theme:ro \
   authup/authup
 ```
 
-The quickest check is `http://localhost:3001/logout`. It is served by the
+The quickest check is `http://localhost:3000/logout`. It is served by the
 same console and carries the same theme, and it takes no parameters.
 
 To see the accent on the login form itself, open the hosted login page. Note
@@ -129,7 +129,7 @@ that `/authorize` rejects an incomplete request by rendering an error card
 required:
 
 ```text
-http://localhost:3001/authorize?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F
+http://localhost:3000/authorize?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F
 ```
 
 The submit button should be red. `realm_id` is needed because a client

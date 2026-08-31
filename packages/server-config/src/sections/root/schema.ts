@@ -15,8 +15,8 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
+import { derivePublicUrl, expandToOrigins, resolveTrustedOrigins  } from '../../helpers/index.ts';
 import { DEFAULT_HOST_PATH, EnvironmentVariable } from '../../constants.ts';
-import { expandToOrigins } from '../../helpers/index.ts';
 import type {
     DatabaseConnectionOptions,
     RedisConnectionOptions,
@@ -68,6 +68,16 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', Environm
         type: z.url(),
         description: 'Externally reachable base URL of the API. Derived from host and port when unset.',
         path: 'publicUrl',
+        // Derived from the core listener keys when the document spells none.
+        // Both are DOCUMENT keys, not facts about whichever process is
+        // asking, so a console computes the identical issuer with no
+        // server-core anywhere. That is what lets a console stand alone.
+        resolve: ({ value, get }) => derivePublicUrl(
+            value as string | undefined,
+            get('server.core.host') as string,
+            get('server.core.port') as number,
+            get('env') as string,
+        ),
         env: EnvironmentVariable.PUBLIC_URL,
         readEnv: readEnvString,
     },
@@ -84,6 +94,11 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', Environm
         description: 'Trusted first-party app origins besides publicUrl, used as redirect targets for the per-realm public system clients; entries are http(s) origins or bare hosts (a bare host expands to its http and https origin) and do not drive CORS. ' +
             'SECURITY: the system clients auto-consent with the global scope, so every origin listed here can obtain a full-permission user token in every realm.',
         path: 'trustedOrigins',
+        // Canonicalized where the key is declared, so every reader gets bare
+        // origins: server-core builds its client redirect allowlist from this
+        // and the account console matches its `ref` back link against it, and
+        // neither may depend on the other having normalized first.
+        resolve: ({ value, get }) => resolveTrustedOrigins(value as string[] | undefined, get('env') as string),
         env: EnvironmentVariable.TRUSTED_ORIGINS,
         readEnv: readEnvArray,
     },

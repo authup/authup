@@ -7,5 +7,6 @@
 
 export * from './constants.ts';
 export * from './schema.ts';
+export * from './trust-proxy-canonicalize.ts';
 export * from './trust-proxy.ts';
 export * from './types.ts';

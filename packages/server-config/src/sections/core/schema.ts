@@ -16,6 +16,9 @@ import {
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
+import { resolveRootRelativePath } from '../../helpers/index.ts';
+import { assertSecretsEncryptionKey } from './secrets-encryption-key.ts';
+import { canonicalizeTrustProxyValue } from './trust-proxy-canonicalize.ts';
 import { EnvironmentVariable } from '../../constants.ts';
 import { ROOT_SCHEMA } from '../root/index.ts';
 import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
@@ -54,6 +57,10 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             'The SQLite database is not placed here; a relative path resolves against rootPath.',
             env: EnvironmentVariable.WRITABLE_DIRECTORY_PATH,
             readEnv: readEnvString,
+            // Relative to `rootPath`, so one document means the same directory
+            // to every service it configures, whichever process cwd each was
+            // started from.
+            resolve: ({ value, get }) => resolveRootRelativePath(value as string, get('rootPath') as string),
         },
 
         logger: {
@@ -79,7 +86,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
 
         port: {
             type: nonNegativeNumberType,
-            default: 3001,
+            default: 3000,
             description: 'TCP port the HTTP listener binds.',
             env: EnvironmentVariable.PORT,
             readEnv: readEnvInt,
@@ -96,6 +103,16 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             description: 'Optional externally reachable base URL dedicated to endpoints that request TLS client certificates, published as RFC 8705 mTLS endpoint aliases. The reverse proxy may route it to the same backend listener.',
             env: EnvironmentVariable.MTLS_PUBLIC_URL,
             readEnv: readEnvString,
+            // The mTLS alias is only meaningful once a certificate source is
+            // configured; without one the listener would advertise an address
+            // no evidence can ever arrive on.
+            resolve: ({ value, get }) => {
+                if (value && get('server.core.certificateSource') === 'disabled') {
+                    throw new Error('mtlsPublicUrl requires certificateSource to be enabled.');
+                }
+
+                return value as string | null;
+            },
         },
         certificateSource: {
             type: z.enum(CERTIFICATE_SOURCES),
@@ -125,6 +142,10 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             'SECURITY: with every hop trusted any direct client can spoof its IP into the login throttle, the audit log and the session inventory; pin the actual proxy when the listener is reachable without one.',
             env: EnvironmentVariable.TRUST_PROXY,
             readEnv: readEnvRaw,
+            // Canonicalized where it is declared, so every surface reading it
+            // (the app options, and therefore every proxy-dependent request
+            // helper) sees the same shape whichever config surface set it.
+            resolve: ({ value }) => canonicalizeTrustProxyValue(value as MiddlewareOptions),
         },
 
         middlewareBody: {
@@ -265,6 +286,16 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             description: 'Throttle failed interactive logins per (identifier, ip) pair by counting recent loginFailed audit events. Requires eventLogEnabled.',
             env: EnvironmentVariable.LOGIN_ATTEMPT_THROTTLE_ENABLED,
             readEnv: readEnvBoolStrict,
+            // The throttle counts LOGIN_FAILED rows, so it is inert without the
+            // event log. Declared here rather than in a normalization step,
+            // because the rule belongs to the key it constrains.
+            resolve: ({ value, get }) => {
+                if (value && !get('server.core.eventLogEnabled')) {
+                    throw new Error('loginAttemptThrottleEnabled requires eventLogEnabled.');
+                }
+
+                return value as boolean;
+            },
         },
         loginAttemptThreshold: {
             type: positiveIntegerType,
@@ -290,6 +321,14 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             'SECURITY: setting it later wraps rows lazily on read, and removing it while wrapped rows exist fails loud at first use.',
             env: EnvironmentVariable.SECRETS_ENCRYPTION_KEY,
             readEnv: readEnvString,
+            // Validated where it is declared: a key that does not decode to 32
+            // bytes is a boot failure, not a runtime surprise inside the
+            // cipher.
+            resolve: ({ value }) => {
+                assertSecretsEncryptionKey(value as string);
+
+                return value as string;
+            },
         },
 
         mfaEnabled: {
@@ -305,6 +344,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             description: 'Enforce MFA for every user: a user without a confirmed device is routed to inline enrollment at the next interactive login. Requires mfaEnabled.',
             env: EnvironmentVariable.MFA_REQUIRED,
             readEnv: readEnvBoolStrict,
+            resolve: ({ value, get }) => {
+                if (value && !get('server.core.mfaEnabled')) {
+                    throw new Error('mfaRequired requires mfaEnabled.');
+                }
+
+                return value as boolean;
+            },
         },
         mfaFreshnessMaxAge: {
             type: nonNegativeNumberType,

@@ -27,7 +27,10 @@ export default defineConfig({
     // VITE_API_URL): port 3000 is the origin server-core seeds into the
     // trusted origins outside production, so the login redirect is allowed
     // without any TRUSTED_ORIGINS configuration.
-    server: { port: 3000 },
+    // 3000 is the API default; the dev server needs a port of its own,
+    // and `trustedOrigins` is dev-seeded with this one so a standalone dev
+    // console can log in on first run.
+    server: { port: 3010 },
     experimental: {
         // Asset URLs that JavaScript resolves at RUNTIME (the preload helper
         // fetching a lazy route's stylesheet) must be relative to the
