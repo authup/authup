@@ -19,6 +19,7 @@ import {
     readSchemaFromEnv,
     resolveSchemaData,
 } from '@authup/server-config-kit';
+import type { CoreConfig, EnvironmentVariable } from '@authup/server-config';
 import type { Config, ConfigInput } from './types';
 
 /**
@@ -38,7 +39,16 @@ export const ADMIN_CONSOLE_CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl'
     ...ADMIN_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,
-    [SECTION_KEY.CORE]: CORE_SCHEMA,
+    // Two keys of server.core, never the section. `publicUrl` derives from
+    // the core listener address, which is what a console needs; selecting the
+    // whole section also selects its INVARIANTS, and `resolveSchemaData` runs
+    // every resolver in a registry -- so a console would refuse to start on a
+    // short SECRETS_ENCRYPTION_KEY, or on mfaRequired without mfaEnabled, for
+    // keys it has no database, key store or MFA to use.
+    [SECTION_KEY.CORE]: defineSchema<Pick<CoreConfig, 'host' | 'port'>, never, EnvironmentVariable>({
+        host: CORE_SCHEMA.host,
+        port: CORE_SCHEMA.port,
+    }),
 });
 
 /**

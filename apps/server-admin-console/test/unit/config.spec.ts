@@ -22,6 +22,10 @@ const KEYS = [
     'ADMIN_CONSOLE_PATH',
     // read by the publicUrl derivation, so a case that sets them must not
     // leak into the next one
+    'SECRETS_ENCRYPTION_KEY',
+    'MFA_REQUIRED',
+    'LOGIN_ATTEMPT_THROTTLE_ENABLED',
+    'EVENT_LOG_ENABLED',
     'HOST',
     'PORT',
 ];
@@ -115,5 +119,33 @@ describe('readAdminConsoleConfigFromEnv', () => {
 
         expect(config.port).toEqual(3021);
         expect(config.host).toEqual('0.0.0.0');
+    });
+
+    /**
+     * A console selects two keys of `server.core` (the listener address the
+     * issuer derives from), never the section. `resolveSchemaData` runs every
+     * resolver in a registry, and the section carries server-core's own
+     * invariants, so selecting it would make this service refuse to start over
+     * a key store, an MFA flag and an event log it does not have.
+     */
+    it('should not inherit server-core own invariants', () => {
+        const cases : Record<string, string>[] = [
+            { SECRETS_ENCRYPTION_KEY: Buffer.alloc(16, 1).toString('base64') },
+            { MFA_REQUIRED: 'true' },
+            { LOGIN_ATTEMPT_THROTTLE_ENABLED: 'true', EVENT_LOG_ENABLED: 'false' },
+        ];
+
+        for (const env of cases) {
+            process.env.PUBLIC_URL = 'https://example.com';
+            Object.assign(process.env, env);
+
+            try {
+                expect(() => readAdminConsoleConfigFromEnv()).not.toThrow();
+            } finally {
+                for (const key of Object.keys(env)) {
+                    delete process.env[key];
+                }
+            }
+        }
     });
 });

@@ -27,7 +27,8 @@ export type ConfigInput = ToObjectLiteral<
     RootConfig &
     {
         [SECTION_KEY.THEME]: ThemeConfig,
-        [SECTION_KEY.CORE]: CoreConfig
+        // only what the publicUrl derivation reads; see the registry
+        [SECTION_KEY.CORE]: Pick<CoreConfig, 'host' | 'port'>
     } &
     AuthConsoleConfig
 >;
