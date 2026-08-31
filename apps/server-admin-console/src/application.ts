@@ -5,21 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConsoleApplication } from '@authup/server-console-kit';
-import { defineConsoleApplication } from '@authup/server-console-kit';
+import { createConsoleApplication } from '@authup/server-console-kit';
+import type { Application } from 'orkos';
+import { readAdminConsoleConfigFromEnv } from './config';
 import { createAdminConsoleHandler } from './handler';
 import type { Config } from './types';
 
 /**
- * This console as a runnable service: its own listener, its own lifecycle,
- * nothing of server-core's. It is what `authup console` starts and what the
- * `authup-admin-console` bin starts, so the two paths cannot diverge.
+ * This console as a runnable service: its own module graph, its own
+ * container, its own lifecycle, and nothing of server-core's. It is what
+ * `authup console` starts and what the `authup-admin-console` bin starts, so
+ * the two paths cannot diverge.
+ *
+ * The configuration is a FACTORY by default, not a value: resolving it reads
+ * the document, and a console started alongside others must not do that at
+ * construction time, before the caller has said where to look.
  */
-export function createAdminConsoleApplication(config: Config) : ConsoleApplication {
-    return defineConsoleApplication({
-        name: 'admin console',
-        port: config.port,
-        host: config.host,
-        createHandler: () => createAdminConsoleHandler(config),
-    });
+export function createAdminConsoleApplication(
+    config: Config | (() => Config | Promise<Config>) = readAdminConsoleConfigFromEnv,
+) : Application {
+    return createConsoleApplication<Config>(config, { createHandler: (resolved) => createAdminConsoleHandler(resolved) });
 }

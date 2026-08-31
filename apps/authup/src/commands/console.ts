@@ -8,7 +8,8 @@
 import { createAccountConsoleApplication } from '@authup/server-account-console';
 import { createAdminConsoleApplication } from '@authup/server-admin-console';
 import { createAuthConsoleApplication } from '@authup/server-auth-console';
-import type { ConsoleApplication } from '@authup/server-console-kit';
+import { ConsoleInjectionKey } from '@authup/server-console-kit';
+import type { Application } from 'orkos';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import { registerShutdownHandlers } from '@authup/server-core';
 import { defineCommand } from 'citty';
@@ -20,7 +21,7 @@ type ConsoleName = typeof CONSOLE_NAMES[number];
 
 type ConsoleService = {
     name: ConsoleName,
-    create: () => ConsoleApplication,
+    create: () => Application,
 };
 
 /**
@@ -88,7 +89,7 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
                 throw new Error(`The ${selected} console is disabled, so there is nothing to serve.`);
             }
 
-            const applications : ConsoleApplication[] = [];
+            const applications : Application[] = [];
             for (const service of wanted) {
                 const application = service.create();
 
@@ -96,8 +97,10 @@ export function defineCLIConsoleCommand(configFs: ConfigReadFsOptions = {}) {
 
                 applications.push(application);
 
+                const server = application.container.resolve(ConsoleInjectionKey.Server);
+
                 // eslint-disable-next-line no-console
-                console.log(`Serving the ${service.name} console on ${application.url}`);
+                console.log(`Serving the ${service.name} console on ${server.url}`);
             }
 
             registerShutdownHandlers({
