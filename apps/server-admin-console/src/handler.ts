@@ -9,14 +9,13 @@ import { getURLBasePath } from '@authup/kit';
 import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     THEME_ASSET_MOUNT_PATH,
-    ThemeProvider,
     createThemeAssetsHandler,
+    createThemeProvider,
     defineStaticConsole,
 } from '@authup/server-console-kit';
 import { createHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import { NotFoundError } from '@ebec/http';
-import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { App, defineCoreHandler } from 'routup';
@@ -31,31 +30,6 @@ import type { Config } from './types';
 
 const ASSETS_PATH = '/assets';
 
-/**
- * Load the operator theme, if one is configured.
- *
- * A missing directory disables the feature entirely: no provider is created,
- * no route is mounted, and the served shell stays byte-identical to an
- * un-themed one. So the default configuration pays nothing.
- */
-async function createThemeProvider(config: Config) : Promise<IThemeProvider | undefined> {
-    if (!config.theme.directoryPath || !fs.existsSync(config.theme.directoryPath)) {
-        return undefined;
-    }
-
-    const provider = new ThemeProvider({
-        directoryPath: config.theme.directoryPath,
-        fragmentsEnabled: config.theme.fragmentsEnabled,
-        // The boot inventory this logs (resolved path, token counts, every
-        // servable file) is the antidote to the feature's dominant failure
-        // mode, which is silence.
-        logger: console,
-    });
-
-    await provider.load();
-
-    return provider;
-}
 
 /**
  * The service as a mountable routup handler, so the CLI can compose it onto
@@ -66,7 +40,10 @@ async function createThemeProvider(config: Config) : Promise<IThemeProvider | un
  * so a service published at `<origin>/console/admin` receives `/users/<id>`,
  * exactly as the console's own router sees it.
  */
-export async function createAdminConsoleHandler(config: Config) : Promise<App> {
+export async function createAdminConsoleHandler(
+    config: Config,
+    themeProvider?: IThemeProvider,
+) : Promise<App> {
     const app = new App();
 
     // The shell is stamped from the vc-locale / vc-color-mode cookies, and
@@ -82,7 +59,9 @@ export async function createAdminConsoleHandler(config: Config) : Promise<App> {
 
     const basePath = getURLBasePath(config.url);
 
-    const theme = await createThemeProvider(config);
+    // Injected by the theme module when this runs inside the console
+    // application; built here for a caller holding only a config.
+    const theme = themeProvider ?? await createThemeProvider(config);
     if (theme) {
         app.use(THEME_ASSET_MOUNT_PATH, createThemeAssetsHandler(theme));
     }

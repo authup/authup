@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createConsoleApplication } from '@authup/server-console-kit';
+import { createApplication } from '@authup/server-console-kit';
 import type { Application } from 'orkos';
 import { readAdminConsoleConfigFromEnv } from './config';
 import { createAdminConsoleHandler } from './handler';
@@ -24,5 +24,5 @@ import type { Config } from './types';
 export function createAdminConsoleApplication(
     config: Config | (() => Config | Promise<Config>) = readAdminConsoleConfigFromEnv,
 ) : Application {
-    return createConsoleApplication<Config>(config, { createHandler: (resolved) => createAdminConsoleHandler(resolved) });
+    return createApplication<Config>(config, { createHandler: (resolved) => createAdminConsoleHandler(resolved) });
 }

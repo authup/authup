@@ -8,8 +8,8 @@
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
 import { serve } from 'routup/node';
-import { ConsoleInjectionKey, ConsoleModuleName } from './constants';
-import type { ConsoleConfig, ConsoleHTTPModuleContext, ConsoleServer } from './types';
+import { InjectionKey, ModuleName } from './constants';
+import type { Config, HTTPModuleContext, HTTPServer } from './types';
 
 /**
  * The console's listener: build the handler, serve it, close it.
@@ -18,25 +18,27 @@ import type { ConsoleConfig, ConsoleHTTPModuleContext, ConsoleServer } from './t
  * token and hoping, so a graph that forgot it fails at setup with a module
  * name instead of an unresolved token at the first request.
  */
-export class ConsoleHTTPModule<C extends ConsoleConfig = ConsoleConfig> implements IModule {
+export class HTTPModule<C extends Config = Config> implements IModule {
     readonly name: string;
 
     readonly dependencies: string[];
 
-    protected ctx : ConsoleHTTPModuleContext<C>;
+    protected ctx : HTTPModuleContext<C>;
 
-    protected instance : ConsoleServer | undefined;
+    protected instance : HTTPServer | undefined;
 
-    constructor(ctx: ConsoleHTTPModuleContext<C>) {
-        this.name = ConsoleModuleName.HTTP;
-        this.dependencies = [ConsoleModuleName.CONFIG];
+    constructor(ctx: HTTPModuleContext<C>) {
+        this.name = ModuleName.HTTP;
+        this.dependencies = [ModuleName.CONFIG, ModuleName.THEME];
         this.ctx = ctx;
     }
 
     async setup(container: IContainer): Promise<void> {
-        const config = container.resolve(ConsoleInjectionKey.Config) as C;
+        const config = container.resolve(InjectionKey.Config) as C;
 
-        const app = await this.ctx.createHandler(config);
+        const theme = container.resolve(InjectionKey.Theme);
+
+        const app = await this.ctx.createHandler(config, theme);
 
         const server = serve(app, {
             port: config.port,
@@ -48,8 +50,8 @@ export class ConsoleHTTPModule<C extends ConsoleConfig = ConsoleConfig> implemen
 
         this.instance = server;
 
-        container.register(ConsoleInjectionKey.App, { useValue: app });
-        container.register(ConsoleInjectionKey.Server, { useValue: server });
+        container.register(InjectionKey.App, { useValue: app });
+        container.register(InjectionKey.Server, { useValue: server });
     }
 
     async teardown(): Promise<void> {

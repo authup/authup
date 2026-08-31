@@ -7,10 +7,12 @@
 
 import { TypedToken } from 'eldin';
 import type { IApp } from 'routup';
-import type { ConsoleConfig, ConsoleServer } from './types';
+import type { IThemeProvider } from '../theme/index';
+import type { Config, HTTPServer } from './types';
 
-export enum ConsoleModuleName {
+export enum ModuleName {
     CONFIG = 'config',
+    THEME = 'theme',
     HTTP = 'http',
 }
 
@@ -20,8 +22,9 @@ export enum ConsoleModuleName {
  * configuration or a fake before `setup()` instead of threading arguments
  * through a factory.
  */
-export const ConsoleInjectionKey = {
-    Config: new TypedToken<ConsoleConfig>('ConsoleConfig'),
+export const InjectionKey = {
+    Config: new TypedToken<Config>('Config'),
     App: new TypedToken<IApp>('ConsoleApp'),
-    Server: new TypedToken<ConsoleServer>('ConsoleServer'),
+    Server: new TypedToken<HTTPServer>('HTTPServer'),
+    Theme: new TypedToken<IThemeProvider | undefined>('ConsoleTheme'),
 };

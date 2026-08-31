@@ -1985,13 +1985,13 @@ bootstrap. What differs from the account console, and why:
   theme/constants.ts                — SERVING only: revalidate interval, asset CSP
 
 apps/server-{admin,account}-console/src/   — one static console service each, same shape
-  config.ts                         — the registry (<Name>CONSOLE_CONFIG_SCHEMA) + resolve<Name>ConsoleConfig
+  config.ts                         — the registry (<Name>CONSOLE_CONFIG_SCHEMA) + resolve<Name>Config
                                       (authup.yml namespace -> the service's own vocabulary) +
                                       read<Name>ConsoleConfigFromEnv (the bin's own read)
   constants.ts                      — vite base, default base path, package name, config marker, health path
   handler.ts                        — create<Name>ConsoleHandler: the mountable App (theme, assets, shell routes)
   server.ts / bin.ts                — the standalone listener and its entry point
-  types.ts                          — <Name>ConsoleConfigInput (the config NAMESPACE) + <Name>ConsoleConfig
+  types.ts                          — <Name>ConsoleConfigInput (the config NAMESPACE) + <Name>Config
 
 apps/server-auth-console/src/       — the SSR console service
   config.ts / constants.ts / types.ts — as above, plus the page list
@@ -2831,7 +2831,7 @@ vocabulary (`server/core start`, `server/core core`, `server/core console
 admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
 the one place pretending otherwise; behind one origin the proxy routes each
 console's path to its port. **Every console is a runnable SERVICE, not a
-handler someone else owns**: each exports `create<Name>ConsoleApplication`
+handler someone else owns**: each exports `create<Name>Application`
 over the shared `defineConsoleApplication` in `@authup/server-console-kit`,
 which is the whole of its lifecycle (build the handler, listen, close). That
 is what `authup console` starts and what the `authup-<name>-console` bin
@@ -2855,7 +2855,7 @@ url carries the origin a BROWSER reaches it at while the listener only ever
 sees a path; a console url with no path at all would have to own the API's
 own root, where it shadows the protocol routes and the page GETs redirect to
 themselves, so it is refused by name. It needs no origin check of its own:
-`normalizeConfig` and each console's own `resolve*ConsoleConfig` already
+`normalizeConfig` and each console's own `resolve*Config` already
 refuse a console url that is not publicUrl's origin. The console
 The console
 role closes its listeners with active connections (`server.close(true)`): a

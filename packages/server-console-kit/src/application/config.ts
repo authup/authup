@@ -7,8 +7,8 @@
 
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
-import { ConsoleInjectionKey, ConsoleModuleName } from './constants';
-import type { ConsoleConfig, ConsoleConfigFactory } from './types';
+import { InjectionKey, ModuleName } from './constants';
+import type { Config, ConfigFactory } from './types';
 
 /**
  * A console's own configuration, resolved once and shared with every module
@@ -21,25 +21,25 @@ import type { ConsoleConfig, ConsoleConfigFactory } from './types';
  * An already-registered token wins, which is the test seam: a spec registers
  * a configuration and the module steps aside rather than reading a file.
  */
-export class ConsoleConfigModule<C extends ConsoleConfig = ConsoleConfig> implements IModule {
+export class ConfigModule<C extends Config = Config> implements IModule {
     readonly name: string;
 
-    protected input : C | ConsoleConfigFactory<C>;
+    protected input : C | ConfigFactory<C>;
 
-    constructor(input: C | ConsoleConfigFactory<C>) {
-        this.name = ConsoleModuleName.CONFIG;
+    constructor(input: C | ConfigFactory<C>) {
+        this.name = ModuleName.CONFIG;
         this.input = input;
     }
 
     async setup(container: IContainer): Promise<void> {
-        if (container.has(ConsoleInjectionKey.Config)) {
+        if (container.has(InjectionKey.Config)) {
             return;
         }
 
         const config = typeof this.input === 'function' ?
-            await (this.input as ConsoleConfigFactory<C>)() :
+            await (this.input as ConfigFactory<C>)() :
             this.input;
 
-        container.register(ConsoleInjectionKey.Config, { useValue: config });
+        container.register(InjectionKey.Config, { useValue: config });
     }
 }

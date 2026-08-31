@@ -6,13 +6,14 @@
  */
 
 import type { IApp } from 'routup';
+import type { IThemeProvider } from '../theme/index';
 
 /**
  * Structural rather than `ReturnType<typeof serve>`: that type reaches into
  * routup's own srvx copy, which a consumer's declarations cannot name
  * portably. Three members is the whole of what the graph uses.
  */
-export type ConsoleServer = {
+export type HTTPServer = {
     readonly url?: string,
     ready(): Promise<unknown>,
     close(closeActiveConnections?: boolean): Promise<unknown>,
@@ -23,18 +24,22 @@ export type ConsoleServer = {
  * own `Config` carries more (its api url, its dist path, its theme), which is
  * its handler's business rather than the graph's.
  */
-export type ConsoleConfig = {
+export type Config = {
     port: number,
     host: string,
+    theme: {
+        directoryPath: string,
+        fragmentsEnabled: boolean,
+    },
 };
 
-export type ConsoleConfigFactory<C extends ConsoleConfig = ConsoleConfig> =    () => C | Promise<C>;
+export type ConfigFactory<C extends Config = Config> =    () => C | Promise<C>;
 
-export type ConsoleHTTPModuleContext<C extends ConsoleConfig = ConsoleConfig> = {
+export type HTTPModuleContext<C extends Config = Config> = {
     /**
      * Built on setup rather than passed in, because a console loads its
      * operator theme before it serves a page: an invalid manifest then fails
      * the boot instead of every render.
      */
-    createHandler: (config: C) => Promise<IApp>,
+    createHandler: (config: C, theme?: IThemeProvider) => Promise<IApp>,
 };

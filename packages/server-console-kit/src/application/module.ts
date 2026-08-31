@@ -6,9 +6,10 @@
  */
 
 import { Application } from 'orkos';
-import { ConsoleConfigModule } from './config';
-import { ConsoleHTTPModule } from './http';
-import type { ConsoleConfig, ConsoleConfigFactory, ConsoleHTTPModuleContext } from './types';
+import { ConfigModule } from './config';
+import { HTTPModule } from './http';
+import { ThemeModule } from './theme';
+import type { Config, ConfigFactory, HTTPModuleContext } from './types';
 
 /**
  * A console as an APPLICATION: a module graph with its own configuration,
@@ -25,14 +26,15 @@ import type { ConsoleConfig, ConsoleConfigFactory, ConsoleHTTPModuleContext } fr
  * dependency order, and a third module — the operator theme is the obvious
  * next one — slots in without any caller changing.
  */
-export function createConsoleApplication<C extends ConsoleConfig>(
-    config: C | ConsoleConfigFactory<C>,
-    ctx: ConsoleHTTPModuleContext<C>,
+export function createApplication<C extends Config>(
+    config: C | ConfigFactory<C>,
+    ctx: HTTPModuleContext<C>,
 ) : Application {
     return new Application({
         modules: [
-            new ConsoleConfigModule<C>(config),
-            new ConsoleHTTPModule<C>(ctx),
+            new ConfigModule<C>(config),
+            new ThemeModule(),
+            new HTTPModule<C>(ctx),
         ],
     });
 }

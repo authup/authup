@@ -9,4 +9,5 @@ export * from './config';
 export * from './constants';
 export * from './http';
 export * from './module';
+export * from './theme';
 export * from './types';
