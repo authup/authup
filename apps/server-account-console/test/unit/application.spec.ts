@@ -55,8 +55,10 @@ describe('createApplication', () => {
     });
 
     it('should resolve the configuration a caller registered', async () => {
-        application = createApplication(() => {
-            throw new Error('the factory must not run when a config is registered');
+        application = createApplication({
+            config: () => {
+                throw new Error('the factory must not run when a config is registered');
+            },
         });
 
         application.container.register(InjectionKey.Config, { useValue: buildConfig() });
@@ -68,8 +70,28 @@ describe('createApplication', () => {
         expect((await fetch(`${server.url}healthy`)).status).toEqual(200);
     });
 
+    /**
+     * The `config` seam `authup start` composes through: it hands each console
+     * its own resolved section, and a console that ignored it would silently
+     * read the environment instead of the document.
+     */
+    it('should resolve the configuration factory the caller passed', async () => {
+        let calls = 0;
+
+        application = createApplication({
+            config: () => {
+                calls += 1;
+                return buildConfig();
+            },
+        });
+
+        await application.setup();
+
+        expect(calls).toEqual(1);
+    });
+
     it('should serve the page through the theme provider the graph resolved', async () => {
-        application = createApplication(buildConfig);
+        application = createApplication({ config: buildConfig });
         application.container.register(InjectionKey.Theme, { useValue: provider });
 
         await application.setup();

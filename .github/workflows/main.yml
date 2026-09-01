@@ -78,13 +78,13 @@ jobs:
                 run: |
                     npm run lint
 
-            -   name: Type-check tests (server-core)
+            -   name: Type-check tests
+                # every workspace declaring the script, not a hand-kept list:
+                # the two it used to name were the only ones checked, so a
+                # test-file type error in any other workspace shipped green
+                # (build excludes tests and vitest transpiles with SWC).
                 run: |
-                    npm run check:types --workspace=apps/server-core
-
-            -   name: Type-check tests (authup)
-                run: |
-                    npm run check:types --workspace=apps/authup
+                    npm run check:types --workspaces --if-present
 
     tests:
         name: Test Packages

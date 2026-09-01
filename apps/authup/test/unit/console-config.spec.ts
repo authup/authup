@@ -63,7 +63,7 @@ describe('readConsoleConfigs', () => {
 
         return {
             core,
-            consoles: await readConsoleConfigs({ cwd: directory }, core),
+            consoles: await readConsoleConfigs({ cwd: directory }),
         };
     }
 
