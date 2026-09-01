@@ -35,22 +35,32 @@ import type {
  * substituted package path or a resolved dist.
  */
 export function defineStaticConsole(definition: StaticConsoleDefinition) : StaticConsole {
+    let cachedPackagePath : string | undefined;
     let cachedDistPath : string | undefined;
 
-    const resolveDistPath = () : string | undefined => {
-        if (cachedDistPath) {
-            return cachedDistPath;
+    const resolvePackagePath = () : string | undefined => {
+        if (cachedPackagePath) {
+            return cachedPackagePath;
         }
 
         // The node_modules ancestor walk from the SERVING package's own root
         // finds the console package for the workspace symlink and for a
         // published install alike. The anchor is behavioural: it decides
         // which node_modules tree is walked, so it is never the process cwd.
-        const packagePath = definition.distPath || locateUpSync(
+        cachedPackagePath = definition.distPath || locateUpSync(
             `node_modules/${definition.packageName}/package.json`,
             { cwd: definition.cwd },
         )?.directory;
 
+        return cachedPackagePath;
+    };
+
+    const resolveDistPath = () : string | undefined => {
+        if (cachedDistPath) {
+            return cachedDistPath;
+        }
+
+        const packagePath = resolvePackagePath();
         if (packagePath) {
             const distPath = path.join(packagePath, 'dist');
 
@@ -62,7 +72,11 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         return cachedDistPath;
     };
 
-    const serve = async (event: IAppEvent, options: StaticConsoleServeOptions) : Promise<string> => {
+    const readShell = async (event: IAppEvent) : Promise<string> => {
+        if (definition.readShell) {
+            return definition.readShell(event);
+        }
+
         const distPath = resolveDistPath();
         if (!distPath) {
             throw new InternalError(
@@ -75,7 +89,11 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         // picked up without a restart. That is what the retired just-in-time
         // branch bought, at the price of a typeorm dependency inside a
         // page-serving package.
-        const html = await fs.promises.readFile(path.join(distPath, 'index.html'), 'utf-8');
+        return fs.promises.readFile(path.join(distPath, 'index.html'), 'utf-8');
+    };
+
+    const serve = async (event: IAppEvent, options: StaticConsoleServeOptions) : Promise<string> => {
+        const html = await readShell(event);
 
         // The splice below MUST stay `replaceTemplateMarker`. A plain
         // String.prototype.replace expands `$&`, "$`", `$'` and `$$` inside
@@ -104,6 +122,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         packageName: definition.packageName,
         marker: definition.marker,
         viteBase: definition.viteBase,
+        resolvePackagePath,
         resolveDistPath,
         serve,
     };
