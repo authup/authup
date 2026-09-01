@@ -67,7 +67,10 @@
         "access": "public"
     },
     "devDependencies": {
+        "@authup/client-auth-console": "^1.0.0-beta.63",
         "cross-env": "^10.1.0",
+        "ts-node": "^10.8.2",
+        "vite": "^8.2.1",
         "vitest": "^4.0.18"
     }
 }
