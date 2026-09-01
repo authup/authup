@@ -79,13 +79,20 @@ const CONSOLE_FS_DENY = [
  *
  * The refusal sits in FRONT of `fromNodeMiddleware` rather than reaching into
  * vite's middleware stack, so it survives a vite upgrade reordering or
- * renaming its internals. Connect matches the route on the raw, still
- * percent-encoded pathname, so a literal segment comparison is faithful: a
- * spelling connect would not route cannot reach the spawn either.
+ * renaming its internals.
+ *
+ * The comparison must be case-insensitive. Connect's own dispatch (vite
+ * 8.2.1, `node_modules/vite/dist/node/chunks/node.js:7038`) matches a route
+ * with `path.toLowerCase().substr(0, route.length) !== route.toLowerCase()`,
+ * so `/__OPEN-IN-EDITOR` reaches the middleware exactly as `/__open-in-editor`
+ * does. A literal segment comparison here would refuse the spelling connect
+ * matches loosely while letting every other casing walk straight past it.
  */
 export function createOpenInEditorGuard() : Handler {
     return defineCoreHandler((event: IAppEvent) => {
-        if (event.path.split('/').includes('__open-in-editor')) {
+        const segments = event.path.split('/').map((segment) => segment.toLowerCase());
+
+        if (segments.includes('__open-in-editor')) {
             event.response.status = 404;
 
             return null;

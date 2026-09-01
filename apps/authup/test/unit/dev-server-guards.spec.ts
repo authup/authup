@@ -59,6 +59,20 @@ describe('createOpenInEditorGuard', () => {
         expect(result.reachedBehind).toEqual(false);
     });
 
+    it('refuses the uppercase spelling connect would still route to vite', async () => {
+        const result = await requestThroughGuard('/__OPEN-IN-EDITOR?file=src/index.ts');
+
+        expect(result.status).toEqual(404);
+        expect(result.reachedBehind).toEqual(false);
+    });
+
+    it('refuses a mixed-case spelling as well', async () => {
+        const result = await requestThroughGuard('/__Open-In-Editor?file=src/index.ts');
+
+        expect(result.status).toEqual(404);
+        expect(result.reachedBehind).toEqual(false);
+    });
+
     it('lets every other path through', async () => {
         const result = await requestThroughGuard('/users/1');
 
