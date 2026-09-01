@@ -19,7 +19,7 @@ import{_ as i,o as a,c as e,a0 as t}from"./chunks/framework.ZNXClGez.js";const E
 <span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">    authup</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>
 <span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">      loadBalancer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>
 <span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">        servers</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>
-<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">          - </span><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">url</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">http://authup:3001</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">          - </span><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">url</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">http://authup:3000</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">tls</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>
 <span class="line"><span style="--shiki-light:#22863A;--shiki-dark:#85E89D;">  options</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>

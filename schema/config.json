@@ -12,6 +12,12 @@
             "type": "string",
             "description": "Root directory every relative path key resolves against."
         },
+        "host": {
+            "type": "string",
+            "description": "Default host address every listener this deployment starts binds: server-core and each console service, unless its own section names one. HOST sets it for all of them at once.",
+            "default": "0.0.0.0",
+            "x-authup-env": "HOST"
+        },
         "publicUrl": {
             "type": "string",
             "format": "uri",
@@ -116,14 +122,13 @@
                             "type": "number",
                             "minimum": 0,
                             "description": "TCP port the HTTP listener binds.",
-                            "default": 3001,
+                            "default": 3000,
                             "x-authup-env": "PORT"
                         },
                         "host": {
                             "type": "string",
-                            "description": "Host address the HTTP listener binds.",
-                            "default": "0.0.0.0",
-                            "x-authup-env": "HOST"
+                            "description": "Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.",
+                            "default": ""
                         },
                         "mtlsPublicUrl": {
                             "anyOf": [
@@ -537,8 +542,8 @@
                         },
                         "host": {
                             "type": "string",
-                            "description": "Host address the standalone listener binds.",
-                            "default": "0.0.0.0",
+                            "description": "Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.",
+                            "default": "",
                             "x-authup-env": "AUTH_CONSOLE_HOST"
                         }
                     }
@@ -582,7 +587,7 @@
                         },
                         "host": {
                             "type": "string",
-                            "description": "Host address the HTTP listener binds; an empty value leaves the runtime default.",
+                            "description": "Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.",
                             "default": "",
                             "x-authup-env": "ADMIN_CONSOLE_HOST"
                         }
@@ -627,7 +632,7 @@
                         },
                         "host": {
                             "type": "string",
-                            "description": "Host address the HTTP listener binds; an empty value leaves the runtime default.",
+                            "description": "Host address the HTTP listener binds. Inherits the deployment-wide `host` (HOST) unless it names its own.",
                             "default": "",
                             "x-authup-env": "ACCOUNT_CONSOLE_HOST"
                         }
