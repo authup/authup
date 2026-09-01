@@ -40,7 +40,7 @@ export async function createConsoleViteServer(options: {
             // The HMR socket cannot share the listener: the console mounts
             // run inside server-core's `mount` hook, which fires before the
             // http server exists.
-            hmr: { port: options.hmrPort },
+            ws: { port: options.hmrPort },
             watch: {
                 usePolling: true,
                 interval: 100,

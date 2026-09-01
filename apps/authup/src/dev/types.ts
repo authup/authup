@@ -7,9 +7,10 @@
 
 import type { RenderPage } from '@authup/server-auth-console';
 import type { IAppEvent } from 'routup';
+import type * as Vite from 'vite';
 import type { ViteDevServer } from 'vite';
 
-export type ViteModule = typeof import('vite');
+export type ViteModule = typeof Vite;
 
 export type ConsoleDevServer = {
     middlewares: ViteDevServer['middlewares'],
