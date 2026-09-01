@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RenderPage } from '@authup/server-auth-console';
 import type { IAppEvent } from 'routup';
 import type { ViteDevServer } from 'vite';
 
@@ -17,4 +18,8 @@ export type ConsoleDevServer = {
 
 export type StaticConsoleDevServer = ConsoleDevServer & {
     readShell(event: IAppEvent): Promise<string>,
+};
+
+export type AuthConsoleDevServer = ConsoleDevServer & {
+    render: RenderPage,
 };

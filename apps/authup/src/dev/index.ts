@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './console-auth.ts';
 export * from './console-static.ts';
 export * from './server.ts';
 export * from './source.ts';
