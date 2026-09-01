@@ -121,7 +121,7 @@ describe('createHandler', () => {
         const substituted = await createHandler(
             config,
             undefined,
-            async () => '<!doctype html><html><head></head><body><!--admin-config--></body></html>',
+            async () => '<!doctype html><html><head></head><body><div id="substituted-shell"></div><!--admin-config--></body></html>',
         );
 
         const local = serve(substituted, { port: 0, silent: true });
@@ -133,6 +133,8 @@ describe('createHandler', () => {
             const body = await response.text();
 
             expect(response.status).toEqual(200);
+            expect(body).toContain('substituted-shell');
+            expect(body).not.toContain('/assets/');
             expect(body).toContain('window.__AUTHUP__');
             expect(body).toContain('"cookieSession":true');
             expect(response.headers.get('cache-control')).toEqual('no-store');
