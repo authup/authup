@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
+import { AuthupError, normalizeError } from '@authup/errors';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ViteModule } from './types.ts';
@@ -34,9 +34,14 @@ export function isSourceCheckout(packagePath: string | undefined) : packagePath 
 export async function loadVite(packageName: string) : Promise<ViteModule> {
     try {
         return await import('vite');
-    } catch {
+    } catch (e) {
+        // The reason is carried, message only: an unresolved bare specifier
+        // and a vite that threw while evaluating are the same failure here,
+        // and the second says nothing without its cause. A stack would bury
+        // the one line that says what to do.
         throw new AuthupError(
-            `Serving ${packageName} from source needs vite, which could not be resolved. ` +
+            `Serving ${packageName} from source needs vite, which could not be loaded: ` +
+            `${normalizeError(e).message}. ` +
             'Install vite in this project, or point the console\'s path at a built package.',
         );
     }

@@ -45,9 +45,25 @@ cookie a served console uses in production, not the standalone browser
 authorization-code flow.
 
 The workspace additionally runs `server-core` itself from its TypeScript
-source (`ts-node/esm`, no build step), so an edit there needs a restart, not
-a rebuild. A published install ships `dist/` and no source, so `authup dev`
-there falls back to `dist/`, exactly like `start`.
+source (`ts-node/esm` plus the `authup-source` export condition, no build
+step), so an edit there needs a restart, not a rebuild.
+
+::: danger It is a development command, and it refuses production
+`authup dev` starts a vite dev server with a file watcher and a filesystem
+reader alongside the API, on the API's own listener, which binds `HOST`
+(`0.0.0.0` in the container). It therefore **refuses to start when the
+resolved environment is production** (`env` in `authup.yml`, or `NODE_ENV`),
+and tells you to run `authup start` instead. Do not work around the refusal.
+
+The refusal is the control, not the absence of source. A package installed
+from npm ships `files: ["dist"]` and carries no `vite.config.ts`, so
+`authup dev` there serves every console from `dist/` exactly like `start` and
+says so. **The published container image is the exception**: it is built by
+copying the whole repository in and running `npm ci` without pruning, so it
+holds every source checkout and every devDependency, and `authup dev` inside
+it would find three source checkouts to serve. That is precisely what the
+production refusal exists to stop.
+:::
 
 - **Backend + every console** `http://localhost:3000/`
 - **Admin console** `http://localhost:3000/console/admin`
@@ -57,7 +73,17 @@ there falls back to `dist/`, exactly like `start`.
 - **Prometheus-Metrics** `http://localhost:3000/metrics`
 
 Each console's vite dev server opens its own hot-module-replacement
-websocket: 24678 (auth), 24679 (admin), 24680 (account).
+websocket: 24678 (auth), 24679 (admin), 24680 (account). If one of those
+ports is already taken, the command refuses to start and names it, rather
+than coming up with that console silently un-hot; the usual cause is another
+`authup dev` still running.
+
+Two things the dev servers deliberately will not do, because they ride the
+API's own listener rather than loopback. They refuse to read the database,
+`authup.yml`, any `.env` and anything under a `writable/` directory over
+vite's `/@fs/` route, and they answer 404 on vite's `__open-in-editor`
+endpoint, which otherwise spawns an editor process for any URL a visited page
+can request.
 
 What is hot, and what still needs a restart or a rebuild:
 

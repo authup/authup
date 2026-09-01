@@ -3233,9 +3233,63 @@ in production.
 **HMR websocket ports are fixed, one per console dev server** (middleware
 mode cannot share routup's listener, since the `mount` hook runs before
 `serve()` creates it): 24678 (auth), 24679 (admin), 24680 (account). An
-`EADDRINUSE` there means another dev server is already running; stop it
-rather than renumber the constants, which would then disagree with the
-docs.
+occupied one FAILS the command, naming the port
+(`assertHmrPortFree` in `apps/authup/src/dev/server.ts`, probing exactly as
+vite's ws server binds: `listen(port)` with no host). It has to, because vite
+itself reports the `EADDRINUSE` through `config.logger.error` and then
+carries on, so the console came up with no HMR at all while the command had
+already announced it as hot. That announcement is now printed only once the
+dev server exists, for the same reason. The cause is almost always another
+dev server; stop it rather than renumber the constants, which would then
+disagree with the docs.
+
+**Two guards make the dev servers safe to put on this listener, and both are
+load-bearing rather than belt-and-braces.** A vite dev server ordinarily
+listens on loopback; in middleware mode it rides server-core's listener,
+which binds `HOST`.
+
+- `server.fs.deny` is extended (`CONSOLE_FS_DENY` in
+  `apps/authup/src/dev/server.ts`) to cover `**/*.sql`, `**/authup.yml`,
+  `**/.env{,.*}` and `**/writable/**`. Without it, `/@fs/<absolute path>`
+  served the whole workspace, `apps/server-core/writable/db.sql` included,
+  and that file holds `auth_keys.decryption_key` as a plaintext PKCS#8 RSA
+  ACTIVE SIGNING KEY. **Supplying the option REPLACES vite's default rather
+  than extending it**, and vite exports no constant for the default, so the
+  default list is restated in the constant and must be kept in step when the
+  vite floor moves. `deny` is the right lever rather than a narrower
+  `fs.allow`: it outranks `allow`, and the allow-list genuinely has to span
+  the workspace, since each console's vite config aliases the kit and both
+  theme packages to source.
+- `createOpenInEditorGuard` answers 404 for any `__open-in-editor` segment,
+  registered in `compose()` BEFORE the vite middlewares. Vite mounts
+  `launchEditorMiddleware()` on that path unconditionally, and it SPAWNS a
+  process (`LAUNCH_EDITOR`, or a guessed editor) for a caller-chosen file.
+  It is a side-effecting GET, so any page a developer visits can fire it
+  cross-origin with an `<img src>`; vite's host allowlist does not defend it,
+  since that check sees the `Host: localhost` such a request carries. The
+  refusal sits in front of vite rather than reaching into its middleware
+  stack, so a vite upgrade reordering or renaming internals cannot silently
+  undo it.
+
+**Neither guard is the primary control. `authup dev` REFUSES to start when
+the resolved environment is production** (`assertNotProduction`, reading
+server-core's own `config.env` rather than `process.env`, so an operator
+declaring the environment in `authup.yml` is covered too). The container is
+what makes that necessary: its Dockerfile runs `COPY . .` and `npm ci`
+BEFORE `ENV NODE_ENV=production` and prunes nothing, so every
+`vite.config.ts` is present and every devDependency installed, which is
+exactly the state `isSourceCheckout` reports as a source checkout, while
+`entrypoint.sh` passes any command through with `HOST=0.0.0.0`. So "a
+published install ships no source" is true for npm and FALSE for the image,
+and the refusal is what closes the gap.
+
+**A dev server that started is closed even when a later one fails.** Each is
+registered for teardown the moment it exists rather than when its mount
+completes, and a failing `app.setup()` closes the registered set before
+rethrowing; teardown is `Promise.allSettled`, so one failing close does not
+abandon the rest. Without it a console failing after an earlier one had
+started stranded that one's file watcher and HMR websocket, which only
+`process.exit(1)` in the CLI entry point was hiding.
 
 **Every console's vite config aliases `@authup/client-web-kit` (and the two
 theme packages) to source**, the same aliasing each console's `vite.config.ts`
