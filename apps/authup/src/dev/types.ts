@@ -5,4 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IAppEvent } from 'routup';
+import type { ViteDevServer } from 'vite';
+
 export type ViteModule = typeof import('vite');
+
+export type ConsoleDevServer = {
+    middlewares: ViteDevServer['middlewares'],
+    close(): Promise<void>,
+};
+
+export type StaticConsoleDevServer = ConsoleDevServer & {
+    readShell(event: IAppEvent): Promise<string>,
+};
