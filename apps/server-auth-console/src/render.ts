@@ -8,7 +8,6 @@
 import type { HydrationPayload, RenderFunction } from '@authup/client-auth-console';
 import { InternalError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
-import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     applyTheme,
     applyUIPageHeaders,
@@ -20,10 +19,9 @@ import {
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { IAppEvent } from 'routup';
 import { VITE_BASE } from './constants';
 import { resolveDistPath } from './resolve';
-import type { Config } from './types';
+import type { RenderPage } from './types';
 
 // Process-lifetime caches for the immutable production SSR assets. The dist
 // template, manifest and server bundle don't change after boot, so read them
@@ -32,15 +30,7 @@ let cachedHtml: string | undefined;
 let cachedManifest: Record<string, any> | undefined;
 let cachedRender: RenderFunction | undefined;
 
-export async function renderPage(
-    event: IAppEvent,
-    config: Config,
-    ctx: {
-        url: string, 
-        data: Record<string, any>, 
-        theme?: IThemeProvider 
-    },
-) : Promise<string> {
+export const renderPage : RenderPage = async (event, config, ctx) => {
     const distPath = resolveDistPath();
     if (!distPath) {
         throw new InternalError(
@@ -106,4 +96,4 @@ export async function renderPage(
     applyUIPageHeaders(event);
 
     return body;
-}
+};
