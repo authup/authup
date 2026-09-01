@@ -10,7 +10,7 @@
     "scripts": {
         "cli": "node dist/index.mjs",
         "cli-dev": "npm run build && npm run cli",
-        "dev": "node --conditions=development --loader ts-node/esm src/index.ts dev",
+        "dev": "node --conditions=authup-source --loader ts-node/esm src/index.ts dev",
         "build:js": "tsdown",
         "build": "rimraf ./dist && npm run build:js",
         "check:types": "tsc -p tsconfig.test.json",

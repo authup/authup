@@ -10,9 +10,10 @@
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "development": "./src/index.ts",
+            "authup-source": "./src/index.ts",
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs"
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
         }
     },
     "files": [

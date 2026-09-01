@@ -3199,13 +3199,22 @@ today's behaviour:
   payload assembly and splice chain the built render uses, minus
   `rebaseAssetURLs` (the dev html already carries the base vite was given,
   so rebasing it would be a no-op done the hard way).
-- server-core itself runs from TypeScript via a `development` export
+- server-core itself runs from TypeScript via an `authup-source` export
   condition on `@authup/server-core`'s `package.json`
-  (`"development": "./src/index.ts"`), reached by
-  `node --conditions=development --loader ts-node/esm`. This is the one
+  (`"authup-source": "./src/index.ts"`), reached by
+  `node --conditions=authup-source --loader ts-node/esm`. This is the one
   seam that is WORKSPACE-ONLY: a published install ships `dist/` and no
   `src/`, so `authup dev` there runs server-core from `dist`, exactly like
-  `start`.
+  `start`. **The condition must stay a name only this repository passes.**
+  It was `development` for one unreleased commit, which is a PUBLIC
+  condition vite and vitest set by DEFAULT in serve mode, and Node does not
+  fall through to the next condition when a matched target is missing: any
+  downstream consumer importing `@authup/server-core` under vitest resolved
+  onto a `src/` the tarball does not ship (`files: ["dist"]`, 0 `src/`
+  entries) and died with `ERR_MODULE_NOT_FOUND`. The map also carries a
+  `default` alongside `import`, so a non-`import` resolver still reaches the
+  ESM entry rather than falling off the end of an exports map that used to
+  list only three conditions.
 
 **Because everything lands on one origin, dev exercises the COOKIE-SESSION
 path**, not the cross-origin browser-PKCE fallback the standalone

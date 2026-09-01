@@ -182,7 +182,7 @@ async function buildAuthMount(
  * workspace symlink and a substituted checkout both do.
  *
  * Running server-core itself from TypeScript is a WORKSPACE capability, not
- * this command's: it comes from the `development` export condition, which a
+ * this command's: it comes from the `authup-source` export condition, which a
  * published install cannot satisfy because it ships no source.
  */
 export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
