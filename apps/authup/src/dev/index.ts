@@ -7,6 +7,7 @@
 
 export * from './console-auth.ts';
 export * from './console-static.ts';
+export * from './resolve.ts';
 export * from './server.ts';
 export * from './source.ts';
 export * from './types.ts';

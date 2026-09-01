@@ -19,6 +19,7 @@ import {
     defineCLIConfigCommand,
     defineCLIConsoleCommand,
     defineCLICoreCommand,
+    defineCLIDevCommand,
     defineCLIHealthCheckCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
@@ -87,6 +88,10 @@ export async function createCLIEntryPointCommand() {
             core: defineCLICoreCommand(configFs),
 
             worker: defineCLIWorkerCommand(configFs),
+
+            // `start`, but a console whose package resolves to a source
+            // checkout is served through vite instead of its built dist.
+            dev: defineCLIDevCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,
         setup(context) {
