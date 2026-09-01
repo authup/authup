@@ -63,7 +63,7 @@ const INTROSPECTION_RESPONSE = {
     active: true,
     exp: 9999999999,
     // the endpoint resolves the subject and answers with its OpenID claims —
-    // the store builds `user` out of these three
+    // the store builds `user` out of these
     sub: 'user-1',
     sub_kind: 'user',
     name: 'admin',

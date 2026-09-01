@@ -63,7 +63,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 }
 
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
-type UserMinimal = Pick<User, 'id' | 'name' | 'displayName'>;
+type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 /**
  * The subject claims the introspection endpoint answers with, alongside the
@@ -76,6 +76,7 @@ type UserMinimal = Pick<User, 'id' | 'name' | 'displayName'>;
 type SubjectClaims = {
     name?: string | null,
     nickname?: string | null,
+    email?: string | null,
 };
 
 export function createStore(context: StoreCreateContext) {
@@ -170,11 +171,11 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     /**
-     * The token's subject, narrowed to what is actually rendered: the id every
-     * owner-scoped query filters on, and the name / display name the account
-     * chip and the authorize page's "continue as" label read. A full `User` was
-     * held here once, at the cost of a `/userinfo` round-trip per restore, and
-     * no consumer ever read a field outside these three.
+     * The token's subject, narrowed to what a consumer renders: the id every
+     * owner-scoped query filters on, the name / display name the account chip
+     * and the authorize page's "continue as" label read, and the address an
+     * avatar hash is derived from. A full `User` was held here once, at the
+     * cost of a `/userinfo` round-trip per restore.
      */
     const user = ref<UserMinimal | null>(null);
     const userId = computed<string | null>(() => (user.value ? user.value.id : null));
@@ -187,6 +188,7 @@ export function createStore(context: StoreCreateContext) {
             id: input.id,
             name: input.name,
             displayName: input.displayName,
+            email: input.email,
         } : null;
 
         context.dispatcher.emit(StoreDispatcherEventName.USER_UPDATED, user.value);
@@ -412,9 +414,9 @@ export function createStore(context: StoreCreateContext) {
     /**
      * The introspected token's subject, built from the response itself: the
      * introspection endpoint resolves the identity server-side and answers
-     * with its OpenID claims (`name`, and `displayName` under `nickname`), so
-     * a second `/userinfo` round-trip fetched a whole entity to restate three
-     * fields the store already had in hand.
+     * with its OpenID claims (`name`, `email`, and `displayName` under
+     * `nickname`), so a second `/userinfo` round-trip fetched a whole entity
+     * to restate fields the store already had in hand.
      *
      * Deriving it also settles the identity question the predecessor had to ask
      * separately: the held user cannot drift from the token, because it IS the
@@ -433,12 +435,17 @@ export function createStore(context: StoreCreateContext) {
             return null;
         }
 
-        const { name, nickname } = introspection as SubjectClaims;
+        const {
+            name,
+            nickname,
+            email,
+        } = introspection as SubjectClaims;
 
         return {
             id: introspection.sub,
             name: name || '',
             displayName: nickname || null,
+            email: email || '',
         };
     };
 

@@ -5638,15 +5638,55 @@ the refresh fallback. The two must not be separated.
 
 **The user is derived from the introspection, not fetched.** `postIntrospect`
 resolves the token's subject server-side and spreads its OpenID claims into the
-response (`OAuth2OpenIDClaimsBuilder`: `name`, and `displayName` under
+response (`OAuth2OpenIDClaimsBuilder`: `name`, `email`, and `displayName` under
 `nickname` / `preferred_username`), so `store.user` is built from a response the
-store already awaits. It is typed to what is rendered,
-`Pick<User, 'id' | 'name' | 'displayName'>` — the id every owner-scoped query
-filters on, plus the account chip's and the authorize page's "continue as"
-label. No consumer ever read a field outside those three; the one surface that
-needs the whole record, the account console's profile form, loads it itself —
+store already awaits. It is typed to what a consumer renders,
+`Pick<User, 'id' | 'name' | 'displayName' | 'email'>`: the id every owner-scoped
+query filters on, the account chip's and the authorize page's "continue as"
+label, and the address an avatar hash is derived from. The one surface that
+needs the whole record, the account console's profile form, loads it itself,
 from `/userinfo` rather than `/users/@me`, because `email` is `select: false`
 and therefore absent from the entity endpoint's default projection.
+
+**`email` is in the pick because dropping a claim already on the wire fails
+silently** (issue #3506). Gravatar keys an avatar on `md5(trim(lower(email)))`,
+so a consumer without the address cannot render one at all, and substituting
+any other stable string still answers 200, since the default `d=` generates a
+fallback image from whatever hash it is given: the page looks right and shows
+the wrong person. Recovering it by re-introspecting per render repeats the
+round-trip this shape exists to remove. It is not the `user` COOKIE coming
+back. That was an unbounded record (`extendOneWithEA` flattens every user
+attribute onto `/userinfo` after the projection) riding the Cookie header on
+every request to the origin, static assets included. The address is not new to
+the browser either: the id_token spreads the SAME claims
+(`OAuth2OpenIDTokenIssuer.issueWithIdentity`) and the kit persists it under
+`CookieName.ID_TOKEN`, so in bearer mode the email already rides that header,
+base64-decodable, on every same-path request. What the ref adds on the wire is
+nothing, and for a Nuxt consumer one more field in an SSR payload that already
+carries the access and refresh tokens off the same store.
+
+**`UserMinimal` is spelled in THREE places and only two of them are guarded.**
+`buildUser` returns the shape and `setUser` re-picks it again at the sink,
+deliberately (callers hand over whole entity rows, and the ref is what a Nuxt
+consumer's SSR payload carries). Both are contextually typed against the alias
+and a pure `Pick` makes every member required, so omitting a newly picked field
+at either site is a compile error, TS2741 in `buildUser` and TS2322 at the sink,
+never a silent drop. Note the guard is `build:types` alone: vitest transpiles
+through SWC, so the suite runs an un-type-checked tree and reports the omission
+as a runtime absence instead. The genuinely unguarded site is the alias ITSELF,
+declared independently in `core/store/create.ts` and
+`core/store/dispatcher/types.ts` with nothing tying the two together. Widening
+one and not the other compiles clean, and the `USER_UPDATED` payload type then
+understates what is emitted. They stay separate because both are private
+aliases, so sharing one would mean exporting it and growing the published
+surface to fix a documentation problem.
+
+The server half is droppable once per SURFACE. The claim maps from a
+`select: false` column that survives only because `UserIdentityRepository.find()`
+re-selects every one of them, and each endpoint then spreads the claims itself,
+so both spreads are pinned: `introspect.spec.ts` for `POST /token/introspect`
+and `console-session.spec.ts` for `GET /sessions/@me/introspect`, the one a
+cookie-mode console hydrates from.
 
 The claims are read through a local `SubjectClaims` shape rather than off
 `OAuth2TokenIntrospectionResponse`. Typing the response as an

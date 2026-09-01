@@ -114,7 +114,8 @@ describe.each(CONSOLES)('$name console session', ({
 
     it('signs a user in and out through the opaque session credential', async () => {
         const password = 'console-session-round-trip';
-        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const userData = createFakeUser({ password });
+        const { data: user } = await suite.client.user.create(userData);
         const { data: realm } = await suite.client.realm.getOne('master');
 
         // 1) the kick: PKCE + state are minted server-side and parked behind
@@ -231,6 +232,11 @@ describe.each(CONSOLES)('$name console session', ({
         expect(sessionBody.sub).toEqual(user.id);
         expect(sessionBody.session_id).toBeDefined();
         expect(sessionBody.realm_id).toEqual(realm.id);
+        // the claim a console keys an avatar on (issue #3506). Cookie mode is
+        // the surface the account console runs on, and it reaches the claims
+        // through this endpoint's own `...subject.claims` spread rather than
+        // through `POST /token/introspect`.
+        expect(sessionBody.email).toEqual(userData.email);
 
         // 5) and the credential drives ordinary, identity-gated API routes —
         //    the same ones every other client reaches with a bearer.

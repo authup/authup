@@ -4,7 +4,8 @@ Session management is handled via `pinia`. The tokens and the active management
 realm are stored as cookies in the browser, so a server-side render can read
 them from the request. The user is not stored: `resolve()` derives it from the
 token introspection that validates the session anyway, and carries the id, name
-and display name that identify the subject.
+and display name that identify the subject, plus the email address an avatar
+hash is derived from.
 
 
 ## Login
@@ -80,7 +81,7 @@ export default defineComponent({
         console.log(store.userId); // xxxx-xxxx-...
         console.log(store.realmId); // xxxx-xxxx-...
         console.log(store.realmName); // xxx
-        console.log(store.user); // null | { id: 'xxxx-xxxx-...', name: 'xxx', displayName: 'xxx' | null }
+        console.log(store.user); // null | { id: 'xxxx-xxxx-...', name: 'xxx', displayName: 'xxx' | null, email: 'xxx' }
     }
 })
 ```
