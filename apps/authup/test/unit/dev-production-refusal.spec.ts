@@ -17,7 +17,13 @@ import { defineCLIDevCommand } from '../../src/commands/dev.ts';
 const nodeEnv = process.env.NODE_ENV;
 
 afterEach(() => {
-    process.env.NODE_ENV = nodeEnv;
+    // Assigning undefined to a process.env member stores the STRING
+    // "undefined", which would then leak into every later test in this worker.
+    if (typeof nodeEnv === 'undefined') {
+        delete process.env.NODE_ENV;
+    } else {
+        process.env.NODE_ENV = nodeEnv;
+    }
 });
 
 /**

@@ -55,12 +55,17 @@ export function createViteRender(vite: ViteRenderContext, root: string) : Render
 
         const template = await fs.promises.readFile(path.join(root, 'index.html'), 'utf-8');
         const html = await vite.transformIndexHtml(ctx.url, template);
-        const render = (await vite.ssrLoadModule('/src/server.ts')).render as RenderFunction;
 
         let appHtml : string;
         let preloadLinks : string;
 
         try {
+            // Loaded INSIDE the try, because a broken SSR entry (or anything
+            // it imports) throws here rather than in the render, and that is
+            // the failure a contributor hits most. Loading it above would
+            // hand them bundled frames for exactly that case.
+            const render = (await vite.ssrLoadModule('/src/server.ts')).render as RenderFunction;
+
             // The manifest drives preload links, which only a build produces.
             // Dev loads every module through the server, so an empty one is
             // correct rather than a degradation.

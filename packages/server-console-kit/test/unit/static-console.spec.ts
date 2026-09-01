@@ -10,9 +10,9 @@ import { App, defineCoreHandler } from 'routup';
 import type { IAppEvent } from 'routup';
 import { serve } from 'routup/node';
 import {
-    afterEach, 
-    describe, 
-    expect, 
+    afterEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { defineStaticConsole } from '../../src';

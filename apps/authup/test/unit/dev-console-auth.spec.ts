@@ -97,4 +97,23 @@ describe('createViteRender', () => {
 
         expect(fixed).toBe(true);
     });
+
+    it('maps the frames back when the SSR entry itself fails to load', async () => {
+        let fixed = false;
+
+        const vite : ViteRenderContext = {
+            transformIndexHtml: async (_url, html) => html,
+            ssrLoadModule: async () => {
+                throw new Error('entry is broken');
+            },
+            ssrFixStacktrace: () => { fixed = true; },
+        };
+
+        const render = createViteRender(vite, root);
+
+        await expect(render(event, config, { url: '/logout', data: {} }))
+            .rejects.toThrow('entry is broken');
+
+        expect(fixed).toBe(true);
+    });
 });
