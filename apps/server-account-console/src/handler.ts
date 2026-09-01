@@ -76,6 +76,7 @@ function buildAppOrigins(config: Config) : string[] {
 export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
+    readShell?: (event: IAppEvent) => Promise<string>,
 ) : Promise<App> {
     const app = new App();
 
@@ -109,6 +110,7 @@ export async function createHandler(
         viteBase: VITE_BASE,
         cwd: PACKAGE_PATH,
         distPath: config.distPath || undefined,
+        readShell,
     });
 
     // Every file under a vite `assets/` output carries a content hash in its

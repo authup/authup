@@ -135,4 +135,28 @@ describe('createHandler', () => {
         expect(response.status).toEqual(404);
         expect(response.headers.get('content-type') ?? '').not.toContain('text/html');
     });
+
+    it('serves a substituted shell while keeping the config splice and the page headers', async () => {
+        const substituted = await createHandler(
+            config,
+            undefined,
+            async () => '<!doctype html><html><head></head><body><!--account-config--></body></html>',
+        );
+
+        const local = serve(substituted, { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/`);
+            const body = await response.text();
+
+            expect(response.status).toEqual(200);
+            expect(body).toContain('window.__AUTHUP__');
+            expect(body).toContain('"cookieSession":true');
+            expect(response.headers.get('cache-control')).toEqual('no-store');
+        } finally {
+            await local.close(true);
+        }
+    });
 });
