@@ -124,6 +124,9 @@ export default {
              * EXPERIMENTAL. Package directory replacing the served admin console. It
              * points at a directory holding the built dist/. Empty resolves the
              * packaged console from node_modules. See the Theming guide.
+             * A source checkout there is served from source with hot module
+             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+             * Quick Start guide).
              * env: ADMIN_CONSOLE_PATH
              * default: ''
              */
@@ -144,6 +147,9 @@ export default {
              * EXPERIMENTAL. Package directory replacing the served account console. It
              * points at a directory holding the built dist/. Empty resolves the
              * packaged console from node_modules. See the Theming guide.
+             * A source checkout there is served from source with hot module
+             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+             * Quick Start guide).
              * env: ACCOUNT_CONSOLE_PATH
              * default: ''
              */
@@ -155,6 +161,9 @@ export default {
              * EXPERIMENTAL. Package directory replacing the served auth console. It
              * points at a directory holding the built dist/. Empty resolves the
              * packaged console from node_modules. See the Theming guide.
+             * A source checkout there is served from source with hot module
+             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+             * Quick Start guide).
              * env: AUTH_CONSOLE_PATH
              * default: ''
              */
