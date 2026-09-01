@@ -24,12 +24,12 @@ export default defineConfig({
     // configuration contract.
     base: '/console/admin/',
     // The standalone dev server (`npm run dev`, JS-token mode against
-    // VITE_API_URL): port 3000 is the origin server-core seeds into the
-    // trusted origins outside production, so the login redirect is allowed
-    // without any TRUSTED_ORIGINS configuration.
-    // 3000 is the API default; the dev server needs a port of its own,
-    // and `trustedOrigins` is dev-seeded with this one so a standalone dev
-    // console can log in on first run.
+    // VITE_API_URL): this port, 3010, is the origin `trustedOrigins` seeds
+    // outside production (`DEVELOPMENT_ORIGIN` in `@authup/server-config`),
+    // so the login redirect is allowed without any TRUSTED_ORIGINS
+    // configuration. `npm run dev` at the repository root (`authup dev`)
+    // needs no such seed: it serves this console on server-core's own
+    // origin instead, so no cross-origin redirect is ever made.
     server: { port: 3010 },
     experimental: {
         // Asset URLs that JavaScript resolves at RUNTIME (the preload helper

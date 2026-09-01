@@ -1342,10 +1342,13 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
-  `http://localhost:3000` is dev-seeded so the admin console's standalone
-  dev server (`npm run dev -w apps/client-admin-console`, vite on :3000)
-  works on first run; the served console at `<publicUrl>/console/admin` needs no
-  entry, since publicUrl's own origin is always in the set.
+  `http://localhost:3010` is dev-seeded (`DEVELOPMENT_ORIGIN`,
+  `@authup/server-config`) so the admin console's standalone dev server
+  (`npm run dev -w apps/client-admin-console`, vite on :3010) works on first
+  run; the served console at `<publicUrl>/console/admin` needs no entry,
+  since publicUrl's own origin is always in the set, and neither does
+  `authup dev` (Development mode below), which serves every console on
+  server-core's own origin instead of a dev server's.
 - **Provisioning (`SystemClientProvisioner.ensureForRealm`)** is the single
   upsert mechanism — it loops `SYSTEM_CLIENT_DEFINITIONS` — run two ways and
   sharing the same factory so they can't drift:
@@ -2240,6 +2243,16 @@ by nobody else: they moved out of server-core's registry with the serving
 `distPath` field rather than through a mutator, so two handlers in one
 process cannot share a substitution.
 
+**EXPERIMENTAL: `authup dev` (see *Development mode* below) gives a
+substituted path a development loop.** When the path a service resolves to
+is a SOURCE checkout (detected by the presence of a `vite.config.ts` in it,
+never a config key of its own), `authup dev` serves it through a vite dev
+server with hot module replacement instead of reading its `dist/`, exactly
+as it does for the three workspace consoles. An integrator who forked
+`@authup/client-auth-console` to reskin the hosted auth UI gets the same
+loop the workspace does, for free, by pointing `server.authConsole.path` at
+their checkout.
+
 **What a replacement owes is a CONTRACT, and the two console kinds carry
 different ones.** `@authup/client-auth-console` exports `CONTRACT_VERSION`
 as a runtime value alongside `render()` (missing = version 1; version 2
@@ -2839,25 +2852,26 @@ starts, so the two paths cannot diverge, and server-core neither imports nor
 mounts any of it.
 
 `authup start` is the one composition, and the CLI performs it, because the
-CLI is the only thing that knows about every piece. server-core exposes
-BUILD and LISTEN as two steps (`new HTTPModule({ listen: false })`, then
-`http.listen(container)`) and learns nothing about consoles; the CLI mounts
-the console handlers on `HTTPInjectionKey.App` in between. The window is the
-point: a sub-application must land AFTER the controllers, so its routes
-cannot shadow a protocol one (every console declares a wildcard shell route,
-and `/console/<name>/login/start` is server-core's), and BEFORE the error
-middleware, so it inherits the error handling every other route has. A caller
-mounting after `setup()` lands after both, on an already-listening server,
-which is why the two steps exist rather than a `mounts` seam server-core
-would have to own. `buildConsoleMounts` (`commands/start.ts`) derives each
-mount path with `getURLBasePath(url)`, never the url itself, since a console
-url carries the origin a BROWSER reaches it at while the listener only ever
+CLI is the only thing that knows about every piece. server-core exposes the
+mount point as a single option, `HTTPModule({ mount })`, and learns nothing
+about consoles: `mount` is a callback that `HTTPModule.setup()` runs itself,
+at the one point that matters, rather than something a caller does to the
+resolved app afterward. The window is the point: a sub-application must
+land AFTER the controllers, so its routes cannot shadow a protocol one
+(every console declares a wildcard shell route, and
+`/console/<name>/login/start` is server-core's), and BEFORE the error
+middleware, so it inherits the error handling every other route has. A
+caller mounting on the resolved app after `setup()` returns would land
+after both, but on an ALREADY-LISTENING server. That is why `mount` is a
+callback `HTTPModule` runs internally rather than a seam it hands back.
+`buildConsoleApplications` (`commands/start.ts`) derives each mount path
+with `getURLBasePath(url)`, never the url itself, since a console url
+carries the origin a BROWSER reaches it at while the listener only ever
 sees a path; a console url with no path at all would have to own the API's
 own root, where it shadows the protocol routes and the page GETs redirect to
 themselves, so it is refused by name. It needs no origin check of its own:
 `normalizeConfig` and each console's own `resolve*Config` already
 refuse a console url that is not publicUrl's origin. The console
-The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
@@ -3136,6 +3150,139 @@ consoles scoping their cookies to the base path (see *Account Console →
 Session cookies are scoped to the deployment base path*); the residual
 corner is a console visit finding no own cookies while the host app's
 root-path records exist, which the console still hydrates.
+
+### Development mode (`authup dev`, plan 102)
+
+**EXPERIMENTAL**, on the console-theming precedent above: shipped
+deliberately unstable, because the two parts most likely to be reshaped are
+the source-checkout detection rule and the coupling to whichever vite major
+the caller has installed.
+
+`authup dev` (`apps/authup/src/commands/dev.ts`) is exactly `authup start`
+(server-core plus every enabled console on one listener), except that
+every console whose package resolves to a SOURCE checkout is served through
+a vite dev server with hot module replacement instead of from its built
+`dist/`. In this workspace that is all three consoles, at
+`http://localhost:3000/console/{admin,account,auth}`; for a plain operator,
+whose console packages ship `files: ["dist"]` and therefore carry no vite
+config, it is none, and the command behaves exactly like `start` and says
+so. There is deliberately no configuration key for any of this: detection
+IS the fact (`isSourceCheckout`), a `vite.config.ts` in the resolved
+package directory, never a declaration of it.
+
+**Composition is unchanged.** The consoles still mount through server-core's
+own `HTTPModule({ mount })` hook (see *Process topology* above), so a
+console's wildcard shell route still lands after the protocol routes and
+before the error middleware. What differs is that each console handler is
+wrapped: a vite dev server's connect middlewares sit IN FRONT of it
+(`fromNodeMiddleware(dev.middlewares)`, then the handler), never INSTEAD of
+it. Vite runs with `appType: 'custom'` for exactly that reason: with
+`spa` it would answer the shell itself, bypassing the console service and
+silently dropping the theme, the account console's `ref` validation and the
+console security headers (`cache-control: no-store`, `x-frame-options:
+DENY`). All of that was confirmed against a live server (plan 102 task 9).
+
+**Three seams, one per console kind**, all optional and all defaulting to
+today's behaviour:
+
+- The two static consoles (`@authup/server-{admin,account}-console`) take an
+  optional `readShell(event)` on `createHandler`, forwarded into
+  `@authup/server-console-kit`'s `defineStaticConsole`. Dev's implementation
+  runs the source `index.html` (which already carries the config marker)
+  through `vite.transformIndexHtml`; everything after that (the marker
+  splice, `stampHtmlAttributes`, `rebaseAssetURLs`, `applyTheme`,
+  `applyUIPageHeaders`) is the same code path production uses.
+- The auth console (`@authup/server-auth-console`) takes an optional
+  `render` on `createHandler`, matching `renderPage`'s own signature. Dev's
+  implementation reads the template through `vite.transformIndexHtml`,
+  loads `src/server.ts` through `vite.ssrLoadModule`, and calls the same
+  payload assembly and splice chain the built render uses, minus
+  `rebaseAssetURLs` (the dev html already carries the base vite was given,
+  so rebasing it would be a no-op done the hard way).
+- server-core itself runs from TypeScript via a `development` export
+  condition on `@authup/server-core`'s `package.json`
+  (`"development": "./src/index.ts"`), reached by
+  `node --conditions=development --loader ts-node/esm`. This is the one
+  seam that is WORKSPACE-ONLY: a published install ships `dist/` and no
+  `src/`, so `authup dev` there runs server-core from `dist`, exactly like
+  `start`.
+
+**Because everything lands on one origin, dev exercises the COOKIE-SESSION
+path**, not the cross-origin browser-PKCE fallback the standalone
+`npm run dev -w apps/client-admin-console` loop takes. A real end-to-end
+login (kick, password grant, `POST /authorize`, callback) was completed
+against a running dev server during verification, and the resulting
+`HttpOnly` session cookie was confirmed unreadable from JavaScript with no
+bearer token anywhere in the shell payload. This is the loop's main
+fidelity win over the pre-102 standalone console dev server (`npm run dev`
+in `apps/client-admin-console`, on `:3010`, or `apps/client-account-console`,
+on vite's default `:5173`): both run cross-origin against the API's `:3000`,
+where `cookieSession` resolves false and the browser-PKCE path is all that
+is reachable, so neither ever exercised what a served console actually does
+in production.
+
+**HMR websocket ports are fixed, one per console dev server** (middleware
+mode cannot share routup's listener, since the `mount` hook runs before
+`serve()` creates it): 24678 (auth), 24679 (admin), 24680 (account). An
+`EADDRINUSE` there means another dev server is already running; stop it
+rather than renumber the constants, which would then disagree with the
+docs.
+
+**Every console's vite config aliases `@authup/client-web-kit` (and the two
+theme packages) to source**, the same aliasing each console's `vite.config.ts`
+already declares for its own build. That is what makes editing the kit hot
+in every console AT ONCE, including the server-rendered auth pages: the
+single biggest practical win of the whole command, confirmed by editing one
+kit component and watching both the admin console's served module and the
+SSR'd `/authorize` HTML change with no restart.
+
+**What is hot and what is not:**
+
+| Edited | Effect |
+|--------|--------|
+| `apps/client-*-console/src/**` | Hot module replacement |
+| `packages/client-web-kit/src/**`, the two theme packages | Hot module replacement |
+| `apps/server-core/src/**` | No build; restart the process |
+| `apps/authup/src/**` | No build; restart the process |
+| `packages/server-*`, `packages/kit`, `packages/errors`, the console services | `npm run build -w <workspace>` required |
+
+The last row is the honest limit: `ts-node` applies no tsconfig `paths` at
+runtime, so those packages resolve to their built `dist/` regardless of
+what `src/` says.
+
+**`apps/server-core`'s `cli-dev` is unaffected and unchanged.** It stays the
+`migration generate` runner and the sole route to the
+`isCodeTransformation(JUST_IN_TIME)` gate (see *The `cli-dev` JIT gate*
+above), which today decides only the migrations glob. `authup dev` is a
+different command in a different workspace and does not touch it.
+
+**Two build-time facts worth recording, because they are non-obvious and
+easy to regress:**
+
+- `vite` is never a dependency of `apps/authup`: it is `await import('vite')`,
+  reached only once a source checkout was detected, and
+  `apps/authup/tsdown.config.ts` carries `deps: { neverBundle: ['vite'] }`.
+  Without it, rolldown statically resolves that dynamic import and inlines
+  vite's whole toolchain (esbuild, lightningcss, rolldown itself) into the
+  published CLI: the dist grows several times over, and the graceful "vite
+  could not be resolved" failure `loadVite` throws stops being reachable,
+  since vite would already be bundled in.
+- `apps/authup` declares `better-sqlite3` as a devDependency purely so the
+  sqlite driver is resolvable when `npm run dev` runs with cwd `apps/authup`.
+  The underlying cause is a PRE-EXISTING, unrelated defect that this only
+  works around locally, not something this command fixes: `apps/server-core`
+  depends on `better-sqlite3@^13.0.3` while typeorm declares it as an
+  optional peer at `^12.0.0`, so npm nests the package under
+  `apps/server-core/node_modules` instead of hoisting it to the repository
+  root, where neither of typeorm's two resolution strategies (its own
+  root-hoisted `require`, then `process.cwd()/node_modules`) can reach it.
+  The devDependency gives `apps/authup` its own nested copy, which covers
+  `npm run dev` and the built `authup start` alike when the cwd is
+  `apps/authup`, but the built CLI still breaks with the identical
+  `DriverPackageNotInstalledError` from any cwd that has no copy of its own,
+  the repository root included, which is otherwise the natural place to run
+  it from. It is a packaging defect worth its own fix, filed separately
+  rather than papered over here.
 
 ## Authorize Realm Binding (plan 041)
 

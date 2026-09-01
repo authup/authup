@@ -15,6 +15,7 @@ corepack enable
 # Development
 npm install                    # install all dependencies + symlink between packages/apps
 npm run build                  # build all packages (required for testing)
+npm run dev                    # EXPERIMENTAL: server-core from TS + every console from source with HMR, one origin
 npm run test                   # test all apps/packages in project (requires build step)
 npm run test --workspace=apps/server-core  # test a single app/package
 npm run lint                   # lint all packages and apps
