@@ -9,23 +9,25 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterEach, 
-    beforeEach, 
-    describe, 
-    expect, 
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
     it,
     vi,
 } from 'vitest';
-import { readConfig } from '../../../src/app/modules/config/helpers';
-import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { expandToOrigins } from '@authup/server-config';
-import { getAppOrigins } from '../../../src/app/modules/config/app-origins';
-import { parseConfig } from '../../../src/app/modules/config/parse';
+import { readConfig } from '../../../src/app/modules/config/read.ts';
+import { normalizeConfig } from '../../../src/app/modules/config/read';
 import {
+    expandToOrigins,
     inspectConfigFile,
     readConfigRawFromEnv,
     readConfigRawFromFS,
-} from '../../../src/app/modules/config/read';
+} from '@authup/server-config';
+import { getAppOrigins } from '../../../src/app/modules/config/app-origins';
+import { parseConfig } from '../../../src/app/modules/config/parse';
+import { CONFIG_SCHEMA } from '../../../src/app/modules/config/constants';
+import type { Config } from '../../../src/app/modules/config/types';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {
@@ -43,13 +45,13 @@ describe('src/config/*.ts', () => {
                 publicUrl: 'https://auth.example.com/sub/path',
                 trustedOrigins: [
                     'https://auth.example.com',
-                    'http://localhost:3000',
+                    'http://localhost:3010',
                 ],
             } as any);
 
             expect(origins).toEqual([
                 'https://auth.example.com',
-                'http://localhost:3000',
+                'http://localhost:3010',
             ]);
         });
     });
@@ -140,7 +142,7 @@ describe('src/config/*.ts', () => {
                 'https://app.example.com',
                 'http://hub.local',
                 'https://hub.local',
-                'http://localhost:3000',
+                'http://localhost:3010',
             ]);
         });
 
@@ -269,7 +271,7 @@ describe('src/config/*.ts', () => {
             const previous = process.env.TRUST_PROXY;
             process.env.TRUST_PROXY = '1';
             try {
-                expect(readConfigRawFromEnv().trustProxy).toEqual('1');
+                expect(readConfigRawFromEnv<Config>(CONFIG_SCHEMA).trustProxy).toEqual('1');
             } finally {
                 if (typeof previous === 'undefined') {
                     delete process.env.TRUST_PROXY;
@@ -330,7 +332,7 @@ describe('src/config/*.ts', () => {
             process.env.MIGRATION_ENABLED = 'false';
 
             try {
-                const raw = readConfigRawFromEnv();
+                const raw = readConfigRawFromEnv<Config>(CONFIG_SCHEMA);
 
                 expect(raw.componentsEnabled).toEqual(false);
                 expect(raw.migrationEnabled).toEqual(false);
@@ -338,7 +340,7 @@ describe('src/config/*.ts', () => {
                 // both are strict readers: a set-but-unrecognized value must
                 // fail loud instead of silently defaulting to true.
                 process.env.COMPONENTS_ENABLED = 'maybe';
-                expect(() => readConfigRawFromEnv()).toThrow(/COMPONENTS_ENABLED/);
+                expect(() => readConfigRawFromEnv<Config>(CONFIG_SCHEMA)).toThrow(/COMPONENTS_ENABLED/);
             } finally {
                 if (typeof previousComponents === 'undefined') {
                     delete process.env.COMPONENTS_ENABLED;
@@ -409,20 +411,20 @@ describe('src/config/*.ts', () => {
     });
 
     it('should load config form fs', async () => {
-        const config = await readConfigRawFromFS({ cwd: 'test/data/config' });
+        const config = await readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: 'test/data/config' });
 
-        // the whole document, flattened onto the Config keys: the shared
-        // sections at the top level, this service's own under server.core,
-        // and a console section whose key name drops the console prefix.
+        // the whole document read onto this service's config: the shared
+        // section and its own at the top level, and a console section under
+        // the console it belongs to.
         expect(config.db).toBeDefined();
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
         expect(config.publicUrl).toEqual('https://idp.example.com');
-        expect(config.adminConsoleUrl).toEqual('https://console.example.com/admin');
+        expect(config.adminConsole!.url).toEqual('https://console.example.com/admin');
         expect(config.port).toEqual(4711);
         expect(config.host).toEqual('127.0.0.1');
-        expect(config.adminConsoleEnabled).toEqual(false);
-        expect(config.accountConsoleEnabled).toEqual(false);
+        expect(config.adminConsole!.enabled).toEqual(false);
+        expect(config.accountConsole!.enabled).toEqual(false);
     });
 
     describe('readConfig', () => {
@@ -494,13 +496,13 @@ describe('src/config/*.ts', () => {
                 'port: 4080\n',
             );
 
-            await expect(readConfigRawFromFS({ cwd: directory, file: 'authup.server.core.yml' }))
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory, file: 'authup.server.core.yml' }))
                 .rejects.toThrow(/authup\.yml/);
 
             // and it is reported when it is merely left lying around
             const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
             try {
-                expect((await readConfigRawFromFS({ cwd: directory })).port).toBeUndefined();
+                expect((await readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory })).port).toBeUndefined();
                 expect(warn.mock.calls[0]?.[0]).toContain('authup.server.core.yml');
             } finally {
                 warn.mockRestore();
@@ -525,7 +527,7 @@ describe('src/config/*.ts', () => {
                 'server:\n  core:\n   port: 1\n  bad: [unclosed\n',
             );
 
-            await expect(readConfigRawFromFS({ cwd: directory })).rejects.toSatisfy(
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory })).rejects.toSatisfy(
                 (error: Error) => typeof (error as { cause?: unknown }).cause !== 'undefined',
             );
         });
@@ -539,7 +541,7 @@ describe('src/config/*.ts', () => {
                 'server.core.port=4060\npublicUrl=https://idp.example.com\n',
             );
 
-            await expect(readConfigRawFromFS({ cwd: directory, file: 'legacy.conf' }))
+            await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory, file: 'legacy.conf' }))
                 .rejects.toThrow(/authup\.yml/);
         });
 
@@ -577,7 +579,7 @@ describe('src/config/*.ts', () => {
             const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
             try {
-                const config = await readConfigRawFromFS({ cwd: directory });
+                const config = await readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory });
 
                 expect(config.port).toBeUndefined();
                 expect(warn).toHaveBeenCalledTimes(1);

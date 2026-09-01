@@ -58,7 +58,7 @@ theme:
 
 server:
   core:
-    port: 3001
+    port: 3000
     host: 0.0.0.0
     registrationEnabled: true
   adminConsole:
@@ -113,8 +113,9 @@ tool can carry its own.
 
 `authup config schema` prints the JSON Schema (draft-07) document describing the file:
 every option at its place in the tree, with its description, its default and the name of
-its environment variable (`x-authup-env`). The same document ships in the server package
-as `dist/config-schema.json` and is published at the URL the `$schema` line above names.
+its environment variable (`x-authup-env`). It covers the whole document, the sections a
+console service reads included, and it is what gets published at the URL the `$schema`
+line above names.
 
 ## Component-Wise
 

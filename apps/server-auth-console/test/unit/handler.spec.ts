@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { serve } from 'routup/node';
-import { createAuthConsoleHandler, resolveAuthConsoleConfig } from '../../src';
+import { createHandler, resolveConfig } from '../../src';
 
 /**
  * The service renders the BUILT `@authup/client-auth-console` bundle, so
@@ -23,14 +23,14 @@ import { createAuthConsoleHandler, resolveAuthConsoleConfig } from '../../src';
  * drives the end-session call from the browser, so the render is a pure
  * shell. That makes it the honest smoke test for the render plumbing.
  */
-describe('createAuthConsoleHandler', () => {
+describe('createHandler', () => {
     let baseURL : string;
     let server : ReturnType<typeof serve>;
 
-    const config = resolveAuthConsoleConfig({ publicUrl: 'https://example.com' });
+    const config = resolveConfig({ publicUrl: 'https://example.com' });
 
     beforeAll(async () => {
-        server = serve(await createAuthConsoleHandler(config), { port: 0, silent: true });
+        server = serve(await createHandler(config), { port: 0, silent: true });
         await server.ready();
 
         baseURL = (server.url ?? '').replace(/\/+$/, '');
@@ -38,7 +38,11 @@ describe('createAuthConsoleHandler', () => {
     });
 
     afterAll(async () => {
-        await server.close();
+        // `true` closes active connections, the same rule the module's own
+        // teardown follows: a console answers over keep-alive sockets, so
+        // waiting for them to go idle means waiting out the client's timeout,
+        // which under a loaded parallel run outlasts the hook budget.
+        await server.close(true);
     });
 
     it('should answer the health route', async () => {

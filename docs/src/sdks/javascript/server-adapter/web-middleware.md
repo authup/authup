@@ -21,7 +21,7 @@ import { verifyRequest } from '@authup/server-adapter-web';
 import { TokenVerifier } from '@authup/server-adapter-kit';
 
 const tokenVerifier = new TokenVerifier({
-    baseURL: 'http://localhost:3001/',
+    baseURL: 'http://localhost:3000/',
     creator: {
         type: 'user',
         name: 'admin',

@@ -7,7 +7,7 @@
 
 import type { OptionsInput } from '@routup/prometheus';
 import { prometheus } from '@routup/prometheus';
-import type { App, IAppEvent } from 'routup';
+import type { IApp, IAppEvent } from 'routup';
 
 const PATH_LABEL_UNMATCHED = '/{unmatched}';
 
@@ -56,7 +56,7 @@ function matchSegments(
     return true;
 }
 
-function buildRouteTemplates(router: App): RouteTemplates {
+function buildRouteTemplates(router: IApp): RouteTemplates {
     const exact: RouteTemplate[] = [];
     const prefix: RouteTemplate[] = [];
     const seen = new Set<string>();
@@ -76,9 +76,9 @@ function buildRouteTemplates(router: App): RouteTemplates {
 
         if (route.method) {
             exact.push({
-                method: route.method, 
-                segments, 
-                label, 
+                method: route.method,
+                segments,
+                label,
             });
         } else if (segments.length > 0) {
             prefix.push({ segments, label });
@@ -102,7 +102,7 @@ function buildRouteTemplates(router: App): RouteTemplates {
  * one unmatched bucket.
  */
 export function createRouteTemplateNormalizePath(
-    router: App,
+    router: IApp,
 ): (path: string, event: IAppEvent) => string {
     let templates : RouteTemplates | undefined;
 
@@ -143,7 +143,7 @@ export function createRouteTemplateNormalizePath(
     };
 }
 
-export function registerPrometheusMiddleware(router: App, input?: OptionsInput) {
+export function registerPrometheusMiddleware(router: IApp, input?: OptionsInput) {
     let options : OptionsInput = {
         normalizePath: createRouteTemplateNormalizePath(router),
         skip(event) {

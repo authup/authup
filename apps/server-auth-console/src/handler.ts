@@ -8,13 +8,13 @@
 import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     THEME_ASSET_MOUNT_PATH,
-    ThemeProvider,
     createThemeAssetsHandler,
+    createThemeProvider,
 } from '@authup/server-console-kit';
-import { createHandler } from '@routup/assets';
+import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
-import fs from 'node:fs';
 import path from 'node:path';
+import type { IApp } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import { ASSETS_PATH, HEALTH_PATH } from './constants';
 import {
@@ -23,9 +23,9 @@ import {
     readAuthorizeInfo,
     readFeatures,
 } from './payload';
-import { renderAuthConsolePage } from './render';
-import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from './resolve';
-import type { AuthConsoleConfig } from './types';
+import { renderPage } from './render';
+import { resolveDistPath, setPackagePath } from './resolve';
+import type { Config } from './types';
 
 const WORKFLOW_PAGES : {
     url: string,
@@ -51,8 +51,11 @@ const WORKFLOW_PAGES : {
  * proxy, so a service published at `<origin>/console/auth` receives
  * `/authorize`, exactly as server-core received it before the split.
  */
-export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Promise<App> {
-    setAuthConsolePackagePath(config.distPath);
+export async function createHandler(
+    config: Config,
+    themeProvider?: IThemeProvider,
+) : Promise<IApp> {
+    setPackagePath(config.distPath);
 
     const app = new App();
     const client = createAPIClient(config);
@@ -68,21 +71,9 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
     // and the rendered pages are byte-identical to the un-themed ones, so the
     // default configuration pays nothing. An invalid manifest throws here and
     // fails the boot rather than surfacing per request.
-    let theme : IThemeProvider | undefined;
-    if (config.themeDirectoryPath && fs.existsSync(config.themeDirectoryPath)) {
-        const provider = new ThemeProvider({
-            directoryPath: config.themeDirectoryPath,
-            fragmentsEnabled: config.themeFragmentsEnabled,
-            // The boot inventory this logs (resolved path, token counts,
-            // every servable file) is the antidote to the feature's dominant
-            // failure mode, which is silence.
-            logger: console,
-        });
-
-        await provider.load();
-
-        theme = provider;
-    }
+    // Injected by the theme module when this runs inside the console
+    // application; built here for a caller holding only a config.
+    const theme = themeProvider ?? await createThemeProvider(config);
 
     app.use(defineCoreHandler({
         method: 'get',
@@ -97,7 +88,7 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
     app.use(defineCoreHandler({
         method: 'get',
         path: '/authorize',
-        fn: async (event) => renderAuthConsolePage(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
             theme,
@@ -111,7 +102,7 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
             fn: async (event) => {
                 const features = await readFeatures(client);
 
-                return renderAuthConsolePage(event, config, {
+                return renderPage(event, config, {
                     url: page.url,
                     data: buildWorkflowPageData(event, features, page),
                     theme,
@@ -126,7 +117,7 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
     app.use(defineCoreHandler({
         method: 'get',
         path: '/logout',
-        fn: async (event) => renderAuthConsolePage(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/logout',
             data: {},
             theme,
@@ -137,9 +128,9 @@ export async function createAuthConsoleHandler(config: AuthConsoleConfig) : Prom
     // template and the ssr manifest are inputs of the render, not files to
     // serve. A missing bundle only disables the mount; the page routes
     // report the actionable error.
-    const distPath = resolveAuthConsoleDistPath();
+    const distPath = resolveDistPath();
     if (distPath) {
-        app.use(ASSETS_PATH, createHandler(
+        app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'client', 'assets'),
             {
                 fallthrough: false,

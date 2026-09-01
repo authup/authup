@@ -54,7 +54,9 @@
         "@authup/kit": "^1.0.0-beta.63",
         "@routup/basic": "^3.0.0",
         "@validup/zod": "^2.0.1",
+        "eldin": "^1.3.0",
         "locter": "^4.1.1",
+        "orkos": "^1.1.1",
         "validup": "^2.0.1",
         "zod": "^4.4.3"
     },

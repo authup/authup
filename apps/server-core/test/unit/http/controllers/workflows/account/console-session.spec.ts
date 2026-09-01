@@ -57,7 +57,7 @@ const CONSOLES = [
         clientName: CLIENT_ACCOUNT_CONSOLE_NAME,
         refusal: '/console/account',
         disable: (config: Config) => {
-            config.accountConsoleEnabled = false;
+            config.accountConsole.enabled = false;
         },
     },
     {
@@ -66,7 +66,7 @@ const CONSOLES = [
         clientName: CLIENT_ADMIN_CONSOLE_NAME,
         refusal: '/console/admin/login',
         disable: (config: Config) => {
-            config.adminConsoleEnabled = false;
+            config.adminConsole.enabled = false;
         },
     },
 ];

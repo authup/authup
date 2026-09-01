@@ -6,13 +6,22 @@ on:
             - master
         paths:
             - 'docs/**'
+            - 'apps/authup/**'
+            - 'packages/server-config/**'
+            - 'packages/server-config-kit/**'
             - '.github/workflows/docs.yml'
     pull_request:
         branches:
             - master
         paths:
             - 'docs/**'
+            - 'apps/authup/**'
+            - 'packages/server-config/**'
+            - 'packages/server-config-kit/**'
             - '.github/workflows/docs.yml'
+
+env:
+    NODE_VERSION: 24
 
 jobs:
     build:
@@ -21,14 +30,30 @@ jobs:
             contents: read
         steps:
             - uses: actions/checkout@v6
-            - uses: actions/setup-node@v7
-              with:
-                  node-version: 24
 
             - name: Install
-              run: npm ci
+              uses: ./.github/actions/install
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
 
+            # `authup config schema` prints the JSON Schema of the whole
+            # authup.yml document, so the CLI has to exist before the site is
+            # built.
             - name: Build
+              uses: ./.github/actions/build
+
+            # Served at the URL a configuration file's
+            # `# yaml-language-server: $schema=` line names. Generated here
+            # rather than committed, so a registry change can never leave a
+            # stale document behind.
+            - name: Generate config schema
+              run: |
+                  mkdir -p docs/src/public/schema
+                  node apps/authup/dist/index.mjs config schema > docs/src/public/schema/config.json
+
+            # after the schema, and again: the repo build above ran the
+            # vitepress build before the file existed.
+            - name: Build docs
               run: npm run build -w docs
 
             - name: Upload artifact

@@ -171,6 +171,21 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   the bare console name (`authup console admin`) while the workspace behind
   it is `server-admin-console`.
 
+- **An export does not repeat its package's name.** The package IS the
+  namespace, so `@authup/server-account-console` exports `createApplication`,
+  `createHandler`, `createServer`, `resolveConfig`, `readConfigFromEnv` and
+  `CONFIG_SCHEMA`, not `createAccountConsoleApplication` and its siblings.
+  Identical names across sibling packages are the intended outcome, not a
+  collision (`server-adapter-node` and `server-adapter-socket-io` have both
+  exported `createMiddleware` since long before the consoles existed): the two
+  only ever meet in a consumer that imports several, and there an alias at the
+  import site says which is which. `apps/authup` is that consumer for the three
+  consoles. This applies to the SERVICE packages only. The client BUNDLES keep
+  a qualified `resolveAccountConsoleConfig`, because that is a module-internal
+  function rather than a package export, and `@authup/server-config` keeps its
+  `ACCOUNT_CONSOLE_BASE_PATH` constants, because it declares all three sections
+  and the console name is what tells them apart.
+
 History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
 `apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
 with no aliases kept. The `client-web-*` packages keep their names on purpose.
@@ -191,7 +206,7 @@ Sort each runtime dependency of a **published** package by one question: **would
 
 **`import type` is NOT automatically `devDependencies`.** A type-only import erases from the emitted JS, but if the type is **re-exposed in the package's public `.d.ts`** — as the return / parameter / field type of a public export, a re-exported type, or a `declare module '<pkg>'` augmentation — then a *consumer* compiling against that `.d.ts` must resolve the package, so it belongs in `dependencies` (stateless leaf: `rapiq`'s `PaginationParseOutput` re-exposed by `server-kit`, `@authup/server-kit`'s `ActorContext` / `IEntityRepository` re-exposed by `server-test-kit`'s fakes) or `peerDependencies` (a singleton, or an augmentation of the consumer's own copy: `validup` in `i18n`, whose `declare module 'validup'` block augments the consumer's validup — optional, since it only matters when that feature is used). Only a type used **purely internally** (never in the emitted `.d.ts`) may be `devDependencies`-only. The monorepo build does **not** catch this — the demoted package is still hoisted for the workspace; verify per package with `rg '<pkg>' dist/**/*.d.ts` after building. `@authup/client-web-kit` re-exposed `vue-router`'s `LocationQuery` in `dist/components/workflows/authorize/helpers.d.ts` while declaring the package in no field at all; the omission only surfaced when a component started calling `useRoute()` at runtime.
 
-**An exported config registry is an ordinary value, and it drags `zod` with it.** Each service package exports its `ConfigSchema` for the CLI to compose, and every entry holds a live zod type, so `zod` and `@authup/server-config-kit` are plain `dependencies` there rather than devDependencies or peers: the CLI evaluates the object at runtime and never owns an instance of anything in it. This is also the reason a shared key is declared in each registry instead of imported from one: the import would be the dependency, and the whole point of the boundary is that neither side takes on the other's tree (see architecture.md → *Four registries, one document*).
+**An exported config registry is an ordinary value, and it drags `zod` with it.** Each service package exports its config registry for the CLI to compose, and every entry holds a live zod type, so `zod` and `@authup/server-config-kit` are plain `dependencies` there rather than devDependencies or peers: the CLI evaluates the object at runtime and never owns an instance of anything in it. This is also the reason a shared key is declared in each registry instead of imported from one: the import would be the dependency, and the whole point of the boundary is that neither side takes on the other's tree (see architecture.md → *Four registries, one document*).
 
 Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it — e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
 

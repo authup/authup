@@ -8,7 +8,7 @@ The following guide is based on some shared assumptions:
 - Min. `2` cores
 - Min. `5G` hard disk
 - Docker `v20.x` is [installed](https://docs.docker.com/get-docker/)
-- One available port on the host system if you want to map the service to your local machine (default: `3001`)
+- One available port on the host system if you want to map the service to your local machine (default: `3000`)
 - This guide assumes [Compose v2](https://docs.docker.com/compose/compose-file/)
 
 
@@ -43,7 +43,7 @@ services:
       ports:
         - "3001:3000"
       environment:
-        - PUBLIC_URL=http://localhost:3001
+        - PUBLIC_URL=http://localhost:3000
       command: server/core start
       networks:
           authup:
@@ -108,7 +108,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-        - PUBLIC_URL=http://localhost:3001
+        - PUBLIC_URL=http://localhost:3000
         - USER_ADMIN_PASSWORD=test-password
     command: server/core start
 ```
@@ -147,7 +147,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - PUBLIC_URL=http://localhost:3001
+      - PUBLIC_URL=http://localhost:3000
     command: server/core start
 
 ```
@@ -178,7 +178,7 @@ services:
             - postgres
             - redis
         environment:
-            - PUBLIC_URL=http://localhost:3001
+            - PUBLIC_URL=http://localhost:3000
             - DB_TYPE=postgres
             - DB_HOST=postgres
             - DB_PORT=5432

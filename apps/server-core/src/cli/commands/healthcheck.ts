@@ -8,11 +8,12 @@
 import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
-import type { ConfigReadFsOptions } from '../../app/index.ts';
-import { ApplicationBuilder, ConfigInjectionKey } from '../../app/index.ts';
+import type { ConfigReadFsOptions } from '@authup/server-config';
+import type { Config } from '../../app/index.ts';
+import { ApplicationBuilder, ConfigInjectionKey  } from '../../app/index.ts';
 import { createCLIConfigModule } from './config.ts';
 
-export function defineCLIHealthCheckCommand(configFs: ConfigReadFsOptions = {}) {
+export function defineCLIHealthCheckCommand(configFs: ConfigReadFsOptions<Config> = {}) {
     return defineCommand({
         meta: { name: 'healthcheck' },
         async setup() {

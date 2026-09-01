@@ -17,11 +17,16 @@
  * For authup itself that registry is `@authup/server-config`, which declares
  * every key of `authup.yml` once and lets each service SELECT the keys it
  * reads (plan 101 stage C).
+ *
+ * One folder per concern: `schema/` declares, `entry/` is the single-key
+ * primitive, `source/` is where values come from, and `json-schema/` +
+ * `validation/` are the two things a registry is turned into.
  */
 
-export * from './defaults.ts';
-export * from './env.ts';
-export * from './file.ts';
-export * from './json-schema.ts';
+export * from './constants.ts';
+export * from './entry/index.ts';
+export * from './json-schema/index.ts';
+export * from './schema/index.ts';
+export * from './source/index.ts';
 export * from './types.ts';
-export * from './validator.ts';
+export * from './validation/index.ts';

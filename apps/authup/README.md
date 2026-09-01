@@ -36,9 +36,9 @@ $ npx authup start
 ```
 
 This launches the server with default settings:
-- API: `http://localhost:3001/`
-- Admin console: `http://localhost:3001/console/admin`
-- Account console: `http://localhost:3001/console/account`
+- API: `http://localhost:3000/`
+- Admin console: `http://localhost:3000/console/admin`
+- Account console: `http://localhost:3000/console/account`
 
 `SIGINT`/`SIGTERM` tear the server down and exit with its outcome. A second
 signal exits immediately, and a teardown that outlasts 10 seconds is forced.
@@ -65,11 +65,11 @@ Configuration is read from an `authup.yml` file (current working directory, or
 
 ```yaml
 # yaml-language-server: $schema=https://authup.org/schema/config.json
-publicUrl: http://localhost:3001
+publicUrl: http://localhost:3000
 
 server:
     core:
-        port: 3001
+        port: 3000
         host: 0.0.0.0
 ```
 

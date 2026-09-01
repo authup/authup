@@ -5,17 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AccountConsoleConfig, AccountConsoleConfigInput } from '@authup/server-account-console';
-import { ACCOUNT_CONSOLE_CONFIG_SCHEMA, resolveAccountConsoleConfig } from '@authup/server-account-console';
-import type { AdminConsoleConfig, AdminConsoleConfigInput } from '@authup/server-admin-console';
-import { ADMIN_CONSOLE_CONFIG_SCHEMA, resolveAdminConsoleConfig } from '@authup/server-admin-console';
-import type { AuthConsoleConfig, AuthConsoleConfigInput } from '@authup/server-auth-console';
-import { AUTH_CONSOLE_CONFIG_SCHEMA, resolveAuthConsoleConfig } from '@authup/server-auth-console';
-import { readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
-import type { ConfigSchemaInput } from '@authup/server-config-kit';
-import type { Config, ConfigReadFsOptions } from '@authup/server-core';
-import { readConfigFileTree } from '@authup/server-core';
-import path from 'node:path';
+import type {
+    Config as AccountConsoleConfig,
+    ConfigInput as AccountConsoleConfigInput,
+} from '@authup/server-account-console';
+import {
+    CONFIG_SCHEMA as ACCOUNT_CONSOLE_SCHEMA,
+    resolveConfig as resolveAccountConsoleConfig,
+} from '@authup/server-account-console';
+import type {
+    Config as AdminConsoleConfig,
+    ConfigInput as AdminConsoleConfigInput,
+} from '@authup/server-admin-console';
+import {
+    CONFIG_SCHEMA as ADMIN_CONSOLE_SCHEMA,
+    resolveConfig as resolveAdminConsoleConfig,
+} from '@authup/server-admin-console';
+import type {
+    Config as AuthConsoleConfig,
+    ConfigInput as AuthConsoleConfigInput,
+} from '@authup/server-auth-console';
+import {
+    CONFIG_SCHEMA as AUTH_CONSOLE_SCHEMA,
+    resolveConfig as resolveAuthConsoleConfig,
+} from '@authup/server-auth-console';
+import { mergeSchemaData, readSchemaFromEnv, readSchemaFromFileTree } from '@authup/server-config-kit';
+import type { SchemaInput } from '@authup/server-config-kit';
+import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
+import { readConfigFileTree } from '@authup/server-config';
 
 export type ConsoleConfigs = {
     auth: AuthConsoleConfig,
@@ -24,68 +41,37 @@ export type ConsoleConfigs = {
 };
 
 /**
- * Resolve a path key the way server-core resolves its own: against the
- * configured `rootPath` rather than the process working directory, so one
- * document means the same thing to every service it configures. A service
- * started through its own bin has no `rootPath` and resolves against the cwd,
- * which is the same directory unless the operator moved it.
- */
-function resolvePaths<T extends { distPath: string, themeDirectoryPath: string }>(
-    config: T,
-    rootPath: string,
-) : T {
-    return {
-        ...config,
-        distPath: config.distPath ? path.resolve(rootPath, config.distPath) : '',
-        themeDirectoryPath: config.themeDirectoryPath ?
-            path.resolve(rootPath, config.themeDirectoryPath) :
-            '',
-    };
-}
-
-/**
  * The three console services' configuration, read from the same `authup.yml`
- * and the same environment server-core read, each through its own registry.
+ * and the same environment server-core reads, each through its own registry.
+ *
+ * Nothing of server-core's is handed over, and that is the whole point. Every
+ * value a console used to be given (the derived `publicUrl`, the canonicalized
+ * `trustedOrigins`, a path made absolute against `rootPath`) is declared as a
+ * `resolve` on the key itself in `@authup/server-config`, so a console
+ * computes it from the document exactly as server-core does. A console
+ * started through its own bin therefore gets the same configuration this
+ * function produces, which is what makes it a service rather than something
+ * the CLI has to assemble.
  *
  * The document is read once and every registry takes its own keys out of it;
- * the environment wins over the file, as it does everywhere else.
+ * the environment wins over the file, as it does everywhere else, and the two
+ * passes are layered SECTION-AWARE, since a spread would let an environment
+ * value for one key of a section replace the whole section the file supplied.
  */
 export async function readConsoleConfigs(
-    options: ConfigReadFsOptions,
-    core: Config,
+    options: ConfigReadFsOptions<AuthupConfig>,
 ) : Promise<ConsoleConfigs> {
     const { tree } = await readConfigFileTree(options);
 
-    const read = <T extends { publicUrl: string }>(schema: ConfigSchemaInput<T>) : Partial<T> => ({
-        ...readSchemaFromFileTree<T>(tree, schema),
-        ...readSchemaFromEnv<T>(schema),
-        // The two deployment-wide keys a console must NOT resolve for itself,
-        // taken from the resolved core configuration instead.
-        //
-        // `publicUrl` is DERIVED from host and port when the document names
-        // none, and a console has no host and port of the API's to derive it
-        // from. `trustedOrigins` is CANONICALIZED (a bare host expands to its
-        // http and its https origin, entries are deduped), which
-        // normalizeConfig owns; the raw list would leave the account console
-        // matching its `ref` back link against a scheme-less pattern that
-        // matches nothing, so the link would silently disappear for exactly
-        // the origins written in the short form.
-        publicUrl: core.publicUrl,
-        trustedOrigins: core.trustedOrigins,
-    });
+    const read = <T>(schema: SchemaInput<T>) : Partial<T> => mergeSchemaData<T>(
+        schema,
+        readSchemaFromFileTree<T>(tree, schema),
+        readSchemaFromEnv<T>(schema),
+    );
 
     return {
-        auth: resolvePaths(
-            resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
-        ),
-        admin: resolvePaths(
-            resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
-        ),
-        account: resolvePaths(
-            resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA)),
-            core.rootPath,
-        ),
+        auth: resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_SCHEMA)),
+        admin: resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_SCHEMA)),
+        account: resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_SCHEMA)),
     };
 }

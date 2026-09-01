@@ -6,12 +6,13 @@
  */
 
 import { defineCommand } from 'citty';
-import type { ConfigReadFsOptions } from '../../app/index.ts';
+import type { ConfigReadFsOptions } from '@authup/server-config';
+import type { Config } from '../../app/index.ts';
 import { createWorkerApplication } from '../../app/index.ts';
 import { createCLIConfigModule } from './config.ts';
 import { registerShutdownHandlers } from './shutdown.ts';
 
-export function defineCLIWorkerCommand(configFs: ConfigReadFsOptions = {}) {
+export function defineCLIWorkerCommand(configFs: ConfigReadFsOptions<Config> = {}) {
     return defineCommand({
         meta: { name: 'worker' },
         async setup() {

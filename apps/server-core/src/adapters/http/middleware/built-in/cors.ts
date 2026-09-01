@@ -7,7 +7,7 @@
 
 import type { Options as CorsOptions } from '@routup/cors';
 import { handleCors } from '@routup/cors';
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import { defineCoreHandler, getRequestHeader } from 'routup';
 
 export type CorsMiddlewareContext = {
@@ -17,7 +17,7 @@ export type CorsMiddlewareContext = {
     baseURL: string,
 };
 
-export function registerCorsMiddleware(router: App, input: CorsOptions | undefined, ctx: CorsMiddlewareContext) {
+export function registerCorsMiddleware(router: IApp, input: CorsOptions | undefined, ctx: CorsMiddlewareContext) {
     const options : CorsOptions = {
         // Reflect any origin by default: OAuth2 clients (and their UIs) are
         // registered at runtime on arbitrary domains, so a startup-time

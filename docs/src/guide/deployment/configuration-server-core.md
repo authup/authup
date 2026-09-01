@@ -56,10 +56,10 @@ export default {
      * URLs and links of the served consoles are rebased onto it
      * automatically.
      * env: PUBLIC_URL
-     * default: derived from host & port — http://localhost:3001
+     * default: derived from host & port — http://localhost:3000
      * (a wildcard bind address renders as localhost)
      */
-    publicUrl: 'http://localhost:3001',
+    publicUrl: 'http://localhost:3000',
 
     /**
      * Additional trusted origins. Entries are http(s) origins
@@ -205,9 +205,9 @@ export default {
             /**
              * Application port number.
              * env: PORT
-             * default: 3001
+             * default: 3000
              */
-            port: 3001,
+            port: 3000,
 
             /**
              * Address the HTTP server binds to.
@@ -559,7 +559,7 @@ export default {
 ```yaml [authup.yml]
 # yaml-language-server: $schema=https://authup.org/schema/config.json
 env: production
-publicUrl: http://localhost:3001
+publicUrl: http://localhost:3000
 trustedOrigins:
   - https://app.example.com
 
@@ -580,7 +580,7 @@ server:
     writableDirectoryPath: writable
     componentsEnabled: true
     migrationEnabled: true
-    port: 3001
+    port: 3000
     host: 0.0.0.0
     mtlsPublicUrl: https://mtls.example.com
     certificateSource: forwarded
@@ -624,9 +624,9 @@ THEME_DIRECTORY_PATH=/etc/authup/theme
 THEME_FRAGMENTS_ENABLED=false
 COMPONENTS_ENABLED=true
 MIGRATION_ENABLED=true
-PORT=3001
+PORT=3000
 HOST=0.0.0.0
-PUBLIC_URL=http://localhost:3001
+PUBLIC_URL=http://localhost:3000
 MTLS_PUBLIC_URL=https://mtls.example.com
 CERTIFICATE_SOURCE=forwarded
 TRUST_PROXY=1

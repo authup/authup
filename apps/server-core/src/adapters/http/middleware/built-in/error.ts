@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import { defineErrorHandler } from 'routup';
 import type { Logger } from '@authup/server-kit';
 import { ErrorCode, httpStatusFromCode, serializeError } from '@authup/errors';
@@ -16,7 +16,7 @@ type ErrorMiddlewareOptions = {
     logger?: Logger
 };
 
-export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOptions = {}) {
+export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOptions = {}) {
     router.use(defineErrorHandler((error, event) => {
         // routup wraps whatever a handler threw into an AppError carrying it
         // as `cause`, so this is the error as it was actually raised.

@@ -7,8 +7,8 @@
  */
 
 import { serve } from 'routup/node';
-import { readAdminConsoleConfigFromEnv } from './config';
-import { createAdminConsoleServer } from './server';
+import { readConfigFromEnv } from './config';
+import { createServer } from './server';
 
 /**
  * The standalone entry. It reads the keys the service needs from the
@@ -16,8 +16,8 @@ import { createAdminConsoleServer } from './server';
  * the composed loader arrive with the CLI roles (plan 101 D2-3), which is
  * also when this service stops being started this way in practice.
  */
-const config = readAdminConsoleConfigFromEnv();
-const app = await createAdminConsoleServer(config);
+const config = readConfigFromEnv();
+const app = await createServer(config);
 
 const server = serve(app, {
     port: config.port,

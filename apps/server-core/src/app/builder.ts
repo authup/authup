@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Application,
-    type IApplication,
-    type IModule,
-} from 'orkos';
+import type { ApplicationContext, IApplication, IModule } from 'orkos';
+import { Application } from 'orkos';
 import {
     AuthenticationModule,
     CacheModule,
@@ -104,7 +101,7 @@ export class ApplicationBuilder {
         return this.set(ModuleName.COMPONENTS, instance);
     }
 
-    withHTTP(instance?: HTTPModule | false): this {
+    withHTTP(instance?: IModule | false): this {
         return this.set(ModuleName.HTTP, instance);
     }
 
@@ -132,8 +129,8 @@ export class ApplicationBuilder {
         return modules;
     }
 
-    build(): IApplication {
-        return new Application({ modules: this.buildModules() });
+    build(ctx: ApplicationContext = {}): IApplication {
+        return new Application({ modules: this.buildModules(), ...ctx });
     }
 
     // ----------------------------------------------------

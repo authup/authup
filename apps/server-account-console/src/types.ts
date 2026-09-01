@@ -6,29 +6,38 @@
  */
 
 import type {
-    AccountConsoleSectionConfig,
-    DeploymentConfig,
+    AccountConsoleConfig,
+    CoreConfig,
+    RootConfig,
+    SECTION_KEY,
     ThemeConfig,
+    ToObjectLiteral,
 } from '@authup/server-config';
 
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
  *
- * The names are console-qualified because they belong to a document that
- * describes a whole deployment, not to this service. Inside this package that
- * vocabulary reads backwards (`publicUrl` here means the API's URL, not this
- * service's), so it is confined to the configuration layer and mapped onto
- * {@link AccountConsoleConfig} before anything else sees it.
+ * Its OWN section is spread flat, because those keys are already this
+ * service's vocabulary; every other section keeps the key the document nests
+ * it at. What the two vocabularies do not share stays out: `apiUrl` and
+ * `distPath` below are this service's names for values the document calls
+ * something else, so they belong to {@link Config} alone.
  */
-export type AccountConsoleConfigInput = Pick<DeploymentConfig, 'publicUrl' | 'trustedOrigins'> &
-    ThemeConfig &
-    AccountConsoleSectionConfig;
+export type ConfigInput = ToObjectLiteral<
+    RootConfig &
+    {
+        [SECTION_KEY.THEME]: ThemeConfig,
+        // only what the publicUrl derivation reads; see the registry
+        [SECTION_KEY.CORE]: Pick<CoreConfig, 'host' | 'port'>
+    } &
+    AccountConsoleConfig
+>;
 
 /**
  * The service's own vocabulary, which is what every consumer in this package
  * reads.
  */
-export type AccountConsoleConfig = {
+export type Config = {
     /**
      * This console's own public URL, e.g.
      * `https://example.com/console/account`. Its path component is the base
@@ -49,7 +58,7 @@ export type AccountConsoleConfig = {
     enabled: boolean,
     /**
      * Where the standalone service listens. Unrelated to
-     * {@link AccountConsoleConfig.url}: behind a reverse proxy the two always
+     * {@link Config.url}: behind a reverse proxy the two always
      * differ.
      */
     port: number,
@@ -66,14 +75,6 @@ export type AccountConsoleConfig = {
      * canonical http(s) origins.
      */
     trustedOrigins: string[],
-    /**
-     * The operator theme directory. Empty disables theming entirely: no
-     * provider is created and no route is mounted.
-     */
-    themeDirectoryPath: string,
-    /**
-     * Opt in to splicing `fragments/head.html` from the theme directory into
-     * the served shell.
-     */
-    themeFragmentsEnabled: boolean,
+
+    theme: ThemeConfig
 };

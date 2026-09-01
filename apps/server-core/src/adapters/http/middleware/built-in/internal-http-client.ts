@@ -6,7 +6,7 @@
  */
 
 import type { IClient } from '@authup/core-http-kit';
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import { defineCoreHandler } from 'routup';
 
 /**
@@ -23,7 +23,7 @@ import { defineCoreHandler } from 'routup';
  */
 export const INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('InternalHttpClientFactory');
 
-export function registerInternalHttpClientMiddleware(router: App, httpClientFactory: () => IClient) {
+export function registerInternalHttpClientMiddleware(router: IApp, httpClientFactory: () => IClient) {
     router.use(defineCoreHandler((event) => {
         event.store[INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY] = httpClientFactory;
         return event.next();

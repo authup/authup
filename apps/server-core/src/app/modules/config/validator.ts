@@ -7,14 +7,14 @@
 
 import { mountSchema } from '@authup/server-config-kit';
 import { Container } from 'validup';
-import { CONFIG_SCHEMA } from './registry.ts';
 import type { Config } from './types.ts';
+import { CONFIG_SCHEMA } from './constants.ts';
 
 export class ConfigValidator extends Container<Config> {
     protected override initialize() {
         super.initialize();
 
-        // The mapped ConfigSchema type is the exhaustiveness guard: a Config
+        // The mapped Schema type is the exhaustiveness guard: a Config
         // key without a registry entry fails the build.
         mountSchema(this, CONFIG_SCHEMA);
     }

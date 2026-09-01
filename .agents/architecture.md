@@ -60,7 +60,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 | Folder                       | Responsibility                                                                                             |
 |------------------------------|------------------------------------------------------------------------------------------------------------|
-| app/modules/config           | Reads environment variables and configuration files. `registry.ts` declares every `Config` key once (zod type, default, description, env name + reader) and `@authup/server-config-kit` is the generic mechanism over it; the env reader, the validator, the static defaults and the `dist/config-schema.json` artifact all derive from the registry (plan 101 C-1) |
+| app/modules/config           | Reads environment variables and configuration files. `constants.ts` SELECTS this service's keys out of `@authup/server-config` (which declares every key of the document once) and `@authup/server-config-kit` is the generic mechanism over such a registry; the env reader, the file reader, the validator and the static defaults all derive from the selection (plan 101 C-1) |
 | app/modules/database         | Implement repositories based on adapters/database typeorm (entities & repositories), bootstrap connections |
 | app/modules/http             | Configure and initialize controllers with concrete implementations                                         |
 | app/modules/authentication   | Authentication feature wiring                                                                              |
@@ -816,7 +816,7 @@ API. The six page GETs became a stateless hop:
   than once per service.
 - **Serving seam (plan 083)**: the Vue app ships as
   `@authup/client-auth-console`, a runtime dependency of the auth console
-  SERVICE, resolved via `resolveAuthConsolePackagePath`/`-DistPath`
+  SERVICE, resolved via `resolvePackagePath`/`resolveDistPath`
   (`apps/server-auth-console/src/resolve.ts`, the locter `locateUpSync`
   ancestor walk anchored on that package's own root, so it works for the
   workspace symlink and a published install alike). It reads the built dist
@@ -1298,7 +1298,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   `https://*.example.com/**` covers every subdomain but not
   `https://a.example.com.evil.test/cb`, `https://a.example.com@evil.test/cb`
   or a differing port. Matching is case sensitive, so a caller comparing URLs
-  canonicalizes first (`resolveAccountConsoleRef`). The matcher walks value
+  canonicalizes first (`resolveRef`). The matcher walks value
   and pattern on separate indices with ONE backtrack point (the last `*`),
   which bounds it at O(value x pattern) and keeps it regex-free, so no
   pattern can be turned into a ReDoS. A property test pins it against a
@@ -1332,7 +1332,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   origins (no path) and `getAppOrigins` does not re-expand. Config validation
   runs through `ConfigValidator` (validup + zod,
   `app/modules/config/validator.ts`, whose container is `mountSchema` over
-  `CONFIG_SCHEMA` (`app/modules/config/registry.ts`); the registry's mapped `ConfigSchema` type is the
+  `CONFIG_SCHEMA` (`app/modules/config/registry.ts`); the registry's mapped `Schema` type is the
   compile-time exhaustiveness guard: a Config key without an entry fails the
   build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
@@ -1479,7 +1479,7 @@ nothing else.
   cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
   root deployments; the two consoles still share one session because both
   scope to the same base path.
-- **Feature flag `accountConsoleEnabled`** (`server.accountConsole.enabled`,
+- **Feature flag `accountConsole.enabled`** (`server.accountConsole.enabled`,
   env `ACCOUNT_CONSOLE_ENABLED`, default `true`) is read by BOTH sides,
   because they answer different questions with it and neither can ask the
   other. The console service injects it as
@@ -1876,12 +1876,12 @@ bootstrap. What differs from the account console, and why:
   from it, and the console service's own base path plus vite base are the
   same literal on its side. Assets are served `immutable` for a year (every
   name carries a content hash; a new build means new names), for both static
-  consoles. Config keys mirror the account console: `adminConsoleEnabled`
+  consoles. Config keys mirror the account console: `adminConsole.enabled`
   (`server.adminConsole.enabled`, `ADMIN_CONSOLE_ENABLED`, declared in the
   service's registry AND server-core's, riding
   `StatusResponseFeatures.adminConsole` on the status endpoint; off means off
   on the SERVER too, where the kick and the callback answer 404) and
-  `adminConsolePath` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
+  `adminConsole.path` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
   substituted-package seam), plus `server.adminConsole.url` and the listen
   address `server.adminConsole.port` / `.host`. The marker
   (`<!--admin-config-->`) and the vite base (`/console/admin/`) are constants
@@ -1985,22 +1985,22 @@ bootstrap. What differs from the account console, and why:
   theme/constants.ts                — SERVING only: revalidate interval, asset CSP
 
 apps/server-{admin,account}-console/src/   — one static console service each, same shape
-  config.ts                         — the registry (<Name>CONSOLE_CONFIG_SCHEMA) + resolve<Name>ConsoleConfig
+  config.ts                         — the registry (<Name>CONSOLE_CONFIG_SCHEMA) + resolve<Name>Config
                                       (authup.yml namespace -> the service's own vocabulary) +
                                       read<Name>ConsoleConfigFromEnv (the bin's own read)
   constants.ts                      — vite base, default base path, package name, config marker, health path
   handler.ts                        — create<Name>ConsoleHandler: the mountable App (theme, assets, shell routes)
   server.ts / bin.ts                — the standalone listener and its entry point
-  types.ts                          — <Name>ConsoleConfigInput (the config NAMESPACE) + <Name>ConsoleConfig
+  types.ts                          — <Name>ConsoleConfigInput (the config NAMESPACE) + <Name>Config
 
 apps/server-auth-console/src/       — the SSR console service
   config.ts / constants.ts / types.ts — as above, plus the page list
-  handler.ts                        — createAuthConsoleHandler: theme, assets, one route per rendered page
-  render.ts                         — renderAuthConsolePage(event, config, { url, data, theme }): template,
+  handler.ts                        — createHandler: theme, assets, one route per rendered page
+  render.ts                         — renderPage(event, config, { url, data, theme }): template,
                                       manifest and render entry memoized for the process lifetime
   payload.ts                        — the anonymous hydration reads (authorize info, status features) + the
                                       workflow-page payload assembly
-  resolve.ts                        — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of
+  resolve.ts                        — resolvePackagePath/resolveDistPath (locter locateUp resolution of
                                       @authup/client-auth-console, anchored on this package)
   redirect.ts                       — sanitizeRelativeRedirect (open-redirect guard on the `redirect` param)
 
@@ -2830,18 +2830,34 @@ its own port). The container entrypoint carries all three as its own service
 vocabulary (`server/core start`, `server/core core`, `server/core console
 admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
 the one place pretending otherwise; behind one origin the proxy routes each
-console's path to its port. `createApplication` grows a generic `mounts`
-seam and mounts whatever it is handed under a path it is told, learning
-nothing about consoles: the CLI knows about every piece and composes them,
-which is its job, and a controller for a console appearing inside server-core
-is the smell that seam exists to prevent. `buildApplicationMounts` refuses to
-reason loosely about origins: a console url on ANOTHER origin names a service
-someone else runs and is skipped rather than mounted locally, and one on this
-origin with no path would have to own the API's own root, where it shadows
-the protocol routes and the page GETs redirect to themselves, so it is
-refused by name rather than booted into a redirect loop. The factory is
-ASYNC because a console loads its operator theme before it serves a page, so
-an invalid manifest fails the boot rather than every render. The console
+console's path to its port. **Every console is a runnable SERVICE, not a
+handler someone else owns**: each exports `create<Name>Application`
+over the shared `defineConsoleApplication` in `@authup/server-console-kit`,
+which is the whole of its lifecycle (build the handler, listen, close). That
+is what `authup console` starts and what the `authup-<name>-console` bin
+starts, so the two paths cannot diverge, and server-core neither imports nor
+mounts any of it.
+
+`authup start` is the one composition, and the CLI performs it, because the
+CLI is the only thing that knows about every piece. server-core exposes
+BUILD and LISTEN as two steps (`new HTTPModule({ listen: false })`, then
+`http.listen(container)`) and learns nothing about consoles; the CLI mounts
+the console handlers on `HTTPInjectionKey.App` in between. The window is the
+point: a sub-application must land AFTER the controllers, so its routes
+cannot shadow a protocol one (every console declares a wildcard shell route,
+and `/console/<name>/login/start` is server-core's), and BEFORE the error
+middleware, so it inherits the error handling every other route has. A caller
+mounting after `setup()` lands after both, on an already-listening server,
+which is why the two steps exist rather than a `mounts` seam server-core
+would have to own. `buildConsoleMounts` (`commands/start.ts`) derives each
+mount path with `getURLBasePath(url)`, never the url itself, since a console
+url carries the origin a BROWSER reaches it at while the listener only ever
+sees a path; a console url with no path at all would have to own the API's
+own root, where it shadows the protocol routes and the page GETs redirect to
+themselves, so it is refused by name. It needs no origin check of its own:
+`normalizeConfig` and each console's own `resolve*Config` already
+refuse a console url that is not publicUrl's origin. The console
+The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
@@ -2930,35 +2946,61 @@ on startup, because the failure is otherwise silent (the server simply
 boots on its defaults).
 
 **The config schema is one registry (plan 101 C-1).**
-`app/modules/config/registry.ts` declares every `Config` key once as a
-`ConfigSchemaEntry`: the zod `type`, the `default` (a static value, or a
+`@authup/server-config` declares every key of the document once as a
+`SchemaEntry`, and `app/modules/config/constants.ts` selects the ones
+this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
-the second falls back to typeorm-extension's driver default), an
+the second falls back to typeorm-extension's driver default; `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `server.core.host` + `server.core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
 operator-facing `description`, and for the 51 env-backed keys the
-`ConfigEnvironmentVariableName` plus a `readEnv` reader. The mapped
-`ConfigSchema` type is the exhaustiveness guard: a `Config` key with no
-entry fails the build. Five passes derive from the registry and nothing
+`EnvironmentVariable` plus a `readEnv` reader. The mapped
+`Schema` type is the exhaustiveness guard: a `Config` key with no
+entry fails the build. Six passes derive from the registry and nothing
 else may re-declare a key: `read/env.ts` is `readSchemaFromEnv` plus the
 untouched `DB_*` block (those names come from typeorm-extension and stay
 special-cased outside the registry), `read/fs.ts` is
 `readSchemaFromFileTree`, `validator.ts` is `mountSchema`,
-`normalizeConfig` spreads `buildSchemaDefaults(CONFIG_SCHEMA)` under the
-parsed input (path resolution and the cross-key invariants stay imperative
-there), and `json-schema.ts` is `buildSchemaJSONSchema`.
+`normalizeConfig` layers `buildSchemaDefaults(CONFIG_SCHEMA)` under the
+parsed input with `mergeSchemaData` (path resolution and the cross-key
+invariants stay imperative there), and `json-schema.ts` is
+`buildSchemaJSONSchema`.
 
-**Where a key sits in `authup.yml` is one entry field, `path`.** It is the
-absolute dotted location in the document; an entry without one resolves
-through the reading pass's prefix, which for server-core is
-`CONFIG_SECTION` = `server.core`. So only the keys that live OUTSIDE this
-service's section spell a path out: the deployment-wide values (`publicUrl`,
-`db`, `redis`, `smtp`, `trustedOrigins`, `env`, `rootPath`) and the
-per-console sections, whose member names drop the console prefix the config
-key carries (`adminConsoleEnabled` reads `server.adminConsole.enabled`). A
+**A registry is shaped like the config it describes, and a SECTION is a
+nested registry.** So server-core reads its own two sections flat, in its
+own vocabulary (`config.port`, never `config.core.port`), and keeps the five
+console keys it borrows under the console they belong to
+(`config.adminConsole.url`), because three consoles each declare a `url` and
+an `enabled` and no flat bag holds them at once. `defineSchema`'s `pathPrefix` fills in
+each entry's absolute path from the section it was declared in, so a section
+declares its keys once, in one vocabulary, and cannot spell a location its
+section does not own. The passes split along that line: the ones working in
+CONFIG space (defaults, environment, validator mounts) mirror the nesting,
+and the ones working in DOCUMENT space (the file read, the unknown-path
+scan, the JSON Schema) flatten it, since every entry carries an absolute
+path. **Composition is `mergeSchemaData`, never a spread**: a later pass
+holding one key of a section would otherwise replace the whole section and
+take every other key's file value and default with it.
+
+**A key inherits another key's VALUE through `resolve`.** Every listener's
+`host` defaults to `''`, which means unset, and resolves to the
+deployment-wide `host` at the document root (env `HOST`, declared exactly
+once there) unless it names its own. So one line binds server-core and all
+three console services. Inheritance settles in `resolveSchemaData`, over
+merged data, because seeing what the other key RESOLVED to is the whole
+point: the predecessor `alt` was a source-address chain applied during the
+file and environment reads, so it could only borrow another key's path and
+variable, never its computed value, and it needed its own recursion in three
+passes to do it. `port` deliberately has no counterpart: three listeners
+cannot share one.
+
+**Where a key sits in `authup.yml` follows from the section it is declared
+in.** `defineSchema(schema, { pathPrefix })` stamps the absolute dotted
+location onto every entry that does not spell one, so `server.core.port` and
+`server.adminConsole.enabled` are written down once, next to the section
+name, rather than repeated per key. An entry spells a `path` of its own only
+to sit outside its section, which today is the deployment-wide `host`. A
 section is per CONSOLE, never per implementation package, and no environment
-variable name ever changed, so env-driven deployments feel nothing. The
-console services' own registries spell every path out, since they apply no
-prefix of their own. **Config follows the code** (plan 101 D2-3): the theme
+variable name ever changed, so env-driven deployments feel nothing. **Config follows the code** (plan 101 D2-3): the theme
 pair (`theme.directoryPath` / `theme.fragmentsEnabled`) and the three
 `server.<name>Console.path` keys LEFT server-core's registry for the
 packages that read them, while `server.adminConsole.url` and
@@ -2967,11 +3009,12 @@ the console login has to know where to send the browser once the credential
 is issued and deriving that from `publicUrl` would be wrong the moment a
 console is published at a path of its own. server-core keeps the two
 `.enabled` flags, which it reads to gate the cookie-mode routes and to
-report on `GET /`. The JSON Schema artifact is emitted in that same nested
-shape, so an editor's `# yaml-language-server: $schema=` line validates the
-real document; the one server-core BUILDS carries its own registry alone
-(that is the package it ships with), while `authup config schema` composes
-all four so the printed document is the one an operator actually writes.
+report on `GET /`. The JSON Schema is emitted in that same nested shape, so
+an editor's `# yaml-language-server: $schema=` line validates the real
+document, and `authup config schema` prints the WHOLE document rather than
+any one service's selection of it: an operator writes one file, so a
+console's key must be neither missing from the schema nor reported as
+unread.
 
 **`@authup/server-config-kit` is the mechanism, and it carries no
 `@authup/*` dependency at all.** It holds the declaration types, the
@@ -3028,9 +3071,10 @@ keys, and server-core imports them back. The package depends on
 binding.
 
 `apps/authup` is still the only workspace that knows about every service, so
-it is where the per-console configs are resolved (`src/roles/config.ts`),
-but `config schema` now prints the package and `config validate` checks the
-whole document against it, including keys no service in the process reads.
+it is where the per-console configs are resolved (`src/roles/config.ts`) and
+where the `config` command lives: `config schema` prints the package and
+`config validate` checks the whole document against it, including keys no
+service in the process reads.
 Cross-section invariants stay in `normalizeConfig` rather than in the
 schema. One of them is that every console url must sit on publicUrl's own
 ORIGIN: a console under a path of its own is fully supported and is what
@@ -3051,24 +3095,35 @@ which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 A new key needs its reader chosen deliberately, not inferred from the zod
 type.
 
-`buildSchemaJSONSchema` renders a registry as JSON Schema draft-07 (zod's
-`toJSONSchema`, `unrepresentable: 'any'`, static defaults only, so a
-process-derived thunk is omitted, `x-authup-env` per property) and
-`scripts/emit-config-schema.mjs` writes server-core's to
-`dist/config-schema.json` at build (the last `build:server` step); the
-builder lives in TypeScript so the `authup config schema` command reuses it
-in process. That command and its sibling `authup config validate` (read the
-file and the environment, normalize, print every issue as
-`<path>: <message>` like the provisioning file loader, exit 1) are
-`defineCLIConfigCommand` in `apps/server-core/src/cli/commands/config.ts`:
-command bodies stay with the service, as every other CLI command does since
-D1, and `apps/authup` only mounts them, passing the console registries in as
-`options.schemas` so neither subcommand reports half a document. Keep
-`registry.ts` importable standalone: it reads
-`CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` from their
-constants FILES, never the request or core barrels (the request barrel
-reaches the x509 module, which needs `reflect-metadata` at import time),
-so the emit script runs under plain node.
+**The published JSON Schema is generated, never committed.**
+`buildSchemaJSONSchema` (`@authup/server-config-kit`) renders a registry as
+JSON Schema draft-07 (zod's `toJSONSchema`, `unrepresentable: 'any'`, static
+defaults only, so a process-derived thunk is omitted, `x-authup-env` per
+property), and `authup config schema`
+(`apps/authup/src/commands/config.ts`) runs it over the WHOLE document,
+`CONFIG_SCHEMA` from `@authup/server-config`, so the printed file is the one
+an operator actually writes rather than one service's selection of it. The
+docs workflow (`.github/workflows/docs.yml`) builds the CLI, writes that
+output to `docs/src/public/schema/config.json` and then builds the site, so
+the document served at the URL a `# yaml-language-server: $schema=` line
+names cannot lag behind the keys. The file is gitignored and server-core
+ships no `dist/config-schema.json` any more: both were a copy that a
+registry change could leave stale, which is why the workflow triggers on
+`packages/server-config{,-kit}/**` and `apps/authup/**` as well as `docs/**`.
+The shape of the emitted document is pinned by
+`packages/server-config/test/unit/schema.spec.ts`. **`config` is the one
+command whose body does NOT stay with the service**, unlike `start`,
+`worker`, `migration` and `healthcheck`: both subcommands are about the
+whole document, and the whole document is only assembled where every
+service meets, which is `apps/authup`. `config validate` reads the file and
+the environment, reports a path nothing reads, runs server-core's own read
+(its `normalizeConfig` is where the cross-section invariants live) and then
+checks every key of the document against the zod type its one declaration
+carries, printing each issue as `<path>: <message>` like the provisioning
+file loader and exiting 1. server-core keeps the pieces its own dev CLI
+needs next to it (`CLI_CONFIG_ARGS`, `applyCLIConfigArgs`,
+`createCLIConfigModule`, `assertNoStrayPositionals`, `describeConfigError`)
+and no config command of its own.
 
 **Unsupported:** sharing one cookie domain between a standalone-hosted
 console (or a downstream kit app on its own origin) and the hosted auth
@@ -5940,7 +5995,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
   hosts build a fresh payload per request (Nuxt's `payload.data`; every
-  `renderAuthConsolePage` caller in the auth console service passes a new
+  `renderPage` caller in the auth console service passes a new
   payload literal, and the process-level caches in its `render.ts` hold only
   the immutable template / manifest / bundle), and the store is provided on
   the per-request Vue app, so it is unreachable once the render ends. Same

@@ -1,7 +1,7 @@
 # OAuth2
 
 Authup implements the OAuth2 (including PKCE) protocol as well as the OpenID specification. The following examples and explanations demonstrate how these flows can be mapped using the Authup API.
-For the examples, it is assumed that the backend application is running at `http://localhost:3001`.
+For the examples, it is assumed that the backend application is running at `http://localhost:3000`.
 
 ## Redirect URIs
 
@@ -37,7 +37,7 @@ It is most often used for trusted applications like mobile apps or desktop apps.
 To obtain an access token using the Password Grant Flow, send a POST request with the user's credentials:
 
 ```shell
-curl -X POST 'http://localhost:3001/token' \
+curl -X POST 'http://localhost:3000/token' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=password' \
   -d 'username=USER_USERNAME' \
@@ -51,7 +51,7 @@ used. In multi-realm deployments, users outside the master realm must
 therefore include a realm parameter:
 
 ```shell
-curl -X POST 'http://localhost:3001/token' \
+curl -X POST 'http://localhost:3000/token' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=password' \
   -d 'username=USER_USERNAME' \
@@ -88,7 +88,7 @@ The Client Credentials Flow is typically used for machine-to-machine communicati
 To obtain an access token using the Client Credentials Flow, send a POST request to the token endpoint:
 
 ```shell
-curl -X POST 'http://localhost:3001/token' \
+curl -X POST 'http://localhost:3000/token' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=client_credentials' \
   -d 'client_id=YOUR_CLIENT_ID' \
@@ -110,7 +110,7 @@ If your access token expires, you can use the Refresh Token Flow to obtain a new
 #### Request
 To request a new access token, use the following POST request:
 ```shell
-curl -X POST 'http://localhost:3001/token' \
+curl -X POST 'http://localhost:3000/token' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=refresh_token' \
   -d 'refresh_token=YOUR_REFRESH_TOKEN'
@@ -135,7 +135,7 @@ Browser-based applications redirect the user to Authup's hosted `/authorize` pag
 #### Authorize request
 
 ```
-GET http://localhost:3001/authorize
+GET http://localhost:3000/authorize
   ?response_type=code
   &client_id=YOUR_CLIENT_ID
   &realm_id=YOUR_REALM_ID
@@ -199,7 +199,7 @@ one, and the token then reports what was actually achieved.
 To end the Authup session when the user logs out of your application, redirect the browser to the `end_session_endpoint` ([OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)):
 
 ```
-GET http://localhost:3001/logout
+GET http://localhost:3000/logout
   ?id_token_hint=THE_ID_TOKEN
   &client_id=YOUR_CLIENT_ID
   &post_logout_redirect_uri=https://app.example.com/after-logout

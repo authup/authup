@@ -113,6 +113,49 @@ the server directly instead of being forwarded: `SIGINT`/`SIGTERM` tear the
 application down and exit with its outcome, a second signal exits immediately,
 and a teardown outlasting 10 seconds is forced.
 
+### The default HTTP port is 3000
+
+`server.core.port` defaults to `3000` instead of `3001`. This aligns the
+default with what the container has always done: every published compose file
+maps `3001:3000`, so the process inside has listened on 3000 all along and
+only the host-side port was 3001.
+
+**No action** for a Docker deployment, whose port mapping is unchanged, or for
+any deployment that names `server.core.port` (or `PORT`) explicitly.
+
+**Action required** for a bare-metal deployment that relied on the default and
+hard-codes `3001` anywhere a client reaches: a reverse proxy upstream, a
+`publicUrl`, a health check. Either set `server.core.port: 3001` to keep the
+old address, or move those references to 3000.
+
+The admin console's development server moves from `:3000` to `:3010` so it no
+longer collides with the API, and the trusted origin seeded in non-production
+follows it. That affects `npm run dev` in this repository only.
+
+### A console derives its own configuration, and refuses a foreign origin
+
+Every value a console service used to be handed by the CLI is now computed
+from the document by the console itself: the issuer (`publicUrl`, derived from
+`server.core.host` and `server.core.port` when the document names none), the
+canonicalized `trustedOrigins`, its own url, and every path resolved against
+`rootPath`. One `authup.yml` therefore means the same thing whether a console
+is started by `authup start`, by `authup console`, or by its own
+`authup-<name>-console` binary.
+
+**Action required** for a deployment that starts a console through its own
+binary AND publishes it on a domain other than `publicUrl`'s. That
+configuration used to boot and half-work; it now refuses to start, with the
+key and both urls named. It was already refused when the console was started
+through the CLI, so only the standalone binary changes behaviour. A console
+under a PATH of its own is unaffected and remains fully supported.
+
+**No action** otherwise. Two things stop being errors: a console started
+standalone without `PUBLIC_URL` now derives one instead of refusing to start,
+and a scheme-less `trustedOrigins` entry (`hub.local`) now expands to both its
+http and its https origin for the console as well, where it previously
+expanded only for server-core. If you added a redundant explicit origin to
+work around that, it stays harmless.
+
 ### The consoles moved under `/console`
 
 Every console `server-core` serves now lives under one `/console` prefix on

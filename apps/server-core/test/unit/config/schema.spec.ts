@@ -5,40 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import { buildSchemaDefaults, resolveSchemaPath } from '@authup/server-config-kit';
-import { describe, expect, it } from 'vitest';
-import { CONFIG_SECTION } from '../../../src/app/modules/config/constants';
-import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import {
-    CORE_CONFIG_SCHEMA,
-    ConfigEnvironmentVariableName,
-    DEPLOYMENT_CONFIG_SCHEMA,
+    buildSchemaDefaults,
+    isSchemaEntryInput,
+} from '@authup/server-config-kit';
+import { describe, expect, it } from 'vitest';
+import {
+    CORE_SCHEMA,
+    EnvironmentVariable,
+    ROOT_SCHEMA,
 } from '@authup/server-config';
-import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
+import { normalizeConfig } from '../../../src/app/modules/config/read';
 import type { Config } from '../../../src/app/modules/config/types';
-import { DIST_PATH, PACKAGE_PATH } from '../../../src/path';
+import { CONFIG_SCHEMA } from '../../../src';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
 function readEnv(key: keyof Config, raw: string) : unknown {
     const entry = CONFIG_SCHEMA[key];
-    if (!entry.env || !entry.readEnv) {
+    if (!isSchemaEntryInput(entry) || !entry.env || !entry.readEnv) {
         throw new Error(`The config key ${key} carries no env reader.`);
     }
 
     return entry.readEnv(raw, entry.env);
 }
 
-describe('src/config/registry.ts', () => {
+describe('src/app/modules/config/constants.ts', () => {
     describe('registry', () => {
         it('should map every environment variable name onto exactly one key', () => {
             const envNames : string[] = [];
             for (const key of CONFIG_KEYS) {
                 const entry = CONFIG_SCHEMA[key];
-                if (typeof entry.env !== 'undefined') {
+                if (isSchemaEntryInput(entry) && typeof entry.env !== 'undefined') {
                     envNames.push(entry.env);
                     expect(typeof entry.readEnv).toEqual('function');
                 }
@@ -52,7 +50,7 @@ describe('src/config/registry.ts', () => {
             // typo cannot reach an operator. The enum is deliberately a
             // superset: it also carries the keys only a console service
             // reads.
-            const known = Object.values(ConfigEnvironmentVariableName) as string[];
+            const known = Object.values(EnvironmentVariable) as string[];
             for (const name of envNames) {
                 expect(known).toContain(name);
             }
@@ -62,13 +60,13 @@ describe('src/config/registry.ts', () => {
          * The selection is by NAME, so nothing stops it from quietly omitting
          * a key of a section it reads in full: the omitted key is then read
          * as its default, in silence. Both sections are asserted whole, and
-         * the surplus is exactly the five console keys server-core needs to
-         * answer a request.
+         * the surplus is exactly the three console sections server-core needs
+         * to answer a request.
          */
-        it('should select both of its sections in full, plus five console keys', () => {
+        it('should select both of its sections in full, plus three console sections', () => {
             const sectioned = [
-                ...Object.keys(DEPLOYMENT_CONFIG_SCHEMA),
-                ...Object.keys(CORE_CONFIG_SCHEMA),
+                ...Object.keys(ROOT_SCHEMA),
+                ...Object.keys(CORE_SCHEMA),
             ];
 
             for (const key of sectioned) {
@@ -76,12 +74,16 @@ describe('src/config/registry.ts', () => {
             }
 
             expect(CONFIG_KEYS.filter((key) => !sectioned.includes(key)).sort()).toEqual([
-                'accountConsoleEnabled',
-                'accountConsoleUrl',
-                'adminConsoleEnabled',
-                'adminConsoleUrl',
-                'authConsoleUrl',
+                'accountConsole',
+                'adminConsole',
+                'authConsole',
             ]);
+
+            // and out of each console only what a request needs: where a
+            // browser reaches it, and whether it is served at all.
+            expect(Object.keys(CONFIG_SCHEMA.authConsole)).toEqual(['url']);
+            expect(Object.keys(CONFIG_SCHEMA.adminConsole).sort()).toEqual(['enabled', 'url']);
+            expect(Object.keys(CONFIG_SCHEMA.accountConsole).sort()).toEqual(['enabled', 'url']);
         });
 
         it('should declare exactly the keys normalizeConfig() outputs', async () => {
@@ -93,7 +95,7 @@ describe('src/config/registry.ts', () => {
         });
 
         it('should build a default for every key except the derived ones', () => {
-            const defaults = buildSchemaDefaults(CONFIG_SCHEMA);
+            const defaults = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
 
             for (const key of CONFIG_KEYS) {
                 if (key === 'publicUrl' || key === 'db') {
@@ -109,8 +111,8 @@ describe('src/config/registry.ts', () => {
         });
 
         it('should hand out a fresh array default per call', () => {
-            const first = buildSchemaDefaults(CONFIG_SCHEMA);
-            const second = buildSchemaDefaults(CONFIG_SCHEMA);
+            const first = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
+            const second = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
 
             expect(first.permissions).toEqual(second.permissions);
             expect(first.permissions).not.toBe(second.permissions);
@@ -197,118 +199,26 @@ describe('src/config/registry.ts', () => {
         });
 
         it('should skip an empty string', () => {
-            expect(readEnv('host', '')).toBeUndefined();
-        });
-    });
-
-    describe('buildConfigJSONSchema', () => {
-        const schema = buildConfigJSONSchema();
-
-        // the document is shaped like authup.yml, so a property is reached at
-        // the path its registry entry declares (or derives from the section).
-        function resolveProperty(document: Record<string, unknown>, path: string) {
-            let node = document;
-
-            for (const segment of path.split('.')) {
-                const properties = node.properties as Record<string, Record<string, unknown>>;
-                expect(properties).toBeDefined();
-                node = properties[segment];
-                expect(node).toBeDefined();
-            }
-
-            return node;
-        }
-
-        function resolveKeyProperty(document: Record<string, unknown>, key: keyof Config) {
-            return resolveProperty(document, resolveSchemaPath(key, CONFIG_SCHEMA[key], CONFIG_SECTION));
-        }
-
-        it('should emit a draft-07 object schema', () => {
-            expect(schema.$schema).toEqual('http://json-schema.org/draft-07/schema#');
-            expect(schema.type).toEqual('object');
-        });
-
-        it('should place every key at its declared path and describe it', () => {
-            for (const key of CONFIG_KEYS) {
-                const property = resolveKeyProperty(schema, key);
-
-                expect(property.description).toEqual(expect.any(String));
-                expect((property.description as string).length).toBeGreaterThan(0);
-            }
-        });
-
-        it('should nest a section key and keep a deployment-wide one at the root', () => {
-            const properties = schema.properties as Record<string, Record<string, unknown>>;
-
-            expect(Object.keys(properties).sort()).toEqual([
-                'db',
-                'env',
-                'publicUrl',
-                'redis',
-                'rootPath',
-                'server',
-                'smtp',
-                'theme',
-                'trustedOrigins',
-            ]);
-
-            expect(resolveProperty(schema, 'server.core.port')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.enabled')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.url')).toBeDefined();
+            expect(readEnv('writableDirectoryPath', '')).toBeUndefined();
         });
 
         /**
-         * The document describes every key an operator may write, not just
-         * the ones this service reads: one `authup.yml` configures the whole
-         * deployment, and an operator writing a console service's section
-         * must not be told the key does not exist.
+         * HOST is declared once, on the deployment-wide `host`, and every
+         * listener INHERITS it rather than declaring a variable of its own.
+         * The inheritance settles in `resolveSchemaData`, over merged data,
+         * so it is asserted through a normalized config rather than through
+         * a single entry's environment read.
          */
-        it('should describe the keys only another service reads', () => {
-            expect(resolveProperty(schema, 'theme.directoryPath')).toBeDefined();
-            expect(resolveProperty(schema, 'server.authConsole.port')).toBeDefined();
-            expect(resolveProperty(schema, 'server.adminConsole.path')).toBeDefined();
-            expect(resolveProperty(schema, 'server.accountConsole.host')).toBeDefined();
-        });
+        it('should let this service inherit the deployment-wide host', async () => {
+            // no variable of its own: HOST belongs to the root key
+            expect(CONFIG_SCHEMA.host.env).toBeUndefined();
 
-        it('should carry the env name and the static default, and omit a process-derived default', () => {
-            const port = resolveProperty(schema, 'server.core.port');
-            expect(port['x-authup-env']).toEqual('PORT');
-            expect(port.default).toEqual(3001);
+            expect((await normalizeConfig({ defaultHost: '127.0.0.1' })).host)
+                .toEqual('127.0.0.1');
 
-            const rootPath = resolveProperty(schema, 'rootPath');
-            expect(rootPath).not.toHaveProperty('x-authup-env');
-            expect(rootPath).not.toHaveProperty('default');
-        });
-
-        it('should represent an enum type', () => {
-            expect(resolveProperty(schema, 'server.core.certificateSource').enum)
-                .toEqual(['disabled', 'standard', 'forwarded']);
-        });
-
-        it('should keep a derived key with an unrepresentable type', () => {
-            const db = resolveProperty(schema, 'db');
-            expect(db.description).toEqual(expect.any(String));
-        });
-
-        it('should serve the same document the authup.yml $schema line names', () => {
-            // committed rather than generated at docs build time (that job
-            // builds the documentation alone), so a registry change that
-            // forgets to rebuild leaves it stale. Run
-            // `npm run build:config-schema -w apps/server-core`.
-            const filePath = path.join(PACKAGE_PATH, '..', '..', 'docs', 'src', 'public', 'schema', 'config.json');
-            expect(existsSync(filePath)).toEqual(true);
-
-            expect(JSON.parse(readFileSync(filePath, 'utf8'))).toEqual(schema);
-        });
-
-        it('should be published as dist/config-schema.json by the build', () => {
-            const filePath = path.join(DIST_PATH, 'config-schema.json');
-            expect(existsSync(filePath)).toEqual(true);
-
-            const artifact = JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, unknown>;
-            for (const key of CONFIG_KEYS) {
-                expect(resolveKeyProperty(artifact, key)).toBeDefined();
-            }
+            // and a listener naming its own keeps it
+            expect((await normalizeConfig({ defaultHost: '127.0.0.1', host: '10.0.0.5' })).host)
+                .toEqual('10.0.0.5');
         });
     });
 });

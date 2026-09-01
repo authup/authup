@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { App } from 'routup';
+import type { IApp } from 'routup';
 import { decorators } from '@routup/decorators';
 import type {
     Client,
@@ -174,7 +174,7 @@ import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/i
 import { MetricsInjectionKey } from '../../metrics/index.ts';
 
 export class HTTPControllerModule {
-    async mount(router: App, container: IContainer): Promise<void> {
+    async mount(router: IApp, container: IContainer): Promise<void> {
         const eventController = this.createEventController(container);
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
@@ -265,7 +265,7 @@ export class HTTPControllerModule {
         return new AuthorizeController({
             options: {
                 baseURL: config.publicUrl,
-                authConsoleUrl: config.authConsoleUrl,
+                authConsoleUrl: config.authConsole.url,
                 features: this.buildUIFeatures(config),
                 promptLoginMaxAge: config.promptLoginMaxAge,
                 mfaFreshnessMaxAge: config.mfaFreshnessMaxAge,
@@ -380,7 +380,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new ActivateController({
-            options: { authConsoleUrl: config.authConsoleUrl },
+            options: { authConsoleUrl: config.authConsole.url },
             service: this.createRegistrationService(container),
         });
     }
@@ -389,7 +389,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new PasswordForgotController({
-            options: { authConsoleUrl: config.authConsoleUrl },
+            options: { authConsoleUrl: config.authConsole.url },
             service: this.createPasswordRecoveryService(container),
         });
     }
@@ -398,7 +398,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new PasswordResetController({
-            options: { authConsoleUrl: config.authConsoleUrl },
+            options: { authConsoleUrl: config.authConsole.url },
             service: this.createPasswordRecoveryService(container),
         });
     }
@@ -433,7 +433,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
 
         return new RegisterController({
-            options: { authConsoleUrl: config.authConsoleUrl },
+            options: { authConsoleUrl: config.authConsole.url },
             service: this.createRegistrationService(container),
         });
     }
@@ -455,7 +455,7 @@ export class HTTPControllerModule {
         });
 
         return new LogoutController({
-            options: { authConsoleUrl: config.authConsoleUrl },
+            options: { authConsoleUrl: config.authConsole.url },
             endSessionService,
         });
     }
@@ -472,8 +472,8 @@ export class HTTPControllerModule {
         return new AdminController({
             options: {
                 baseURL: config.publicUrl,
-                consoleUrl: config.adminConsoleUrl,
-                enabled: config.adminConsoleEnabled,
+                consoleUrl: config.adminConsole.url,
+                enabled: config.adminConsole.enabled,
             },
             loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
             sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),
@@ -490,8 +490,8 @@ export class HTTPControllerModule {
         return new AccountController({
             options: {
                 baseURL: config.publicUrl,
-                consoleUrl: config.accountConsoleUrl,
-                enabled: config.accountConsoleEnabled,
+                consoleUrl: config.accountConsole.url,
+                enabled: config.accountConsole.enabled,
             },
             loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
             sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),
@@ -508,8 +508,8 @@ export class HTTPControllerModule {
             registration: config.registrationEnabled,
             passwordRecovery: config.passwordRecoveryEnabled,
             emailVerification: config.emailVerificationEnabled,
-            accountConsole: config.accountConsoleEnabled,
-            adminConsole: config.adminConsoleEnabled,
+            accountConsole: config.accountConsole.enabled,
+            adminConsole: config.adminConsole.enabled,
         };
     }
 
@@ -879,9 +879,9 @@ export class HTTPControllerModule {
 
         let issuer : string | undefined;
         let webauthn : {
-            rpId: string, 
-            rpName: string, 
-            origin: string 
+            rpId: string,
+            rpName: string,
+            origin: string
         } | undefined;
         try {
             const url = new URL(config.publicUrl);

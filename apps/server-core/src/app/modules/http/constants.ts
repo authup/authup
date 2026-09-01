@@ -8,13 +8,16 @@
 import type { IClient } from '@authup/core-http-kit';
 import { TypedToken } from 'eldin';
 import type { serve } from 'routup/node';
+import type { IApp } from 'routup';
 
 export type HTTPServer = ReturnType<typeof serve>;
 
 export const HTTPInjectionKey : {
+    App: TypedToken<IApp>,
     Server: TypedToken<HTTPServer>,
     InternalHttpClient: TypedToken<IClient>,
 } = {
+    App: new TypedToken<IApp>('IApp'),
     Server: new TypedToken<HTTPServer>('Server'),
     /**
      * HTTP client for the SSR'd UI pages. `HTTPModule.setup` registers a

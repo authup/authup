@@ -35,8 +35,8 @@ export function createApplication(context: CreateApplicationContext = {}) {
         .withIdentity()
         .withOAuth2()
         .withComponents()
-        .withHTTP(new HTTPModule({ mounts: context.mounts }))
-        .build();
+        .withHTTP(context.http || new HTTPModule())
+        .build({ container: context.container });
 }
 
 /**
@@ -66,5 +66,5 @@ export function createWorkerApplication(context: CreateApplicationContext = {}) 
         .withCache()
         .withDatabase(new DatabaseModule({ migrate: migrateWorkerSchema }))
         .withComponents(new ComponentsModule({ force: true }))
-        .build();
+        .build({ container: context.container });
 }

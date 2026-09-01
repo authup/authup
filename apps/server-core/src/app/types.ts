@@ -5,41 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Handler, IApp } from 'routup';
-import type { Config, ConfigModule } from './modules/index.ts';
-
-/**
- * A handler mounted onto the application's own listener, so one process can
- * serve more than server-core does.
- *
- * The point of the seam is that server-core stays ignorant of what it
- * mounts. The console services own their handlers; the CLI knows about
- * every piece and composes them, which is its job. A controller for a
- * console appearing inside server-core is the smell this exists to
- * prevent (plan 101 D2).
- */
-export type ApplicationMount = {
-    path: string,
-    /**
-     * A routup handler or a whole sub-application. A console service
-     * exposes the latter, which routup flattens onto this listener.
-     */
-    handler: Handler | IApp,
-};
-
-/**
- * Resolved from the application's own config, because a mount path is a
- * config value (the path component of each console's url) and config is
- * not known until the modules set up.
- *
- * Asynchronous because building a handler may have to read something first:
- * a console service loads its operator theme before it serves a page, so an
- * invalid manifest fails the boot rather than every render.
- */
-export type ApplicationMountFactory = (config: Config) =>
-ApplicationMount[] | Promise<ApplicationMount[]>;
+import type { ConfigModule } from './modules/index.ts';
+import type { IModule } from 'orkos';
+import type { IContainer } from 'eldin';
 
 export type CreateApplicationContext = {
+    /**
+     * A pre-configured DI container. Registering a token before setup wins
+     * over the module that would otherwise register it, which is the
+     * test-fake seam (see testing.md).
+     */
+    container?: IContainer,
     config?: ConfigModule,
-    mounts?: ApplicationMountFactory,
+    /**
+     * The HTTP module to run instead of the default one, which is how a
+     * caller opts into building the application without listening
+     * (`new HTTPModule({ listen: false })`) so it can compose onto the same
+     * listener before starting it.
+     */
+    http?: IModule
 };

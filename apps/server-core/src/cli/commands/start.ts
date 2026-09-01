@@ -6,38 +6,19 @@
  */
 
 import { defineCommand } from 'citty';
-import type { ApplicationMountFactory, ConfigReadFsOptions } from '../../app/index.ts';
+import type { Config } from '../../app/index.ts';
 import { createApplication } from '../../app/index.ts';
 import { createCLIConfigModule } from './config.ts';
 import { registerShutdownHandlers } from './shutdown.ts';
-
-export type CLIStartCommandOptions = {
-    /**
-     * Handlers to compose onto the same listener, so one process can serve
-     * more than server-core does. The CLI supplies them: server-core is
-     * deliberately ignorant of what it mounts (plan 101 D2). Without any,
-     * this is the `core` role: the API and the IdP alone.
-     */
-    mounts?: ApplicationMountFactory,
-    /**
-     * The name the command reports. Two roles run the same factory and
-     * differ only in what they mount, so the operator-facing word is a
-     * caller decision.
-     */
-    name?: string,
-};
+import type { ConfigReadFsOptions } from '@authup/server-config';
 
 export function defineCLIStartCommand(
-    configFs: ConfigReadFsOptions = {},
-    options: CLIStartCommandOptions = {},
+    configFs: ConfigReadFsOptions<Config> = {},
 ) {
     return defineCommand({
-        meta: { name: options.name || 'start' },
+        meta: { name: 'start' },
         async setup() {
-            const app = createApplication({
-                config: createCLIConfigModule(configFs),
-                mounts: options.mounts,
-            });
+            const app = createApplication({ config: createCLIConfigModule(configFs) });
 
             await app.setup();
 

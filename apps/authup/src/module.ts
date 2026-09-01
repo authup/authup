@@ -5,23 +5,55 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigReadFsOptions } from '@authup/server-core';
+import type { ConfigReadFsOptions } from '@authup/server-config';
 import {
-    CLI_CONFIG_ARGS,
-    applyCLIConfigArgs,
     assertNoStrayPositionals,
-    defineCLIConfigCommand,
-    defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
-    defineCLIStartCommand,
     defineCLIWorkerCommand,
 } from '@authup/server-core';
-import { defineCommand } from 'citty';
+import { type ArgsDef, defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
-import { defineCLIConsoleCommand } from './roles/console.ts';
-import { buildApplicationMounts } from './roles/mounts.ts';
+import {
+    defineCLIConfigCommand,
+    defineCLIConsoleCommand,
+    defineCLICoreCommand,
+    defineCLIHealthCheckCommand,
+    defineCLIStartCommand,
+} from './commands/index.ts';
+import type { ObjectLiteral } from '@authup/kit';
+
+export const CLI_CONFIG_ARGS = {
+    configDirectory: {
+        type: 'string',
+        description: 'Config directory path',
+    },
+    configFile: {
+        type: 'string',
+        description: 'Name of one or more configuration files.',
+    },
+} satisfies ArgsDef;
+
+export type CLIConfigArgs = {
+    configDirectory?: string,
+    configFile?: string,
+};
+
+function applyCLIConfigArgs<T extends ObjectLiteral = ObjectLiteral>(
+    options: ConfigReadFsOptions<T>,
+    args: CLIConfigArgs,
+) : ConfigReadFsOptions<T> {
+    if (args.configDirectory) {
+        options.cwd = args.configDirectory;
+    }
+
+    if (args.configFile) {
+        options.file = args.configFile;
+    }
+
+    return options;
+}
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
@@ -30,6 +62,8 @@ export async function createCLIEntryPointCommand() {
     );
     const pkg = JSON.parse(pkgRaw);
 
+    // untyped on purpose: these options travel to every service, and each
+    // reads its own selection of the document.
     const configFs : ConfigReadFsOptions = {};
 
     return defineCommand({
@@ -39,19 +73,19 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
-            // Every key of `authup.yml` is declared in `@authup/server-config`,
-            // which server-core reads directly, so the command already covers
-            // the console services' sections without being handed anything.
             config: defineCLIConfigCommand(configFs),
             console: defineCLIConsoleCommand(configFs),
-            // The API and the IdP alone: the page GETs still redirect to the
-            // console service, which someone else runs.
-            core: defineCLIStartCommand(configFs, { name: 'core' }),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
+
             // The batteries-included single container: server-core plus every
             // enabled console on one listener.
-            start: defineCLIStartCommand(configFs, { mounts: buildApplicationMounts(configFs) }),
+            start: defineCLIStartCommand(configFs),
+
+            // The API and the IdP alone, mounting nothing: the page GETs
+            // still redirect to the console service, which someone else runs.
+            core: defineCLICoreCommand(configFs),
+
             worker: defineCLIWorkerCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,

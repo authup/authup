@@ -4,25 +4,60 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
-import { CORE_CONFIG_SECTION } from '@authup/server-config';
 import { TypedToken } from 'eldin';
-import type { Config } from './types.ts';
+import type { Config, ConfigSchemaDerivedKey } from './types.ts';
+import type { Schema } from '@authup/server-config-kit';
+import { defineSchema } from '@authup/server-config-kit';
+import type { EnvironmentVariable } from '@authup/server-config';
+import {
+    ACCOUNT_CONSOLE_SCHEMA,
+    ADMIN_CONSOLE_SCHEMA,
+    AUTH_CONSOLE_SCHEMA,
+    CORE_SCHEMA,
+    ROOT_SCHEMA,
+    SECTION_KEY,
+} from '@authup/server-config';
 
 export const ConfigInjectionKey = new TypedToken<Config>('Config');
 
 /**
- * The section of `authup.yml` this service's own keys live under, re-exported
- * from the package that declares them so the two cannot spell it differently.
- * Every entry already carries its absolute path, so this is the anchor those
- * paths were written from rather than a prefix a reader applies.
+ * The keys this service reads, SELECTED out of the document schema by name.
+ *
+ * Nothing is declared here: a key's path, environment variable, default,
+ * reader and zod type all travel with its one declaration in
+ * `@authup/server-config`, so naming a key is the only thing that can go
+ * wrong, and naming a key that does not exist fails the build. The mapped
+ * Schema type is the other half of that guard: a {@link Config} key
+ * with no entry fails the build too.
+ *
+ * The two whole-section spreads are the sections this service reads in full,
+ * so their keys are flat and read in this service's own vocabulary. The five
+ * console keys stay nested under the console they belong to, since three
+ * consoles each declare a `url`. They are picked one by one rather than
+ * spread because a console section is mostly the console service's own
+ * business (where it listens, which package it serves); server-core only
+ * needs where a browser reaches it, and whether a static console is served
+ * at all.
  */
-export const CONFIG_SECTION = CORE_CONFIG_SECTION;
+export const CONFIG_SCHEMA: Schema<
+    Config,
+    ConfigSchemaDerivedKey,
+    EnvironmentVariable
+> = {
+    ...ROOT_SCHEMA,
+    ...CORE_SCHEMA,
 
-/**
- * The one file the configuration is read from, and the extensions it may
- * carry. `conf` is deliberately absent: the `authup.conf` family was retired
- * in favour of a single `authup.yml` (plan 101 stage C).
- */
-export const CONFIG_FILE_NAME = 'authup';
-export const CONFIG_FILE_EXTENSIONS = ['yml', 'yaml', 'json', 'js', 'mjs', 'cjs', 'ts', 'mts'];
+    // where the hosted page GETs redirect to
+    [SECTION_KEY.AUTH_CONSOLE]: defineSchema({ url: AUTH_CONSOLE_SCHEMA.url }),
+
+    // where the server-side console login lands the browser, and whether that
+    // login is minted at all
+    [SECTION_KEY.ADMIN_CONSOLE]: defineSchema({
+        url: ADMIN_CONSOLE_SCHEMA.url,
+        enabled: ADMIN_CONSOLE_SCHEMA.enabled,
+    }),
+    [SECTION_KEY.ACCOUNT_CONSOLE]: defineSchema({
+        url: ACCOUNT_CONSOLE_SCHEMA.url,
+        enabled: ACCOUNT_CONSOLE_SCHEMA.enabled,
+    }),
+};

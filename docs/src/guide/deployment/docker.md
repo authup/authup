@@ -8,7 +8,7 @@ The following guide is based on some shared assumptions:
 - Docker `v20.x` is [installed](https://docs.docker.com/get-docker/)
 - Min. `2` cores
 - Min. `5G` hard disk
-- One available port on the host system if you want to map the service to your local machine (default: `3001`)
+- One available port on the host system if you want to map the service to your local machine (default: `3000`)
 
 
 ## Step. 1: Create a new project
@@ -41,7 +41,7 @@ One container runs the whole deployment. It serves the API and both consoles:
 docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
-  -e PUBLIC_URL=http://localhost:3001 \
+  -e PUBLIC_URL=http://localhost:3000 \
   authup/authup:latest server/core start
 ```
 
@@ -52,9 +52,9 @@ consoles derive the API address from it, so with the port published as
 Now all should be set up, and you are ready to go :tada:
 
 This will launch the following with default settings:
-- API: `http://localhost:3001/`
-- Admin console: `http://localhost:3001/console/admin`
-- Account console: `http://localhost:3001/console/account`
+- API: `http://localhost:3000/`
+- Admin console: `http://localhost:3000/console/admin`
+- Account console: `http://localhost:3000/console/account`
 
 ::: warning The `client/admin-console` service was retired
 The admin console used to be a second container. It is now served by

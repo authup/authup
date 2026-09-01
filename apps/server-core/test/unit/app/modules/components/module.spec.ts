@@ -20,7 +20,7 @@ import { CacheInjectionKey } from '../../../../../src/app/modules/cache';
 import { ComponentsModule } from '../../../../../src/app/modules/components';
 import type { Config } from '../../../../../src/app/modules/config';
 import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
-import { normalizeConfig } from '../../../../../src/app/modules/config/normalize';
+import { normalizeConfig } from '../../../../../src/app/modules/config/read';
 import { DatabaseInjectionKey } from '../../../../../src/app/modules/database';
 import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
 

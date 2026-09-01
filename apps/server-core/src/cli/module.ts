@@ -8,7 +8,7 @@
 import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ConfigReadFsOptions } from '../app/index.ts';
+import type { Config } from '../app/index.ts';
 import { PACKAGE_PATH } from '../path.ts';
 import { CLI_CONFIG_ARGS, applyCLIConfigArgs, assertNoStrayPositionals } from './commands/config.ts';
 import {
@@ -17,6 +17,7 @@ import {
     defineCLIStartCommand,
     defineCLIWorkerCommand,
 } from './commands/index.ts';
+import type { ConfigReadFsOptions } from '@authup/server-config';
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
@@ -25,7 +26,7 @@ export async function createCLIEntryPointCommand() {
     );
     const pkg = JSON.parse(pkgRaw);
 
-    const configFs : ConfigReadFsOptions = {};
+    const configFs : ConfigReadFsOptions<Config> = {};
 
     return defineCommand({
         meta: {

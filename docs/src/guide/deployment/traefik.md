@@ -33,7 +33,7 @@ http:
     authup:
       loadBalancer:
         servers:
-          - url: http://authup:3001
+          - url: http://authup:3000
 
 tls:
   options:

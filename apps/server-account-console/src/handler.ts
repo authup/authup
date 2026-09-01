@@ -9,76 +9,60 @@ import { getURLBasePath } from '@authup/kit';
 import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     THEME_ASSET_MOUNT_PATH,
-    ThemeProvider,
     createThemeAssetsHandler,
+    createThemeProvider,
     defineStaticConsole,
 } from '@authup/server-console-kit';
-import { createHandler } from '@routup/assets';
+import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
 import { useRequestQuery } from '@routup/basic/query';
 import { NotFoundError } from '@ebec/http';
-import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 import type { IAppEvent } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import {
-    ACCOUNT_CONSOLE_CONFIG_MARKER,
-    ACCOUNT_CONSOLE_PACKAGE_NAME,
-    ACCOUNT_CONSOLE_VITE_BASE,
+    CONFIG_MARKER,
     HEALTH_PATH,
+    PACKAGE_NAME,
+    VITE_BASE,
 } from './constants';
 import { PACKAGE_PATH } from './path';
-import { resolveAccountConsoleRef } from './ref';
-import type { AccountConsoleConfig } from './types';
+import { resolveRef } from './ref';
+import { expandToOrigins } from '@authup/server-config';
+import type { Config } from './types';
 
 const ASSETS_PATH = '/assets';
 
 /**
  * The origins the `ref` back-link parameter is validated against: the API's
- * own origin plus every trusted one. Mirrors server-core's `getAppOrigins`,
- * and expects the configured entries to be canonical origins already, which
- * is what server-core's config normalization guarantees for the CLI path.
+ * own origin plus every trusted one. Mirrors server-core's `getAppOrigins`.
+ *
+ * The configured entries are expanded HERE rather than assumed canonical. A
+ * bare host is a supported way to write the key, and it expands to both its
+ * http and its https origin; taken verbatim it becomes the pattern
+ * `hub.local/**`, which is matched against an absolute URL and therefore
+ * matches nothing, so the back link disappears for exactly the origins
+ * written in the short form, with no diagnostic anywhere. `expandToOrigins`
+ * is idempotent, so an already-canonical list passes through untouched and
+ * this service no longer depends on someone else having normalized for it.
  *
  * Resolved once per handler rather than per request: the list is operator
  * configuration and cannot change while the service runs.
  */
-function buildAppOrigins(config: AccountConsoleConfig) : string[] {
+function buildAppOrigins(config: Config) : string[] {
     const origins = new Set<string>();
     origins.add(new URL(config.apiUrl).origin);
 
-    for (const origin of config.trustedOrigins ?? []) {
-        origins.add(origin);
+    for (const value of config.trustedOrigins ?? []) {
+        for (const origin of expandToOrigins(value)) {
+            origins.add(origin);
+        }
     }
 
     return Array.from(origins);
 }
 
-/**
- * Load the operator theme, if one is configured.
- *
- * A missing directory disables the feature entirely: no provider is created,
- * no route is mounted, and the served shell stays byte-identical to an
- * un-themed one. So the default configuration pays nothing.
- */
-async function createThemeProvider(config: AccountConsoleConfig) : Promise<IThemeProvider | undefined> {
-    if (!config.themeDirectoryPath || !fs.existsSync(config.themeDirectoryPath)) {
-        return undefined;
-    }
-
-    const provider = new ThemeProvider({
-        directoryPath: config.themeDirectoryPath,
-        fragmentsEnabled: config.themeFragmentsEnabled,
-        // The boot inventory this logs (resolved path, token counts, every
-        // servable file) is the antidote to the feature's dominant failure
-        // mode, which is silence.
-        logger: console,
-    });
-
-    await provider.load();
-
-    return provider;
-}
 
 /**
  * The service as a mountable routup handler, so the CLI can compose it onto
@@ -89,7 +73,10 @@ async function createThemeProvider(config: AccountConsoleConfig) : Promise<IThem
  * so a service published at `<origin>/console/account` receives `/sessions`,
  * exactly as the console's own router sees it.
  */
-export async function createAccountConsoleHandler(config: AccountConsoleConfig) : Promise<App> {
+export async function createHandler(
+    config: Config,
+    themeProvider?: IThemeProvider,
+) : Promise<App> {
     const app = new App();
 
     // The shell is stamped from the vc-locale / vc-color-mode cookies and the
@@ -106,7 +93,9 @@ export async function createAccountConsoleHandler(config: AccountConsoleConfig) 
     const basePath = getURLBasePath(config.url);
     const appOrigins = buildAppOrigins(config);
 
-    const theme = await createThemeProvider(config);
+    // Injected by the theme module when this runs inside the console
+    // application; built here for a caller holding only a config.
+    const theme = themeProvider ?? await createThemeProvider(config);
     if (theme) {
         app.use(THEME_ASSET_MOUNT_PATH, createThemeAssetsHandler(theme));
     }
@@ -115,9 +104,9 @@ export async function createAccountConsoleHandler(config: AccountConsoleConfig) 
     // is instance-scoped, so two applications in one process never share a
     // substituted package path or a resolved dist.
     const staticConsole = defineStaticConsole({
-        packageName: ACCOUNT_CONSOLE_PACKAGE_NAME,
-        marker: ACCOUNT_CONSOLE_CONFIG_MARKER,
-        viteBase: ACCOUNT_CONSOLE_VITE_BASE,
+        packageName: PACKAGE_NAME,
+        marker: CONFIG_MARKER,
+        viteBase: VITE_BASE,
         cwd: PACKAGE_PATH,
         distPath: config.distPath || undefined,
     });
@@ -128,7 +117,7 @@ export async function createAccountConsoleHandler(config: AccountConsoleConfig) 
     // re-requested all 140+ files on every full document load.
     const distPath = staticConsole.resolveDistPath();
     if (distPath) {
-        app.use(ASSETS_PATH, createHandler(
+        app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'assets'),
             {
                 fallthrough: false,
@@ -161,7 +150,7 @@ export async function createAccountConsoleHandler(config: AccountConsoleConfig) 
             // Everything else here is operator config, but `ref` is
             // request-reflected, so it is validated against the trusted
             // app origins before it goes anywhere near the page.
-            ref: resolveAccountConsoleRef(useRequestQuery(event, 'ref'), appOrigins),
+            ref: resolveRef(useRequestQuery(event, 'ref'), appOrigins),
         },
     });
 

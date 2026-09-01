@@ -10,14 +10,14 @@ import { Client } from '@authup/core-http-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from './redirect';
-import type { AuthConsoleConfig } from './types';
+import type { Config } from './types';
 
 /**
  * The service hydrates ANONYMOUSLY. It holds no credential of its own and
  * asks server-core only for what an unauthenticated visitor may see, which
  * is the whole of what these pages render.
  */
-export function createAPIClient(config: AuthConsoleConfig) : Client {
+export function createAPIClient(config: Config) : Client {
     return new Client({ baseURL: config.apiUrl });
 }
 

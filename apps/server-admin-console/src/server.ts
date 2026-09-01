@@ -6,17 +6,17 @@
  */
 
 import { App } from 'routup';
-import { createAdminConsoleHandler } from './handler';
-import type { AdminConsoleConfig } from './types';
+import { createHandler } from './handler';
+import type { Config } from './types';
 
 /**
  * The standalone service: the same handler the CLI mounts in process, behind
  * a listener of its own.
  */
-export async function createAdminConsoleServer(config: AdminConsoleConfig) : Promise<App> {
+export async function createServer(config: Config) : Promise<App> {
     const app = new App();
 
-    app.use(await createAdminConsoleHandler(config));
+    app.use(await createHandler(config));
 
     return app;
 }

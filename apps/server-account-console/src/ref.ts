@@ -11,7 +11,7 @@ import { isSimpleURLMatch } from '@authup/kit';
  * Upper bound on an accepted `ref`, matching the cap
  * `OAuth2EndSessionRequestValidator` applies to `post_logout_redirect_uri`.
  */
-export const ACCOUNT_CONSOLE_REF_MAX_LENGTH = 2000;
+export const REF_MAX_LENGTH = 2000;
 
 /**
  * Resolve the `ref` back-link parameter against the trusted app origins.
@@ -36,7 +36,7 @@ export const ACCOUNT_CONSOLE_REF_MAX_LENGTH = 2000;
  * silently, the way `sanitizeRelativeRedirect` drops a bad workflow
  * redirect.
  */
-export function resolveAccountConsoleRef(
+export function resolveRef(
     value: unknown,
     trustedOrigins: string[],
 ) : string | undefined {
@@ -45,7 +45,7 @@ export function resolveAccountConsoleRef(
     }
 
     const trimmed = value.trim();
-    if (trimmed.length === 0 || trimmed.length > ACCOUNT_CONSOLE_REF_MAX_LENGTH) {
+    if (trimmed.length === 0 || trimmed.length > REF_MAX_LENGTH) {
         return undefined;
     }
 

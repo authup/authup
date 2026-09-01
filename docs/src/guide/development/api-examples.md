@@ -3,17 +3,17 @@
 The following examples demonstrate how to interact with a resource in the API via HTTP. 
 This section uses the **Permission** resource as an example to showcase various operations.
 
-For these examples, it is assumed that the backend application is running at `http://localhost:3001`.  
+For these examples, it is assumed that the backend application is running at `http://localhost:3000`.  
 Make sure to replace `Bearer ***` with a valid access token in all requests.  
 For a complete list of API endpoints and detailed specifications, visit the Swagger documentation at:  
-`http://localhost:3001/docs`
+`http://localhost:3000/docs`
 
 ## GET Collection
 
 You can fetch a list of permissions using the following cURL command:
 
 ```shell
-curl -X GET 'http://localhost:3001/permissions' \
+curl -X GET 'http://localhost:3000/permissions' \
   -H 'Authorization: Bearer ***'
 ```
 
@@ -50,7 +50,7 @@ curl -X GET 'http://localhost:3001/permissions' \
 To fetch details of a specific permission by its **id** or **name**:
 
 ```shell
-curl -X GET 'http://localhost:3001/permissions/user_read' \
+curl -X GET 'http://localhost:3000/permissions/user_read' \
   -H 'Authorization: Bearer ***'
 ```
 
@@ -69,7 +69,7 @@ curl -X GET 'http://localhost:3001/permissions/user_read' \
 ## CREATE Record
 To create a new permission, send a POST request with the necessary details:
 ```ssh
-curl -X POST 'http://localhost:3001/permissions' \
+curl -X POST 'http://localhost:3000/permissions' \
   -H 'Authorization: Bearer ***' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -94,7 +94,7 @@ curl -X POST 'http://localhost:3001/permissions' \
 ## UPDATE Record
 To update an existing permission by its **id** or **name**:
 ```ssh
-curl -X POST 'http://localhost:3001/permissions/profile_edit' \
+curl -X POST 'http://localhost:3000/permissions/profile_edit' \
   -H 'Authorization: Bearer ***' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -118,7 +118,7 @@ curl -X POST 'http://localhost:3001/permissions/profile_edit' \
 To delete a permission by its **id** or **name**:
 
 ```ssh
-curl -X DELETE 'http://localhost:3001/permissions/profile_edit' \
+curl -X DELETE 'http://localhost:3000/permissions/profile_edit' \
   -H 'Authorization: Bearer ***'
 ```
 

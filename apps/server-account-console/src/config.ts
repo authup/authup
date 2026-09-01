@@ -6,16 +6,21 @@
  */
 
 import {
-    ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-    DEPLOYMENT_CONFIG_SCHEMA,
-    THEME_CONFIG_SCHEMA,
+    ACCOUNT_CONSOLE_SCHEMA,
+    CORE_SCHEMA,
+    ROOT_SCHEMA,
+    SECTION_KEY,
+    THEME_SCHEMA,
 } from '@authup/server-config';
-import type { ConfigSchema } from '@authup/server-config-kit';
-import { buildSchemaDefaults, readSchemaFromEnv } from '@authup/server-config-kit';
-import { ACCOUNT_CONSOLE_BASE_PATH } from './constants';
-import type { AccountConsoleConfig, AccountConsoleConfigInput } from './types';
-
-export { ACCOUNT_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
+import {
+    buildSchemaDefaults,
+    defineSchema,
+    mergeSchemaData,
+    readSchemaFromEnv,
+    resolveSchemaData,
+} from '@authup/server-config-kit';
+import type { CoreConfig, EnvironmentVariable } from '@authup/server-config';
+import type { Config, ConfigInput } from './types';
 
 /**
  * The keys this service reads, SELECTED out of the document schema by name.
@@ -23,49 +28,60 @@ export { ACCOUNT_CONSOLE_CONFIG_SECTION } from '@authup/server-config';
  * Nothing is declared here: every key of `authup.yml` is declared once in
  * `@authup/server-config`, so this service cannot spell a path, an
  * environment variable, a default or a reader differently from server-core,
- * which reads `publicUrl`, `trustedOrigins`, `accountConsoleUrl` and
- * `accountConsoleEnabled` too. Neither package depends on the other; both
- * depend on the declaration.
+ * which reads several of the same keys. Neither package depends on the other;
+ * both depend on the declaration.
+ *
+ * Its own section is spread, so this service reads it in its own vocabulary
+ * (`url`, `port`, `host`); every other section stays under the key the
+ * document nests it at.
  */
-export const ACCOUNT_CONSOLE_CONFIG_SCHEMA = {
-    ...ACCOUNT_CONSOLE_SECTION_CONFIG_SCHEMA,
-    ...THEME_CONFIG_SCHEMA,
-    publicUrl: DEPLOYMENT_CONFIG_SCHEMA.publicUrl,
-    trustedOrigins: DEPLOYMENT_CONFIG_SCHEMA.trustedOrigins,
-} satisfies ConfigSchema<AccountConsoleConfigInput, 'publicUrl'>;
+export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+    ...ACCOUNT_CONSOLE_SCHEMA,
+    ...ROOT_SCHEMA,
+    [SECTION_KEY.THEME]: THEME_SCHEMA,
+    // Two keys of server.core, never the section. `publicUrl` derives from
+    // the core listener address, which is what a console needs; selecting the
+    // whole section also selects its INVARIANTS, and `resolveSchemaData` runs
+    // every resolver in a registry -- so a console would refuse to start on a
+    // short SECRETS_ENCRYPTION_KEY, or on mfaRequired without mfaEnabled, for
+    // keys it has no database, key store or MFA to use.
+    [SECTION_KEY.CORE]: defineSchema<Pick<CoreConfig, 'host' | 'port'>, never, EnvironmentVariable>({
+        host: CORE_SCHEMA.host,
+        port: CORE_SCHEMA.port,
+    }),
+});
 
 /**
  * Turn the configuration namespace into the service's own shape: fill the
  * defaults, derive the one key that is derived rather than configured, and
- * rename. An empty `accountConsoleUrl` means the console sits on
- * server-core's own origin under the default segment, which is the
- * single-origin deployment.
+ * rename. An empty `url` means the console sits on server-core's own origin
+ * under the default segment, which is the single-origin deployment.
+ *
+ * The defaults are layered SECTION-AWARE ({@link mergeSchemaData}): a spread
+ * would let an input carrying one key of a section replace the whole section
+ * and take every other key's default with it.
  */
-export function resolveAccountConsoleConfig(
-    input: Partial<AccountConsoleConfigInput>,
-) : AccountConsoleConfig {
-    const values = {
-        ...buildSchemaDefaults<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_CONFIG_SCHEMA),
-        ...input,
-    } as AccountConsoleConfigInput;
-
-    if (!values.publicUrl) {
-        throw new Error(
-            'The account console service needs the public URL of server-core. Set PUBLIC_URL.',
-        );
-    }
+export function resolveConfig(
+    input: Partial<ConfigInput>,
+) : Config {
+    const values = resolveSchemaData<ConfigInput>(
+        CONFIG_SCHEMA,
+        mergeSchemaData<ConfigInput>(
+            CONFIG_SCHEMA,
+            buildSchemaDefaults<ConfigInput>(CONFIG_SCHEMA),
+            input,
+        ),
+    ) as ConfigInput;
 
     return {
-        url: values.accountConsoleUrl ||
-            `${values.publicUrl.replace(/\/+$/, '')}${ACCOUNT_CONSOLE_BASE_PATH}`,
+        url: values.url,
         apiUrl: values.publicUrl,
-        enabled: values.accountConsoleEnabled,
-        port: values.accountConsolePort,
-        host: values.accountConsoleHost,
-        distPath: values.accountConsolePath,
+        enabled: values.enabled,
+        port: values.port,
+        host: values.host,
+        distPath: values.path,
         trustedOrigins: values.trustedOrigins,
-        themeDirectoryPath: values.themeDirectoryPath,
-        themeFragmentsEnabled: values.themeFragmentsEnabled,
+        theme: values.theme,
     };
 }
 
@@ -74,13 +90,11 @@ export function resolveAccountConsoleConfig(
  * `authup.yml` reaches this service through the CLI roles, which compose this
  * very registry into the one document loader.
  */
-export function readAccountConsoleConfigFromEnv() : AccountConsoleConfig {
+export function readConfigFromEnv() : Config {
     // The explicit type argument is load-bearing: inferred from the schema
     // object, a key declared without a default (the derived publicUrl) comes
     // back as unknown.
-    const input : Partial<AccountConsoleConfigInput> = readSchemaFromEnv<AccountConsoleConfigInput>(
-        ACCOUNT_CONSOLE_CONFIG_SCHEMA,
-    );
+    const input : Partial<ConfigInput> = readSchemaFromEnv<ConfigInput>(CONFIG_SCHEMA);
 
-    return resolveAccountConsoleConfig(input);
+    return resolveConfig(input);
 }
