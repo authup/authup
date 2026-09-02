@@ -52,7 +52,7 @@
         "@validup/zod": "^2.0.1",
         "envix": "^1.5.0",
         "validup": "^2.0.1",
-        "zod": "^4.4.3"
+        "zod": "^4.5.4"
     },
     "devDependencies": {
         "vitest": "^4.0.14"

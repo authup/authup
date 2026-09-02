@@ -44,7 +44,7 @@ export class FakeConsentRepository implements IConsentRepository {
     }
 
     rows(): Consent[] {
-        return [...this.consents.values()];
+        return this.consents.values().toArray();
     }
 
     async findMany(

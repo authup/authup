@@ -107,8 +107,8 @@ export class SessionController {
 
         if (
             !identity ||
-            identity.type !== IdentityType.USER ||
             !sessionId ||
+            identity.type !== IdentityType.USER ||
             !this.identityResolver ||
             !this.identityPermissionProvider
         ) {

@@ -304,7 +304,7 @@ export class OAuth2Authorization {
             let allowed = false;
 
             const subject = toIdentityPolicyData(identity);
-            if (this.accessPolicyEvaluator && subject) {
+            if (subject && this.accessPolicyEvaluator) {
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     options.client.accessPolicyId,
                     subject,

@@ -181,7 +181,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         let actorScope: `${RealmScope}` = RealmScope.ANY;
         let actorPolicyFree = true;
         let actorPolicyId: string | null = null;
-        if (actor.identity && permission) {
+        if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 { type: actor.identity.type, id: actor.identity.data.id },
                 {

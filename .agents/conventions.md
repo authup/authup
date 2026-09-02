@@ -238,7 +238,7 @@ Sort each runtime dependency of a **published** package by one question: **would
 
 Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it — e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
 
-## Root `vue` override tracks every `@vue/*` bump
+## Root `vue` / `vue-router` overrides track every bump of theirs
 
 The root `package.json` `overrides` block pins `vue` to an exact patch. That pin
 must move whenever ANY dependency bump (dependabot's `minorandpatch` group
@@ -251,11 +251,42 @@ both in files nobody touched: `@vue/test-utils` (a top-level package peering
 `@vue/server-renderer`) fails every client-web-kit SSR spec with
 `Cannot find package '@vue/server-renderer'`, and two `@vue/reactivity` copies
 give `vue-tsc` two `RefSymbol` identities (`Property '[RefSymbol]' is missing`).
-It has recurred three times (the July 2026 `@vuecs` bump, #3317, #3461). Fix:
+It has recurred four times (the July 2026 `@vuecs` bump, #3317, #3461, #3516). Fix:
 set `overrides.vue` to the new patch, `npm install --force`, then verify
 `node_modules/vue/node_modules/@vue` is gone and
 `node_modules/@vue/server-renderer` is hoisted. A dependabot PR whose table
 lists `vue` needs this before merge; its own CI already shows the failure.
+
+`vue-router` carries an override for the same reason and needs the same care
+on a bump of its own. The duplication arrives from the other direction: the six
+workspaces declare the new range while `nuxt` (`^5.2.0`) and
+`@vuecs/navigation` (`^4.x || ^5.x`) are satisfied by the old patch, so npm
+hoists the OLD one to the root and nests a copy of the new one under every
+workspace that asked for it. Two nominal type identities again, and the symptom
+is a `check:types` failure in `packages/client-web-nuxt` alone
+(`src/runtime/middleware/00.root.ts`, `TS2345`, one `vue-router/dist/index-*`
+path "not assignable" to another) — the router is a `provide`/`inject`
+singleton, so a second copy is a runtime hazard and not only a typing one.
+
+**Adding the override is not enough by itself**: npm will not re-resolve a
+lockfile entry that already satisfies its dependents, so `npm install --force`
+leaves the old resolution in place and the tree unchanged. Delete that
+package's entries from `package-lock.json` (the hoisted one and every nested
+one), then `npm install --package-lock-only --force` followed by
+`npm install --force`. Do NOT reach for `rm -rf node_modules package-lock.json`:
+a full regeneration does produce a correct single-copy tree, but it rewrote
+~22k lock lines and re-resolved unrelated transitive versions, which is not
+reviewable inside a dependency PR. The targeted splice leaves a lock diff that
+only removes the duplicated subtrees.
+
+**Both overrides must stay EXACT versions, and a caret is not an improvement** —
+which is worth stating because relaxing the pin is the obvious way to stop
+having to realign it. It was measured: with `^3.5.42` / `^5.3.0` npm re-created
+the five nested `vue-router` copies the exact pin had just collapsed. An exact
+pin rewrites every spec to one identical string, which npm dedupes to a single
+node; a range leaves the specs as ranges and npm is free to satisfy them
+per-consumer. The manual realignment on each bump is the price of the single
+copy, not an oversight.
 
 ## Interfaces & Types
 

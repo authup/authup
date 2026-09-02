@@ -244,7 +244,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 issues: pendingIssues,
             };
 
-            if (ctx.withConditions && lowerable && conditions.length > 0) {
+            if (lowerable && ctx.withConditions && conditions.length > 0) {
                 result.condition = conditions.length === 1 ?
                     conditions[0]! :
                     or(...conditions);

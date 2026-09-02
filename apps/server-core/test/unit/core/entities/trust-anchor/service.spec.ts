@@ -79,11 +79,13 @@ describe('core/entities/trust-anchor/service', () => {
             const actor = createAllowAllActor();
             let calls = 0;
             actor.permissionEvaluator.setBehavior(({ method }) => {
-                if (method === 'evaluateOneOf') {
-                    calls += 1;
-                    if (calls === 2) {
-                        throw new Error('denied');
-                    }
+                if (method !== 'evaluateOneOf') {
+                    return;
+                }
+
+                calls += 1;
+                if (calls === 2) {
+                    throw new Error('denied');
                 }
             });
 

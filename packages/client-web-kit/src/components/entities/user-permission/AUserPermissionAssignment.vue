@@ -25,7 +25,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<UserPermission>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${EntityType.USER_PERMISSION}`,
+            type: EntityType.USER_PERMISSION,
             setup,
             query: () => ({
                 filters: {

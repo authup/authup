@@ -121,7 +121,7 @@ function buildChildEnv(writableDirectory) {
 
     // PORT and HOST name what the CLI has to listen on: the config file
     // written below disagrees about both, and the environment wins.
-    env.PORT = `${SERVER_PORT}`;
+    env.PORT = String(SERVER_PORT);
     env.HOST = '0.0.0.0';
 
     return env;
@@ -521,9 +521,9 @@ async function executeSplitScenario() {
     // Only the listen addresses: every console url keeps its default, which
     // is publicUrl plus the segment its bundle is built for.
     const consoleEnv = {
-        AUTH_CONSOLE_PORT: `${CONSOLE_PORTS.auth}`,
-        ADMIN_CONSOLE_PORT: `${CONSOLE_PORTS.admin}`,
-        ACCOUNT_CONSOLE_PORT: `${CONSOLE_PORTS.account}`,
+        AUTH_CONSOLE_PORT: String(CONSOLE_PORTS.auth),
+        ADMIN_CONSOLE_PORT: String(CONSOLE_PORTS.admin),
+        ACCOUNT_CONSOLE_PORT: String(CONSOLE_PORTS.account),
     };
 
     const api = spawn(process.execPath, [cliEntry, 'core', configArg], {

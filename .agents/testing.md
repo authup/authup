@@ -24,7 +24,16 @@
   file. The MySQL/Postgres runs have no per-worker copy (one shared server
   database), so `test/vitest.config.ts` turns `fileParallelism` off for
   them instead; expect those runs to take several times the sqlite
-  wall-clock.
+  wall-clock. Those runs also raise `testTimeout` to 30s: a heavy spec (the
+  full provisioning sync) sits just under vitest's 5s default there and tips
+  over on a loaded CI runner, so an unchanged test starts failing on a
+  dependency bump alone. The sqlite run keeps the 5s default, which is what
+  keeps it an honest signal about a test that got genuinely slow. It raises
+  `testTimeout` only: `hookTimeout` stays at vitest's default, and the one
+  spec whose hooks outgrew it says so itself (`federation-e2e.spec.ts`'s
+  `TWO_INSTANCE_HOOK_TIMEOUT`). A hook that starts flaking on the
+  shared-server runs belongs in that same per-spec form until there are
+  enough of them to justify a second config-level knob.
 - **A second application in one spec (server-core)**: a spec that boots two
   instances (`federation-e2e.spec.ts`, one authup brokering a login to
   another) gives the second one

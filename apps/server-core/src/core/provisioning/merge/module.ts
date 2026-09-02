@@ -99,10 +99,10 @@ function mergeProvisioningRecord(
     options: MergeProvisioningOptions = {},
 ): Record<string, unknown> {
     const output : Record<string, unknown> = { ...target };
-    for (const key of Object.keys(source)) {
+    for (const [key, value] of Object.entries(source)) {
         output[key] = key in target ?
-            mergeProvisioningValue(target[key], source[key], options) :
-            source[key];
+            mergeProvisioningValue(target[key], value, options) :
+            value;
     }
     return output;
 }

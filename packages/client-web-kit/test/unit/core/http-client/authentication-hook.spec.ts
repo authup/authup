@@ -72,10 +72,7 @@ describe('core/http-client/authentication-hook', () => {
     });
 
     it('drops a refresh whose source token was replaced mid-flight', async () => {
-        let release : (() => void) | undefined;
-        const gate = new Promise<void>((resolve) => {
-            release = resolve;
-        });
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         const {
             store, 
@@ -105,7 +102,7 @@ describe('core/http-client/authentication-hook', () => {
         // the refresh grant was in flight — its response must NOT be applied
         // (it would overwrite the new session's tokens with the old one's)
         store.setRefreshToken('rt-new');
-        release!();
+        release();
 
         await refresh;
 
@@ -128,10 +125,7 @@ describe('core/http-client/authentication-hook', () => {
     });
 
     it('drops a refresh that finishes after a logout tore the session down', async () => {
-        let release : (() => void) | undefined;
-        const gate = new Promise<void>((resolve) => {
-            release = resolve;
-        });
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         const {
             store, 
@@ -158,7 +152,7 @@ describe('core/http-client/authentication-hook', () => {
         const refresh = hook.refresh();
 
         await store.logout();
-        release!();
+        release();
 
         await refresh;
 

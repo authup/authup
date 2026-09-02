@@ -95,7 +95,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 // resource SCALAR — which has no row-column counterpart, so parity holds
                 // for realistic row-shaped data (see the exactness caveat above).
                 const terms : ICondition[] = [];
-                if (scope !== RealmScope.NONE && realmId !== null) {
+                if (realmId !== null && scope !== RealmScope.NONE) {
                     terms.push(eq(field, realmId));
                 }
                 if (scope === RealmScope.OWN_OR_NULL) {
@@ -276,11 +276,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             const attributeValue = attributes[key];
 
             if (
-                attributeValue === null &&
-                policy.attributeNullMatchAll
-            ) {
-                outcome = true;
-            } else if (
+                (attributeValue === null && policy.attributeNullMatchAll) ||
                 attributeValue === identity.realmId ||
                 attributeValue === identity.realmName
             ) {

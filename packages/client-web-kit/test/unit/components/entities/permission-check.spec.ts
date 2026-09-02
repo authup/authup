@@ -73,10 +73,7 @@ describe('components/entities/permission-check', () => {
     });
 
     it('should fail closed while a re-evaluation is pending', async () => {
-        let release!: () => void;
-        const gate = new Promise<void>((resolve) => {
-            release = resolve;
-        });
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         vi.spyOn(PermissionEvaluator.prototype, 'preEvaluateOneOf')
             .mockImplementation(async (ctx) => {

@@ -122,7 +122,7 @@ export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
     input: unknown,
     options: DecodeQueryOptions<RECORD>,
 ) : Promise<Query> {
-    const normalized = isObject(input) || typeof input === 'string' ? input : {};
+    const normalized = typeof input === 'string' || isObject(input) ? input : {};
 
     const parsed = await queryCodec.decodeAsync(normalized, {
         // Schema<RECORD> is invariant; the codec's non-generic options

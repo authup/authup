@@ -24,7 +24,9 @@ export class CompositeProvisioningSource implements IProvisioningSource {
             (this.sources).map((source) => source.load(container)),
         );
 
-        sourcesData.map((sourceData) => this.merge(output, sourceData));
+        for (const sourceData of sourcesData) {
+            this.merge(output, sourceData);
+        }
 
         return output;
     }

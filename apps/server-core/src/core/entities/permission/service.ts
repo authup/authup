@@ -391,7 +391,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const isBuiltIn = (Object.values(PermissionName) as string[]).includes(permission.name);
-        if (!permission.realmId && !isBuiltIn) {
+        if (!isBuiltIn && !permission.realmId) {
             return;
         }
 

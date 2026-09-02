@@ -87,7 +87,7 @@ export class ListHandlers<T extends ObjectLiteral> {
                 if (index !== -1) {
                     const [output] = this.data.value.splice(index, 1);
 
-                    if (this.options.deleted && output) {
+                    if (output && this.options.deleted) {
                         this.options.deleted(output);
                     }
                 }

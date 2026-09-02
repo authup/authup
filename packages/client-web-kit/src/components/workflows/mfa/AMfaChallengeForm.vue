@@ -172,7 +172,7 @@ export default defineComponent({
             // the browser API's option shape at this single boundary.
             const optionsJSON = (props.challenge?.webauthn ?? null) as
                 unknown as PublicKeyCredentialRequestOptionsJSON | null;
-            if (busy.value || !optionsJSON) {
+            if (!optionsJSON || busy.value) {
                 return;
             }
 

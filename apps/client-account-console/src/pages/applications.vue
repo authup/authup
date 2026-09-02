@@ -94,7 +94,7 @@ export default defineComponent({
                 }
             });
 
-            return [...groups.values()];
+            return Array.from(groups.values());
         };
 
         const httpClient = injectHTTPClient();

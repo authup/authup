@@ -488,10 +488,7 @@ describe('core/store/lifecycle', () => {
     });
 
     it('keeps a logout final when it interleaves with the store refresh round-trip', async () => {
-        let release : (() => void) | undefined;
-        const gate = new Promise<void>((resolve) => {
-            release = resolve;
-        });
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         const { store, httpClient } = buildStore({
             'POST /token': async () => {
@@ -513,7 +510,7 @@ describe('core/store/lifecycle', () => {
         const resolving = store.resolve();
 
         await store.logout();
-        release!();
+        release();
 
         await expect(resolving).rejects.toThrow(
             'The session was torn down before the token could be refreshed.',

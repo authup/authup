@@ -70,7 +70,7 @@ export default defineComponent({
         });
 
         const navigateToRedirect = (): boolean => {
-            if (props.redirect && typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && props.redirect) {
                 window.location.href = props.redirect;
                 return true;
             }

@@ -38,7 +38,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     }
 
     getAll(): UserAuthenticator[] {
-        return [...this.entities.values()];
+        return this.entities.values().toArray();
     }
 
     create(data: Partial<UserAuthenticator>): UserAuthenticator {

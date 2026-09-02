@@ -50,7 +50,7 @@ export class FakeSessionRepository implements ISessionRepository {
             return null;
         }
 
-        return [...this.sessions.values()]
+        return this.sessions.values()
             .find((session) => session.secret === secret) ?? null;
     }
 
@@ -65,7 +65,7 @@ export class FakeSessionRepository implements ISessionRepository {
         query: IQuery,
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
-        let data = [...this.sessions.values()];
+        let data = this.sessions.values().toArray();
         if (options.owner) {
             data = data.filter((s) => this.ownedBy(s, options.owner!));
         }
@@ -81,11 +81,11 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     async findAllByOwner(owner: SessionOwner): Promise<Session[]> {
-        return [...this.sessions.values()].filter((s) => this.ownedBy(s, owner));
+        return this.sessions.values().toArray().filter((s) => this.ownedBy(s, owner));
     }
 
     async findAllByQuery(query: IQuery): Promise<Session[]> {
-        return [...this.sessions.values()]
+        return this.sessions.values().toArray()
             .filter((session) => this.matchesCondition(session, query.filters));
     }
 
@@ -129,7 +129,7 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     async deleteExpired(before: string): Promise<number> {
-        const expired = [...this.sessions.values()]
+        const expired = this.sessions.values().toArray()
             .filter((session) => session.expiresAt < before);
 
         expired.forEach((session) => this.sessions.delete(session.id));

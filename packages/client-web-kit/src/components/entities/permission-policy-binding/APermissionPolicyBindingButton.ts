@@ -104,7 +104,7 @@ export const APermissionPolicyBindingButton = defineComponent({
             const entityId = props.entity?.id;
             const api = pickEntityAPI(client, props.entityType);
 
-            if (!api?.update || !entityId) return;
+            if (!entityId || !api?.update) return;
 
             busy.value = true;
             try {
@@ -132,7 +132,7 @@ export const APermissionPolicyBindingButton = defineComponent({
             const entityId = props.entity?.id;
             const api = pickEntityAPI(client, props.entityType);
 
-            if (!api?.update || !entityId) return;
+            if (!entityId || !api?.update) return;
 
             busy.value = true;
             try {

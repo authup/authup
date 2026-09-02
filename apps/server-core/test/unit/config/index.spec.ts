@@ -368,7 +368,7 @@ describe('src/config/*.ts', () => {
             await expect(normalizeConfig({ secretsEncryptionKey: Buffer.alloc(16, 1).toString('base64') })).rejects.toThrow(/32 bytes/);
 
             // not base64 at all
-            await expect(normalizeConfig({ secretsEncryptionKey: '   ' })).rejects.toThrow(/secretsEncryptionKey/);
+            await expect(normalizeConfig({ secretsEncryptionKey: ' '.repeat(3) })).rejects.toThrow(/secretsEncryptionKey/);
         });
 
         it('should accept a valid 32-byte secretsEncryptionKey', async () => {

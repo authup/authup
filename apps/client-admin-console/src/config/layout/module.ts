@@ -86,17 +86,17 @@ export class Navigation {
             }
 
             if (
-                typeof item.meta.requireLoggedIn !== 'undefined' &&
-                    item.meta.requireLoggedIn &&
-                    !authenticated
+                !authenticated &&
+                    typeof item.meta.requireLoggedIn !== 'undefined' &&
+                    item.meta.requireLoggedIn
             ) {
                 return undefined;
             }
 
             if (
-                typeof item.meta.requireLoggedOut !== 'undefined' &&
-                    item.meta.requireLoggedOut &&
-                    authenticated
+                authenticated &&
+                    typeof item.meta.requireLoggedOut !== 'undefined' &&
+                    item.meta.requireLoggedOut
             ) {
                 return undefined;
             }
