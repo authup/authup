@@ -279,6 +279,15 @@ a full regeneration does produce a correct single-copy tree, but it rewrote
 reviewable inside a dependency PR. The targeted splice leaves a lock diff that
 only removes the duplicated subtrees.
 
+**Both overrides must stay EXACT versions, and a caret is not an improvement** —
+which is worth stating because relaxing the pin is the obvious way to stop
+having to realign it. It was measured: with `^3.5.42` / `^5.3.0` npm re-created
+the five nested `vue-router` copies the exact pin had just collapsed. An exact
+pin rewrites every spec to one identical string, which npm dedupes to a single
+node; a range leaves the specs as ranges and npm is free to satisfy them
+per-consumer. The manual realignment on each bump is the price of the single
+copy, not an oversight.
+
 ## Interfaces & Types
 
 - **Every interface is prefixed with `I`**: `IEntityAPI`, `IClient`, `IRealmAPI`, `IEntityRepository`, `IDomainEventHandler`.
