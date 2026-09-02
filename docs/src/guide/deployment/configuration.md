@@ -36,7 +36,7 @@ The extensions discovered are `yml`, `yaml`, `json`, `js`, `mjs`, `cjs`, `ts` an
 cannot be expressed in YAML: use the `js`/`ts` variant for those.
 
 Deployment-wide options sit at the top level, and everything a single service reads
-sits in that service's own section. `server/core` reads `server.core`:
+sits in that service's own section. `server/core` reads `core`:
 
 ```yaml
 # yaml-language-server: $schema=https://authup.org/schema/config.json
@@ -56,22 +56,21 @@ trustedOrigins:
 theme:
   directoryPath: /etc/authup/theme
 
-server:
-  core:
-    port: 3000
-    host: 0.0.0.0
-    registrationEnabled: true
-  adminConsole:
-    enabled: true
-  accountConsole:
-    enabled: true
+core:
+  port: 3000
+  host: 0.0.0.0
+  registrationEnabled: true
+adminConsole:
+  enabled: true
+accountConsole:
+  enabled: true
 ```
 
 The first line is a comment for your editor. A YAML language server resolves the
 schema from it and gives you completion and validation while you type; the same
 document is printed by `authup config schema`.
 
-Every option not documented as living elsewhere belongs under `server.core`. The
+Every option not documented as living elsewhere belongs under `core`. The
 [server/core page](./configuration-server-core) shows each option at its place.
 
 A `client.admin-console` section is no longer read: the admin console is served by

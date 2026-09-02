@@ -26,8 +26,8 @@ export function toPublicHost(input: string) : string {
  * `publicUrl` is the issuer: it signs into every token, every discovery
  * document, every mail deep link and every cookie scope. It has to mean ONE
  * thing to every service reading the same `authup.yml`, which is why the
- * derivation reads `server.core.host` and `server.core.port` -- document
- * keys, not facts about whichever process happens to be asking. A console
+ * derivation reads `core.host` and `core.port` -- document keys, not facts
+ * about whichever process happens to be asking. A console
  * therefore computes the identical value with no server-core anywhere, which
  * is what makes a console able to stand alone: the alternative was to refuse
  * to start without an explicit PUBLIC_URL, and then the same file would mean
@@ -47,7 +47,7 @@ export function derivePublicUrl(
     }
 
     const listenHost = host || '0.0.0.0';
-    // agrees with `server.core.port`'s declared default; a caller that built
+    // agrees with `core.port`'s declared default; a caller that built
     // defaults always supplies one, so this covers a caller that did not
     const listenPort = port ?? 3000;
 

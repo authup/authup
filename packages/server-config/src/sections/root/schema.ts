@@ -74,8 +74,8 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', Environm
         // server-core anywhere. That is what lets a console stand alone.
         resolve: ({ value, get }) => derivePublicUrl(
             value as string | undefined,
-            get('server.core.host') as string,
-            get('server.core.port') as number,
+            get('core.host') as string,
+            get('core.port') as number,
             get('env') as string,
         ),
         env: EnvironmentVariable.PUBLIC_URL,

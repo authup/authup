@@ -40,7 +40,7 @@ const middlewareType = z.boolean().or(z.record(z.string(), z.any()));
 // ---------------------------------------------------------------
 
 /**
- * The `server.core.*` section: the API and IdP service's own keys.
+ * The `core.*` section: the API and IdP service's own keys.
  *
  * An entry declares no location of its own derives
  * it from the section and the key name, so a key cannot end up at a path this
@@ -109,7 +109,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             // configured; without one the listener would advertise an address
             // no evidence can ever arrive on.
             resolve: ({ value, get }) => {
-                if (value && get('server.core.certificateSource') === 'disabled') {
+                if (value && get('core.certificateSource') === 'disabled') {
                     throw new Error('mtlsPublicUrl requires certificateSource to be enabled.');
                 }
 
@@ -292,7 +292,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             // event log. Declared here rather than in a normalization step,
             // because the rule belongs to the key it constrains.
             resolve: ({ value, get }) => {
-                if (value && !get('server.core.eventLogEnabled')) {
+                if (value && !get('core.eventLogEnabled')) {
                     throw new Error('loginAttemptThrottleEnabled requires eventLogEnabled.');
                 }
 
@@ -347,7 +347,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             env: EnvironmentVariable.MFA_REQUIRED,
             readEnv: readEnvBoolStrict,
             resolve: ({ value, get }) => {
-                if (value && !get('server.core.mfaEnabled')) {
+                if (value && !get('core.mfaEnabled')) {
                     throw new Error('mfaRequired requires mfaEnabled.');
                 }
 
@@ -442,5 +442,5 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             readEnv: readEnvBool,
         },
     },
-    { pathPrefix: 'server.core' },
+    { pathPrefix: 'core' },
 );

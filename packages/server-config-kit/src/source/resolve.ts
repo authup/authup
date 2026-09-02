@@ -22,7 +22,7 @@ type Slot = {
  * A registry is shaped like the config while the document is addressed by
  * path, so the index is what lets one key reach another regardless of how the
  * reading service selected it: server-core spreads a section flat, a console
- * nests it, and `server.core.port` means the same location to both.
+ * nests it, and `core.port` means the same location to both.
  */
 function indexByPath<T>(
     schema: SchemaInput<T>,

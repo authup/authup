@@ -4,12 +4,11 @@ db:
     type: mysql
     database: core
 
-server:
-    core:
-        port: 4711
-        host: 127.0.0.1
-    adminConsole:
-        enabled: false
-        url: https://console.example.com/admin
-    accountConsole:
-        enabled: false
+core:
+    port: 4711
+    host: 127.0.0.1
+adminConsole:
+    enabled: false
+    url: https://console.example.com/admin
+accountConsole:
+    enabled: false

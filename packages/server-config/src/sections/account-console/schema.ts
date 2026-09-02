@@ -44,7 +44,7 @@ export const ACCOUNT_CONSOLE_SCHEMA = defineSchema<
                 // Another PATH is what this key is for; another DOMAIN
                 // half-works rather than failing, so it fails here, for every
                 // reader, rather than in one service's boot sequence.
-                assertConsoleOrigin('server.accountConsole', url, publicUrl);
+                assertConsoleOrigin('accountConsole', url, publicUrl);
 
                 return url;
             },
@@ -86,5 +86,5 @@ export const ACCOUNT_CONSOLE_SCHEMA = defineSchema<
             resolve: ({ value, get }) => (value as string) || get('host') as string,
         },
     },
-    { pathPrefix: 'server.accountConsole' },
+    { pathPrefix: 'accountConsole' },
 );

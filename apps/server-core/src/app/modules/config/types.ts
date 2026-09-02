@@ -16,7 +16,7 @@ import type {
 
 /**
  * The keys THIS service reads out of `authup.yml`: the deployment-wide
- * section, its own `server.core` section, and the four console keys it needs
+ * section, its own `core` section, and the four console keys it needs
  * to answer a request.
  *
  * It is a SELECTION, never a declaration. Every key is declared once in

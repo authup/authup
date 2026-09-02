@@ -28,7 +28,7 @@ export type ToObjectLiteral<T extends ObjectLiteral> = {
  *
  * The type NESTS one key per qualified section, mirroring the file it
  * describes: a section declares `host` and the entry's path says
- * `server.adminConsole.host`, so the three consoles keep one vocabulary
+ * `adminConsole.host`, so the three consoles keep one vocabulary
  * without colliding on the shared names. The predecessor flattened them
  * behind a derived qualifier (`adminConsoleHost`) to keep precedence a
  * single spread; precedence is `mergeSchemaData` now, which layers the

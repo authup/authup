@@ -42,7 +42,7 @@ function buildProperty<T, K extends keyof T>(entry: SchemaEntryInput<T, K>) : Re
  *
  * The document is described by PATH, and every entry carries an absolute one,
  * so a section contributes to the same tree its parent does. Building a
- * section into a property of its own instead would place `server.core.port`
+ * section into a property of its own instead would place `core.port`
  * under a second `core` property and describe a file nobody writes.
  */
 function collectSchemaEntries<T>(

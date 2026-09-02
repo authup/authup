@@ -134,10 +134,9 @@ function writeServerConfig(directory) {
     // of a served console shell is what proves the file was found and applied.
     fs.writeFileSync(path.join(directory, 'authup.yml'), [
         `publicUrl: ${PUBLIC_URL}`,
-        'server:',
-        '    core:',
-        `        port: ${CONFIG_FILE_PORT}`,
-        '        host: 127.0.0.1',
+        'core:',
+        `    port: ${CONFIG_FILE_PORT}`,
+        '    host: 127.0.0.1',
     ].join('\n'));
 }
 

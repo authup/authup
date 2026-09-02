@@ -65,7 +65,7 @@ service on a derived issuer and an empty database while the rest of the file
 applied.
 
 Keys moved as well. Everything a service reads lives in that service's own
-section (`server.core` for `server/core`), and the deployment-wide options moved
+section (`core` for `server/core`), and the deployment-wide options moved
 up to the top level:
 
 | Was | Is |
@@ -77,14 +77,14 @@ up to the top level:
 | `server.core.trustedOrigins` | `trustedOrigins` |
 | `server.core.themeDirectoryPath` | `theme.directoryPath` |
 | `server.core.themeFragmentsEnabled` | `theme.fragmentsEnabled` |
-| `server.core.adminConsoleEnabled` | `server.adminConsole.enabled` |
-| `server.core.adminConsolePath` | `server.adminConsole.path` |
-| `server.core.accountConsoleEnabled` | `server.accountConsole.enabled` |
-| `server.core.accountConsolePath` | `server.accountConsole.path` |
-| `server.core.authConsolePath` | `server.authConsole.path` |
+| `server.core.adminConsoleEnabled` | `adminConsole.enabled` |
+| `server.core.adminConsolePath` | `adminConsole.path` |
+| `server.core.accountConsoleEnabled` | `accountConsole.enabled` |
+| `server.core.accountConsolePath` | `accountConsole.path` |
+| `server.core.authConsolePath` | `authConsole.path` |
 
 `env` and `rootPath` are top-level too. Every other option keeps its name under
-`server.core`.
+`core`.
 
 The shared-section walk is gone with the file family. `db`, `redis` and `smtp`
 used to be looked up at the top level, under `server.*` and under `server.core.*`,
@@ -157,17 +157,17 @@ and a teardown outlasting 10 seconds is forced.
 
 ### The default HTTP port is 3000
 
-`server.core.port` defaults to `3000` instead of `3001`. This aligns the
+`core.port` defaults to `3000` instead of `3001`. This aligns the
 default with what the container has always done: every published compose file
 maps `3001:3000`, so the process inside has listened on 3000 all along and
 only the host-side port was 3001.
 
 **No action** for a Docker deployment, whose port mapping is unchanged, or for
-any deployment that names `server.core.port` (or `PORT`) explicitly.
+any deployment that names `core.port` (or `PORT`) explicitly.
 
 **Action required** for a bare-metal deployment that relied on the default and
 hard-codes `3001` anywhere a client reaches: a reverse proxy upstream, a
-`publicUrl`, a health check. Either set `server.core.port: 3001` to keep the
+`publicUrl`, a health check. Either set `core.port: 3001` to keep the
 old address, or move those references to 3000.
 
 The admin console's development server moves from `:3000` to `:3010` so it no
@@ -178,7 +178,7 @@ follows it. That affects `npm run dev` in this repository only.
 
 Every value a console service used to be handed by the CLI is now computed
 from the document by the console itself: the issuer (`publicUrl`, derived from
-`server.core.host` and `server.core.port` when the document names none), the
+`core.host` and `core.port` when the document names none), the
 canonicalized `trustedOrigins`, its own url, and every path resolved against
 `rootPath`. One `authup.yml` therefore means the same thing whether a console
 is started by `authup start`, by `authup console`, or by its own

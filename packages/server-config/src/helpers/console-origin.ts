@@ -7,7 +7,7 @@
 
 /**
  * A console must be published on the deployment's own ORIGIN. Another PATH is
- * fully supported and is what `server.<name>Console.url` is for; another
+ * fully supported and is what `<name>Console.url` is for; another
  * domain half-works rather than failing on its own, so it fails here.
  *
  * The static consoles authenticate with a `SameSite=Strict` credential the

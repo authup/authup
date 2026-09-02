@@ -125,9 +125,8 @@ reads live in its own section, see [configuration](./configuration); environment
 variables override file values):
 
 ```yaml
-server:
-  core:
-    userAdminPassword: test-password
+core:
+  userAdminPassword: test-password
 ```
 
 In the following compose file example you can see that the

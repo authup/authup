@@ -68,7 +68,7 @@ Operators with their own self-service portal can turn the surface off:
 ACCOUNT_CONSOLE_ENABLED=false
 ```
 
-(`server.accountConsole.enabled` / `ACCOUNT_CONSOLE_ENABLED`, default `true`.) The routes then serve
+(`accountConsole.enabled` / `ACCOUNT_CONSOLE_ENABLED`, default `true`.) The routes then serve
 a localized "not enabled" notice instead of the surface, so stale links do
 not dead-end. The flag is also reported in the `features` block of the
 public status endpoint (`GET /`).

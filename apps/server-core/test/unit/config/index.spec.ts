@@ -452,7 +452,7 @@ describe('src/config/*.ts', () => {
         it('should resolve a file value through the fs read path', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4010\n',
+                'core:\n  port: 4010\n',
             );
 
             const config = await readConfig({ env: true, fs: { cwd: directory } });
@@ -463,7 +463,7 @@ describe('src/config/*.ts', () => {
         it('should let an env value win over the same key from file', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4010\n',
+                'core:\n  port: 4010\n',
             );
 
             process.env.PORT = '5055';
@@ -476,7 +476,7 @@ describe('src/config/*.ts', () => {
         it('should resolve an explicitly selected config file', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'deployment.yml'),
-                'server:\n  core:\n    port: 4020\n',
+                'core:\n  port: 4020\n',
             );
 
             const config = await readConfig({
@@ -514,7 +514,7 @@ describe('src/config/*.ts', () => {
 
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4090\n',
+                'core:\n  port: 4090\n',
             );
 
             expect((await inspectConfigFile({ cwd: directory })).files)
@@ -524,7 +524,7 @@ describe('src/config/*.ts', () => {
         it('should name the reason a configuration file could not be parsed', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n   port: 1\n  bad: [unclosed\n',
+                'core:\n  port: 1\nbad: [unclosed\n',
             );
 
             await expect(readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory })).rejects.toSatisfy(
@@ -549,11 +549,10 @@ describe('src/config/*.ts', () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
                 [
-                    'server:',
-                    '  core:',
-                    '    port: 4070',
-                    '    publicUrl: https://idp.example.com',
-                    '    typo: true',
+                    'core:',
+                    '  port: 4070',
+                    '  publicUrl: https://idp.example.com',
+                    '  typo: true',
                     'x-anchors:',
                     '  shared: 1',
                     '',
@@ -561,8 +560,8 @@ describe('src/config/*.ts', () => {
             );
 
             expect((await inspectConfigFile({ cwd: directory })).unknown).toEqual([
-                'server.core.publicUrl',
-                'server.core.typo',
+                'core.publicUrl',
+                'core.typo',
             ]);
         });
 
