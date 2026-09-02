@@ -10,7 +10,7 @@ import type { EventEmitter } from '@posva/event-emitter';
 import type { StoreDispatcherEventName } from './constants';
 
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
-type UserMinimal = Pick<User, 'id' | 'name' | 'displayName'>;
+type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.LOGGING_IN]: [],

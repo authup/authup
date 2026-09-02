@@ -31,8 +31,8 @@ export default defineComponent({
         const { realmId } = storeToRefs(store);
 
         // The store carries only the identity the token asserts (id, name,
-        // display name), so the page loads the record whose every column this
-        // form writes. It is the one surface that needs the whole user, and it
+        // display name, email), so the page loads the record whose every
+        // column this form writes. It is the one surface that needs the whole user, and it
         // reads `/userinfo` rather than `/users/@me`: `email` is `select:false`,
         // so it is absent from the entity endpoint's default projection, and
         // the form would render an empty email box and submit a null over the

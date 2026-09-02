@@ -22,6 +22,7 @@ function buildStore() {
                 sub: TOKEN_SUBJECT,
                 sub_kind: 'user',
                 name: 'admin',
+                email: 'admin@example.com',
                 session_id: 'sess-1',
                 realm_id: 'realm-1',
                 realm_name: 'master',
@@ -87,6 +88,9 @@ describe('core/store/revalidate', () => {
         expect(store.user.value).toMatchObject({
             id: TOKEN_SUBJECT,
             name: 'admin',
+            // the address a consumer keys a gravatar on: it is on the wire,
+            // and dropping it left no way to derive the hash
+            email: 'admin@example.com',
         });
     });
 

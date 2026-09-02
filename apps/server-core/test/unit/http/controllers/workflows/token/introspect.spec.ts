@@ -11,7 +11,12 @@ import {
     expect,
     it,
 } from 'vitest';
-import { CLIENT_ADMIN_CONSOLE_NAME, PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
+import {
+    CLIENT_ADMIN_CONSOLE_NAME,
+    PermissionName,
+    REALM_MASTER_NAME,
+    buildUserFakeEmail,
+} from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
@@ -102,6 +107,27 @@ describe('token-introspect', () => {
         expect(introspection.active).toBe(true);
         expect(Array.isArray(introspection.permissions)).toBe(true);
         expect(introspection.permissions!.length).toBeGreaterThan(0);
+    });
+
+    // The kit's `store.user` is built from these claims and nothing else, so
+    // a consumer keys its gravatar on the address this response carries
+    // (issue #3506). Nothing pinned it: the claim is mapped from a
+    // `select: false` column that only survives because the identity
+    // repository re-selects it, and both halves are silently droppable.
+    it('should carry the subject email claim for a live token', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
+        expect(introspection.active).toBe(true);
+        expect(introspection.email).toEqual(buildUserFakeEmail('admin'));
     });
 
     // Without the controller deriving `active` from `exp`, this is the
