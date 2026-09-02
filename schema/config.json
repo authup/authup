@@ -39,13 +39,9 @@
         "redis": {
             "anyOf": [
                 {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "boolean"
-                        }
+                    "type": [
+                        "string",
+                        "boolean"
                     ]
                 },
                 {}
@@ -57,13 +53,9 @@
         "smtp": {
             "anyOf": [
                 {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "boolean"
-                        }
+                    "type": [
+                        "string",
+                        "boolean"
                     ]
                 },
                 {}
