@@ -36,7 +36,7 @@ The extensions discovered are `yml`, `yaml`, `json`, `js`, `mjs`, `cjs`, `ts` an
 cannot be expressed in YAML: use the `js`/`ts` variant for those.
 
 Deployment-wide options sit at the top level, and everything a single service reads
-sits in that service's own section. `server/core` reads `core`; each console
+sits in that service's own section. server-core reads `core`; each console
 service reads `authConsole`, `adminConsole` or `accountConsole`,
 plus the top level and `theme`. One document configures all of them, whether they run
 in one process (`authup start`) or in several:
@@ -74,7 +74,7 @@ schema from it and gives you completion and validation while you type; the same
 document is printed by `authup config schema`.
 
 Every option not documented as living elsewhere belongs under `core`. The
-[server/core page](./configuration-server-core) shows each option at its place.
+[server-core page](./configuration-server-core) shows each option at its place.
 
 A `client.admin-console` section is no longer read. The admin console is served by
 `@authup/server-admin-console` and configured under `adminConsole`; see
@@ -121,6 +121,6 @@ line above names.
 
 ## Component-Wise
 
-- [server/core](./configuration-server-core) This page describes the configuration of the main backend service.
+- [server-core](./configuration-server-core) This page describes the configuration of the main backend service.
 - [Admin Console](./configuration-client-admin-console) This page describes the administration console service, published at `/console/admin`, and how to host its bundle standalone.
 - [Account Console](./account-console) This page describes the self-service console service, published at `/console/account`.

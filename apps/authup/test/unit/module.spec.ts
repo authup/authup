@@ -5,19 +5,37 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseArgs } from 'citty';
-import { describe, expect, it } from 'vitest';
+import type * as ServerCore from '@authup/server-core';
+import type { ArgsDef, CommandDef } from 'citty';
+import { parseArgs, runCommand } from 'citty';
+import {
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
+import type * as ConsoleModule from '../../src/console/index.ts';
 import { createCLIEntryPointCommand } from '../../src/module.ts';
 
+// The refusal cases below must fail on a sentinel, never by booting a
+// server inside the test worker, should one of the hand-written refusals
+// in `start` regress. Reading the configuration is the first step of every
+// boot path, so it is what a missed refusal would reach next.
+vi.mock('@authup/server-core', async (importOriginal) => ({
+    ...await importOriginal<typeof ServerCore>(),
+    readConfig: () => {
+        throw new Error('readConfig must not be reached from this spec.');
+    },
+}));
+
+vi.mock('../../src/console/index.ts', async (importOriginal) => ({
+    ...await importOriginal<typeof ConsoleModule>(),
+    readConsoleConfigs: () => {
+        throw new Error('readConsoleConfigs must not be reached from this spec.');
+    },
+}));
+
 type EntryPointCommand = Awaited<ReturnType<typeof createCLIEntryPointCommand>>;
-
-function resolveArgsDef(command: EntryPointCommand) {
-    if (!command.args || typeof command.args === 'function' || command.args instanceof Promise) {
-        throw new Error('The entry point declares its args statically.');
-    }
-
-    return command.args;
-}
 
 function createSetupContext(command: EntryPointCommand, positionals: string[]) {
     return {
@@ -26,45 +44,92 @@ function createSetupContext(command: EntryPointCommand, positionals: string[]) {
             _: positionals,
             configDirectory: '',
             configFile: '',
+            worker: false,
         },
         cmd: command,
     };
 }
 
+async function resolveSubCommand(command: EntryPointCommand, name: string) : Promise<CommandDef> {
+    const subCommands = await (typeof command.subCommands === 'function' ?
+        command.subCommands() :
+        command.subCommands);
+
+    const subCommand = subCommands?.[name];
+    if (!subCommand) {
+        throw new Error(`The entry point declares no "${name}" command.`);
+    }
+
+    return typeof subCommand === 'function' ? subCommand() : subCommand;
+}
+
+async function resolveArgsDef(command: CommandDef) : Promise<ArgsDef> {
+    const args = await (typeof command.args === 'function' ? command.args() : command.args);
+
+    return args ?? {};
+}
+
 describe('createCLIEntryPointCommand', () => {
-    it('carries the authup meta and every role command', async () => {
+    it('carries the authup meta and every command', async () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['config', 'console', 'core', 'dev', 'healthcheck', 'migration', 'start']);
+            .toEqual(['config', 'dev', 'healthcheck', 'migration', 'start']);
     });
 
-    it('does not read --worker as a stray positional', async () => {
+    it('refuses a stray positional on dev but leaves the roles and the migration operation alone', async () => {
         const command = await createCLIEntryPointCommand();
 
-        for (const rawArgs of [['start', '--worker'], ['core', '--worker']]) {
-            const args = parseArgs<ReturnType<typeof resolveArgsDef>>(rawArgs, resolveArgsDef(command));
-            expect(args._).toEqual([rawArgs[0]]);
-            expect(() => command.setup?.({
-                rawArgs, 
-                args, 
-                cmd: command, 
-            })).not.toThrow();
+        expect(() => command.setup?.(createSetupContext(command, ['dev', 'server.core'])))
+            .toThrow(/Unexpected argument/);
+
+        for (const positionals of [
+            ['start', 'core'],
+            ['start', 'worker'],
+            ['start', 'console', 'admin'],
+            ['migration', 'run'],
+        ]) {
+            expect(() => command.setup?.(createSetupContext(command, positionals)))
+                .not.toThrow();
         }
     });
 
-    it('refuses stray positionals on the listener roles but not on migration or console', async () => {
-        const command = await createCLIEntryPointCommand();
+    describe('start', () => {
+        it('declares the config flags itself, so a flag after the role is not read as a positional', async () => {
+            const command = await createCLIEntryPointCommand();
+            const start = await resolveSubCommand(command, 'start');
 
-        expect(() => command.setup?.(createSetupContext(command, ['start', 'server.core'])))
-            .toThrow(/Unexpected argument/);
-        expect(() => command.setup?.(createSetupContext(command, ['core', 'server.core'])))
-            .toThrow(/Unexpected argument/);
-        expect(() => command.setup?.(createSetupContext(command, ['dev', 'server.core'])))
-            .toThrow(/Unexpected argument/);
-        expect(() => command.setup?.(createSetupContext(command, ['migration', 'run'])))
-            .not.toThrow();
-        expect(() => command.setup?.(createSetupContext(command, ['console', 'admin'])))
-            .not.toThrow();
+            const args = parseArgs(['worker', '--configDirectory', '/x'], await resolveArgsDef(start));
+
+            expect(args._).toEqual(['worker']);
+            expect(args.configDirectory).toEqual('/x');
+        });
+
+        it('renders the role and the console name as choices', async () => {
+            const command = await createCLIEntryPointCommand();
+            const args = await resolveArgsDef(await resolveSubCommand(command, 'start'));
+
+            expect(args.role).toMatchObject({ type: 'positional', valueHint: 'core|worker|console' });
+            expect(args.name).toMatchObject({ type: 'positional', valueHint: 'admin|account|auth' });
+        });
+
+        // Every case below is refused before any configuration is read and
+        // before anything listens; the sentinels at the top of the file are
+        // what a regressed refusal hits instead of a listener. A bare
+        // `start`, `start core`, `start worker` or `start console` boots a
+        // real server and must never appear in this file.
+        it.each([
+            [['start', 'server.core'], /Unknown role/],
+            [['start', 'core', 'admin'], /only the console role/],
+            [['start', 'console', 'bogus'], /Unknown console/],
+            [['start', 'console', 'admin', 'extra'], /Unexpected argument/],
+            [['start', '--worker'], /retired/],
+            [['--worker', 'start'], /retired/],
+            [['--worker', 'start', 'core'], /retired/],
+        ])('refuses %j', async (rawArgs, message) => {
+            const command = await createCLIEntryPointCommand();
+
+            await expect(runCommand(command, { rawArgs })).rejects.toThrow(message);
+        });
     });
 });

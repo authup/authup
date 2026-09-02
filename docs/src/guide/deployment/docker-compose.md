@@ -20,11 +20,14 @@ examples show how to configure authup using the options described in the [config
 paste and modify the example you want to use into a `docker-compose.yml` file.
 
 The following example shows a sensible default configuration for getting started with Authup.
-This starts the one container a deployment needs: `server/core start` runs the API
+This starts the one container a deployment needs: `start` runs the API
 and every console on one listener (the auth console at `/console/auth`, the admin
 console at `/console/admin`, the account console at `/console/account`). To run the
 consoles as their own service instead, see
-[Console Replicas](./console-replicas.md).
+[Console Replicas](./console-replicas.md). The `command` is the CLI's own
+argument list; `start` is also the image's default command, and the former
+`server/core` prefix is deprecated (accepted with a notice on stderr for the
+rest of the 1.0.0-beta line, removed in v1.0.0).
 
 ```yaml
 version: '3.8'
@@ -47,7 +50,7 @@ services:
         - "3001:3000"
       environment:
         - PUBLIC_URL=http://localhost:3001
-      command: server/core start
+      command: start
       networks:
           authup:
 
@@ -112,7 +115,7 @@ services:
     environment:
         - PUBLIC_URL=http://localhost:3001
         - USER_ADMIN_PASSWORD=test-password
-    command: server/core start
+    command: start
 ```
 
 
@@ -149,7 +152,7 @@ services:
       - "3001:3000"
     environment:
       - PUBLIC_URL=http://localhost:3001
-    command: server/core start
+    command: start
 
 ```
 
@@ -187,7 +190,7 @@ services:
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
-        command: server/core start
+        command: start
 
     postgres:
         image: postgres:14

@@ -66,7 +66,7 @@ $ docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
   -e PUBLIC_URL=http://localhost:3001 \
-  authup/authup:latest server/core start
+  authup/authup:latest start
 ```
 
 That service also serves the admin console at http://localhost:3001/console/admin and the account console at http://localhost:3001/console/account.

@@ -24,7 +24,7 @@ Of those, server-core itself reads only `enabled` and `url` per console: `enable
 gates the console's two sign-in routes, `url` is where it sends the browser. The rest
 of a console's section, and the whole `theme` section, are read by the **console
 service** that serves the console, so setting them on an API-only process
-(`authup core`) does nothing. See [Console Replicas](./console-replicas.md) for the
+(`authup start core`) does nothing. See [Console Replicas](./console-replicas.md) for the
 full per-console option list.
 
 ::: danger Security
@@ -131,7 +131,7 @@ export default {
          * there once a sign-in is complete; the console service rebases its
          * asset URLs and links onto it. Only the path may differ from
          * publicUrl, never the origin. `port` and `host` (the console's own
-         * listener, used by `authup console`) are documented in the
+         * listener, used by `authup start console`) are documented in the
          * Console Replicas guide.
          * env: ADMIN_CONSOLE_URL
          * default: '' (derived: <publicUrl>/console/admin)
@@ -238,7 +238,7 @@ export default {
              * Run the worker (the background cron sweeps) in this process.
              * Under the default mode the API runs it alongside itself; set
              * false on API replicas when a dedicated
-             * `authup start --worker` process runs it. Worker mode
+             * `authup start worker` process runs it. Worker mode
              * refuses to start when this is false. Set it false only once
              * such a process exists: with it false everywhere, nothing
              * sweeps. See the Worker guide.

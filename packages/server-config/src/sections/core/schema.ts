@@ -72,7 +72,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             enabled: {
                 type: booleanType,
                 default: true,
-                description: 'Run the worker (the background cron sweeps) in this process. Under the default mode the API runs it alongside itself; set false on API replicas when a dedicated `authup start --worker` process runs it. Worker mode refuses to start when this is false.',
+                description: 'Run the worker (the background cron sweeps) in this process. Under the default mode the API runs it alongside itself; set false on API replicas when a dedicated `authup start worker` process runs it. Worker mode refuses to start when this is false.',
                 env: EnvironmentVariable.WORKER_ENABLED,
                 readEnv: readEnvBoolStrict,
             },

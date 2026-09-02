@@ -63,7 +63,7 @@ The option is read by the **console services**, not by the API. In a
 single-container deployment (`authup start`) they are the same process and
 there is nothing to think about. In a [split deployment](./console-replicas.md)
 the directory has to be mounted into the console containers; on an API-only
-process (`authup core`) the option does nothing.
+process (`authup start core`) the option does nothing.
 
 ```bash
 docker run \

@@ -10,8 +10,8 @@ package) served by `@authup/server-admin-console` on the IdP origin at
 
 The bundle and the service that serves it are two packages. `authup start`
 runs that service in its own process alongside the API, on the API's listener,
-so a default deployment is still one container and one port; `authup console
-admin` runs it alone, on its own port, for a
+so a default deployment is still one container and one port; `authup start
+console admin` runs it alone, on its own port, for a
 [split deployment](./console-replicas.md). Earlier releases shipped the console
 as a Nuxt server with its own environment variables, all of which are gone; see
 [Upgrading](./upgrading.md) for what to remove from an existing setup.
@@ -61,7 +61,7 @@ adminConsole:
 surface off. Both sides read it: `authup start` then mounts no admin console at
 all, and the API's two sign-in routes (`/console/admin/login/start`,
 `/console/admin/callback`) answer `404` rather than minting a session for a
-console nothing serves. `authup console admin` refuses to start for the same
+console nothing serves. `authup start console admin` refuses to start for the same
 reason. The flag is also reported in the `features` block of the public status
 endpoint (`GET /`).
 
@@ -131,14 +131,15 @@ of the following is read any more, and none has a successor:
 | `NUXT_PUBLIC_PUBLIC_URL` | `ADMIN_CONSOLE_URL`, which defaults to `<publicUrl>/console/admin` and may change the path but not the origin. |
 | `NUXT_PUBLIC_COOKIE_DOMAIN` | The console is same-origin with the API, so there is no cookie domain to widen. |
 | `NUXT_PUBLIC_CLIENT_ID` | The client is `admin-console`. A fork injects `clientId` in `window.__AUTHUP__`. |
-| `NUXT_HOST`, `NUXT_PORT` | `ADMIN_CONSOLE_HOST` / `ADMIN_CONSOLE_PORT`, the listener `authup console` binds. |
+| `NUXT_HOST`, `NUXT_PORT` | `ADMIN_CONSOLE_HOST` / `ADMIN_CONSOLE_PORT`, the listener `authup start console` binds. |
 
 The plain build-time names `PUBLIC_URL`, `COOKIE_DOMAIN` and `CLIENT_ID` are
 gone with them. Note that `PUBLIC_URL` is unrelated to the console and stays a
-[`server/core` option](./configuration-server-core): it is the public URL of
+[server-core option](./configuration-server-core): it is the public URL of
 the server, and the console's own address derives from it.
 
 The `client.admin-console` section of the configuration file is no longer read
-either, and `authup start client.admin-console` is refused: `start` takes no
-positional argument. The command that does is `authup console [admin|account|auth]`,
-which serves a console rather than selecting a package.
+either, and `authup start client.admin-console` is refused as an unknown role:
+the one positional `start` takes names a role, and
+`authup start console [admin|account|auth]` serves a console rather than
+selecting a package.
