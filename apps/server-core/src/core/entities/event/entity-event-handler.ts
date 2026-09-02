@@ -105,7 +105,7 @@ export class EntityEventHandler implements IDomainEventHandler {
             // recursion guard — no event subscriber exists today (the
             // auth_events entity is deliberately subscriber-less), so this is
             // defense in depth against an audit-write feedback loop.
-            if (ctx.content.type === 'event') {
+            if (ctx.content.type === EntityType.EVENT) {
                 return;
             }
 
@@ -153,6 +153,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 requestUserAgent: requestContext?.requestUserAgent ?? null,
                 data,
                 retentionDays: this.options.retentionDays,
+                transaction: ctx.transaction,
             });
         } catch {
             // record() never throws, but the bridge itself must also never

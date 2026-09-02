@@ -27,7 +27,14 @@ export type DomainEventPublishContext<
      * redis/socket consumers — only in-process handlers (e.g. the audit
      * entity-event bridge) may read it.
      */
-    dataPrevious?: Record<string, any>
+    dataPrevious?: Record<string, any>,
+    /**
+     * The transaction the publishing write rides, as an opaque handle (this
+     * package knows no persistence): an in-process handler that persists
+     * joins it instead of taking a second connection (#3539). Wire handlers
+     * ignore it.
+     */
+    transaction?: unknown
 };
 
 export interface IDomainEventHandler {

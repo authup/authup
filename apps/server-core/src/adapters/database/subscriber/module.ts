@@ -14,6 +14,7 @@ import {
 import type { DomainEventDestinations, IDomainEventPublisher } from '@authup/server-kit';
 import type {
     DataSource,
+    EntityManager,
     EntitySubscriberInterface,
     InsertEvent,
     ObjectLiteral,
@@ -77,7 +78,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             await this.dropCacheKeys(event.connection, event.entity);
         }
 
-        await this.publish(EntityDefaultEventName.CREATED, event.entity);
+        await this.publish(EntityDefaultEventName.CREATED, event.entity, undefined, event.manager);
     }
 
     async afterUpdate(event: UpdateEvent<T>): Promise<any> {
@@ -87,7 +88,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
 
         await this.dropCacheKeys(event.connection, event.entity as T);
 
-        await this.publish(EntityDefaultEventName.UPDATED, event.entity as T, event.databaseEntity);
+        await this.publish(EntityDefaultEventName.UPDATED, event.entity as T, event.databaseEntity, event.manager);
     }
 
     async afterRemove(event: RemoveEvent<T>): Promise<any> {
@@ -101,7 +102,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
 
         await this.dropCacheKeys(event.connection, entity);
 
-        await this.publish(EntityDefaultEventName.DELETED, entity);
+        await this.publish(EntityDefaultEventName.DELETED, entity, undefined, event.manager);
     }
 
     protected async dropCacheKeys(connection: DataSource, data: T) : Promise<void> {
@@ -112,10 +113,15 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         await connection.queryResultCache.remove(this.ctx.cache.keys(data));
     }
 
+    /**
+     * `transaction` is the hook's `event.manager`: the after* hooks run inside
+     * the persist transaction, so a handler that persists rides it (#3539).
+     */
     protected async publish(
         event: `${EntityDefaultEventName}`,
         data: T,
         dataPrevious?: T,
+        transaction?: EntityManager,
     ) : Promise<void> {
         if (!this.publisher) {
             return;
@@ -129,6 +135,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             },
             destinations: this.ctx.destinations(data),
             ...(dataPrevious ? { dataPrevious } : {}),
+            transaction,
         });
     }
 }

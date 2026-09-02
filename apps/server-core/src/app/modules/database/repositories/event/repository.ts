@@ -8,13 +8,14 @@
 import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { LessThan } from 'typeorm';
+import { EntityManager, LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
     EventDeleteExpiredOptions,
     EventFindManyOptions,
+    EventSaveOptions,
     IEventRepository,
 } from '../../../../../core/index.ts';
 import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../core/index.ts';
@@ -23,16 +24,67 @@ import { applyRealmScopeSelect, deleteInBatches, resolveSweepBatchSize } from '.
 export class EventRepositoryAdapter implements IEventRepository {
     private readonly repository: Repository<Event>;
 
+    /**
+     * One pending audit save per caller connection, keyed by the manager the
+     * hook handed over (every hook of one broadcast gets the same object).
+     */
+    private readonly transactionQueue: WeakMap<EntityManager, Promise<unknown>>;
+
     constructor(repository: Repository<Event>) {
         this.repository = repository;
+        this.transactionQueue = new WeakMap();
     }
 
     create(data: Partial<Event>): Event {
         return this.repository.create(data);
     }
 
-    async save(entity: Event): Promise<Event> {
+    async save(entity: Event, options: EventSaveOptions = {}): Promise<Event> {
+        // An audit row written from inside a persist transaction rides it: the
+        // connection behind the write is still held while the subscriber hooks
+        // run, so a save through the DataSource would wait for a second pooled
+        // connection and ten concurrent writes deadlock (#3539).
+        if (options.transaction instanceof EntityManager) {
+            return this.saveOnCallerConnection(options.transaction, entity);
+        }
+
         return this.repository.save(entity);
+    }
+
+    /**
+     * Writes the row on the connection the caller already holds.
+     *
+     * Serialized per connection, because the after-hooks of one array save run
+     * concurrently (typeorm awaits them with Promise.all) and would otherwise
+     * put several statements in flight on one client. pg deprecates that in
+     * 8.22 and removes it in 9, and typeorm avoids it everywhere it controls
+     * the fan-out.
+     *
+     * `transaction: false` keeps the nested save from opening a transaction of
+     * its own. Inside a persist transaction it would not have, but a
+     * query-builder insert (the extra-attribute add path) broadcasts its hooks
+     * on a runner carrying no transaction, and there each save would otherwise
+     * BEGIN and COMMIT one.
+     *
+     * Deliberately no savepoint: savepoints are a stack per connection, and
+     * `startTransaction` issues `SAVEPOINT typeorm_<depth>` and awaits it
+     * before incrementing the depth, so concurrent hooks raced it and a
+     * RELEASE named a savepoint that was never created. The residual is
+     * postgres-only and stated in .agents/architecture.md.
+     */
+    private saveOnCallerConnection(manager: EntityManager, entity: Event): Promise<Event> {
+        const pending = this.transactionQueue.get(manager) || Promise.resolve();
+        const next = pending
+            .catch(() => undefined)
+            .then(() => manager
+                .withRepository(this.repository)
+                .save(entity, { transaction: false }));
+
+        // the queue tail must never stay rejected, or it would fail every
+        // later row on this connection
+        this.transactionQueue.set(manager, next.catch(() => undefined));
+
+        return next;
     }
 
     async findOneById(id: string): Promise<Event | null> {
