@@ -33,16 +33,10 @@ export default defineNuxtModule<ModuleOptions>({
 
         const resolver = createResolver(import.meta.url);
 
-        const runtimeOptions : RuntimeOptions = {
-            apiURL: options.apiURL,
-            apiURLRuntimeKey: options.apiURLRuntimeKey,
-
-            cookieDomain: options.cookieDomain,
-            cookieDomainRuntimeKey: options.cookieDomainRuntimeKey,
-
-            homeRoute: options.homeRoute,
-            loginRoute: options.loginRoute,
-        };
+        // Spread rather than enumerate: `ModuleOptions` IS `RuntimeOptions`, so a
+        // hand-written list can only ever fall behind the type. `serverApiURL`
+        // already had, and the plugin read a value that never reached it.
+        const runtimeOptions : RuntimeOptions = { ...options };
 
         nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {};
         if (nuxt.options.runtimeConfig.public.authup) {
