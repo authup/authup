@@ -18,6 +18,7 @@ import {
     createHandler as createAdminConsoleHandler,
 } from '@authup/server-admin-console';
 import type { ConfigReadFsOptions } from '@authup/server-config';
+import { createApplication as createConsoleApplication } from '@authup/server-console-kit';
 import {
     ConfigModule,
     HTTPModule,
@@ -26,6 +27,7 @@ import {
     registerShutdownHandlers,
 } from '@authup/server-core';
 import { defineCommand } from 'citty';
+import type { Application } from 'orkos';
 import { assertConsolePath, readConsoleConfigs } from '../console/index.ts';
 import type { Mount } from '../dev/index.ts';
 import {
@@ -103,23 +105,42 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                 closers.push(close);
             };
 
+            // The consoles themselves, one tier down and under the same rule:
+            // a console application is collected the moment it exists, so a
+            // failure anywhere after it cannot leave its modules holding what
+            // they opened.
+            const applications : Application[] = [];
+            const registerApplication = (application: Application) => {
+                applications.push(application);
+            };
+
             // One failing close must not abandon the rest, so the results are
             // settled rather than raced.
             const closeDevServers = async () => {
                 await Promise.allSettled(closers.map((close) => close()));
             };
 
+            const teardownConsoles = async () => {
+                await Promise.allSettled(applications.map((application) => application.teardown()));
+            };
+
             const app = createApplication({
                 config: new ConfigModule(config),
                 http: new HTTPModule({
                     mount: async (router) => {
-                        mounts.push(await buildAuthMount(consoles.auth, authPath, log, register));
+                        mounts.push(await buildAuthMount(
+                            consoles.auth,
+                            authPath,
+                            log,
+                            register,
+                            registerApplication,
+                        ));
 
-                        // Each handler is bound at its own call site rather
-                        // than passed as a value: the three services take
-                        // three different config types, so a shared factory
-                        // parameter would have to widen them into a union the
-                        // callee could not hand back.
+                        // Each application is bound at its own call site
+                        // rather than passed as a value: the three services
+                        // take three different config types, so a shared
+                        // factory parameter would have to widen them into a
+                        // union the callee could not hand back.
                         if (adminPath) {
                             mounts.push(await buildStaticMount({
                                 name: 'admin',
@@ -129,13 +150,18 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 marker: ADMIN_CONFIG_MARKER,
                                 viteBase: ADMIN_VITE_BASE,
                                 hmrPort: HMR_PORTS.admin,
-                                createHandler: (readShell) => createAdminConsoleHandler(
-                                    consoles.admin,
-                                    undefined,
-                                    readShell,
-                                ),
+                                createApplication: (readShell) => createConsoleApplication({
+                                    config: consoles.admin,
+                                    listen: false,
+                                    createHandler: (config, theme) => createAdminConsoleHandler(
+                                        config,
+                                        theme,
+                                        readShell,
+                                    ),
+                                }),
                                 log,
                                 register,
+                                registerApplication,
                             }));
                         }
 
@@ -148,13 +174,18 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 marker: ACCOUNT_CONFIG_MARKER,
                                 viteBase: ACCOUNT_VITE_BASE,
                                 hmrPort: HMR_PORTS.account,
-                                createHandler: (readShell) => createAccountConsoleHandler(
-                                    consoles.account,
-                                    undefined,
-                                    readShell,
-                                ),
+                                createApplication: (readShell) => createConsoleApplication({
+                                    config: consoles.account,
+                                    listen: false,
+                                    createHandler: (config, theme) => createAccountConsoleHandler(
+                                        config,
+                                        theme,
+                                        readShell,
+                                    ),
+                                }),
                                 log,
                                 register,
+                                registerApplication,
                             }));
                         }
 
@@ -169,8 +200,10 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                 await app.setup();
             } catch (e) {
                 // Whatever failed, the dev servers already started are ours
-                // to close before the error leaves this command.
+                // to close before the error leaves this command, and the
+                // consoles behind them are ours to unwind.
                 await closeDevServers();
+                await teardownConsoles();
 
                 throw e;
             }
@@ -180,6 +213,11 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                     // The dev servers first: each owns a file watcher and an
                     // HMR websocket, which outlive the http listener.
                     await closeDevServers();
+
+                    // Then the consoles, which are mounted ON this listener,
+                    // so tearing the listener down under them would leave
+                    // their modules to unwind against a socket that is gone.
+                    await teardownConsoles();
 
                     await app.teardown();
                 },

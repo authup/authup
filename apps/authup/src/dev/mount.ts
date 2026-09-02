@@ -7,7 +7,12 @@
 
 import type { Config as AuthConsoleConfig } from '@authup/server-auth-console';
 import { createHandler as createAuthConsoleHandler } from '@authup/server-auth-console';
-import { defineStaticConsole } from '@authup/server-console-kit';
+import {
+    InjectionKey,
+    createApplication as createConsoleApplication,
+    defineStaticConsole,
+} from '@authup/server-console-kit';
+import type { Application } from 'orkos';
 import type { IApp, IAppEvent } from 'routup';
 import { App } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
@@ -43,6 +48,32 @@ export function compose(dev: ConsoleDevServer | undefined, handler: IApp) : IApp
     return app;
 }
 
+/**
+ * A console as the APPLICATION it is, which is what `authup start` mounts and
+ * what both supported ways of starting one produce.
+ *
+ * Dev used to ask each console for a bare handler instead, so it ran neither
+ * the config module nor the theme module: the one command a contributor
+ * spends the day in was the only place a console came up differently from
+ * production. Nothing about the handler had to change for this, because
+ * `createHandler` is a caller-supplied function on the graph's own context.
+ *
+ * Registered for teardown BEFORE the setup rather than after it: orkos
+ * unwinds a failed setup itself and then skips every module that never
+ * reached ready, so tearing one down twice is a no-op while leaking one
+ * strands whatever its modules opened.
+ */
+async function setupConsoleApplication(
+    application: Application,
+    register: (application: Application) => void,
+) : Promise<IApp> {
+    register(application);
+
+    await application.setup();
+
+    return application.container.resolve(InjectionKey.App);
+}
+
 export async function buildStaticMount(options: {
     name: 'admin' | 'account',
     basePath: string,
@@ -51,9 +82,10 @@ export async function buildStaticMount(options: {
     marker: string,
     viteBase: string,
     hmrPort: number,
-    createHandler: (readShell?: (event: IAppEvent) => Promise<string>) => Promise<IApp>,
+    createApplication: (readShell?: (event: IAppEvent) => Promise<string>) => Application,
     log: (message: string) => void,
     register: (close: () => Promise<void>) => void,
+    registerApplication: (application: Application) => void,
 }) : Promise<Mount> {
     const { basePath } = options;
 
@@ -71,7 +103,13 @@ export async function buildStaticMount(options: {
     if (!isSourceCheckout(packagePath)) {
         options.log(`Serving the ${options.name} console from its built bundle (no source checkout at ${packagePath ?? 'an unresolved path'}).`);
 
-        return { path: basePath, app: await options.createHandler() };
+        return {
+            path: basePath,
+            app: await setupConsoleApplication(
+                options.createApplication(),
+                options.registerApplication,
+            ),
+        };
     }
 
     const dev = await createStaticConsoleDevServer({
@@ -93,7 +131,10 @@ export async function buildStaticMount(options: {
 
     return {
         path: basePath,
-        app: compose(dev, await options.createHandler(dev.readShell)),
+        app: compose(dev, await setupConsoleApplication(
+            options.createApplication(dev.readShell),
+            options.registerApplication,
+        )),
     };
 }
 
@@ -102,13 +143,24 @@ export async function buildAuthMount(
     basePath: string,
     log: (message: string) => void,
     register: (close: () => Promise<void>) => void,
+    registerApplication: (application: Application) => void,
 ) : Promise<Mount> {
     const packagePath = resolveAuthConsolePackagePath(config.distPath);
 
     if (!isSourceCheckout(packagePath)) {
         log(`Serving the auth console from its built bundle (no source checkout at ${packagePath ?? 'an unresolved path'}).`);
 
-        return { path: basePath, app: await createAuthConsoleHandler(config) };
+        return {
+            path: basePath,
+            app: await setupConsoleApplication(
+                createConsoleApplication<AuthConsoleConfig>({
+                    config,
+                    listen: false,
+                    createHandler: (resolved, theme) => createAuthConsoleHandler(resolved, theme),
+                }),
+                registerApplication,
+            ),
+        };
     }
 
     const dev = await createAuthConsoleDevServer({
@@ -124,6 +176,13 @@ export async function buildAuthMount(
 
     return {
         path: basePath,
-        app: compose(dev, await createAuthConsoleHandler(config, undefined, dev.render)),
+        app: compose(dev, await setupConsoleApplication(
+            createConsoleApplication<AuthConsoleConfig>({
+                config,
+                listen: false,
+                createHandler: (resolved, theme) => createAuthConsoleHandler(resolved, theme, dev.render),
+            }),
+            registerApplication,
+        )),
     };
 }
