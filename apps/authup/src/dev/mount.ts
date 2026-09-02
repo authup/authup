@@ -17,7 +17,6 @@ import type { IApp, IAppEvent } from 'routup';
 import { App } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
 import { PACKAGE_PATH } from '../path.ts';
-import { HMR_PORTS } from './constants.ts';
 import { createOpenInEditorGuard } from './middleware/index.ts';
 import { isSourceCheckout, resolveAuthConsolePackagePath } from './package.ts';
 import type { ConsoleDevServer } from './server/index.ts';
@@ -80,7 +79,6 @@ export async function buildStaticMount(options: {
     packageName: string,
     marker: string,
     viteBase: string,
-    hmrPort: number,
     createApplication: (readShell?: (event: IAppEvent) => Promise<string>) => Application,
     log: (message: string) => void,
     register: (close: () => Promise<void>) => void,
@@ -115,7 +113,6 @@ export async function buildStaticMount(options: {
         packageName: options.packageName,
         root: packagePath,
         basePath,
-        hmrPort: options.hmrPort,
     });
 
     // Registered the moment the server exists, never on the way out: it
@@ -126,7 +123,7 @@ export async function buildStaticMount(options: {
     // Announced only once the dev server exists. A console reported as hot
     // while its HMR socket never came up is the worst of both: edits stop
     // applying and nothing on screen says why.
-    options.log(`Serving the ${options.name} console from source with HMR (${packagePath}).`);
+    options.log(`Serving the ${options.name} console from source with HMR on port ${dev.hmrPort} (${packagePath}).`);
 
     return {
         path: basePath,
@@ -166,12 +163,11 @@ export async function buildAuthMount(
         packageName: '@authup/client-auth-console',
         root: packagePath,
         basePath,
-        hmrPort: HMR_PORTS.auth,
     });
 
     register(dev.close);
 
-    log(`Serving the auth console from source with HMR (${packagePath}).`);
+    log(`Serving the auth console from source with HMR on port ${dev.hmrPort} (${packagePath}).`);
 
     return {
         path: basePath,

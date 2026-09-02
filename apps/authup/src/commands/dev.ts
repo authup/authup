@@ -31,7 +31,6 @@ import type { Application } from 'orkos';
 import { assertConsolePath, readConsoleConfigs } from '../console/index.ts';
 import type { Mount } from '../dev/index.ts';
 import {
-    HMR_PORTS,
     assertNotProduction,
     buildAuthMount,
     buildStaticMount,
@@ -149,7 +148,6 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 packageName: ADMIN_PACKAGE_NAME,
                                 marker: ADMIN_CONFIG_MARKER,
                                 viteBase: ADMIN_VITE_BASE,
-                                hmrPort: HMR_PORTS.admin,
                                 createApplication: (readShell) => createConsoleApplication({
                                     config: consoles.admin,
                                     listen: false,
@@ -173,7 +171,6 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 packageName: ACCOUNT_PACKAGE_NAME,
                                 marker: ACCOUNT_CONFIG_MARKER,
                                 viteBase: ACCOUNT_VITE_BASE,
-                                hmrPort: HMR_PORTS.account,
                                 createApplication: (readShell) => createConsoleApplication({
                                     config: consoles.account,
                                     listen: false,

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
-import net from 'node:net';
+import { getPort } from 'get-port-please';
 import path from 'node:path';
 import type { ViteDevServer } from 'vite';
+import { HMR_PORT_BASE, HMR_PORT_RANGE } from '../constants.ts';
 import { loadVite } from '../package.ts';
 
 /**
@@ -64,40 +64,18 @@ const CONSOLE_FS_DENY = [
 ];
 
 /**
- * Refuse a hot-module-replacement port that is already taken.
+ * The first free hot-module-replacement socket at or above the base.
  *
- * Vite reports an occupied ws port through `config.logger.error` and then
- * CARRIES ON, so the console comes up with no HMR at all while this command
- * has already announced it as hot. A dev loop that lies about being hot costs
- * more than one that refuses to start: the symptom is edits that silently
- * stop applying, which reads as a broken build rather than a busy port.
- *
- * The probe binds exactly as vite's ws server does (`listen(port)` with no
- * host, so every interface), or it would answer a different question from the
- * one the dev server is about to ask.
+ * Called immediately before the server binds it, and never for all three
+ * consoles up front: nothing reserves a port between the probe and the bind,
+ * so resolving them together would hand the same number to every console.
+ * Each dev server is created in turn, so by the time this runs the previous
+ * one already holds its port.
  */
-async function assertHmrPortFree(port: number, packageName: string) : Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-        const probe = net.createServer();
-
-        probe.once('error', (error: NodeJS.ErrnoException) => {
-            if (error.code === 'EADDRINUSE') {
-                reject(new AuthupError(
-                    `The hot module replacement port ${port} for ${packageName} is already in use. ` +
-                    'Another `authup dev` is most likely still running; stop it and start again.',
-                ));
-
-                return;
-            }
-
-            reject(error);
-        });
-
-        probe.once('listening', () => {
-            probe.close(() => resolve());
-        });
-
-        probe.listen(port);
+export function resolveHmrPort() : Promise<number> {
+    return getPort({
+        port: HMR_PORT_BASE,
+        alternativePortRange: HMR_PORT_RANGE,
     });
 }
 
@@ -117,13 +95,12 @@ export async function createConsoleViteServer(options: {
     packageName: string,
     root: string,
     basePath: string,
-    hmrPort: number,
-}) : Promise<ViteDevServer> {
+}) : Promise<{ server: ViteDevServer, hmrPort: number }> {
     const vite = await loadVite(options.packageName);
 
-    await assertHmrPortFree(options.hmrPort, options.packageName);
+    const hmrPort = await resolveHmrPort();
 
-    return vite.createServer({
+    const server = await vite.createServer({
         configFile: path.join(options.root, 'vite.config.ts'),
         root: options.root,
         base: `${options.basePath}/`,
@@ -134,7 +111,7 @@ export async function createConsoleViteServer(options: {
             // The HMR socket cannot share the listener: the console mounts
             // run inside server-core's `mount` hook, which fires before the
             // http server exists.
-            ws: { port: options.hmrPort },
+            ws: { port: hmrPort },
             fs: { deny: CONSOLE_FS_DENY },
             watch: {
                 usePolling: true,
@@ -142,4 +119,6 @@ export async function createConsoleViteServer(options: {
             },
         },
     });
+
+    return { server, hmrPort };
 }

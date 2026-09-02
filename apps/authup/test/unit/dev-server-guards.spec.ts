@@ -10,7 +10,7 @@ import type { IAppEvent } from 'routup';
 import { App, defineCoreHandler } from 'routup';
 import { serve } from 'routup/node';
 import { describe, expect, it } from 'vitest';
-import { createConsoleViteServer, createOpenInEditorGuard } from '../../src/dev/index.ts';
+import { HMR_PORT_BASE, createOpenInEditorGuard, resolveHmrPort } from '../../src/dev/index.ts';
 
 /**
  * The guard has to be exercised through a real dispatch rather than by
@@ -81,27 +81,32 @@ describe('createOpenInEditorGuard', () => {
     });
 });
 
-describe('createConsoleViteServer', () => {
-    it('refuses an occupied hot module replacement port by name', async () => {
+describe('resolveHmrPort', () => {
+    /**
+     * The base is vite's own default HMR port, so on a developer's machine it
+     * is the one most likely to be held already by an unrelated vite project.
+     * Refusing to start over that would be poor advice, so the port is a
+     * preference and the resolver steps past whatever is taken. Occupying
+     * whatever it picks first, rather than the literal base, keeps this true
+     * no matter what else is running while the suite runs.
+     */
+    it('steps past a port that is already taken', async () => {
+        const first = await resolveHmrPort();
+
+        expect(first).toBeGreaterThanOrEqual(HMR_PORT_BASE);
+
         // Bound exactly as vite's own ws server binds it (no host, so every
-        // interface), which is what the probe has to match.
+        // interface), or it would not be the same question the resolver asks.
         const occupied = net.createServer();
         await new Promise<void>((resolve) => {
-            occupied.listen(0, () => resolve());
+            occupied.listen(first, () => resolve());
         });
 
-        const address = occupied.address();
-        const port = typeof address === 'object' && address ? address.port : 0;
-
         try {
-            await expect(createConsoleViteServer({
-                packageName: '@authup/client-admin-console',
-                root: process.cwd(),
-                basePath: '/console/admin',
-                hmrPort: port,
-            })).rejects.toThrow(
-                new RegExp(`port ${port} for @authup/client-admin-console is already in use`),
-            );
+            const second = await resolveHmrPort();
+
+            expect(second).not.toEqual(first);
+            expect(second).toBeGreaterThan(HMR_PORT_BASE);
         } finally {
             await new Promise<void>((resolve) => {
                 occupied.close(() => resolve());

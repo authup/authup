@@ -102,12 +102,12 @@ export async function createAuthConsoleDevServer(options: {
     packageName: string,
     root: string,
     basePath: string,
-    hmrPort: number,
 }) : Promise<AuthConsoleDevServer> {
-    const server = await createConsoleViteServer(options);
+    const { server, hmrPort } = await createConsoleViteServer(options);
 
     return {
         middlewares: server.middlewares,
+        hmrPort,
         render: createViteRender(server, options.root),
         close: () => server.close(),
     };

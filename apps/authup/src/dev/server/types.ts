@@ -11,6 +11,12 @@ import type { ViteDevServer } from 'vite';
 
 export type ConsoleDevServer = {
     middlewares: ViteDevServer['middlewares'],
+    /**
+     * The socket this console's hot module replacement actually bound, which
+     * is a preference resolved at creation rather than a fixed number, so the
+     * caller has to be told rather than assume it.
+     */
+    hmrPort: number,
     close(): Promise<void>,
 };
 
