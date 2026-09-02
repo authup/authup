@@ -5,9 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/*
+The full-height chain every console layout hangs off. `html, body` are 100%
+below, and this carries that through the element the app mounts on.
+
+A percentage height resolves against an auto-height parent as auto, so a
+mount id missing from this list silently collapses the shell to content
+height and the footer leaves the bottom of the viewport. Nothing errors,
+which is how the admin console shipped broken when it moved off nuxt: it
+mounts on `#root`, and only the two nuxt ids and `#app` were listed.
+
+The ids are mount points, not decoration. `#root` is the admin console,
+`#app` the account and auth consoles (and the admin layout's own wrapper
+inside `#root`). `#__nuxt` and `#__layout` are nuxt's own, kept for
+downstream nuxt apps consuming this theme.
+*/
 #__nuxt,
 #__layout,
-#app {
+#app,
+#root {
     height: 100%;
 }
 
