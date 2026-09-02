@@ -67,6 +67,41 @@ describe('app/modules/database/repositories/event', () => {
         .getRepository<Event>(EventEntity)
         .countBy({ refId });
 
+    it('writes the row on the transaction it is handed, so a rollback takes it with it', async () => {
+        // the entity-CRUD bridge saves from inside the persist transaction
+        // (#3539); on mysql/postgres a save that ignored the handle would land
+        // on a second connection, autocommit, and survive this rollback.
+        const refId = `transaction-probe-${randomUUID()}`;
+
+        await expect(suite.dataSource.transaction(async (manager) => {
+            await repository.save(repository.create({
+                id: randomUUID(),
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                refId,
+                expiring: false,
+            }), { transaction: manager });
+
+            throw new Error('rollback');
+        })).rejects.toThrow('rollback');
+
+        expect(await countByRef(refId)).toEqual(0);
+    });
+
+    it('saves on a connection of its own when the handle is not one it recognizes', async () => {
+        const refId = `handle-probe-${randomUUID()}`;
+
+        await repository.save(repository.create({
+            id: randomUUID(),
+            scope: EventScope.ENTITY,
+            name: EventName.CREATED,
+            refId,
+            expiring: false,
+        }), { transaction: {} });
+
+        expect(await countByRef(refId)).toEqual(1);
+    });
+
     it('counts a just-written row inside the window (host-timezone independent)', async () => {
         // the login-throttle window: the bound `since` must compare correctly
         // against the DB-clock-stamped created_at regardless of the HOST's

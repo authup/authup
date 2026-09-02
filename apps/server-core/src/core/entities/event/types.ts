@@ -50,10 +50,19 @@ export type EventCountRecentFilter = {
     since: string,
 };
 
+export type EventSaveOptions = {
+    /**
+     * The transaction the row rides, as the opaque handle the domain event
+     * carried. The adapter decides whether it recognizes the handle; without
+     * one the row saves on a connection of its own.
+     */
+    transaction?: unknown,
+};
+
 export interface IEventRepository {
     create(data: Partial<Event>): Event;
 
-    save(entity: Event): Promise<Event>;
+    save(entity: Event, options?: EventSaveOptions): Promise<Event>;
 
     findMany(
         query: IQuery,
@@ -104,6 +113,12 @@ export type EventRecordInput = {
      * effective value.
      */
     retentionDays?: number,
+    /**
+     * The transaction the originating write rides, when the caller is inside
+     * one (the entity-CRUD bridge). The row joins it instead of taking a
+     * second pooled connection (#3539).
+     */
+    transaction?: unknown,
 };
 
 export type EventServiceOptions = {

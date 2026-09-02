@@ -8,13 +8,14 @@
 import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { LessThan } from 'typeorm';
+import { EntityManager, LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
     EventDeleteExpiredOptions,
     EventFindManyOptions,
+    EventSaveOptions,
     IEventRepository,
 } from '../../../../../core/index.ts';
 import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../core/index.ts';
@@ -31,7 +32,26 @@ export class EventRepositoryAdapter implements IEventRepository {
         return this.repository.create(data);
     }
 
-    async save(entity: Event): Promise<Event> {
+    async save(entity: Event, options: EventSaveOptions = {}): Promise<Event> {
+        // An audit row written from inside a persist transaction rides it:
+        // the connection behind the write is still held while the subscriber
+        // hooks run, so a save through the DataSource would wait for a second
+        // pooled connection and ten concurrent writes deadlock (#3539).
+        // Deliberately no savepoint around it: savepoints are a stack per
+        // connection and typeorm reads its depth before the awaited SAVEPOINT
+        // statement, while the after-hooks of one array save (an entity's
+        // attribute rows) run concurrently on one runner, so the depth races
+        // and a RELEASE names a savepoint that does not exist. The residual is
+        // postgres-only: it aborts the whole transaction on a failed statement,
+        // so an INSERT that fails on the database's side (this row has no
+        // foreign key, its free-text columns are truncated and its uuid columns
+        // only receive ids the server minted, so nothing data-shaped fails it)
+        // dooms the write, and the executor's COMMIT then answers ROLLBACK
+        // without raising.
+        if (options.transaction instanceof EntityManager) {
+            return options.transaction.withRepository(this.repository).save(entity);
+        }
+
         return this.repository.save(entity);
     }
 

@@ -8,6 +8,7 @@
 import type { EntityDefaultEventName, IdentityProviderAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
+import type { EntityManager } from 'typeorm';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { IdentityProviderAttributeEntity } from './entity.ts';
@@ -41,11 +42,13 @@ export class IdentityProviderAttributeSubscriber extends EntitySubscriber<Identi
         event: `${EntityDefaultEventName}`,
         data: IdentityProviderAttribute,
         dataPrevious?: IdentityProviderAttribute,
+        transaction?: EntityManager,
     ): Promise<void> {
         await super.publish(
             event,
             { ...data, value: null },
             dataPrevious ? { ...dataPrevious, value: null } : undefined,
+            transaction,
         );
     }
 }

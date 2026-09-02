@@ -96,10 +96,10 @@ concurrent saves exhausted the pool and hung every later query. The same spec
 therefore carries a pool-exhaustion pin: twelve concurrent updates on twelve
 different users and twelve concurrent creates must all resolve within the
 default test timeout, which a regression turns into a hang and vitest into a
-failure. The spec boots with `eventLogEntityEnabled = false`: the entity
-audit mirror writes its row on a second pooled connection from inside the
-persist transaction (issue #3539, pre-existing), so with it on the pins hang
-against master too and would say nothing about the save shape.
+failure. The spec boots with the entity audit mirror on, its default: the
+mirror used to insert its row on a second pooled connection from inside the
+persist transaction (issue #3539), so the same pins are the regression test
+for that write too.
 
 ## Test Layers (server-core)
 

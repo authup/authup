@@ -153,6 +153,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 requestUserAgent: requestContext?.requestUserAgent ?? null,
                 data,
                 retentionDays: this.options.retentionDays,
+                transaction: ctx.transaction,
             });
         } catch {
             // record() never throws, but the bridge itself must also never

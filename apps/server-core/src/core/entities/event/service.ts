@@ -158,9 +158,11 @@ export class EventService extends AbstractEntityService implements IEventService
                     null,
             });
 
-            await this.repository.save(entity);
+            await this.repository.save(entity, { transaction: input.transaction });
         } catch {
             // an audit write failure must never fail the originating operation
+            // from here; a save that joined the write's transaction can still
+            // have doomed it on postgres, see EventRepositoryAdapter.save
             this.logger?.warn(`Recording the audit event ${input.scope}.${input.name} failed.`);
         }
     }

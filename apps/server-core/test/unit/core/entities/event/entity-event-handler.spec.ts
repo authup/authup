@@ -314,6 +314,14 @@ describe('EntityEventHandler', () => {
         expect(eventService.recordCalls).toHaveLength(0);
     });
 
+    it('forwards the transaction handle the bus carried', async () => {
+        const transaction = {};
+
+        await buildHandler().handle({ ...buildPublishContext(), transaction });
+
+        expect(eventService.recordCalls[0].transaction).toBe(transaction);
+    });
+
     it('forwards the configured retention override', async () => {
         await buildHandler({ retentionDays: 7 }).handle(buildPublishContext());
 

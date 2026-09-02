@@ -33,19 +33,10 @@ import { createFakeClient, createFakeUser } from '../../../../utils';
 const rowLockable = ['mysql', 'postgres'].includes(process.env.DB_TYPE ?? '');
 
 describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
-    // `eventLogEntityEnabled` is off here on purpose. The entity audit mirror
-    // is a SECOND, pre-existing pinning site: `EntitySubscriber.afterInsert` /
-    // `afterUpdate` run inside TypeORM's own persist transaction, and the
-    // `EntityEventHandler` they await inserts the `auth_events` row through
-    // the DataSource, on a second pooled connection. Ten concurrent entity
-    // writes deadlock on that alone, with or without the #3526 seam, so the
-    // pool pin below could never settle with it on. That site is issue #3539;
-    // this file pins the save shape.
-    const suite = createTestApplication({
-        config: (config) => {
-            config.eventLogEntityEnabled = false;
-        },
-    });
+    // The entity audit mirror stays ON (its default): every entity write
+    // also inserts an `auth_events` row from inside TypeORM's persist
+    // transaction, so the pool pins below cover that write as well (#3539).
+    const suite = createTestApplication();
     const actor = createAllowAllActor();
 
     let realm: Realm;

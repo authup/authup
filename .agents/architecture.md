@@ -1081,8 +1081,11 @@ threads instances through constructor/context args:
   destination + one namespaced destination per non-null realm id); `cache.keys`
   returns the query-result-cache keys to drop on update/remove
   (`cache.onInsert: true` adds insert — used by junction/attribute subscribers
-  whose cache is keyed by the owner id). A subscriber without an injected
-  publisher publishes nothing (tests / migration CLI runs).
+  whose cache is keyed by the owner id). Every `after*` hook hands its
+  `event.manager` to the publish as the opaque `transaction`, because the
+  hooks run inside the persist transaction and a handler that persists must
+  ride it (#3539). A subscriber without an injected publisher publishes
+  nothing (tests / migration CLI runs).
 - **typeorm-extension's global registry is unused** — `setDataSource` /
   `useDataSource` / `unsetDataSource` have no call sites; repositories that
   need a `DataSource` (identity-provider mappers/account, `OAuth2KeyRepository`)
@@ -2709,11 +2712,12 @@ concurrent saves, reachable by any user with ten concurrent `POST /users/@me`.
 The concurrency spec carries a pool-exhaustion pin for exactly this (twelve
 concurrent updates on twelve different users, and twelve concurrent creates,
 all resolving inside the default timeout). The pin runs with the entity
-audit mirror OFF, because the mirror has the same hazard on its own and on
-master: every `EntitySubscriber.afterInsert` / `afterUpdate` awaits the audit
-row's save from INSIDE TypeORM's persist transaction, on a second pooled
-connection. That is issue #3539, and until it is fixed ten concurrent entity
-writes still hang a deployment with `eventLogEntityEnabled` on.
+audit mirror ON, its default, and that is deliberate: the mirror used to be
+the same hazard on its own. Every `EntitySubscriber.afterInsert` /
+`afterUpdate` awaited the audit row's save from INSIDE TypeORM's persist
+transaction, through the DataSource, on a second pooled connection (issue
+#3539). The row rides the write's own `event.manager` now (see *Entity-CRUD
+bridge* under *Security Event Log*), so the one pin covers both sites.
 
 On sqlite the seam is an unlocked passthrough that hands the callback the
 adapter itself, for the reason
@@ -5883,8 +5887,46 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `created|updated|deleted` rows (`refType` = entity type, `refId` = id).
   The pre-update snapshot rides the publish **context** as `dataPrevious`
   (`afterUpdate` passes `event.databaseEntity`) — **never inside `content`**,
-  the shared realtime wire payload the redis/socket handlers ship. Actor +
-  request attribution comes from an AsyncLocalStorage request context
+  the shared realtime wire payload the redis/socket handlers ship.
+  **The audit row rides the write's own transaction** (issue #3539). The
+  subscriber hooks run inside TypeORM's persist transaction, before the
+  executor commits and releases the connection, so a save through the
+  DataSource waited for a SECOND pooled connection while the first was held,
+  and ten concurrent entity writes (ten `POST /users/@me`, any bulk import)
+  deadlocked the whole pool. `EntitySubscriber.publish` therefore hands
+  `event.manager` to the publish context as its opaque `transaction`
+  (`@authup/server-kit` knows no persistence, hence `unknown`), the handler
+  forwards it into `EventRecordInput.transaction`, and
+  `EventRepositoryAdapter.save` writes through `manager.withRepository(...)`
+  when it recognizes an `EntityManager`. Three things follow. The row is
+  atomic with the write it describes: a rolled-back write leaves no row
+  (pinned by `event-repository.spec.ts`; the pin is only meaningful on
+  mysql/postgres, since sqlite shares one query runner and joined the
+  transaction anyway). Deferring the write to `afterTransactionCommit` was
+  NOT an option: TypeORM broadcasts it inside `commitTransaction()`, still
+  before the runner is released, so it would have deadlocked the same way.
+  And the failed-save contract narrowed by one residual, stated exactly:
+  `record()` still swallows a failed save, and on mysql and sqlite that is
+  the whole story, but postgres aborts the WHOLE transaction on any failed
+  statement, so an audit INSERT that fails on the database's side dooms the
+  write and the executor's COMMIT answers ROLLBACK without raising, the API
+  answering 201 for a row that never landed with only the `record()` warn
+  line as a trace. It is infrastructure-only: `auth_events` carries no
+  foreign key, every free-text column is truncated to its width and the four
+  `uuid` columns only ever receive ids the server minted, so the INSERT has
+  no data-shaped way to fail while the write's own statements succeeded.
+  A savepoint around the audit save was tried and REJECTED: savepoints are
+  a stack per connection and typeorm reads its depth before the awaited
+  `SAVEPOINT` statement, while the after-hooks of one array save (an
+  entity's attribute rows, a policy tree's cascade) run concurrently on one
+  runner, so two hooks both issue `SAVEPOINT typeorm_1` and the first
+  `RELEASE` names `typeorm_2`, which does not exist (the policy and
+  identity-provider update specs failed with exactly that). Making it
+  correct needs a per-runner mutex plus a sqlite bypass (the shared runner
+  would leak the depth across requests), which is more mechanism than an
+  infrastructure-only failure buys; revisit if a real deployment ever logs
+  that warn line next to a lost write.
+  Actor + request attribution comes from an AsyncLocalStorage request context
   (`adapters/http/request/event-context.ts`; middleware mounted immediately
   after the authorization middleware — non-HTTP writes like
   provisioning/CLI/cron have no store → null actor = "system" semantics).
