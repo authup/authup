@@ -61,7 +61,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
     async findBySessionId(sessionId: string): Promise<SessionToken[]> {
         this.findBySessionIdCalls.push(sessionId);
-        return [...this.rows.values()].filter((row) => row.sessionId === sessionId);
+        return this.rows.values().toArray().filter((row) => row.sessionId === sessionId);
     }
 
     async markRefreshConsumed(id: string, at: string): Promise<boolean> {

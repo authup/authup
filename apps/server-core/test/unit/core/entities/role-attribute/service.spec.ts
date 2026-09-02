@@ -55,11 +55,13 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluateOneOf' && call.ctx.data) {
-                    const entity = call.ctx.data.get('attributes') as RoleAttribute;
-                    if (entity && entity.id === denied.id) {
-                        throw PermissionError.denied('test');
-                    }
+                if (!(call.method === 'evaluateOneOf' && call.ctx.data)) {
+                    return;
+                }
+
+                const entity = call.ctx.data.get('attributes') as RoleAttribute;
+                if (entity && entity.id === denied.id) {
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -176,13 +178,15 @@ describe('core/entities/role-attribute/service', () => {
             // wired into create, realmMatch was absent and this neutral-passed (cross-realm leak).
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
-                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
-                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
-                        undefined;
-                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
-                        throw PermissionError.denied('realm');
-                    }
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
+                    return;
+                }
+
+                const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                    undefined;
+                if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                    throw PermissionError.denied('realm');
                 }
             });
 
@@ -223,13 +227,15 @@ describe('core/entities/role-attribute/service', () => {
             const entity = repository.seed(createFakeRoleAttribute({ realmId: 'realm-b' } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
-                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
-                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
-                        undefined;
-                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
-                        throw PermissionError.denied('realm');
-                    }
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
+                    return;
+                }
+
+                const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                    undefined;
+                if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                    throw PermissionError.denied('realm');
                 }
             });
 
@@ -242,13 +248,15 @@ describe('core/entities/role-attribute/service', () => {
             const entity = repository.seed(createFakeRoleAttribute({ realmId: 'realm-b' } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
-                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
-                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
-                        undefined;
-                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
-                        throw PermissionError.denied('realm');
-                    }
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
+                    return;
+                }
+
+                const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                    undefined;
+                if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                    throw PermissionError.denied('realm');
                 }
             });
 

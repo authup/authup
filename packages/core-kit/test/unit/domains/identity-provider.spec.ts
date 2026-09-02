@@ -35,7 +35,7 @@ describe('IdentityProvider assurance allow-lists', () => {
             [','],
             [',,,'],
             [' , '],
-            ['   '],
+            [' '.repeat(3)],
         ])('should reject %j, which parses to no tokens at all', async (value) => {
             // it would be stored, shown as configured in the admin form, and
             // silently check nothing

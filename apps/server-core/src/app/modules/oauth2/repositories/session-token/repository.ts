@@ -142,7 +142,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
      * once could on the entity repositories (plan 039).
      */
     protected joinSessionForGate(qb: SelectQueryBuilder<SessionTokenEntity>) {
-        if (!qb.expressionMap.joinAttributes.some((join) => join.alias.name === 'session')) {
+        if (qb.expressionMap.joinAttributes.every((join) => join.alias.name !== 'session')) {
             qb.leftJoin('sessionToken.session', 'session');
         }
 

@@ -117,14 +117,14 @@ describe('src/config/*.ts', () => {
 
         it('should accept boolean process role keys and reject non-boolean values', async () => {
             const config = await parseConfig({
-                componentsEnabled: false,
+                worker: { enabled: false },
                 migrationEnabled: false,
             });
 
-            expect(config.componentsEnabled).toEqual(false);
+            expect(config.worker?.enabled).toEqual(false);
             expect(config.migrationEnabled).toEqual(false);
 
-            await expect(parseConfig({ componentsEnabled: 'nope' })).rejects.toThrow();
+            await expect(parseConfig({ worker: { enabled: 'nope' } })).rejects.toThrow();
             await expect(parseConfig({ migrationEnabled: 'nope' })).rejects.toThrow();
         });
     });
@@ -310,42 +310,42 @@ describe('src/config/*.ts', () => {
         it('should default the process role keys to true', async () => {
             const config = await normalizeConfig();
 
-            expect(config.componentsEnabled).toEqual(true);
+            expect(config.worker.enabled).toEqual(true);
             expect(config.migrationEnabled).toEqual(true);
         });
 
         it('should accept the process role keys', async () => {
             const config = await normalizeConfig({
-                componentsEnabled: false,
+                worker: { enabled: false },
                 migrationEnabled: false,
             });
 
-            expect(config.componentsEnabled).toEqual(false);
+            expect(config.worker?.enabled).toEqual(false);
             expect(config.migrationEnabled).toEqual(false);
         });
 
-        it('should read COMPONENTS_ENABLED and MIGRATION_ENABLED from the environment', () => {
-            const previousComponents = process.env.COMPONENTS_ENABLED;
+        it('should read WORKER_ENABLED and MIGRATION_ENABLED from the environment', () => {
+            const previousWorker = process.env.WORKER_ENABLED;
             const previousMigration = process.env.MIGRATION_ENABLED;
 
-            process.env.COMPONENTS_ENABLED = 'false';
+            process.env.WORKER_ENABLED = 'false';
             process.env.MIGRATION_ENABLED = 'false';
 
             try {
                 const raw = readConfigRawFromEnv<Config>(CONFIG_SCHEMA);
 
-                expect(raw.componentsEnabled).toEqual(false);
+                expect(raw.worker?.enabled).toEqual(false);
                 expect(raw.migrationEnabled).toEqual(false);
 
                 // both are strict readers: a set-but-unrecognized value must
                 // fail loud instead of silently defaulting to true.
-                process.env.COMPONENTS_ENABLED = 'maybe';
-                expect(() => readConfigRawFromEnv<Config>(CONFIG_SCHEMA)).toThrow(/COMPONENTS_ENABLED/);
+                process.env.WORKER_ENABLED = 'maybe';
+                expect(() => readConfigRawFromEnv<Config>(CONFIG_SCHEMA)).toThrow(/WORKER_ENABLED/);
             } finally {
-                if (typeof previousComponents === 'undefined') {
-                    delete process.env.COMPONENTS_ENABLED;
+                if (typeof previousWorker === 'undefined') {
+                    delete process.env.WORKER_ENABLED;
                 } else {
-                    process.env.COMPONENTS_ENABLED = previousComponents;
+                    process.env.WORKER_ENABLED = previousWorker;
                 }
 
                 if (typeof previousMigration === 'undefined') {
@@ -368,7 +368,7 @@ describe('src/config/*.ts', () => {
             await expect(normalizeConfig({ secretsEncryptionKey: Buffer.alloc(16, 1).toString('base64') })).rejects.toThrow(/32 bytes/);
 
             // not base64 at all
-            await expect(normalizeConfig({ secretsEncryptionKey: '   ' })).rejects.toThrow(/secretsEncryptionKey/);
+            await expect(normalizeConfig({ secretsEncryptionKey: ' '.repeat(3) })).rejects.toThrow(/secretsEncryptionKey/);
         });
 
         it('should accept a valid 32-byte secretsEncryptionKey', async () => {

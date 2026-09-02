@@ -9,7 +9,6 @@ import type { ConfigReadFsOptions } from '@authup/server-config';
 import {
     assertNoStrayPositionals,
     defineCLIMigrationCommand,
-    defineCLIWorkerCommand,
 } from '@authup/server-core';
 import { type ArgsDef, defineCommand } from 'citty';
 import fs from 'node:fs';
@@ -86,8 +85,6 @@ export async function createCLIEntryPointCommand() {
             // The API and the IdP alone, mounting nothing: the page GETs
             // still redirect to the console service, which someone else runs.
             core: defineCLICoreCommand(configFs),
-
-            worker: defineCLIWorkerCommand(configFs),
 
             // `start`, but a console whose package resolves to a source
             // checkout is served through vite instead of its built dist.

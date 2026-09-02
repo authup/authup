@@ -15,7 +15,7 @@ import { createCLIConfigModule } from './config.ts';
 
 export function defineCLIHealthCheckCommand(configFs: ConfigReadFsOptions<Config> = {}) {
     return defineCommand({
-        meta: { name: 'healthcheck' },
+        meta: { name: 'healthcheck', description: 'Probe the API listener and exit non-zero when it does not answer.' },
         async setup() {
             const app = new ApplicationBuilder()
                 .withConfig(createCLIConfigModule(configFs))

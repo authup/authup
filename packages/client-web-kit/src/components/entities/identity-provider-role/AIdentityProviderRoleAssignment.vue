@@ -120,7 +120,7 @@ export default defineComponent({
         const confirmDialog = useAlertDialog();
 
         const manager = defineEntityManager({
-            type: `${EntityType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
+            type: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
             setup,
             socket: {
                 processEvent(event) {

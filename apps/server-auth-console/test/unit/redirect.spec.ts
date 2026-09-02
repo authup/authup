@@ -33,7 +33,8 @@ describe('sanitizeRelativeRedirect', () => {
     it.each([
         ['relative without leading slash', 'users'],
         ['absolute http url', 'http://evil.com'],
-        ['scheme-only', `${'java'}script:alert(1)`],
+        // eslint-disable-next-line no-script-url
+        ['scheme-only', 'javascript:alert(1)'],
         ['protocol-relative', '//evil.com'],
         ['backslash authority', '/\\evil.com'],
         ['double backslash', '\\\\evil.com'],

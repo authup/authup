@@ -51,10 +51,12 @@ export default defineComponent({
         watch(() => props.entity, (val) => { localEntity.value = val; });
 
         const set = () => {
-            if (entity.value) {
-                if (entity.value.preset) preset.value = entity.value.preset;
-                if (entity.value.protocol) protocol.value = entity.value.protocol;
+            if (!entity.value) {
+                return;
             }
+
+            if (entity.value.preset) preset.value = entity.value.preset;
+            if (entity.value.protocol) protocol.value = entity.value.protocol;
         };
 
         set();
@@ -63,7 +65,7 @@ export default defineComponent({
         const onPick = (type: 'protocol' | 'preset', value: string) => {
             if (type === 'preset') {
                 preset.value = value;
-                protocol.value = `${getIdentityProviderProtocolForPreset(value as IdentityProviderPreset)}`;
+                protocol.value = getIdentityProviderProtocolForPreset(value as IdentityProviderPreset);
                 return;
             }
             protocol.value = value;

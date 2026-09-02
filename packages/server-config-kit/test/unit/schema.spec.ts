@@ -127,20 +127,13 @@ describe('readSchemaFromFileTree', () => {
     it('should read a section into a value of its own', () => {
         const data = readSchemaFromFileTree({ server: { core: { port: 4001, host: '10.0.0.1' } } }, SCHEMA);
 
-        expect(data).toEqual({
-            core: { port: 4001, host: '10.0.0.1' },
-            adminConsole: {},
-        });
+        expect(data).toEqual({ core: { port: 4001, host: '10.0.0.1' } });
     });
 
-    it('should skip a key the document says nothing about', () => {
+    it('should skip a key, and a section, the document says nothing about', () => {
         const data = readSchemaFromFileTree({ publicUrl: 'https://idp.example.com' }, SCHEMA);
 
-        expect(data).toEqual({
-            publicUrl: 'https://idp.example.com',
-            core: {},
-            adminConsole: {},
-        });
+        expect(data).toEqual({ publicUrl: 'https://idp.example.com' });
     });
 
     it('should collect a falsy value', () => {

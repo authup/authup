@@ -76,7 +76,7 @@ export default defineComponent({
     setup(props, ctx) {
         const apiClient = injectHTTPClient();
         const manager = defineEntityManager({
-            type: `${EntityType.IDENTITY_PROVIDER}`,
+            type: EntityType.IDENTITY_PROVIDER,
             setup: ctx,
             props,
         });

@@ -22,7 +22,7 @@ import { canonicalizeTrustProxyValue } from './trust-proxy-canonicalize.ts';
 import { EnvironmentVariable } from '../../constants.ts';
 import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
-import type { CoreConfig, MiddlewareOptions } from './types.ts';
+import type { CoreConfig, CoreWorkerConfig, MiddlewareOptions } from './types.ts';
 
 // ---------------------------------------------------------------
 // shared shapes
@@ -68,13 +68,15 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             description: 'Enable the application logger.',
         },
 
-        componentsEnabled: {
-            type: booleanType,
-            default: true,
-            description: 'Run the background components (the cron sweeps) in this process. Set false on API replicas when a dedicated worker process runs them.',
-            env: EnvironmentVariable.COMPONENTS_ENABLED,
-            readEnv: readEnvBoolStrict,
-        },
+        worker: defineSchema<CoreWorkerConfig, never, EnvironmentVariable>({
+            enabled: {
+                type: booleanType,
+                default: true,
+                description: 'Run the worker (the background cron sweeps) in this process. Under the default mode the API runs it alongside itself; set false on API replicas when a dedicated `authup start --worker` process runs it. Worker mode refuses to start when this is false.',
+                env: EnvironmentVariable.WORKER_ENABLED,
+                readEnv: readEnvBoolStrict,
+            },
+        }, { pathPrefix: 'core.worker' }),
         migrationEnabled: {
             type: booleanType,
             default: true,

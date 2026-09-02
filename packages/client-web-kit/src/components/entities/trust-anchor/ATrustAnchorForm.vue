@@ -73,7 +73,7 @@ export default defineComponent({
         });
 
         const manager = defineEntityManager({
-            type: `${EntityType.TRUST_ANCHOR}`,
+            type: EntityType.TRUST_ANCHOR,
             setup: ctx,
             props,
         });
@@ -114,10 +114,12 @@ export default defineComponent({
         }
 
         watch(updatedAt, (value, oldValue) => {
-            if (value && value !== oldValue) {
-                manager.data.value = props.entity;
-                initForm();
+            if (!value || value === oldValue) {
+                return;
             }
+
+            manager.data.value = props.entity;
+            initForm();
         });
 
         initForm();

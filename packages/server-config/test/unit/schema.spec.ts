@@ -40,8 +40,7 @@ function collectDeclarations<T>(
     prefix = '',
     declarations: Declaration[] = [],
 ) : Declaration[] {
-    for (const name of Object.keys(schema)) {
-        const entry = (schema as Record<string, unknown>)[name];
+    for (const [name, entry] of Object.entries(schema as Record<string, unknown>)) {
         const key = prefix ? `${prefix}.${name}` : name;
 
         if (isSchemaEntryInput(entry)) {

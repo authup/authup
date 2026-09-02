@@ -34,10 +34,10 @@ const DATABASE_PATH = path.join(
     `test-worker-${process.env.VITEST_POOL_ID || '0'}.sql`,
 );
 
-async function buildWorkerConfig(): Promise<Config> {
+async function buildWorkerConfig(input: Partial<Config> = {}): Promise<Config> {
     const config = await normalizeConfig({
-        componentsEnabled: false,
         eventLogEnabled: false,
+        ...input,
     });
 
     config.redis = false;
@@ -72,7 +72,7 @@ describe('app/factory', () => {
     it('should compose the worker application from the background modules only', () => {
         const app = createWorkerApplication({ config: new ConfigModule(buildWorkerConfig) });
 
-        const names = [...app.getStatus().keys()];
+        const names = app.getStatus().keys().toArray();
 
         expect(names).toEqual([
             ModuleName.CONFIG,
@@ -116,15 +116,28 @@ describe('app/factory', () => {
                 await queryRunner.release();
             }
 
-            // the components are forced on, so they must report themselves
-            // started despite componentsEnabled: false, and never off.
             expect(lines.some((line) => line.startsWith('Background components started: oauth2-cleaner'))).toBeTruthy();
-            expect(lines).not.toContain('Background components are disabled by configuration.');
         } finally {
             await app.teardown();
         }
 
         expect(app.getModuleStatus(ModuleName.DATABASE)).toEqual(ModuleStatus.TornDown);
         expect(app.container.tryResolve(DatabaseInjectionKey.DataSource).success).toBeFalsy();
+    });
+
+    it('should refuse to boot when the worker is disabled by configuration', async () => {
+        fs.mkdirSync(path.dirname(DATABASE_PATH), { recursive: true });
+        fs.rmSync(DATABASE_PATH, { force: true });
+
+        // a process started for nothing but the sweeps must not come up idle:
+        // worker mode requires core.worker.enabled rather than ignoring it.
+        const app = createWorkerApplication({ config: new ConfigModule(() => buildWorkerConfig({ worker: { enabled: false } })) });
+        app.container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
+
+        try {
+            await expect(app.setup()).rejects.toThrow(/core\.worker\.enabled/);
+        } finally {
+            await app.teardown();
+        }
     });
 });

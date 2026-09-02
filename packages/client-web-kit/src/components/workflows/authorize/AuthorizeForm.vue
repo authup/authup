@@ -139,7 +139,7 @@ export default defineComponent({
                 return;
             }
 
-            const url = new URL(`${props.codeRequest.redirect_uri}`);
+            const url = new URL(String(props.codeRequest.redirect_uri));
             url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
             url.searchParams.set(
                 'error_description',

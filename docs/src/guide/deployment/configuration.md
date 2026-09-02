@@ -21,7 +21,7 @@ service off, say so: `REDIS=false`, not `REDIS=`.
 ## Configuration File
 
 One file holds the configuration: `authup.yml`, discovered in the **current working
-directory** of the process. Every CLI command (`start`, `core`, `console`, `worker`,
+directory** of the process. Every CLI command (`start`, `core`, `console`,
 `migration`, `healthcheck`, `config`) honors it, and the lookup can be redirected with
 two global CLI flags:
 

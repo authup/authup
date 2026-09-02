@@ -56,8 +56,8 @@ function buildLogoTokens(logo: string | undefined, basePath: string) : Record<st
 }
 
 function buildTokenRule(selector: string, tokens: Record<string, string>) : string {
-    const declarations = Object.keys(tokens)
-        .map((name) => `${name}:${tokens[name]}`)
+    const declarations = Object.entries(tokens)
+        .map(([name, value]) => `${name}:${value}`)
         .join(';');
 
     return `${selector}{${declarations}}`;

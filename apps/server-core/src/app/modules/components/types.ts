@@ -7,12 +7,11 @@
 
 export type ComponentsModuleOptions = {
     /**
-     * Register and start the background components even when the
-     * componentsEnabled config key is false. The worker role sets it, so a
-     * shared environment block can disable the components on every API
-     * replica while the worker keeps running them.
+     * Refuse to boot when `core.worker.enabled` is false instead of skipping
+     * the components. Worker mode sets it: a process started for nothing but
+     * the sweeps must not come up doing nothing.
      *
      * default: false
      */
-    force?: boolean
+    required?: boolean
 };

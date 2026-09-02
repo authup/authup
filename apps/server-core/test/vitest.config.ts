@@ -29,6 +29,12 @@ export default defineConfig({
         setupFiles: ['reflect-metadata'],
         include: ['test/unit/**/*.spec.ts'],
         fileParallelism: !usesSharedServerDatabase,
+        // A shared-server run is structurally slower than the sqlite one: every
+        // spec file contends for the one server database and, per the comment
+        // above, they cannot run concurrently. Heavy specs (a full provisioning
+        // sync) sit just under vitest's 5s default there and tip over on a
+        // loaded CI runner, so the shared-server runs get a wider budget.
+        ...(usesSharedServerDatabase ? { testTimeout: 30_000 } : {}),
     },
     plugins: [swc.vite()],
 });

@@ -392,8 +392,8 @@ export class IdentityProviderController {
         // re-renders the request and the next attempt carries one.
         const browserNonce = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
         if (
-            !data.browserNonce ||
             typeof browserNonce !== 'string' ||
+            !data.browserNonce ||
             browserNonce !== data.browserNonce
         ) {
             return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);

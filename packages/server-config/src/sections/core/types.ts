@@ -24,6 +24,17 @@ export type MiddlewareOptions = boolean | Record<string, any>;
 /**
  * The `core.*` section: the keys the API and IdP service reads.
  */
+export type CoreWorkerConfig = {
+    /**
+     * Run the worker in this process. Under the default mode the API runs it
+     * alongside itself; set false on API replicas when a dedicated
+     * `authup start --worker` process runs it. Worker mode refuses to
+     * start when this is false.
+     * default: true
+     */
+    enabled: boolean,
+};
+
 export type CoreConfig = {
     /**
      * Directory the application writes to at runtime (log files in
@@ -51,11 +62,9 @@ export type CoreConfig = {
     // ----------------------------------------------------
 
     /**
-     * Background components (the cron sweeps) run in this process. Set
-     * false on API replicas when a dedicated worker process runs them.
-     * default: true
+     * The worker: the background cron sweeps.
      */
-    componentsEnabled: boolean,
+    worker: CoreWorkerConfig,
 
     /**
      * Apply pending schema migrations at startup. When false, startup runs

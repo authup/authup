@@ -164,7 +164,7 @@ const AEntityDelete = defineComponent({
                 return undefined;
             }
 
-            if (props.withPrompt && confirmDialog) {
+            if (confirmDialog && props.withPrompt) {
                 const confirmed = await confirmDialog({
                     title: promptTitle.value,
                     description: promptDescription.value,

@@ -9,5 +9,9 @@ import type { ConfigReadFsOptions } from '@authup/server-config';
 import { defineApplicationCommand } from './application.ts';
 
 export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
-    return defineApplicationCommand(configFs, { name: 'start', consoles: true });
+    return defineApplicationCommand(configFs, {
+        name: 'start',
+        description: 'Start the API and every enabled console on one listener: the single-process deployment.',
+        consoles: true,
+    });
 }

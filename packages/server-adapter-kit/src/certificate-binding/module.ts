@@ -24,9 +24,9 @@ export function assertTokenCertificateBinding(
     const expected = payload.cnf['x5t#S256'];
     if (
         typeof expected !== 'string' ||
-        expected.length === 0 ||
         !certificateThumbprint ||
-        certificateThumbprint !== expected
+        certificateThumbprint !== expected ||
+        expected.length === 0
     ) {
         throw JWTError.invalid();
     }

@@ -25,7 +25,7 @@ if [[ -z "${COMMAND}" || -z "${SERVICE}" ]]; then
     printf '  server/core start\n    Start the API and every enabled console on one listener.\n'
     printf '  server/core core\n    Start the API and the IdP alone; the page GETs redirect to the console service.\n'
     printf '  server/core console admin\n    Serve one console. Without a name, every enabled one on its own port.\n'
-    printf '  server/core worker\n    Start the server core background worker (no http listener).\n'
+    printf '  server/core start --worker\n    Start the background worker alone (no http listener).\n'
     exit 0
 fi
 

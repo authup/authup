@@ -80,7 +80,7 @@ export default defineComponent({
             .map((value) => ({ label: value, value }));
 
         const manager = defineEntityManager({
-            type: `${EntityType.PERMISSION}`,
+            type: EntityType.PERMISSION,
             setup: ctx,
             props,
         });
@@ -125,10 +125,12 @@ export default defineComponent({
         }
 
         watch(updatedAt, (val, oldVal) => {
-            if (val && val !== oldVal) {
-                manager.data.value = props.entity;
-                initForm();
+            if (!val || val === oldVal) {
+                return;
             }
+
+            manager.data.value = props.entity;
+            initForm();
         });
 
         initForm();

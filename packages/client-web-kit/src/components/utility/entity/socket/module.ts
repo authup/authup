@@ -139,7 +139,7 @@ function create<
 
     let mounted = false;
     const mount = async () => {
-        if ((ctx.target && !targetId.value) || mounted) {
+        if (mounted || (ctx.target && !targetId.value)) {
             return;
         }
 
@@ -185,7 +185,7 @@ function create<
     };
 
     const unmount = async () => {
-        if ((ctx.target && !targetId.value) || !mounted) {
+        if (!mounted || (ctx.target && !targetId.value)) {
             return;
         }
 

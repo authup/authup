@@ -69,7 +69,7 @@ export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handl
         },
         skip(event, response): boolean {
             const path = event.path || '';
-            if (path.length === 0 || path === '/') {
+            if (path === '/' || path.length === 0) {
                 return true;
             }
 

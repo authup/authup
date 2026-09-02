@@ -36,7 +36,7 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
     }
 
     rows(): IdentityProviderAccount[] {
-        return [...this.accounts.values()];
+        return this.accounts.values().toArray();
     }
 
     async findMany(
@@ -69,7 +69,7 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
 
     async removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean> {
         const count = this.rows().filter((account) => account.userId === entity.userId).length;
-        if (count <= 1 && !userHasOtherLogin) {
+        if (!userHasOtherLogin && count <= 1) {
             return false;
         }
 

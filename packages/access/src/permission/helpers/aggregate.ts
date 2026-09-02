@@ -68,8 +68,7 @@ export function aggregatePermissionPolicyBindings(
         }, {} as Record<string, PermissionPolicyBinding[]>);
 
     const output: PermissionPolicyBindingAggregated[] = [];
-    for (const key of Object.keys(grouped)) {
-        const group = grouped[key]!;
+    for (const group of Object.values(grouped)) {
         output.push({
             permission: group[0]!.permission,
             grants: group.map(buildGrant),

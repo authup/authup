@@ -59,10 +59,10 @@
         "locter": "^4.1.1",
         "orkos": "^1.1.1",
         "validup": "^2.0.1",
-        "zod": "^4.4.3"
+        "zod": "^4.5.4"
     },
     "devDependencies": {
-        "@types/node": "^26.0.0",
+        "@types/node": "^26.4.0",
         "routup": "^6.1.0",
         "vitest": "^4.0.14"
     },

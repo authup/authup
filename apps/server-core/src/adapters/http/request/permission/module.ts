@@ -64,7 +64,7 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
         // identity evaluator would run its validator against `undefined` and
         // throw an uncaught error instead of a clean permission denial — see
         // the deleted-subject edge case in issue #3184.
-        if (scopes.includes(ScopeName.GLOBAL) && identity) {
+        if (identity && scopes.includes(ScopeName.GLOBAL)) {
             ctx.data = ctx.data || new PolicyData();
             ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
         }

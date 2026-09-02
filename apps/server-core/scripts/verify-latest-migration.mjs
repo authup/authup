@@ -72,7 +72,7 @@ async function bootApplication(env = {}) {
         cwd: process.cwd(),
         env: {
             ...process.env,
-            PORT: `${port}`,
+            PORT: String(port),
             HOST: '127.0.0.1',
             USER_ADMIN_PASSWORD: adminPassword,
             PUBLIC_URL: `http://127.0.0.1:${port}`,

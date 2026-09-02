@@ -172,8 +172,8 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // condition even though the pending success stays uninverted.
             let condition : ICondition | null = null;
             if (
-                ctx.withConditions &&
                 pendingWithoutCondition === 0 &&
+                ctx.withConditions &&
                 pendingConditions.length > 0 &&
                 decisionStrategy !== DecisionStrategy.CONSENSUS
             ) {

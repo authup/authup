@@ -72,7 +72,7 @@ export default defineComponent({
                     filters.id = { $nin: excluded };
                 }
 
-                filters.parentId = [null, `${props.entity.id}`];
+                filters.parentId = [null, String(props.entity.id)];
             } else {
                 filters.parentId = null;
             }

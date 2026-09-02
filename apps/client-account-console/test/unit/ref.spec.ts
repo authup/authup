@@ -69,7 +69,7 @@ describe('account console ref stash', () => {
 });
 
 describe('account console ref stash: hostile storage', () => {
-    const original = globalThis.sessionStorage;
+    const original = sessionStorage;
 
     afterEach(() => {
         Object.defineProperty(globalThis, 'sessionStorage', {

@@ -30,7 +30,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<PermissionPolicy>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${EntityType.PERMISSION_POLICY}`,
+            type: EntityType.PERMISSION_POLICY,
             setup,
             query: () => ({
                 filters: {

@@ -86,7 +86,7 @@ export default defineComponent({
 
             // Only the removal transition confirms (currently assigned → this
             // click un-assigns). Adding is low-stakes and never prompts.
-            if (props.value && props.withPrompt && confirmDialog) {
+            if (confirmDialog && props.value && props.withPrompt) {
                 const confirmed = await confirmDialog({
                     title: translations.removeConfirmTitle,
                     description: translations.removeConfirmDescription,

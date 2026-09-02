@@ -416,10 +416,8 @@ describe('UserAuthenticatorService', () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
             const [code] = enrolled.meta.codes!;
 
-            let markStarted! : () => void;
-            const started = new Promise<void>((resolve) => { markStarted = resolve; });
-            let releaseHook! : () => void;
-            const hookGate = new Promise<void>((resolve) => { releaseHook = resolve; });
+            const { promise: started, resolve: markStarted } = Promise.withResolvers<void>();
+            const { promise: hookGate, resolve: releaseHook } = Promise.withResolvers<void>();
             const renew = vi.spyOn(cache, 'renewIfValue');
 
             vi.useFakeTimers();
