@@ -5,12 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm, User } from '@authup/core-kit';
+import type { RealmMinimal, UserMinimal } from '../types';
 import type { EventEmitter } from '@posva/event-emitter';
 import type { StoreDispatcherEventName } from './constants';
-
-type RealmMinimal = Pick<Realm, 'id' | 'name'>;
-type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.LOGGING_IN]: [],

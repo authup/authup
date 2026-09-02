@@ -13,10 +13,14 @@ import type {
     _ExtractGettersFromSetupStore, 
     _ExtractStateFromSetupStore,
 } from 'pinia';
+import type { Realm, User } from '@authup/core-kit';
 import type { IClient } from '@authup/core-http-kit';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
 import type { StoreDispatcher } from './dispatcher';
+
+export type RealmMinimal = Pick<Realm, 'id' | 'name'>;
+export type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 type StoreData = ReturnType<typeof createStore>;
 export type Store = BaseStore<

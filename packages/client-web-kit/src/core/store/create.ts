@@ -17,15 +17,17 @@ import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
-import type {
-    Realm,
-    User,
-} from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client } from '@authup/core-http-kit';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
-import type { StoreCreateContext, StoreLoginContext, StoreLogoutOptions } from './types';
+import type {
+    RealmMinimal,
+    StoreCreateContext,
+    StoreLoginContext,
+    StoreLogoutOptions,
+    UserMinimal,
+} from './types';
 
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
@@ -61,9 +63,6 @@ function createPromiseShareWrapperFn<F extends InputFn>(
         return promise;
     };
 }
-
-type RealmMinimal = Pick<Realm, 'id' | 'name'>;
-type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 export function createStore(context: StoreCreateContext) {
     const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
