@@ -6,7 +6,7 @@
  */
 
 import type { ConfigReadFsOptions } from '@authup/server-config';
-import { defineApplicationCommand } from './start.ts';
+import { defineApplicationCommand } from './application.ts';
 
 export function defineCLICoreCommand(configFs: ConfigReadFsOptions = {}) {
     return defineApplicationCommand(configFs, { name: 'core', consoles: false });
