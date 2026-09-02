@@ -446,9 +446,9 @@ or different copy, you replace the console package instead:
 
 | | |
 |---|---|
-| `server.authConsole.path` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
-| `server.accountConsole.path` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
-| `server.adminConsole.path` / `ADMIN_CONSOLE_PATH` | package directory replacing `@authup/client-admin-console` |
+| `authConsole.path` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
+| `accountConsole.path` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
+| `adminConsole.path` / `ADMIN_CONSOLE_PATH` | package directory replacing `@authup/client-admin-console` |
 
 Each points at a directory containing the built `dist/`. When set, it is used
 instead of resolving the packaged console from `node_modules`.

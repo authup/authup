@@ -147,12 +147,10 @@ describe('SCHEMA', () => {
                 directoryPath: '/etc/authup/theme',
                 fragmentsEnabled: true,
             },
-            server: {
-                core: { port: 4001 },
-                authConsole: { url: 'https://idp.example.com/console/auth', port: 4020 },
-                adminConsole: { url: 'https://idp.example.com/console/admin', enabled: false },
-                accountConsole: { url: 'https://idp.example.com/console/account', enabled: false },
-            },
+            core: { port: 4001 },
+            authConsole: { url: 'https://idp.example.com/console/auth', port: 4020 },
+            adminConsole: { url: 'https://idp.example.com/console/admin', enabled: false },
+            accountConsole: { url: 'https://idp.example.com/console/account', enabled: false },
         };
 
         expect(readSchemaFromFileTree<AuthupConfig>(tree, SCHEMA)).toEqual({
@@ -267,28 +265,31 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
      */
     it('nests every key at the path its entry spells', () => {
         expect(Object.keys(schema.properties as Record<string, unknown>).sort()).toEqual([
+            'accountConsole',
+            'adminConsole',
+            'authConsole',
+            'core',
             'db',
             'env',
             'host',
             'publicUrl',
             'redis',
             'rootPath',
-            'server',
             'smtp',
             'theme',
             'trustedOrigins',
         ]);
 
         // a section is a way of DECLARING the document, never a part of it:
-        // its keys sit at the paths their entries carry.
+        // its keys sit at the paths their entries carry. Every key a service
+        // reads now sits at the top level, so nothing wraps them.
         const properties = schema.properties as Record<string, unknown>;
-        expect(properties).not.toHaveProperty('core');
-        expect(properties).not.toHaveProperty('adminConsole');
+        expect(properties).not.toHaveProperty('server');
 
-        expect(resolveProperty('server.core.port')).toBeDefined();
-        expect(resolveProperty('server.authConsole.port')).toBeDefined();
-        expect(resolveProperty('server.adminConsole.path')).toBeDefined();
-        expect(resolveProperty('server.accountConsole.host')).toBeDefined();
+        expect(resolveProperty('core.port')).toBeDefined();
+        expect(resolveProperty('authConsole.port')).toBeDefined();
+        expect(resolveProperty('adminConsole.path')).toBeDefined();
+        expect(resolveProperty('accountConsole.host')).toBeDefined();
         expect(resolveProperty('theme.directoryPath')).toBeDefined();
     });
 
@@ -302,7 +303,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
     });
 
     it('carries the env name and the static default, and omits a process-derived one', () => {
-        const port = resolveProperty('server.core.port');
+        const port = resolveProperty('core.port');
         expect(port['x-authup-env']).toEqual('PORT');
         expect(port.default).toEqual(3000);
 
@@ -312,7 +313,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
     });
 
     it('represents an enum type', () => {
-        expect(resolveProperty('server.core.certificateSource').enum)
+        expect(resolveProperty('core.certificateSource').enum)
             .toEqual(['disabled', 'standard', 'forwarded']);
     });
 });

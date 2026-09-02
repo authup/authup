@@ -12,7 +12,7 @@ import { createServer } from './server';
 
 /**
  * The standalone entry. It reads the keys the service needs from the
- * environment alone; the `server.accountConsole` section of `authup.yml` and
+ * environment alone; the `accountConsole` section of `authup.yml` and
  * the composed loader arrive with the CLI roles (plan 101 D2-3), which is
  * also when this service stops being started this way in practice.
  */

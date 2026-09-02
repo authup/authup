@@ -29,7 +29,7 @@ import { buildConsoleApplications, readConsoleConfigs } from '../console/index.t
  * reads no console configuration at all: it neither resolves a console
  * package nor loads an operator theme, and every console path answers the
  * 404 server-core has served since plan 101 D2-3. The hosted page GETs still
- * redirect, because that is a controller reading `server.<name>Console.url`,
+ * redirect, because that is a controller reading `<name>Console.url`,
  * not a mount.
  *
  * Two named factories rather than one with a flag: the role is what an

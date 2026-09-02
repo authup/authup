@@ -11,8 +11,8 @@ const PRODUCTION = 'production';
 
 /**
  * The dev console's own listener. In non-production it runs on its own port
- * while the API answers on `server.core.port`, so it is seeded into the
- * trusted origins: without it the redirect allowlist (`<origin>/**`) and CORS
+ * while the API answers on `core.port`, so it is seeded into the trusted
+ * origins: without it the redirect allowlist (`<origin>/**`) and CORS
  * reject the realm-selection login and a first run is dead on arrival.
  */
 export const DEVELOPMENT_ORIGIN = 'http://localhost:3010';

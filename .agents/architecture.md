@@ -831,7 +831,7 @@ API. The six page GETs became a stateless hop:
   imports those TYPES only, the runtime stays a dist-file `read()`.
   Substituting a package that fulfills the contract is the supported way to
   replace the hosted auth UI (the Keycloak login-theme analog), via
-  `server.authConsole.path`. A missing bundle 500s with an actionable
+  `authConsole.path`. A missing bundle 500s with an actionable
   message (build `apps/client-auth-console` first).
 - **The service hydrates ANONYMOUSLY.** It holds no credential and asks
   server-core only for what an unauthenticated visitor may see, which is the
@@ -858,7 +858,7 @@ API. The six page GETs became a stateless hop:
   where the auth console service reads them from.
 - **Sub-path deployment**: a console service works behind a
   prefix-stripping reverse proxy with no extra config. Its own public path
-  is the path component of `server.<name>Console.url`
+  is the path component of `<name>Console.url`
   (`getURLBasePath` in `@authup/kit`), which feeds the vue-router history
   base, the `useBasePath()` composable (`src/base-path.ts`) that pages use
   for inter-page hrefs and rendered `redirect` values, and the asset rebase
@@ -1482,8 +1482,8 @@ nothing else.
   cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
   root deployments; the two consoles still share one session because both
   scope to the same base path.
-- **Feature flag `accountConsole.enabled`** (`server.accountConsole.enabled`,
-  env `ACCOUNT_CONSOLE_ENABLED`, default `true`) is read by BOTH sides,
+- **Feature flag `accountConsole.enabled`**
+  (env `ACCOUNT_CONSOLE_ENABLED`, default `true`) is read by BOTH sides,
   because they answer different questions with it and neither can ask the
   other. The console service injects it as
   `window.__AUTHUP__.features.accountConsole`, since the service serving a
@@ -1854,7 +1854,7 @@ bootstrap. What differs from the account console, and why:
   path-scoped to `<base>/<segment>` (so two consoles keep separate logins in
   flight) and the callback URL derives from the segment, both on the API's
   own origin whatever the console url says, while the LANDING and REFUSAL
-  targets derive from `consoleUrl` (`server.<name>Console.url`), because the
+  targets derive from `consoleUrl` (`<name>Console.url`), because the
   console may be published at a path of its own and deriving it from
   `publicUrl` would then send the browser nowhere. Only the url's path is
   used: a console on a FOREIGN origin could never present the
@@ -1880,13 +1880,12 @@ bootstrap. What differs from the account console, and why:
   same literal on its side. Assets are served `immutable` for a year (every
   name carries a content hash; a new build means new names), for both static
   consoles. Config keys mirror the account console: `adminConsole.enabled`
-  (`server.adminConsole.enabled`, `ADMIN_CONSOLE_ENABLED`, declared in the
-  service's registry AND server-core's, riding
-  `StatusResponseFeatures.adminConsole` on the status endpoint; off means off
-  on the SERVER too, where the kick and the callback answer 404) and
-  `adminConsole.path` (`server.adminConsole.path`, `ADMIN_CONSOLE_PATH`, the
-  substituted-package seam), plus `server.adminConsole.url` and the listen
-  address `server.adminConsole.port` / `.host`. The marker
+  (`ADMIN_CONSOLE_ENABLED`, declared in the service's registry AND
+  server-core's, riding `StatusResponseFeatures.adminConsole` on the status
+  endpoint; off means off on the SERVER too, where the kick and the callback
+  answer 404) and `adminConsole.path` (`ADMIN_CONSOLE_PATH`, the
+  substituted-package seam), plus `adminConsole.url` and the listen
+  address `adminConsole.port` / `.host`. The marker
   (`<!--admin-config-->`) and the vite base (`/console/admin/`) are constants
   in the service, and they must agree with the bundle: a package built for
   another vite base serves its shell and then 404s every asset with no error
@@ -2230,11 +2229,11 @@ pages rendered unthemed.
   provider. That replaced the `event.store` handoff server-core used while
   it served the consoles itself.
 
-### Console substitution (`server.<name>Console.path`)
+### Console substitution (`<name>Console.path`)
 
-Theming cannot change markup. `server.authConsole.path`
-(`AUTH_CONSOLE_PATH`), `server.accountConsole.path`
-(`ACCOUNT_CONSOLE_PATH`) and `server.adminConsole.path`
+Theming cannot change markup. `authConsole.path`
+(`AUTH_CONSOLE_PATH`), `accountConsole.path`
+(`ACCOUNT_CONSOLE_PATH`) and `adminConsole.path`
 (`ADMIN_CONSOLE_PATH`) point at package directories consulted BEFORE the
 locter `node_modules` walk, so replacing a console never means mounting over
 a workspace symlink. Each key is declared by the SERVICE that reads it and
@@ -2250,7 +2249,7 @@ never a config key of its own), `authup dev` serves it through a vite dev
 server with hot module replacement instead of reading its `dist/`, exactly
 as it does for the three workspace consoles. An integrator who forked
 `@authup/client-auth-console` to reskin the hosted auth UI gets the same
-loop the workspace does, for free, by pointing `server.authConsole.path` at
+loop the workspace does, for free, by pointing `authConsole.path` at
 their checkout.
 
 **What a replacement owes is a CONTRACT, and the two console kinds carry
@@ -2965,7 +2964,7 @@ boots on its defaults).
 this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
-the second falls back to typeorm-extension's driver default; `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `server.core.host` + `server.core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
+the second falls back to typeorm-extension's driver default; `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `core.host` + `core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
 operator-facing `description`, and for the 51 env-backed keys the
 `EnvironmentVariable` plus a `readEnv` reader. The mapped
 `Schema` type is the exhaustiveness guard: a `Config` key with no
@@ -3009,16 +3008,16 @@ cannot share one.
 
 **Where a key sits in `authup.yml` follows from the section it is declared
 in.** `defineSchema(schema, { pathPrefix })` stamps the absolute dotted
-location onto every entry that does not spell one, so `server.core.port` and
-`server.adminConsole.enabled` are written down once, next to the section
+location onto every entry that does not spell one, so `core.port` and
+`adminConsole.enabled` are written down once, next to the section
 name, rather than repeated per key. An entry spells a `path` of its own only
 to sit outside its section, which today is the deployment-wide `host`. A
 section is per CONSOLE, never per implementation package, and no environment
 variable name ever changed, so env-driven deployments feel nothing. **Config follows the code** (plan 101 D2-3): the theme
 pair (`theme.directoryPath` / `theme.fragmentsEnabled`) and the three
-`server.<name>Console.path` keys LEFT server-core's registry for the
-packages that read them, while `server.adminConsole.url` and
-`server.accountConsole.url` JOINED it next to the auth console's, because
+`<name>Console.path` keys LEFT server-core's registry for the
+packages that read them, while `adminConsole.url` and
+`accountConsole.url` JOINED it next to the auth console's, because
 the console login has to know where to send the browser once the credential
 is issued and deriving that from `publicUrl` would be wrong the moment a
 console is published at a path of its own. server-core keeps the two
@@ -3047,13 +3046,28 @@ carried before the extraction.
 
 **One document, one declaration per key** (`@authup/server-config`). Every
 key of `authup.yml` is declared exactly once, in the section it belongs to:
-`deployment/` (the root keys), `theme/`, `core/` (`server.core.*`) and one
-per console (`server.<name>Console.*`). A service does not declare anything.
+`deployment/` (the root keys), `theme/`, `core/` (`core.*`) and one
+per console (`<name>Console.*`). A service does not declare anything.
 It SELECTS: its config type is an intersection of the section types it
 reads, and its registry a spread of the matching schemas. server-core takes
 deployment plus core plus the five console-reference keys it needs to
 redirect and to land a login; a console takes `publicUrl`, the theme pair
 and its own section.
+
+**Every section sits at the document ROOT, with no `server.` wrapper.** The
+four service sections carried one until the prefix was dropped, and it never
+discriminated: there is no `client.` sibling and cannot be (plan 081 retired
+`client.admin-console`, and the container entrypoint exits 1 on it), so a
+namespace with one member is not one. It was also only half applied, since
+`theme` and the seven deployment keys always sat at the root, and it made the
+document the odd surface out: `SECTION_KEY` and `AuthupConfig` were already
+`core` / `adminConsole`, and no environment variable ever carried a `SERVER_`
+qualifier. The docker entrypoint's `server/core` is a service SELECTOR and
+never followed the section anyway; it is unchanged. The prefix was never
+released (it arrived with `authup.yml` in plan 101 C-2 and left in the same
+beta), so there is no migration path and none is offered: the file read is
+permissive, so a document still carrying `server:` has its whole subtree
+skipped in silence.
 
 That is the whole point of the shape: a service that names key names cannot
 mis-spell a path, an environment variable or a reader, because it spells

@@ -67,16 +67,15 @@ Configuration is read from an `authup.yml` file (current working directory, or
 # yaml-language-server: $schema=https://authup.org/schema/config.json
 publicUrl: http://localhost:3000
 
-server:
-    core:
-        port: 3000
-        host: 0.0.0.0
+core:
+    port: 3000
+    host: 0.0.0.0
 ```
 
 The deployment-wide values (`publicUrl`, `db`, `redis`, `smtp`,
 `trustedOrigins`, `theme`) sit at the top level, everything the API itself
-reads under `server.core`, and each console under its own
-`server.<name>Console` section.
+reads under `core`, and each console under its own
+`<name>Console` section.
 
 Every option can be set in the environment instead, and the environment always
 wins over the file. `PORT` and `HOST` are ordinary options under that rule, so

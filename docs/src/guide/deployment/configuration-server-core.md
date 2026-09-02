@@ -1,6 +1,6 @@
 # Configuration
 
-The API configuration is read from the `server.core` section of `authup.yml` (or of
+The API configuration is read from the `core` section of `authup.yml` (or of
 `authup.{json,js,ts,...}`; see the [configuration introduction](./configuration) for
 the file lookup and the `--configDirectory`/`--configFile` CLI flags).
 
@@ -8,11 +8,17 @@ Most options can also be provided as environment variables (shown in the `.env` 
 **An environment variable always overrides the file value** for the same option.
 A few options are file-only and have no environment variable — they are marked as such.
 
-Not every option below sits under `server.core`. `env`, `host`, `rootPath`,
+Not every option below sits under `core`. `env`, `host`, `rootPath`,
 `publicUrl` and `trustedOrigins` are top-level, the two theme options are
 `theme.directoryPath` and `theme.fragmentsEnabled`, and the console options are
-`server.adminConsole.*`, `server.accountConsole.*` and `server.authConsole.*`. The
+`adminConsole.*`, `accountConsole.*` and `authConsole.*`. The
 `authup.yml` tab shows each one at its place.
+
+`host` appears at both levels on purpose, and they are not alternatives. The
+top-level one (env `HOST`) is the deployment-wide bind address every listener
+inherits, so one line binds the API and all three console services; `core.host`
+overrides it for the API listener alone and is what the sample below sets.
+`port` has no top-level counterpart, because several listeners cannot share one.
 
 Of those, server-core itself reads only `enabled` and `url` per console: `enabled`
 gates the console's two sign-in routes, `url` is where it sends the browser. The rest
@@ -119,490 +125,488 @@ export default {
         fragmentsEnabled: false,
     },
 
-    server: {
-        adminConsole: {
-            /**
-             * Where the admin console is published. server-core sends the browser
-             * there once a sign-in is complete; the console service rebases its
-             * asset URLs and links onto it. Only the path may differ from
-             * publicUrl, never the origin. `port` and `host` (the console's own
-             * listener, used by `authup console`) are documented in the
-             * Console Replicas guide.
-             * env: ADMIN_CONSOLE_URL
-             * default: '' (derived: <publicUrl>/console/admin)
-             */
-            url: '',
+    adminConsole: {
+        /**
+         * Where the admin console is published. server-core sends the browser
+         * there once a sign-in is complete; the console service rebases its
+         * asset URLs and links onto it. Only the path may differ from
+         * publicUrl, never the origin. `port` and `host` (the console's own
+         * listener, used by `authup console`) are documented in the
+         * Console Replicas guide.
+         * env: ADMIN_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/admin)
+         */
+        url: '',
 
-            /**
-             * Serve the admin console at `<publicUrl>/console/admin` (realms, clients,
-             * users, roles, permissions, policies, keys, sessions, events).
-             * Disable it to administer the instance through the API alone.
-             * env: ADMIN_CONSOLE_ENABLED
-             * default: true
-             */
-            enabled: true,
+        /**
+         * Serve the admin console at `<publicUrl>/console/admin` (realms, clients,
+         * users, roles, permissions, policies, keys, sessions, events).
+         * Disable it to administer the instance through the API alone.
+         * env: ADMIN_CONSOLE_ENABLED
+         * default: true
+         */
+        enabled: true,
 
-            /**
-             * EXPERIMENTAL. Package directory replacing the served admin console. It
-             * points at a directory holding the built dist/. Empty resolves the
-             * packaged console from node_modules. See the Theming guide.
-             * A source checkout there is served from source with hot module
-             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
-             * Quick Start guide).
-             * env: ADMIN_CONSOLE_PATH
-             * default: ''
-             */
-            path: '',
-        },
+        /**
+         * EXPERIMENTAL. Package directory replacing the served admin console. It
+         * points at a directory holding the built dist/. Empty resolves the
+         * packaged console from node_modules. See the Theming guide.
+         * A source checkout there is served from source with hot module
+         * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+         * Quick Start guide).
+         * env: ADMIN_CONSOLE_PATH
+         * default: ''
+         */
+        path: '',
+    },
 
-        accountConsole: {
-            /**
-             * Where the account console is published, same rules as
-             * adminConsole.url above.
-             * env: ACCOUNT_CONSOLE_URL
-             * default: '' (derived: <publicUrl>/console/account)
-             */
-            url: '',
+    accountConsole: {
+        /**
+         * Where the account console is published, same rules as
+         * adminConsole.url above.
+         * env: ACCOUNT_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/account)
+         */
+        url: '',
 
-            /**
-             * Serve the account self-service surface at `<publicUrl>/console/account`
-             * (profile, password, authenticators, sessions, applications).
-             * Disable it when you run your own self-service portal.
-             * env: ACCOUNT_CONSOLE_ENABLED
-             * default: true
-             */
-            enabled: true,
+        /**
+         * Serve the account self-service surface at `<publicUrl>/console/account`
+         * (profile, password, authenticators, sessions, applications).
+         * Disable it when you run your own self-service portal.
+         * env: ACCOUNT_CONSOLE_ENABLED
+         * default: true
+         */
+        enabled: true,
 
-            /**
-             * EXPERIMENTAL. Package directory replacing the served account console. It
-             * points at a directory holding the built dist/. Empty resolves the
-             * packaged console from node_modules. See the Theming guide.
-             * A source checkout there is served from source with hot module
-             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
-             * Quick Start guide).
-             * env: ACCOUNT_CONSOLE_PATH
-             * default: ''
-             */
-            path: '',
-        },
+        /**
+         * EXPERIMENTAL. Package directory replacing the served account console. It
+         * points at a directory holding the built dist/. Empty resolves the
+         * packaged console from node_modules. See the Theming guide.
+         * A source checkout there is served from source with hot module
+         * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+         * Quick Start guide).
+         * env: ACCOUNT_CONSOLE_PATH
+         * default: ''
+         */
+        path: '',
+    },
 
-        authConsole: {
-            /**
-             * Where the hosted login, consent and workflow pages are published.
-             * The six page GETs on this server redirect there, carrying the
-             * request's own query. Same rules as adminConsole.url above; there is
-             * no `enabled`, because those pages are the issuance surface.
-             * env: AUTH_CONSOLE_URL
-             * default: '' (derived: <publicUrl>/console/auth)
-             */
-            url: '',
+    authConsole: {
+        /**
+         * Where the hosted login, consent and workflow pages are published.
+         * The six page GETs on this server redirect there, carrying the
+         * request's own query. Same rules as adminConsole.url above; there is
+         * no `enabled`, because those pages are the issuance surface.
+         * env: AUTH_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/auth)
+         */
+        url: '',
 
-            /**
-             * EXPERIMENTAL. Package directory replacing the served auth console. It
-             * points at a directory holding the built dist/. Empty resolves the
-             * packaged console from node_modules. See the Theming guide.
-             * A source checkout there is served from source with hot module
-             * replacement by `authup dev` instead (also EXPERIMENTAL; see the
-             * Quick Start guide).
-             * env: AUTH_CONSOLE_PATH
-             * default: ''
-             */
-            path: '',
-        },
+        /**
+         * EXPERIMENTAL. Package directory replacing the served auth console. It
+         * points at a directory holding the built dist/. Empty resolves the
+         * packaged console from node_modules. See the Theming guide.
+         * A source checkout there is served from source with hot module
+         * replacement by `authup dev` instead (also EXPERIMENTAL; see the
+         * Quick Start guide).
+         * env: AUTH_CONSOLE_PATH
+         * default: ''
+         */
+        path: '',
+    },
 
-        core: {
-            /**
-             * Directory the application writes to at runtime (log files in
-             * production) and reads file-based provisioning from
-             * (<writableDirectoryPath>/provisioning). Relative paths are resolved
-             * against rootPath. The SQLite database is NOT placed here - its path
-             * comes from the database configuration (db.database / DB_DATABASE).
-             * env: WRITABLE_DIRECTORY_PATH
-             * default: writable
-             */
-            writableDirectoryPath: 'writable',
+    core: {
+        /**
+         * Directory the application writes to at runtime (log files in
+         * production) and reads file-based provisioning from
+         * (<writableDirectoryPath>/provisioning). Relative paths are resolved
+         * against rootPath. The SQLite database is NOT placed here - its path
+         * comes from the database configuration (db.database / DB_DATABASE).
+         * env: WRITABLE_DIRECTORY_PATH
+         * default: writable
+         */
+        writableDirectoryPath: 'writable',
 
-            /**
-             * Enable logging. File-only (no environment variable).
-             * default: true
-             */
-            logger: true,
+        /**
+         * Enable logging. File-only (no environment variable).
+         * default: true
+         */
+        logger: true,
 
-            /**
-             * Run the background components (the session, token and audit-event
-             * sweeps) in this process. Set false on API replicas once a dedicated
-             * worker process runs them, and only then: with it false everywhere,
-             * nothing sweeps. A worker started with `authup worker` forces
-             * them on regardless of this option. See the Worker guide.
-             * env: COMPONENTS_ENABLED
-             * default: true
-             */
-            componentsEnabled: true,
+        /**
+         * Run the background components (the session, token and audit-event
+         * sweeps) in this process. Set false on API replicas once a dedicated
+         * worker process runs them, and only then: with it false everywhere,
+         * nothing sweeps. A worker started with `authup worker` forces
+         * them on regardless of this option. See the Worker guide.
+         * env: COMPONENTS_ENABLED
+         * default: true
+         */
+        componentsEnabled: true,
 
-            /**
-             * Apply pending schema migrations at startup. When false, startup runs
-             * no DDL: it verifies that no migration is pending and fails loud
-             * otherwise, so a replica never races a sibling for the same DDL. Run
-             * `authup migration run` as a separate step instead; that command
-             * is unaffected by this option. Ignored on SQLite, which ships no
-             * migrations and always synchronizes its schema. See the Worker guide.
-             * env: MIGRATION_ENABLED
-             * default: true
-             */
-            migrationEnabled: true,
+        /**
+         * Apply pending schema migrations at startup. When false, startup runs
+         * no DDL: it verifies that no migration is pending and fails loud
+         * otherwise, so a replica never races a sibling for the same DDL. Run
+         * `authup migration run` as a separate step instead; that command
+         * is unaffected by this option. Ignored on SQLite, which ships no
+         * migrations and always synchronizes its schema. See the Worker guide.
+         * env: MIGRATION_ENABLED
+         * default: true
+         */
+        migrationEnabled: true,
 
-            /**
-             * Application port number.
-             * env: PORT
-             * default: 3000
-             */
-            port: 3000,
+        /**
+         * Application port number.
+         * env: PORT
+         * default: 3000
+         */
+        port: 3000,
 
-            /**
-             * Address the HTTP server binds to. Has no environment variable of
-             * its own: HOST sets the top-level `host`, which this listener and
-             * every console listener inherit unless they name their own.
-             * default: the top-level host (0.0.0.0, all interfaces)
-             */
-            host: '0.0.0.0',
+        /**
+         * Address the HTTP server binds to. Has no environment variable of
+         * its own: HOST sets the top-level `host`, which this listener and
+         * every console listener inherit unless they name their own.
+         * default: the top-level host (0.0.0.0, all interfaces)
+         */
+        host: '0.0.0.0',
 
-            /**
-             * Optional public base URL whose proxy requests TLS client certificates.
-             * Published in OpenID discovery as RFC 8705 mtls_endpoint_aliases.
-             * Requires certificateSource to be enabled.
-             * env: MTLS_PUBLIC_URL
-             * default: null
-             */
-            mtlsPublicUrl: 'https://mtls.example.com',
+        /**
+         * Optional public base URL whose proxy requests TLS client certificates.
+         * Published in OpenID discovery as RFC 8705 mtls_endpoint_aliases.
+         * Requires certificateSource to be enabled.
+         * env: MTLS_PUBLIC_URL
+         * default: null
+         */
+        mtlsPublicUrl: 'https://mtls.example.com',
 
-            /**
-             * Trusted-proxy certificate header contract:
-             * - disabled: ignore certificate headers (default)
-             * - standard: RFC 9440 Client-Cert / Client-Cert-Chain
-             * - forwarded: X-Forwarded-Tls-Client-Cert escaped PEM leaf
-             *
-             * Enabling this requires a private backend listener and a proxy that
-             * removes/overwrites public certificate headers on every request.
-             * env: CERTIFICATE_SOURCE
-             * default: disabled
-             */
-            certificateSource: 'forwarded',
+        /**
+         * Trusted-proxy certificate header contract:
+         * - disabled: ignore certificate headers (default)
+         * - standard: RFC 9440 Client-Cert / Client-Cert-Chain
+         * - forwarded: X-Forwarded-Tls-Client-Cert escaped PEM leaf
+         *
+         * Enabling this requires a private backend listener and a proxy that
+         * removes/overwrites public certificate headers on every request.
+         * env: CERTIFICATE_SOURCE
+         * default: disabled
+         */
+        certificateSource: 'forwarded',
 
-            /**
-             * Which upstream proxies to trust when deriving the client IP from
-             * X-Forwarded-For: true trusts every hop, false trusts none (the
-             * socket peer address is used), a number trusts that many hops, and
-             * a string / list is an allowlist of proxy IPs, CIDRs, or the
-             * presets loopback, linklocal, uniquelocal.
-             *
-             * Security: with `true` (the default), a DIRECT client can spoof
-             * its IP via X-Forwarded-For — login-throttle keys, audit events,
-             * the access log, and the session inventory then record the forged
-             * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
-             * proxy) when the listener is reachable without a proxy or exact
-             * attribution matters. String forms are canonicalized: "1" means
-             * one trusted hop (never trust-all), "true"/"false" parse as
-             * booleans, anything else is a comma-separated allowlist. Allowlist
-             * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
-             * a hop count outside the safe integer range is rejected at boot.
-             * env: TRUST_PROXY
-             * default: true
-             */
-            trustProxy: 1,
+        /**
+         * Which upstream proxies to trust when deriving the client IP from
+         * X-Forwarded-For: true trusts every hop, false trusts none (the
+         * socket peer address is used), a number trusts that many hops, and
+         * a string / list is an allowlist of proxy IPs, CIDRs, or the
+         * presets loopback, linklocal, uniquelocal.
+         *
+         * Security: with `true` (the default), a DIRECT client can spoof
+         * its IP via X-Forwarded-For — login-throttle keys, audit events,
+         * the access log, and the session inventory then record the forged
+         * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
+         * proxy) when the listener is reachable without a proxy or exact
+         * attribution matters. String forms are canonicalized: "1" means
+         * one trusted hop (never trust-all), "true"/"false" parse as
+         * booleans, anything else is a comma-separated allowlist. Allowlist
+         * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
+         * a hop count outside the safe integer range is rejected at boot.
+         * env: TRUST_PROXY
+         * default: true
+         */
+        trustProxy: 1,
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Built-in HTTP middlewares. Each accepts a boolean or an options
-             * object (options objects require the js/ts file variant), except
-             * middlewareSwagger, which is boolean-only.
-             * File-only (no environment variables).
-             * default: true (each)
-             */
-            middlewareBody: true,       // request body parsing
-            middlewareCookie: true,     // cookie parsing
-            middlewareCors: true,       // CORS (reflects any origin by default;
-                                        // pass options for an explicit allowlist)
-            middlewarePrometheus: true, // /metrics endpoint
-            middlewareQuery: true,      // query-string parsing
-            middlewareRateLimit: true,  // rate limiting
-            middlewareSwagger: true,    // /docs endpoint
+        /**
+         * Built-in HTTP middlewares. Each accepts a boolean or an options
+         * object (options objects require the js/ts file variant), except
+         * middlewareSwagger, which is boolean-only.
+         * File-only (no environment variables).
+         * default: true (each)
+         */
+        middlewareBody: true,       // request body parsing
+        middlewareCookie: true,     // cookie parsing
+        middlewareCors: true,       // CORS (reflects any origin by default;
+                                    // pass options for an explicit allowlist)
+        middlewarePrometheus: true, // /metrics endpoint
+        middlewareQuery: true,      // query-string parsing
+        middlewareRateLimit: true,  // rate limiting
+        middlewareSwagger: true,    // /docs endpoint
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Refresh token validity in seconds (default: 259,200s / 3 days).
-             * env: TOKEN_REFRESH_MAX_AGE
-             * default: 259_200
-             */
-            tokenRefreshMaxAge: 259_200,
+        /**
+         * Refresh token validity in seconds (default: 259,200s / 3 days).
+         * env: TOKEN_REFRESH_MAX_AGE
+         * default: 259_200
+         */
+        tokenRefreshMaxAge: 259_200,
 
-            /**
-             * Access token validity in seconds (default: 900s / 15 minutes).
-             * env: TOKEN_ACCESS_MAX_AGE
-             * default: 900
-             */
-            tokenAccessMaxAge: 900,
+        /**
+         * Access token validity in seconds (default: 900s / 15 minutes).
+         * env: TOKEN_ACCESS_MAX_AGE
+         * default: 900
+         */
+        tokenAccessMaxAge: 900,
 
-            /**
-             * Grace period (seconds) during which a just-rotated refresh token is
-             * still accepted, minting new chain-linked tokens instead of triggering
-             * replay detection. Absorbs multi-tab / mobile refresh races.
-             * env: TOKEN_REFRESH_GRACE_PERIOD
-             * default: 0 (strict — first-use-wins)
-             */
-            tokenRefreshGracePeriod: 0,
+        /**
+         * Grace period (seconds) during which a just-rotated refresh token is
+         * still accepted, minting new chain-linked tokens instead of triggering
+         * replay detection. Absorbs multi-tab / mobile refresh races.
+         * env: TOKEN_REFRESH_GRACE_PERIOD
+         * default: 0 (strict — first-use-wins)
+         */
+        tokenRefreshGracePeriod: 0,
 
-            /**
-             * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
-             * authorize request accepts before forcing re-authentication. Judged against
-             * the session's creation time — a stateless approximation.
-             * env: PROMPT_LOGIN_MAX_AGE
-             * default: 60
-             */
-            promptLoginMaxAge: 60,
+        /**
+         * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
+         * authorize request accepts before forcing re-authentication. Judged against
+         * the session's creation time — a stateless approximation.
+         * env: PROMPT_LOGIN_MAX_AGE
+         * default: 60
+         */
+        promptLoginMaxAge: 60,
 
-            /**
-             * Seconds past its expiry an (expired) id_token_hint presented at the
-             * RP-initiated logout endpoint (/logout) is still accepted for a
-             * server-side session revoke. Bounds how long a leaked id_token stays a
-             * replayable remote logout; beyond the window the click-gated confirm
-             * page still works.
-             * env: END_SESSION_HINT_GRACE_PERIOD
-             * default: 0 (unbounded — spec/Keycloak parity)
-             */
-            endSessionHintGracePeriod: 0,
+        /**
+         * Seconds past its expiry an (expired) id_token_hint presented at the
+         * RP-initiated logout endpoint (/logout) is still accepted for a
+         * server-side session revoke. Bounds how long a leaked id_token stays a
+         * replayable remote logout; beyond the window the click-gated confirm
+         * page still works.
+         * env: END_SESSION_HINT_GRACE_PERIOD
+         * default: 0 (unbounded — spec/Keycloak parity)
+         */
+        endSessionHintGracePeriod: 0,
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Enable user registration?
-             * env: REGISTRATION_ENABLED
-             * default: false
-             */
-            registrationEnabled: false,
+        /**
+         * Enable user registration?
+         * env: REGISTRATION_ENABLED
+         * default: false
+         */
+        registrationEnabled: false,
 
-            /**
-             * Require email verification for registration or login?
-             * env: EMAIL_VERIFICATION_ENABLED
-             * default: false
-             */
-            emailVerificationEnabled: false,
+        /**
+         * Require email verification for registration or login?
+         * env: EMAIL_VERIFICATION_ENABLED
+         * default: false
+         */
+        emailVerificationEnabled: false,
 
-            /**
-             * Allow password reset via email?
-             * env: PASSWORD_RECOVERY_ENABLED
-             * default: false
-             */
-            passwordRecoveryEnabled: false,
+        /**
+         * Allow password reset via email?
+         * env: PASSWORD_RECOVERY_ENABLED
+         * default: false
+         */
+        passwordRecoveryEnabled: false,
 
-            /**
-             * Minimum length for user-chosen passwords (user create/update,
-             * registration, password reset). The maximum is fixed at 512.
-             * env: PASSWORD_MIN_LENGTH
-             * default: 10
-             */
-            passwordMinLength: 10,
+        /**
+         * Minimum length for user-chosen passwords (user create/update,
+         * registration, password reset). The maximum is fixed at 512.
+         * env: PASSWORD_MIN_LENGTH
+         * default: 10
+         */
+        passwordMinLength: 10,
 
-            /**
-             * Persist security events (login, loginFailed, authorize,
-             * logout, refresh replay, ...) to the auth_events table.
-             * env: EVENT_LOG_ENABLED
-             * default: true
-             */
-            eventLogEnabled: true,
+        /**
+         * Persist security events (login, loginFailed, authorize,
+         * logout, refresh replay, ...) to the auth_events table.
+         * env: EVENT_LOG_ENABLED
+         * default: true
+         */
+        eventLogEnabled: true,
 
-            /**
-             * Retention for persisted security events in days. Raise it for
-             * longer compliance windows; 0 = keep forever.
-             * env: EVENT_LOG_RETENTION_DAYS
-             * default: 90
-             */
-            eventLogRetentionDays: 90,
+        /**
+         * Retention for persisted security events in days. Raise it for
+         * longer compliance windows; 0 = keep forever.
+         * env: EVENT_LOG_RETENTION_DAYS
+         * default: 90
+         */
+        eventLogRetentionDays: 90,
 
-            /**
-             * Additionally mirror every entity create/update/delete into the
-             * auth_events table (scope: entity). Only effective while
-             * eventLogEnabled is true.
-             * env: EVENT_LOG_ENTITY_ENABLED
-             * default: true
-             */
-            eventLogEntityEnabled: true,
+        /**
+         * Additionally mirror every entity create/update/delete into the
+         * auth_events table (scope: entity). Only effective while
+         * eventLogEnabled is true.
+         * env: EVENT_LOG_ENTITY_ENABLED
+         * default: true
+         */
+        eventLogEntityEnabled: true,
 
-            /**
-             * Retention for entity create/update/delete events in days —
-             * deliberately short so entity churn self-prunes. 0 = keep forever.
-             * env: EVENT_LOG_ENTITY_RETENTION_DAYS
-             * default: 7
-             */
-            eventLogEntityRetentionDays: 7,
+        /**
+         * Retention for entity create/update/delete events in days —
+         * deliberately short so entity churn self-prunes. 0 = keep forever.
+         * env: EVENT_LOG_ENTITY_RETENTION_DAYS
+         * default: 7
+         */
+        eventLogEntityRetentionDays: 7,
 
-            /**
-             * Throttle failed logins per (identifier, ip) pair by counting recent
-             * loginFailed events. Requires eventLogEnabled.
-             * The IP half of the key follows `trustProxy` — pin it to the actual
-             * proxy (hops or allowlist) so a direct client cannot spoof the IP
-             * via X-Forwarded-For.
-             * env: LOGIN_ATTEMPT_THROTTLE_ENABLED
-             * default: false
-             */
-            loginAttemptThrottleEnabled: false,
+        /**
+         * Throttle failed logins per (identifier, ip) pair by counting recent
+         * loginFailed events. Requires eventLogEnabled.
+         * The IP half of the key follows `trustProxy` — pin it to the actual
+         * proxy (hops or allowlist) so a direct client cannot spoof the IP
+         * via X-Forwarded-For.
+         * env: LOGIN_ATTEMPT_THROTTLE_ENABLED
+         * default: false
+         */
+        loginAttemptThrottleEnabled: false,
 
-            /**
-             * Failed attempts per (identifier, ip) pair within the window before
-             * the pair is throttled (HTTP 429).
-             * env: LOGIN_ATTEMPT_THRESHOLD
-             * default: 5
-             */
-            loginAttemptThreshold: 5,
+        /**
+         * Failed attempts per (identifier, ip) pair within the window before
+         * the pair is throttled (HTTP 429).
+         * env: LOGIN_ATTEMPT_THRESHOLD
+         * default: 5
+         */
+        loginAttemptThreshold: 5,
 
-            /**
-             * Sliding throttle window in seconds.
-             * env: LOGIN_ATTEMPT_WINDOW
-             * default: 900
-             */
-            loginAttemptWindow: 900,
+        /**
+         * Sliding throttle window in seconds.
+         * env: LOGIN_ATTEMPT_WINDOW
+         * default: 900
+         */
+        loginAttemptWindow: 900,
 
-            /**
-             * Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the
-             * realm key store's material at rest — the per-realm JWT signing
-             * private keys and the auto-generated per-realm encryption keys
-             * that protect MFA seeds. Generate one with:
-             * openssl rand -base64 32
-             * or:
-             * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
-             * Must be standard base64 (+, /, = padding) decoding to exactly
-             * 32 bytes — base64url or any other length is rejected at startup.
-             * Unset, key material is stored unwrapped in the database (the
-             * Keycloak/authentik posture). Setting it later wraps existing
-             * rows lazily on read; removing it while wrapped rows exist fails
-             * loud at first use, so treat it as a long-lived secret.
-             * env: SECRETS_ENCRYPTION_KEY
-             * default: '' (unset)
-             */
-            secretsEncryptionKey: '',
+        /**
+         * Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the
+         * realm key store's material at rest — the per-realm JWT signing
+         * private keys and the auto-generated per-realm encryption keys
+         * that protect MFA seeds. Generate one with:
+         * openssl rand -base64 32
+         * or:
+         * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+         * Must be standard base64 (+, /, = padding) decoding to exactly
+         * 32 bytes — base64url or any other length is rejected at startup.
+         * Unset, key material is stored unwrapped in the database (the
+         * Keycloak/authentik posture). Setting it later wraps existing
+         * rows lazily on read; removing it while wrapped rows exist fails
+         * loud at first use, so treat it as a long-lived secret.
+         * env: SECRETS_ENCRYPTION_KEY
+         * default: '' (unset)
+         */
+        secretsEncryptionKey: '',
 
-            /**
-             * Enable multi-factor authentication. Users can enroll authenticator
-             * devices (TOTP app, recovery codes); a user holding a confirmed
-             * device must present a second factor on interactive authorization
-             * and on the password grant (otp parameter). Seed-encryption keys
-             * are generated per realm automatically — no further configuration
-             * is required.
-             * env: MFA_ENABLED
-             * default: false
-             */
-            mfaEnabled: false,
+        /**
+         * Enable multi-factor authentication. Users can enroll authenticator
+         * devices (TOTP app, recovery codes); a user holding a confirmed
+         * device must present a second factor on interactive authorization
+         * and on the password grant (otp parameter). Seed-encryption keys
+         * are generated per realm automatically — no further configuration
+         * is required.
+         * env: MFA_ENABLED
+         * default: false
+         */
+        mfaEnabled: false,
 
-            /**
-             * Enforce MFA for every user: a user without a confirmed device is
-             * routed to inline enrollment at next interactive login.
-             * Requires mfaEnabled.
-             * env: MFA_REQUIRED
-             * default: false
-             */
-            mfaRequired: false,
+        /**
+         * Enforce MFA for every user: a user without a confirmed device is
+         * routed to inline enrollment at next interactive login.
+         * Requires mfaEnabled.
+         * env: MFA_REQUIRED
+         * default: false
+         */
+        mfaRequired: false,
 
-            /**
-             * Max age (seconds) of the session's second-factor proof an
-             * acr_values=urn:authup:mfa step-up request accepts before forcing
-             * a fresh challenge.
-             * env: MFA_FRESHNESS_MAX_AGE
-             * default: 60
-             */
-            mfaFreshnessMaxAge: 60,
+        /**
+         * Max age (seconds) of the session's second-factor proof an
+         * acr_values=urn:authup:mfa step-up request accepts before forcing
+         * a fresh challenge.
+         * env: MFA_FRESHNESS_MAX_AGE
+         * default: 60
+         */
+        mfaFreshnessMaxAge: 60,
 
-            /**
-             * Lifetime (seconds) of the MFA-pending login ticket a fresh
-             * interactive login receives when its second factor needs an
-             * interactive challenge (email / WebAuthn) — and of the pending
-             * session backing it.
-             * env: MFA_TICKET_MAX_AGE
-             * default: 600
-             */
-            mfaTicketMaxAge: 600,
+        /**
+         * Lifetime (seconds) of the MFA-pending login ticket a fresh
+         * interactive login receives when its second factor needs an
+         * interactive challenge (email / WebAuthn) — and of the pending
+         * session backing it.
+         * env: MFA_TICKET_MAX_AGE
+         * default: 600
+         */
+        mfaTicketMaxAge: 600,
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Permit HTTP Basic authentication with client credentials
-             * against the management API.
-             * env: CLIENT_AUTH_BASIC
-             * default: false
-             */
-            clientAuthBasic: false,
+        /**
+         * Permit HTTP Basic authentication with client credentials
+         * against the management API.
+         * env: CLIENT_AUTH_BASIC
+         * default: false
+         */
+        clientAuthBasic: false,
 
-            /**
-             * Activate the built-in `system` client of the master realm.
-             * env: CLIENT_SYSTEM_ENABLED
-             * default: false
-             */
-            clientSystemEnabled: false,
+        /**
+         * Activate the built-in `system` client of the master realm.
+         * env: CLIENT_SYSTEM_ENABLED
+         * default: false
+         */
+        clientSystemEnabled: false,
 
-            /**
-             * The secret of the built-in `system` client.
-             * env: CLIENT_SYSTEM_SECRET
-             * default: 'start123'
-             */
-            clientSystemSecret: '<unique-secret>',
+        /**
+         * The secret of the built-in `system` client.
+         * env: CLIENT_SYSTEM_SECRET
+         * default: 'start123'
+         */
+        clientSystemSecret: '<unique-secret>',
 
-            /**
-             * Reset the `system` client secret on application startup.
-             * env: CLIENT_SYSTEM_SECRET_RESET
-             * default: false
-             */
-            clientSystemSecretReset: false,
+        /**
+         * Reset the `system` client secret on application startup.
+         * env: CLIENT_SYSTEM_SECRET_RESET
+         * default: false
+         */
+        clientSystemSecretReset: false,
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Permit HTTP Basic authentication with user credentials
-             * against the management API.
-             * env: USER_AUTH_BASIC
-             * default: false
-             */
-            userAuthBasic: false,
+        /**
+         * Permit HTTP Basic authentication with user credentials
+         * against the management API.
+         * env: USER_AUTH_BASIC
+         * default: false
+         */
+        userAuthBasic: false,
 
-            /**
-             * Enable default admin user.
-             * env: USER_ADMIN_ENABLED
-             * default: true
-             */
-            userAdminEnabled: true,
+        /**
+         * Enable default admin user.
+         * env: USER_ADMIN_ENABLED
+         * default: true
+         */
+        userAdminEnabled: true,
 
-            /**
-             * The password of the default admin user.
-             * env: USER_ADMIN_PASSWORD
-             * default: 'start123'
-             */
-            userAdminPassword: '<strong-password>',
+        /**
+         * The password of the default admin user.
+         * env: USER_ADMIN_PASSWORD
+         * default: 'start123'
+         */
+        userAdminPassword: '<strong-password>',
 
-            /**
-             * Reset admin password on application startup.
-             * env: USER_ADMIN_PASSWORD_RESET
-             * default: false
-             */
-            userAdminPasswordReset: false,
+        /**
+         * Reset admin password on application startup.
+         * env: USER_ADMIN_PASSWORD_RESET
+         * default: false
+         */
+        userAdminPasswordReset: false,
 
-            // ----------------------------------------------------
+        // ----------------------------------------------------
 
-            /**
-             * Additional (non-built-in) permission names to provision on startup.
-             * env: PERMISSIONS (comma-separated)
-             * default: []
-             */
-            permissions: [],
+        /**
+         * Additional (non-built-in) permission names to provision on startup.
+         * env: PERMISSIONS (comma-separated)
+         * default: []
+         */
+        permissions: [],
 
-            /**
-             * Auto-assign the system.default policy to new permissions
-             * created without an explicit policyId.
-             * Transitional option — will be removed in the next major release.
-             * Set to false to opt into the allow-by-default model.
-             * env: PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT
-             * default: true
-             */
-            permissionsDefaultPolicyAssignment: true,
-        },
+        /**
+         * Auto-assign the system.default policy to new permissions
+         * created without an explicit policyId.
+         * Transitional option — will be removed in the next major release.
+         * Set to false to opt into the allow-by-default model.
+         * env: PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT
+         * default: true
+         */
+        permissionsDefaultPolicyAssignment: true,
     },
 }
 ```
@@ -618,54 +622,53 @@ theme:
   directoryPath: /etc/authup/theme
   fragmentsEnabled: false
 
-server:
-  adminConsole:
-    enabled: true
-    path: ''
-  accountConsole:
-    enabled: true
-    path: ''
-  authConsole:
-    path: ''
-  core:
-    writableDirectoryPath: writable
-    componentsEnabled: true
-    migrationEnabled: true
-    port: 3000
-    host: 0.0.0.0
-    mtlsPublicUrl: https://mtls.example.com
-    certificateSource: forwarded
-    trustProxy: 1
-    tokenRefreshMaxAge: 259200
-    tokenAccessMaxAge: 900
-    tokenRefreshGracePeriod: 0
-    promptLoginMaxAge: 60
-    endSessionHintGracePeriod: 0
-    registrationEnabled: false
-    emailVerificationEnabled: false
-    passwordRecoveryEnabled: false
-    passwordMinLength: 10
-    eventLogEnabled: true
-    eventLogRetentionDays: 90
-    eventLogEntityEnabled: true
-    eventLogEntityRetentionDays: 7
-    loginAttemptThrottleEnabled: false
-    loginAttemptThreshold: 5
-    loginAttemptWindow: 900
-    secretsEncryptionKey: ''
-    mfaEnabled: false
-    mfaRequired: false
-    mfaFreshnessMaxAge: 60
-    mfaTicketMaxAge: 600
-    clientAuthBasic: false
-    clientSystemEnabled: false
-    clientSystemSecret: '<unique-secret>'
-    clientSystemSecretReset: false
-    userAuthBasic: false
-    userAdminEnabled: true
-    userAdminPassword: '<strong-password>'
-    userAdminPasswordReset: false
-    permissionsDefaultPolicyAssignment: true
+adminConsole:
+  enabled: true
+  path: ''
+accountConsole:
+  enabled: true
+  path: ''
+authConsole:
+  path: ''
+core:
+  writableDirectoryPath: writable
+  componentsEnabled: true
+  migrationEnabled: true
+  port: 3000
+  host: 0.0.0.0
+  mtlsPublicUrl: https://mtls.example.com
+  certificateSource: forwarded
+  trustProxy: 1
+  tokenRefreshMaxAge: 259200
+  tokenAccessMaxAge: 900
+  tokenRefreshGracePeriod: 0
+  promptLoginMaxAge: 60
+  endSessionHintGracePeriod: 0
+  registrationEnabled: false
+  emailVerificationEnabled: false
+  passwordRecoveryEnabled: false
+  passwordMinLength: 10
+  eventLogEnabled: true
+  eventLogRetentionDays: 90
+  eventLogEntityEnabled: true
+  eventLogEntityRetentionDays: 7
+  loginAttemptThrottleEnabled: false
+  loginAttemptThreshold: 5
+  loginAttemptWindow: 900
+  secretsEncryptionKey: ''
+  mfaEnabled: false
+  mfaRequired: false
+  mfaFreshnessMaxAge: 60
+  mfaTicketMaxAge: 600
+  clientAuthBasic: false
+  clientSystemEnabled: false
+  clientSystemSecret: '<unique-secret>'
+  clientSystemSecretReset: false
+  userAuthBasic: false
+  userAdminEnabled: true
+  userAdminPassword: '<strong-password>'
+  userAdminPasswordReset: false
+  permissionsDefaultPolicyAssignment: true
 ```
 
 ```dotenv [.env]

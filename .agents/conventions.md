@@ -192,8 +192,9 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   (`authup`, the one an ordinary deployment runs, plus a per-service
   `authup-<name>-console` escape hatch), the CLI ROLES (`start`, `core`,
   `console [admin|account|auth]`, `worker`), the configuration sections
-  (`server.core`, `server.<name>Console`; slash form `server/core` in the
-  docker entrypoint), and helm values keys. The grammar above governs
+  (`core`, `<name>Console`), the docker entrypoint's own service selector
+  (`server/core`, which no longer mirrors a configuration section), and helm
+  values keys. The grammar above governs
   workspace directory and npm package identity only, which is why a role is
   the bare console name (`authup console admin`) while the workspace behind
   it is `server-admin-console`.
@@ -288,7 +289,7 @@ lists `vue` needs this before merge; its own CI already shows the failure.
   in `normalizeConfig`, so consumers receive an absolute path and none of them
   has to know what the process cwd was. server-core's own is
   `writableDirectoryPath`; the console-side path keys
-  (`theme.directoryPath`, `server.<name>Console.path`) live in the console
+  (`theme.directoryPath`, `<name>Console.path`) live in the console
   registries now and are resolved for them by the CLI (`resolvePaths` in
   `apps/authup/src/roles/config.ts`), against server-core's `rootPath`, so one
   document means the same directory to every service it configures. A new

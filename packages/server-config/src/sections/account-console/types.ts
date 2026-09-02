@@ -6,10 +6,10 @@
  */
 
 /**
- * The `server.accountConsole.*` section.
+ * The `accountConsole.*` section.
  *
  * The field names are the section's own, exactly as the document spells
- * them under `server.accountConsole.*`, so the console service reads them
+ * them under `accountConsole.*`, so the console service reads them
  * unchanged. The section is per CONSOLE, never per implementation package,
  * so substituting the package leaves the document untouched.
  *

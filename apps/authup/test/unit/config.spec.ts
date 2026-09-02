@@ -56,7 +56,7 @@ describe('defineCLIConfigCommand', () => {
         // runCommand rather than calling run directly, or nothing pins that.
         await fs.promises.writeFile(
             path.join(directory, 'authup.yml'),
-            'server:\n  core:\n    port: "not-a-port"\n',
+            'core:\n  port: "not-a-port"\n',
         );
 
         const root = await createCLIEntryPointCommand();
@@ -93,7 +93,7 @@ describe('defineCLIConfigCommand', () => {
     it('should report the options the file holds that nothing reads', async () => {
         await fs.promises.writeFile(
             path.join(directory, 'authup.yml'),
-            'server:\n  core:\n    publicUrl: https://idp.example.com\n',
+            'core:\n  publicUrl: https://idp.example.com\n',
         );
 
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -103,7 +103,7 @@ describe('defineCLIConfigCommand', () => {
             await runSubCommand(defineCLIConfigCommand({ cwd: directory }), 'validate');
 
             expect(exit).toHaveBeenCalledWith(1);
-            expect(error.mock.calls[0][0]).toContain('server.core.publicUrl');
+            expect(error.mock.calls[0][0]).toContain('core.publicUrl');
         } finally {
             error.mockRestore();
             exit.mockRestore();
@@ -113,7 +113,7 @@ describe('defineCLIConfigCommand', () => {
     it('should stay silent for a valid configuration', async () => {
         await fs.promises.writeFile(
             path.join(directory, 'authup.yml'),
-            'server:\n  core:\n    port: 4050\n',
+            'core:\n  port: 4050\n',
         );
 
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -133,7 +133,7 @@ describe('defineCLIConfigCommand', () => {
     it('should report every issue and exit non-zero for an invalid configuration', async () => {
         await fs.promises.writeFile(
             path.join(directory, 'authup.yml'),
-            'server:\n  core:\n    port: "not-a-port"\n    passwordMinLength: 0\n',
+            'core:\n  port: "not-a-port"\n  passwordMinLength: 0\n',
         );
 
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -171,8 +171,8 @@ describe('defineCLIConfigCommand', () => {
             const document = JSON.parse(log.mock.calls[0][0] as string);
 
             expect(document.$schema).toEqual('http://json-schema.org/draft-07/schema#');
-            expect(document.properties.server.properties.core.properties.port).toBeDefined();
-            expect(document.properties.server.properties.adminConsole.properties.path).toBeDefined();
+            expect(document.properties.core.properties.port).toBeDefined();
+            expect(document.properties.adminConsole.properties.path).toBeDefined();
             expect(document.properties.theme.properties.directoryPath).toBeDefined();
         } finally {
             log.mockRestore();

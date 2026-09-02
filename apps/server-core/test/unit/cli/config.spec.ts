@@ -81,7 +81,7 @@ describe('src/cli/commands/config', () => {
         it('should register a config resolved from the threaded fs options', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4010\n',
+                'core:\n  port: 4010\n',
             );
 
             const options : ConfigReadFsOptions<Config> = {};
@@ -99,7 +99,7 @@ describe('src/cli/commands/config', () => {
         it('should pick up args applied after the module was created', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4030\n',
+                'core:\n  port: 4030\n',
             );
 
             const options : ConfigReadFsOptions<Config> = {};
@@ -117,7 +117,7 @@ describe('src/cli/commands/config', () => {
         it('should let env win over the threaded file config', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.yml'),
-                'server:\n  core:\n    port: 4010\n',
+                'core:\n  port: 4010\n',
             );
 
             process.env.PORT = '5077';

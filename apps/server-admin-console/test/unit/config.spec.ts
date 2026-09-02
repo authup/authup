@@ -122,7 +122,7 @@ describe('readConfigFromEnv', () => {
     });
 
     /**
-     * A console selects two keys of `server.core` (the listener address the
+     * A console selects two keys of `core` (the listener address the
      * issuer derives from), never the section. `resolveSchemaData` runs every
      * resolver in a registry, and the section carries server-core's own
      * invariants, so selecting it would make this service refuse to start over

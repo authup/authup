@@ -64,9 +64,8 @@ COMPONENTS_ENABLED=false
 ```
 
 ```yaml [authup.yml]
-server:
-  core:
-    componentsEnabled: false
+core:
+  componentsEnabled: false
 ```
 
 :::

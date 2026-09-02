@@ -62,7 +62,7 @@ export type SchemaEntry<
      * it normalizes, and every service reading the same document computes
      * the same answer without calling anything itself:
      *
-     *   publicUrl:      ({ value, get }) => value ?? derive(get('server.core.host'), …)
+     *   publicUrl:      ({ value, get }) => value ?? derive(get('core.host'), …)
      *   url (console):  ({ value, get }) => value || `${get('publicUrl')}/console/account`
      *
      * By PATH rather than by entry reference: {@link defineSchema} clones an

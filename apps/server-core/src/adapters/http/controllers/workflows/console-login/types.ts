@@ -29,7 +29,7 @@ export type ConsoleLoginDefinition = {
      */
     segment: string,
     /**
-     * Where the console itself is served (`server.<name>Console.url`). The
+     * Where the console itself is served (`<name>Console.url`). The
      * browser lands there once the credential is issued, so a console under a
      * path of its own is landed on correctly.
      *

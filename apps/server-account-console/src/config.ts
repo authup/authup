@@ -39,7 +39,7 @@ export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
     ...ACCOUNT_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,
-    // Two keys of server.core, never the section. `publicUrl` derives from
+    // Two keys of core, never the section. `publicUrl` derives from
     // the core listener address, which is what a console needs; selecting the
     // whole section also selects its INVARIANTS, and `resolveSchemaData` runs
     // every resolver in a registry -- so a console would refuse to start on a

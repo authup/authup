@@ -6,10 +6,10 @@
  */
 
 /**
- * The `server.authConsole.*` section.
+ * The `authConsole.*` section.
  *
  * The field names are the section's own, the ones the document spells under
- * `server.authConsole.*`, so the console service reads them unchanged. The
+ * `authConsole.*`, so the console service reads them unchanged. The
  * section is per CONSOLE, never per implementation package, so substituting
  * the package leaves the document untouched.
  *

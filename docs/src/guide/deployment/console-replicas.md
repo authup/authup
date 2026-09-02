@@ -165,8 +165,8 @@ console, which the browser then follows into the console set.
 
 ## Console options
 
-Every console has the same section, `server.authConsole`, `server.adminConsole`
-or `server.accountConsole`, and the same environment prefix (`AUTH_CONSOLE_`,
+Every console has the same section, `authConsole`, `adminConsole`
+or `accountConsole`, and the same environment prefix (`AUTH_CONSOLE_`,
 `ADMIN_CONSOLE_`, `ACCOUNT_CONSOLE_`):
 
 | Option | Env | Default | Read by |

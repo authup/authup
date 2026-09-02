@@ -70,7 +70,7 @@ describe('readConsoleConfigs', () => {
     it('should hand every console the DERIVED public url', async () => {
         // the document names no publicUrl, so it is derived from host and
         // port. A console owns neither, and must not fall back to its own.
-        write('server:\n  core:\n    port: 4711\n    host: 127.0.0.1\n');
+        write('core:\n  port: 4711\n  host: 127.0.0.1\n');
 
         const { core, consoles } = await read();
 
@@ -111,9 +111,8 @@ describe('readConsoleConfigs', () => {
             `rootPath: ${directory}`,
             'theme:',
             '  directoryPath: ./brand',
-            'server:',
-            '  accountConsole:',
-            '    path: ./bundle',
+            'accountConsole:',
+            '  path: ./bundle',
             '',
         ].join('\n'));
 
@@ -126,9 +125,8 @@ describe('readConsoleConfigs', () => {
     it('should refuse a console published on another origin', async () => {
         write([
             'publicUrl: https://idp.example.com',
-            'server:',
-            '  accountConsole:',
-            '    url: https://accounts.other.example.com',
+            'accountConsole:',
+            '  url: https://accounts.other.example.com',
             '',
         ].join('\n'));
 

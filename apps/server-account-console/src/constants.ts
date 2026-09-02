@@ -14,7 +14,7 @@ export const VITE_BASE = '/console/account/';
 
 /**
  * The path the service is served under by default, i.e. the path component
- * of `server.accountConsole.url`. It is the same segment server-core mounted
+ * of `accountConsole.url`. It is the same segment server-core mounted
  * the console at before the split, so a built bundle needs no rebuild.
  */
 export const BASE_PATH = '/console/account';

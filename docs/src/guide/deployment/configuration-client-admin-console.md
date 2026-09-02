@@ -37,7 +37,7 @@ were already issued. See the tip in
 
 ## Configuration
 
-The console has its own section, `server.adminConsole`, in the one
+The console has its own section, `adminConsole`, in the one
 [configuration file](./configuration.md). Two of its options are the ones a
 single-container deployment ever needs; `url`, `port` and `host` matter for a
 [split deployment](./console-replicas.md) and are documented there.
@@ -51,14 +51,13 @@ ADMIN_CONSOLE_PATH=
 ````
 
 ````yaml [authup.yml]
-server:
-  adminConsole:
-    enabled: true
-    path: ''
+adminConsole:
+  enabled: true
+  path: ''
 ````
 :::
 
-`server.adminConsole.enabled` / `ADMIN_CONSOLE_ENABLED` (default `true`) turns the
+`adminConsole.enabled` / `ADMIN_CONSOLE_ENABLED` (default `true`) turns the
 surface off. Both sides read it: `authup start` then mounts no admin console at
 all, and the API's two sign-in routes (`/console/admin/login/start`,
 `/console/admin/callback`) answer `404` rather than minting a session for a
@@ -66,7 +65,7 @@ console nothing serves. `authup console admin` refuses to start for the same
 reason. The flag is also reported in the `features` block of the public status
 endpoint (`GET /`).
 
-`server.adminConsole.path` / `ADMIN_CONSOLE_PATH` replaces the served package. It
+`adminConsole.path` / `ADMIN_CONSOLE_PATH` replaces the served package. It
 points at a directory
 holding a built `dist/`, whose `index.html` must carry the
 `<!--admin-config-->` marker and whose assets must be built for the

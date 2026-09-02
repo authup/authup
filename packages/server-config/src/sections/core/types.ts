@@ -22,7 +22,7 @@ export type CertificateSource = typeof CERTIFICATE_SOURCES[number];
 export type MiddlewareOptions = boolean | Record<string, any>;
 
 /**
- * The `server.core.*` section: the keys the API and IdP service reads.
+ * The `core.*` section: the keys the API and IdP service reads.
  */
 export type CoreConfig = {
     /**
