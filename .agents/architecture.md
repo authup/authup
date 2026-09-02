@@ -5877,7 +5877,10 @@ base64-decodable, on every same-path request. What the ref adds on the wire is
 nothing, and for a Nuxt consumer one more field in an SSR payload that already
 carries the access and refresh tokens off the same store.
 
-**`UserMinimal` is spelled in THREE places and only two of them are guarded.**
+**`UserMinimal` is declared once and re-picked at two sinks.** The alias, and
+`RealmMinimal` beside it, lives in `core/store/types.ts` and is imported by
+`core/store/create.ts` and `core/store/dispatcher/types.ts`, so widening the
+pick reaches the refs and the `USER_UPDATED` payload type in one edit.
 `buildUser` returns the shape and `setUser` re-picks it again at the sink,
 deliberately (callers hand over whole entity rows, and the ref is what a Nuxt
 consumer's SSR payload carries). Both are contextually typed against the alias
@@ -5885,13 +5888,13 @@ and a pure `Pick` makes every member required, so omitting a newly picked field
 at either site is a compile error, TS2741 in `buildUser` and TS2322 at the sink,
 never a silent drop. Note the guard is `build:types` alone: vitest transpiles
 through SWC, so the suite runs an un-type-checked tree and reports the omission
-as a runtime absence instead. The genuinely unguarded site is the alias ITSELF,
-declared independently in `core/store/create.ts` and
-`core/store/dispatcher/types.ts` with nothing tying the two together. Widening
-one and not the other compiles clean, and the `USER_UPDATED` payload type then
-understates what is emitted. They stay separate because both are private
-aliases, so sharing one would mean exporting it and growing the published
-surface to fix a documentation problem.
+as a runtime absence instead. The DECLARATION carried no such guard until issue
+#3520: it was spelled independently in both files with nothing tying the two
+together, so widening one and leaving the other narrow compiled clean and the
+dispatcher payload type silently understated what was emitted. Sharing it
+publishes it through the store barrel, which is not the cost it reads as: that
+barrel already re-exports `create.ts` wholesale, so an alias exported from
+either file lands in the package's public `.d.ts` just the same.
 
 The server half is droppable once per SURFACE. The claim maps from a
 `select: false` column that survives only because `UserIdentityRepository.find()`
