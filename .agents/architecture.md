@@ -2864,13 +2864,28 @@ caller mounting on the resolved app after `setup()` returns would land
 after both, but on an ALREADY-LISTENING server. That is why `mount` is a
 callback `HTTPModule` runs internally rather than a seam it hands back.
 `buildConsoleApplications` (`commands/start.ts`) derives each mount path
-with `getURLBasePath(url)`, never the url itself, since a console url
-carries the origin a BROWSER reaches it at while the listener only ever
-sees a path; a console url with no path at all would have to own the API's
-own root, where it shadows the protocol routes and the page GETs redirect to
-themselves, so it is refused by name. It needs no origin check of its own:
-`normalizeConfig` and each console's own `resolve*Config` already
-refuse a console url that is not publicUrl's origin. The console
+through `assertConsolePath(name, url, publicUrl)`, which is the console
+url's path MINUS publicUrl's own. Both subtractions matter and each was a
+shipped defect: a console url carries the origin a BROWSER reaches it at,
+which the listener never sees, and under a sub-path deployment it carries
+publicUrl's path prefix, which the listener never sees either, because the
+proxy strips it before the request arrives exactly as it does for every
+server-core route (all of which are mounted root-relative). Mounting the
+full path put every console where nothing could reach it: `/console/admin`
+arrived and `/auth/console/admin` was mounted, so console pages answered 404
+while the API worked (issue #3531, a regression from D2-3, where server-core
+mounted at a constant prefix-free segment). Two urls are refused by name
+rather than mounted: one with no path of its own, which would have to own the
+API's own root, where it shadows the protocol routes and the page GETs
+redirect to themselves; and one outside publicUrl's prefix, which the proxy
+routes nothing to, since the rule that reaches this listener is publicUrl's.
+The refusals are `start`/`dev` only, since a console owns its listener under
+`authup console` and the proxy may map whatever it likes there. Neither needs
+an origin check: `normalizeConfig` and each console's own `resolve*Config`
+already refuse a console url that is not publicUrl's origin. **The
+subtraction is the MOUNT's alone**: the console's own `basePath`, which
+rebases its asset hrefs and builds its links, stays the full browser-facing
+path. The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
