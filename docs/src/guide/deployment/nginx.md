@@ -79,15 +79,18 @@ PUBLIC_URL=https://[DOMAIN]/auth
 The API is then reachable under the prefix, and session cookies are scoped to
 it, so an application of your own on the same origin is left alone.
 
-::: warning The consoles do not work under a prefix yet
+The consoles are reachable under the prefix as well
+(`https://[DOMAIN]/auth/console/admin`), because the rule above strips it for
+them exactly as it does for the API: a console's url carries the prefix, since
+that is where a browser reaches it, and the mount subtracts it, since that is
+what the listener sees.
 
-`authup start` mounts each console at the path component of its own url, which
-carries the prefix, while the proxy has just stripped it: every console page
-answers 404 (authup/authup#3531). The API, the token endpoint and the
-management API are unaffected. Until it is fixed, deploy authup at the origin
-root, or publish the consoles from their own replica set
-([Console Replicas](./console-replicas.md)), where each console listener is
-addressed directly.
+::: warning Keep the console urls under the prefix
+
+A console url may name a path of its own (`AUTH_CONSOLE_URL=https://[DOMAIN]/auth/login`),
+but it has to stay under the prefix authup is published at, because the proxy
+routes nothing else here. A url outside it is refused at startup, naming both
+values.
 
 :::
 

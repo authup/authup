@@ -61,6 +61,7 @@ export function defineApplicationCommand(
 
                         consoles.push(...await buildConsoleApplications(
                             await readConsoleConfigs(configFs),
+                            config.publicUrl,
                         ));
 
                         for (const mount of consoles) {

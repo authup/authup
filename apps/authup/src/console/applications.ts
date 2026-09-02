@@ -23,12 +23,16 @@ import type { ConsoleApplication, ConsoleConfigs } from './types.ts';
  * that only resembles the two supported ones. A console owns its listener
  * everywhere except here, and here it is composed rather than reduced.
  *
- * The mount PATH is the path component of the console's url, never the url
- * itself. A console url is where a BROWSER reaches the console, so it carries
- * the origin the proxy publishes; the listener only ever sees the path.
+ * The mount PATH is derived from the console's url, never the url itself, and
+ * never the whole path either. A console url is where a BROWSER reaches the
+ * console, so it carries both the origin the proxy publishes and the path
+ * prefix authup is published under; the listener sees neither, because the
+ * proxy strips the prefix before the request arrives. `assertConsolePath`
+ * takes publicUrl for exactly that subtraction.
  */
 export async function buildConsoleApplications(
     consoles: ConsoleConfigs,
+    publicUrl: string,
 ) : Promise<ConsoleApplication[]> {
     const candidates : {
         name: string,
@@ -64,7 +68,7 @@ export async function buildConsoleApplications(
     const applications : ConsoleApplication[] = [];
 
     for (const candidate of candidates) {
-        const path = assertConsolePath(candidate.name, candidate.url);
+        const path = assertConsolePath(candidate.name, candidate.url, publicUrl);
 
         const application = candidate.create();
 

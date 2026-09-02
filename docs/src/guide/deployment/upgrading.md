@@ -223,11 +223,11 @@ published; the path may differ from `publicUrl`, the origin may not), `port`
 deployment that runs a console without the CLI; `authup console` is the
 supported route.
 
-**Known limitation.** Under a sub-path deployment (`PUBLIC_URL` carrying a path
-behind a prefix-stripping proxy), `authup start` mounts the consoles at a path
-the listener never sees, so console pages answer `404`
-([#3531](https://github.com/authup/authup/issues/3531)). The API is unaffected.
-Deploy at the origin root, or serve the consoles from their own replica set.
+**Sub-path deployments.** A console url carries the path prefix authup is
+published under, and the mount subtracts it, so a prefix-stripping proxy
+reaches the consoles the same way it reaches the API. A console url outside
+that prefix is refused at startup rather than mounted where no request can
+arrive.
 
 ### A console derives its own configuration, and refuses a foreign origin
 
