@@ -8,7 +8,7 @@ Don't forget to replace the placeholders with the actual values:
 - `[SERVER_CORE_PORT]`: Port of the server core application.
 :::
 
-There is one upstream. `server/core start` runs the API and every console in
+There is one upstream. `authup start` runs the API and every console in
 one process, on one listener: the auth console at `/console/auth` (the hosted
 login, consent and workflow pages), the admin console at `/console/admin` and
 the account console at `/console/account`. Nothing has to be routed by path.

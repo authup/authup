@@ -1,43 +1,44 @@
 # Console Replicas
 
 Authup is a family of services that ship in one image and one npm package.
-`authup start` (container: `server/core start`) runs all of them in one
+`authup start` (container command: `start`) runs all of them in one
 process: the API and the IdP, plus every enabled console, on one listener.
 That is the default and it stays supported.
 
 This page is the other shape. Two replica sets on the ONE origin: an API set
-running `authup core`, which answers the protocol and the management API and
-mounts no console at all, and a console set running `authup console`, which
-serves the console pages and nothing else. Same image, same `PUBLIC_URL`; only
+running `authup start core`, which answers the protocol and the management API
+and mounts no console at all, and a console set running `authup start console`,
+which serves the console pages and nothing else. Same image, same `PUBLIC_URL`; only
 the API set reaches the database and the cache.
 
 ## The two roles
 
 | | API set | Console set |
 |---|---|---|
-| Command | `server/core core` | `server/core console` |
+| Command | `authup start core` | `authup start console` |
 | Serves | the protocol, the management API, the two sign-in routes per static console | the auth, admin and account console pages |
 | Listens on | `3000` | `3020` (auth), `3021` (admin), `3022` (account) |
 | Database | required | none |
 | Redis | required (see below) | none |
 | Runs migrations / cron sweeps | per `MIGRATION_ENABLED` / `WORKER_ENABLED` | never, by construction |
 
-`authup console` starts every enabled console in one process, each on its own
-port, because each console is its own service: its own package, its own
-config section, its own deployment. Name one to serve only that one
-(`server/core console admin`).
+`authup start console` starts every enabled console in one process, each on
+its own port, because each console is its own service: its own package, its
+own config section, its own deployment. Name one to serve only that one
+(`authup start console admin`). In a container the command is the same without
+the binary: the API set runs `start core`, the console set `start console`.
 
 A console process holds no credential, opens no database or cache connection
 and mounts no controller. `WORKER_ENABLED` and `MIGRATION_ENABLED` are
 server-core options and do nothing on it, so run `authup migration run`
-(container: `server/core migration run`) once before either set starts and let
+(container command: `migration run`) once before either set starts and let
 a single [worker](./worker.md) own the sweeps, exactly as for any multi-replica
 deployment.
 
 ## The console flags stay on
 
 `ADMIN_CONSOLE_ENABLED` and `ACCOUNT_CONSOLE_ENABLED` are **not** how the split
-is made. `core` mounts no console whatever they say, and turning one off on the
+is made. `start core` mounts no console whatever they say, and turning one off on the
 API set disables the only console routes that set still owns, so every sign-in
 would 404. Leave them at their default (`true`) on both sets and use the roles.
 
@@ -213,9 +214,9 @@ deployment keeps one database file per container, the same caveat the
 
 ## Health checks
 
-The image's own `HEALTHCHECK` probes `127.0.0.1:3000`, which a console
-container does not bind. Override it per console listener; each answers `GET
-/healthy` on its own port.
+The image's own `HEALTHCHECK` probes the port `PORT` names (`3000` by
+default), which a console container does not bind. Override it per console
+listener; each answers `GET /healthy` on its own port.
 
 ## Docker Compose
 
@@ -235,20 +236,20 @@ services:
             - REDIS=redis://redis:6379
             - WORKER_ENABLED=false
             - MIGRATION_ENABLED=false
-        command: server/core core
+        command: start core
 
     authup-console:
         image: authup/authup:latest
         restart: unless-stopped
         environment:
             - PUBLIC_URL=https://auth.example.com
-        command: server/core console
+        command: start console
         healthcheck:
             test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3021/healthy"]
             interval: 10s
 ```
 
-Run `server/core migration run` once before starting either service, and add a
+Run `migration run` once before starting either service, and add a
 [worker](./worker.md) for the sweeps. The console service takes no `DB_*` and
 no `REDIS`: it reads `PUBLIC_URL` (to derive its own url and the API address
 it injects into the console), its own section, and the

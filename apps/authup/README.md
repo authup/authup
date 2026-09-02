@@ -7,8 +7,8 @@
 This package contains the operator CLI. It runs the authup server
 (`@authup/server-core`) **in the same process**: there is no child process and
 no supervisor, so signals, the exit code and the environment reach the server
-directly. The server serves the admin console, the account console and the
-hosted auth pages itself.
+directly. `start` composes the console services (the admin console, the
+account console and the hosted auth pages) onto the server's listener.
 
 Authup is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
@@ -46,17 +46,28 @@ signal exits immediately, and a teardown that outlasts 10 seconds is forced.
 ## Commands
 
 ```shell
-$ authup start                 # serve the API and every console
-$ authup worker                # run the background sweeps alone, with no HTTP listener
+$ authup start                 # the API and every enabled console on one listener
+$ authup start core            # the API and the IdP alone, mounting no console
+$ authup start worker          # the background sweeps alone, with no HTTP listener
+$ authup start console         # every enabled console service, each on its own port
+$ authup start console admin   # one console service: admin, account or auth
 $ authup migration run         # apply pending database migrations
 $ authup healthcheck           # probe the running API
 $ authup config validate       # report what does not hold in the configuration
 $ authup config schema         # print the JSON Schema of authup.yml
 ```
 
-`start` and `worker` take no positional argument: the CLI starts exactly one
-service. `authup start server.core` and `authup start client.admin-console`
-are refused.
+`start` is the one listener command, and its positional argument is a role:
+`core`, `worker` or `console`, the last followed by an optional console name.
+A mis-typed role is refused before anything boots: an unknown role
+(`authup start server.core`, `authup start client.admin-console`), a name
+after a role that takes none (`authup start core admin`), an unknown console
+name (`authup start console web`) and a second argument after the console
+name. The retired `--worker` flag is refused as well, with a message naming
+`authup start worker`.
+
+`authup dev` is the EXPERIMENTAL development variant of `start`; see the
+documentation.
 
 ## Configuration
 
@@ -81,9 +92,9 @@ Every option can be set in the environment instead, and the environment always
 wins over the file. `PORT` and `HOST` are ordinary options under that rule, so
 a platform that injects `PORT` decides where the server listens.
 
-A `client.admin-console` section is not read: the admin console is served by
-server-core at `<publicUrl>/console/admin` and no longer runs as its own
-process.
+A `client.admin-console` section is not read: the admin console is served at
+`<publicUrl>/console/admin` by its own console service, which `start` composes
+onto the server's listener.
 
 ## License
 

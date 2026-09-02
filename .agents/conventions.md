@@ -190,14 +190,17 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   renaming an app never implies renaming a published package family.
 - **Operator-facing vocabulary is a separate, shorter layer**: the binaries
   (`authup`, the one an ordinary deployment runs, plus a per-service
-  `authup-<name>-console` escape hatch), the CLI ROLES (`start`, `core`,
-  `console [admin|account|auth]`, each of the first two taking `--worker`), the configuration sections
-  (`core`, `<name>Console`), the docker entrypoint's own service selector
-  (`server/core`, which no longer mirrors a configuration section), and helm
+  `authup-<name>-console` escape hatch), the CLI ROLES (one listener verb,
+  `start`, whose positional is the role: `start core`, `start worker`,
+  `start console [admin|account|auth]`), the configuration sections
+  (`core`, `<name>Console`), the container command (the CLI's own argument
+  list; the docker entrypoint's former `server/core` selector never mirrored
+  a configuration section and is deprecated, accepted with a notice on
+  stderr through the 1.0.0-beta line and removed in v1.0.0), and helm
   values keys. The grammar above governs
   workspace directory and npm package identity only, which is why a role is
-  the bare console name (`authup console admin`) while the workspace behind
-  it is `server-admin-console`.
+  the bare console name (`authup start console admin`) while the workspace
+  behind it is `server-admin-console`.
 
 - **An export does not repeat its package's name.** The package IS the
   namespace, so `@authup/server-account-console` exports `createApplication`,
@@ -322,7 +325,7 @@ copy, not an oversight.
   `writableDirectoryPath`; the console-side path keys
   (`theme.directoryPath`, `<name>Console.path`) live in the console
   registries now and are resolved for them by the CLI (`resolvePaths` in
-  `apps/authup/src/roles/config.ts`), against server-core's `rootPath`, so one
+  `apps/authup/src/console/config.ts`), against server-core's `rootPath`, so one
   document means the same directory to every service it configures. A new
   server-core path key joins that block; computing it *before* the spread
   reads a default `rootPath` rather than the configured one (the

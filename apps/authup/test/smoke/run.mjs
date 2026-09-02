@@ -503,10 +503,10 @@ async function executeWorkspaceScenario() {
  * prefix-stripping proxy delivers, and it is the shape a proxy-less local
  * run has anyway.
  *
- * What this proves that the composed scenario cannot: `authup core` serves
- * no console at all (the shed), `authup console` serves all three on its
- * own, and the hop between them lands. A regression in either half looks
- * identical from inside one process.
+ * What this proves that the composed scenario cannot: `authup start core`
+ * serves no console at all (the shed), `authup start console` serves all
+ * three on its own, and the hop between them lands. A regression in either
+ * half looks identical from inside one process.
  */
 async function executeSplitScenario() {
     const tempDirectory = createTempDirectory('authup-smoke-split');
@@ -526,13 +526,13 @@ async function executeSplitScenario() {
         ACCOUNT_CONSOLE_PORT: String(CONSOLE_PORTS.account),
     };
 
-    const api = spawn(process.execPath, [cliEntry, 'core', configArg], {
+    const api = spawn(process.execPath, [cliEntry, 'start', 'core', configArg], {
         cwd,
         env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
         stdio: 'inherit',
     });
 
-    const consoles = spawn(process.execPath, [cliEntry, 'console', configArg], {
+    const consoles = spawn(process.execPath, [cliEntry, 'start', 'console', configArg], {
         cwd,
         env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
         stdio: 'inherit',

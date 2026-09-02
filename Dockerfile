@@ -17,6 +17,7 @@ RUN chmod +x ./entrypoint.sh
 
 RUN mkdir -p /var/lib/authup
 
+ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV NODE_ENV=production
 ENV WRITABLE_DIRECTORY_PATH=/var/lib/authup
@@ -24,7 +25,7 @@ ENV WRITABLE_DIRECTORY_PATH=/var/lib/authup
 EXPOSE 3000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=10 --start-period=5s \
-    CMD wget --spider --proxy off http://127.0.0.1:3000/ || exit 1
+    CMD wget --spider --proxy off http://127.0.0.1:${PORT}/ || exit 1
 
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
-CMD ["server/core", "start"]
+CMD ["start"]

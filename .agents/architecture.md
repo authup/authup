@@ -1940,12 +1940,13 @@ bootstrap. What differs from the account console, and why:
   locale `installLocale` over `createCookieRef`), and every `NUXT_PUBLIC_*` /
   `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable (no successor: runtime
   config is injected by the serving side). A `client.admin-console` selector
-  is refused and a `client.admin-console` config section is not read;
-  `entrypoint.sh client/admin-console` exits 1 with a notice. The
+  is refused and a `client.admin-console` config section is not read; a
+  container command `client/admin-console` reaches the CLI as an unknown
+  command (usage, exit 1). The
   `authup-admin-console` NAME came back in plan 101 D2-3, but as the bin of
   the SERVICE (`apps/server-admin-console`), which serves the dist rather
-  than being a Nuxt server; `authup console admin` is the supported route to
-  it. `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration
+  than being a Nuxt server; `authup start console admin` is the supported
+  route to it. `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration
   for downstream apps (hub), which keep their own origin and the JS-token
   store.
 
@@ -2898,31 +2899,87 @@ endpoint plan 078 recorded. Same-ORIGIN is what let plan 088 Stage 2 apply
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
 
-**Process topology: one binary, several roles.** The batteries-included
-container runs `server/core start`, which is `authup start`: server-core plus
-every enabled console on ONE listener (plus the optional `server/core
-worker`). `authup` (`apps/authup`) is an **in-process** CLI over the service
-packages (plan 101 D1): it imports them and calls the `defineCLI*Command`
-helpers server-core exports, so `start`, `core`, `migration` and
-`healthcheck` run the services' own factories inside the process the operator
-started. `apps/server-core` ships no `bin` field; its `src/cli/` stays as the
-command source plus dev-only tooling (`migration generate`, the `cli-dev`
-script).
+**Process topology: one binary, one listener verb, several roles.** The
+batteries-included container runs `start`, which is `authup start`:
+server-core plus every enabled console on ONE listener, with the worker
+sweeps in process while `core.worker.enabled` is true. `authup`
+(`apps/authup`) is an **in-process** CLI over the service packages (plan 101
+D1): it imports them and runs their factories inside the process the operator
+started. `start` is the CLI's own command over server-core's
+`createApplication` / `createWorkerApplication` / `HTTPModule({ mount })`,
+`healthcheck` its own probe over `@authup/server-config`, and `migration`
+composes the `defineCLIMigrationCommand` helper server-core exports, so that
+one command body stays with the service. `apps/server-core` ships no `bin`
+field; its `src/cli/` stays as that helper's source plus dev-only tooling
+(`migration generate`, the `cli-dev` script, and a `start` of its own that
+belongs to the dev CLI, not to `authup start`).
 
-The split topology is the same binary with different roles: `authup core`
-(the API and the IdP alone, mounting nothing) next to `authup console
-[admin|account|auth]` (one console service, or every enabled one, each on
-its own port). The container entrypoint carries all three as its own service
-vocabulary (`server/core start`, `server/core core`, `server/core console
-admin`) and runs the CLI underneath. Each console IS its own service, so a shared listener would be
-the one place pretending otherwise; behind one origin the proxy routes each
-console's path to its port. **Every console is a runnable SERVICE, not a
+The other shapes are ROLES of that one verb, passed as its positional:
+`authup start core` (the API and the IdP alone, mounting nothing and reading
+no console config), `authup start worker` (the background worker alone: no
+listener, no migrations, refused while `core.worker.enabled` is false) and
+`authup start console [admin|account|auth]` (one console service, or every
+enabled one, each on its own port). A role rather than a subcommand per
+shape, because they are one thing started differently: every role reads the
+same document, the role is what an operator types, `--help` lists them under
+the one command an operator already knows, and a boolean flag (the retired
+`--worker`) says nothing about which role it selects once there are more
+than two. No release of the `authup` CLI ever carried the `core`, `worker`
+and `console` subcommands or the `--worker` flag: all four landed after
+v1.0.0-beta.63 and were renamed inside the same release window.
+
+Five citty (0.2.2) facts shape the implementation, each verified against
+`node_modules/citty/dist/index.mjs` and each load-bearing:
+
+1. A positional's `options: [...]` is DECORATIVE: citty checks it for
+   `type: 'enum'` only, so `start server.core` parses as the role
+   `server.core`. Role, console name and arity are refused BY HAND in
+   `start`'s `setup`, before anything boots.
+2. citty parses with `strict: false`, so an undeclared flag becomes a
+   boolean nobody reads. After the rename a stale `start --worker` would
+   have booted the FULL API in a worker pod and stayed up as a healthy-looking process. `start` therefore
+   declares a tombstone `worker` boolean arg and throws when it is set, with
+   a message naming `start worker`.
+3. A subcommand is re-parsed with ONLY its own arg defs on the argv after
+   its name, so a space-separated root flag placed AFTER the subcommand
+   (`start worker --configDirectory /x`) reads `/x` into the next
+   positional. `start` therefore declares the two config args itself
+   (`...CLI_CONFIG_ARGS`); the root `setup` still reads them first, so
+   nothing else changes.
+4. `--help` renders a positional's choices only through `valueHint`, so the
+   role carries `valueHint: 'core|worker|console'` and the console name
+   `'admin|account|auth'`.
+5. `assertNoStrayPositionals` (`apps/server-core/src/cli/commands/config.ts`)
+   reads the ROOT `args._` (`[command, ...positionals]`) and refuses a
+   positional after any command in the set it is given. Two CLIs share it:
+   server-core's own dev CLI (`apps/server-core/src/cli/module.ts`, whose
+   `start` takes no positional) and authup's. The set is a parameter,
+   `assertNoStrayPositionals(args, commands = new Set(['start']))`, with
+   server-core's set as the default; authup's root passes `new Set(['dev'])`,
+   since `dev` is the one authup command with no positional and `start`
+   validates its own.
+
+The container command is the CLI's own argument list: `entrypoint.sh` strips
+an OPTIONAL leading `server/core` (a binary selector from when the image
+carried several) with a one-line deprecation notice on stderr, changes into
+`apps/server-core` (typeorm's cwd-relative driver fallback) and `exec`s the
+CLI with `--configDirectory /usr/src/app` plus the arguments as given. The
+prefix stays accepted for the rest of the 1.0.0-beta line and is removed in
+v1.0.0. `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
+unconditional exports, so `-e PORT=4000` reaches the server, and the
+`HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
+default command. An empty or unknown command (the retired
+`client/admin-console`) is the CLI's to refuse, with its usage and exit 1.
+
+Each console IS its own service, so a shared listener would be the one place
+pretending otherwise; behind one origin the proxy routes each console's path
+to its port. **Every console is a runnable SERVICE, not a
 handler someone else owns**: each exports `create<Name>Application`
 over the shared `defineConsoleApplication` in `@authup/server-console-kit`,
 which is the whole of its lifecycle (build the handler, listen, close). That
-is what `authup console` starts and what the `authup-<name>-console` bin
-starts, so the two paths cannot diverge, and server-core neither imports nor
-mounts any of it.
+is what `authup start console` starts and what the `authup-<name>-console`
+bin starts, so the two paths cannot diverge, and server-core neither imports
+nor mounts any of it.
 
 `authup start` is the one composition, and the CLI performs it, because the
 CLI is the only thing that knows about every piece. server-core exposes the
@@ -2937,7 +2994,7 @@ middleware, so it inherits the error handling every other route has. A
 caller mounting on the resolved app after `setup()` returns would land
 after both, but on an ALREADY-LISTENING server. That is why `mount` is a
 callback `HTTPModule` runs internally rather than a seam it hands back.
-`buildConsoleApplications` (`commands/start.ts`) derives each mount path
+`buildConsoleApplications` (`console/applications.ts`) derives each mount path
 through `assertConsolePath(name, url, publicUrl)`, which is the console
 url's path MINUS publicUrl's own. Both subtractions matter and each was a
 shipped defect: a console url carries the origin a BROWSER reaches it at,
@@ -2954,7 +3011,7 @@ API's own root, where it shadows the protocol routes and the page GETs
 redirect to themselves; and one outside publicUrl's prefix, which the proxy
 routes nothing to, since the rule that reaches this listener is publicUrl's.
 The refusals are `start`/`dev` only, since a console owns its listener under
-`authup console` and the proxy may map whatever it likes there. Neither needs
+`authup start console` and the proxy may map whatever it likes there. Neither needs
 an origin check: `normalizeConfig` and each console's own `resolve*Config`
 already refuse a console url that is not publicUrl's origin. **The
 subtraction is the MOUNT's alone**: the console's own `basePath`, which
@@ -2978,13 +3035,12 @@ runtime**: the migrations glob is anchored on server-core's package path, so
 what gets LAUNCHED (a console service still walks node_modules to find the
 BUNDLE it serves, anchored on its own package root for the same reason).
 Package selectors are gone with the supervisor (`authup start server.core` is
-refused as a stray positional, and a `client.admin-console` config section is
+refused as an unknown role, and a `client.admin-console` config section is
 simply not read).
 
 **Worker mode (plans 095/096/097)** is the same binary and the same image,
-started as `authup start --worker` (container: `server/core start --worker`;
-`core --worker` is the same thing, since a worker mounts no
-console either way). It is `createWorkerApplication()` in `app/factory.ts`:
+started as `authup start worker` (container command: `start worker`). It is
+`createWorkerApplication()` in `app/factory.ts`:
 config, logger, cache, database and components, and nothing else, so it opens
 no port and serves no request. Two config keys move the work:
 `core.worker.enabled` (`WORKER_ENABLED`) says whether THIS process runs the
@@ -3012,8 +3068,8 @@ lines are debug).
 Every served console lives under the one `/console` prefix
 (`adapters/http/constants.ts` on the API side, the same literal as each
 service's base path), so the consoles are served from their own processes on
-the ONE origin: `authup core` for the API set, `authup console` for the
-console set, and the proxy routing `/console/**` to the latter. **The two
+the ONE origin: `authup start core` for the API set, `authup start console`
+for the console set, and the proxy routing `/console/**` to the latter. **The two
 cookie-mode paths per console are the exception and stay on the API set**
 (`/console/<name>/login/start` and `/console/<name>/callback`, plan 101
 invariant 3), because the pending-login cookie has to be issued on the
@@ -3025,9 +3081,9 @@ recipe still works for a plain `start` process on both sides
 (`ADMIN_CONSOLE_ENABLED=false ACCOUNT_CONSOLE_ENABLED=false` on the API set,
 BOTH sides with `WORKER_ENABLED=false MIGRATION_ENABLED=false` plus the
 one-off `migration run`, or a console replica runs the sweeps and races the
-DDL), and the roles make it unnecessary: `core` mounts nothing regardless of
-the flags, and `console` runs neither components nor migrations because it
-has no database at all. **Redis is a hard requirement for the split, and
+DDL), and the roles make it unnecessary: `start core` mounts nothing
+regardless of the flags, and `start console` runs neither components nor
+migrations because it has no database at all. **Redis is a hard requirement for the split, and
 sticky routing is no substitute**: the authorization code is a cache entry
 minted at `POST /authorize` on whichever replica the API rule picked and
 popped by `/token` on the API replica that answered the callback (the
@@ -3152,13 +3208,15 @@ and its own section.
 **Every section sits at the document ROOT, with no `server.` wrapper.** The
 four service sections carried one until the prefix was dropped, and it never
 discriminated: there is no `client.` sibling and cannot be (plan 081 retired
-`client.admin-console`, and the container entrypoint exits 1 on it), so a
+`client.admin-console`, and the CLI refuses `client/admin-console` as an
+unknown command), so a
 namespace with one member is not one. It was also only half applied, since
 `theme` and the seven deployment keys always sat at the root, and it made the
 document the odd surface out: `SECTION_KEY` and `AuthupConfig` were already
 `core` / `adminConsole`, and no environment variable ever carried a `SERVER_`
-qualifier. The docker entrypoint's `server/core` is a service SELECTOR and
-never followed the section anyway; it is unchanged. The prefix was never
+qualifier. The docker entrypoint's `server/core` was a service SELECTOR and
+never followed the section anyway; it is deprecated on its own schedule (see
+*Process topology*). The `server.` prefix was never
 released (it arrived with `authup.yml` in plan 101 C-2 and left in the same
 beta), so there is no migration path and none is offered: the file read is
 permissive, so a document still carrying `server:` has its whole subtree
@@ -3194,7 +3252,7 @@ keys, and server-core imports them back. The package depends on
 binding.
 
 `apps/authup` is still the only workspace that knows about every service, so
-it is where the per-console configs are resolved (`src/roles/config.ts`) and
+it is where the per-console configs are resolved (`src/console/config.ts`) and
 where the `config` command lives: `config schema` prints the package and
 `config validate` checks the whole document against it, including keys no
 service in the process reads.

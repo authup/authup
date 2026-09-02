@@ -21,12 +21,9 @@ $ mkdir authup && cd authup
 
 ## Step. 2: Configuration
 
-::: warning
-It is important to mention that in the docker environment the configuration for the `PORT` option is ignored.
-:::
-
-So when the authup container is run, the rule is as follows:
-- The API always runs on the internal port `3000` and can be mounted on another external port (`-p <port>:3000`). The `console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
+`PORT` and `HOST` are honored inside the container. The image defaults them to
+`3000` and `0.0.0.0`, so the rule when the container is run is as follows:
+- By default the API listens on the internal port `3000` and is published on another external port with `-p <port>:3000`. Setting `-e PORT=4000` moves the listener, and the built-in healthcheck follows `PORT`; the image's `EXPOSE 3000` is metadata and pins nothing. The `start console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.
@@ -42,8 +39,13 @@ docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
   -e PUBLIC_URL=http://localhost:3001 \
-  authup/authup:latest server/core start
+  authup/authup:latest start
 ```
+
+The container command is the CLI's own argument list (`start`, `start worker`,
+`migration run`, ...), and `start` is the image's default command. The former
+`server/core` prefix is deprecated: it is still accepted with a notice on
+stderr for the rest of the 1.0.0-beta line and is removed in v1.0.0.
 
 `PUBLIC_URL` is the address the browser reaches the container at. The
 consoles derive the API address from it, so with the port published as
@@ -59,8 +61,8 @@ This will launch the following with default settings:
 
 ::: warning The `client/admin-console` service was retired
 The admin console used to be a second container. It is now a console service
-composed into `server/core start`, and `client/admin-console start` exits with
-an error naming the replacement. See [Upgrading](./upgrading.md).
+composed into `start`, and `client/admin-console start` is an unknown command
+to the CLI, which prints its usage and exits `1`. See [Upgrading](./upgrading.md).
 :::
 
 It is recommended to operate the service behind a reverse proxy. For example [nginx](./nginx.md).

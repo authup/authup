@@ -75,7 +75,7 @@ export default defineComponent({
       - DB_TYPE=postgres
       - DB_HOST=postgres
       - REDIS=redis://redis:6379
-    command: server/core start
+    command: start
     depends_on: [postgres, redis]
 
   postgres:

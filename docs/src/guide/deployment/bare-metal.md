@@ -3,11 +3,10 @@
 This section will help you to spin up Authup directly on the **host** system.
 
 ::: tip Production
-For production, the recommended topology is a **container** running the
-`server/core` service. See [Docker](./docker) and
-[Docker Compose](./docker-compose). The `authup` CLI described here runs that
-same service, in the same process; it is the quickstart and bare-metal path to
-it.
+For production, the recommended topology is a **container** running `start`.
+See [Docker](./docker) and [Docker Compose](./docker-compose). The `authup`
+CLI described here runs the same command, in the same process; it is the
+quickstart and bare-metal path to it.
 :::
 
 ## Requirements
@@ -90,7 +89,7 @@ i Server: Started http server.
 Now all should be set up, and you are ready to go :tada:
 
 This will launch the API with default settings:
-- Backend (server/core): `http://127.0.0.1:3000/`
+- Backend (server-core): `http://127.0.0.1:3000/`
 
 The consoles run in that same process, on the same listener:
 - Auth console (login, consent, register, password recovery): `http://127.0.0.1:3000/console/auth`
@@ -99,7 +98,7 @@ The consoles run in that same process, on the same listener:
 
 ## Process behavior
 
-`authup start` runs `server/core` and every enabled console **in the process
+`authup start` runs server-core and every enabled console **in the process
 you started**. There is no child process and no supervisor, so there is nothing
 between you and the service:
 
@@ -115,35 +114,37 @@ between you and the service:
 - **Exit code**: the exit code is the server's own, so a process manager can
   restart it.
 
-The service cannot be named as an argument. `authup start server.core` and
-`authup start server/core` are refused: `start` and `core` take no
-positional argument. The one command that takes a name is `console`, and it
-names a console to serve, not a package to select.
+The one positional argument `start` takes is a role: `core`, `worker` or
+`console`, the last followed by an optional console name. A package cannot be
+named. `authup start server.core` and `authup start server/core` are refused
+as an unknown role before anything boots, and so is a name after a role that
+takes none (`authup start core admin`).
 
 ::: warning `client.admin-console` no longer exists
 The admin console is served by `@authup/server-admin-console` at
 `<publicUrl>/console/admin`, composed into `authup start`.
-`authup start client.admin-console` is refused as an unexpected argument, and a
+`authup start client.admin-console` is refused as an unknown role, and a
 `client.admin-console` section in the configuration file is not read. Remove
 both. See [Upgrading](./upgrading.md).
 :::
 
 ## Other commands
 
-The CLI carries more commands. `core` and `console` split what `start` does
-into two processes (see [Console Replicas](./console-replicas.md)); the rest
-act on the same deployment:
+The CLI carries more commands. The roles of `start` split what a plain
+`start` does into separate processes (see
+[Console Replicas](./console-replicas.md) and [Worker](./worker.md)); the
+rest act on the same deployment:
 
 ```shell
 # the API and the IdP alone, mounting no console
-$ authup core
+$ authup start core
 
 # one console service, or every enabled one, each on its own port
-$ authup console
-$ authup console admin
+$ authup start console
+$ authup start console admin
 
 # run the background sweeps alone, with no HTTP listener
-$ authup start --worker
+$ authup start worker
 
 # apply / inspect / undo database migrations
 $ authup migration run
@@ -154,10 +155,9 @@ $ authup migration revert
 $ authup healthcheck
 ```
 
-`--worker` is the second long-running role. It runs the cron sweeps and
-opens no port, so API replicas can hand them over. The flag selects a mode
-rather than a command of its own: `authup core --worker` starts the same
-process. See [Worker](./worker.md).
+`worker` is the role with no listener. It runs the cron sweeps and opens no
+port, so API replicas can hand them over, and it refuses to start while
+`core.worker.enabled` is false. See [Worker](./worker.md).
 
 All commands honor `--configDirectory` / `--configFile` (except
 `migration generate`, a repository development tool that targets the local

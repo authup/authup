@@ -4,7 +4,7 @@ The account console is the end-user self-service surface. It is a
 client-side single-page application (the `@authup/client-account-console`
 package) served by `@authup/server-account-console` on the IdP origin at
 `<publicUrl>/console/account` by default. `authup start` runs that service
-alongside the API on one listener; `authup console account` runs it alone, on
+alongside the API on one listener; `authup start console account` runs it alone, on
 its own port, for a [split deployment](./console-replicas.md).
 It works in every deployment, including
 ones that run with the admin console disabled, and gives each of your

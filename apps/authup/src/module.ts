@@ -7,53 +7,21 @@
 
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import {
+    CLI_CONFIG_ARGS,
+    applyCLIConfigArgs,
     assertNoStrayPositionals,
     defineCLIMigrationCommand,
 } from '@authup/server-core';
-import { type ArgsDef, defineCommand } from 'citty';
+import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
 import {
     defineCLIConfigCommand,
-    defineCLIConsoleCommand,
-    defineCLICoreCommand,
     defineCLIDevCommand,
     defineCLIHealthCheckCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
-import type { ObjectLiteral } from '@authup/kit';
-
-export const CLI_CONFIG_ARGS = {
-    configDirectory: {
-        type: 'string',
-        description: 'Config directory path',
-    },
-    configFile: {
-        type: 'string',
-        description: 'Name of one or more configuration files.',
-    },
-} satisfies ArgsDef;
-
-export type CLIConfigArgs = {
-    configDirectory?: string,
-    configFile?: string,
-};
-
-function applyCLIConfigArgs<T extends ObjectLiteral = ObjectLiteral>(
-    options: ConfigReadFsOptions<T>,
-    args: CLIConfigArgs,
-) : ConfigReadFsOptions<T> {
-    if (args.configDirectory) {
-        options.cwd = args.configDirectory;
-    }
-
-    if (args.configFile) {
-        options.file = args.configFile;
-    }
-
-    return options;
-}
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
@@ -74,25 +42,36 @@ export async function createCLIEntryPointCommand() {
         },
         subCommands: {
             config: defineCLIConfigCommand(configFs),
-            console: defineCLIConsoleCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
 
-            // The batteries-included single container: server-core plus every
-            // enabled console on one listener.
+            // One listener verb with a positional role: bare for the
+            // single container, `core`, `worker` or `console [name]` for
+            // the split deployment.
             start: defineCLIStartCommand(configFs),
-
-            // The API and the IdP alone, mounting nothing: the page GETs
-            // still redirect to the console service, which someone else runs.
-            core: defineCLICoreCommand(configFs),
 
             // `start`, but a console whose package resolves to a source
             // checkout is served through vite instead of its built dist.
             dev: defineCLIDevCommand(configFs),
         },
-        args: CLI_CONFIG_ARGS,
+        args: {
+            ...CLI_CONFIG_ARGS,
+            // Declared on `start` as well: citty parses an undeclared flag as
+            // a boolean nobody reads, and a flag placed BEFORE the subcommand
+            // (`authup --worker start`) never reaches the subcommand's parse.
+            worker: {
+                type: 'boolean',
+                description: 'Retired. Use `authup start worker`.',
+            },
+        },
         setup(context) {
-            assertNoStrayPositionals(context.args);
+            if (context.args.worker) {
+                throw new Error('The --worker flag is retired. Use `authup start worker`.');
+            }
+
+            // `dev` is the one command here that takes no positional at all;
+            // `start` takes a role and validates it itself.
+            assertNoStrayPositionals(context.args, new Set(['dev']));
             applyCLIConfigArgs(configFs, context.args);
         },
     });

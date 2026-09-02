@@ -49,12 +49,25 @@ export function createCLIConfigModule(options: ConfigReadFsOptions<Config> = {})
     }));
 }
 
-const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['core', 'dev', 'start']);
+const CLI_COMMANDS_WITHOUT_POSITIONALS : ReadonlySet<string> = new Set(['start']);
 
-export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
+/**
+ * Refuse a positional after a command that takes none, on the ROOT args
+ * (`_` = [command, ...positionals]), before the subcommand is even resolved.
+ * citty validates nothing here: a positional's `options` are decorative.
+ *
+ * The set is the caller's, because two CLIs share this helper and disagree
+ * about which commands take a positional: the default is this package's own
+ * dev CLI, whose `start` takes none, while the `authup` CLI's `start` takes a
+ * role and validates it itself.
+ */
+export function assertNoStrayPositionals(
+    args: Pick<ParsedArgs, '_'>,
+    commands: ReadonlySet<string> = CLI_COMMANDS_WITHOUT_POSITIONALS,
+) : void {
     const [command, ...rest] = args._;
 
-    if (!command || !CLI_COMMANDS_WITHOUT_POSITIONALS.has(command) || rest.length === 0) {
+    if (!command || !commands.has(command) || rest.length === 0) {
         return;
     }
 

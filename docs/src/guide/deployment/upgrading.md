@@ -92,17 +92,31 @@ The entry is now dropped with the row and the very next request answers 401.
 
 No action required.
 
-### The worker is a flag on `start`, and `COMPONENTS_ENABLED` is now `WORKER_ENABLED`
+### `start` takes a role, and `COMPONENTS_ENABLED` is now `WORKER_ENABLED`
 
-The `worker` subcommand is retired. The worker is a flag on the listener
-roles now: `authup start --worker`, in a container
-`server/core start --worker`. `authup core --worker` is equivalent,
-since a worker mounts no console either way.
+`start` is the one listener command, and the role is its positional argument:
+
+| Command | Runs |
+|---|---|
+| `authup start` | the API and every enabled console on one listener (unchanged) |
+| `authup start core` | the API and the IdP alone, mounting no console |
+| `authup start worker` | the background sweeps alone: no listener, no migrations |
+| `authup start console [admin\|account\|auth]` | one console service, or every enabled one, each on its own port |
+
+There is no `worker` or `core` subcommand, no top-level `console` subcommand
+and no `--worker` flag. None of them was ever released: all four existed
+between two betas and were renamed inside that window. A mis-typed role is
+refused before anything boots: `authup start server.core` (an unknown role),
+`authup start core admin` (a name after a role that takes none),
+`authup start console web` (an unknown console). `authup start --worker` is
+refused with a message naming `authup start worker`, rather than parsed as a
+flag nobody reads and booting the full API in a worker pod.
 
 **Action required** for anything that runs `server/core worker`,
 `authup-server worker` or `authup worker`: a Compose `command`, a Kubernetes
-`Deployment`, a systemd unit. It fails at start with an unknown-command error rather than degrading
-quietly, so a stale worker stops sweeping.
+`Deployment`, a systemd unit. Each fails at start with an unknown-command
+error rather than degrading quietly, so a stale worker stops sweeping. The
+replacement is `authup start worker`; in a container, `start worker`.
 
 The key moved with it. `core.componentsEnabled` (env `COMPONENTS_ENABLED`) is
 now `core.worker.enabled` (env `WORKER_ENABLED`).
@@ -117,6 +131,30 @@ is reported by `authup config validate` as a path nothing reads.
 worker role ignored it. A worker that reads the API replicas'
 `WORKER_ENABLED=false` therefore stops starting. Give that process
 `WORKER_ENABLED=true` in its own environment.
+
+### The container command is the CLI's own argument list
+
+The image runs the `authup` CLI, and the container command reaches it as it
+stands: `docker run authup/authup start`, a Compose `command: start worker`,
+a Kubernetes `args: [migration, run]`. The image's default command is `start`.
+
+The `server/core` prefix is **deprecated**. It selected a binary while the
+image carried several, and there is one now. It is still accepted for the rest
+of the 1.0.0-beta line, with a one-line notice on stderr, and it is removed in
+v1.0.0, where `server/core start` fails as an unknown command. Drop the prefix
+wherever a Compose file, a Helm values file or a `docker run` line names it.
+
+`client/admin-console start` no longer prints a retirement notice of its own.
+It is an unknown command to the CLI, which prints its usage and exits `1`, the
+same exit code as before. An empty command exits `1` with the usage as well,
+where it used to exit `1` silently.
+
+**`PORT` and `HOST` are honored inside the container.** The entrypoint used to
+force `HOST=0.0.0.0` and `PORT=3000` onto every command, which is why the
+Docker guide warned that `PORT` was ignored. They are image defaults now
+(`ENV HOST=0.0.0.0`, `ENV PORT=3000`), so `-e PORT=4000` moves the listener
+and the built-in `HEALTHCHECK` probes the port `PORT` names. `EXPOSE 3000` is
+metadata; publish whichever port you set.
 
 ### `email_verified` is a real column, and every existing user starts unverified
 
@@ -176,7 +214,7 @@ service on a derived issuer and an empty database while the rest of the file
 applied.
 
 Keys moved as well. Everything a service reads lives in that service's own
-section (`core` for `server/core`), and the deployment-wide options moved
+section (`core` for server-core), and the deployment-wide options moved
 up to the top level:
 
 | Was | Is |
@@ -225,20 +263,19 @@ without the CLI; see the console entries below.)
 | Was | Is |
 |---|---|
 | `authup-server start` | `authup start` |
-| `authup-server worker` | `authup start --worker` |
+| `authup-server worker` | `authup start worker` |
 | `authup-server migration run` | `authup migration run` |
 | `authup-server healthcheck` | `authup healthcheck` |
 
-**Containers need no change**, apart from the worker covered above. The rest
-of the entrypoint vocabulary is unchanged: `server/core start` and
-`server/core migration run` both still work, and the image runs the `authup`
-CLI underneath. A Compose file, a Helm values file or a `docker run` line that
-names `server/core <command>` is already correct.
+**Containers** run the `authup` CLI underneath, and the container command is
+its argument list: `start`, `start worker`, `migration run`. The `server/core`
+prefix a Compose file, a Helm values file or a `docker run` line may still
+carry is deprecated; see the container entry above for its schedule.
 
 **Action required** for anything that invoked the binary by name: a systemd
 unit, a PM2 config, a Procfile, a CI step or an `npm` script naming
 `authup-server`. Install the `authup` package and use the commands in the
-table. The worker role is on this path as well: `authup start --worker`
+table. The worker role is on this path as well: `authup start worker`
 replaces `authup-server worker` (see the entry above).
 
 **`PORT` and `HOST` now follow the normal precedence.** The supervisor always
@@ -255,9 +292,9 @@ configuration file, and relied on the file winning. The two now disagree in
 the other direction. Drop one of them.
 
 **Package selectors are gone.** `authup start server.core` and
-`authup start client.admin-console` are refused as an unexpected argument;
-`start` takes no positional argument, because the CLI starts exactly one
-service. A `client.admin-console` section in the configuration
+`authup start client.admin-console` are refused as an unknown role: the one
+positional `start` takes names a role (`core`, `worker`, `console`), never a
+package. A `client.admin-console` section in the configuration
 file is not read (it printed a deprecation warning before). Remove both.
 
 Two smaller things need no action. `authup migration run` finds its migration
@@ -298,15 +335,15 @@ they are the cookie-mode sign-in, and the pending-login cookie has to be issued
 by the origin that reads it back. The six hosted page GETs answer a redirect to
 the auth console, carrying the request's own query.
 
-The CLI gained two roles for it:
+`start` gained two roles for it:
 
 | Command | Runs |
 |---|---|
 | `authup start` (unchanged default) | the API and every enabled console on one listener |
-| `authup core` | the API and the IdP alone, mounting no console |
-| `authup console [admin\|account\|auth]` | one console service, or every enabled one, each on its own port (`3020` auth, `3021` admin, `3022` account) |
+| `authup start core` | the API and the IdP alone, mounting no console |
+| `authup start console [admin\|account\|auth]` | one console service, or every enabled one, each on its own port (`3020` auth, `3021` admin, `3022` account) |
 
-**No action** for a deployment running `server/core start`: the process, the
+**No action** for a deployment running `authup start`: the process, the
 port, the paths and the container command are all unchanged, and the consoles
 now run as separate services inside it.
 
@@ -314,7 +351,7 @@ now run as separate services inside it.
 
 - **A split deployment.** The flag-only recipe (both sets running `start` with
   the console flags inverted) no longer produces the intended split, and the
-  flags must now stay `true` on both sets. Use `core` and `console` instead;
+  flags must now stay `true` on both sets. Use `start core` and `start console` instead;
   [Console Replicas](./console-replicas.md) is rewritten around them, including
   the two sign-in paths that must keep reaching the API set.
 - **A themed deployment.** `theme.directoryPath` and `theme.fragmentsEnabled`
@@ -330,8 +367,8 @@ published; the path may differ from `publicUrl`, the origin may not), `port`
 (`*_CONSOLE_PORT`) and `host` (`*_CONSOLE_HOST`, inheriting the deployment-wide
 `HOST`). Each console service also ships a binary of its own
 (`authup-auth-console`, `authup-admin-console`, `authup-account-console`) for a
-deployment that runs a console without the CLI; `authup console` is the
-supported route.
+deployment that runs a console without the CLI; `authup start console` is
+the supported route.
 
 **Sub-path deployments.** A console url carries the path prefix authup is
 published under, and the mount subtracts it, so a prefix-stripping proxy
@@ -346,7 +383,7 @@ from the document by the console itself: the issuer (`publicUrl`, derived from
 `core.host` and `core.port` when the document names none), the
 canonicalized `trustedOrigins`, its own url, and every path resolved against
 `rootPath`. One `authup.yml` therefore means the same thing whether a console
-is started by `authup start`, by `authup console`, or by its own
+is started by `authup start`, by `authup start console`, or by its own
 `authup-<name>-console` binary.
 
 **Action required** for a deployment that starts a console through its own
@@ -437,15 +474,15 @@ every console on one listener (see the next entry for what serves what).
 **Action required.**
 
 - **Docker / Compose**: remove the `client/admin-console` service. The
-  entrypoint no longer starts it: `client/admin-console start` prints the
-  replacement and exits `1`, so a stale service fails loudly instead of
-  reporting a healthy run having started nothing. The remaining `server/core`
-  container serves the console.
+  entrypoint no longer starts it: `client/admin-console start` is an unknown
+  command to the CLI, which prints its usage and exits `1`, so a stale
+  service fails loudly instead of reporting a healthy run having started
+  nothing. The remaining container serves the console.
 - **Helm**: the chart in the `authup/helm` repository still deploys an admin
   console workload, whose pods now crash-loop for the reason above. Remove or
   scale that workload to zero. A follow-up chart release drops it.
-- **Bare metal**: the command does not change. `authup start` starts
-  `server/core` alone. `authup start client.admin-console` is refused and a
+- **Bare metal**: the command does not change. `authup start` runs the API
+  and the console in one process. `authup start client.admin-console` is refused and a
   `client.admin-console` section of the configuration file is not read (see the entry
   above). Remove both.
 - **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
@@ -464,7 +501,7 @@ every console on one listener (see the next entry for what serves what).
 build-time names `API_URL`, `API_URL_SERVER`, `PUBLIC_URL`, `COOKIE_DOMAIN`
 and `CLIENT_ID`. The cookie domain is moot: the console is same-origin with
 the API, so there is nothing to widen. Note that `PUBLIC_URL` is unaffected as
-a [`server/core` option](./configuration-server-core); it is the server's own
+a [server-core option](./configuration-server-core); it is the server's own
 public URL, and the console's address derives from it.
 
 **New options.** `ADMIN_CONSOLE_ENABLED` / `adminConsole.enabled`
