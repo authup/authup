@@ -89,18 +89,19 @@ i Server: Started http server.
 
 Now all should be set up, and you are ready to go :tada:
 
-This will launch one service with default settings:
+This will launch the API with default settings:
 - Backend (server/core): `http://127.0.0.1:3000/`
 
-The consoles are served by that same process:
+The consoles run in that same process, on the same listener:
+- Auth console (login, consent, register, password recovery): `http://127.0.0.1:3000/console/auth`
 - Admin console: `http://127.0.0.1:3000/console/admin`
 - Account console: `http://127.0.0.1:3000/console/account`
 
 ## Process behavior
 
-`authup start` runs `server/core` **in the process you started**. There is no
-child process and no supervisor, so there is nothing between you and the
-service:
+`authup start` runs `server/core` and every enabled console **in the process
+you started**. There is no child process and no supervisor, so there is nothing
+between you and the service:
 
 - **Environment**: the process environment is the server's environment. Every
   [server](./configuration-server-core) variable can be set on the `authup`
@@ -115,23 +116,32 @@ service:
   restart it.
 
 The service cannot be named as an argument. `authup start server.core` and
-`authup start server/core` are refused: `start` and `worker` take no
-positional argument, because the CLI starts exactly one service.
+`authup start server/core` are refused: `start`, `core` and `worker` take no
+positional argument. The one command that takes a name is `console`, and it
+names a console to serve, not a package to select.
 
 ::: warning `client.admin-console` no longer exists
-The admin console is served by `server/core` at `<publicUrl>/console/admin`.
+The admin console is served by `@authup/server-admin-console` at
+`<publicUrl>/console/admin`, composed into `authup start`.
 `authup start client.admin-console` is refused as an unexpected argument, and a
 `client.admin-console` section in the configuration file is not read. Remove
-both. See
-[Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
+both. See [Upgrading](./upgrading.md).
 :::
 
 ## Other commands
 
-The CLI carries three more commands, all against the same `server/core`
-service:
+The CLI carries more commands. `core` and `console` split what `start` does
+into two processes (see [Console Replicas](./console-replicas.md)); the rest
+act on the same deployment:
 
 ```shell
+# the API and the IdP alone, mounting no console
+$ authup core
+
+# one console service, or every enabled one, each on its own port
+$ authup console
+$ authup console admin
+
 # run the background sweeps alone, with no HTTP listener
 $ authup worker
 

@@ -8,11 +8,18 @@ Most options can also be provided as environment variables (shown in the `.env` 
 **An environment variable always overrides the file value** for the same option.
 A few options are file-only and have no environment variable — they are marked as such.
 
-Not every option below sits under `core`. `env`, `rootPath`, `publicUrl` and
-`trustedOrigins` are top-level, the two theme options are `theme.directoryPath` and
-`theme.fragmentsEnabled`, and the console options are `adminConsole.*`,
-`accountConsole.*` and `authConsole.*`. The `authup.yml` tab shows each
-one at its place.
+Not every option below sits under `core`. `env`, `host`, `rootPath`,
+`publicUrl` and `trustedOrigins` are top-level, the two theme options are
+`theme.directoryPath` and `theme.fragmentsEnabled`, and the console options are
+`adminConsole.*`, `accountConsole.*` and `authConsole.*`. The
+`authup.yml` tab shows each one at its place.
+
+Of those, server-core itself reads only `enabled` and `url` per console: `enabled`
+gates the console's two sign-in routes, `url` is where it sends the browser. The rest
+of a console's section, and the whole `theme` section, are read by the **console
+service** that serves the console, so setting them on an API-only process
+(`authup core`) does nothing. See [Console Replicas](./console-replicas.md) for the
+full per-console option list.
 
 ::: danger Security
 The admin password and the `system` client secret both default to `start123`.
@@ -80,8 +87,9 @@ export default {
      * token — only add origins you control. A wildcard host trusts every
      * subdomain, so use one only where you control the whole domain.
      * The consoles authup serves need no entry: they are on the
-     * publicUrl origin. In non-production, the admin console's vite dev
-     * server origin (http://localhost:3000) is seeded automatically.
+     * publicUrl origin. In non-production, the admin console's standalone
+     * vite dev server origin (http://localhost:3010) is seeded
+     * automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */
@@ -91,6 +99,8 @@ export default {
         /**
          * EXPERIMENTAL (may change in a minor release; see the Theming guide).
          * Directory holding the operator theme applied to the served consoles.
+         * Read by the console services, not by server-core: in a split
+         * deployment it must be mounted into the console containers.
          * Relative paths are resolved against rootPath. Empty disables theming.
          * See the Theming guide.
          * env: THEME_DIRECTORY_PATH
@@ -101,7 +111,7 @@ export default {
         /**
          * EXPERIMENTAL, alongside directoryPath.
          * Read fragments/head.html from the theme directory and splice it
-         * into the head of both served consoles. Raw, unsanitized markup on
+         * into the head of every served console. Raw, unsanitized markup on
          * the identity provider origin, so it is opt-in.
          * env: THEME_FRAGMENTS_ENABLED
          * default: false
@@ -110,6 +120,18 @@ export default {
     },
 
     adminConsole: {
+        /**
+         * Where the admin console is published. server-core sends the browser
+         * there once a sign-in is complete; the console service rebases its
+         * asset URLs and links onto it. Only the path may differ from
+         * publicUrl, never the origin. `port` and `host` (the console's own
+         * listener, used by `authup console`) are documented in the
+         * Console Replicas guide.
+         * env: ADMIN_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/admin)
+         */
+        url: '',
+
         /**
          * Serve the admin console at `<publicUrl>/console/admin` (realms, clients,
          * users, roles, permissions, policies, keys, sessions, events).
@@ -134,6 +156,14 @@ export default {
 
     accountConsole: {
         /**
+         * Where the account console is published, same rules as
+         * adminConsole.url above.
+         * env: ACCOUNT_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/account)
+         */
+        url: '',
+
+        /**
          * Serve the account self-service surface at `<publicUrl>/console/account`
          * (profile, password, authenticators, sessions, applications).
          * Disable it when you run your own self-service portal.
@@ -156,6 +186,16 @@ export default {
     },
 
     authConsole: {
+        /**
+         * Where the hosted login, consent and workflow pages are published.
+         * The six page GETs on this server redirect there, carrying the
+         * request's own query. Same rules as adminConsole.url above; there is
+         * no `enabled`, because those pages are the issuance surface.
+         * env: AUTH_CONSOLE_URL
+         * default: '' (derived: <publicUrl>/console/auth)
+         */
+        url: '',
+
         /**
          * EXPERIMENTAL. Package directory replacing the served auth console. It
          * points at a directory holding the built dist/. Empty resolves the
@@ -218,9 +258,10 @@ export default {
         port: 3000,
 
         /**
-         * Address the HTTP server binds to.
-         * env: HOST
-         * default: 0.0.0.0 (all interfaces)
+         * Address the HTTP server binds to. Has no environment variable of
+         * its own: HOST sets the top-level `host`, which this listener and
+         * every console listener inherit unless they name their own.
+         * default: the top-level host (0.0.0.0, all interfaces)
          */
         host: '0.0.0.0',
 
@@ -272,7 +313,8 @@ export default {
 
         /**
          * Built-in HTTP middlewares. Each accepts a boolean or an options
-         * object (options objects require the js/ts file variant).
+         * object (options objects require the js/ts file variant), except
+         * middlewareSwagger, which is boolean-only.
          * File-only (no environment variables).
          * default: true (each)
          */

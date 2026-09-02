@@ -1,9 +1,11 @@
 # Worker
 
-`server-core` normally runs everything in one process: it serves the API and
-the consoles, and it also runs a set of cron sweeps in the background. Those
-sweeps can be moved into a separate process, the **worker**, so the API
-replicas only serve requests.
+`authup start` normally runs everything in one process: `server-core` answers
+the API, the console services serve their pages on the same listener, and a set
+of cron sweeps runs in the background. Those sweeps can be moved into a
+separate process, the **worker**, so the API replicas only serve requests. The
+consoles can be moved out the same way; see
+[Console Replicas](./console-replicas.md).
 
 The worker is the same image and the same binary, started with a different
 subcommand:

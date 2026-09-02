@@ -21,9 +21,9 @@ service off, say so: `REDIS=false`, not `REDIS=`.
 ## Configuration File
 
 One file holds the configuration: `authup.yml`, discovered in the **current working
-directory** of the process. Every CLI command (`start`, `worker`, `migration`,
-`healthcheck`, `config`) honors it, and the lookup can be redirected with two global
-CLI flags:
+directory** of the process. Every CLI command (`start`, `core`, `console`, `worker`,
+`migration`, `healthcheck`, `config`) honors it, and the lookup can be redirected with
+two global CLI flags:
 
 - `--configDirectory <path>`: directory to search instead of the cwd.
 - `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
@@ -36,7 +36,10 @@ The extensions discovered are `yml`, `yaml`, `json`, `js`, `mjs`, `cjs`, `ts` an
 cannot be expressed in YAML: use the `js`/`ts` variant for those.
 
 Deployment-wide options sit at the top level, and everything a single service reads
-sits in that service's own section. `server/core` reads `core`:
+sits in that service's own section. `server/core` reads `core`; each console
+service reads `authConsole`, `adminConsole` or `accountConsole`,
+plus the top level and `theme`. One document configures all of them, whether they run
+in one process (`authup start`) or in several:
 
 ```yaml
 # yaml-language-server: $schema=https://authup.org/schema/config.json
@@ -73,8 +76,8 @@ document is printed by `authup config schema`.
 Every option not documented as living elsewhere belongs under `core`. The
 [server/core page](./configuration-server-core) shows each option at its place.
 
-A `client.admin-console` section is no longer read: the admin console is served by
-`server/core` and has no configuration of its own. See
+A `client.admin-console` section is no longer read. The admin console is served by
+`@authup/server-admin-console` and configured under `adminConsole`; see
 [Admin Console](./configuration-client-admin-console).
 
 ::: warning YAML has teeth
@@ -119,5 +122,5 @@ line above names.
 ## Component-Wise
 
 - [server/core](./configuration-server-core) This page describes the configuration of the main backend service.
-- [Admin Console](./configuration-client-admin-console) This page describes the surface `server/core` serves at `/console/admin`, and how to host it standalone.
-- [Account Console](./account-console) This page describes the self-service surface `server/core` serves at `/console/account`.
+- [Admin Console](./configuration-client-admin-console) This page describes the administration console service, published at `/console/admin`, and how to host its bundle standalone.
+- [Account Console](./account-console) This page describes the self-service console service, published at `/console/account`.
