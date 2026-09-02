@@ -9,6 +9,7 @@ The following guide is based on some shared assumptions:
 - Min. `5G` hard disk
 - Docker `v20.x` is [installed](https://docs.docker.com/get-docker/)
 - One available port on the host system if you want to map the service to your local machine (default: `3000`)
+- A reachable PostgreSQL or MySQL database. The image runs in production mode, which does not support SQLite, so it does not start until `DB_*` names a server database. The [Multiple services](#multiple-services) example below brings one up alongside Authup
 - This guide assumes [Compose v2](https://docs.docker.com/compose/compose-file/)
 
 

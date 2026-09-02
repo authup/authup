@@ -9,6 +9,7 @@ The following guide is based on some shared assumptions:
 - Min. `2` cores
 - Min. `5G` hard disk
 - One available port on the host system if you want to map the service to your local machine (default: `3000`)
+- A reachable PostgreSQL or MySQL database. The image runs in production mode, which does not support SQLite, so it does not start until `DB_*` names a server database (see [Database](./configuration-server-core-database.md))
 
 
 ## Step. 1: Create a new project

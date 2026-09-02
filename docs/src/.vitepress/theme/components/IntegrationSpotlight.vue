@@ -72,19 +72,27 @@ export default defineComponent({
       - PUBLIC_URL=http://localhost:3001
       - DB_TYPE=postgres
       - DB_HOST=postgres
+      - DB_USERNAME=authup
+      - DB_PASSWORD=secret
+      - DB_DATABASE=authup
       - REDIS=redis://redis:6379
     command: start
     depends_on: [postgres, redis]
 
   postgres:
     image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=authup
       - POSTGRES_USER=authup
       - POSTGRES_PASSWORD=secret
 
   redis:
-    image: redis:7`;
+    image: redis:7
+
+volumes:
+  postgres_data:`;
 
         return { snippet };
     },

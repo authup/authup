@@ -732,6 +732,13 @@ failing logins when you opt into assurance.
 
 ### Docker: the writable directory moved to `/var/lib/authup`
 
+**Superseded by the next release, and the mount and variable below are dead
+there.** The writable directory was split into a log directory and a
+provisioning directory, `WRITABLE_DIRECTORY_PATH` is not read any more, and the
+image keeps no state directory at all. Upgrading from before this release to a
+newer one means following the FHS entries above instead of this one; it is kept
+because it is what the v1.0.0-beta.63 image does.
+
 The image wrote its runtime files to `/usr/src/app/writable`, inside the
 application install directory. It now uses `/var/lib/authup`, which is where
 the filesystem hierarchy standard puts mutable application state and which is
