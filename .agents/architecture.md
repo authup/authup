@@ -3230,18 +3230,20 @@ where `cookieSession` resolves false and the browser-PKCE path is all that
 is reachable, so neither ever exercised what a served console actually does
 in production.
 
-**HMR websocket ports are fixed, one per console dev server** (middleware
-mode cannot share routup's listener, since the `mount` hook runs before
-`serve()` creates it): 24678 (auth), 24679 (admin), 24680 (account). An
-occupied one FAILS the command, naming the port
-(`assertHmrPortFree` in `apps/authup/src/dev/server.ts`, probing exactly as
-vite's ws server binds: `listen(port)` with no host). It has to, because vite
-itself reports the `EADDRINUSE` through `config.logger.error` and then
-carries on, so the console came up with no HMR at all while the command had
-already announced it as hot. That announcement is now printed only once the
-dev server exists, for the same reason. The cause is almost always another
-dev server; stop it rather than renumber the constants, which would then
-disagree with the docs.
+**Each console dev server takes its own HMR websocket port**, because
+middleware mode cannot share routup's listener (the `mount` hook runs before
+`serve()` creates it). `resolveHmrPort` (`apps/authup/src/dev/server/module.ts`)
+asks `get-port-please` for the first free port at or above 24678, and the
+command reports the one each console took. The base is a PREFERENCE: 24678 is
+vite's own default, so it is the port most likely to be held by an unrelated
+vite project, and refusing to start over that would be poor advice. Resolution
+happens immediately before each server binds and never for all three consoles
+at once, since nothing reserves a port between the probe and the bind, so
+resolving them together would hand the same number to every console. The
+residual risk is a race in that window, which is far rarer than the collision
+it replaces; the predecessor `assertHmrPortFree` refused instead, which is why
+vite reporting `EADDRINUSE` through `config.logger.error` and then carrying on
+mattered so much.
 
 **Two guards make the dev servers safe to put on this listener, and both are
 load-bearing rather than belt-and-braces.** A vite dev server ordinarily

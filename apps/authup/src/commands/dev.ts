@@ -5,8 +5,6 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
-import { EnvironmentName, getURLBasePath } from '@authup/kit';
 import {
     CONFIG_MARKER as ACCOUNT_CONFIG_MARKER,
     PACKAGE_NAME as ACCOUNT_PACKAGE_NAME,
@@ -19,10 +17,8 @@ import {
     VITE_BASE as ADMIN_VITE_BASE,
     createHandler as createAdminConsoleHandler,
 } from '@authup/server-admin-console';
-import type { Config as AuthConsoleConfig } from '@authup/server-auth-console';
-import { createHandler as createAuthConsoleHandler } from '@authup/server-auth-console';
-import { defineStaticConsole } from '@authup/server-console-kit';
 import type { ConfigReadFsOptions } from '@authup/server-config';
+import { createApplication as createConsoleApplication } from '@authup/server-console-kit';
 import {
     ConfigModule,
     HTTPModule,
@@ -31,183 +27,15 @@ import {
     registerShutdownHandlers,
 } from '@authup/server-core';
 import { defineCommand } from 'citty';
-import type { IApp, IAppEvent } from 'routup';
-import { App } from 'routup';
-import { fromNodeMiddleware } from 'routup/node';
-import type { ConsoleDevServer } from '../dev/index.ts';
+import type { Application } from 'orkos';
+import { assertConsolePath, readConsoleConfigs } from '../console/index.ts';
+import type { Mount } from '../dev/index.ts';
 import {
-    createAuthConsoleDevServer,
-    createOpenInEditorGuard,
-    createStaticConsoleDevServer,
-    isSourceCheckout,
-    resolveAuthConsolePackagePath,
+    assertNotProduction,
+    buildAuthMount,
+    buildStaticMount,
     withConsoleRateLimitSkip,
 } from '../dev/index.ts';
-import { PACKAGE_PATH } from '../path.ts';
-import { readConsoleConfigs } from '../roles/config.ts';
-
-/**
- * One websocket per dev server. Middleware mode cannot share the listener:
- * the console mounts are built inside server-core's `mount` hook, which fires
- * before the http server exists.
- */
-const HMR_PORTS = {
-    auth: 24678,
-    admin: 24679,
-    account: 24680,
-} as const;
-
-type Mount = {
-    path: string,
-    app: IApp,
-};
-
-/**
- * `authup dev` must never run a production deployment, and the refusal has to
- * be here rather than left to the detection rule.
- *
- * The shipped container is what makes it reachable: its Dockerfile runs
- * `COPY . .` and `npm ci` BEFORE `ENV NODE_ENV=production` and prunes
- * nothing, so every `vite.config.ts` is present and every devDependency is
- * installed, which is exactly the state `isSourceCheckout` reports as a
- * source checkout. `entrypoint.sh` passes any command straight through while
- * exporting `HOST=0.0.0.0`. So a production image started with `dev` would
- * put a vite dev server, a file watcher and an unauthenticated `/@fs/`
- * reader on a public port, over the real database and the real signing keys.
- *
- * The environment read is server-core's own notion (`config.env`, the `env`
- * key backed by `NODE_ENV`), never `process.env` directly, so an operator who
- * declares the environment in `authup.yml` is covered by the same gate.
- */
-function assertNotProduction(env: string) : void {
-    if (env === EnvironmentName.PRODUCTION) {
-        throw new AuthupError(
-            'The dev command refuses to run with env set to production: it starts a vite dev server ' +
-            'with a file watcher and a filesystem reader over this deployment\'s own configuration, ' +
-            'database and signing keys. Run `authup start` instead.',
-        );
-    }
-}
-
-function assertConsolePath(name: string, url: string) : string {
-    const value = getURLBasePath(url);
-    if (!value) {
-        throw new AuthupError(
-            `The ${name} console url is ${url}, which is this deployment's own origin root. ` +
-            'A console needs a path of its own; the defaults are under /console.',
-        );
-    }
-
-    return value;
-}
-
-/**
- * Wrap a console handler so a dev server sits in FRONT of it: vite answers
- * its client, its source modules and its dependency chunks, and everything it
- * declines falls through to the console's own routes.
- *
- * The guard is registered BEFORE the vite middlewares, which is the whole
- * point of it: vite mounts a process-spawning endpoint unconditionally, and
- * this listener is reachable from off the machine. See
- * `createOpenInEditorGuard`.
- */
-function compose(dev: ConsoleDevServer | undefined, handler: IApp) : IApp {
-    if (!dev) {
-        return handler;
-    }
-
-    const app = new App();
-    app.use(createOpenInEditorGuard());
-    app.use(fromNodeMiddleware(dev.middlewares));
-    app.use(handler);
-
-    return app;
-}
-
-async function buildStaticMount(options: {
-    name: 'admin' | 'account',
-    basePath: string,
-    distPath: string,
-    packageName: string,
-    marker: string,
-    viteBase: string,
-    hmrPort: number,
-    createHandler: (readShell?: (event: IAppEvent) => Promise<string>) => Promise<IApp>,
-    log: (message: string) => void,
-    register: (close: () => Promise<void>) => void,
-}) : Promise<Mount> {
-    const { basePath } = options;
-
-    // Resolution is the kit's rule, never re-walked here: the anchor decides
-    // which node_modules tree is searched, and getting it wrong silently
-    // serves the wrong package.
-    const packagePath = defineStaticConsole({
-        packageName: options.packageName,
-        marker: options.marker,
-        viteBase: options.viteBase,
-        cwd: PACKAGE_PATH,
-        distPath: options.distPath || undefined,
-    }).resolvePackagePath();
-
-    if (!isSourceCheckout(packagePath)) {
-        options.log(`Serving the ${options.name} console from its built bundle (no source checkout at ${packagePath ?? 'an unresolved path'}).`);
-
-        return { path: basePath, app: await options.createHandler() };
-    }
-
-    const dev = await createStaticConsoleDevServer({
-        packageName: options.packageName,
-        root: packagePath,
-        basePath,
-        hmrPort: options.hmrPort,
-    });
-
-    // Registered the moment the server exists, never on the way out: it
-    // already holds a file watcher and an HMR websocket, so anything that
-    // throws between here and the return would strand both.
-    options.register(dev.close);
-
-    // Announced only once the dev server exists. A console reported as hot
-    // while its HMR socket never came up is the worst of both: edits stop
-    // applying and nothing on screen says why.
-    options.log(`Serving the ${options.name} console from source with HMR (${packagePath}).`);
-
-    return {
-        path: basePath,
-        app: compose(dev, await options.createHandler(dev.readShell)),
-    };
-}
-
-async function buildAuthMount(
-    config: AuthConsoleConfig,
-    basePath: string,
-    log: (message: string) => void,
-    register: (close: () => Promise<void>) => void,
-) : Promise<Mount> {
-    const packagePath = resolveAuthConsolePackagePath(config.distPath);
-
-    if (!isSourceCheckout(packagePath)) {
-        log(`Serving the auth console from its built bundle (no source checkout at ${packagePath ?? 'an unresolved path'}).`);
-
-        return { path: basePath, app: await createAuthConsoleHandler(config) };
-    }
-
-    const dev = await createAuthConsoleDevServer({
-        packageName: '@authup/client-auth-console',
-        root: packagePath,
-        basePath,
-        hmrPort: HMR_PORTS.auth,
-    });
-
-    register(dev.close);
-
-    log(`Serving the auth console from source with HMR (${packagePath}).`);
-
-    return {
-        path: basePath,
-        app: compose(dev, await createAuthConsoleHandler(config, undefined, dev.render)),
-    };
-}
 
 /**
  * EXPERIMENTAL. `authup start` with one difference: every console whose
@@ -276,23 +104,42 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                 closers.push(close);
             };
 
+            // The consoles themselves, one tier down and under the same rule:
+            // a console application is collected the moment it exists, so a
+            // failure anywhere after it cannot leave its modules holding what
+            // they opened.
+            const applications : Application[] = [];
+            const registerApplication = (application: Application) => {
+                applications.push(application);
+            };
+
             // One failing close must not abandon the rest, so the results are
             // settled rather than raced.
             const closeDevServers = async () => {
                 await Promise.allSettled(closers.map((close) => close()));
             };
 
+            const teardownConsoles = async () => {
+                await Promise.allSettled(applications.map((application) => application.teardown()));
+            };
+
             const app = createApplication({
                 config: new ConfigModule(config),
                 http: new HTTPModule({
                     mount: async (router) => {
-                        mounts.push(await buildAuthMount(consoles.auth, authPath, log, register));
+                        mounts.push(await buildAuthMount(
+                            consoles.auth,
+                            authPath,
+                            log,
+                            register,
+                            registerApplication,
+                        ));
 
-                        // Each handler is bound at its own call site rather
-                        // than passed as a value: the three services take
-                        // three different config types, so a shared factory
-                        // parameter would have to widen them into a union the
-                        // callee could not hand back.
+                        // Each application is bound at its own call site
+                        // rather than passed as a value: the three services
+                        // take three different config types, so a shared
+                        // factory parameter would have to widen them into a
+                        // union the callee could not hand back.
                         if (adminPath) {
                             mounts.push(await buildStaticMount({
                                 name: 'admin',
@@ -301,14 +148,18 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 packageName: ADMIN_PACKAGE_NAME,
                                 marker: ADMIN_CONFIG_MARKER,
                                 viteBase: ADMIN_VITE_BASE,
-                                hmrPort: HMR_PORTS.admin,
-                                createHandler: (readShell) => createAdminConsoleHandler(
-                                    consoles.admin,
-                                    undefined,
-                                    readShell,
-                                ),
+                                createApplication: (readShell) => createConsoleApplication({
+                                    config: consoles.admin,
+                                    listen: false,
+                                    createHandler: (config, theme) => createAdminConsoleHandler(
+                                        config,
+                                        theme,
+                                        readShell,
+                                    ),
+                                }),
                                 log,
                                 register,
+                                registerApplication,
                             }));
                         }
 
@@ -320,14 +171,18 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                                 packageName: ACCOUNT_PACKAGE_NAME,
                                 marker: ACCOUNT_CONFIG_MARKER,
                                 viteBase: ACCOUNT_VITE_BASE,
-                                hmrPort: HMR_PORTS.account,
-                                createHandler: (readShell) => createAccountConsoleHandler(
-                                    consoles.account,
-                                    undefined,
-                                    readShell,
-                                ),
+                                createApplication: (readShell) => createConsoleApplication({
+                                    config: consoles.account,
+                                    listen: false,
+                                    createHandler: (config, theme) => createAccountConsoleHandler(
+                                        config,
+                                        theme,
+                                        readShell,
+                                    ),
+                                }),
                                 log,
                                 register,
+                                registerApplication,
                             }));
                         }
 
@@ -342,8 +197,10 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                 await app.setup();
             } catch (e) {
                 // Whatever failed, the dev servers already started are ours
-                // to close before the error leaves this command.
+                // to close before the error leaves this command, and the
+                // consoles behind them are ours to unwind.
                 await closeDevServers();
+                await teardownConsoles();
 
                 throw e;
             }
@@ -353,6 +210,11 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                     // The dev servers first: each owns a file watcher and an
                     // HMR websocket, which outlive the http listener.
                     await closeDevServers();
+
+                    // Then the consoles, which are mounted ON this listener,
+                    // so tearing the listener down under them would leave
+                    // their modules to unwind against a socket that is gone.
+                    await teardownConsoles();
 
                     await app.teardown();
                 },

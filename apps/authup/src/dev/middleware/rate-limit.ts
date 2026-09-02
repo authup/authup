@@ -12,6 +12,11 @@ import type { IAppEvent } from 'routup';
 /**
  * Exempt every request under a console base path from the rate limiter.
  *
+ * This file sits under `middleware/` but exports no handler: server-core owns
+ * the rate-limit middleware, and what dev contributes is the `skip` half of
+ * its options. The folder says which middleware the code is about, not what
+ * shape it takes.
+ *
  * The limiter is there to protect a public API, and it caps an
  * unauthenticated caller at 1200 requests per minute keyed by IP. In dev a
  * single page load IS the module graph: vite serves every source file as its

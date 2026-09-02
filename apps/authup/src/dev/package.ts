@@ -9,6 +9,7 @@ import { AuthupError, normalizeError } from '@authup/errors';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ViteModule } from './types.ts';
+import { resolvePackagePath, setPackagePath } from '@authup/server-auth-console';
 
 /**
  * Whether a resolved console package is a SOURCE checkout rather than a
@@ -45,4 +46,16 @@ export async function loadVite(packageName: string) : Promise<ViteModule> {
             'Install vite in this project, or point the console\'s path at a built package.',
         );
     }
+}
+
+/**
+ * The auth console service resolves its bundle through module-level state
+ * seeded at handler creation, so the package path has to be asked for the
+ * same way rather than re-walked here: the anchor decides which node_modules
+ * tree is searched, and it belongs to that package.
+ */
+export function resolveAuthConsolePackagePath(distPath?: string) : string | undefined {
+    setPackagePath(distPath || undefined);
+
+    return resolvePackagePath();
 }

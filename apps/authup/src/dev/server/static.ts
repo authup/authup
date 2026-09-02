@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import type { ViteDevServer } from 'vite';
-import { createConsoleViteServer } from './server.ts';
+import { createConsoleViteServer } from './module.ts';
 import type { StaticConsoleDevServer } from './types.ts';
 
 /**
@@ -41,12 +41,12 @@ export async function createStaticConsoleDevServer(options: {
     packageName: string,
     root: string,
     basePath: string,
-    hmrPort: number,
 }) : Promise<StaticConsoleDevServer> {
-    const server = await createConsoleViteServer(options);
+    const { server, hmrPort } = await createConsoleViteServer(options);
 
     return {
         middlewares: server.middlewares,
+        hmrPort,
         readShell: createViteReadShell(server, options.root),
         close: () => server.close(),
     };

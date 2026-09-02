@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
-import net from 'node:net';
+import { getPort } from 'get-port-please';
 import path from 'node:path';
-import type { Handler, IAppEvent } from 'routup';
-import { defineCoreHandler } from 'routup';
 import type { ViteDevServer } from 'vite';
-import { loadVite } from './source.ts';
+import { HMR_PORT_BASE, HMR_PORT_RANGE } from '../constants.ts';
+import { loadVite } from '../package.ts';
 
 /**
  * Vite's own `server.fs.deny` default, restated because supplying the option
@@ -66,77 +64,18 @@ const CONSOLE_FS_DENY = [
 ];
 
 /**
- * The one path a console dev server must never answer.
+ * The first free hot-module-replacement socket at or above the base.
  *
- * Vite registers `middlewares.use('/__open-in-editor', launchEditorMiddleware())`
- * UNCONDITIONALLY (vite 8.2.1), and that middleware spawns a child process:
- * `launch-editor` runs `process.env.LAUNCH_EDITOR` (or a guessed editor) with
- * a caller-chosen path. It is a side-effecting endpoint reachable by a plain
- * GET, so any page a developer visits can fire it cross-origin with
- * `<img src="http://localhost:3000/console/admin/__open-in-editor?file=...">`.
- * Vite's own host allowlist does not defend it: that check sees
- * `Host: localhost`, which is exactly what such a request carries.
- *
- * The refusal sits in FRONT of `fromNodeMiddleware` rather than reaching into
- * vite's middleware stack, so it survives a vite upgrade reordering or
- * renaming its internals.
- *
- * The comparison must be case-insensitive. Connect's own dispatch (vite
- * 8.2.1, `node_modules/vite/dist/node/chunks/node.js:7038`) matches a route
- * with `path.toLowerCase().substr(0, route.length) !== route.toLowerCase()`,
- * so `/__OPEN-IN-EDITOR` reaches the middleware exactly as `/__open-in-editor`
- * does. A literal segment comparison here would refuse the spelling connect
- * matches loosely while letting every other casing walk straight past it.
+ * Called immediately before the server binds it, and never for all three
+ * consoles up front: nothing reserves a port between the probe and the bind,
+ * so resolving them together would hand the same number to every console.
+ * Each dev server is created in turn, so by the time this runs the previous
+ * one already holds its port.
  */
-export function createOpenInEditorGuard() : Handler {
-    return defineCoreHandler((event: IAppEvent) => {
-        const segments = event.path.split('/').map((segment) => segment.toLowerCase());
-
-        if (segments.includes('__open-in-editor')) {
-            event.response.status = 404;
-
-            return null;
-        }
-
-        return event.next();
-    });
-}
-
-/**
- * Refuse a hot-module-replacement port that is already taken.
- *
- * Vite reports an occupied ws port through `config.logger.error` and then
- * CARRIES ON, so the console comes up with no HMR at all while this command
- * has already announced it as hot. A dev loop that lies about being hot costs
- * more than one that refuses to start: the symptom is edits that silently
- * stop applying, which reads as a broken build rather than a busy port.
- *
- * The probe binds exactly as vite's ws server does (`listen(port)` with no
- * host, so every interface), or it would answer a different question from the
- * one the dev server is about to ask.
- */
-async function assertHmrPortFree(port: number, packageName: string) : Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-        const probe = net.createServer();
-
-        probe.once('error', (error: NodeJS.ErrnoException) => {
-            if (error.code === 'EADDRINUSE') {
-                reject(new AuthupError(
-                    `The hot module replacement port ${port} for ${packageName} is already in use. ` +
-                    'Another `authup dev` is most likely still running; stop it and start again.',
-                ));
-
-                return;
-            }
-
-            reject(error);
-        });
-
-        probe.once('listening', () => {
-            probe.close(() => resolve());
-        });
-
-        probe.listen(port);
+export function resolveHmrPort() : Promise<number> {
+    return getPort({
+        port: HMR_PORT_BASE,
+        alternativePortRange: HMR_PORT_RANGE,
     });
 }
 
@@ -156,13 +95,12 @@ export async function createConsoleViteServer(options: {
     packageName: string,
     root: string,
     basePath: string,
-    hmrPort: number,
-}) : Promise<ViteDevServer> {
+}) : Promise<{ server: ViteDevServer, hmrPort: number }> {
     const vite = await loadVite(options.packageName);
 
-    await assertHmrPortFree(options.hmrPort, options.packageName);
+    const hmrPort = await resolveHmrPort();
 
-    return vite.createServer({
+    const server = await vite.createServer({
         configFile: path.join(options.root, 'vite.config.ts'),
         root: options.root,
         base: `${options.basePath}/`,
@@ -173,7 +111,7 @@ export async function createConsoleViteServer(options: {
             // The HMR socket cannot share the listener: the console mounts
             // run inside server-core's `mount` hook, which fires before the
             // http server exists.
-            ws: { port: options.hmrPort },
+            ws: { port: hmrPort },
             fs: { deny: CONSOLE_FS_DENY },
             watch: {
                 usePolling: true,
@@ -181,4 +119,6 @@ export async function createConsoleViteServer(options: {
             },
         },
     });
+
+    return { server, hmrPort };
 }

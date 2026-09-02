@@ -5,26 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Config as AccountConsoleConfig,
-    ConfigInput as AccountConsoleConfigInput,
-} from '@authup/server-account-console';
+import type { ConfigInput as AccountConsoleConfigInput } from '@authup/server-account-console';
 import {
     CONFIG_SCHEMA as ACCOUNT_CONSOLE_SCHEMA,
     resolveConfig as resolveAccountConsoleConfig,
 } from '@authup/server-account-console';
-import type {
-    Config as AdminConsoleConfig,
-    ConfigInput as AdminConsoleConfigInput,
-} from '@authup/server-admin-console';
+import type { ConfigInput as AdminConsoleConfigInput } from '@authup/server-admin-console';
 import {
     CONFIG_SCHEMA as ADMIN_CONSOLE_SCHEMA,
     resolveConfig as resolveAdminConsoleConfig,
 } from '@authup/server-admin-console';
-import type {
-    Config as AuthConsoleConfig,
-    ConfigInput as AuthConsoleConfigInput,
-} from '@authup/server-auth-console';
+import type { ConfigInput as AuthConsoleConfigInput } from '@authup/server-auth-console';
 import {
     CONFIG_SCHEMA as AUTH_CONSOLE_SCHEMA,
     resolveConfig as resolveAuthConsoleConfig,
@@ -33,12 +24,7 @@ import { mergeSchemaData, readSchemaFromEnv, readSchemaFromFileTree } from '@aut
 import type { SchemaInput } from '@authup/server-config-kit';
 import type { AuthupConfig, ConfigReadFsOptions } from '@authup/server-config';
 import { readConfigFileTree } from '@authup/server-config';
-
-export type ConsoleConfigs = {
-    auth: AuthConsoleConfig,
-    admin: AdminConsoleConfig,
-    account: AccountConsoleConfig,
-};
+import type { ConsoleConfigs } from './types.ts';
 
 /**
  * The three console services' configuration, read from the same `authup.yml`

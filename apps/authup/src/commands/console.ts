@@ -13,7 +13,7 @@ import type { Application } from 'orkos';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import { registerShutdownHandlers } from '@authup/server-core';
 import { defineCommand } from 'citty';
-import { readConsoleConfigs } from '../roles/config.ts';
+import { readConsoleConfigs } from '../console/index.ts';
 
 const CONSOLE_NAMES = ['admin', 'account', 'auth'] as const;
 

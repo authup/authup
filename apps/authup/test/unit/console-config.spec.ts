@@ -17,7 +17,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readConsoleConfigs } from '../../src/roles/config.ts';
+import { readConsoleConfigs } from '../../src/console/index.ts';
 
 /**
  * What a console service ends up configured with, from the same `authup.yml`

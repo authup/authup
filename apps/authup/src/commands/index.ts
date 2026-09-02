@@ -5,8 +5,10 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+export * from './application.ts';
 export * from './config.ts';
 export * from './console.ts';
+export * from './core.ts';
 export * from './dev.ts';
 export * from './healthcheck.ts';
 export * from './start.ts';

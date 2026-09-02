@@ -73,10 +73,11 @@ production refusal exists to stop.
 - **Prometheus-Metrics** `http://localhost:3000/metrics`
 
 Each console's vite dev server opens its own hot-module-replacement
-websocket: 24678 (auth), 24679 (admin), 24680 (account). If one of those
-ports is already taken, the command refuses to start and names it, rather
-than coming up with that console silently un-hot; the usual cause is another
-`authup dev` still running.
+websocket, taking the first free port from 24678 upward, and reports the one
+it took. With nothing else running that is 24678 (auth), 24679 (admin) and
+24680 (account). The port is a preference rather than an assignment: 24678 is
+vite's own default, so it is the port most likely to be held already by an
+unrelated project, and stepping past it beats refusing to start.
 
 Two things the dev servers deliberately will not do, because they ride the
 API's own listener rather than loopback. They refuse to read the database,
