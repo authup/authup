@@ -2979,7 +2979,11 @@ what gets LAUNCHED (a console service still walks node_modules to find the
 BUNDLE it serves, anchored on its own package root for the same reason).
 Package selectors are gone with the supervisor (`authup start server.core` is
 refused as a stray positional, and a `client.admin-console` config section is
-simply not read).
+simply not read). The `migration` operation positional is checked by hand for
+the same reason: citty validates a positional's `options` nowhere (the check
+exists for `type: 'enum'` only), so `authup migration stauts` used to run every
+pending migration and exit 0. An unknown operation is now refused, with exit 1,
+before the data source is created (#3542).
 
 **Worker mode (plans 095/096/097)** is the same binary and the same image,
 started as `authup start --worker` (container: `server/core start --worker`;

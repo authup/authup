@@ -36,9 +36,15 @@ enum MigrationOperation {
     RUN = 'run',
 }
 
+const OPERATIONS = Object.values(MigrationOperation);
+
+function isMigrationOperation(value: string) : value is MigrationOperation {
+    return (OPERATIONS as string[]).includes(value);
+}
+
 async function runMigrationOperation(
     container: IContainer,
-    operation: string,
+    operation: MigrationOperation,
 ): Promise<void> {
     const config = container.resolve(ConfigInjectionKey);
     const logger = container.resolve(LoggerInjectionKey);
@@ -178,13 +184,19 @@ export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions<Config> 
             operation: {
                 required: true,
                 type: 'positional',
-                options: Object.values(MigrationOperation),
-                valueHint: Object.values(MigrationOperation).join('|'),
+                valueHint: OPERATIONS.join('|'),
             },
         },
         async setup(context) {
+            // citty checks a positional's options nowhere, so an unknown operation
+            // used to fall through to `runMigrations` (#3542).
+            const { operation } = context.args;
+            if (!isMigrationOperation(operation)) {
+                throw new Error(`Unknown migration operation "${operation}". Expected one of: ${OPERATIONS.join(', ')}.`);
+            }
+
             try {
-                if (context.args.operation === MigrationOperation.GENERATE) {
+                if (operation === MigrationOperation.GENERATE) {
                     await generateMigrations();
                 } else {
                     const app = new ApplicationBuilder()
@@ -196,7 +208,7 @@ export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions<Config> 
                         name: ModuleName.DATABASE,
                         dependencies: [ModuleName.CONFIG, ModuleName.LOGGER],
                         async setup(container: IContainer): Promise<void> {
-                            await runMigrationOperation(container, context.args.operation);
+                            await runMigrationOperation(container, operation);
                         },
                     });
 
