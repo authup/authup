@@ -41,6 +41,7 @@ import {
     createStaticConsoleDevServer,
     isSourceCheckout,
     resolveAuthConsolePackagePath,
+    withConsoleRateLimitSkip,
 } from '../dev/index.ts';
 import { PACKAGE_PATH } from '../path.ts';
 import { readConsoleConfigs } from '../roles/config.ts';
@@ -125,7 +126,7 @@ function compose(dev: ConsoleDevServer | undefined, handler: IApp) : IApp {
 
 async function buildStaticMount(options: {
     name: 'admin' | 'account',
-    url: string,
+    basePath: string,
     distPath: string,
     packageName: string,
     marker: string,
@@ -135,7 +136,7 @@ async function buildStaticMount(options: {
     log: (message: string) => void,
     register: (close: () => Promise<void>) => void,
 }) : Promise<Mount> {
-    const basePath = assertConsolePath(options.name, options.url);
+    const { basePath } = options;
 
     // Resolution is the kit's rule, never re-walked here: the anchor decides
     // which node_modules tree is searched, and getting it wrong silently
@@ -179,10 +180,10 @@ async function buildStaticMount(options: {
 
 async function buildAuthMount(
     config: AuthConsoleConfig,
+    basePath: string,
     log: (message: string) => void,
     register: (close: () => Promise<void>) => void,
 ) : Promise<Mount> {
-    const basePath = assertConsolePath('auth', config.url);
     const packagePath = resolveAuthConsolePackagePath(config.distPath);
 
     if (!isSourceCheckout(packagePath)) {
@@ -239,6 +240,27 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
 
             assertNotProduction(config.env);
 
+            const consoles = await readConsoleConfigs(configFs);
+
+            // Resolved here rather than inside each builder so the mounts and
+            // the rate-limit exemption below cannot disagree about where a
+            // console lives, and read BEFORE the application is built because
+            // the exemption has to be on the config by the time server-core
+            // registers the middleware.
+            const authPath = assertConsolePath('auth', consoles.auth.url);
+            const adminPath = consoles.admin.enabled ?
+                assertConsolePath('admin', consoles.admin.url) :
+                undefined;
+            const accountPath = consoles.account.enabled ?
+                assertConsolePath('account', consoles.account.url) :
+                undefined;
+
+            config.middlewareRateLimit = withConsoleRateLimitSkip(
+                config.middlewareRateLimit,
+                [authPath, adminPath, accountPath]
+                    .filter((value) : value is string => typeof value === 'string'),
+            );
+
             // eslint-disable-next-line no-console
             const log = (message: string) => console.log(message);
 
@@ -264,19 +286,17 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                 config: new ConfigModule(config),
                 http: new HTTPModule({
                     mount: async (router) => {
-                        const consoles = await readConsoleConfigs(configFs);
-
-                        mounts.push(await buildAuthMount(consoles.auth, log, register));
+                        mounts.push(await buildAuthMount(consoles.auth, authPath, log, register));
 
                         // Each handler is bound at its own call site rather
                         // than passed as a value: the three services take
                         // three different config types, so a shared factory
                         // parameter would have to widen them into a union the
                         // callee could not hand back.
-                        if (consoles.admin.enabled) {
+                        if (adminPath) {
                             mounts.push(await buildStaticMount({
                                 name: 'admin',
-                                url: consoles.admin.url,
+                                basePath: adminPath,
                                 distPath: consoles.admin.distPath,
                                 packageName: ADMIN_PACKAGE_NAME,
                                 marker: ADMIN_CONFIG_MARKER,
@@ -292,10 +312,10 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
                             }));
                         }
 
-                        if (consoles.account.enabled) {
+                        if (accountPath) {
                             mounts.push(await buildStaticMount({
                                 name: 'account',
-                                url: consoles.account.url,
+                                basePath: accountPath,
                                 distPath: consoles.account.distPath,
                                 packageName: ACCOUNT_PACKAGE_NAME,
                                 marker: ACCOUNT_CONFIG_MARKER,
