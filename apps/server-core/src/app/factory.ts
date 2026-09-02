@@ -50,14 +50,13 @@ async function migrateWorkerSchema(container: IContainer, dataSource: DataSource
 }
 
 /**
- * The worker role: the background components and the modules they stand on,
+ * Worker mode: the background components and the modules they stand on,
  * and nothing else. No http, oauth2, identity, authentication, ldap, mail or
  * provisioning module, so the process serves no request and writes no
  * provisioning graph.
  *
- * The components are forced on regardless of `componentsEnabled`, so an API
- * replica can hand the sweeps over by turning that flag off while this
- * process keeps running them.
+ * `core.worker.enabled` is REQUIRED here: a process started for nothing but
+ * the sweeps refuses to boot with them off, rather than coming up idle.
  */
 export function createWorkerApplication(context: CreateApplicationContext = {}) {
     return new ApplicationBuilder()
@@ -65,6 +64,6 @@ export function createWorkerApplication(context: CreateApplicationContext = {}) 
         .withLogger()
         .withCache()
         .withDatabase(new DatabaseModule({ migrate: migrateWorkerSchema }))
-        .withComponents(new ComponentsModule({ force: true }))
+        .withComponents(new ComponentsModule({ required: true }))
         .build({ container: context.container });
 }

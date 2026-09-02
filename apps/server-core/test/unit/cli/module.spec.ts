@@ -21,7 +21,7 @@ import { createCLIEntryPointCommand } from '../../../src/cli/module';
 import { PACKAGE_PATH } from '../../../src/path';
 
 describe('src/cli/module', () => {
-    it('should register the worker subcommand', async () => {
+    it('should register the service subcommands', async () => {
         const command = await createCLIEntryPointCommand();
 
         const subCommands = await (typeof command.subCommands === 'function' ?
@@ -32,7 +32,6 @@ describe('src/cli/module', () => {
             'healthcheck',
             'migration',
             'start',
-            'worker',
         ]);
     });
 
@@ -70,11 +69,11 @@ describe('src/cli/module', () => {
             ))).toThrow('Unexpected argument "client.admin-console" for command "start".');
         });
 
-        it('should refuse a stray positional on worker', () => {
+        it('should refuse a stray positional on core', () => {
             expect(() => assertNoStrayPositionals(parseArgs(
-                ['worker', 'client.admin-console'],
+                ['core', 'client.admin-console'],
                 CLI_CONFIG_ARGS,
-            ))).toThrow('Unexpected argument "client.admin-console" for command "worker".');
+            ))).toThrow('Unexpected argument "client.admin-console" for command "core".');
         });
 
         it('should accept the space form of the config flags on start', () => {
@@ -89,9 +88,9 @@ describe('src/cli/module', () => {
             ))).not.toThrow();
         });
 
-        it('should accept the equals form of the config flags on worker', () => {
+        it('should accept the equals form of the config flags on core', () => {
             expect(() => assertNoStrayPositionals(parseArgs(
-                ['worker', '--configDirectory=/etc/authup'],
+                ['core', '--configDirectory=/etc/authup'],
                 CLI_CONFIG_ARGS,
             ))).not.toThrow();
         });
@@ -119,13 +118,5 @@ describe('src/cli/module', () => {
         await expect(runCommand(command, { rawArgs: ['start', 'client.admin-console'] }))
             .rejects
             .toThrow('Unexpected argument "client.admin-console" for command "start".');
-    });
-
-    it('should refuse a stray positional on worker before the subcommand runs', async () => {
-        const command = await createCLIEntryPointCommand();
-
-        await expect(runCommand(command, { rawArgs: ['worker', 'client.admin-console'] }))
-            .rejects
-            .toThrow('Unexpected argument "client.admin-console" for command "worker".');
     });
 });

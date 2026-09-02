@@ -7,20 +7,22 @@ separate process, the **worker**, so the API replicas only serve requests. The
 consoles can be moved out the same way; see
 [Console Replicas](./console-replicas.md).
 
-The worker is the same image and the same binary, started with a different
-subcommand:
+The worker is the same image and the same binary, started in a different mode:
 
 ```bash
-authup worker
+authup start --worker
 ```
 
-In a container that is `server/core worker`; on bare metal it is a second
-`authup` process next to the one running `start`.
+In a container that is `server/core start --worker`; on bare metal it is a
+second `authup` process next to the one running `start`. Without the flag the
+API runs the worker alongside itself.
+`authup core --worker` is equivalent: a worker mounts no console either
+way.
 
 ## What it runs
 
-The worker process boots the background components and the modules they stand
-on, and nothing else. There is no HTTP listener, so it serves no request and
+The worker process boots the background sweeps and the modules they stand on,
+and nothing else. There is no HTTP listener, so it serves no request and
 opens no port.
 
 Two sweeps run today, both once a minute:
@@ -54,25 +56,36 @@ scheduled work at all, so scaling them up and down never affects retention.
 
 ## Turning the sweeps off in the API
 
-The worker forces its components on, whatever the configuration says. The API
-side is where you switch them off:
+`core.worker.enabled` reads the same in both modes. Under the default mode it
+says whether the API runs the worker alongside itself, so a plain `start` needs
+nothing set. The API side is where you hand the sweeps over:
 
 ::: code-group
 
 ```dotenv [.env]
-COMPONENTS_ENABLED=false
+WORKER_ENABLED=false
 ```
 
 ```yaml [authup.yml]
 core:
-  componentsEnabled: false
+  worker:
+    enabled: false
 ```
 
 :::
 
 Set that on every API replica, and only once a worker is actually running. With
 it set and no worker, nothing sweeps: expired sessions, tokens and audit events
-accumulate until a process that runs the components starts.
+accumulate until a process that runs the sweeps starts.
+
+Worker mode requires the key. `start --worker` refuses to boot while
+`core.worker.enabled` is false, naming the key in the error, rather than coming
+up idle and sweeping nothing. A worker that reads the same `authup.yml` as the
+API replicas therefore has to override it in its own environment:
+
+```dotenv
+WORKER_ENABLED=true
+```
 
 ## Schema ownership
 
@@ -133,7 +146,7 @@ services:
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
             # the sweeps run in the worker below
-            - COMPONENTS_ENABLED=false
+            - WORKER_ENABLED=false
         command: server/core start
 
     # one instance is enough, whatever the API scales to
@@ -152,15 +165,15 @@ services:
         # the image healthcheck probes an HTTP port this process never opens
         healthcheck:
             disable: true
-        command: server/core worker
+        command: server/core start --worker
 ```
 
 The worker needs no volume and no published port. It does need the same
 database as the API, since the sweeps are plain deletes against the shared
 schema. This split is for the server databases (MySQL and Postgres): a SQLite
 worker container would open its own database file inside the container and
-sweep nothing of the API's data, so a SQLite deployment keeps the components
-in the API process instead. Note the worker's rotating file logs under
+sweep nothing of the API's data, so a SQLite deployment keeps the sweeps in
+the API process instead. Note the worker's rotating file logs under
 `WRITABLE_DIRECTORY_PATH` are ephemeral without a volume; the console output
 for `docker logs` remains.
 
@@ -170,10 +183,12 @@ The same split, with the migration step as its own object:
 
 - A `Job` running `server/core migration run`, as a pre-install and pre-upgrade
   hook so it completes before the workloads roll.
-- The API `Deployment`, with `COMPONENTS_ENABLED=false` and
+- The API `Deployment`, with `WORKER_ENABLED=false` and
   `MIGRATION_ENABLED=false`. Any number of replicas.
-- The worker `Deployment`, `replicas: 1`, command `server/core worker`, with
-  no readiness or liveness HTTP probe.
+- The worker `Deployment`, `replicas: 1`, command
+  `server/core start --worker`, with no readiness or liveness HTTP probe.
+  Give it `WORKER_ENABLED=true` when it shares the API's `ConfigMap`, which
+  sets that key to false.
 
 Leaving the worker without probes is deliberate. There is no port to probe, and
 a liveness probe over `exec` would add little: the sweeps are scheduled inside

@@ -20,7 +20,7 @@ the API set reaches the database and the cache.
 | Listens on | `3000` | `3020` (auth), `3021` (admin), `3022` (account) |
 | Database | required | none |
 | Redis | required (see below) | none |
-| Runs migrations / cron sweeps | per `MIGRATION_ENABLED` / `COMPONENTS_ENABLED` | never, by construction |
+| Runs migrations / cron sweeps | per `MIGRATION_ENABLED` / `WORKER_ENABLED` | never, by construction |
 
 `authup console` starts every enabled console in one process, each on its own
 port, because each console is its own service: its own package, its own
@@ -28,7 +28,7 @@ config section, its own deployment. Name one to serve only that one
 (`server/core console admin`).
 
 A console process holds no credential, opens no database or cache connection
-and mounts no controller. `COMPONENTS_ENABLED` and `MIGRATION_ENABLED` are
+and mounts no controller. `WORKER_ENABLED` and `MIGRATION_ENABLED` are
 server-core options and do nothing on it, so run `authup migration run`
 (container: `server/core migration run`) once before either set starts and let
 a single [worker](./worker.md) own the sweeps, exactly as for any multi-replica
@@ -233,7 +233,7 @@ services:
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
-            - COMPONENTS_ENABLED=false
+            - WORKER_ENABLED=false
             - MIGRATION_ENABLED=false
         command: server/core core
 

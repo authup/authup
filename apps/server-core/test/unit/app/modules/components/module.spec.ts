@@ -117,7 +117,7 @@ describe('app/modules/components', () => {
     });
 
     it('should register no components when they are disabled by config', async () => {
-        const config = await normalizeConfig({ componentsEnabled: false });
+        const config = await normalizeConfig({ worker: { enabled: false } });
 
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
@@ -133,7 +133,7 @@ describe('app/modules/components', () => {
         await module.setup(container);
         await flushMicrotasks();
 
-        expect(infoLines).toContain('Background components are disabled by configuration.');
+        expect(infoLines).toContain('The worker is disabled by configuration (core.worker.enabled: false).');
         expect(infoLines.some((line) => line.startsWith('Background components started'))).toBeFalsy();
 
         expect(findMock).not.toHaveBeenCalled();
@@ -145,30 +145,15 @@ describe('app/modules/components', () => {
         await expect(module.teardown(container)).resolves.toBeUndefined();
     });
 
-    it('should register components regardless of the flag when forced', async () => {
-        const config = await normalizeConfig({
-            componentsEnabled: false,
-            eventLogEnabled: false,
-        });
+    it('should refuse to boot when required and the worker is disabled', async () => {
+        const config = await normalizeConfig({ worker: { enabled: false } });
 
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+        const { container, findMock } = createContext(config);
 
-        const {
-            container, 
-            findMock, 
-            infoLines, 
-        } = createContext(config);
+        const module = new ComponentsModule({ required: true });
 
-        const module = new ComponentsModule({ force: true });
-
-        await module.setup(container);
-        await flushMicrotasks();
-
-        expect(infoLines).toContain('Background components started: oauth2-cleaner.');
-        expect(findMock).toHaveBeenCalledTimes(2);
-
-        await module.teardown(container);
+        await expect(module.setup(container)).rejects.toThrow(/core\.worker\.enabled/);
+        expect(findMock).not.toHaveBeenCalled();
     });
 
     it('should name every registered component in the boot log', async () => {

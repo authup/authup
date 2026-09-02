@@ -49,7 +49,7 @@ export function createCLIConfigModule(options: ConfigReadFsOptions<Config> = {})
     }));
 }
 
-const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['core', 'dev', 'start', 'worker']);
+const CLI_COMMANDS_WITHOUT_POSITIONALS = new Set(['core', 'dev', 'start']);
 
 export function assertNoStrayPositionals(args: Pick<ParsedArgs, '_'>) : void {
     const [command, ...rest] = args._;

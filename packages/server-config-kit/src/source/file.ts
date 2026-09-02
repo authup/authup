@@ -66,7 +66,12 @@ export function readSchemaFromFileTree<T>(
         }
 
         if (isSchemaInput(entry)) {
-            data[key as string] = readSchemaFromFileTree<any>(tree, entry);
+            const value = readSchemaFromFileTree<any>(tree, entry);
+            // a section the document does not spell stays absent, like a key
+            if (Object.keys(value).length > 0) {
+                data[key as string] = value;
+            }
+
             continue;
         }
 
