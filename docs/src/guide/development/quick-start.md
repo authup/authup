@@ -117,4 +117,19 @@ admin console) than the API, it signs in with the standalone browser
 authorization-code (PKCE) flow rather than the cookie-session credential a
 served console uses in production.
 
+::: warning Sign out of the hosted pages first
+
+Cookies ignore ports, so `localhost:3010` and `localhost:3000` are the same
+HOST to the browser. A standalone console started while a session from the
+hosted auth pages is still open therefore seeds itself from that session's
+path-`/` token cookies and comes up already signed in, without ever running
+the flow you are trying to test. Sign out at `http://localhost:3000/logout`
+(or clear the `localhost` cookies) before you start.
+
+This is a same-host development artefact only. A real deployment serves the
+consoles on the API's own origin, where they hold no token cookies at all,
+and a standalone-hosted console runs on a domain of its own.
+
+:::
+
 You can start working with the application or begin making contributions to the project!
