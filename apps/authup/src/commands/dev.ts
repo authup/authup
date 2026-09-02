@@ -75,12 +75,12 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
             // console lives, and read BEFORE the application is built because
             // the exemption has to be on the config by the time server-core
             // registers the middleware.
-            const authPath = assertConsolePath('auth', consoles.auth.url);
+            const authPath = assertConsolePath('auth', consoles.auth.url, config.publicUrl);
             const adminPath = consoles.admin.enabled ?
-                assertConsolePath('admin', consoles.admin.url) :
+                assertConsolePath('admin', consoles.admin.url, config.publicUrl) :
                 undefined;
             const accountPath = consoles.account.enabled ?
-                assertConsolePath('account', consoles.account.url) :
+                assertConsolePath('account', consoles.account.url, config.publicUrl) :
                 undefined;
 
             config.middlewareRateLimit = withConsoleRateLimitSkip(
