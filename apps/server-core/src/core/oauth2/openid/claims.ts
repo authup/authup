@@ -11,7 +11,7 @@ import type {
     User,
 } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
-import type { OpenIDTokenPayload } from '@authup/specs';
+import type { OpenIDClaims, OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { ObjectLiteral } from 'validup';
 
@@ -19,10 +19,18 @@ type AttributeMapTuple<T> = {
     [K in keyof T]: [K, (value: unknown) => any]
 }[keyof T];
 
-type AttributeMap<T extends Record<string, any>> = Record<
-    keyof OpenIDTokenPayload,
+/**
+ * Keyed on `OpenIDClaims`, never on `OpenIDTokenPayload`: the latter inherits
+ * `JWTClaims`' `[key: string]: any`, so `keyof` collapses to `string | number`
+ * and the map accepts any claim name at all — a typo compiles and the claim is
+ * simply never emitted, which is the failure mode #3518 is about. `OpenIDClaims`
+ * carries no index signature, so a name that is not a claim fails the build.
+ * `Partial`, because a map declares only the claims its entity can supply.
+ */
+type AttributeMap<T extends Record<string, any>> = Partial<Record<
+    keyof OpenIDClaims,
 keyof T | AttributeMapTuple<T>
->;
+>>;
 
 export class OAuth2OpenIDClaimsBuilder {
     protected clientMap : AttributeMap<Client> = {
@@ -59,7 +67,7 @@ export class OAuth2OpenIDClaimsBuilder {
         ],
 
         email: 'email',
-        email_verified: 'active',
+        email_verified: 'emailVerified',
     };
 
     /**
@@ -83,26 +91,54 @@ export class OAuth2OpenIDClaimsBuilder {
         return this.extract(this.userMap, input);
     }
 
+    /**
+     * A claim is emitted only for a value that exists AND is not nullish.
+     *
+     * The map reads entity columns, several of which are nullable, and OIDC
+     * models an unavailable claim as one that is not returned rather than one
+     * returned as `null` — so a user without a display name must omit
+     * `nickname`, not answer `nickname: null` (#3518). Emitting the null also
+     * put a JSON `null` claim value into every id_token, which no relying
+     * party expects.
+     */
     protected extract<T extends ObjectLiteral = ObjectLiteral>(
         attributeMap: AttributeMap<T>,
         attributes: T,
     ) : OpenIDTokenPayload {
         const result = {} as OpenIDTokenPayload;
 
-        const keys = Object.keys(attributeMap);
+        const keys = Object.keys(attributeMap) as (keyof OpenIDClaims)[];
         for (const key_ of keys) {
             const attribute = attributeMap[key_];
+
+            let value : unknown;
             if (typeof attribute === 'string') {
-                if (hasOwnProperty(attributes, attribute)) {
-                    result[key_] = attributes[attribute];
+                if (!hasOwnProperty(attributes, attribute)) {
+                    continue;
                 }
+
+                value = attributes[attribute];
             } else {
                 const [key, transformer] = attribute as AttributeMapTuple<T>;
 
-                if (hasOwnProperty(attributes, key)) {
-                    result[key_] = transformer(attributes[key]);
+                if (!hasOwnProperty(attributes, key)) {
+                    continue;
                 }
+
+                value = transformer(attributes[key]);
             }
+
+            if (
+                typeof value === 'undefined' ||
+                value === null
+            ) {
+                continue;
+            }
+
+            // Cast on the VALUE side only: which claim is written is checked by
+            // `AttributeMap`'s key type, while the value comes out of an entity
+            // column through an untyped transformer and never had a type here.
+            (result as Record<string, unknown>)[key_] = value;
         }
 
         return result;

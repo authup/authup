@@ -6,6 +6,7 @@
  */
 
 import type { JWTClaims } from '../json-web-token';
+import type { OpenIDClaims } from '../openid/claims';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2TokenGrantResponse = {
@@ -148,7 +149,16 @@ export type OAuth2TokenPermission = {
     realm_id?: string
 };
 
-export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & {
+/**
+ * The endpoint answers with the token's own payload plus the subject's OpenID
+ * claims, so both are declared. Without the claim set they were reachable only
+ * through `JWTClaims`' index signature, which types every one of them `any`:
+ * a renamed or mistyped claim compiled and failed at runtime (#3518).
+ *
+ * `OpenIDClaims` rather than `OpenIDTokenPayload`, because that type lives in a
+ * module importing this one.
+ */
+export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & OpenIDClaims & {
     active: boolean,
     permissions?: OAuth2TokenPermission[]
 };

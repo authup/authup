@@ -7,6 +7,48 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### `email_verified` is a real column, and every existing user starts unverified
+
+The OIDC `email_verified` claim was mapped onto `auth_users.active`, the account
+enable flag, which says nothing about the address. It was wrong in both
+directions: registration sets `active` outright when `EMAIL_VERIFICATION_ENABLED`
+is off (the default), and a federated or provisioned user is created active with
+a synthesized `<name>@example.com`, so authup asserted a verified address that
+had never received anything; conversely, deactivating a user who *had* completed
+activation flipped the claim back to false.
+
+It now has its own column, `auth_users.email_verified`, set by the activation
+round-trip. The migration backfills **false for every existing row**, including
+users who genuinely activated: `activate_hash` is null both after a completed
+activation and for a user who was never asked to verify, so no existing row can
+be proven verified.
+
+**Action required if a relying party reads the claim.** Anything gating on
+`email_verified: true` — account linking by email address is the usual case —
+stops matching until the addresses are verified again, or vouched for. The field
+is admin-settable (`POST /users/:id` with `{"emailVerified": true}` — the update verb
+authup serves is POST, not PATCH — and a
+switch in the admin console's user form), so an operator can restore it for
+addresses they trust. It is on the `system.user-names-self-manage` denylist, so a
+user cannot set it on themselves, and it is cleared automatically when a user's
+email address changes.
+
+If you were relying on the old behaviour to mean anything, note that it did not:
+on a default deployment it read `true` for every self-registered user.
+
+### The introspection response omits a claim instead of answering `null`
+
+`POST /token/introspect`, `GET /sessions/@me/introspect` and every id_token
+mapped nullable user columns straight onto OIDC claims, so a user without a
+display name answered `nickname: null`. OIDC models an unavailable claim as an
+omitted key, so those claims are now absent rather than null. A consumer testing
+`payload.nickname === null` should test for absence (`== null` covers both).
+
+The claims are also declared on `OAuth2TokenIntrospectionResponse` now
+(`OpenIDClaims` in `@authup/specs`), so a TypeScript consumer reading `email`,
+`nickname`, `preferred_username`, `given_name`, `family_name` or `updated_at`
+gets a real type instead of `any`.
+
 ### The configuration file is `authup.yml`
 
 The `.conf` file family is retired. One file is discovered now, `authup.yml` (or

@@ -128,6 +128,12 @@ describe('token-introspect', () => {
 
         expect(introspection.active).toBe(true);
         expect(introspection.email).toEqual(buildUserFakeEmail('admin'));
+        // #3519. The provisioned admin is `active: true` with a SYNTHESIZED
+        // `admin@example.com` that has never received anything, which is
+        // exactly the address the old `email_verified: 'active'` mapping
+        // asserted as verified. It is now the flag's own column, and nothing
+        // has verified this one.
+        expect(introspection.email_verified).toBe(false);
     });
 
     // Without the controller deriving `active` from `exp`, this is the

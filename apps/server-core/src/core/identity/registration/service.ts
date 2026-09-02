@@ -126,9 +126,13 @@ export class RegistrationService implements IRegistrationService {
             throw new EntityNotFoundError();
         }
 
+        // Following the mailed code IS the proof of control over the address,
+        // and it is the only place authup obtains one — which is why the claim
+        // is stamped here rather than derived from `active` (#3519).
         const merged = this.repository.merge(entity, {
             active: true,
             activateHash: null,
+            emailVerified: true,
         });
 
         await this.repository.save(merged);

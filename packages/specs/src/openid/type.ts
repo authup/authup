@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2AuthorizationResponseType, OAuth2TokenPayload } from '../oauth2';
+import type { OpenIDClaims } from './claims';
 
 export type OpenIDProviderMetadata = {
     /**
@@ -106,62 +107,4 @@ export type OpenIDProviderMetadata = {
     userinfo_endpoint?: string
 };
 
-export type OpenIDTokenPayload = OAuth2TokenPayload & {
-    // -----------------------------------------------------------------
-    // scope: email
-    // -----------------------------------------------------------------
-
-    email?: string,
-
-    email_verified?: boolean,
-
-    // -----------------------------------------------------------------
-    // scope: phone
-    // -----------------------------------------------------------------
-
-    phone_number?: string,
-
-    phone_number_verified?: boolean,
-
-    // -----------------------------------------------------------------
-    // scope: address
-    // -----------------------------------------------------------------
-    address?: Record<string, any>,
-
-    // -----------------------------------------------------------------
-    // scope: profile / identity
-    // -----------------------------------------------------------------
-
-    name?: string,
-
-    family_name?: string,
-
-    given_name?: string,
-
-    middle_name?: string,
-
-    nickname?: string,
-
-    preferred_username?: string,
-
-    profile?: string,
-
-    picture?: string,
-
-    website?: string,
-
-    gender?: string,
-
-    birthdate?: string,
-
-    roles?: string[],
-
-    zoneinfo?: string,
-
-    locale?: string,
-
-    /**
-     * UTC Date in seconds
-     */
-    updated_at: number
-};
+export type OpenIDTokenPayload = OAuth2TokenPayload & OpenIDClaims;

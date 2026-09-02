@@ -17,6 +17,8 @@ export const TranslatorTranslationCommonFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.INACTIVE]: 'Inactif',
     [TranslatorTranslationCommonKey.LOCKED]: 'Verrouillé',
     [TranslatorTranslationCommonKey.NOT_LOCKED]: 'Non verrouillé',
+    [TranslatorTranslationCommonKey.EMAIL_VERIFIED]: 'E-mail vérifié',
+    [TranslatorTranslationCommonKey.EMAIL_NOT_VERIFIED]: 'E-mail non vérifié',
     [TranslatorTranslationCommonKey.APPLICATION]: 'Application',
     [TranslatorTranslationCommonKey.SEARCH]: 'Rechercher',
     [TranslatorTranslationCommonKey.NO_RESULTS]: 'Aucun résultat trouvé.',

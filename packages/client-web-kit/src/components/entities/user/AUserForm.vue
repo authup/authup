@@ -42,7 +42,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 // keys, so every `v.fields.<key>` degrades to `FieldState<any> | undefined`
 // (tada5hi/validup#455). Pinning the composable to an index-signature-free
 // projection restores typed field access.
-type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName' | 'email' | 'realmId'>;
+type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName' | 'email' | 'emailVerified' | 'realmId'>;
 
 export default defineComponent({
     components: {
@@ -80,6 +80,7 @@ export default defineComponent({
             nameLocked: false,
             displayName: '',
             email: '',
+            emailVerified: false,
             realmId: '',
         });
 
@@ -194,6 +195,14 @@ export default defineComponent({
                     key: TranslatorTranslationCommonKey.NOT_LOCKED, 
                 },
                 {
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.EMAIL_VERIFIED,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.EMAIL_NOT_VERIFIED,
+                },
+                {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.NAME, 
                 },
@@ -301,6 +310,21 @@ export default defineComponent({
                                         :class="[labelClass, form.nameLocked ? 'text-success-600' : 'text-warning-600']"
                                     >
                                         {{ form.nameLocked ? translationsDefault.locked : translationsDefault.notLocked }}
+                                    </label>
+                                </template>
+                            </VCFormSwitch>
+                        </div>
+                        <div class="flex-1 basis-0 px-2">
+                            <VCFormSwitch
+                                v-model="form.emailVerified"
+                                :label="true"
+                            >
+                                <template #label="{ id, class: labelClass }">
+                                    <label
+                                        :for="id"
+                                        :class="[labelClass, form.emailVerified ? 'text-success-600' : 'text-warning-600']"
+                                    >
+                                        {{ form.emailVerified ? translationsDefault.emailVerified : translationsDefault.emailNotVerified }}
                                     </label>
                                 </template>
                             </VCFormSwitch>

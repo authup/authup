@@ -43,6 +43,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         lastName: 'Doe',
         displayName: 'John Doe',
         email: 'john@example.com',
+        emailVerified: false,
         password: null,
         avatar: null,
         cover: null,

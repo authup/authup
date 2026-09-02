@@ -13,6 +13,7 @@ import type { User } from '@authup/core-kit';
 // `passwordRepeat` is NOT validator-mounted but is accepted by the controller for password
 // confirmation; it is only carried on update/save shapes.
 type UserOptionalFields = Pick<User, 'nameLocked' |
+    'emailVerified' |
     'firstName' |
     'lastName' |
     'displayName' |

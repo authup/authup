@@ -65,6 +65,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
             lastName: null,
             displayName: null,
             email: 'user@example.com',
+            emailVerified: false,
             password: null,
             avatar: null,
             cover: null,

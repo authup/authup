@@ -2610,7 +2610,7 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 | Policy | Denylist `names` |
 |---|---|
 | `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
-| `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId` |
+| `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId, emailVerified` |
 
 The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
@@ -5900,14 +5900,31 @@ so both spreads are pinned: `introspect.spec.ts` for `POST /token/introspect`
 and `console-session.spec.ts` for `GET /sessions/@me/introspect`, the one a
 cookie-mode console hydrates from.
 
-The claims are read through a local `SubjectClaims` shape rather than off
-`OAuth2TokenIntrospectionResponse`. Typing the response as an
-`OpenIDTokenPayload` was tried and reverted: the endpoint maps entity columns
-onto claim names and passes a nullable column straight through, so a user
-without a display name answers `nickname: null`, where the OIDC claim types
-model an absent claim as an omitted string. That mismatch is not theoretical —
+The claims are read straight off `OAuth2TokenIntrospectionResponse`, which
+declares them (`OpenIDClaims` in `@authup/specs`, the OIDC Core 5.1 set,
+intersected by both that response and `OpenIDTokenPayload`). A local
+`SubjectClaims` alias stood here until #3518 because the two sides disagreed
+about NULL: the endpoint mapped entity columns onto claim names and passed a
+nullable one straight through, so a user without a display name answered
+`nickname: null`, where the OIDC claim types model an absent claim as an
+omitted key. That mismatch was not theoretical —
 `packages/server-adapter-kit/test/data/token.ts` is a captured response and
-carries `family_name: null`.
+carried `family_name: null`.
+
+It was resolved on the SERVER side rather than by widening the claim types to
+`string | null`: `OAuth2OpenIDClaimsBuilder.extract` now skips a nullish value,
+so an absent claim is an omitted key on the wire, which is what OIDC describes
+and what the id_token needed anyway (a JSON `null` claim value is not something
+a relying party expects). Widening the types instead would have encoded the
+deviation permanently and kept the alias alive. Do not re-add a `| null` to
+these claims; fix the producer.
+
+Declaring them is what buys the compile-time check. `JWTClaims` opens with
+`[key: string]: any`, so every claim read was `any` and a renamed one compiled
+and failed at runtime — which had already cost a downstream consumer real time
+via `OAuth2TokenPayload.sub_name`. A declared property NARROWS that index
+signature on read (verified, not assumed), while an unknown key still resolves
+through it, so nothing else in the payload was constrained.
 
 A commit does not overwrite a held user whose id already matches: the account
 console re-seeds the store from its own profile-form response, and a commit
