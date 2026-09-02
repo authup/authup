@@ -103,11 +103,16 @@
                     "description": "Enable the application logger.",
                     "default": true
                 },
-                "componentsEnabled": {
-                    "type": "boolean",
-                    "description": "Run the background components (the cron sweeps) in this process. Set false on API replicas when a dedicated worker process runs them.",
-                    "default": true,
-                    "x-authup-env": "COMPONENTS_ENABLED"
+                "worker": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Run the worker (the background cron sweeps) in this process. Under the default mode the API runs it alongside itself; set false on API replicas when a dedicated `authup start --worker` process runs it. Worker mode refuses to start when this is false.",
+                            "default": true,
+                            "x-authup-env": "WORKER_ENABLED"
+                        }
+                    }
                 },
                 "migrationEnabled": {
                     "type": "boolean",
