@@ -325,7 +325,7 @@ describe('src/config/*.ts', () => {
         });
 
         it('should read WORKER_ENABLED and MIGRATION_ENABLED from the environment', () => {
-            const previousComponents = process.env.WORKER_ENABLED;
+            const previousWorker = process.env.WORKER_ENABLED;
             const previousMigration = process.env.MIGRATION_ENABLED;
 
             process.env.WORKER_ENABLED = 'false';
@@ -342,10 +342,10 @@ describe('src/config/*.ts', () => {
                 process.env.WORKER_ENABLED = 'maybe';
                 expect(() => readConfigRawFromEnv<Config>(CONFIG_SCHEMA)).toThrow(/WORKER_ENABLED/);
             } finally {
-                if (typeof previousComponents === 'undefined') {
+                if (typeof previousWorker === 'undefined') {
                     delete process.env.WORKER_ENABLED;
                 } else {
-                    process.env.WORKER_ENABLED = previousComponents;
+                    process.env.WORKER_ENABLED = previousWorker;
                 }
 
                 if (typeof previousMigration === 'undefined') {

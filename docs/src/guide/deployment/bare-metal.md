@@ -155,8 +155,8 @@ $ authup healthcheck
 ```
 
 `--worker` is the second long-running role. It runs the cron sweeps and
-opens no port, so API replicas can hand them over. It is a mode rather than a
-flag rather than a command of its own: `authup core --worker` starts the same
+opens no port, so API replicas can hand them over. The flag selects a mode
+rather than a command of its own: `authup core --worker` starts the same
 process. See [Worker](./worker.md).
 
 All commands honor `--configDirectory` / `--configFile` (except

@@ -14,9 +14,9 @@ roles now: `authup start --worker`, in a container
 `server/core start --worker`. `authup core --worker` is equivalent,
 since a worker mounts no console either way.
 
-**Action required** for anything that runs `authup worker` or
-`server/core worker`: a Compose `command`, a Kubernetes `Deployment`, a systemd
-unit. It fails at start with an unknown-command error rather than degrading
+**Action required** for anything that runs `server/core worker`,
+`authup-server worker` or `authup worker`: a Compose `command`, a Kubernetes
+`Deployment`, a systemd unit. It fails at start with an unknown-command error rather than degrading
 quietly, so a stale worker stops sweeping.
 
 The key moved with it. `core.componentsEnabled` (env `COMPONENTS_ENABLED`) is
@@ -29,7 +29,7 @@ is reported by `authup config validate` as a path nothing reads.
 
 **The key now reads in both modes.** Worker mode refuses to boot while
 `core.worker.enabled` is false, naming the key in the error, where the old
-`authup worker` ignored it. A worker that reads the API replicas'
+worker role ignored it. A worker that reads the API replicas'
 `WORKER_ENABLED=false` therefore stops starting. Give that process
 `WORKER_ENABLED=true` in its own environment.
 
@@ -153,8 +153,8 @@ names `server/core <command>` is already correct.
 **Action required** for anything that invoked the binary by name: a systemd
 unit, a PM2 config, a Procfile, a CI step or an `npm` script naming
 `authup-server`. Install the `authup` package and use the commands in the
-table. The worker role is new on this path: it was previously reachable
-through the `authup-server` binary only, and the CLI could not start it.
+table. The worker role is on this path as well: `authup start --worker`
+replaces `authup-server worker` (see the entry above).
 
 **`PORT` and `HOST` now follow the normal precedence.** The supervisor always
 forced them onto the child, taking the value from the `server.core` section of
