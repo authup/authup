@@ -45,6 +45,7 @@ function createUser(realmId: string) : User {
         lastName: null,
         displayName: null,
         email: 'jdoe@example.com',
+        emailVerified: false,
         password: null,
         avatar: null,
         cover: null,

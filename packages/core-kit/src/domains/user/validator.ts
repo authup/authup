@@ -139,6 +139,15 @@ export class UserValidator extends Container<User> {
             createValidator(z.boolean()),
         );
 
+        // Admin-settable, like `active`, so an operator can vouch for an address
+        // an activation round-trip never covered. Denied on the self-edit path
+        // by `system.user-names-self-manage` (#3519).
+        this.mount(
+            'emailVerified',
+            { optional: true },
+            createValidator(z.boolean()),
+        );
+
         this.mount(
             'nameLocked',
             { optional: true },

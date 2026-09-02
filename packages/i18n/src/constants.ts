@@ -475,6 +475,8 @@ export enum TranslatorTranslationCommonKey {
     INACTIVE = 'inactive',
     LOCKED = 'locked',
     NOT_LOCKED = 'notLocked',
+    EMAIL_VERIFIED = 'emailVerified',
+    EMAIL_NOT_VERIFIED = 'emailNotVerified',
     APPLICATION = 'application',
     SEARCH = 'search',
     NO_RESULTS = 'noResults',

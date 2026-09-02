@@ -88,6 +88,12 @@ describe('http/controllers/user (self-manage)', () => {
         ).rejects.toThrow();
     });
 
+    it('should reject self-update of emailVerified (denylisted)', async () => {
+        await expect(
+            selfClient.user.update(entity.id, { emailVerified: true } as Partial<UserEntity>),
+        ).rejects.toThrow();
+    });
+
     it('should reject self-update of status (denylisted)', async () => {
         await expect(
             selfClient.user.update(entity.id, { status: 'banned' } as Partial<UserEntity>),

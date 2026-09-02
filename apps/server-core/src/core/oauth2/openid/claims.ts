@@ -59,7 +59,7 @@ export class OAuth2OpenIDClaimsBuilder {
         ],
 
         email: 'email',
-        email_verified: 'active',
+        email_verified: 'emailVerified',
     };
 
     /**
@@ -83,6 +83,16 @@ export class OAuth2OpenIDClaimsBuilder {
         return this.extract(this.userMap, input);
     }
 
+    /**
+     * A claim is emitted only for a value that exists AND is not nullish.
+     *
+     * The map reads entity columns, several of which are nullable, and OIDC
+     * models an unavailable claim as one that is not returned rather than one
+     * returned as `null` — so a user without a display name must omit
+     * `nickname`, not answer `nickname: null` (#3518). Emitting the null also
+     * put a JSON `null` claim value into every id_token, which no relying
+     * party expects.
+     */
     protected extract<T extends ObjectLiteral = ObjectLiteral>(
         attributeMap: AttributeMap<T>,
         attributes: T,
@@ -92,17 +102,32 @@ export class OAuth2OpenIDClaimsBuilder {
         const keys = Object.keys(attributeMap);
         for (const key_ of keys) {
             const attribute = attributeMap[key_];
+
+            let value : unknown;
             if (typeof attribute === 'string') {
-                if (hasOwnProperty(attributes, attribute)) {
-                    result[key_] = attributes[attribute];
+                if (!hasOwnProperty(attributes, attribute)) {
+                    continue;
                 }
+
+                value = attributes[attribute];
             } else {
                 const [key, transformer] = attribute as AttributeMapTuple<T>;
 
-                if (hasOwnProperty(attributes, key)) {
-                    result[key_] = transformer(attributes[key]);
+                if (!hasOwnProperty(attributes, key)) {
+                    continue;
                 }
+
+                value = transformer(attributes[key]);
             }
+
+            if (
+                typeof value === 'undefined' ||
+                value === null
+            ) {
+                continue;
+            }
+
+            result[key_] = value;
         }
 
         return result;

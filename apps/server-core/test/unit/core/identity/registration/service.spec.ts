@@ -303,6 +303,9 @@ describe('core/identity/registration/service', () => {
             const user = await repository.findOneById(entity.id);
             expect(user!.active).toBe(true);
             expect(user!.activateHash).toBeNull();
+            // Following the mailed code is the only proof of address control
+            // authup obtains, so it is the only place the claim is stamped.
+            expect(user!.emailVerified).toBe(true);
         });
 
         it('should throw NotFoundError when token is invalid', async () => {

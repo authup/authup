@@ -31,6 +31,7 @@ export const userSchema = defineSchema<User>({
             'firstName',
             'lastName',
             'displayName',
+            'emailVerified',
             'avatar',
             'cover',
             'active',

@@ -237,6 +237,10 @@ describe.each(CONSOLES)('$name console session', ({
         // through this endpoint's own `...subject.claims` spread rather than
         // through `POST /token/introspect`.
         expect(sessionBody.email).toEqual(userData.email);
+        // and the verification flag alongside it, for the same reason: this
+        // endpoint spreads the claims itself, so a pin on `/token/introspect`
+        // does not cover it (#3519).
+        expect(sessionBody.email_verified).toEqual(false);
 
         // 5) and the credential drives ordinary, identity-gated API routes —
         //    the same ones every other client reaches with a bearer.

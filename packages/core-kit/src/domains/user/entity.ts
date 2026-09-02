@@ -22,6 +22,13 @@ export interface User {
 
     email: string;
 
+    /**
+     * Whether control of `email` was proven, by following the code mailed
+     * to it. Deliberately NOT derived from `active`, which is the account's
+     * enable flag and says nothing about the address (#3519).
+     */
+    emailVerified: boolean;
+
     password: string | null;
 
     // ------------------------------------------------------------------

@@ -76,6 +76,13 @@ export class UserEntity implements User {
     email: string;
 
     @Column({
+        name: 'email_verified',
+        type: 'boolean',
+        default: false,
+    })
+    emailVerified: boolean;
+
+    @Column({
         type: 'varchar',
         length: 512,
         default: null,

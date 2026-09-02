@@ -116,6 +116,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         'status',
                         'statusMessage',
                         'realmId',
+                        // A self-edit must not assert its own address is
+                        // verified — that is the whole point of the claim.
+                        'emailVerified',
                     ],
                 },
             },

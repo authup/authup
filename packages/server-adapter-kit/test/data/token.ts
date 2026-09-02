@@ -23,8 +23,6 @@ export const TokenPayload : OAuth2TokenIntrospectionResponse = {
     realm_name: 'master',
     scope: 'global',
     name: 'admin',
-    family_name: null,
-    given_name: null,
     nickname: 'admin',
     preferred_username: 'admin',
     email: 'admin@example.com',

@@ -50,6 +50,7 @@ describe('OAuth2AuthorizationCodeIssuer', () => {
             lastName: null,
             displayName: null,
             email: 'user@example.com',
+            emailVerified: false,
             password: null,
             avatar: null,
             cover: null,

@@ -65,20 +65,6 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
 type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
-/**
- * The subject claims the introspection endpoint answers with, alongside the
- * token payload it echoes. Declared here rather than on
- * `OAuth2TokenIntrospectionResponse`, because the endpoint maps entity columns
- * onto claim names and passes a nullable column through as `null` (a display
- * name arrives as `nickname: null`), where the OIDC claim types model an absent
- * claim as an omitted string.
- */
-type SubjectClaims = {
-    name?: string | null,
-    nickname?: string | null,
-    email?: string | null,
-};
-
 export function createStore(context: StoreCreateContext) {
     const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
 
@@ -439,7 +425,7 @@ export function createStore(context: StoreCreateContext) {
             name,
             nickname,
             email,
-        } = introspection as SubjectClaims;
+        } = introspection;
 
         return {
             id: introspection.sub,

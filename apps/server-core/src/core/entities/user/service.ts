@@ -262,6 +262,27 @@ export class UserService extends AbstractEntityService implements IUserService {
             const originalName = entity.name;
             const originalNameLocked = entity.nameLocked;
 
+            // A changed address carries none of the old one's verification, and
+            // `email` is NOT on the self-manage denylist, so without this a user
+            // verifies their own address and then edits it to someone else's
+            // while the claim keeps asserting `email_verified: true` — the very
+            // account-linking takeover the claim is read for (#3519).
+            //
+            // The old value has to be re-read: the entity loaded above carries
+            // no `email` at all, because the column is `select: false`. Read
+            // BEFORE the merge below, which writes the new address onto that
+            // same entity. An explicit `emailVerified` in the same payload
+            // skips the check, so an admin can change the address and vouch for
+            // the new one in one request.
+            let emailChanged = false;
+            if (
+                validated.email &&
+                typeof validated.emailVerified === 'undefined'
+            ) {
+                const current = await this.repository.findOneByWithEmail({ id: entity.id });
+                emailChanged = !!current && current.email !== validated.email;
+            }
+
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_SELF_MANAGE,
@@ -295,6 +316,10 @@ export class UserService extends AbstractEntityService implements IUserService {
                         [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
                     }),
                 });
+            }
+
+            if (emailChanged) {
+                entity.emailVerified = false;
             }
 
             if (validated.password) {

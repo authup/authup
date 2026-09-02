@@ -524,6 +524,8 @@ interface User {
 
     email: string;
 
+    emailVerified: boolean;
+
     password: string | null;
 
     // ------------------------------------------------------------------

@@ -80,6 +80,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
                 lastName: 'Doe',
                 displayName: 'John Doe',
                 email: 'john@example.com',
+                emailVerified: true,
                 active: true,
             } as User;
 
@@ -91,6 +92,44 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             expect(result.preferred_username).toBe('John Doe');
             expect(result.email).toBe('john@example.com');
             expect(result.email_verified).toBe(true);
+        });
+
+        // #3519: `active` is the account's enable flag. It is set true by
+        // registration with verification off (the default) and by every
+        // federated/provisioned create, so reading it as the email claim
+        // asserted a verification that never happened.
+        it('should derive email_verified from emailVerified, never from active', () => {
+            const user = {
+                name: 'jdoe',
+                email: 'john@example.com',
+                emailVerified: false,
+                active: true,
+            } as User;
+
+            const result = builder.fromUser(user);
+            expect(result.email_verified).toBe(false);
+        });
+
+        // #3518: OIDC models an unavailable claim as an omitted key. A nullable
+        // column passed through as `null` is not a claim value, and it landed in
+        // every id_token as one.
+        it('should omit a claim whose column is null rather than emitting null', () => {
+            const user = {
+                name: 'jdoe',
+                firstName: null,
+                lastName: null,
+                displayName: null,
+                email: 'john@example.com',
+                emailVerified: false,
+            } as unknown as User;
+
+            const result = builder.fromUser(user);
+            expect(result).not.toHaveProperty('given_name');
+            expect(result).not.toHaveProperty('family_name');
+            expect(result).not.toHaveProperty('nickname');
+            expect(result).not.toHaveProperty('preferred_username');
+            expect(result.name).toBe('jdoe');
+            expect(result.email_verified).toBe(false);
         });
 
         it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
