@@ -138,9 +138,14 @@ describe('src/app/modules/config/constants.ts', () => {
         });
 
         it('should accept boolean process role keys and reject non-boolean values', () => {
-            expect(CONFIG_SCHEMA.componentsEnabled.type.safeParse(false).success).toEqual(true);
+            const { worker } = CONFIG_SCHEMA;
+            if (!('enabled' in worker)) {
+                throw new Error('worker is a nested section');
+            }
+
+            expect(worker.enabled.type.safeParse(false).success).toEqual(true);
             expect(CONFIG_SCHEMA.migrationEnabled.type.safeParse(false).success).toEqual(true);
-            expect(CONFIG_SCHEMA.componentsEnabled.type.safeParse('nope').success).toEqual(false);
+            expect(worker.enabled.type.safeParse('nope').success).toEqual(false);
             expect(CONFIG_SCHEMA.migrationEnabled.type.safeParse('nope').success).toEqual(false);
         });
 

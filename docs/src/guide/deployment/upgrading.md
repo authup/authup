@@ -7,6 +7,32 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### The worker is a flag on `start`, and `COMPONENTS_ENABLED` is now `WORKER_ENABLED`
+
+The `worker` subcommand is retired. The worker is a flag on the listener
+roles now: `authup start --worker`, in a container
+`server/core start --worker`. `authup core --worker` is equivalent,
+since a worker mounts no console either way.
+
+**Action required** for anything that runs `authup worker` or
+`server/core worker`: a Compose `command`, a Kubernetes `Deployment`, a systemd
+unit. It fails at start with an unknown-command error rather than degrading
+quietly, so a stale worker stops sweeping.
+
+The key moved with it. `core.componentsEnabled` (env `COMPONENTS_ENABLED`) is
+now `core.worker.enabled` (env `WORKER_ENABLED`).
+Rename it wherever an API replica set it to `false`. An old
+`COMPONENTS_ENABLED=false` is ignored, so those replicas run the sweeps
+alongside the worker again. The sweeps are batch-safe, so that is harmless,
+but it happens N times over. A stale `componentsEnabled:` key in `authup.yml`
+is reported by `authup config validate` as a path nothing reads.
+
+**The key now reads in both modes.** Worker mode refuses to boot while
+`core.worker.enabled` is false, naming the key in the error, where the old
+`authup worker` ignored it. A worker that reads the API replicas'
+`WORKER_ENABLED=false` therefore stops starting. Give that process
+`WORKER_ENABLED=true` in its own environment.
+
 ### `email_verified` is a real column, and every existing user starts unverified
 
 The OIDC `email_verified` claim was mapped onto `auth_users.active`, the account
@@ -114,22 +140,21 @@ without the CLI; see the console entries below.)
 | Was | Is |
 |---|---|
 | `authup-server start` | `authup start` |
-| `authup-server worker` | `authup worker` |
+| `authup-server worker` | `authup start --worker` |
 | `authup-server migration run` | `authup migration run` |
 | `authup-server healthcheck` | `authup healthcheck` |
 
-**Containers need no change.** The entrypoint vocabulary is unchanged:
-`server/core start`, `server/core worker` and `server/core migration run` all
-still work, and the image runs the `authup` CLI underneath. A Compose file, a
-Helm values file or a `docker run` line that names `server/core <command>` is
-already correct.
+**Containers need no change**, apart from the worker covered above. The rest
+of the entrypoint vocabulary is unchanged: `server/core start` and
+`server/core migration run` both still work, and the image runs the `authup`
+CLI underneath. A Compose file, a Helm values file or a `docker run` line that
+names `server/core <command>` is already correct.
 
 **Action required** for anything that invoked the binary by name: a systemd
 unit, a PM2 config, a Procfile, a CI step or an `npm` script naming
 `authup-server`. Install the `authup` package and use the commands in the
-table. `authup worker` is new on this path: the worker role was previously
-reachable through the `authup-server` binary only, and the CLI could not start
-it.
+table. The worker role is new on this path: it was previously reachable
+through the `authup-server` binary only, and the CLI could not start it.
 
 **`PORT` and `HOST` now follow the normal precedence.** The supervisor always
 forced them onto the child, taking the value from the `server.core` section of
@@ -146,8 +171,8 @@ the other direction. Drop one of them.
 
 **Package selectors are gone.** `authup start server.core` and
 `authup start client.admin-console` are refused as an unexpected argument;
-`start` and `worker` take no positional argument, because the CLI starts
-exactly one service. A `client.admin-console` section in the configuration
+`start` takes no positional argument, because the CLI starts exactly one
+service. A `client.admin-console` section in the configuration
 file is not read (it printed a deprecation warning before). Remove both.
 
 Two smaller things need no action. `authup migration run` finds its migration

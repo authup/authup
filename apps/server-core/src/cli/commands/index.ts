@@ -11,4 +11,3 @@ export * from './migration.ts';
 export * from './shutdown.ts';
 export * from './start.ts';
 export * from './types.ts';
-export * from './worker.ts';

@@ -45,10 +45,14 @@ export class ComponentsModule implements IModule {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const logger = container.resolve(LoggerInjectionKey);
 
-        // the worker role forces them on; every other role follows the
-        // config, so an API replica can hand the sweeps to that worker.
-        if (!this.options.force && !config.componentsEnabled) {
-            logger.info('Background components are disabled by configuration.');
+        // worker mode requires it; the default mode follows the config, so an
+        // API replica can hand the sweeps to a dedicated worker process.
+        if (!config.worker.enabled) {
+            if (this.options.required) {
+                throw new Error('This process runs in worker mode, but core.worker.enabled is false (WORKER_ENABLED=false). Enable the worker for this process, or start it without --worker.');
+            }
+
+            logger.info('The worker is disabled by configuration (core.worker.enabled: false).');
             return;
         }
 

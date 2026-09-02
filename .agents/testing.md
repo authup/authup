@@ -321,8 +321,8 @@ lives in the packages. The suite is split in two accordingly.
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
   meta read from the package and exactly the subcommands it should
   (`config`, `console`, `core`, `healthcheck`, `migration`, `start`,
-  `worker`), and its `setup` refuses a stray positional on
-  `core`/`start`/`worker` (the retired `authup start server.core` selector
+  and no `worker`: that is `start --worker`), and its `setup` refuses a
+  stray positional on `core`/`start` (the retired `authup start server.core` selector
   shape) while leaving the commands whose positional is real alone
   (`migration run`, `console admin`). The composed-schema spec that sat here
   is gone with `composeSchemas`: every configuration key is declared once in

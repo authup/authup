@@ -173,7 +173,7 @@ async function generateMigrations(): Promise<void> {
 
 export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions<Config> = {}) {
     return defineCommand({
-        meta: { name: 'migration' },
+        meta: { name: 'migration', description: 'Apply, revert or generate the database migrations.' },
         args: {
             operation: {
                 required: true,

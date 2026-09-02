@@ -11,6 +11,7 @@ import {
     ConfigModule,
     HTTPModule,
     createApplication,
+    createWorkerApplication,
     readConfig,
     registerShutdownHandlers,
 } from '@authup/server-core';
@@ -39,15 +40,33 @@ import { buildConsoleApplications, readConsoleConfigs } from '../console/index.t
  */
 export function defineApplicationCommand(
     configFs: ConfigReadFsOptions,
-    role: { name: string, consoles: boolean },
+    role: {
+        name: string, 
+        description: string, 
+        consoles: boolean 
+    },
 ) {
     return defineCommand({
-        meta: { name: role.name },
-        async setup() {
+        meta: { name: role.name, description: role.description },
+        args: {
+            worker: {
+                type: 'boolean',
+                default: false,
+                description: 'Run the background worker alone, with no listener; refuses to start while core.worker.enabled is false. Without it the API runs the worker alongside itself while that key is true.',
+            },
+        },
+        async setup(context) {
             const config = await readConfig({
                 env: true,
                 fs: { ...configFs },
             });
+
+            if (context.args.worker) {
+                const worker = createWorkerApplication({ config: new ConfigModule(config) });
+                await worker.setup();
+                registerShutdownHandlers(worker);
+                return;
+            }
 
             const consoles : ConsoleApplication[] = [];
 

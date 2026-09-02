@@ -191,7 +191,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **Operator-facing vocabulary is a separate, shorter layer**: the binaries
   (`authup`, the one an ordinary deployment runs, plus a per-service
   `authup-<name>-console` escape hatch), the CLI ROLES (`start`, `core`,
-  `console [admin|account|auth]`, `worker`), the configuration sections
+  `console [admin|account|auth]`, each of the first two taking `--worker`), the configuration sections
   (`core`, `<name>Console`), the docker entrypoint's own service selector
   (`server/core`, which no longer mirrors a configuration section), and helm
   values keys. The grammar above governs

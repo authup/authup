@@ -2829,7 +2829,7 @@ container runs `server/core start`, which is `authup start`: server-core plus
 every enabled console on ONE listener (plus the optional `server/core
 worker`). `authup` (`apps/authup`) is an **in-process** CLI over the service
 packages (plan 101 D1): it imports them and calls the `defineCLI*Command`
-helpers server-core exports, so `start`, `core`, `worker`, `migration` and
+helpers server-core exports, so `start`, `core`, `migration` and
 `healthcheck` run the services' own factories inside the process the operator
 started. `apps/server-core` ships no `bin` field; its `src/cli/` stays as the
 command source plus dev-only tooling (`migration generate`, the `cli-dev`
@@ -2892,15 +2892,21 @@ Package selectors are gone with the supervisor (`authup start server.core` is
 refused as a stray positional, and a `client.admin-console` config section is
 simply not read).
 
-**The worker role (plans 095/096/097)** is the same binary and the same image,
-started as `authup worker` (container: `server/core worker`). It is
-`createWorkerApplication()` in `app/factory.ts`: config, logger, cache,
-database and components, and nothing else, so it opens no port and serves no
-request. Two config keys move the work: `componentsEnabled`
-(`COMPONENTS_ENABLED`) turns the cron sweeps off on the API replicas, and
-`migrationEnabled` (`MIGRATION_ENABLED`) turns boot-time DDL off so one
-process owns the schema. The worker forces its components on regardless of
-the first key, and **never** applies migrations regardless of the second: its
+**Worker mode (plans 095/096/097)** is the same binary and the same image,
+started as `authup start --worker` (container: `server/core start --worker`;
+`core --worker` is the same thing, since a worker mounts no
+console either way). It is `createWorkerApplication()` in `app/factory.ts`:
+config, logger, cache, database and components, and nothing else, so it opens
+no port and serves no request. Two config keys move the work:
+`core.worker.enabled` (`WORKER_ENABLED`) says whether THIS process runs the
+cron sweeps, and `migrationEnabled` (`MIGRATION_ENABLED`) turns boot-time DDL
+off so one process owns the schema. The key reads the same in both modes: the
+default mode runs the worker alongside the API while it is true (so a single
+`start` process needs nothing set), an API replica hands the sweeps over by
+setting it false, and worker mode REQUIRES it (`ComponentsModule({ required:
+true })` throws at boot, since a process started for nothing but the sweeps
+must not come up idle). That replaced a `componentsEnabled` key the worker
+role ignored. Worker mode **never** applies migrations regardless of the second key: its
 `DatabaseModule` migrate override is `verifySchemaOrSynchronize` (shared with
 the flag-off boot, `app/modules/database/migration.ts`), which runs
 `assertNoPendingMigrations` and fails the boot when the chain is behind. That
@@ -2928,7 +2934,7 @@ compares against `publicUrl` and the session cookie path is the deployment
 base path, both identical across processes behind one origin. The flag-based
 recipe still works for a plain `start` process on both sides
 (`ADMIN_CONSOLE_ENABLED=false ACCOUNT_CONSOLE_ENABLED=false` on the API set,
-BOTH sides with `COMPONENTS_ENABLED=false MIGRATION_ENABLED=false` plus the
+BOTH sides with `WORKER_ENABLED=false MIGRATION_ENABLED=false` plus the
 one-off `migration run`, or a console replica runs the sweeps and races the
 DDL), and the roles make it unnecessary: `core` mounts nothing regardless of
 the flags, and `console` runs neither components nor migrations because it
@@ -3114,7 +3120,7 @@ Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
 **Env semantics are per entry, not per type**: the seven security toggles
-(`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,
+(`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
 `mfaRequired`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
@@ -3141,7 +3147,7 @@ registry change could leave stale, which is why the workflow triggers on
 The shape of the emitted document is pinned by
 `packages/server-config/test/unit/schema.spec.ts`. **`config` is the one
 command whose body does NOT stay with the service**, unlike `start`,
-`worker`, `migration` and `healthcheck`: both subcommands are about the
+`migration` and `healthcheck`: both subcommands are about the
 whole document, and the whole document is only assembled where every
 service meets, which is `apps/authup`. `config validate` reads the file and
 the environment, reports a path nothing reads, runs server-core's own read

@@ -116,7 +116,7 @@ between you and the service:
   restart it.
 
 The service cannot be named as an argument. `authup start server.core` and
-`authup start server/core` are refused: `start`, `core` and `worker` take no
+`authup start server/core` are refused: `start` and `core` take no
 positional argument. The one command that takes a name is `console`, and it
 names a console to serve, not a package to select.
 
@@ -143,7 +143,7 @@ $ authup console
 $ authup console admin
 
 # run the background sweeps alone, with no HTTP listener
-$ authup worker
+$ authup start --worker
 
 # apply / inspect / undo database migrations
 $ authup migration run
@@ -154,9 +154,10 @@ $ authup migration revert
 $ authup healthcheck
 ```
 
-`authup worker` is the second long-running role. It runs the cron sweeps and
-opens no port, so API replicas can hand them over; see
-[Worker](./worker.md).
+`--worker` is the second long-running role. It runs the cron sweeps and
+opens no port, so API replicas can hand them over. It is a mode rather than a
+flag rather than a command of its own: `authup core --worker` starts the same
+process. See [Worker](./worker.md).
 
 All commands honor `--configDirectory` / `--configFile` (except
 `migration generate`, a repository development tool that targets the local

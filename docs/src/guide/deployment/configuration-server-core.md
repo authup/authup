@@ -233,16 +233,20 @@ export default {
          */
         logger: true,
 
-        /**
-         * Run the background components (the session, token and audit-event
-         * sweeps) in this process. Set false on API replicas once a dedicated
-         * worker process runs them, and only then: with it false everywhere,
-         * nothing sweeps. A worker started with `authup worker` forces
-         * them on regardless of this option. See the Worker guide.
-         * env: COMPONENTS_ENABLED
-         * default: true
-         */
-        componentsEnabled: true,
+        worker: {
+            /**
+             * Run the worker (the background cron sweeps) in this process.
+             * Under the default mode the API runs it alongside itself; set
+             * false on API replicas when a dedicated
+             * `authup start --worker` process runs it. Worker mode
+             * refuses to start when this is false. Set it false only once
+             * such a process exists: with it false everywhere, nothing
+             * sweeps. See the Worker guide.
+             * env: WORKER_ENABLED
+             * default: true
+             */
+            enabled: true,
+        },
 
         /**
          * Apply pending schema migrations at startup. When false, startup runs
@@ -632,7 +636,8 @@ authConsole:
   path: ''
 core:
   writableDirectoryPath: writable
-  componentsEnabled: true
+  worker:
+    enabled: true
   migrationEnabled: true
   port: 3000
   host: 0.0.0.0
@@ -676,7 +681,7 @@ NODE_ENV=production
 WRITABLE_DIRECTORY_PATH=writable
 THEME_DIRECTORY_PATH=/etc/authup/theme
 THEME_FRAGMENTS_ENABLED=false
-COMPONENTS_ENABLED=true
+WORKER_ENABLED=true
 MIGRATION_ENABLED=true
 PORT=3000
 HOST=0.0.0.0

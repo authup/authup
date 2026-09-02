@@ -9,5 +9,9 @@ import type { ConfigReadFsOptions } from '@authup/server-config';
 import { defineApplicationCommand } from './application.ts';
 
 export function defineCLICoreCommand(configFs: ConfigReadFsOptions = {}) {
-    return defineApplicationCommand(configFs, { name: 'core', consoles: false });
+    return defineApplicationCommand(configFs, {
+        name: 'core',
+        description: 'Start the API and the IdP alone; the consoles are served by `authup console`.',
+        consoles: false,
+    });
 }
