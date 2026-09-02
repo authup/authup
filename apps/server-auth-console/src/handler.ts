@@ -25,7 +25,7 @@ import {
 } from './payload';
 import { renderPage } from './render';
 import { resolveDistPath, setPackagePath } from './resolve';
-import type { Config } from './types';
+import type { Config, RenderPage } from './types';
 
 const WORKFLOW_PAGES : {
     url: string,
@@ -54,6 +54,7 @@ const WORKFLOW_PAGES : {
 export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
+    render: RenderPage = renderPage,
 ) : Promise<IApp> {
     setPackagePath(config.distPath);
 
@@ -88,7 +89,7 @@ export async function createHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/authorize',
-        fn: async (event) => renderPage(event, config, {
+        fn: async (event) => render(event, config, {
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
             theme,
@@ -102,7 +103,7 @@ export async function createHandler(
             fn: async (event) => {
                 const features = await readFeatures(client);
 
-                return renderPage(event, config, {
+                return render(event, config, {
                     url: page.url,
                     data: buildWorkflowPageData(event, features, page),
                     theme,
@@ -117,7 +118,7 @@ export async function createHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/logout',
-        fn: async (event) => renderPage(event, config, {
+        fn: async (event) => render(event, config, {
             url: '/logout',
             data: {},
             theme,

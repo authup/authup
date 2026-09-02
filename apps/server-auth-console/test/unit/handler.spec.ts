@@ -89,4 +89,32 @@ describe('createHandler', () => {
         expect(asset.status).toEqual(200);
         expect(asset.headers.get('content-type')).toContain('javascript');
     });
+
+    it('renders through a substituted render function', async () => {
+        const seen : string[] = [];
+
+        const substituted = await createHandler(
+            config,
+            undefined,
+            async (event, _config, ctx) => {
+                seen.push(ctx.url);
+
+                return `<!doctype html><html><body>substituted:${ctx.url}</body></html>`;
+            },
+        );
+
+        const local = serve(substituted, { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/logout`);
+
+            expect(response.status).toEqual(200);
+            expect(await response.text()).toContain('substituted:/logout');
+            expect(seen).toEqual(['/logout']);
+        } finally {
+            await local.close(true);
+        }
+    });
 });

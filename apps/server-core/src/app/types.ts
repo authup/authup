@@ -19,9 +19,10 @@ export type CreateApplicationContext = {
     config?: ConfigModule,
     /**
      * The HTTP module to run instead of the default one, which is how a
-     * caller opts into building the application without listening
-     * (`new HTTPModule({ listen: false })`) so it can compose onto the same
-     * listener before starting it.
+     * caller composes something else onto the same listener: `HTTPModule`
+     * takes a `mount` callback that runs INSIDE its own `setup()`, after its
+     * controllers and before its error middleware, so a caller's routes land
+     * exactly where a console's have to (see `HTTPModuleOptions.mount`).
      */
     http?: IModule
 };

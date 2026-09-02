@@ -61,6 +61,7 @@
     },
     "scripts": {
         "build": "npx nx run-many -t build",
+        "dev": "npm run dev --workspace=apps/authup",
         "test": "npx nx run-many -t test",
         "lint": "eslint --ext .ts ./packages ./apps",
         "lint:fix": "npm run lint -- --fix",

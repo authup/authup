@@ -59,6 +59,13 @@ export type StaticConsoleDefinition = {
      * consulted before the walk.
      */
     distPath?: string,
+    /**
+     * Where the shell comes from, replacing the read of `<dist>/index.html`.
+     * Everything after the read is unchanged, which is what lets a caller
+     * serving the console from source keep the config splice, the theme and
+     * the page headers.
+     */
+    readShell?: (event: IAppEvent) => Promise<string>,
 };
 
 export type StaticConsoleServeOptions = {
@@ -91,6 +98,12 @@ export type StaticConsole = {
     readonly packageName: string,
     readonly marker: string,
     readonly viteBase: string,
+    /**
+     * Locate the console PACKAGE, whether or not it holds a built bundle.
+     * A caller serving it from source needs the package root, and must not
+     * re-walk for it: the anchor rule is this package's business.
+     */
+    resolvePackagePath(): string | undefined,
     /**
      * Locate the built bundle. Only a positive result is cached, so a dev
      * building the app after boot is picked up on the next request.

@@ -7,5 +7,6 @@
 
 export * from './config.ts';
 export * from './console.ts';
+export * from './dev.ts';
 export * from './healthcheck.ts';
 export * from './start.ts';

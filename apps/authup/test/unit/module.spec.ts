@@ -27,7 +27,7 @@ describe('createCLIEntryPointCommand', () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['config', 'console', 'core', 'healthcheck', 'migration', 'start', 'worker']);
+            .toEqual(['config', 'console', 'core', 'dev', 'healthcheck', 'migration', 'start', 'worker']);
     });
 
     it('refuses stray positionals on the listener roles but not on migration or console', async () => {
@@ -38,6 +38,8 @@ describe('createCLIEntryPointCommand', () => {
         expect(() => command.setup?.(createSetupContext(command, ['worker', 'server.core'])))
             .toThrow(/Unexpected argument/);
         expect(() => command.setup?.(createSetupContext(command, ['core', 'server.core'])))
+            .toThrow(/Unexpected argument/);
+        expect(() => command.setup?.(createSetupContext(command, ['dev', 'server.core'])))
             .toThrow(/Unexpected argument/);
         expect(() => command.setup?.(createSetupContext(command, ['migration', 'run'])))
             .not.toThrow();

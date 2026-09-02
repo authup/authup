@@ -67,6 +67,10 @@ actually substituted. Empty resolves `@authup/client-admin-console` from
 [Replacing a console](./theming.md#replacing-a-console). For branding alone,
 use the [theme directory](./theming.md) instead: it needs no build.
 
+EXPERIMENTAL: point it at a source checkout instead, and `authup dev` (see the
+[Quick Start](../development/quick-start.md) guide) serves it from source
+with hot module replacement rather than reading `dist/`.
+
 ## Standalone hosting
 
 The console is an ordinary OAuth2 relying party, so the same built bundle can

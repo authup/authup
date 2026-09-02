@@ -13,6 +13,8 @@ import type {
     ThemeConfig,
     ToObjectLiteral,
 } from '@authup/server-config';
+import type { IThemeProvider } from '@authup/server-console-kit';
+import type { IAppEvent } from 'routup';
 
 /**
  * The `authup.yml` NAMESPACE: the sections this service selects keys from.
@@ -67,3 +69,18 @@ export type Config = {
 
     theme: ThemeConfig
 };
+
+/**
+ * How a page becomes a document. The default is this service's own
+ * `renderPage`, reading the built bundle; a caller serving the console from
+ * source substitutes one that reads through a vite dev server instead.
+ */
+export type RenderPage = (
+    event: IAppEvent,
+    config: Config,
+    ctx: {
+        url: string,
+        data: Record<string, any>,
+        theme?: IThemeProvider,
+    },
+) => Promise<string>;

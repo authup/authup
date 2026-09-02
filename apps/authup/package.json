@@ -10,6 +10,7 @@
     "scripts": {
         "cli": "node dist/index.mjs",
         "cli-dev": "npm run build && npm run cli",
+        "dev": "node --conditions=authup-source --loader ts-node/esm src/index.ts dev",
         "build:js": "tsdown",
         "build": "rimraf ./dist && npm run build:js",
         "check:types": "tsc -p tsconfig.test.json",
@@ -67,7 +68,12 @@
         "access": "public"
     },
     "devDependencies": {
+        "@authup/client-auth-console": "^1.0.0-beta.63",
+        "@routup/basic": "^3.0.0",
+        "better-sqlite3": "^13.0.3",
         "cross-env": "^10.1.0",
+        "ts-node": "^10.8.2",
+        "vite": "^8.2.1",
         "vitest": "^4.0.18"
     }
 }

@@ -446,6 +446,12 @@ or different copy, you replace the console package instead:
 Each points at a directory containing the built `dist/`. When set, it is used
 instead of resolving the packaged console from `node_modules`.
 
+EXPERIMENTAL: when that directory is a source checkout instead (detected by a
+`vite.config.ts` next to it, never a setting of its own), `authup dev` serves
+it from source with hot module replacement rather than reading `dist/`. See
+the [Quick Start](../development/quick-start.md) guide; the detection rule
+and the coupling to the installed vite version may still change.
+
 ::: danger This replaces the login implementation
 The auth console is not a skin over the login. It owns the OIDC prompt ladder
 (`prompt=none`, `select_account`, `max_age`), PKCE and `state` handling, MFA

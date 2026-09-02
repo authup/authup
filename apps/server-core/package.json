@@ -6,6 +6,16 @@
     "license": "AGPL-3.0-only",
     "main": "dist/index.mjs",
     "module": "dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "authup-source": "./src/index.ts",
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
+        }
+    },
     "files": [
         "dist"
     ],
