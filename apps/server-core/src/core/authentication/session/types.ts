@@ -106,20 +106,24 @@ export type SessionManagerOptions = {
     maxAge: number
 };
 
-export interface IBackchannelLogoutNotifier {
+/**
+ * Tells the clients that rode a session that it was revoked. The OAuth2
+ * implementation pushes an OIDC back-channel logout token; the manager only
+ * knows the two steps and their order.
+ */
+export interface ISessionRevokeNotifier {
     /**
-     * The clients to notify when the session ends: every client a token of
-     * the session was issued for that registered a back-channel logout URI.
-     * Must run BEFORE the session row is removed, because the token rows the
-     * audience is derived from cascade-delete with it.
+     * The clients to notify once the session is gone. Runs BEFORE the row is
+     * removed, because what the audience derives from (the session's token
+     * rows) cascade-deletes with it.
      *
      * @param session
      */
     resolve(session: Session): Promise<Client[]>;
 
     /**
-     * Push one logout token per client. Best effort: a refusing or
-     * unreachable client is logged and never fails the revoke.
+     * Notify the resolved clients. Best effort: a refusing or unreachable
+     * client is logged and never fails the revoke.
      *
      * @param session
      * @param clients
@@ -131,11 +135,10 @@ export type SessionManagerContext = {
     options: SessionManagerOptions,
     repository: ISessionRepository,
     /**
-     * Pushes an OIDC back-channel logout token to every client the session
-     * issued a token for (plan 064). Optional so a minimal graph, and every
-     * fake-backed spec, constructs the manager without one.
+     * Notified on every revoke (plan 064: the OAuth2 back-channel logout).
+     * Optional so a fake-backed spec constructs the manager without one.
      */
-    backchannelLogoutNotifier?: IBackchannelLogoutNotifier,
+    revokeNotifier?: ISessionRevokeNotifier,
 };
 
 export interface ISessionManager {

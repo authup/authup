@@ -9,9 +9,9 @@ import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { JWTError } from '@authup/specs';
 import type { 
-    IBackchannelLogoutNotifier, 
     ISessionManager, 
     ISessionRepository, 
+    ISessionRevokeNotifier, 
     SessionManagerContext, 
     SessionManagerOptions, 
 } from './types.ts';
@@ -21,14 +21,14 @@ export class SessionManager implements ISessionManager {
 
     protected repository: ISessionRepository;
 
-    protected backchannelLogoutNotifier?: IBackchannelLogoutNotifier;
+    protected revokeNotifier?: ISessionRevokeNotifier;
 
     // -----------------------------------------------------
 
     constructor(ctx: SessionManagerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
-        this.backchannelLogoutNotifier = ctx.backchannelLogoutNotifier;
+        this.revokeNotifier = ctx.revokeNotifier;
     }
 
     // -----------------------------------------------------
@@ -122,16 +122,16 @@ export class SessionManager implements ISessionManager {
         // session's token rows, which cascade-delete with it. Delivery waits
         // until AFTER, so a client is never told about a session that still
         // exists.
-        const clients = this.backchannelLogoutNotifier ?
-            await this.backchannelLogoutNotifier.resolve(session) :
+        const clients = this.revokeNotifier ?
+            await this.revokeNotifier.resolve(session) :
             [];
 
         // A copy goes to the repository: TypeORM unsets the primary key on
         // the entity it removed, and the notifier still needs `sid`.
         await this.repository.remove({ ...session });
 
-        if (this.backchannelLogoutNotifier && clients.length > 0) {
-            await this.backchannelLogoutNotifier.notify(session, clients);
+        if (this.revokeNotifier && clients.length > 0) {
+            await this.revokeNotifier.notify(session, clients);
         }
     }
 

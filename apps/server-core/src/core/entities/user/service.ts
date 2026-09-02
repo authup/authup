@@ -375,7 +375,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 // racing a concurrent nameLocked flip must still lose.
                 const { name: currentName, nameLocked: currentNameLocked } = current;
                 const merged = repository.merge(current, patch);
-                if (patch.name && currentNameLocked && validated.nameLocked !== false) {
+                if (currentNameLocked && patch.name && validated.nameLocked !== false) {
                     merged.name = currentName;
                 }
 

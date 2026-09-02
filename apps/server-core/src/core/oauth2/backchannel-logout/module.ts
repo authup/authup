@@ -11,7 +11,7 @@ import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import { describeError } from '../../../utils/index.ts';
-import type { IBackchannelLogoutNotifier } from '../../authentication/session/types.ts';
+import type { ISessionRevokeNotifier } from '../../authentication/session/types.ts';
 import type { IOAuth2ClientRepository } from '../client/types.ts';
 import type { ISessionTokenRepository } from '../session-token/types.ts';
 import type { IOAuth2TokenSigner } from '../token/signer/types.ts';
@@ -25,7 +25,7 @@ import type {
     OAuth2BackchannelLogoutNotifierOptions,
 } from './types.ts';
 
-export class OAuth2BackchannelLogoutNotifier implements IBackchannelLogoutNotifier {
+export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
     protected signer: IOAuth2TokenSigner;
 
     protected sessionTokenRepository: ISessionTokenRepository;

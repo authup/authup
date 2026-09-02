@@ -57,7 +57,7 @@ export class AuthenticationModule implements IModule {
                 return new SessionManager({
                     repository,
                     options: { maxAge: config.tokenRefreshMaxAge + 3_600 },
-                    backchannelLogoutNotifier: new OAuth2BackchannelLogoutNotifier({
+                    revokeNotifier: new OAuth2BackchannelLogoutNotifier({
                         signer: c.resolve(OAuth2InjectionToken.TokenSigner),
                         sessionTokenRepository: c.resolve(OAuth2InjectionToken.SessionTokenRepository),
                         clientRepository: c.resolve(OAuth2InjectionToken.ClientRepository),

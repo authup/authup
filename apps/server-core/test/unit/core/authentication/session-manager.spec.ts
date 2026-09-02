@@ -15,7 +15,7 @@ import {
     it,
 } from 'vitest';
 import { SessionManager } from '../../../../src/core/authentication/session/module.ts';
-import type { IBackchannelLogoutNotifier } from '../../../../src/core/authentication/session/types.ts';
+import type { ISessionRevokeNotifier } from '../../../../src/core/authentication/session/types.ts';
 import { FakeSessionRepository } from '../entities/session/fake-repository.ts';
 
 const TIMESTAMP = '2026-01-01T00:00:00.000Z';
@@ -64,7 +64,7 @@ function createClient(): Client {
  * the ordering (audience read before the row goes, delivery after) is the
  * property under test, and a call-count alone cannot show it.
  */
-class RecordingNotifier implements IBackchannelLogoutNotifier {
+class RecordingNotifier implements ISessionRevokeNotifier {
     public resolveCalls: { sessionId: string, removed: number }[] = [];
 
     public notifyCalls: {
@@ -103,10 +103,10 @@ describe('SessionManager', () => {
         ...overrides,
     });
 
-    const buildManager = (notifier?: IBackchannelLogoutNotifier) => new SessionManager({
+    const buildManager = (notifier?: ISessionRevokeNotifier) => new SessionManager({
         repository,
         options: { maxAge: 3_600 },
-        backchannelLogoutNotifier: notifier,
+        revokeNotifier: notifier,
     });
 
     beforeEach(() => {

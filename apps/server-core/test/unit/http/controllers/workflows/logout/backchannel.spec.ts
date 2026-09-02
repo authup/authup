@@ -73,7 +73,7 @@ describe('back-channel logout', () => {
     beforeAll(async () => {
         rpServer = createServer((req, res) => {
             const chunks: Buffer[] = [];
-            req.on('data', (chunk: Buffer) => chunks.push(chunk));
+            req.on('data', (chunk: Buffer) => { chunks.push(chunk); });
             req.on('end', () => {
                 const body = new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
                 deliveries.push({
@@ -192,7 +192,7 @@ describe('back-channel logout', () => {
         const jwk = keys.find((key) => key.kid === header.kid);
         expect(jwk).toBeDefined();
 
-        const key = await globalThis.crypto.subtle.importKey(
+        const key = await crypto.subtle.importKey(
             'jwk',
             {
                 kty: jwk!.kty, 

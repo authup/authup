@@ -3871,13 +3871,13 @@ other RP on that session that it ended.
   tokens have lapsed with it, which is the signal an RP already has.
 - **The token.** `OAuth2BackchannelLogoutNotifier`
   (`core/oauth2/backchannel-logout/`, implementing the port
-  `IBackchannelLogoutNotifier`, which lives with its consumer in
+  `ISessionRevokeNotifier`, which lives with its consumer in
   `core/authentication/session/types.ts` so the session manager depends on
   no oauth2 file; built unconditionally in the
   `AuthenticationModule`'s `SessionManager` factory from the oauth2 signer,
   the session-token repository and the client repository; the module
   declares `ModuleName.OAUTH2` as a hard dependency for it, and only the
-  `SessionManagerContext.backchannelLogoutNotifier` FIELD is optional, for
+  `SessionManagerContext.revokeNotifier` FIELD is optional, for
   the fake-backed specs that build a manager by hand) signs one
   `logout_token` per client with the active signing key of the CLIENT's
   realm: `iss` is built from `client.realm.name`, so the `kid` has to resolve
