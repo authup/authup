@@ -1,79 +1,106 @@
 # Console Replicas
 
-`server-core` serves the API and the consoles from one process. Every console
-lives under the `/console` prefix, so the two can be split across two replica
-sets on the ONE origin: an API set that answers the protocol and the
-management API, and a console set that serves the admin and account console
-shells. Same image, same binary, same `PUBLIC_URL`, same database, one shared
-Redis.
+Authup is a family of services that ship in one image and one npm package.
+`authup start` (container: `server/core start`) runs all of them in one
+process: the API and the IdP, plus every enabled console, on one listener.
+That is the default and it stays supported.
 
-This page is the flag-only shape of that split. A dedicated
-`authup console [admin|account]` role, which additionally leaves the
-management API unmounted on the console set, is planned and builds on exactly
-this recipe.
+This page is the other shape. Two replica sets on the ONE origin: an API set
+running `authup core`, which answers the protocol and the management API and
+mounts no console at all, and a console set running `authup console`, which
+serves the console pages and nothing else. Same image, same `PUBLIC_URL`; only
+the API set reaches the database and the cache.
 
-## The two sets
+## The two roles
 
-Both sets run `server/core start`. What differs is the console flags:
+| | API set | Console set |
+|---|---|---|
+| Command | `server/core core` | `server/core console` |
+| Serves | the protocol, the management API, the two sign-in routes per static console | the auth, admin and account console pages |
+| Listens on | `3000` | `3020` (auth), `3021` (admin), `3022` (account) |
+| Database | required | none |
+| Redis | required (see below) | none |
+| Runs migrations / cron sweeps | per `MIGRATION_ENABLED` / `COMPONENTS_ENABLED` | never, by construction |
 
-| Setting | API set | Console set |
-|---------|---------|-------------|
-| `ADMIN_CONSOLE_ENABLED` | `false` | `true` |
-| `ACCOUNT_CONSOLE_ENABLED` | `false` | `true` |
-| `COMPONENTS_ENABLED` | `false` | `false` |
-| `MIGRATION_ENABLED` | `false` | `false` |
+`authup console` starts every enabled console in one process, each on its own
+port, because each console is its own service: its own package, its own
+config section, its own deployment. Name one to serve only that one
+(`server/core console admin`).
 
-The console flags decide which set renders the console shells and answers
-their sign-in routes (`/console/admin/login`, `/console/admin/callback` and
-the account console's pair). With a flag off those routes answer a "not
-enabled" notice, so a console request that reaches the API set by mistake
-fails visibly rather than signing someone in on the wrong set.
+A console process holds no credential, opens no database or cache connection
+and mounts no controller. `COMPONENTS_ENABLED` and `MIGRATION_ENABLED` are
+server-core options and do nothing on it, so run `authup migration run`
+(container: `server/core migration run`) once before either set starts and let
+a single [worker](./worker.md) own the sweeps, exactly as for any multi-replica
+deployment.
 
-The other two flags are the [worker](./worker.md) rules applied to both sets.
-A console replica is a plain `start` process: with the defaults every console
-replica would run the cron sweeps and race its siblings for the DDL. So run
-`authup migration run` (container: `server/core migration run`) once,
-before either set starts, and let a single [worker](./worker.md) own the
-sweeps.
+## The console flags stay on
+
+`ADMIN_CONSOLE_ENABLED` and `ACCOUNT_CONSOLE_ENABLED` are **not** how the split
+is made. `core` mounts no console whatever they say, and turning one off on the
+API set disables the only console routes that set still owns, so every sign-in
+would 404. Leave them at their default (`true`) on both sets and use the roles.
+
+Turn a flag off only to remove that console from the deployment altogether: the
+console set then serves no shell for it and the API set answers 404 for its
+sign-in.
 
 ## Routing
 
-The proxy sends `/console/**` to the console set and everything else to the
-API set. If you use the [theme directory](./theming.md), route `/theme/**` to
-the console set as well and mount the directory on both sets: the API set
-renders the auth pages, which reference the theme's files, and the console set
-serves them.
+Two rules, in this order:
 
-Nginx, with two upstreams:
+1. **`/console/<name>/login/start` and `/console/<name>/callback` go to the API
+   set** (admin and account; the auth console has no such pair). Those two are
+   the cookie-mode sign-in and they are still server-core routes: the
+   pending-login cookie has to be issued by the origin that reads it back.
+2. **Everything else under `/console/**` goes to the console set**, per console
+   port. Everything outside `/console` goes to the API set.
+
+A console service serves its handler at the ROOT of its own listener (`/`,
+`/assets/**`, `/theme/**`, `/healthy`) while the browser addresses it under the
+console's public path, so **the proxy must strip that prefix**.
+
+Nginx, with one upstream per listener:
 
 ```nginx
-upstream authup_api {
-    server 10.0.0.11:3000;
-    server 10.0.0.12:3000;
-}
-
-upstream authup_console {
-    server 10.0.0.21:3000;
-}
+upstream authup_api          { server 10.0.0.11:3000; server 10.0.0.12:3000; }
+upstream authup_auth_console { server 10.0.0.21:3020; }
+upstream authup_admin_console   { server 10.0.0.21:3021; }
+upstream authup_account_console { server 10.0.0.21:3022; }
 
 server {
     server_name [DOMAIN];
     listen 80;
 
-    location /console/ {
+    # The sign-in pair stays on the API set. Exact matches, so they win over
+    # the prefix rules below.
+    location = /console/admin/login/start   { proxy_pass http://authup_api; }
+    location = /console/admin/callback      { proxy_pass http://authup_api; }
+    location = /console/account/login/start { proxy_pass http://authup_api; }
+    location = /console/account/callback    { proxy_pass http://authup_api; }
+
+    location /console/auth/ {
+        rewrite ^/console/auth(/.*)$ $1 break;
         proxy_set_header Host               $host;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto  $scheme;
         proxy_set_header X-Forwarded-Tls-Client-Cert "";
-        proxy_pass                          http://authup_console;
+        proxy_pass                          http://authup_auth_console;
     }
 
-    location /theme/ {
+    location /console/admin/ {
+        rewrite ^/console/admin(/.*)$ $1 break;
         proxy_set_header Host               $host;
         proxy_set_header X-Forwarded-Proto  $scheme;
         proxy_set_header X-Forwarded-Tls-Client-Cert "";
-        proxy_pass                          http://authup_console;
+        proxy_pass                          http://authup_admin_console;
+    }
+
+    location /console/account/ {
+        rewrite ^/console/account(/.*)$ $1 break;
+        proxy_set_header Host               $host;
+        proxy_set_header X-Forwarded-Proto  $scheme;
+        proxy_set_header X-Forwarded-Tls-Client-Cert "";
+        proxy_pass                          http://authup_account_console;
     }
 
     location / {
@@ -87,106 +114,114 @@ server {
 }
 ```
 
-The same rule as a Kubernetes `Ingress`, with one `Service` per set:
+The same rules as a Kubernetes `Ingress`. `Exact` paths are matched before
+`Prefix` ones, and the prefix rewrite is the controller's own (shown for
+ingress-nginx):
 
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-    name: authup
+    name: authup-console
+    annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
     rules:
         - host: auth.example.com
           http:
               paths:
-                  - path: /console
-                    pathType: Prefix
+                  - path: /console/admin(/|$)(.*)
+                    pathType: ImplementationSpecific
                     backend:
                         service:
                             name: authup-console
                             port:
-                                number: 3000
-                  - path: /theme
-                    pathType: Prefix
+                                number: 3021
+                  - path: /console/account(/|$)(.*)
+                    pathType: ImplementationSpecific
                     backend:
                         service:
                             name: authup-console
                             port:
-                                number: 3000
-                  - path: /
-                    pathType: Prefix
+                                number: 3022
+                  - path: /console/auth(/|$)(.*)
+                    pathType: ImplementationSpecific
                     backend:
                         service:
-                            name: authup-api
+                            name: authup-console
                             port:
-                                number: 3000
+                                number: 3020
 ```
 
+plus a second `Ingress` (no rewrite annotation) carrying the four `Exact`
+sign-in paths and the `/` catch-all, both backed by the API `Service` on port
+`3000`.
+
 `/authorize`, `/token`, `/logout`, `/sessions/@me`, `/userinfo`, the identity
-provider callbacks and the entity routes all land on the API set. That is the
-whole routing table: one prefix for the consoles, the root for everything
-else.
+provider callbacks and the entity routes all land on the API set. The six
+hosted page GETs (`/authorize`, `/register`, `/activate`, `/password-forgot`,
+`/password-reset`, `/logout`) are answered there with a redirect to the auth
+console, which the browser then follows into the console set.
+
+## Console options
+
+Every console has the same section, `server.authConsole`, `server.adminConsole`
+or `server.accountConsole`, and the same environment prefix (`AUTH_CONSOLE_`,
+`ADMIN_CONSOLE_`, `ACCOUNT_CONSOLE_`):
+
+| Option | Env | Default | Read by |
+|---|---|---|---|
+| `url` | `*_CONSOLE_URL` | `<publicUrl>/console/<name>` | the console service and server-core |
+| `enabled` | `*_CONSOLE_ENABLED` | `true` (the auth console has none) | the console service and server-core |
+| `port` | `*_CONSOLE_PORT` | `3020` / `3021` / `3022` | the console service |
+| `host` | `*_CONSOLE_HOST` | the deployment-wide `host` (`HOST`) | the console service |
+| `path` | `*_CONSOLE_PATH` | the installed bundle package | the console service |
+
+`path` points at a substituted console bundle, consulted before the
+`node_modules` lookup. `theme.directoryPath` and `theme.fragmentsEnabled`
+([Theming](./theming.md)) are read by the console services too, so in a split
+deployment the theme directory has to be mounted into the console containers,
+not the API ones.
+
+`url` is where a browser reaches that console. Change it to
+publish a console under another path, and the service rebases its asset URLs
+and links onto it while server-core redirects and lands sign-ins there. The
+ORIGIN must stay `PUBLIC_URL`'s own: the consoles authenticate with a
+`SameSite=Strict` cookie that is re-checked against `Sec-Fetch-Site:
+same-origin`, and the auth console holds the browser session every
+`prompt=none` decision reads. A foreign origin is refused when the
+configuration resolves.
 
 ## Redis is required
 
-The split needs a shared cache, so [`REDIS`](./configuration-server-core-redis.md)
-must point both sets at the same server. The reason is the sign-in round-trip.
-The hosted login page posts the consent to `POST /authorize`, which the proxy
-sends to the API set; the authorization code it mints is a cache entry, not a
-database row. The browser is then redirected to `/console/<name>/callback`,
-which the proxy sends to the console set, and the console replica that
-answers it redeems the code through its own `/token`, popping that entry. With
-the default per-process memory cache the entry exists only in the API replica
-that minted it, and every console sign-in fails.
+The console sign-in crosses two API replicas. `GET
+/console/<name>/login/start` parks a pending login in the cache and redirects
+to `/authorize`; the consent POST mints an authorization code, also a cache
+entry; `GET /console/<name>/callback` then redeems it. Nothing pins those
+requests to one replica, so with the default per-process memory cache the
+entry exists only in the replica that wrote it and sign-in fails. Point both
+sets at the same [Redis](./configuration-server-core-redis.md).
 
-Sticky sessions do not help. The two requests are on different paths and land
-on different sets by design, so no affinity rule can keep them on one
-process. The pending-login entry the console's `/login` parks and the token
-blocklist ride the same cache and have the same requirement.
+The token blocklist rides the same cache and has the same requirement. The
+console set needs no cache configuration at all.
 
 ## SQLite cannot split
 
 The split is for the server databases (MySQL and Postgres). A SQLite
 deployment keeps one database file per container, the same caveat the
-[worker](./worker.md) page states: a console container would sign users into a
-database the API set never sees. Keep a SQLite deployment in one process.
+[worker](./worker.md) page states. Keep it in one process.
 
-## What the flags do not do
+## Health checks
 
-- **The asset mounts stay.** The console flags gate the shells and the sign-in
-  routes, not `/console/admin/assets/*` and `/console/account/assets/*`. A
-  replica that has a console's `dist/` installed serves them whatever the
-  flag says. That is harmless (hashed, immutable files) and means an asset
-  request that reaches the API set is still answered.
-- **The auth pages ride every replica.** `/authorize`, `/logout`,
-  `/register`, `/activate`, `/password-forgot`, `/password-reset` and their
-  assets under `/console/auth/assets/*` are served by every replica of both
-  sets. There is no flag for them, by design: they are the identity
-  provider's own surface (`authorization_endpoint`, `end_session_endpoint`,
-  the mail deep links), not a console. The `/console/**` rule sends the auth
-  console's assets to the console set while the API set renders its pages;
-  both sets carry the bundle, so both answer.
-- **`GET /` reports per replica.** The `features` block of the status
-  endpoint reflects the console flags of the replica that answered. Through
-  the proxy `GET /` lands on the API set and reports `adminConsole: false`
-  and `accountConsole: false`; a console replica probed directly (the image
-  healthcheck does) reports `true`. Harmless, and a quick way to check which
-  set a process belongs to.
-- **The management API stays mounted on the console set.** A request for
-  `/users` that reaches a console replica is answered like on the API set.
-  The planned console role is what removes it.
+The image's own `HEALTHCHECK` probes `127.0.0.1:3000`, which a console
+container does not bind. Override it per console listener; each answers `GET
+/healthy` on its own port.
 
 ## Docker Compose
 
-Two services from the same image and the same configuration, differing only
-in the two console flags, behind the proxy above. Redis and the database are
-shared:
-
 ```yaml
-version: '3.8'
-
 services:
-    server-core:
+    authup-api:
         image: authup/authup:latest
         restart: unless-stopped
         environment:
@@ -198,29 +233,23 @@ services:
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
-            - ADMIN_CONSOLE_ENABLED=false
-            - ACCOUNT_CONSOLE_ENABLED=false
             - COMPONENTS_ENABLED=false
             - MIGRATION_ENABLED=false
-        command: server/core start
+        command: server/core core
 
-    server-core-console:
+    authup-console:
         image: authup/authup:latest
         restart: unless-stopped
         environment:
             - PUBLIC_URL=https://auth.example.com
-            - DB_TYPE=postgres
-            - DB_HOST=postgres
-            - DB_PORT=5432
-            - DB_USERNAME=postgres
-            - DB_PASSWORD=postgres
-            - DB_DATABASE=postgres
-            - REDIS=redis://redis:6379
-            - COMPONENTS_ENABLED=false
-            - MIGRATION_ENABLED=false
-        command: server/core start
+        command: server/core console
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3021/healthy"]
+            interval: 10s
 ```
 
-Run `server/core migration run` once before starting either service, and add
-a [worker](./worker.md) for the sweeps. Both services keep the image
-healthcheck: each opens an HTTP port and answers `GET /`.
+Run `server/core migration run` once before starting either service, and add a
+[worker](./worker.md) for the sweeps. The console service takes no `DB_*` and
+no `REDIS`: it reads `PUBLIC_URL` (to derive its own url and the API address
+it injects into the console), its own section, and the
+[theme](./theming.md) directory when one is configured.

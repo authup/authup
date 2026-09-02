@@ -20,8 +20,11 @@ examples show how to configure authup using the options described in the [config
 paste and modify the example you want to use into a `docker-compose.yml` file.
 
 The following example shows a sensible default configuration for getting started with Authup.
-This starts the one service a deployment needs: `server/core` serves the API and both consoles
-(the admin console at `/console/admin`, the account console at `/console/account`).
+This starts the one container a deployment needs: `server/core start` runs the API
+and every console on one listener (the auth console at `/console/auth`, the admin
+console at `/console/admin`, the account console at `/console/account`). To run the
+consoles as their own service instead, see
+[Console Replicas](./console-replicas.md).
 
 ```yaml
 version: '3.8'
@@ -43,7 +46,7 @@ services:
       ports:
         - "3001:3000"
       environment:
-        - PUBLIC_URL=http://localhost:3000
+        - PUBLIC_URL=http://localhost:3001
       command: server/core start
       networks:
           authup:
@@ -74,8 +77,7 @@ docker compose logs -f
 ::: warning The `client/admin-console` service was retired
 Earlier versions of this example ran a second container for the admin
 console. That service no longer exists: remove it, and remove its
-`NUXT_PUBLIC_*` environment variables. See
-[Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
+`NUXT_PUBLIC_*` environment variables. See [Upgrading](./upgrading.md).
 :::
 
 ## Configuration
@@ -108,7 +110,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-        - PUBLIC_URL=http://localhost:3000
+        - PUBLIC_URL=http://localhost:3001
         - USER_ADMIN_PASSWORD=test-password
     command: server/core start
 ```
@@ -147,7 +149,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - PUBLIC_URL=http://localhost:3000
+      - PUBLIC_URL=http://localhost:3001
     command: server/core start
 
 ```
@@ -178,7 +180,7 @@ services:
             - postgres
             - redis
         environment:
-            - PUBLIC_URL=http://localhost:3000
+            - PUBLIC_URL=http://localhost:3001
             - DB_TYPE=postgres
             - DB_HOST=postgres
             - DB_PORT=5432

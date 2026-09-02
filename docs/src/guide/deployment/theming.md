@@ -59,6 +59,12 @@ Deployment itself.
 Point `theme.directoryPath` (`THEME_DIRECTORY_PATH`) at the directory. Empty is
 the default and disables theming entirely.
 
+The option is read by the **console services**, not by the API. In a
+single-container deployment (`authup start`) they are the same process and
+there is nothing to think about. In a [split deployment](./console-replicas.md)
+the directory has to be mounted into the console containers; on an API-only
+process (`authup core`) the option does nothing.
+
 ```bash
 docker run \
   -e THEME_DIRECTORY_PATH=/etc/authup/theme \
@@ -225,7 +231,8 @@ The rest of this page is the reference for what you just used.
 ```
 /etc/authup/theme/
   theme.json          design tokens, title, favicon, logo, stylesheet
-  assets/             the only directory served over HTTP, at /theme
+  assets/             the only directory served over HTTP, under each
+                      console's own base (e.g. /console/admin/theme)
     theme.css
     logo.svg
     logo-dark.svg
@@ -340,8 +347,8 @@ for the things tokens cannot express.
 
 ```css
 /* Relative to theme.css, not root-absolute. Authup rebases the hrefs it
-   generates, but your stylesheet is served verbatim, so "/theme/..." would
-   break when authup runs under a public URL prefix. */
+   generates, but your stylesheet is served verbatim, and the assets live
+   under each console's own base, so "/theme/..." never resolves. */
 @font-face {
   font-family: Inter;
   src: url("./inter.woff2") format("woff2");
@@ -467,17 +474,20 @@ different flow.
 
 - `dist/client/index.html` containing the `<!--preload-links-->` and
   `<!--app-html-->` markers, built with vite `base: '/console/auth/'` (the
-  assets then resolve under `/console/auth/assets/`, which is what server-core
-  mounts)
+  service rebases those hrefs onto the path it serves the bundle under, and
+  mounts the bundle's assets at its own `/assets`)
 - `dist/client/.vite/ssr-manifest.json` (`{}` is valid)
 - `dist/server/server.js` exporting `render(ctx)`, plus `CONTRACT_VERSION`
   once the contract moves past version 1 (omitting it means version 1)
 
-`CONTRACT_VERSION` is checked at boot against the version this authup
-implements, and a mismatch **stops the container** with a message naming both
-versions. That is deliberate: you replaced security-relevant code, so a drift
-must not surface as subtly wrong auth pages. A bundle without the export counts
-as version 1.
+::: warning Nothing verifies this at boot
+`CONTRACT_VERSION` is exported but not read: the serving service loads
+`render` and calls it. A bundle written against an older contract therefore
+produces subtly wrong auth pages rather than a failed start. Version 3 is
+current; a version 2 bundle strands every federated login on the login form,
+because it does not know it has to redeem the login handle. Check the version
+yourself when you substitute the package.
+:::
 
 The types are published in the package's `src/contract.ts`
 (`HydrationPayload`, `RenderContext`, `RenderResult`, `RenderFunction`).
@@ -493,8 +503,9 @@ absolute, so a bundle built for another base is served but loads nothing.
 | account console | `<!--account-config-->` |
 | admin console | `<!--admin-config-->` |
 
-The marker is checked at boot; without it the injected `window.__AUTHUP__`
-never lands and the SPA would silently fall back to deriving its API URL from
-the origin.
-
-Every check only runs for a package you actually substituted.
+The marker is not verified either. Without it the shell is still served, the
+injected `window.__AUTHUP__` never lands, and the SPA silently falls back to
+deriving its API URL from its own origin. The same goes for the vite base: a
+bundle built for another one is served and loads nothing. Both failures answer
+`200`, so verify a substituted bundle by loading it and following the first
+script the shell references.

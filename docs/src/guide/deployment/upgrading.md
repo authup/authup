@@ -102,12 +102,14 @@ JSON Schema your editor can validate against while you type.
 variable name changed, so a `docker run -e`, a Compose `environment:` block, a Helm
 values file and a `.env` are all unaffected.
 
-### `authup` is the only binary, and it runs the server in process
+### `authup` is the operator binary, and it runs the server in process
 
 The `authup-server` binary is retired. The `@authup/server-core` package ships
 no binary at all now; the `authup` package (`npm install authup`) carries the
-one command and runs the server **inside its own process**, where it used to
-start it as a child and supervise it.
+operator commands and runs the server **inside its own process**, where it used
+to start it as a child and supervise it. (Each console service ships an
+`authup-<name>-console` binary as well, for a deployment that runs one console
+without the CLI; see the console entries below.)
 
 | Was | Is |
 |---|---|
@@ -174,6 +176,59 @@ The admin console's development server moves from `:3000` to `:3010` so it no
 longer collides with the API, and the trusted origin seeded in non-production
 follows it. That affects `npm run dev` in this repository only.
 
+### The consoles are their own services
+
+`server-core` serves no console any more. Each console is a service package of
+its own (`@authup/server-auth-console` for the hosted login, consent, register,
+activate and password pages, plus `@authup/server-admin-console` and
+`@authup/server-account-console`), and `server-core` is the protocol surface
+and the management API. What it keeps under `/console` is two routes per static
+console, `GET /console/<name>/login/start` and `GET /console/<name>/callback`:
+they are the cookie-mode sign-in, and the pending-login cookie has to be issued
+by the origin that reads it back. The six hosted page GETs answer a redirect to
+the auth console, carrying the request's own query.
+
+The CLI gained two roles for it:
+
+| Command | Runs |
+|---|---|
+| `authup start` (unchanged default) | the API and every enabled console on one listener |
+| `authup core` | the API and the IdP alone, mounting no console |
+| `authup console [admin\|account\|auth]` | one console service, or every enabled one, each on its own port (`3020` auth, `3021` admin, `3022` account) |
+
+**No action** for a deployment running `server/core start`: the process, the
+port, the paths and the container command are all unchanged, and the consoles
+now run as separate services inside it.
+
+**Action required** for:
+
+- **A split deployment.** The flag-only recipe (both sets running `start` with
+  the console flags inverted) no longer produces the intended split, and the
+  flags must now stay `true` on both sets. Use `core` and `console` instead;
+  [Console Replicas](./console-replicas.md) is rewritten around them, including
+  the two sign-in paths that must keep reaching the API set.
+- **A themed deployment.** `theme.directoryPath` and `theme.fragmentsEnabled`
+  are read by the console services now. In one container nothing changes; in a
+  split one, mount the theme directory into the console containers.
+- **A substituted console.** `server.<name>Console.path` moved to the console
+  services with the serving. Setting it on an API-only process does nothing.
+  The auth console is themed as well since this release, which is what closes
+  the one window in which the hosted auth pages rendered unthemed.
+
+**New options**, all per console: `url` (`*_CONSOLE_URL`, where the console is
+published; the path may differ from `publicUrl`, the origin may not), `port`
+(`*_CONSOLE_PORT`) and `host` (`*_CONSOLE_HOST`, inheriting the deployment-wide
+`HOST`). Each console service also ships a binary of its own
+(`authup-auth-console`, `authup-admin-console`, `authup-account-console`) for a
+deployment that runs a console without the CLI; `authup console` is the
+supported route.
+
+**Known limitation.** Under a sub-path deployment (`PUBLIC_URL` carrying a path
+behind a prefix-stripping proxy), `authup start` mounts the consoles at a path
+the listener never sees, so console pages answer `404`
+([#3531](https://github.com/authup/authup/issues/3531)). The API is unaffected.
+Deploy at the origin root, or serve the consoles from their own replica set.
+
 ### A console derives its own configuration, and refuses a foreign origin
 
 Every value a console service used to be handed by the CLI is now computed
@@ -209,11 +264,12 @@ the IdP origin:
 | Account console | `<publicUrl>/account` | `<publicUrl>/console/account` |
 | Auth console assets (the scripts and styles behind `/authorize`, `/logout`, `/register`, ...) | `<publicUrl>/public/` | `<publicUrl>/console/auth/assets/` |
 
-The auth pages themselves (`/authorize`, `/logout`, `/register`, `/activate`,
+The auth page URLs (`/authorize`, `/logout`, `/register`, `/activate`,
 `/password-forgot`, `/password-reset`) and every API route are unchanged.
 They are the protocol surface (`authorization_endpoint`,
-`end_session_endpoint`, the mail deep links) and stay at the root. `/console`
-and `/console/auth` themselves serve nothing.
+`end_session_endpoint`, the mail deep links) and stay at the root; a `GET` on
+one of them now redirects to the auth console at `/console/auth`, which
+renders it (see the next entries). `/console` itself serves nothing.
 
 **Action required.**
 
@@ -229,13 +285,16 @@ and `/console/auth` themselves serve nothing.
   vite base (`/console/admin/`, `/console/account/`, `/console/auth/`).
 - **Links, bookmarks and proxy rules** naming `/account`, `/admin` or
   `/public` must name the new paths. That includes the sign-in routes
-  (`/console/account/login`, `/console/account/callback` and the admin pair)
-  and every page below a console (`/console/account/authenticators`, ...).
-  Update the "Manage account" link your own applications render.
+  (`/console/account/login/start`, `/console/account/callback` and the admin
+  pair) and every page below a console (`/console/account/authenticators`,
+  ...). Update the "Manage account" link your own applications render.
 - **No redirect is served for the old paths.** `/account/**`, `/admin/**` and
   `/public/**` answer `404`.
 - **`@authup/client-web-kit` and the server must be on the same release.** The
-  kit's `buildConsoleLoginURL` now emits `<baseURL>/console/<console>/login`.
+  kit's `buildConsoleLoginURL` now emits
+  `<baseURL>/console/<console>/login/start`, a path of its own: the bare
+  `/console/<console>/login` is the console's own login PAGE, served by the
+  console service.
   A newer kit against an older server kicks to a route that does not exist,
   and an older kit (or an older standalone-hosted console bundle) against
   this server does the same the other way round; a `404` on a top-level
@@ -251,18 +310,19 @@ One prefix is what makes serving the consoles from their own replica set a
 single proxy rule; see [Console Replicas](./console-replicas.md).
 
 Also in this release, `ACCOUNT_CONSOLE_ENABLED=false` applies to the account
-console's sign-in routes as well: `GET /console/account/login` and
-`GET /console/account/callback` answer the "not enabled" notice instead of
-starting a login, the way the admin console's routes did already. Before, a
-disabled account console still minted a pending login and a session cookie
-on a direct hit. No action needed.
+console's sign-in routes as well: `GET /console/account/login/start` and
+`GET /console/account/callback` answer `404` instead of starting a login, the
+way the admin console's routes did already. Before, a disabled account console
+still minted a pending login and a session cookie on a direct hit. No action
+needed.
 
-### The admin console is served by server-core
+### The admin console is no longer a Nuxt server
 
-The admin console is no longer a separate Nuxt server. It is a static
-single-page bundle that `server-core` serves at `<publicUrl>/console/admin`,
-the way it serves the account console at `<publicUrl>/console/account` (the
-`/console` prefix is the entry above). A deployment runs one process.
+The admin console is a static single-page bundle, served at
+`<publicUrl>/console/admin` the way the account console is served at
+`<publicUrl>/console/account` (the `/console` prefix is the entry above). A
+default deployment still runs one container: `authup start` runs the API and
+every console on one listener (see the next entry for what serves what).
 
 **Action required.**
 
@@ -281,10 +341,10 @@ the way it serves the account console at `<publicUrl>/console/account` (the
 - **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
   now, but the provisioner keeps re-asserting every listed origin into the
   system clients' redirect allowlists on each boot.
-- **Reverse proxy**: collapse the two upstreams into one. The API and both
-  consoles are served by the same listener, so a rule that routed `/` to the
-  console port and `/api/` to the server port routes `/` to the server port
-  now. See [Nginx](./nginx).
+- **Reverse proxy**: collapse the two upstreams into one. Under `authup start`
+  the API and every console are served by the same listener, so a rule that
+  routed `/` to the console port and `/api/` to the server port routes `/` to
+  the server port now. See [Nginx](./nginx).
 - **Links and bookmarks**: the console moved from the root of its own origin
   to `<publicUrl>/console/admin`.
 
@@ -297,14 +357,15 @@ the API, so there is nothing to widen. Note that `PUBLIC_URL` is unaffected as
 a [`server/core` option](./configuration-server-core); it is the server's own
 public URL, and the console's address derives from it.
 
-**New `server/core` options.** `ADMIN_CONSOLE_ENABLED` / `adminConsoleEnabled`
-(default `true`) serves the console; with it off the routes render a "not
-enabled" notice (and the sign-in routes start no login), so stale links do
-not dead-end. `ADMIN_CONSOLE_PATH` /
-`adminConsolePath` substitutes the console package, the same contract as
-`ACCOUNT_CONSOLE_PATH`: a directory holding a built `dist/` whose
-`index.html` carries the `<!--admin-config-->` marker. The `features` block of
-the public status endpoint (`GET /`) gains `adminConsole`.
+**New options.** `ADMIN_CONSOLE_ENABLED` / `server.adminConsole.enabled`
+(default `true`) serves the console; with it off nothing mounts it and the
+API's two sign-in routes answer `404`. `ADMIN_CONSOLE_PATH` /
+`server.adminConsole.path` substitutes the console package, the same contract
+as `ACCOUNT_CONSOLE_PATH`: a directory holding a built `dist/` whose
+`index.html` carries the `<!--admin-config-->` marker. `enabled` is read by
+both server-core and the console service; `path` only by the console service.
+The `features` block of the public status endpoint (`GET /`) gains
+`adminConsole`.
 
 **Deliberately gone**: the `authup-admin-console` binary and the published
 Nuxt server bundle. `@authup/client-admin-console` ships `dist/` only. The
@@ -313,10 +374,10 @@ bundle stays hostable on a static host of your own, on its own origin; see
 
 Sign-in changed as well and needs no action. Served from the API's origin, the
 console authenticates with the same opaque `HttpOnly` session cookie the
-account console uses (`GET /console/admin/login` and `GET /console/admin/callback` against the
-per-realm `admin-console` client), so no OAuth2 token reaches the browser's
-JavaScript. Hosted standalone on a foreign origin it keeps the browser-side
-authorization-code flow with PKCE.
+account console uses (`GET /console/admin/login/start` and
+`GET /console/admin/callback` against the per-realm `admin-console` client), so
+no OAuth2 token reaches the browser's JavaScript. Hosted standalone on a
+foreign origin it keeps the browser-side authorization-code flow with PKCE.
 
 ### Token introspection requires authorization
 
