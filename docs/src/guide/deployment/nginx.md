@@ -8,9 +8,14 @@ Don't forget to replace the placeholders with the actual values:
 - `[SERVER_CORE_PORT]`: Port of the server core application.
 :::
 
-There is one upstream. `server/core` serves the API and both consoles (the
-admin console at `/console/admin`, the account console at `/console/account`), so nothing has
-to be routed by path.
+There is one upstream. `server/core start` runs the API and every console in
+one process, on one listener: the auth console at `/console/auth` (the hosted
+login, consent and workflow pages), the admin console at `/console/admin` and
+the account console at `/console/account`. Nothing has to be routed by path.
+
+To run the consoles as their own replica set instead, see
+[Console Replicas](./console-replicas.md); that is the only shape that needs
+per-path rules.
 
 ```txt
 map $sent_http_content_type $expires {
@@ -71,9 +76,20 @@ location /auth/ {
 PUBLIC_URL=https://[DOMAIN]/auth
 ```
 
-The consoles are then reachable at `https://[DOMAIN]/auth/console/admin` and
-`https://[DOMAIN]/auth/console/account`. Session cookies are scoped to the prefix, so
-an application of your own on the same origin is left alone.
+The API is then reachable under the prefix, and session cookies are scoped to
+it, so an application of your own on the same origin is left alone.
+
+::: warning The consoles do not work under a prefix yet
+
+`authup start` mounts each console at the path component of its own url, which
+carries the prefix, while the proxy has just stripped it: every console page
+answers 404 (authup/authup#3531). The API, the token endpoint and the
+management API are unaffected. Until it is fixed, deploy authup at the origin
+root, or publish the consoles from their own replica set
+([Console Replicas](./console-replicas.md)), where each console listener is
+addressed directly.
+
+:::
 
 ## Certificate
 

@@ -2,8 +2,11 @@
 
 The account console is the end-user self-service surface. It is a
 client-side single-page application (the `@authup/client-account-console`
-package) that `server-core` serves on the IdP origin at
-`<publicUrl>/console/account` by default. It works in every deployment, including
+package) served by `@authup/server-account-console` on the IdP origin at
+`<publicUrl>/console/account` by default. `authup start` runs that service
+alongside the API on one listener; `authup console account` runs it alone, on
+its own port, for a [split deployment](./console-replicas.md).
+It works in every deployment, including
 ones that run with the admin console disabled, and gives each of your
 applications a stable "Manage account" link target.
 
@@ -20,11 +23,27 @@ It covers:
 
 ## Sign-in
 
-The surface authenticates through a regular authorization-code + PKCE flow
-against the per-realm `account-console` system client (see
-[Provisioning](./provisioning.md#per-realm-system-clients)). A user visiting
-`/console/account` without a session picks a realm (a single-realm deployment skips
-the picker) and is redirected to the hosted login. An existing session on the
+Served on the IdP origin, the console signs in **through the server** and never
+holds an OAuth2 token in JavaScript. A user visiting `/console/account` without
+a session picks a realm (a single-realm deployment skips the picker), and the
+page navigates to `GET /console/account/login/start`. The server mints the PKCE
+verifier and the `state`, parks them behind a short-lived cookie and redirects
+to the hosted login; `GET /console/account/callback` then redeems the code,
+revokes the tokens it received and hands the browser an opaque, `HttpOnly`
+session cookie naming the session row. Those two routes are the only
+`/console/account` paths the API answers; everything else under it is the
+console service. The admin console signs in the same way, and both surfaces
+share the single session on that origin.
+
+The flow is an authorization-code flow with PKCE either way, against the
+per-realm `account-console` system client (see
+[Provisioning](./provisioning.md#per-realm-system-clients)). What the
+server-side variant changes is who holds the credential. A bundle hosted
+standalone on a foreign origin cannot present a `SameSite=Strict` cookie, so it
+runs the same flow in the browser and keeps its tokens there; that is decided
+at runtime, not configured.
+
+An existing session on the
 IdP origin is reused, so no second session row is created. Attribution is per
 token (`auth_session_tokens.client_id`), so the tokens the account console
 obtains name the `account-console` client. The session row itself records no
