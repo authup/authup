@@ -49,7 +49,7 @@ export default defineComponent({
 
         const httpClient = injectHTTPClient();
         const manager = defineEntityManager({
-            type: `${EntityType.POLICY}`,
+            type: EntityType.POLICY,
             setup: ctx,
             props,
         });

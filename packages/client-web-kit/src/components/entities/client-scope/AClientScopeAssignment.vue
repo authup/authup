@@ -24,7 +24,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<ClientScope>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${EntityType.CLIENT_SCOPE}`,
+            type: EntityType.CLIENT_SCOPE,
             setup,
             query: () => ({
                 filters: {

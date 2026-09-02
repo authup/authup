@@ -350,8 +350,8 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 }
 
                 if (
-                    entity.name &&
-                    pathNormalized === 'email'
+                    pathNormalized === 'email' &&
+                    entity.name
                 ) {
                     entity[pathNormalized] = buildUserFakeEmail(entity.name);
                     retry = true;

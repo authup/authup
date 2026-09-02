@@ -40,7 +40,7 @@ describe('OAuth2EndSessionRequestValidator', () => {
     it('should treat blank params as absent', async () => {
         const output = await validator.run({
             id_token_hint: '',
-            state: '   ',
+            state: ' '.repeat(3),
             post_logout_redirect_uri: '',
         });
 

@@ -87,7 +87,7 @@ export function buildJunctionUpdateData(input: BuildJunctionUpdateDataInput): Re
         updateData.realmScope = minRealmScope([data.realmScope as `${RealmScope}`, actorScope]);
     }
 
-    if (actorScope === RealmScope.ANY && actorPolicyFree) {
+    if (actorPolicyFree && actorScope === RealmScope.ANY) {
         if (touchesPolicy) {
             updateData.policyId = data.policyId;
         }

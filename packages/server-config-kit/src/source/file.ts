@@ -144,14 +144,13 @@ export function findUnknownSchemaPaths<T>(
     const unknown : string[] = [];
 
     const walk = (node: Record<string, unknown>, prefix: string) => {
-        for (const name of Object.keys(node)) {
+        for (const [name, value] of Object.entries(node)) {
             const path = prefix ? `${prefix}.${name}` : name;
 
             if (claimed.has(path) || name.startsWith('x-')) {
                 continue;
             }
 
-            const value = node[name];
             if (traversed.has(path) && isRecord(value)) {
                 walk(value, path);
                 continue;

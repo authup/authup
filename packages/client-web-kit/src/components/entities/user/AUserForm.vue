@@ -85,7 +85,7 @@ export default defineComponent({
         });
 
         const manager = defineEntityManager({
-            type: `${EntityType.USER}`,
+            type: EntityType.USER,
             setup: ctx,
             props,
         });
@@ -138,10 +138,12 @@ export default defineComponent({
         }
 
         watch(updatedAt, (val, oldVal) => {
-            if (val && val !== oldVal) {
-                manager.data.value = props.entity ?? undefined;
-                initForm();
+            if (!val || val === oldVal) {
+                return;
             }
+
+            manager.data.value = props.entity ?? undefined;
+            initForm();
         });
 
         initForm();

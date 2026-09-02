@@ -23,10 +23,10 @@ function createDirectory(files: Record<string, string>) : string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-theme-provider-'));
     roots.push(root);
 
-    for (const name of Object.keys(files)) {
+    for (const [name, content] of Object.entries(files)) {
         const filePath = path.join(root, name);
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
-        fs.writeFileSync(filePath, files[name], 'utf-8');
+        fs.writeFileSync(filePath, content, 'utf-8');
     }
 
     return root;

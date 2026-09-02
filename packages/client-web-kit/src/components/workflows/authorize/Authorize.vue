@@ -161,19 +161,21 @@ export default defineComponent({
         const mfaSatisfiedLocal = ref<boolean>(false);
 
         watch(lastAuthOrigin, (value) => {
-            if (value === StoreAuthOrigin.LOGIN) {
-                accountConfirmedLocal.value = true;
+            if (value !== StoreAuthOrigin.LOGIN) {
+                return;
+            }
 
-                // A login whose grant already verified the second factor (the
-                // inline `otp` step or the MFA-pending ticket completion,
-                // issue #3242) carries acr urn:authup:mfa — its session is
-                // mfa_at-stamped, so re-prompting the challenge here would be
-                // a redundant second ceremony. Scoped to a fresh ON-PAGE login;
-                // lingering/restored sessions keep the pre-consent challenge
-                // (it also pre-empts acr step-up freshness).
-                if (acr.value === OAuth2AuthenticationContextClass.MFA) {
-                    mfaSatisfiedLocal.value = true;
-                }
+            accountConfirmedLocal.value = true;
+
+            // A login whose grant already verified the second factor (the
+            // inline `otp` step or the MFA-pending ticket completion,
+            // issue #3242) carries acr urn:authup:mfa — its session is
+            // mfa_at-stamped, so re-prompting the challenge here would be
+            // a redundant second ceremony. Scoped to a fresh ON-PAGE login;
+            // lingering/restored sessions keep the pre-consent challenge
+            // (it also pre-empts acr step-up freshness).
+            if (acr.value === OAuth2AuthenticationContextClass.MFA) {
+                mfaSatisfiedLocal.value = true;
             }
         });
 
@@ -500,7 +502,7 @@ export default defineComponent({
             // login on THIS page stamps lastAuthOrigin (accountConfirmed).
             const forceReauth = (isReauth || reauthRequired.value) && !accountConfirmed.value;
 
-            if (!loggedIn.value || forceReauth) {
+            if (forceReauth || !loggedIn.value) {
                 // A silent request can never render a login form — redirect the
                 // login_required error to the RP (falls through to the form only
                 // when the redirect_uri was not verified).

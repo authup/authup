@@ -154,7 +154,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // guard keeps the redirect decision resting on the match itself,
         // which is the only thing here that knows the uri was ever matched.
         const redirectUri = verified.data.redirect_uri;
-        if (!verified.redirectUriVerified || !redirectUri) {
+        if (!redirectUri || !verified.redirectUriVerified) {
             throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
         }
 
@@ -242,7 +242,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                     realm,
                 },
             });
-            if (this.accessPolicyEvaluator && subject) {
+            if (subject && this.accessPolicyEvaluator) {
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     verified.client.accessPolicyId,
                     subject,

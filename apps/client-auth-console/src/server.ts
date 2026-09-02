@@ -54,18 +54,20 @@ function renderPreloadLinks(modules: string[], manifest: Record<string, string[]
         const files = manifest[id];
         if (files) {
             files.forEach((file) => {
-                if (!seen.has(file)) {
-                    seen.add(file);
-                    const filename = basename(file);
-                    if (manifest[filename]) {
-                        for (const depFile of manifest[filename]) {
-                            links += renderPreloadLink(depFile);
-                            seen.add(depFile);
-                        }
-                    }
-
-                    links += renderPreloadLink(file);
+                if (seen.has(file)) {
+                    return;
                 }
+
+                seen.add(file);
+                const filename = basename(file);
+                if (manifest[filename]) {
+                    for (const depFile of manifest[filename]) {
+                        links += renderPreloadLink(depFile);
+                        seen.add(depFile);
+                    }
+                }
+
+                links += renderPreloadLink(file);
             });
         }
     });

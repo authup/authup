@@ -118,7 +118,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         // resolve, counts as unverified.
         if (hintVerified && data.client_id) {
             const expected = isUUID(data.client_id) ? data.client_id : client?.id;
-            if (audiences.length === 0 || !expected || !audiences.includes(expected)) {
+            if (!expected || audiences.length === 0 || !audiences.includes(expected)) {
                 hintVerified = false;
                 sub = undefined;
                 subKind = undefined;

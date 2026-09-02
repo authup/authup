@@ -133,7 +133,7 @@ export function assertIdentityProviderAssurance(
 
     if (requiredAmr.length > 0) {
         const amr = Array.isArray(claims.amr) ? claims.amr : [];
-        if (!requiredAmr.some((value) => amr.includes(value))) {
+        if (requiredAmr.every((value) => !amr.includes(value))) {
             throw new IdentityProviderAssuranceError(
                 `The identity provider amr claim does not satisfy: ${requiredAmr.join(', ')}.`,
             );

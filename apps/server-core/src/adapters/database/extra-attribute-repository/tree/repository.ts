@@ -99,9 +99,9 @@ export class EATreeRepository<
             columns.add(rel.propertyName);
         }
 
-        for (const key of Object.keys(source)) {
+        for (const [key, value] of Object.entries(source as Record<string, any>)) {
             if (!columns.has(key) && !(key in entity)) {
-                (entity as Record<string, any>)[key] = (source as Record<string, any>)[key];
+                (entity as Record<string, any>)[key] = value;
             }
         }
     }

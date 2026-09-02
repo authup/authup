@@ -165,7 +165,7 @@ describe('core/provisioning/wildcard', () => {
             // relation lists union: the wildcard-only role joins the block
             expect(merged.relations?.roles).toHaveLength(1);
 
-            expect([...variants.keys()]).toEqual(['foo']);
+            expect(variants.keys().toArray()).toEqual(['foo']);
             expect(variants.get('foo')!.clients![0].attributes.displayName).toBe('Explicit Portal');
         });
 

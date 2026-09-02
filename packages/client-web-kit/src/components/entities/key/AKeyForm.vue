@@ -76,10 +76,10 @@ export default defineComponent({
         const nameSeed = useId();
         const form = reactive({
             name: '',
-            use: `${JWKUse.SIGNATURE}`,
-            signatureAlgorithm: `${JWTAlgorithm.RS256}`,
+            use: String(JWKUse.SIGNATURE),
+            signatureAlgorithm: String(JWTAlgorithm.RS256),
             priority: 0,
-            status: `${KeyStatus.ACTIVE}`,
+            status: String(KeyStatus.ACTIVE),
             realmId: '',
             decryptionKey: '',
             encryptionKey: '',
@@ -99,8 +99,8 @@ export default defineComponent({
         );
 
         const useOptions = computed<FormOption[]>(() => [
-            { value: `${JWKUse.SIGNATURE}`, label: translationsClient.keyUseSignature },
-            { value: `${JWKUse.ENCRYPTION}`, label: translationsClient.keyUseEncryption },
+            { value: JWKUse.SIGNATURE, label: translationsClient.keyUseSignature },
+            { value: JWKUse.ENCRYPTION, label: translationsClient.keyUseEncryption },
         ]);
 
         const algorithmOptions : FormOption[] = [
@@ -110,13 +110,13 @@ export default defineComponent({
             JWTAlgorithm.ES256,
             JWTAlgorithm.ES384,
             JWTAlgorithm.ES512,
-        ].map((value) => ({ value: `${value}`, label: `${value}` }));
+        ].map((value) => ({ value, label: value }));
 
         const statusOptions : FormOption[] = Object.values(KeyStatus)
-            .map((value) => ({ value: `${value}`, label: `${value}` }));
+            .map((value) => ({ value, label: value }));
 
         const manager = defineEntityManager({
-            type: `${EntityType.KEY}`,
+            type: EntityType.KEY,
             setup: ctx,
             props,
         });
@@ -148,7 +148,7 @@ export default defineComponent({
 
         const updatedAt = useUpdatedAt(() => props.entity);
 
-        const isEnc = computed(() => form.use === `${JWKUse.ENCRYPTION}`);
+        const isEnc = computed(() => form.use === JWKUse.ENCRYPTION);
 
         const importEnabled = ref(false);
 
@@ -165,10 +165,12 @@ export default defineComponent({
         }
 
         watch(updatedAt, (val, oldVal) => {
-            if (val && val !== oldVal) {
-                manager.data.value = props.entity;
-                initForm();
+            if (!val || val === oldVal) {
+                return;
             }
+
+            manager.data.value = props.entity;
+            initForm();
         });
 
         initForm();

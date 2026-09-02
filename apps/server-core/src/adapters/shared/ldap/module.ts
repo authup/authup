@@ -53,6 +53,7 @@ export class LdapClient implements ILdapClient {
             const errorListener = (error?: Error | null) => {
                 if (error) {
                     reject(error);
+                    return;
                 }
 
                 resolve();

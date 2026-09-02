@@ -24,7 +24,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<ClientRole>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${EntityType.CLIENT_ROLE}`,
+            type: EntityType.CLIENT_ROLE,
             setup,
             query: () => ({
                 filters: {

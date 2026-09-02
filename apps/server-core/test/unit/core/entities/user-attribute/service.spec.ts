@@ -386,13 +386,15 @@ describe('core/entities/user-attribute/service', () => {
             } as Partial<UserAttribute>));
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
-                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
-                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
-                        undefined;
-                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
-                        throw PermissionError.denied('realm');
-                    }
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE)) {
+                    return;
+                }
+
+                const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                    undefined;
+                if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                    throw PermissionError.denied('realm');
                 }
             });
 

@@ -103,8 +103,8 @@ export default defineComponent({
             postLogoutRedirectUri: '',
             baseUrl: '',
             rootUrl: '',
-            authMethod: `${ClientAuthMethod.SECRET}` as `${ClientAuthMethod}`,
-            tokenBindingMethod: `${ClientTokenBindingMethod.NONE}` as `${ClientTokenBindingMethod}`,
+            authMethod: ClientAuthMethod.SECRET as `${ClientAuthMethod}`,
+            tokenBindingMethod: ClientTokenBindingMethod.NONE as `${ClientTokenBindingMethod}`,
             secret: '',
             secretHashed: false,
             grantTypes: null as string | null,
@@ -112,7 +112,7 @@ export default defineComponent({
         });
 
         const manager = defineEntityManager({
-            type: `${EntityType.CLIENT}`,
+            type: EntityType.CLIENT,
             setup: ctx,
             props,
         });
@@ -187,10 +187,12 @@ export default defineComponent({
         watch(
             updatedAt,
             (val, oldVal) => {
-                if (val && val !== oldVal) {
-                    manager.data.value = props.entity;
-                    initForm();
+                if (!val || val === oldVal) {
+                    return;
                 }
+
+                manager.data.value = props.entity;
+                initForm();
             },
         );
 
@@ -306,13 +308,13 @@ export default defineComponent({
         const policyQuery = computed(() => defineQuery<Policy>({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
 
         const authMethodOptions = computed<FormOption[]>(() => [
-            { value: `${ClientAuthMethod.NONE}`, label: translationsClient.authMethodNone },
-            { value: `${ClientAuthMethod.SECRET}`, label: translationsClient.authMethodSecret },
-            { value: `${ClientAuthMethod.TLS}`, label: translationsClient.authMethodTls },
+            { value: ClientAuthMethod.NONE, label: translationsClient.authMethodNone },
+            { value: ClientAuthMethod.SECRET, label: translationsClient.authMethodSecret },
+            { value: ClientAuthMethod.TLS, label: translationsClient.authMethodTls },
         ]);
         const tokenBindingMethodOptions = computed<FormOption[]>(() => [
-            { value: `${ClientTokenBindingMethod.NONE}`, label: translationsClient.tokenBindingMethodNone },
-            { value: `${ClientTokenBindingMethod.TLS}`, label: translationsClient.tokenBindingMethodTls },
+            { value: ClientTokenBindingMethod.NONE, label: translationsClient.tokenBindingMethodNone },
+            { value: ClientTokenBindingMethod.TLS, label: translationsClient.tokenBindingMethodTls },
         ]);
         const clientCertificateURI = computed(() => (manager.data.value ?
             buildClientCertificateURI(manager.data.value.id) :

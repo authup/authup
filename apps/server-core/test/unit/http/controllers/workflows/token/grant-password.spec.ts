@@ -221,7 +221,7 @@ describe('src/http/controllers/token', () => {
             .createWithPassword({
                 username: user.name,
                 password: 'realm-user-secret',
-                realm_id: '   ',
+                realm_id: ' '.repeat(3),
                 realm_name: realm.name,
             });
 

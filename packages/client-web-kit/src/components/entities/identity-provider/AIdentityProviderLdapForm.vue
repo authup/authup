@@ -61,7 +61,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const manager = defineEntityManager({
-            type: `${EntityType.IDENTITY_PROVIDER}`,
+            type: EntityType.IDENTITY_PROVIDER,
             setup: ctx,
             props,
         });

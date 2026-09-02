@@ -489,7 +489,7 @@ export function createStore(context: StoreCreateContext) {
         // expire date (and thus the refresh timer) from a superseded token.
         // Cookie mode never arms it at all: an expire date would start a
         // refresh timer with no refresh token behind it.
-        if (!ctx.tokenless && ctx.introspection.exp && tokenIsCurrent) {
+        if (tokenIsCurrent && !ctx.tokenless && ctx.introspection.exp) {
             setAccessTokenExpireDate(new Date(ctx.introspection.exp * 1000));
         }
 
@@ -885,7 +885,7 @@ export function createStore(context: StoreCreateContext) {
 
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
 
-        if (context.cookieSession && revoke) {
+        if (revoke && context.cookieSession) {
             // The credential lives server-side, so the local teardown below
             // cannot reach it: the session has to be ended over the wire.
             // Best effort — a failed call must still leave this instance

@@ -72,7 +72,7 @@ describe('app/factory', () => {
     it('should compose the worker application from the background modules only', () => {
         const app = createWorkerApplication({ config: new ConfigModule(buildWorkerConfig) });
 
-        const names = [...app.getStatus().keys()];
+        const names = app.getStatus().keys().toArray();
 
         expect(names).toEqual([
             ModuleName.CONFIG,
