@@ -134,6 +134,45 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         expect(row?.displayName).toBe('Concurrent Edit');
     });
 
+    // The console posts its whole form, so an unrelated edit can carry a
+    // stale `active: true`. A field echoed back with the value the request
+    // read is no intent to change it and must not be written.
+    it('should not undo a concurrent deactivation with an echoed active flag', async () => {
+        const created = await userService.create({
+            ...createFakeUser(),
+            realmId: realm.id,
+        }, actor);
+
+        await Promise.all([
+            userService.update(created.id, { displayName: 'Concurrent Edit', active: true }, actor),
+            userService.update(created.id, { active: false }, actor),
+        ]);
+
+        const row = await userRepository.findOneBy({ id: created.id });
+        expect(row?.active).toBe(false);
+        expect(row?.displayName).toBe('Concurrent Edit');
+    });
+
+    // The secret normalization follows the row's authMethod. Read before the
+    // lock it would clear the credential a concurrent switch to `secret`
+    // just stored.
+    it('should keep the secret of a concurrent switch to secret authentication', async () => {
+        const created = await clientService.create({
+            ...createFakeClient({ authMethod: 'none', secret: null }),
+            realmId: realm.id,
+        }, actor);
+
+        await Promise.all([
+            clientService.update(created.id, { displayName: 'Concurrent Edit' }, actor),
+            clientService.update(created.id, { authMethod: 'secret', secret: 'concurrent-secret-1234' }, actor),
+        ]);
+
+        const row = await clientRepository.findOneWithSecret({ id: created.id });
+        expect(row?.authMethod).toBe('secret');
+        expect(row?.secret).toBeTruthy();
+        expect(row?.displayName).toBe('Concurrent Edit');
+    });
+
     // Ten concurrent saves deadlocked the whole DataSource while the entire
     // save ran inside the transaction: it pinned one pooled connection, and
     // the realm resolve, the join-column check and the uniqueness check each

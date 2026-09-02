@@ -37,6 +37,8 @@ export type SessionServiceContext = {
     sessionManager: ISessionManager,
 };
 
+const SESSION_REVOKE_CONCURRENCY = 10;
+
 export class SessionService extends AbstractEntityService implements ISessionService {
     protected repository: ISessionRepository;
 
@@ -254,10 +256,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         const toRevoke = sessions.filter((session) => !currentSessionId || session.id !== currentSessionId);
 
-        // Fanned out rather than awaited one by one: every revoke waits for
-        // its back-channel deliveries, so a hanging RP would otherwise cost
-        // one timeout per session instead of one per request.
-        await Promise.all(toRevoke.map((session) => this.sessionManager.revoke(session.id)));
+        await this.revokeAll(toRevoke);
 
         return { count: toRevoke.length };
     }
@@ -300,9 +299,21 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             toRevoke.push(session);
         }
 
-        // see deleteManyForSelf: one back-channel timeout per request, not per session
-        await Promise.all(toRevoke.map((session) => this.sessionManager.revoke(session.id)));
+        await this.revokeAll(toRevoke);
 
         return { count: toRevoke.length };
+    }
+
+    /**
+     * Revokes in batches. Every revoke waits for its back-channel deliveries,
+     * so one at a time costs a hanging RP one timeout per session, while all
+     * at once is an unbounded burst of row deletes and outbound requests.
+     */
+    protected async revokeAll(sessions: Session[]): Promise<void> {
+        for (let i = 0; i < sessions.length; i += SESSION_REVOKE_CONCURRENCY) {
+            await Promise.all(sessions
+                .slice(i, i + SESSION_REVOKE_CONCURRENCY)
+                .map((session) => this.sessionManager.revoke(session.id)));
+        }
     }
 }

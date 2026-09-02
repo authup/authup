@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Session } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IOAuth2ClientRepository } from '../client/types.ts';
 import type { ISessionTokenRepository } from '../session-token/types.ts';
@@ -36,24 +35,3 @@ export type OAuth2BackchannelLogoutNotifierContext = {
     options: OAuth2BackchannelLogoutNotifierOptions,
     logger?: Logger,
 };
-
-export interface IOAuth2BackchannelLogoutNotifier {
-    /**
-     * The clients to notify when the session ends: every client a token of
-     * the session was issued for that registered a back-channel logout URI.
-     * Must run BEFORE the session row is removed, because the token rows the
-     * audience is derived from cascade-delete with it.
-     *
-     * @param session
-     */
-    resolve(session: Session): Promise<Client[]>;
-
-    /**
-     * Push one logout token per client. Best effort: a refusing or
-     * unreachable client is logged and never fails the revoke.
-     *
-     * @param session
-     * @param clients
-     */
-    notify(session: Session, clients: Client[]): Promise<void>;
-}

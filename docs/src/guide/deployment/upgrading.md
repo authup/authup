@@ -47,7 +47,9 @@ each read the row, merged its own fields and saved the whole thing, so the
 second save silently restored what the first had changed. The reported case
 was a display-name edit racing an email change and undoing the
 `email_verified` reset; a deactivation racing any other edit could be undone
-the same way.
+the same way. A field the request echoes back with the value it had read is
+not written either, so a console form saved with a stale `active: true` no
+longer undoes a deactivation that landed in between.
 
 No action required. Concurrent updates of one user or client now serialize,
 so the second waits for the first instead of overwriting it. SQLite is

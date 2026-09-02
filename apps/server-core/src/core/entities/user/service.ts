@@ -299,6 +299,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 });
             }
 
+            const before: Partial<User> = { ...entity };
             entity = this.repository.merge(entity, validated);
 
             if (
@@ -343,8 +344,16 @@ export class UserService extends AbstractEntityService implements IUserService {
             // patch merged onto it: TypeORM writes only the columns that
             // differ, so a concurrent writer's columns survive (#3526).
             const patch: Partial<User> = { ...validated };
-            // The name-lock revert means "do not touch the name": a stale
-            // originalName must not overwrite a concurrent rename.
+            // A field echoed back with the value this request read is no
+            // intent to change it (the console posts its whole form), and
+            // writing it would overwrite a concurrent change. The name-lock
+            // revert falls under the same rule: a stale originalName must not
+            // overwrite a concurrent rename.
+            for (const key of Object.keys(patch) as (keyof User)[]) {
+                if (patch[key] === before[key]) {
+                    delete patch[key];
+                }
+            }
             if (entity.name === originalName) {
                 delete patch.name;
             }
@@ -362,7 +371,15 @@ export class UserService extends AbstractEntityService implements IUserService {
                     throw new EntityNotFoundError();
                 }
 
-                return repository.save(repository.merge(current, patch));
+                // The lock is re-checked against the FRESH row: a rename
+                // racing a concurrent nameLocked flip must still lose.
+                const { name: currentName, nameLocked: currentNameLocked } = current;
+                const merged = repository.merge(current, patch);
+                if (patch.name && currentNameLocked && validated.nameLocked !== false) {
+                    merged.name = currentName;
+                }
+
+                return repository.save(merged);
             });
 
             return {

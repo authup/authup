@@ -225,6 +225,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
             }
 
+            const before: Partial<Client> = { ...entity };
             entity = this.repository.merge(entity, validated);
 
             if (!isSelfEdit) {
@@ -255,12 +256,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
             // fresh row is lock-read and this request's patch merged onto it,
             // so a concurrent writer's columns survive (#3526).
             const patch: Partial<Client> = { ...validated };
-            if (entity.authMethod !== ClientAuthMethod.SECRET) {
-                patch.secret = null;
-                patch.secretHashed = false;
-                patch.secretEncrypted = false;
-            } else if (validated.secret) {
-                patch.secret = entity.secret;
+            // A field echoed back with the value this request read is no
+            // intent to change it (the console posts its whole form), and
+            // writing it would overwrite a concurrent change.
+            for (const key of Object.keys(patch) as (keyof Client)[]) {
+                if (patch[key] === before[key]) {
+                    delete patch[key];
+                }
             }
 
             const { id } = entity;
@@ -270,7 +272,19 @@ export class ClientService extends AbstractEntityService implements IClientServi
                     throw new EntityNotFoundError();
                 }
 
-                return repository.save(repository.merge(current, patch));
+                // The secret follows the FRESH row's authMethod, not the one
+                // this request read: a concurrent switch to `secret` must not
+                // have its credential cleared by an unrelated edit racing it.
+                const merged = repository.merge(current, patch);
+                if (merged.authMethod !== ClientAuthMethod.SECRET) {
+                    merged.secret = null;
+                    merged.secretHashed = false;
+                    merged.secretEncrypted = false;
+                } else if (patch.secret) {
+                    merged.secret = await credentialsService.protect(patch.secret, merged);
+                }
+
+                return repository.save(merged);
             });
 
             return {

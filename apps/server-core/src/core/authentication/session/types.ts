@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Session } from '@authup/core-kit';
+import type { Client, Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IOAuth2BackchannelLogoutNotifier } from '../../oauth2/backchannel-logout/types.ts';
 
 export type SessionOwner = {
     sub: string,
@@ -107,6 +106,27 @@ export type SessionManagerOptions = {
     maxAge: number
 };
 
+export interface IBackchannelLogoutNotifier {
+    /**
+     * The clients to notify when the session ends: every client a token of
+     * the session was issued for that registered a back-channel logout URI.
+     * Must run BEFORE the session row is removed, because the token rows the
+     * audience is derived from cascade-delete with it.
+     *
+     * @param session
+     */
+    resolve(session: Session): Promise<Client[]>;
+
+    /**
+     * Push one logout token per client. Best effort: a refusing or
+     * unreachable client is logged and never fails the revoke.
+     *
+     * @param session
+     * @param clients
+     */
+    notify(session: Session, clients: Client[]): Promise<void>;
+}
+
 export type SessionManagerContext = {
     options: SessionManagerOptions,
     repository: ISessionRepository,
@@ -115,7 +135,7 @@ export type SessionManagerContext = {
      * issued a token for (plan 064). Optional so a minimal graph, and every
      * fake-backed spec, constructs the manager without one.
      */
-    backchannelLogoutNotifier?: IOAuth2BackchannelLogoutNotifier,
+    backchannelLogoutNotifier?: IBackchannelLogoutNotifier,
 };
 
 export interface ISessionManager {

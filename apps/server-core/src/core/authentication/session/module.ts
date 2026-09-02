@@ -8,12 +8,12 @@
 import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { JWTError } from '@authup/specs';
-import type { IOAuth2BackchannelLogoutNotifier } from '../../oauth2/backchannel-logout/types.ts';
-import type {
+import type { 
+    IBackchannelLogoutNotifier, 
     ISessionManager, 
     ISessionRepository, 
     SessionManagerContext, 
-    SessionManagerOptions,
+    SessionManagerOptions, 
 } from './types.ts';
 
 export class SessionManager implements ISessionManager {
@@ -21,7 +21,7 @@ export class SessionManager implements ISessionManager {
 
     protected repository: ISessionRepository;
 
-    protected backchannelLogoutNotifier?: IOAuth2BackchannelLogoutNotifier;
+    protected backchannelLogoutNotifier?: IBackchannelLogoutNotifier;
 
     // -----------------------------------------------------
 

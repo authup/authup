@@ -2672,14 +2672,23 @@ the permission gates, validation, `validateJoinColumns`, `checkUniqueness`,
 the merge onto the loaded row and every derivation (the #3525
 `emailVerified` reset, the name lock, the password hash, the client's secret
 hashing / encryption and storage flags). What comes out of that is a PATCH
-for this request: the validated fields plus the derived ones, with `name`
-dropped when the name lock reverted it (a stale original name must not
-overwrite a concurrent rename). The update branch then runs
+for this request: the validated fields plus the derived ones, minus every
+field the request echoed back with the value it had read (the console posts
+its whole form, and an echoed `active: true` must not undo a concurrent
+deactivation; `emailVerified` followed that rule already), and minus `name`
+when the name lock reverted it (a stale original name must not overwrite a
+concurrent rename). The update branch then runs
 `this.repository.transaction(async (repository) => { ... })` with nothing but
 transaction-bound calls inside: `repository.findOneBy({ id })` lock-reads the
 FRESH row (`FOR UPDATE`, typeorm `lock: { mode: 'pessimistic_write' }`, on
 mysql and postgres), `repository.merge(current, patch)` applies this
-request's patch onto it, and `repository.save` commits with the callback.
+request's patch onto it, the two rules that depend on the row's CURRENT
+state are re-checked against that fresh row (a rename still loses to a
+`nameLocked` flip that landed in between; the client's secret follows the
+fresh row's `authMethod`, so an unrelated edit racing a switch to `secret`
+cannot clear the credential the switch stored, and a submitted secret is
+hashed inside the callback, CPU only), and `repository.save` commits with
+the callback.
 Merging onto the fresh row is what makes a concurrent writer's columns
 survive: TypeORM writes only the columns that differ from the row it just
 read. Without the lock each request read the row, merged its own fields and
@@ -3855,8 +3864,10 @@ other RP on that session that it ended.
   `/token/revoke` (it retires a token, not the session). A lapsed session's
   tokens have lapsed with it, which is the signal an RP already has.
 - **The token.** `OAuth2BackchannelLogoutNotifier`
-  (`core/oauth2/backchannel-logout/`, port
-  `IOAuth2BackchannelLogoutNotifier`, built unconditionally in the
+  (`core/oauth2/backchannel-logout/`, implementing the port
+  `IBackchannelLogoutNotifier`, which lives with its consumer in
+  `core/authentication/session/types.ts` so the session manager depends on
+  no oauth2 file; built unconditionally in the
   `AuthenticationModule`'s `SessionManager` factory from the oauth2 signer,
   the session-token repository and the client repository; the module
   declares `ModuleName.OAUTH2` as a hard dependency for it, and only the
@@ -3893,8 +3904,10 @@ other RP on that session that it ended.
   (`response.body?.cancel()`) once the status is known, since an unread body
   pins the keep-alive socket. The bulk paths (`SessionService.deleteManyForSelf`
   / `deleteManyByQuery`) collect the sessions that pass their checks first
-  and then `Promise.all` the revokes, so a hanging RP costs one timeout per
-  request rather than one per session. `POST /token/introspect` answers the
+  and then revoke them in batches of ten (`SESSION_REVOKE_CONCURRENCY`), so a
+  hanging RP costs one timeout per batch rather than one per session, while
+  a realm-wide sweep never turns into an unbounded burst of row deletes and
+  outbound requests. `POST /token/introspect` answers the
   bare `{ active: false }` for a token whose `kind` is `logout_token`: it
   verifies (same realm key) but is a notification, not a credential, and RFC
   7662 reports rather than raises.
