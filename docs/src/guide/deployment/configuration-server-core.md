@@ -14,6 +14,12 @@ Not every option below sits under `core`. `env`, `host`, `rootPath`,
 `adminConsole.*`, `accountConsole.*` and `authConsole.*`. The
 `authup.yml` tab shows each one at its place.
 
+`host` appears at both levels on purpose, and they are not alternatives. The
+top-level one (env `HOST`) is the deployment-wide bind address every listener
+inherits, so one line binds the API and all three console services; `core.host`
+overrides it for the API listener alone and is what the sample below sets.
+`port` has no top-level counterpart, because several listeners cannot share one.
+
 Of those, server-core itself reads only `enabled` and `url` per console: `enabled`
 gates the console's two sign-in routes, `url` is where it sends the browser. The rest
 of a console's section, and the whole `theme` section, are read by the **console

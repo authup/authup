@@ -133,7 +133,7 @@ describe('defineCLIConfigCommand', () => {
     it('should report every issue and exit non-zero for an invalid configuration', async () => {
         await fs.promises.writeFile(
             path.join(directory, 'authup.yml'),
-            'core:\n  port: "not-a-port"\n    passwordMinLength: 0\n',
+            'core:\n  port: "not-a-port"\n  passwordMinLength: 0\n',
         );
 
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
