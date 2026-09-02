@@ -136,7 +136,10 @@ Two consequences to plan for:
   the cookie, because a file download is a top-level navigation and cannot
   carry an `Authorization` header, must read the prefixed name.
 - **Cookies written before the prefix was set are afterwards neither read nor
-  cleared.** Only `access_token` and `access_token_expire_date` carry a
-  lifetime; the rest are session cookies that go away when the browser
-  closes. Sign out and close the browser once after the change, or clear the
-  cookies for the domain by hand.
+  cleared**, because signing out only clears the prefixed names. So sign out
+  *before* you set the prefix, and nothing is left behind. If you have already
+  switched, the leftovers still clear themselves: `refresh_token`, `id_token`,
+  `realm` and `realm_management` are session cookies that go away when the
+  browser closes, and the bare `access_token` pair carries the access token's
+  own lifetime, 15 minutes by default. Clear them for the domain by hand if
+  you would rather not wait.
