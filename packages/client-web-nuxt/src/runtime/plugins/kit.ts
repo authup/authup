@@ -45,6 +45,16 @@ function buildCookieOptions(runtimeConfig: RuntimeConfig) : CookieOptions {
     return cookieOptions;
 }
 
+function buildCookieName(runtimeConfig: RuntimeConfig) : (key: string) => string {
+    const options = runtimeConfig.public.authup as RuntimeOptions;
+
+    if (!options.cookiePrefix) {
+        return (key) => key;
+    }
+
+    return (key) => `${options.cookiePrefix}${key}`;
+}
+
 function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
     const options = runtimeConfig.public.authup as RuntimeOptions;
 
@@ -87,6 +97,9 @@ export default defineNuxtPlugin({
 
         const baseURL = buildApiUrl(runtimeConfig);
         const cookieOptions = buildCookieOptions(runtimeConfig);
+        // One function for all three, because a prefix on the write but not on
+        // the read is a session the app can never hydrate again.
+        const cookieName = buildCookieName(runtimeConfig);
 
         install(ctx.vueApp, {
             pinia: ctx.$pinia as Pinia,
@@ -94,7 +107,7 @@ export default defineNuxtPlugin({
             cookieSet: (key, value, options) => {
                 const app = tryUseNuxtApp();
                 if (app) {
-                    const cookie = useCookie(key, {
+                    const cookie = useCookie(cookieName(key), {
                         ...cookieOptions,
                         ...(options || {}),
                     });
@@ -104,7 +117,7 @@ export default defineNuxtPlugin({
             cookieUnset: (key, options) => {
                 const app = tryUseNuxtApp();
                 if (app) {
-                    const cookie = useCookie(key, {
+                    const cookie = useCookie(cookieName(key), {
                         ...cookieOptions,
                         ...(options || {}),
                     });
@@ -114,7 +127,7 @@ export default defineNuxtPlugin({
             cookieGet: (key) => {
                 const app = tryUseNuxtApp();
                 if (app) {
-                    const cookie = useCookie(key);
+                    const cookie = useCookie(cookieName(key));
                     return cookie.value;
                 }
 

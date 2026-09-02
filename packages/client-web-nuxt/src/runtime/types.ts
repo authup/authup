@@ -35,6 +35,22 @@ export type RuntimeOptions = {
     cookieDomainRuntimeKey?: string,
 
     /**
+     * Prefix prepended to every session cookie name
+     * (client-side & server-side)
+     *
+     * The session cookies are written under fixed names (`access_token`,
+     * `refresh_token`, ...). Widening `cookieDomain` delivers those names to
+     * every host under that domain, so any other authup client there writes
+     * the same names and the browser ends up holding two records under one.
+     * A prefix keeps them apart.
+     *
+     * Prepended verbatim, so `flame_` writes `flame_access_token`. Use cookie
+     * name characters only: letters, digits, `_`, `-`, `.`, never `:` or a
+     * space.
+     */
+    cookiePrefix?: string,
+
+    /**
      * Path of the home route
      * Default: /
      */
