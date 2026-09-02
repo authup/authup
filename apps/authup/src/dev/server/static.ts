@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import type { ViteDevServer } from 'vite';
-import { createConsoleViteServer } from './server.ts';
+import { createConsoleViteServer } from './module.ts';
 import type { StaticConsoleDevServer } from './types.ts';
 
 /**

@@ -5,12 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IApp } from 'routup';
-import type * as Vite from 'vite';
-
-export type ViteModule = typeof Vite;
-
-export type Mount = {
-    path: string,
-    app: IApp,
-};
+export * from './open-in-editor.ts';
+export * from './rate-limit.ts';

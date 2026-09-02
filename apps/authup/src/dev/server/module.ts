@@ -9,7 +9,7 @@ import { AuthupError } from '@authup/errors';
 import net from 'node:net';
 import path from 'node:path';
 import type { ViteDevServer } from 'vite';
-import { loadVite } from './source.ts';
+import { loadVite } from '../package.ts';
 
 /**
  * Vite's own `server.fs.deny` default, restated because supplying the option

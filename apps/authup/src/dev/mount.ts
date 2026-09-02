@@ -18,12 +18,11 @@ import { App } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
 import { PACKAGE_PATH } from '../path.ts';
 import { HMR_PORTS } from './constants.ts';
-import { createAuthConsoleDevServer } from './console-auth.ts';
-import { createStaticConsoleDevServer } from './console-static.ts';
-import { createOpenInEditorGuard } from './open-in-editor.ts';
-import { resolveAuthConsolePackagePath } from './resolve.ts';
-import { isSourceCheckout } from './source.ts';
-import type { ConsoleDevServer, Mount } from './types.ts';
+import { createOpenInEditorGuard } from './middleware/index.ts';
+import { isSourceCheckout, resolveAuthConsolePackagePath } from './package.ts';
+import type { ConsoleDevServer } from './server/index.ts';
+import { createAuthConsoleDevServer, createStaticConsoleDevServer } from './server/index.ts';
+import type { Mount } from './types.ts';
 
 /**
  * Wrap a console handler so a dev server sits in FRONT of it: vite answers

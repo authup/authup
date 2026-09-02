@@ -19,7 +19,7 @@ import {
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ViteDevServer } from 'vite';
-import { createConsoleViteServer } from './server.ts';
+import { createConsoleViteServer } from './module.ts';
 import type { AuthConsoleDevServer } from './types.ts';
 
 type ViteRenderContext = Pick<
