@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "ignoreDeprecations": "6.0"
+    },
+    "include": [
+        "types/**/*.d.ts",
+        "src/**/*.ts",
+        "test/**/*.ts"
+    ]
+}

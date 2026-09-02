@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Query } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import {
     FakeEntityRepository,
@@ -40,7 +41,7 @@ describe('FakeEntityRepository', () => {
     it('paginates findMany with total count', async () => {
         const repo = new FakeEntityRepository<{ id: string }>();
         repo.seed([{ id: '1' }, { id: '2' }, { id: '3' }]);
-        const { data, meta } = await repo.findMany({});
+        const { data, meta } = await repo.findMany(new Query({}));
         expect(data).toHaveLength(3);
         expect(meta.total).toBe(3);
     });

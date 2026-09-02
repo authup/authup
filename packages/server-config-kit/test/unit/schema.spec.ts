@@ -288,7 +288,9 @@ describe('mergeSchemaData', () => {
             publicUrl: 'https://idp.example.com',
             server: { core: { host: '10.0.0.1' } },
         }, SCHEMA);
-        const env = { core: { port: 4001 } };
+        // a section arrives partial, which validup's own shallow
+        // `ContainerInput<T> = Partial<T>` cannot express.
+        const env : Record<string, any> = { core: { port: 4001 } };
 
         expect(mergeSchemaData(SCHEMA, defaults, file, env)).toEqual({
             publicUrl: 'https://idp.example.com',
@@ -312,20 +314,25 @@ describe('mergeSchemaData', () => {
 
 describe('mountSchema', () => {
     it('should validate a section rather than drop it', async () => {
-        const container = new Container<Record<string, any>>();
+        const container = new Container<Fixture>();
         mountSchema(container, SCHEMA);
 
-        await expect(container.run({
+        // what a parsed document actually carries: untrusted, and a section
+        // arrives partial, which validup's own shallow `ContainerInput<T> =
+        // Partial<T>` cannot express.
+        const invalid : Record<string, any> = {
             publicUrl: 'https://idp.example.com',
             core: { port: 'not-a-port' },
-        })).rejects.toThrow();
+        };
+        await expect(container.run(invalid)).rejects.toThrow();
 
         // a mounted section is also what carries the value over: validup
         // strips whatever nothing claims.
-        expect(await container.run({
+        const valid : Record<string, any> = {
             publicUrl: 'https://idp.example.com',
             core: { port: 4001 },
-        })).toEqual({
+        };
+        expect(await container.run(valid)).toEqual({
             publicUrl: 'https://idp.example.com',
             core: { port: 4001 },
         });

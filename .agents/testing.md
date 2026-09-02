@@ -55,6 +55,7 @@ npm run build                                  # required before testing
 npm run test                                   # test all apps/packages
 npm run test --workspace=apps/server-core      # test a single app/package
 npm run test --workspace=apps/server-core -- test/unit/core/entities/role/service.spec.ts  # run a specific test file
+npm run check:types --workspace=apps/server-core  # type-check src + test (vitest's SWC does not)
 ```
 
 ### Database-Specific Tests (server-core)

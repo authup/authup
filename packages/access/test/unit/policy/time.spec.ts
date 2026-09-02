@@ -69,10 +69,11 @@ describe('src/policy/time', () => {
 
     it('should parse options with unknown', async () => {
         const validator = new TimePolicyValidator();
-        const output = await validator.run({
+        const input: TimePolicy & { foo?: string } = {
             start: '08:00:00',
             foo: 'bar',
-        } satisfies TimePolicy & { foo?: string }) as Partial<TimePolicy> & { foo?: string };
+        };
+        const output = await validator.run(input) as Partial<TimePolicy> & { foo?: string };
 
         expect(output.start)
             .toEqual('08:00:00');

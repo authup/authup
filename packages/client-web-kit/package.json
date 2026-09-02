@@ -21,6 +21,7 @@
         "build:js": "tsdown",
         "build": "rimraf ./dist && npm run build:js && npm run build:types",
         "build:watch": "npm run build -- --watch",
+        "check:types": "vue-tsc -p tsconfig.test.json",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage"
     },

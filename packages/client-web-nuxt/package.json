@@ -24,6 +24,7 @@
         "build": "nuxt-module-build prepare && nuxt-module-build build",
         "prepack": "nuxt-module-build prepare && nuxt-module-build build",
         "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+        "check:types": "nuxt-module-build prepare && vue-tsc -p tsconfig.test.json",
         "lint": "eslint .",
         "test": "nuxt-module-build prepare && cross-env NODE_ENV=test vitest run --config test/vitest.config.ts"
     },

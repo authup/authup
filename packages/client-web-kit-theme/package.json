@@ -22,7 +22,8 @@
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
     "build:js": "tsdown",
-    "build": "rimraf ./dist && npm run build:js && npm run build:types"
+    "build": "rimraf ./dist && npm run build:js && npm run build:types",
+    "check:types": "tsc -p tsconfig.test.json"
   },
   "engines": {
     "node": "^22.13.0 || ^23.5.0 || >=24.0.0"

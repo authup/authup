@@ -49,10 +49,11 @@ describe('src/policy/attribute-names', () => {
 
     it('should parse options with unknown', async () => {
         const validator = new AttributeNamesPolicyValidator();
-        const output = await validator.run({
+        const input : AttributeNamesPolicy & { foo?: string } = {
             names: ['foo', 'bar'],
             foo: 'bar',
-        } satisfies AttributeNamesPolicy & { foo?: string }) as Partial<AttributeNamesPolicy> & { foo?: string };
+        };
+        const output = await validator.run(input) as Partial<AttributeNamesPolicy> & { foo?: string };
 
         expect(output.names).toBeDefined();
         expect(output.foo).toBeUndefined();

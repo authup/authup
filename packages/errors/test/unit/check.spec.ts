@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Issue } from '@ebec/core';
 import { BaseError, isBaseError, markInstanceof } from '@ebec/core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -147,7 +148,7 @@ describe('duck-type guards (JSON-rehydrated)', () => {
         // and the shape heuristic must not run.
         const FOREIGN_MARKER = Symbol.for('@foreign/ForeignError');
         class ForeignError extends BaseError {
-            issues: unknown[] = [];
+            readonly issues: readonly Issue[] = [];
 
             constructor() {
                 super({ message: 'foo', code: 'inputRejected' });

@@ -55,6 +55,33 @@
   in, transitive ones included: an unaliased package is bundled from its
   built dist while `vue-tsc` checks the source, so the two silently disagree
   until a rebuild.
+- **`check:types` (`tsc -p tsconfig.test.json`, `vue-tsc` in the Vue
+  workspaces) is the only thing that type-checks `test/**`.** `build:types`
+  compiles `src` alone, and vitest transpiles through SWC, which strips types
+  without checking them. So a type error in a spec (or in `src`, exercised
+  only by a spec) otherwise ships green and surfaces as a RUNTIME assertion
+  failure, which reads as a different class of bug and gets diagnosed as one.
+  That happened in #3517. Every workspace declares the script, so CI's
+  `npm run check:types --workspaces --if-present` is a real gate rather than
+  a hand-kept list; adding a workspace means adding its `tsconfig.test.json`
+  too. The three client console BUNDLES are the exception and carry none:
+  their `build:types` is already `vue-tsc --noEmit -p tsconfig.json` and that
+  config's `include` lists `test/**/*.ts`, so their tests are gated by the
+  build job instead, and a second script there would run vue-tsc twice for no
+  coverage. `packages/client-web-nuxt` is the one config that deviates, in
+  three ways: its script is prefixed with `nuxt-module-build prepare` because
+  its tsconfig extends the generated, gitignored `.nuxt/tsconfig.json` (on a
+  warm nx cache the lint job's build step is skipped and `.nuxt` never
+  exists); it runs `vue-tsc` because Nuxt's generated config aliases
+  `@authup/client-web-kit` to source, which imports `.vue`; and it omits
+  `"ignoreDeprecations": "6.0"`, because that chain never reaches the repo
+  root, whose deprecated `baseUrl` is the whole reason the other configs
+  carry it. That generated config is also STRICTER than the root (it sets
+  `noUncheckedIndexedAccess`), which is why two genuine `src` errors surfaced
+  there and nowhere else. The gate stops at the include globs
+  (`src/**/*.ts` + `test/**/*.ts`), so root-level build files
+  (`tsdown.config.ts`, `vite.config.ts`, `test/vitest.config.ts`) stay
+  unchecked.
 - The auth console emits both halves of its SSR output from one
   `vite build`, declared as `environments: { client, ssr }` plus
   `builder: {}` rather than two invocations with CLI flags. The output

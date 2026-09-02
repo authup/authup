@@ -63,6 +63,8 @@ const client: Client = {
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),
     },
+    accessPolicyId: null,
+    accessPolicy: null,
 };
 
 // a non-login_required failure (transient 500 / network blip)

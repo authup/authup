@@ -17,6 +17,7 @@ import {
 } from '@authup/server-config-kit';
 import { describe, expect, it } from 'vitest';
 import {
+    CORE_SCHEMA,
     EnvironmentVariable,
     SCHEMA,
     expandToOrigins,
@@ -34,8 +35,8 @@ type Declaration = {
  * shaped like the configuration object, so a key of a section is only
  * reachable through it.
  */
-function collectDeclarations(
-    schema: SchemaInput<any>,
+function collectDeclarations<T>(
+    schema: SchemaInput<T>,
     prefix = '',
     declarations: Declaration[] = [],
 ) : Declaration[] {
@@ -49,14 +50,14 @@ function collectDeclarations(
         }
 
         if (isSchemaInput(entry)) {
-            collectDeclarations(entry as SchemaInput<any>, key, declarations);
+            collectDeclarations<any>(entry, key, declarations);
         }
     }
 
     return declarations;
 }
 
-const DECLARATIONS = collectDeclarations(SCHEMA);
+const DECLARATIONS = collectDeclarations<AuthupConfig>(SCHEMA);
 
 describe('SCHEMA', () => {
     /**
@@ -222,7 +223,7 @@ describe('SCHEMA', () => {
     });
 
     it('rejects a mis-typed trustProxy allowlist entry', () => {
-        const { type } = SCHEMA.core.trustProxy;
+        const { type } = CORE_SCHEMA.trustProxy;
 
         expect(type.safeParse(['10.0.0.0/8', 'loopback']).success).toBe(true);
         // proxy-addr would compile '1' to the address 0.0.0.1
