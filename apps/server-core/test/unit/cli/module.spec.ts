@@ -20,6 +20,14 @@ import { CLI_CONFIG_ARGS, assertNoStrayPositionals } from '../../../src/cli/comm
 import { createCLIEntryPointCommand } from '../../../src/cli/module';
 import { PACKAGE_PATH } from '../../../src/path';
 
+// A regressed operation guard must fail here, not against a database.
+vi.mock('typeorm-extension', async (importOriginal) => ({
+    ...await importOriginal<Record<string, unknown>>(),
+    checkDatabase: () => {
+        throw new Error('checkDatabase must not be reached from this spec.');
+    },
+}));
+
 describe('src/cli/module', () => {
     it('should register the service subcommands', async () => {
         const command = await createCLIEntryPointCommand();
@@ -121,5 +129,13 @@ describe('src/cli/module', () => {
         await expect(runCommand(command, { rawArgs: ['start', 'client.admin-console'] }))
             .rejects
             .toThrow('Unexpected argument "client.admin-console" for command "start".');
+    });
+
+    it('should refuse an unknown migration operation before the database is touched', async () => {
+        const command = await createCLIEntryPointCommand();
+
+        await expect(runCommand(command, { rawArgs: ['migration', 'stauts'] }))
+            .rejects
+            .toThrow('Unknown migration operation "stauts". Expected one of: generate, revert, status, run.');
     });
 });

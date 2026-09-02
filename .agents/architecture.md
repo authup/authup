@@ -2934,7 +2934,9 @@ Five citty (0.2.2) facts shape the implementation, each verified against
 1. A positional's `options: [...]` is DECORATIVE: citty checks it for
    `type: 'enum'` only, so `start server.core` parses as the role
    `server.core`. Role, console name and arity are refused BY HAND in
-   `start`'s `setup`, before anything boots.
+   `start`'s `setup`, before anything boots. The `migration` operation is
+   refused the same way (#3542): an unknown word used to fall through to
+   `runMigrations`, so a typo applied every pending migration and exited 0.
 2. citty parses with `strict: false`, so an undeclared flag becomes a
    boolean nobody reads. After the rename a stale `start --worker` would
    have booted the FULL API in a worker pod and stayed up as a healthy-looking process. `start` therefore
