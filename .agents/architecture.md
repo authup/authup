@@ -3139,12 +3139,28 @@ needs next to it (`CLI_CONFIG_ARGS`, `applyCLIConfigArgs`,
 `createCLIConfigModule`, `assertNoStrayPositionals`, `describeConfigError`)
 and no config command of its own.
 
-**Unsupported:** sharing one cookie domain between a standalone-hosted
+**Partly unsupported:** sharing one cookie domain between a standalone-hosted
 console (or a downstream kit app on its own origin) and the hosted auth
-pages — both surfaces embed the kit store under identical cookie names, so a
+pages. Both surfaces embed the kit store under identical cookie names, so a
 widened cookie domain has the two apps clobbering each other's session
-cookies. The served consoles are same-origin and hold no token cookies at
-all (cookie mode), so the question does not arise for them. The same-ORIGIN variant of this collision — a host
+cookies. A downstream app on `@authup/client-web-nuxt` has a way out since
+issue #3527: `cookiePrefix` prepends a namespace to every store cookie name
+inside that plugin's own `cookieGet` / `cookieSet` / `cookieUnset`, which is
+total because `installStore` routes all cookie I/O through those three, and
+the kit therefore needs no option of its own. Only a consumer supplying its
+own `cookieSet` can set a `Domain` at all (the kit assigns one nowhere), so
+in every cross-host collision the widening side IS the side that can prefix,
+and breaking name equality on one side is enough. Two things stay
+unsupported. A prefix is a contract across the adopting app's OWN services:
+a resource server of theirs reading the access token out of the cookie (a
+file download is a top-level navigation, so it carries no `Authorization`
+header) must read the prefixed name. And two kit-DEFAULT consumers on ONE
+host still collide with no widening involved, since both take the host-only
+`useCookies()` default and a console builds its install from
+`window.__AUTHUP__`, which carries no such key; that is what a kit-level
+option would be for (PR #3403, parked). The served consoles are
+same-origin and hold no token cookies at all (cookie mode), so the question
+does not arise for them. The same-ORIGIN variant of this collision — a host
 application at `/` embedding authup under a sub-path — is defused by the
 consoles scoping their cookies to the base path (see *Account Console →
 Session cookies are scoped to the deployment base path*); the residual

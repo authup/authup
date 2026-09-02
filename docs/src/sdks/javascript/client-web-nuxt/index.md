@@ -75,6 +75,14 @@ export type RuntimeOptions = {
     cookieDomainRuntimeKey?: string,
 
     /**
+     * Prefix prepended to every session cookie name
+     * (client-side & server-side)
+     *
+     * See "Namespacing the session cookies" below.
+     */
+    cookiePrefix?: string,
+
+    /**
      * Path of the home route
      * Default: /
      */
@@ -88,4 +96,47 @@ export type RuntimeOptions = {
 };
 ```
 
+## Namespacing the session cookies
 
+The session cookies are written under fixed names (`access_token`,
+`refresh_token`, `id_token`, `realm`, ...). Widening `cookieDomain` delivers
+those names to every host under that domain, so any other authup client
+reachable there writes the same names and the browser ends up holding two
+records under one name. A read takes the first, which can be the older one,
+and each side then drives on, refreshes and revokes the other's tokens. It
+surfaces as being signed out on the next page load.
+
+Set `cookiePrefix` to keep them apart:
+
+```typescript
+export default defineNuxtConfig({
+    // ...
+    modules: [
+        [
+            '@authup/client-web-nuxt',
+            {
+                apiURLRuntimeKey: 'authupUrl',
+                cookieDomainRuntimeKey: 'cookieDomain',
+                cookiePrefix: 'flame_'
+            }
+        ]
+    ]
+    // ...
+});
+```
+
+The value is prepended verbatim, so `access_token` becomes
+`flame_access_token`. Use cookie name characters only: letters, digits, `_`,
+`-` and `.`, never `:` or a space.
+
+Two consequences to plan for:
+
+- **The prefix applies to everything that reads these cookies**, not only the
+  Nuxt app. A resource server of your own that reads the access token out of
+  the cookie, because a file download is a top-level navigation and cannot
+  carry an `Authorization` header, must read the prefixed name.
+- **Cookies written before the prefix was set are afterwards neither read nor
+  cleared.** Only `access_token` and `access_token_expire_date` carry a
+  lifetime; the rest are session cookies that go away when the browser
+  closes. Sign out and close the browser once after the change, or clear the
+  cookies for the domain by hand.
