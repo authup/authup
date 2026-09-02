@@ -63,6 +63,7 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
         lastName: null,
         displayName: null,
         email: 'jdoe@example.com',
+        emailVerified: false,
         password: null,
         avatar: null,
         cover: null,

@@ -11,7 +11,7 @@ import type {
     User,
 } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
-import type { OpenIDTokenPayload } from '@authup/specs';
+import type { OpenIDClaims, OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { ObjectLiteral } from 'validup';
 
@@ -19,10 +19,18 @@ type AttributeMapTuple<T> = {
     [K in keyof T]: [K, (value: unknown) => any]
 }[keyof T];
 
-type AttributeMap<T extends Record<string, any>> = Record<
-    keyof OpenIDTokenPayload,
+/**
+ * Keyed on `OpenIDClaims`, never on `OpenIDTokenPayload`: the latter inherits
+ * `JWTClaims`' `[key: string]: any`, so `keyof` collapses to `string | number`
+ * and the map accepts any claim name at all — a typo compiles and the claim is
+ * simply never emitted, which is the failure mode #3518 is about. `OpenIDClaims`
+ * carries no index signature, so a name that is not a claim fails the build.
+ * `Partial`, because a map declares only the claims its entity can supply.
+ */
+type AttributeMap<T extends Record<string, any>> = Partial<Record<
+    keyof OpenIDClaims,
 keyof T | AttributeMapTuple<T>
->;
+>>;
 
 export class OAuth2OpenIDClaimsBuilder {
     protected clientMap : AttributeMap<Client> = {
@@ -99,7 +107,7 @@ export class OAuth2OpenIDClaimsBuilder {
     ) : OpenIDTokenPayload {
         const result = {} as OpenIDTokenPayload;
 
-        const keys = Object.keys(attributeMap);
+        const keys = Object.keys(attributeMap) as (keyof OpenIDClaims)[];
         for (const key_ of keys) {
             const attribute = attributeMap[key_];
 
@@ -127,7 +135,10 @@ export class OAuth2OpenIDClaimsBuilder {
                 continue;
             }
 
-            result[key_] = value;
+            // Cast on the VALUE side only: which claim is written is checked by
+            // `AttributeMap`'s key type, while the value comes out of an entity
+            // column through an untyped transformer and never had a type here.
+            (result as Record<string, unknown>)[key_] = value;
         }
 
         return result;

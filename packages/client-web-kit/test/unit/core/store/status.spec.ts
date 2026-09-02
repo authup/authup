@@ -27,6 +27,7 @@ function buildUser() : User {
         lastName: null,
         displayName: null,
         email: 'admin@example.com',
+        emailVerified: false,
         password: null,
         avatar: null,
         cover: null,

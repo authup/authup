@@ -353,6 +353,9 @@ describe('core/entities/user/service', () => {
                 expect(result.emailVerified).toBe(false);
             });
 
+            // Resubmitting the SAME address is not a change, so the clear must
+            // not fire — the guard compares values, never mere presence of the
+            // `email` key.
             it('should keep it when the same address is resubmitted', async () => {
                 const entity = repository.seed(createFakeUser({
                     email: 'same@example.com',
@@ -368,6 +371,7 @@ describe('core/entities/user/service', () => {
                     createAllowAllActor(),
                 );
 
+                expect(result.displayName).toBe('New Display');
                 expect(result.emailVerified).toBe(true);
             });
 
@@ -388,7 +392,8 @@ describe('core/entities/user/service', () => {
 
             // So an admin can change the address and vouch for the new one in a
             // single request, rather than needing a second call to undo the
-            // clear.
+            // clear. The submitted value DIFFERS from the stored one, which is
+            // what makes it an assertion rather than an echo.
             it('should let an explicit value in the same payload win', async () => {
                 const entity = repository.seed(createFakeUser({
                     email: 'old@example.com',
@@ -406,6 +411,47 @@ describe('core/entities/user/service', () => {
 
                 expect(result.email).toBe('new@example.com');
                 expect(result.emailVerified).toBe(true);
+            });
+
+            // `AUserForm` posts its whole reactive state on every save, hydrated
+            // from the record it loaded, so an address change from the console
+            // always carries the stored `emailVerified` back with it. Reading
+            // that as a deliberate vouch made the rule above unreachable from
+            // the one UI that ships with the feature.
+            it('should clear it when a changed address carries a merely echoed value', async () => {
+                const entity = repository.seed(createFakeUser({
+                    email: 'old@example.com',
+                    emailVerified: true,
+                }));
+
+                const result = await service.update(
+                    entity.id,
+                    {
+                        email: 'new@example.com',
+                        emailVerified: true,
+                    },
+                    createAllowAllActor(),
+                );
+
+                expect(result.email).toBe('new@example.com');
+                expect(result.emailVerified).toBe(false);
+            });
+
+            // The mirror of the above: an admin may still explicitly REVOKE
+            // verification while leaving the address alone.
+            it('should honour an explicit revoke with no address change', async () => {
+                const entity = repository.seed(createFakeUser({
+                    email: 'kept@example.com',
+                    emailVerified: true,
+                }));
+
+                const result = await service.update(
+                    entity.id,
+                    { emailVerified: false },
+                    createAllowAllActor(),
+                );
+
+                expect(result.emailVerified).toBe(false);
             });
         });
 

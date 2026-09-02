@@ -2597,7 +2597,7 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 | Policy | Denylist `names` |
 |---|---|
 | `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
-| `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId` |
+| `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId, emailVerified` |
 
 The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /

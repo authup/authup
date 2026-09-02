@@ -26,7 +26,8 @@ be proven verified.
 **Action required if a relying party reads the claim.** Anything gating on
 `email_verified: true` — account linking by email address is the usual case —
 stops matching until the addresses are verified again, or vouched for. The field
-is admin-settable (`PATCH /users/:id` with `{"emailVerified": true}`, and a
+is admin-settable (`POST /users/:id` with `{"emailVerified": true}` — the update verb
+authup serves is POST, not PATCH — and a
 switch in the admin console's user form), so an operator can restore it for
 addresses they trust. It is on the `system.user-names-self-manage` denylist, so a
 user cannot set it on themselves, and it is cleared automatically when a user's

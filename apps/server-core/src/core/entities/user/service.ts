@@ -271,13 +271,22 @@ export class UserService extends AbstractEntityService implements IUserService {
             // The old value has to be re-read: the entity loaded above carries
             // no `email` at all, because the column is `select: false`. Read
             // BEFORE the merge below, which writes the new address onto that
-            // same entity. An explicit `emailVerified` in the same payload
-            // skips the check, so an admin can change the address and vouch for
-            // the new one in one request.
+            // same entity.
+            //
+            // An `emailVerified` that DIFFERS from the stored value is a
+            // deliberate assertion and wins, so an admin can change the address
+            // and vouch for the new one in one request. One merely ECHOED back
+            // is not: `AUserForm` posts its whole reactive state on every save,
+            // hydrated from the record it loaded, so treating presence alone as
+            // an assertion made the rule unreachable from the console — every
+            // address change there carried the stale `true` straight through.
             let emailChanged = false;
             if (
                 validated.email &&
-                typeof validated.emailVerified === 'undefined'
+                (
+                    typeof validated.emailVerified === 'undefined' ||
+                    validated.emailVerified === entity.emailVerified
+                )
             ) {
                 const current = await this.repository.findOneByWithEmail({ id: entity.id });
                 emailChanged = !!current && current.email !== validated.email;
