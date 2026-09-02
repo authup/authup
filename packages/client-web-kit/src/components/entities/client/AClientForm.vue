@@ -101,8 +101,8 @@ export default defineComponent({
             realmId: '',
             redirectUri: '',
             postLogoutRedirectUri: '',
-            baseUrl: '',
-            rootUrl: '',
+            backchannelLogoutUri: null as string | null,
+            baseUrl: null as string | null,
             authMethod: ClientAuthMethod.SECRET as `${ClientAuthMethod}`,
             tokenBindingMethod: ClientTokenBindingMethod.NONE as `${ClientTokenBindingMethod}`,
             secret: '',
@@ -215,6 +215,8 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
                 { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
                 { key: TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT },
+                { key: TranslatorTranslationClientKey.BASE_URL_HINT },
+                { key: TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD_NONE },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD_SECRET },
@@ -257,6 +259,14 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,
                     key: TranslatorTranslationFieldKey.POST_LOGOUT_REDIRECT_URIS,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.BASE_URL,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.BACKCHANNEL_LOGOUT_URI,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,
@@ -552,6 +562,40 @@ export default defineComponent({
                     {{ translationsClient.postLogoutRedirectURIHint }}
                 </template>
             </AFormInputList>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.baseUrl"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.baseUrl }}
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.baseUrl.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.baseUrl.$model.value = next; }"
+                    />
+                    <template #hint>
+                        {{ translationsClient.baseUrlHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.backchannelLogoutUri"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.backchannelLogoutUri }}
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.backchannelLogoutUri.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.backchannelLogoutUri.$model.value = next; }"
+                    />
+                    <template #hint>
+                        {{ translationsClient.backchannelLogoutURIHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.grantTypes"

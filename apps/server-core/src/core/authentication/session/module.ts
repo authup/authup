@@ -8,11 +8,12 @@
 import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { JWTError } from '@authup/specs';
-import type {
+import type { 
     ISessionManager, 
     ISessionRepository, 
+    ISessionRevokeNotifier, 
     SessionManagerContext, 
-    SessionManagerOptions,
+    SessionManagerOptions, 
 } from './types.ts';
 
 export class SessionManager implements ISessionManager {
@@ -20,11 +21,14 @@ export class SessionManager implements ISessionManager {
 
     protected repository: ISessionRepository;
 
+    protected revokeNotifier?: ISessionRevokeNotifier;
+
     // -----------------------------------------------------
 
     constructor(ctx: SessionManagerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
+        this.revokeNotifier = ctx.revokeNotifier;
     }
 
     // -----------------------------------------------------
@@ -109,7 +113,26 @@ export class SessionManager implements ISessionManager {
     // -----------------------------------------------------
 
     async revoke(id: string): Promise<void> {
-        await this.repository.removeById(id);
+        const session = await this.repository.findOneById(id);
+        if (!session) {
+            return;
+        }
+
+        // The audience is read BEFORE the row goes: it derives from the
+        // session's token rows, which cascade-delete with it. Delivery waits
+        // until AFTER, so a client is never told about a session that still
+        // exists.
+        const clients = this.revokeNotifier ?
+            await this.revokeNotifier.resolve(session) :
+            [];
+
+        // A copy goes to the repository: TypeORM unsets the primary key on
+        // the entity it removed, and the notifier still needs `sid`.
+        await this.repository.remove({ ...session });
+
+        if (this.revokeNotifier && clients.length > 0) {
+            await this.revokeNotifier.notify(session, clients);
+        }
     }
 
     // -----------------------------------------------------

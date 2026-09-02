@@ -31,4 +31,11 @@ export class FakeClientRepository extends FakeEntityRepository<Client> implement
     async getBoundPermissions(_entity: string | Client): Promise<PermissionPolicyBinding[]> {
         return [];
     }
+
+    transactionCalls = 0;
+
+    async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
+        this.transactionCalls += 1;
+        return fn(this);
+    }
 }

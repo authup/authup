@@ -20,6 +20,7 @@ import {
     vi,
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
+import { SessionManager } from '../../../../../src/core/authentication/session/module.ts';
 import { SessionService } from '../../../../../src/core/entities/session/service.ts';
 import { FakeSessionRepository } from './fake-repository.ts';
 
@@ -49,11 +50,15 @@ function makeActor(options: { allow: boolean, identity?: boolean } = { allow: tr
 
 describe('SessionService', () => {
     let repository: FakeSessionRepository;
+    let sessionManager: SessionManager;
     let service: SessionService;
 
     beforeEach(() => {
         repository = new FakeSessionRepository();
-        service = new SessionService({ repository });
+        // the real manager over the fake rows: every revoke below has to reach
+        // the repository THROUGH it, since that is the back-channel chokepoint
+        sessionManager = new SessionManager({ repository, options: { maxAge: 3_600 } });
+        service = new SessionService({ repository, sessionManager });
     });
 
     function seedOwn(): Session {
@@ -213,6 +218,18 @@ describe('SessionService', () => {
             await service.delete(session.id, actor);
             expect(repository.removeCalls.map((s) => s.id)).toContain(session.id);
         });
+
+        it('routes the revoke through the session manager and keeps the id on the answer', async () => {
+            const session = seedOwn();
+            const actor = makeActor({ allow: false });
+            const revoke = vi.spyOn(sessionManager, 'revoke');
+
+            const result = await service.delete(session.id, actor);
+
+            expect(revoke).toHaveBeenCalledWith(session.id);
+            expect(result.id).toEqual(session.id);
+            expect(await repository.findOneById(session.id)).toBeNull();
+        });
     });
 
     describe('deleteMany (self-service — no target filter)', () => {
@@ -240,6 +257,17 @@ describe('SessionService', () => {
             const { count } = await service.deleteMany(actor);
 
             expect(count).toEqual(2);
+        });
+
+        it('routes every revoke through the session manager', async () => {
+            const s1 = seedOwn();
+            const s2 = seedOwn();
+            const revoke = vi.spyOn(sessionManager, 'revoke');
+
+            const actor = makeActor({ allow: false });
+            await service.deleteMany(actor);
+
+            expect(revoke.mock.calls.map(([id]) => id).sort()).toEqual([s1.id, s2.id].sort());
         });
 
         it('needs no permission (self-service) even with an empty/unrecognized filter', async () => {

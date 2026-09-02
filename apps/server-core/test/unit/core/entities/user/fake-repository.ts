@@ -31,4 +31,11 @@ export class FakeUserRepository extends FakeEntityRepository<User> implements IU
     async getBoundPermissions(_entity: string | User): Promise<PermissionPolicyBinding[]> {
         return [];
     }
+
+    transactionCalls = 0;
+
+    async transaction<R>(fn: (repository: IUserRepository) => Promise<R>): Promise<R> {
+        this.transactionCalls += 1;
+        return fn(this);
+    }
 }

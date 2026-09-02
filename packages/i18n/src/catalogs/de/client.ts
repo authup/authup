@@ -13,6 +13,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Wird allen Benutzern dieser Anwendung angezeigt',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein Browser nach einem erfolgreichen Login weiterleiten kann',
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein RP-initiierter Logout zurückleiten darf. Getrennt von den Login-Weiterleitungs-URIs. Ohne Eintrag endet der Logout immer auf der Bestätigungsseite.',
+    [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Adresse der Anwendung. Wird in der Kontokonsole als Link angezeigt. Ohne Eintrag erscheint nur der Name.',
+    [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Endpunkt, der beim Ende einer Sitzung ein Logout-Token erhält (OIDC Back-Channel Logout). Eine http(s)-URL, keine Muster. Ohne Eintrag wird nichts gesendet.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Schränkt ein, welche OAuth2-Grants dieser Client verwenden darf. Ohne Auswahl sind alle Grants erlaubt.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentifizierungsmethode',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Keine',

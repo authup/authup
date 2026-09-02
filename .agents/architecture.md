@@ -1315,13 +1315,14 @@ no new endpoint — the `/authorize` verifier already resolves clients via
 - **Scopes** (`SYSTEM_CLIENT_SCOPE_NAMES` = `global` + `openid`, per
   definition) are bound as
   `auth_client_scopes` rows. That junction is the only source `/authorize`
-  reads scopes from (`OAuth2ScopeRepository.findByClientId`). The `Client.scope` column carries
-  the same list but is descriptive only: nothing on any production path reads
-  it. Writing the column alone left the client with an empty granted set, so a
-  standard OIDC `scope=openid` request failed with `insufficient_scope` while
-  only requests carrying `global` passed via the verifier's bypass (#3347).
-  The junction rows are additive: a scope an admin bound by hand survives the
-  next boot.
+  reads scopes from (`OAuth2ScopeRepository.findByClientId`), and since #3355
+  it is the only place a client's scopes exist at all. The `Client.scope`
+  column that carried the same list as text is gone: nothing had read it
+  since #3354, and writing it alone left the client with an empty granted
+  set, so a standard OIDC `scope=openid` request failed with
+  `insufficient_scope` while only requests carrying `global` passed via the
+  verifier's bypass (#3347). The junction rows are additive: a scope an admin
+  bound by hand survives the next boot.
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
   `config.trustedOrigins` merged verbatim. A `trustedOrigins` entry may carry
   an http(s) scheme (contributes exactly that origin; other protocols are
@@ -1367,16 +1368,17 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   row belongs to the system whatever state it is in: a non-built-in client
   squatting one predates the reservation and is taken over (overwrite + warn)
   rather than left to shadow the realm's system client.
-- **The ten attributes in `buildSystemClientAttributes` are owned by the
+- **The nine attributes in `buildSystemClientAttributes` are owned by the
   provisioner and reassert on every boot.** Whatever writes a different value
   to `name`, `realmId`, `authMethod`, `tokenBindingMethod`, `builtIn`,
-  `active`, `grantTypes`, `scope`, `redirectUri` or `postLogoutRedirectUri`,
+  `active`, `grantTypes`, `redirectUri` or `postLogoutRedirectUri`,
   a provisioning file or the API, the MERGE reverts it at the next start with
   no error (the takeover `warn` above fires only for a non-`builtIn` row).
   Redirect patterns are configured through `trustedOrigins`, not per client.
   Everything outside that set survives a boot and is the supported way to
   extend the client: `displayName` (seeded from the definition at create,
-  then admin-owned), `description`, `baseUrl`, `rootUrl`,
+  then admin-owned), `description`, `baseUrl`, `backchannelLogoutUri` (a
+  system client has no RP behind it, so the builder leaves it null),
   `accessPolicyId` (deliberately omitted from the builder so an admin-set
   policy is not wiped), and every junction row, since `ensureScopes` only
   inserts what is missing and never deletes.
@@ -2663,6 +2665,78 @@ Two-layer rejection:
 1. **Validator** silently strips fields it doesn't mount (e.g. `builtIn`, `realmId` on UPDATE) — these never reach the policy.
 2. **ATTRIBUTE_NAMES policy** rejects validated fields not in the allowlist (e.g. `active` on a client) — produces a `value_invalid` issue and the request fails.
 
+**The update WRITE runs inside a row-locking transaction (#3526), and only
+the write.** `UserService.save` and `ClientService.save` do their pre-work
+exactly as before, unlocked and outside any transaction: the `findOneBy`,
+the permission gates, validation, `validateJoinColumns`, `checkUniqueness`,
+the merge onto the loaded row and every derivation (the #3525
+`emailVerified` reset, the name lock, the password hash, the client's secret
+hashing / encryption and storage flags). What comes out of that is a PATCH
+for this request: the validated fields plus the derived ones, minus every
+field the request echoed back with the value it had read (the console posts
+its whole form, and an echoed `active: true` must not undo a concurrent
+deactivation; `emailVerified` followed that rule already), and minus `name`
+when the name lock reverted it (a stale original name must not overwrite a
+concurrent rename). The update branch then runs
+`this.repository.transaction(async (repository) => { ... })` with nothing but
+transaction-bound calls inside: `repository.findOneBy({ id })` lock-reads the
+FRESH row (`FOR UPDATE`, typeorm `lock: { mode: 'pessimistic_write' }`, on
+mysql and postgres), `repository.merge(current, patch)` applies this
+request's patch onto it, the two rules that depend on the row's CURRENT
+state are re-checked against that fresh row (a rename still loses to a
+`nameLocked` flip that landed in between; the client's secret follows the
+fresh row's `authMethod`, so an unrelated edit racing a switch to `secret`
+cannot clear the credential the switch stored, and a submitted secret is
+hashed inside the callback, CPU only), and `repository.save` commits with
+the callback.
+Merging onto the fresh row is what makes a concurrent writer's columns
+survive: TypeORM writes only the columns that differ from the row it just
+read. Without the lock each request read the row, merged its own fields and
+saved the whole thing, so a `displayName` edit racing an email change re-saved
+the stale row and undid the `emailVerified` reset, and a deactivation racing
+any other edit came back `active: true`. The create branch takes no
+transaction at all.
+
+**Why the pre-work stays outside is a pool constraint, not tidiness.**
+`dataSource.transaction()` pins one pooled connection for the callback, while
+`validateJoinColumns` (typeorm-extension's `dataSource.getRepository(...)`),
+`checkUniqueness` (`isEntityUnique({ dataSource })`), the outer
+`realmRepository.resolve(...)` and the permission evaluator's binding and
+policy loads on a cold cache each acquire a SECOND connection from the same
+pool. The pool is 10 with an unbounded wait on both mysql2 and pg, so an
+earlier shape that wrapped the whole body deadlocked the DataSource under ten
+concurrent saves, reachable by any user with ten concurrent `POST /users/@me`.
+The concurrency spec carries a pool-exhaustion pin for exactly this (twelve
+concurrent updates on twelve different users, and twelve concurrent creates,
+all resolving inside the default timeout). The pin runs with the entity
+audit mirror OFF, because the mirror has the same hazard on its own and on
+master: every `EntitySubscriber.afterInsert` / `afterUpdate` awaits the audit
+row's save from INSIDE TypeORM's persist transaction, on a second pooled
+connection. That is issue #3539, and until it is fixed ten concurrent entity
+writes still hang a deployment with `eventLogEntityEnabled` on.
+
+On sqlite the seam is an unlocked passthrough that hands the callback the
+adapter itself, for the reason
+`IdentityProviderAccountRepositoryAdapter.removeGuarded` skips its
+transaction: better-sqlite3 has no `FOR UPDATE`, and the sqlite drivers share
+one query runner, so a transaction would nest as a savepoint inside whatever
+else is running. The adapters carry the lock as a private ctor option
+(`{ lockRows: true }`) set only on the instance built inside the transaction,
+so a read outside one never locks.
+
+The seam is `transaction<R>(fn)` on `IUserRepository` and `IClientRepository`,
+not on the base `IEntityRepository`: those two are the entities whose update
+merges admin-only state a lost update can silently restore, and the base port
+has 32 implementers that would each grow a method nothing calls. What stays
+UNLOCKED, deliberately: registration, password recovery and the federated
+account manager's user writes. Each is its own write path with its own race
+surface and none of them was the reported lost update; they are the
+residual. The fakes count `transactionCalls`, so a service spec pins that an
+update takes the seam exactly once and a create not at all, and the
+real-database regression spec
+(`test/unit/http/controllers/entities/user-concurrency.spec.ts`) is gated to
+mysql/postgres, because on sqlite the lost update reproduces by design.
+
 ### preEvaluate is derived from data availability (tri-state, issue #3286)
 
 The policy engine is tri-state: a policy whose declared data requirements
@@ -3543,8 +3617,10 @@ round-trip), an over-window session throws, and `max_age=0` is *stricter* than
 
 **id_token claims (bug fix + addition):** `auth_time` is now the session's
 creation instant (previously — wrongly — the token issuance time == `iat`), and a
-`sid` claim (= `session_id`) is added (prerequisite for RP-initiated /
-back-channel logout). Both are `OAuth2TokenPayload` fields.
+`sid` claim (= `session_id`) is added, consumed by RP-initiated logout (the
+`id_token_hint` names the session to revoke) and by back-channel logout
+(the `logout_token` names the session that ended; see *Back-channel logout*
+below). Both are `OAuth2TokenPayload` fields.
 
 **Minting site — the `/token` exchange, not `/authorize` (plan 042 item 6):**
 the id_token is minted inside the `authorization_code` grant
@@ -3616,7 +3692,8 @@ separately as plan 063.
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
 DTO** (`ClientSummary` = `id`/`name`/`displayName`/`builtIn`/`createdAt`) plus
 the `RealmSummary` and scopes — never the client's `redirectUri` patterns (the
-trusted-origin set), `grantTypes`, internal `baseUrl`/`rootUrl`, or the
+trusted-origin set), `grantTypes`, `baseUrl` (the account console renders it,
+to a signed-in user), `backchannelLogoutUri`, or the
 secret storage flags. `ClientEntity.secret` is additionally `select:false`, but
 the DTO must not rely on that alone.
 
@@ -3765,6 +3842,98 @@ local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
 
+### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064 Stages 1+2)
+
+`Client.backchannelLogoutUri` (`auth_clients.backchannel_logout_uri`, nullable
+`varchar(2000)`; one absolute http(s) URL, no wildcard, no comma list, no
+userinfo; `null` = no push) is the endpoint an RP registers to be told when a
+session it received tokens for ends. It is the push half of the `sid` claim:
+RP-initiated logout lets one RP END the authup session, and this tells every
+other RP on that session that it ended.
+
+- **One chokepoint: `SessionManager.revoke(id)`.** It loads the session, asks
+  the notifier for the audience (`resolve`), removes the row, and only then
+  delivers (`notify`). The order is load-bearing: the audience is every
+  distinct non-null `auth_session_tokens.client_id` the session issued tokens
+  for (plan 086's per-token attribution) that carries a
+  `backchannelLogoutUri`, and those rows cascade-delete with the session, so
+  a read after the remove finds nothing. `SessionService.delete`,
+  `deleteManyForSelf` and `deleteManyByQuery` called `repository.remove`
+  directly and now route through `sessionManager.revoke` (the service takes
+  an `ISessionManager` in its context), because a session ending through the
+  management API is exactly the case an RP cannot observe on its own. So
+  `DELETE /sessions/:id`, `DELETE /sessions` (self and admin), `/logout` with
+  a verified `id_token_hint` and the refresh-replay family revoke all emit.
+- **What does NOT emit**: `verify()` expiring a lapsed session (it calls the
+  repository directly and stays that way), the oauth2 cleaner's expiry sweep,
+  the database cascades when a user, client or realm is deleted, and
+  `/token/revoke` (it retires a token, not the session). A lapsed session's
+  tokens have lapsed with it, which is the signal an RP already has.
+- **The token.** `OAuth2BackchannelLogoutNotifier`
+  (`core/oauth2/backchannel-logout/`, implementing the port
+  `ISessionRevokeNotifier`, which lives with its consumer in
+  `core/authentication/session/types.ts` so the session manager depends on
+  no oauth2 file; built unconditionally in the
+  `AuthenticationModule`'s `SessionManager` factory from the oauth2 signer,
+  the session-token repository and the client repository; the module
+  declares `ModuleName.OAUTH2` as a hard dependency for it, and only the
+  `SessionManagerContext.revokeNotifier` FIELD is optional, for
+  the fake-backed specs that build a manager by hand) signs one
+  `logout_token` per client with the active signing key of the CLIENT's
+  realm: `iss` is built from `client.realm.name`, so the `kid` has to resolve
+  through that realm's JWKS, and the session's realm can differ (the
+  cross-realm password grant, a UUID user with the master client). The claim
+  set is `kind: logout_token`
+  (`OAuth2TokenKind.LOGOUT`, so the authorization middleware, which requires
+  `kind === access_token`, never accepts one as a bearer), `iss`
+  (`<publicUrl>/realms/<realm name>`, the shape
+  `OAuth2BaseTokenIssuer.buildIss` produces, inlined rather than inherited),
+  `aud` (the client's id), `iat` (stamped by `signToken`), `jti` (a fresh
+  UUID), `exp` (120s after issue by default),
+  `events: { 'http://schemas.openid.net/event/backchannel-logout': {} }`,
+  `sid` (the session id) and `sub`, plus `realm_id` (the client's), which
+  the signer keys on and which the spec permits as an extra claim. **No
+  `nonce`**: the spec
+  prohibits it on a logout token so one can never pass as an id_token. The
+  `typ: logout+jwt` header is a SHOULD that server-kit's `signToken` cannot
+  set (no header option), so an RP validating `typ` strictly refuses the
+  token; that is the one known gap.
+- **Delivery** is `POST <backchannelLogoutUri>`,
+  `application/x-www-form-urlencoded`, body `logout_token=<jwt>`, one request
+  per client under `Promise.allSettled`, each with a 5s `AbortSignal.timeout`
+  and `redirect: 'manual'` (a 3xx is the RP's refusal and logs as one, never
+  a second POST of the token elsewhere), awaited before `revoke` returns.
+  Best effort by design: a non-2xx answer or a thrown fetch is
+  `logger.warn`ed naming the client id and never rethrown, so an RP that is
+  down cannot block a logout and the status of the API call that ended the
+  session is unaffected. The response body is never read and is cancelled
+  (`response.body?.cancel()`) once the status is known, since an unread body
+  pins the keep-alive socket. The bulk paths (`SessionService.deleteManyForSelf`
+  / `deleteManyByQuery`) collect the sessions that pass their checks first
+  and then revoke them in batches of ten (`SESSION_REVOKE_CONCURRENCY`), so a
+  hanging RP costs one timeout per batch rather than one per session, while
+  a realm-wide sweep never turns into an unbounded burst of row deletes and
+  outbound requests. `POST /token/introspect` answers the
+  bare `{ active: false }` for a token whose `kind` is `logout_token`: it
+  verifies (same realm key) but is a notification, not a credential, and RFC
+  7662 reports rather than raises.
+- **SSRF residual, stated.** The server POSTs to an admin-chosen URL from
+  inside the deployment, so the value can name an internal address. It is in
+  the same trust class as `redirectUri`: written by an actor holding
+  `CLIENT_CREATE` / `CLIENT_UPDATE`, and deliberately NOT in the
+  `system.client-names-self-manage` denylist, since a self-managing client
+  registering where its own logouts go is the feature. What bounds it is the
+  request shape: a fixed method and content type, a body carrying only `sub`
+  and `sid` inside a signed token, and a discarded response, so the request
+  cannot be steered and nothing comes back to the caller.
+- **Discovery** advertises `backchannel_logout_supported: true` and
+  `backchannel_logout_session_supported: true` (`sid` rides every id_token).
+  The URI is an `AClientForm` field, absent from `buildSystemClientAttributes`
+  (a system client has no RP behind it) and from the anonymous
+  `ClientSummary`.
+- **Deferred (plan 064 Stage 3):** a per-delivery audit event in
+  `auth_events`. Today the only trace of a failed push is the warn line.
+
 ## Application Access Policy (plan 052)
 
 `Client.accessPolicyId` is an optional FK onto `auth_policies`
@@ -3910,9 +4079,14 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   (`apps/client-account-console/src/pages/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
-  DELETEs behind an error-tone `useAlertDialog`). The self-service list
-  endpoint joins only a **client summary** (id / name / displayName /
-  builtIn) — never the full `ClientEntity` (`client` is deliberately absent
+  DELETEs behind an error-tone `useAlertDialog`). Each group's name is a
+  link to the application when the summary carries a `baseUrl` that passes
+  `isHttpURL` (`src/pages/utils.ts`: `new URL` plus an http(s) protocol
+  ALLOWLIST, the `isSafeActionURL` shape from server-core's mail formatter,
+  not the `isSafeRedirectURLScheme` denylist), since the value is admin
+  text rendered as an `href`; anything else renders the plain name. The
+  self-service list endpoint joins only a **client summary** (id / name /
+  displayName / builtIn / baseUrl), never the full `ClientEntity` (`client` is deliberately absent
   from the schema's `relations.allowed`, so a raw `?include=client` cannot
   force the full-column join and leak redirectUri patterns / grantTypes /
   secret-storage flags / `accessPolicyId` to a self-service user without
@@ -4808,7 +4982,10 @@ caller has no request context*
 `{id, expiresAt}[]`; each jti is cache-blocklisted **with its real expiry**
 (never the fallback 1h TTL — a 3-day RT must not resurface as `active` in
 introspection); then `sessionManager.revoke(sessionId)` deletes the session
-(cascade drops the rows) so its access tokens stop verifying on authup's own API.
+(cascade drops the rows) so its access tokens stop verifying on authup's own API,
+and pushes a back-channel `logout_token` to every RP the session issued
+tokens for (the audience is read before the delete, since the rows it
+derives from cascade with the session; see *Back-channel logout*).
 Replay is logged (`logger?.warn`) and surfaced as `invalid_grant`.
 
 ### Grace period (`tokenRefreshGracePeriod`, seconds, default 0 = strict)
@@ -4846,12 +5023,22 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   `SESSION_READ` + realm-match. `@me`/`@self` resolve to the caller's current
   session (`useRequestSessionId`).
 - `DELETE /sessions/:id` — revoke one. Own → no permission; else `SESSION_DELETE`
-  + realm-match. Delete routes through the cache-aware `SessionRepository.remove`
-  (drops the id cache key; the DB delete cascade-drops the session's
-  `auth_session_tokens` rows, so a force-logout also kills the subject's refresh
-  tokens). Access tokens stay valid on local-JWKS adapters until `exp` (the
+  + realm-match. Delete routes through `SessionManager.revoke`, the one
+  chokepoint (plan 064): it removes the row through the cache-aware session
+  repository (the id cache key is dropped; the DB delete cascade-drops the
+  session's `auth_session_tokens` rows, so a force-logout also kills the
+  subject's refresh tokens) and then pushes a back-channel `logout_token` to
+  every client the session issued tokens for (see *Back-channel logout*).
+  Access tokens stay valid on local-JWKS adapters until `exp` (the
   documented limitation; authup's own API rejects immediately via the
-  authorization middleware's session check).
+  authorization middleware's session check). That immediacy rests on the
+  cache drop reading the session id BEFORE the TypeORM `remove`: TypeORM
+  unsets the primary key on the entity it removed, and until the plan-064
+  batch the drop ran after it and so dropped `SESSION:undefined`, leaving the
+  revoked session resolvable from the cache for the rest of its access
+  token's lifetime. Pinned by *refuses the bearer of a revoked session on its
+  very next request* in `test/unit/http/controllers/entities/session.spec.ts`,
+  which fails with the two statements swapped.
 - `DELETE /sessions` — bulk revoke, discriminated by whether the rapiq query
   carries a **recognized target filter** (`SESSION_FILTER_KEYS` = `id`, `sub`,
   `subKind`, `userId`, `clientId`, `realmId`; the same

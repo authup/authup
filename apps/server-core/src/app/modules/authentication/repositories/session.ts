@@ -169,11 +169,16 @@ export class SessionRepository implements ISessionRepository {
     // -----------------------------------------------------
 
     async remove(session: Session): Promise<void> {
+        // TypeORM unsets the primary key on the entity it removed, so the id
+        // has to be read first or the cache drop misses and the revoked
+        // session stays readable until its entry expires.
+        const { id } = session;
+
         await this.repository.remove(session);
         await this.cache.drop(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: session.id, 
+                key: id,
             }),
         );
     }

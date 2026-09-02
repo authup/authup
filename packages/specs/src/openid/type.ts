@@ -92,6 +92,17 @@ export type OpenIDProviderMetadata = {
     end_session_endpoint?: string,
 
     /**
+     * OIDC Back-Channel Logout 1.0: the OP pushes a logout token to a
+     * client's registered back-channel logout URI when a session ends.
+     */
+    backchannel_logout_supported?: boolean,
+
+    /**
+     * OIDC Back-Channel Logout 1.0: the pushed logout token carries `sid`.
+     */
+    backchannel_logout_session_supported?: boolean,
+
+    /**
      * The OAuth 2.0 / OpenID Connect URL of the OP's Dynamic Client Registration Endpoint OpenID.Registration.
      */
     registration_endpoint?: string,

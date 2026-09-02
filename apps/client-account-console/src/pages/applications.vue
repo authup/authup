@@ -26,11 +26,12 @@ import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
 import PageError from '../components/PageError.vue';
-import { useAccountToasts, usePageError } from './utils';
+import { isHttpURL, useAccountToasts, usePageError } from './utils';
 
 type ConsentGroup = {
     clientId: string,
     name: string,
+    url: string | null,
     createdAt: string,
     rows: Consent[],
 };
@@ -53,7 +54,8 @@ export default defineComponent({
         // Scope to the current user's own consent rows (an admin holding
         // CONSENT_READ would otherwise see every row here); non-admins are
         // self-scoped by the server regardless. The server always joins a
-        // client summary (id/name/displayName), so no relation is requested.
+        // client summary (id/name/displayName/baseUrl), so no relation is
+        // requested.
         const query = computed(() => defineQuery<Consent>({
             filters: { sub: userId.value ?? undefined, subKind: 'user' },
             sorts: { createdAt: 'DESC' },
@@ -78,9 +80,12 @@ export default defineComponent({
             rows.forEach((row) => {
                 let group = groups.get(row.clientId);
                 if (!group) {
+                    const baseUrl = row.client?.baseUrl;
+
                     group = {
                         clientId: row.clientId,
                         name: row.client?.displayName || row.client?.name || row.clientId,
+                        url: isHttpURL(baseUrl) ? baseUrl : null,
                         createdAt: row.createdAt,
                         rows: [],
                     };
@@ -294,7 +299,18 @@ export default defineComponent({
                         <div class="flex items-center justify-between gap-2">
                             <div>
                                 <div class="font-bold">
-                                    {{ group.name }}
+                                    <a
+                                        v-if="group.url"
+                                        :href="group.url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="hover:underline"
+                                    >
+                                        {{ group.name }}
+                                    </a>
+                                    <template v-else>
+                                        {{ group.name }}
+                                    </template>
                                 </div>
                                 <small class="text-fg-muted">
                                     <VCTimeago :datetime="group.createdAt" />

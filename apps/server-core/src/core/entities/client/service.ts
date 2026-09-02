@@ -187,7 +187,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const validated = await this.validator.run(data, { group });
 
         // Reserve the system-provisioned client names (`system`, the console
-        // clients) so an API caller can't create or rename a client onto them — that would
+        // clients) so an API caller can't create or rename a client onto them: that would
         // collide on unique(name, realmId) or shadow the builtIn client.
         // Provisioning and runtime hooks bypass this service, so they remain
         // free to manage the reserved clients. builtIn clients are exempt
@@ -225,6 +225,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
             }
 
+            const before: Partial<Client> = { ...entity };
             entity = this.repository.merge(entity, validated);
 
             if (!isSelfEdit) {
@@ -248,7 +249,43 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 entity.secretEncrypted = false;
             }
 
-            await this.repository.save(entity);
+            // Only the write runs inside the transaction: it pins one pooled
+            // connection, and the evaluator, join-column and uniqueness reads
+            // above each take their own from the same pool, so wrapping them
+            // too deadlocks the DataSource under ten concurrent saves. The
+            // fresh row is lock-read and this request's patch merged onto it,
+            // so a concurrent writer's columns survive (#3526).
+            const patch: Partial<Client> = { ...validated };
+            // A field echoed back with the value this request read is no
+            // intent to change it (the console posts its whole form), and
+            // writing it would overwrite a concurrent change.
+            for (const key of Object.keys(patch) as (keyof Client)[]) {
+                if (patch[key] === before[key]) {
+                    delete patch[key];
+                }
+            }
+
+            const { id } = entity;
+            entity = await this.repository.transaction(async (repository) => {
+                const current = await repository.findOneWithSecret({ id });
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                // The secret follows the FRESH row's authMethod, not the one
+                // this request read: a concurrent switch to `secret` must not
+                // have its credential cleared by an unrelated edit racing it.
+                const merged = repository.merge(current, patch);
+                if (merged.authMethod !== ClientAuthMethod.SECRET) {
+                    merged.secret = null;
+                    merged.secretHashed = false;
+                    merged.secretEncrypted = false;
+                } else if (patch.secret) {
+                    merged.secret = await credentialsService.protect(patch.secret, merged);
+                }
+
+                return repository.save(merged);
+            });
 
             return {
                 entity,

@@ -17,6 +17,8 @@ export const TranslatorTranslationFieldSpanish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.SECRET]: 'Secreto',
     [TranslatorTranslationFieldKey.REDIRECT_URIS]: 'URI(s) de redirección',
     [TranslatorTranslationFieldKey.POST_LOGOUT_REDIRECT_URIS]: 'URI(s) de redirección tras cierre de sesión',
+    [TranslatorTranslationFieldKey.BASE_URL]: 'URL de inicio',
+    [TranslatorTranslationFieldKey.BACKCHANNEL_LOGOUT_URI]: 'URL de cierre de sesión back-channel',
     [TranslatorTranslationFieldKey.GRANT_TYPES]: 'Tipos de concesión',
     [TranslatorTranslationFieldKey.PASSWORD]: 'Contraseña',
     [TranslatorTranslationFieldKey.DECISION_STRATEGY]: 'Estrategia de decisión',

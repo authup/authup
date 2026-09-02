@@ -15,6 +15,7 @@ import {
     OAuth2GrantTypeError,
     OAuth2RequestError,
     OAuth2TokenGrant,
+    OAuth2TokenKind,
     isJWTError,
 } from '@authup/specs';
 import { 
@@ -189,6 +190,14 @@ export class TokenController {
                 ignoreExpiry: true,
                 skipActiveCheck: true,
             });
+
+            if (payload.kind === OAuth2TokenKind.LOGOUT) {
+                // A back-channel logout token verifies (it is signed with the
+                // realm key) but is a notification, never a credential: no
+                // endpoint accepts it as a bearer, so it is reported dead
+                // rather than raised (RFC 7662 §2.2), bare like any other.
+                return { active: false };
+            }
 
             if (!await this.isIntrospectionAllowed(event, payload)) {
                 // RFC 7662 §2.2's third clause: a caller "not allowed to

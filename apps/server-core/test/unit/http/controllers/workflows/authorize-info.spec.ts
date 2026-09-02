@@ -104,7 +104,7 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         expect(body.client.postLogoutRedirectUri).toBeUndefined();
         expect(body.client.grantTypes).toBeUndefined();
         expect(body.client.baseUrl).toBeUndefined();
-        expect(body.client.rootUrl).toBeUndefined();
+        expect(body.client.backchannelLogoutUri).toBeUndefined();
         expect(body.client.authMethod).toBeUndefined();
         expect(body.client.secret).toBeUndefined();
         expect(body.client.secretHashed).toBeUndefined();

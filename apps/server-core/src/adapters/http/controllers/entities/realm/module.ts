@@ -122,6 +122,12 @@ export class RealmController {
 
             end_session_endpoint: resolveURL(baseURL, 'logout'),
 
+            // OIDC Back-Channel Logout 1.0: every session end pushes a
+            // logout token carrying `sid` to the clients that registered a
+            // back-channel logout URI (plan 064).
+            backchannel_logout_supported: true,
+            backchannel_logout_session_supported: true,
+
             jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
 
             // OAuth 2.1 posture: the authorization endpoint issues codes

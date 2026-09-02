@@ -52,7 +52,6 @@ Their attributes are fixed (identical for both, except `name`):
 | `tokenBindingMethod` | `none`                                                         |
 | `builtIn`         | `true`                                                            |
 | `grantTypes`      | `authorization_code refresh_token`                                |
-| `scope`           | `global openid`                                                  |
 | `active`          | `true`                                                            |
 | `redirectUri`     | `<origin>/**` for every trusted app origin (see below)            |
 | `postLogoutRedirectUri` | the same `<origin>/**` patterns                             |
@@ -95,7 +94,7 @@ Every other attribute is left untouched and survives a restart —
 `displayName` is seeded once at creation (`Admin Console`,
 `Account Console`) and then belongs to you. A provisioning file may
 therefore declare a system client to set `displayName`, `description`,
-`baseUrl`, `rootUrl` or `accessPolicyId`, and to assign additional roles,
+`baseUrl`, `backchannelLogoutUri` or `accessPolicyId`, and to assign additional roles,
 permissions and scopes:
 
 ```yaml

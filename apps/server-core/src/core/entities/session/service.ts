@@ -22,7 +22,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { ISessionRepository } from '../../authentication/index.ts';
+import type { ISessionManager, ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
@@ -30,14 +30,24 @@ import { sessionSchema } from './schema.ts';
 
 export type SessionServiceContext = {
     repository: ISessionRepository,
+    /**
+     * Every revoke goes through the manager rather than the repository: its
+     * `revoke` is the one chokepoint that pushes the back-channel logout.
+     */
+    sessionManager: ISessionManager,
 };
+
+const SESSION_REVOKE_CONCURRENCY = 10;
 
 export class SessionService extends AbstractEntityService implements ISessionService {
     protected repository: ISessionRepository;
 
+    protected sessionManager: ISessionManager;
+
     constructor(ctx: SessionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.sessionManager = ctx.sessionManager;
     }
 
     protected isOwnedBy(session: Session, actor: ActorContext): boolean {
@@ -166,9 +176,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             });
         }
 
-        const { id: entityId } = entity;
-        await this.repository.remove(entity);
-        entity.id = entityId;
+        await this.sessionManager.revoke(entity.id);
 
         return entity;
     }
@@ -246,16 +254,11 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             subKind: actor.identity!.type,
         });
 
-        let count = 0;
-        for (const session of sessions) {
-            if (currentSessionId && session.id === currentSessionId) {
-                continue;
-            }
-            await this.repository.remove(session);
-            count += 1;
-        }
+        const toRevoke = sessions.filter((session) => !currentSessionId || session.id !== currentSessionId);
 
-        return { count };
+        await this.revokeAll(toRevoke);
+
+        return { count: toRevoke.length };
     }
 
     protected async deleteManyByQuery(
@@ -273,7 +276,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             }),
         );
 
-        let count = 0;
+        const toRevoke: Session[] = [];
         for (const session of sessions) {
             // Own sessions are always deletable by the actor (mirrors getMany).
             // Otherwise per-session realm-match: a realm_admin only reaches
@@ -293,10 +296,24 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 }
             }
 
-            await this.repository.remove(session);
-            count += 1;
+            toRevoke.push(session);
         }
 
-        return { count };
+        await this.revokeAll(toRevoke);
+
+        return { count: toRevoke.length };
+    }
+
+    /**
+     * Revokes in batches. Every revoke waits for its back-channel deliveries,
+     * so one at a time costs a hanging RP one timeout per session, while all
+     * at once is an unbounded burst of row deletes and outbound requests.
+     */
+    protected async revokeAll(sessions: Session[]): Promise<void> {
+        for (let i = 0; i < sessions.length; i += SESSION_REVOKE_CONCURRENCY) {
+            await Promise.all(sessions
+                .slice(i, i + SESSION_REVOKE_CONCURRENCY)
+                .map((session) => this.sessionManager.revoke(session.id)));
+        }
     }
 }

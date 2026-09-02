@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Session } from '@authup/core-kit';
+import type { Client, Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 
@@ -106,9 +106,39 @@ export type SessionManagerOptions = {
     maxAge: number
 };
 
+/**
+ * Tells the clients that rode a session that it was revoked. The OAuth2
+ * implementation pushes an OIDC back-channel logout token; the manager only
+ * knows the two steps and their order.
+ */
+export interface ISessionRevokeNotifier {
+    /**
+     * The clients to notify once the session is gone. Runs BEFORE the row is
+     * removed, because what the audience derives from (the session's token
+     * rows) cascade-deletes with it.
+     *
+     * @param session
+     */
+    resolve(session: Session): Promise<Client[]>;
+
+    /**
+     * Notify the resolved clients. Best effort: a refusing or unreachable
+     * client is logged and never fails the revoke.
+     *
+     * @param session
+     * @param clients
+     */
+    notify(session: Session, clients: Client[]): Promise<void>;
+}
+
 export type SessionManagerContext = {
     options: SessionManagerOptions,
     repository: ISessionRepository,
+    /**
+     * Notified on every revoke (plan 064: the OAuth2 back-channel logout).
+     * Optional so a fake-backed spec constructs the manager without one.
+     */
+    revokeNotifier?: ISessionRevokeNotifier,
 };
 
 export interface ISessionManager {
@@ -158,6 +188,10 @@ export interface ISessionManager {
     /**
      * Revoke (delete) a session by id, forcing re-authentication. Idempotent —
      * a no-op when the session does not exist.
+     *
+     * The ONE chokepoint every session end goes through, because it is where
+     * the back-channel logout is pushed: a caller deleting the row on the
+     * repository directly ends the session without telling any client.
      *
      * @param id
      */

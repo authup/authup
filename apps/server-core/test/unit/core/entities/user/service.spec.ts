@@ -332,6 +332,14 @@ describe('core/entities/user/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
+        it('should open one repository transaction for the write and none on create (#3526)', async () => {
+            const entity = await service.create(createFakeUser(), createAllowAllActor());
+            expect(repository.transactionCalls).toBe(0);
+
+            await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
+            expect(repository.transactionCalls).toBe(1);
+        });
+
         // #3519. `email` is NOT on the self-manage denylist, so a user may
         // change their own address. Without this the claim would keep asserting
         // a verification that belonged to the PREVIOUS address, which is the

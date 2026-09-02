@@ -67,14 +67,14 @@ describe('http/controllers/client (self-manage)', () => {
         expect(response.description).toBe('self-updated');
     });
 
-    it('should allow client to update its own redirect_uri and scope (allowed fields)', async () => {
+    it('should allow client to update its own redirect_uri and base_url (allowed fields)', async () => {
         const { data: response } = await selfClient.client.update(entity.id, {
             redirectUri: 'https://example.test/cb',
-            scope: 'openid profile',
+            baseUrl: 'https://example.test',
         });
 
         expect(response.redirectUri).toBe('https://example.test/cb');
-        expect(response.scope).toBe('openid profile');
+        expect(response.baseUrl).toBe('https://example.test');
     });
 
     it('should silently strip self-update of realm_id (validator drops on UPDATE)', async () => {

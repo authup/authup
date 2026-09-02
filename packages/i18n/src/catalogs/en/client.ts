@@ -13,6 +13,8 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI pattern an RP-initiated logout may redirect back to. Kept separate from the login redirect URIs. Leave empty to always end on the sign-out confirmation page.',
+    [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Where the application lives. Shown as a link on the account console. Leave empty to show the name only.',
+    [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Endpoint that receives a logout token when a session ends (OIDC Back-Channel Logout). One http(s) URL, no patterns. Leave empty to send nothing.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restrict which OAuth2 grants this client may use. Select none to allow every grant.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentication method',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'None',

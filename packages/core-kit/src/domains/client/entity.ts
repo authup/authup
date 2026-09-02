@@ -49,18 +49,19 @@ export interface Client {
      */
     postLogoutRedirectUri: string | null,
 
+    /**
+     * OIDC Back-Channel Logout 1.0 endpoint: one absolute http(s) URL, no
+     * patterns. Null means no logout token is pushed to this client.
+     */
+    backchannelLogoutUri: string | null,
+
     grantTypes: string | null,
 
-    scope: string | null,
-
     /**
-     * Default redirect URL.
+     * The application's home URL, rendered as a link on the account
+     * console's Applications page. http(s)-only is enforced at render time.
      */
     baseUrl: string | null,
-    /**
-     * URL prepended to relative URLs.
-     */
-    rootUrl: string | null,
 
     // ------------------------------------------------------------------
 

@@ -160,7 +160,7 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 #### Discovery
 
-Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, and `prompt_values_supported`.
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, `prompt_values_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#7-back-channel-logout)).
 
 ### 5. Federated login (external identity providers)
 
@@ -214,3 +214,74 @@ GET http://localhost:3000/logout
 | `state` | Opaque value echoed back on the redirect (only alongside a validated `post_logout_redirect_uri`). |
 
 Without a valid `id_token_hint`, `/logout` serves a page asking the user to confirm sign-out; no state is changed until they confirm. The same applies when the request is malformed (oversized parameters, an invalid `post_logout_redirect_uri`): every parameter is discarded and the neutral confirm page is served. The `realm_id` / `realm_name` hint (scoping a name-identified `client_id`) is case-insensitive.
+
+### 7. Back-Channel Logout
+
+RP-initiated logout lets your application end the Authup session. Back-channel
+logout ([OpenID Connect Back-Channel Logout 1.0](https://openid.net/specs/openid-connect-backchannel-1_0.html))
+is the other direction: Authup tells your application when a session it
+received tokens for was ended elsewhere, by the user on the account console,
+by an administrator, by another application's logout, or by refresh-token
+replay detection.
+
+#### Registering the endpoint
+
+Set the client's `backchannelLogoutUri` (admin console client form, or
+`POST /clients/:id` with `{"backchannelLogoutUri": "https://app.example.com/logout/backchannel"}`).
+It is one absolute `http(s)` URL, not a pattern list: no wildcards, no
+comma-separated values. `null` (the default, and what the provisioned system
+clients keep) disables the push for that client.
+
+#### The request
+
+Authup sends one request per affected client:
+
+```http
+POST /logout/backchannel HTTP/1.1
+Host: app.example.com
+Content-Type: application/x-www-form-urlencoded
+
+logout_token=eyJhbGciOi...
+```
+
+`logout_token` is a JWT signed with the active signing key of your client's
+realm, the realm named in `iss`, so it is verifiable against that realm's
+`jwks_uri`. Verify it the way the specification asks (section 2.6):
+
+| Claim | Value |
+|---|---|
+| `iss` | The realm issuer, as in every other token of that realm |
+| `aud` | Your client's id |
+| `sub` | The subject the session belonged to |
+| `sid` | The session id, matching the `sid` of the id_tokens that session issued |
+| `events` | `{"http://schemas.openid.net/event/backchannel-logout": {}}` |
+| `iat`, `exp`, `jti` | Issued at, expiry (2 minutes after issue), a unique id to reject replays |
+| `kind` | `logout_token`. No Authup endpoint accepts a token of this kind as a bearer |
+
+A logout token never carries a `nonce`; refuse one that does, since it could be
+an id_token in disguise. The `typ: logout+jwt` header is not set yet, so do not
+require it. Answer with any `2xx` once the local session for `sid` is ended.
+Applications that keep no per-session state can key on `sub` and end every
+session of that user.
+
+#### When it fires
+
+- `DELETE /sessions/:id` and `DELETE /sessions` (the account console's "log
+  out other devices", an administrator's force-logout, the sessions UI);
+- `/logout` with a verified `id_token_hint`, once the hosted sign-out page
+  has confirmed it: the `GET` and `form_post` bindings are browser
+  navigations that hand over to that page, and the revoke runs on the JSON
+  call the page makes;
+- the refresh-token replay reaction, which revokes the whole session.
+
+A session that simply expires sends nothing: its tokens expire with it.
+Revoking a single token (`POST /token/revoke`) sends nothing either, because
+the session stays alive.
+
+#### Best effort
+
+Delivery is awaited but never blocks the logout: every affected client is
+notified concurrently, each request times out after 5 seconds, and a client
+that is unreachable or answers a non-`2xx` status is logged on the server and
+otherwise ignored. The API call that ended the session succeeds regardless.
+Do not treat a missing push as proof that the session is still alive.

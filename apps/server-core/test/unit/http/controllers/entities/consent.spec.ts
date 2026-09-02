@@ -63,6 +63,7 @@ describe('consent', () => {
     async function createScopedClient(scopeNames: string[] = [ScopeName.GLOBAL]): Promise<Client> {
         const { data: client } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
+            baseUrl: 'https://app.example.test',
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
@@ -141,8 +142,9 @@ describe('consent', () => {
         await confirm(client.id, ScopeName.GLOBAL);
 
         // A self-service user (no CLIENT_READ) explicitly asks for the client
-        // relation — the response must carry only a summary, never the
-        // trusted-origin patterns / grant_types / secret-storage flags.
+        // relation. The response must carry only the summary (the home link
+        // included), never the trusted-origin patterns / grant_types / the
+        // back-channel endpoint / secret-storage flags.
         const { data } = await userClient.consent.getMany({
             filters: { clientId: client.id },
             relations: ['client'] as any,
@@ -155,8 +157,8 @@ describe('consent', () => {
         expect(joined!.redirectUri).toBeUndefined();
         expect(joined!.postLogoutRedirectUri).toBeUndefined();
         expect(joined!.grantTypes).toBeUndefined();
-        expect(joined!.baseUrl).toBeUndefined();
-        expect(joined!.rootUrl).toBeUndefined();
+        expect(joined!.baseUrl).toEqual('https://app.example.test');
+        expect(joined!.backchannelLogoutUri).toBeUndefined();
         expect(joined!.authMethod).toBeUndefined();
         expect(joined!.tokenBindingMethod).toBeUndefined();
         expect(joined!.accessPolicyId).toBeUndefined();

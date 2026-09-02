@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -19,6 +20,7 @@ import {
 } from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import { OAuth2TokenKind } from '@authup/specs';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../../app';
 import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
@@ -201,6 +203,41 @@ describe('token-introspect', () => {
 
         expect(introspection.active).toBe(false);
         expect(Object.keys(introspection)).toEqual(['active']);
+    });
+
+    // A back-channel logout token is signed with the realm key like every
+    // other token, so it verifies; it is a notification, not a credential,
+    // and is reported dead and bare rather than as its subject's token.
+    it('should report a logout token as inactive, and nothing else', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+        const current = await suite.client
+            .token
+            .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const now = Math.floor(Date.now() / 1000);
+        const logoutToken = await signer.sign({
+            kind: OAuth2TokenKind.LOGOUT,
+            jti: randomUUID(),
+            iss: current.iss,
+            aud: current.client_id,
+            sub: current.sub,
+            sid: current.session_id,
+            realm_id: current.realm_id,
+            exp: now + 120,
+            events: { 'http://schemas.openid.net/event/backchannel-logout': {} },
+        });
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token: logoutToken }, { authorizationHeaderInherit: true });
+
+        expect(introspection).toEqual({ active: false });
     });
 
     // The token PARAMETER is still part of the request contract: a body without

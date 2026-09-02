@@ -74,6 +74,33 @@ npm run test:mysql --workspace=apps/server-core
 npm run test:psql --workspace=apps/server-core
 ```
 
+Some behaviour only exists against a server database. The row lock
+`UserService.save` / `ClientService.save` take through the repository
+`transaction(fn)` seam (#3526) is a `FOR UPDATE` on mysql and postgres and an
+unlocked passthrough on sqlite, so the concurrency regression spec
+(`test/unit/http/controllers/entities/user-concurrency.spec.ts`, two
+`Promise.all`ed updates of one row, asserting the second cannot restore what
+the first changed) is `describe.skipIf`-gated to those two dialects: on sqlite
+the two awaited reads interleave and the lost update reproduces by design. The
+lock path therefore runs under `test:mysql` / `test:psql` only, and a green
+sqlite run says nothing about it. The service specs pin the seam itself on the
+fakes (`transactionCalls === 1` after an update, `0` after a create), which
+every dialect runs.
+
+The transaction wraps ONLY the write: lock-read the fresh row, merge this
+request's patch, save. The pre-work (gates, validation, join-column and
+uniqueness checks, derivations) stays unlocked and outside it, because a
+transaction pins a pooled connection and the evaluator, join-column and
+uniqueness reads acquire a second one; with the whole body inside, ten
+concurrent saves exhausted the pool and hung every later query. The same spec
+therefore carries a pool-exhaustion pin: twelve concurrent updates on twelve
+different users and twelve concurrent creates must all resolve within the
+default test timeout, which a regression turns into a hang and vitest into a
+failure. The spec boots with `eventLogEntityEnabled = false`: the entity
+audit mirror writes its row on a second pooled connection from inside the
+persist transaction (issue #3539, pre-existing), so with it on the pins hang
+against master too and would say nothing about the save shape.
+
 ## Test Layers (server-core)
 
 ### Service-Level Tests
@@ -511,6 +538,8 @@ DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD
 ```
 
 It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows — the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
+
+The value comparison exempts the columns the newest migration itself changed, in both directions. Columns it ADDED are keys present before and absent after the revert; columns it DROPPED are keys present after the revert and absent before, which the revert brings back as keys the before-snapshot never had. Only the first kind was exempt until #3355 dropped `auth_clients.scope` and `root_url`, at which point *column values unchanged after revert* failed by construction. The script now compares the after-revert values without the dropped columns against the before values without the added ones, and additionally checks that the re-run drops them again.
 
 The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is no longer part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
 

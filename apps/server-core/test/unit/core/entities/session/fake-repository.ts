@@ -117,8 +117,11 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     async remove(session: Session): Promise<void> {
-        this.removeCalls.push(session);
+        this.removeCalls.push({ ...session });
         this.sessions.delete(session.id);
+        // TypeORM unsets the primary key on the object it removed; a caller
+        // that still needs the id afterwards must have handed over a copy.
+        delete (session as Partial<Session>).id;
     }
 
     async removeById(id: string): Promise<void> {

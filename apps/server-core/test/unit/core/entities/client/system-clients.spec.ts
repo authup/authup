@@ -10,7 +10,6 @@ import { Query } from '@rapiq/core';
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
     CLIENT_ADMIN_CONSOLE_NAME,
-    ScopeName,
 } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import { FakeEntityRepository } from '@authup/server-test-kit';
@@ -53,7 +52,7 @@ describe('core/entities/client/system-clients', () => {
             expect(attributes.tokenBindingMethod).toBe('none');
             expect(attributes.builtIn).toBe(true);
             expect(attributes.active).toBe(true);
-            expect(attributes.scope).toBe(`${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
+            expect(attributes).not.toHaveProperty('scope');
             expect(attributes.redirectUri).toBe(
                 'http://localhost:3000/**,https://app.example.com/**',
             );
@@ -137,8 +136,9 @@ describe('core/entities/client/system-clients', () => {
         });
 
         // Regression (#3347): the declared `global openid` used to land in the
-        // dead `scope` column only, leaving the client with no junction rows.
-        // That junction is the sole source /authorize resolves scopes from.
+        // dead `scope` column only (dropped since), leaving the client with no
+        // junction rows. That junction is the sole source /authorize resolves
+        // scopes from.
         it('should bind the built-in scopes through the junction for every client', async () => {
             const realmId = randomUUID();
             await provisioner.ensureForRealm({ id: realmId });

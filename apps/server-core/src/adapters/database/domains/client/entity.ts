@@ -134,6 +134,14 @@ export class ClientEntity implements Client {
     })
     postLogoutRedirectUri: string | null;
 
+    @Column({
+        name: 'backchannel_logout_uri',
+        type: 'varchar',
+        length: 2000,
+        nullable: true,
+    })
+    backchannelLogoutUri: string | null;
+
     @Index()
     @Column({
         name: 'access_policy_id',
@@ -158,28 +166,12 @@ export class ClientEntity implements Client {
     grantTypes: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 512,
-        nullable: true,
-        default: null,
-    })
-    scope: string | null;
-
-    @Column({
         name: 'base_url', 
         type: 'varchar', 
         length: 2000, 
         nullable: true, 
     })
     baseUrl: string | null;
-
-    @Column({
-        name: 'root_url', 
-        type: 'varchar', 
-        length: 2000, 
-        nullable: true, 
-    })
-    rootUrl: string | null;
 
     // ------------------------------------------------------------------
 

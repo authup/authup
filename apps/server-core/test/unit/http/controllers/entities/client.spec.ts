@@ -15,7 +15,7 @@ import {
     it,
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
-import { createFakeClient, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createFakeClient, expectPropertiesEqualToSrc, httpRequest } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 import { createTestApplication } from '../../../../app';
 
@@ -205,5 +205,35 @@ describe('http/controllers/client', () => {
 
         read = (await suite.client.client.getOne(created.id)).data;
         expect(read.accessPolicyId).toBeNull();
+    });
+
+    // `scope` and `rootUrl` were dropped (issue #3355): the validator strips
+    // them like any unmounted key, so a payload still carrying them is
+    // accepted and answered without them. `baseUrl` stays and round-trips.
+    it('should ignore the retired scope and rootUrl keys and round-trip baseUrl', async () => {
+        const response = await httpRequest(suite, 'POST', '/clients', {
+            headers: {
+                Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...createFakeClient(),
+                baseUrl: 'https://app.example.com',
+                scope: 'openid profile',
+                rootUrl: 'https://app.example.com/root',
+            }),
+        });
+
+        expect(response.status).toEqual(201);
+
+        const { data: created } = await response.json();
+        expect(created.baseUrl).toEqual('https://app.example.com');
+        expect(created).not.toHaveProperty('scope');
+        expect(created).not.toHaveProperty('rootUrl');
+
+        const { data: read } = await suite.client.client.getOne(created.id);
+        expect(read.baseUrl).toEqual('https://app.example.com');
+        expect(read).not.toHaveProperty('scope');
+        expect(read).not.toHaveProperty('rootUrl');
     });
 });
