@@ -15,7 +15,7 @@ import type { Config } from './types';
 /**
  * This console as a runnable service: its own module graph, its own
  * container, its own lifecycle, and nothing of server-core's. It is what
- * `authup console` starts, what the `authup-account-console` bin starts, and what
+ * `authup start console` starts, what the `authup-account-console` bin starts, and what
  * `authup start` composes onto its own listener, so no caller reaches past
  * the graph for a bare handler.
  *

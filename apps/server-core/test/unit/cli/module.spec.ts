@@ -77,11 +77,14 @@ describe('src/cli/module', () => {
             ))).toThrow('Unexpected argument "client.admin-console" for command "start".');
         });
 
-        it('should refuse a stray positional on core', () => {
-            expect(() => assertNoStrayPositionals(parseArgs(
-                ['core', 'client.admin-console'],
-                CLI_CONFIG_ARGS,
-            ))).toThrow('Unexpected argument "client.admin-console" for command "core".');
+        it('should refuse a stray positional on the commands the caller names', () => {
+            const commands = new Set(['dev']);
+
+            expect(() => assertNoStrayPositionals(parseArgs(['dev', 'x'], CLI_CONFIG_ARGS), commands))
+                .toThrow('Unexpected argument "x" for command "dev".');
+
+            expect(() => assertNoStrayPositionals(parseArgs(['start', 'x'], CLI_CONFIG_ARGS), commands))
+                .not.toThrow();
         });
 
         it('should accept the space form of the config flags on start', () => {
@@ -96,9 +99,9 @@ describe('src/cli/module', () => {
             ))).not.toThrow();
         });
 
-        it('should accept the equals form of the config flags on core', () => {
+        it('should accept the equals form of the config flags on start', () => {
             expect(() => assertNoStrayPositionals(parseArgs(
-                ['core', '--configDirectory=/etc/authup'],
+                ['start', '--configDirectory=/etc/authup'],
                 CLI_CONFIG_ARGS,
             ))).not.toThrow();
         });

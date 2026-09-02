@@ -13,7 +13,7 @@ import { createServer } from './server';
 /**
  * The standalone entry. It reads the keys this service declares from the
  * environment; `authup.yml` reaches the service through the CLI roles
- * (`authup console auth`), which hand each factory its own section, and that
+ * (`authup start console auth`), which hand each factory its own section, and that
  * is also how it is started in practice.
  */
 const config = readConfigFromEnv();

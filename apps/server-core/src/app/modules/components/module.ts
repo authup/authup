@@ -49,7 +49,7 @@ export class ComponentsModule implements IModule {
         // API replica can hand the sweeps to a dedicated worker process.
         if (!config.worker.enabled) {
             if (this.options.required) {
-                throw new Error('This process runs in worker mode, but core.worker.enabled is false. Set it to true for this process (WORKER_ENABLED=true), or start it without --worker.');
+                throw new Error('This process runs in worker mode, but core.worker.enabled is false. Set it to true for this process (WORKER_ENABLED=true), or start the API instead (`authup start` or `authup start core`), which runs the worker in process while the key is true.');
             }
 
             logger.info('The worker is disabled by configuration (core.worker.enabled: false).');

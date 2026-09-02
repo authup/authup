@@ -356,11 +356,14 @@ lives in the packages. The suite is split in two accordingly.
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
   meta read from the package and exactly the subcommands it should
-  (`config`, `console`, `core`, `healthcheck`, `migration`, `start`,
-  and no `worker`: that is `start --worker`), and its `setup` refuses a
-  stray positional on `core`/`start` (the retired `authup start server.core` selector
-  shape) while leaving the commands whose positional is real alone
-  (`migration run`, `console admin`). The composed-schema spec that sat here
+  (`config`, `dev`, `healthcheck`, `migration`, `start`, and no `core`,
+  `console` or `worker`: those are roles of `start`). The root `setup`
+  refuses a stray positional on `dev` alone and leaves the commands whose
+  positional is real alone (`migration run`, `start console admin`);
+  `start`'s own `setup` refuses a bad role before anything boots: an unknown
+  role (the retired `authup start server.core` selector shape), a name after
+  `core` or `worker`, an unknown console name and the tombstone `--worker`
+  flag, whose message names `start worker`. The composed-schema spec that sat here
   is gone with `composeSchemas`: every configuration key is declared once in
   `@authup/server-config` now, so there is no pair of declarations left to
   prove consistent. The supervisor-era specs are gone with the supervisor: there is no entrypoint to
@@ -383,7 +386,7 @@ lives in the packages. The suite is split in two accordingly.
     answers. That the file was read at all is proven separately, by reading
     `publicUrl` back out of the injected console config: it is the one key
     only the file supplies.
-  - The **split** scenario runs `authup core` and `authup console` side by
+  - The **split** scenario runs `authup start core` and `authup start console` side by
     side and asserts what only two processes can show: the API answers **404**
     for every console page (the shed; a shell answered there would mean both
     sides serve it, with whichever mounted first winning silently), `/logout`

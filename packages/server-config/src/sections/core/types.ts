@@ -28,7 +28,7 @@ export type CoreWorkerConfig = {
     /**
      * Run the worker in this process. Under the default mode the API runs it
      * alongside itself; set false on API replicas when a dedicated
-     * `authup start --worker` process runs it. Worker mode refuses to
+     * `authup start worker` process runs it. Worker mode refuses to
      * start when this is false.
      * default: true
      */

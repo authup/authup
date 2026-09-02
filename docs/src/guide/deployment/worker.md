@@ -4,20 +4,19 @@
 the API, the console services serve their pages on the same listener, and a set
 of cron sweeps runs in the background. Those sweeps can be moved into a
 separate process, the **worker**, so the API replicas only serve requests. The
-consoles can be moved out the same way; see
+consoles can be moved out the same way, an API set running `start core` next
+to a console set running `start console`; see
 [Console Replicas](./console-replicas.md).
 
-The worker is the same image and the same binary, started in a different mode:
+The worker is the same image and the same binary, started in a different role:
 
 ```bash
-authup start --worker
+authup start worker
 ```
 
-In a container that is `server/core start --worker`; on bare metal it is a
-second `authup` process next to the one running `start`. Without the flag the
-API runs the worker alongside itself.
-`authup core --worker` is equivalent: a worker mounts no console either
-way.
+In a container the command is `start worker`; on bare metal it is a second
+`authup` process next to the one running `start`. Without the role the API
+runs the worker alongside itself.
 
 ## What it runs
 
@@ -47,7 +46,7 @@ user are still written by the API process on startup.
 
 ## When to deploy one
 
-Most deployments do not need a worker. A single `server/core start` process
+Most deployments do not need a worker. A single `authup start` process
 already runs the sweeps, and so does every replica of it.
 
 Deploy a worker when you run more than one API replica and want the sweeps to
@@ -78,7 +77,7 @@ Set that on every API replica, and only once a worker is actually running. With
 it set and no worker, nothing sweeps: expired sessions, tokens and audit events
 accumulate until a process that runs the sweeps starts.
 
-Worker mode requires the key. `start --worker` refuses to boot while
+Worker mode requires the key. `start worker` refuses to boot while
 `core.worker.enabled` is false, naming the key in the error, rather than coming
 up idle and sweeping nothing. A worker that reads the same `authup.yml` as the
 API replicas therefore has to override it in its own environment:
@@ -99,7 +98,7 @@ schema like every other process.
 So a deployment that adds a worker also has to decide who migrates. The
 recommendation is to let neither long-running process do it:
 
-1. Run `authup migration run` (container: `server/core migration run`)
+1. Run `authup migration run` (container command: `migration run`)
    as a one-off step, and let it finish.
 2. Start the API replicas and the worker.
 
@@ -147,7 +146,7 @@ services:
             - REDIS=redis://redis:6379
             # the sweeps run in the worker below
             - WORKER_ENABLED=false
-        command: server/core start
+        command: start
 
     # one instance is enough, whatever the API scales to
     server-core-worker:
@@ -165,7 +164,7 @@ services:
         # the image healthcheck probes an HTTP port this process never opens
         healthcheck:
             disable: true
-        command: server/core start --worker
+        command: start worker
 ```
 
 The worker needs no volume and no published port. It does need the same
@@ -181,12 +180,12 @@ for `docker logs` remains.
 
 The same split, with the migration step as its own object:
 
-- A `Job` running `server/core migration run`, as a pre-install and pre-upgrade
+- A `Job` running `migration run`, as a pre-install and pre-upgrade
   hook so it completes before the workloads roll.
 - The API `Deployment`, with `WORKER_ENABLED=false` and
   `MIGRATION_ENABLED=false`. Any number of replicas.
 - The worker `Deployment`, `replicas: 1`, command
-  `server/core start --worker`, with no readiness or liveness HTTP probe.
+  `start worker`, with no readiness or liveness HTTP probe.
   Give it `WORKER_ENABLED=true` when it shares the API's `ConfigMap`, which
   sets that key to false.
 
