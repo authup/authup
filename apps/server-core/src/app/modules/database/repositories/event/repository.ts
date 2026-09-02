@@ -24,8 +24,15 @@ import { applyRealmScopeSelect, deleteInBatches, resolveSweepBatchSize } from '.
 export class EventRepositoryAdapter implements IEventRepository {
     private readonly repository: Repository<Event>;
 
+    /**
+     * One pending audit save per caller connection, keyed by the manager the
+     * hook handed over (every hook of one broadcast gets the same object).
+     */
+    private readonly transactionQueue: WeakMap<EntityManager, Promise<unknown>>;
+
     constructor(repository: Repository<Event>) {
         this.repository = repository;
+        this.transactionQueue = new WeakMap();
     }
 
     create(data: Partial<Event>): Event {
@@ -33,26 +40,51 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async save(entity: Event, options: EventSaveOptions = {}): Promise<Event> {
-        // An audit row written from inside a persist transaction rides it:
-        // the connection behind the write is still held while the subscriber
-        // hooks run, so a save through the DataSource would wait for a second
-        // pooled connection and ten concurrent writes deadlock (#3539).
-        // Deliberately no savepoint around it: savepoints are a stack per
-        // connection and typeorm reads its depth before the awaited SAVEPOINT
-        // statement, while the after-hooks of one array save (an entity's
-        // attribute rows) run concurrently on one runner, so the depth races
-        // and a RELEASE names a savepoint that does not exist. The residual is
-        // postgres-only: it aborts the whole transaction on a failed statement,
-        // so an INSERT that fails on the database's side (this row has no
-        // foreign key, its free-text columns are truncated and its uuid columns
-        // only receive ids the server minted, so nothing data-shaped fails it)
-        // dooms the write, and the executor's COMMIT then answers ROLLBACK
-        // without raising.
+        // An audit row written from inside a persist transaction rides it: the
+        // connection behind the write is still held while the subscriber hooks
+        // run, so a save through the DataSource would wait for a second pooled
+        // connection and ten concurrent writes deadlock (#3539).
         if (options.transaction instanceof EntityManager) {
-            return options.transaction.withRepository(this.repository).save(entity);
+            return this.saveOnCallerConnection(options.transaction, entity);
         }
 
         return this.repository.save(entity);
+    }
+
+    /**
+     * Writes the row on the connection the caller already holds.
+     *
+     * Serialized per connection, because the after-hooks of one array save run
+     * concurrently (typeorm awaits them with Promise.all) and would otherwise
+     * put several statements in flight on one client. pg deprecates that in
+     * 8.22 and removes it in 9, and typeorm avoids it everywhere it controls
+     * the fan-out.
+     *
+     * `transaction: false` keeps the nested save from opening a transaction of
+     * its own. Inside a persist transaction it would not have, but a
+     * query-builder insert (the extra-attribute add path) broadcasts its hooks
+     * on a runner carrying no transaction, and there each save would otherwise
+     * BEGIN and COMMIT one.
+     *
+     * Deliberately no savepoint: savepoints are a stack per connection, and
+     * `startTransaction` issues `SAVEPOINT typeorm_<depth>` and awaits it
+     * before incrementing the depth, so concurrent hooks raced it and a
+     * RELEASE named a savepoint that was never created. The residual is
+     * postgres-only and stated in .agents/architecture.md.
+     */
+    private saveOnCallerConnection(manager: EntityManager, entity: Event): Promise<Event> {
+        const pending = this.transactionQueue.get(manager) || Promise.resolve();
+        const next = pending
+            .catch(() => undefined)
+            .then(() => manager
+                .withRepository(this.repository)
+                .save(entity, { transaction: false }));
+
+        // the queue tail must never stay rejected, or it would fail every
+        // later row on this connection
+        this.transactionQueue.set(manager, next.catch(() => undefined));
+
+        return next;
     }
 
     async findOneById(id: string): Promise<Event | null> {
