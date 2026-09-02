@@ -24,6 +24,7 @@ describe('src/testing/matcher', () => {
             method: 'GET', 
             url: 'clients', 
             params: {},
+            headers: {},
         })).toEqual('many');
     });
 
@@ -39,6 +40,7 @@ describe('src/testing/matcher', () => {
             method: 'POST', 
             url: 'clients', 
             params: {},
+            headers: {},
         })).toEqual('created');
     });
 
@@ -53,6 +55,7 @@ describe('src/testing/matcher', () => {
             method: 'GET', 
             url: '', 
             params: {},
+            headers: {},
         })).toEqual('fallthrough');
     });
 
@@ -65,6 +68,7 @@ describe('src/testing/matcher', () => {
             method: 'GET', 
             url: '', 
             params: {},
+            headers: {},
         })).toEqual('one');
     });
 

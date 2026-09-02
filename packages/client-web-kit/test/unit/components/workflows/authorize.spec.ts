@@ -9,6 +9,7 @@ import type {
     Client, 
     Consent, 
     OAuth2AuthorizationCodeRequest, 
+    Realm,
     User,
 } from '@authup/core-kit';
 import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
@@ -94,10 +95,46 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
 // lowercase scope token, mirroring the server's persisted shape.
 function consentRow(scope: string, expiresAt: string | null = null): Consent {
     const now = new Date(0).toISOString();
+    const realm: Realm = {
+        id: REALM.id,
+        name: REALM.name,
+        displayName: null,
+        description: null,
+        builtIn: false,
+        createdAt: now,
+        updatedAt: now,
+    };
+
     return {
         id: `consent-${scope}`,
         clientId: 'client-1',
+        client: {
+            id: 'client-1',
+            active: true,
+            builtIn: false,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
+            name: 'web',
+            displayName: 'Web',
+            description: null,
+            secret: null,
+            secretHashed: false,
+            secretEncrypted: false,
+            redirectUri: null,
+            postLogoutRedirectUri: null,
+            grantTypes: null,
+            scope: null,
+            baseUrl: null,
+            rootUrl: null,
+            createdAt: now,
+            updatedAt: now,
+            realmId: REALM.id,
+            realm,
+            accessPolicyId: null,
+            accessPolicy: null,
+        },
         realmId: REALM.id,
+        realm,
         userId: 'user-1',
         sub: 'user-1',
         subKind: 'user',
@@ -223,6 +260,8 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             createdAt: clientTimestamp,
             updatedAt: clientTimestamp,
         },
+        accessPolicyId: null,
+        accessPolicy: null,
     };
 
     let store!: Store;

@@ -54,11 +54,12 @@ describe('src/policy/date', () => {
 
     it('should parse options with unknown', async () => {
         const validator = new DatePolicyValidator();
-        const output = await validator.run({
+        const input : DatePolicy & { foo?: string } = {
             start: '2024-01-01',
             end: '2024-05-01',
             foo: 'bar',
-        } satisfies DatePolicy & { foo?: string }) as Partial<DatePolicy> & { foo?: string };
+        };
+        const output = await validator.run(input) as Partial<DatePolicy> & { foo?: string };
 
         expect(output.start).toEqual('2024-01-01');
         expect(output.end).toEqual('2024-05-01');

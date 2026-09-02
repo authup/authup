@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    // No `ignoreDeprecations` here: this chain extends the Nuxt-generated .nuxt/tsconfig.json,
+    // not the repo root, whose deprecated `baseUrl` is what the sibling configs suppress.
+    "compilerOptions": {
+        "noEmit": true
+    },
+    "include": [
+        "src/**/*.ts",
+        "test/**/*.ts"
+    ]
+}

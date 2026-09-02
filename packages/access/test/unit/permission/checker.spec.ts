@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
-import type { AttributeNamesPolicy, PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src';
 import { 
     BuiltInPolicyType, 
     PermissionError, 
@@ -17,16 +17,14 @@ import {
     PolicyDefaultEvaluators, 
     PolicyEngine, 
     definePolicyData, 
+    definePolicyWithType,
 } from '../../../src';
 
 const abilities : PermissionPolicyBinding[] = [
     {
         permission: { name: 'user_edit' },
         policies: [
-            {
-                type: BuiltInPolicyType.ATTRIBUTE_NAMES,
-                names: ['name'],
-            } satisfies AttributeNamesPolicy,
+            definePolicyWithType(BuiltInPolicyType.ATTRIBUTE_NAMES, { names: ['name'] }),
         ],
     },
     { permission: { name: 'user_add' } },

@@ -67,6 +67,8 @@ const client: Client = {
     updatedAt: now,
     realmId: 'realm-x',
     realm,
+    accessPolicyId: null,
+    accessPolicy: null,
 };
 
 type FormProps = {

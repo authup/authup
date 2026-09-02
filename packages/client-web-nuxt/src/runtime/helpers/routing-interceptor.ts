@@ -16,6 +16,7 @@ import {
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
+import type { Pinia } from 'pinia';
 import { BuiltInPolicyType, type IdentityPolicyData, definePolicyData } from '@authup/access';
 import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
@@ -37,7 +38,7 @@ export class RoutingInterceptor {
     protected loginRoute : string;
 
     constructor(nuxtApp: NuxtApp) {
-        this.store = injectStore(nuxtApp.$pinia, nuxtApp.vueApp);
+        this.store = injectStore(nuxtApp.$pinia as Pinia | undefined, nuxtApp.vueApp);
         this.storeRefs = storeToRefs(this.store);
 
         const runtimeOptions = nuxtApp.$config.public.authup as RuntimeOptions;
@@ -114,7 +115,7 @@ export class RoutingInterceptor {
                     const query : Record<string, string | string[]> = {};
                     for (const key of new Set(destination.searchParams.keys())) {
                         const values = destination.searchParams.getAll(key);
-                        query[key] = values.length > 1 ? values : values[0];
+                        query[key] = values.length > 1 ? values : values[0]!;
                     }
 
                     return {

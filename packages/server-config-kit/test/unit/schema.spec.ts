@@ -288,7 +288,7 @@ describe('mergeSchemaData', () => {
             publicUrl: 'https://idp.example.com',
             server: { core: { host: '10.0.0.1' } },
         }, SCHEMA);
-        const env = { core: { port: 4001 } };
+        const env = { core: { port: 4001 } } as Partial<Fixture>;
 
         expect(mergeSchemaData(SCHEMA, defaults, file, env)).toEqual({
             publicUrl: 'https://idp.example.com',
@@ -313,7 +313,7 @@ describe('mergeSchemaData', () => {
 describe('mountSchema', () => {
     it('should validate a section rather than drop it', async () => {
         const container = new Container<Record<string, any>>();
-        mountSchema(container, SCHEMA);
+        mountSchema(container, SCHEMA as SchemaInput<Record<string, any>>);
 
         await expect(container.run({
             publicUrl: 'https://idp.example.com',

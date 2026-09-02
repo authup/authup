@@ -24,6 +24,7 @@
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "tsdown",
         "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "check:types": "tsc -p tsconfig.test.json",
         "test": "cross-env NODE_ENV=test vitest run test/unit",
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },

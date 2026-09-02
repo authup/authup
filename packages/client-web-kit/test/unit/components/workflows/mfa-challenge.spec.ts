@@ -77,9 +77,10 @@ describe('AMfaChallengeForm', () => {
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
         expect(verifyRequest).toBeDefined();
-        expect(verifyRequest!.body.kind).toEqual('webauthn');
+        const verifyBody = verifyRequest!.body as Record<string, string>;
+        expect(verifyBody.kind).toEqual('webauthn');
         // the assertion is forwarded as a JSON string
-        expect(JSON.parse(verifyRequest!.body.response).id).toEqual('cred-1');
+        expect(JSON.parse(verifyBody.response).id).toEqual('cred-1');
         expect(wrapper.emitted('done')).toBeTruthy();
     });
 

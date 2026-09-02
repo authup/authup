@@ -122,16 +122,19 @@ describe('escalation prevention', () => {
     });
 
     it('should allow: same policy by id even as distinct objects (identity, not reference)', () => {
+        const parentPolicy = { type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' };
+        const childPolicy = { type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' };
+
         const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [{ type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' }],
+                policies: [parentPolicy],
             },
         ];
         const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [{ type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' }],
+                policies: [childPolicy],
             },
         ];
 
@@ -182,24 +185,27 @@ describe('escalation prevention', () => {
     it('should allow: distinct policy rows with identical configuration (value-compare, different id)', () => {
         // Two SEPARATE policy rows (different id) encoding the same restriction = same predicate,
         // so the actor genuinely holds what it confers. id differs; structural config is identical.
+        const policyRow1 = {
+            type: BuiltInPolicyType.ATTRIBUTES,
+            id: 'row-1',
+            query: { department: 'x' },
+        };
+        const policyRow2 = {
+            type: BuiltInPolicyType.ATTRIBUTES,
+            id: 'row-2',
+            query: { department: 'x' },
+        };
+
         const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_update' },
-                policies: [{
-                    type: BuiltInPolicyType.ATTRIBUTES, 
-                    id: 'row-1', 
-                    query: { department: 'x' }, 
-                }],
+                policies: [policyRow1],
             },
         ];
         const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_update' },
-                policies: [{
-                    type: BuiltInPolicyType.ATTRIBUTES, 
-                    id: 'row-2', 
-                    query: { department: 'x' }, 
-                }],
+                policies: [policyRow2],
             },
         ];
 

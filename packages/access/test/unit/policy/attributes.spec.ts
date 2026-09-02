@@ -54,10 +54,11 @@ describe('src/policy/attributes', () => {
 
     it('should parse options with unknown', async () => {
         const validator = new AttributesPolicyValidator();
-        const output = await validator.run({
+        const input : AttributesPolicy & { foo?: string } = {
             query: { name: { $eq: 'admin' } },
             foo: 'bar',
-        } satisfies AttributesPolicy & { foo?: string }) as Partial<AttributesPolicy> & { foo?: string };
+        };
+        const output = await validator.run(input) as Partial<AttributesPolicy> & { foo?: string };
 
         expect(output.query).toBeDefined();
         expect(output.foo).toBeUndefined();
