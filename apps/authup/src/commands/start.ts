@@ -216,21 +216,30 @@ async function startConsoles(configFs: ConfigReadFsOptions, selected?: ConsoleNa
         // A named console that is switched off is an operator contradiction,
         // and starting nothing would read as a healthy run to whatever
         // supervises the process.
-        throw new Error(`The ${selected} console is disabled, so there is nothing to serve.`);
+        throw new Error(`The ${selected} console is disabled (${selected}Console.enabled, env ${String(selected).toUpperCase()}_CONSOLE_ENABLED), so there is nothing to serve.`);
     }
 
     const applications : Application[] = [];
-    for (const service of wanted) {
-        const application = service.create();
+    try {
+        for (const service of wanted) {
+            const application = service.create();
 
-        await application.setup();
+            await application.setup();
 
-        applications.push(application);
+            applications.push(application);
 
-        const server = application.container.resolve(InjectionKey.Server);
+            const server = application.container.resolve(InjectionKey.Server);
 
-        // eslint-disable-next-line no-console
-        console.log(`Serving the ${service.name} console on ${server.url}`);
+            // eslint-disable-next-line no-console
+            console.log(`Serving the ${service.name} console on ${server.url}`);
+        }
+    } catch (e) {
+        // A console that came up before a later one failed must not keep
+        // answering while the error unwinds: the exit that follows closes it
+        // too, but only after it served requests as if the process were healthy.
+        await Promise.allSettled(applications.map((application) => application.teardown()));
+
+        throw e;
     }
 
     registerShutdownHandlers({

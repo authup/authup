@@ -244,8 +244,11 @@ services:
         environment:
             - PUBLIC_URL=https://auth.example.com
         command: start console
+        # The image probes the API port, which this process never opens.
+        # Probe the auth console: it cannot be disabled, so it is always
+        # listening (3020 by default, AUTH_CONSOLE_PORT).
         healthcheck:
-            test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3021/healthy"]
+            test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/healthy"]
             interval: 10s
 ```
 

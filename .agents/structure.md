@@ -98,7 +98,9 @@ Apps:
                       server-console-kit, server-kit, specs (+ ilingo runtime dep)
                       (NO console package is a dependency any more: the three client-*-console dists,
                        @routup/assets and vite all left with the console serving in plan 101 D2-3, which
-                       is ~28 MB of dist an `authup start core` deployment never installs. server-console-kit
+                       is ~28 MB of dist a server-core-only install never pulls in. The `authup` CLI depends
+                       on every service, so a `start core` process still has them on disk; it never LOADS
+                       them, since that role reads no console config and resolves no bundle. server-console-kit
                        survives for one import, the shared vc-locale cookie name useRequestLocale reads)
   server-account-console → client-account-console (RUNTIME: the built dist/ it serves), kit,
                       server-config-kit, server-console-kit (+ routup, @routup/assets, @routup/basic,

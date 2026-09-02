@@ -2968,8 +2968,13 @@ prefix stays accepted for the rest of the 1.0.0-beta line and is removed in
 v1.0.0. `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
 unconditional exports, so `-e PORT=4000` reaches the server, and the
 `HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
-default command. An empty or unknown command (the retired
-`client/admin-console`) is the CLI's to refuse, with its usage and exit 1.
+default command. That probe fits `start` and `start core` only: a `start
+worker` container opens no port and a `start console` container binds the
+console ports, so those roles disable or override it in their own deployment
+(the compose snippets in `worker.md` and `console-replicas.md`; the console
+one probes the auth console, which cannot be disabled). An empty or unknown
+command (the retired `client/admin-console`) is the CLI's to refuse, with its
+usage and exit 1.
 
 Each console IS its own service, so a shared listener would be the one place
 pretending otherwise; behind one origin the proxy routes each console's path

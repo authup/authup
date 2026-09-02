@@ -514,9 +514,13 @@ both server-core and the console service; `path` only by the console service.
 The `features` block of the public status endpoint (`GET /`) gains
 `adminConsole`.
 
-**Deliberately gone**: the `authup-admin-console` binary and the published
-Nuxt server bundle. `@authup/client-admin-console` ships `dist/` only. The
-bundle stays hostable on a static host of your own, on its own origin; see
+**Deliberately gone**: the Nuxt server process and its published bundle.
+`@authup/client-admin-console` ships `dist/` only. The `authup-admin-console`
+NAME survives in the same release, but as the bin of
+`@authup/server-admin-console`, the service that serves that dist (see the
+consoles-are-services entry above); `authup start console admin` is the
+supported route to it. The bundle stays hostable on a static host of your
+own, on its own origin; see
 [Admin Console](./configuration-client-admin-console.md#standalone-hosting).
 
 Sign-in changed as well and needs no action. Served from the API's origin, the

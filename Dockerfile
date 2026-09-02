@@ -24,6 +24,10 @@ ENV WRITABLE_DIRECTORY_PATH=/var/lib/authup
 
 EXPOSE 3000
 
+# Probes the API listener, which `start` and `start core` open. A `start worker`
+# container opens no port and a `start console` container binds the console
+# ports instead, so those roles disable or override this check in their own
+# deployment (see docs/src/guide/deployment/{worker,console-replicas}.md).
 HEALTHCHECK --interval=10s --timeout=5s --retries=10 --start-period=5s \
     CMD wget --spider --proxy off http://127.0.0.1:${PORT}/ || exit 1
 

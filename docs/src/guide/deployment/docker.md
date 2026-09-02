@@ -23,7 +23,7 @@ $ mkdir authup && cd authup
 
 `PORT` and `HOST` are honored inside the container. The image defaults them to
 `3000` and `0.0.0.0`, so the rule when the container is run is as follows:
-- By default the API listens on the internal port `3000` and is published on another external port with `-p <port>:3000`. Setting `-e PORT=4000` moves the listener, and the built-in healthcheck follows `PORT`; the image's `EXPOSE 3000` is metadata and pins nothing. The `start console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
+- By default the API listens on the internal port `3000` and is published on another external port with `-p <port>:3000`. Setting `-e PORT=4000` moves the listener to `4000`, so the container side of the mapping must follow it (`-p <port>:4000`); the built-in healthcheck follows `PORT` on its own, and the image's `EXPOSE 3000` is metadata that pins nothing. The `start console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.

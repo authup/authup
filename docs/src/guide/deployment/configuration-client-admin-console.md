@@ -140,6 +140,6 @@ the server, and the console's own address derives from it.
 
 The `client.admin-console` section of the configuration file is no longer read
 either, and `authup start client.admin-console` is refused as an unknown role:
-the positional `start` takes names a role, and
+the one positional `start` takes names a role, and
 `authup start console [admin|account|auth]` serves a console rather than
 selecting a package.
