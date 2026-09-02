@@ -19,7 +19,7 @@ It covers:
 | Authenticators | `/console/account/authenticators` | Enroll and remove second factors (TOTP, recovery codes, email, passkeys) |
 | Connected accounts | `/console/account/connected-accounts` | Link and unlink external identity-provider accounts (e.g. Facebook, Google, any OAuth2/OIDC provider of the realm) |
 | Sessions | `/console/account/sessions` | See active sessions, revoke one, or log out all other devices |
-| Applications | `/console/account/applications` | Review and revoke granted application consents |
+| Applications | `/console/account/applications` | Review and revoke granted application consents, and open an application that registered a home URL (`baseUrl`) |
 
 ## Sign-in
 

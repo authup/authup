@@ -16,6 +16,7 @@ import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
@@ -23,6 +24,7 @@ import {
     ClientEntity,
     ClientPermissionEntity,
     ClientRoleEntity,
+    RealmEntity,
 } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -31,14 +33,21 @@ export type ClientRepositoryAdapterContext = {
     realmRepository: Repository<Realm>,
 };
 
+export type ClientRepositoryAdapterOptions = {
+    lockRows?: boolean,
+};
+
 export class ClientRepositoryAdapter implements IClientRepository {
     private readonly repository: Repository<Client>;
 
     private readonly realmRepository: IRealmRepository;
 
-    constructor(ctx: ClientRepositoryAdapterContext) {
+    private readonly lockRows: boolean;
+
+    constructor(ctx: ClientRepositoryAdapterContext, options: ClientRepositoryAdapterOptions = {}) {
         this.repository = ctx.repository;
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
+        this.lockRows = options.lockRows ?? false;
     }
 
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Client>> {
@@ -110,7 +119,10 @@ export class ClientRepositoryAdapter implements IClientRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Client | null> {
-        return this.repository.findOneBy(translateWhereConditions(where));
+        return this.repository.findOne({
+            where: translateWhereConditions(where),
+            ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
+        });
     }
 
     async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {
@@ -121,6 +133,10 @@ export class ClientRepositoryAdapter implements IClientRepository {
         });
 
         qb.addSelect('client.secret');
+
+        if (this.lockRows) {
+            qb.setLock('pessimistic_write');
+        }
 
         return qb.getOne();
     }
@@ -139,6 +155,25 @@ export class ClientRepositoryAdapter implements IClientRepository {
 
     async remove(entity: Client): Promise<void> {
         await this.repository.remove(entity);
+    }
+
+    async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
+        const dataSource = this.repository.manager.connection;
+        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+            // better-sqlite3: no FOR UPDATE, and the driver shares ONE query
+            // runner, so a transaction here would nest as a savepoint inside
+            // whatever else is running on it. Plain unlocked passthrough,
+            // exactly as the un-guarded path did (the removeGuarded rule).
+            return fn(this);
+        }
+
+        // mysql / postgres: real concurrency. Hand the callback an adapter
+        // bound to the transaction's manager whose single-row reads lock,
+        // so the row loaded by save() cannot change under the merge.
+        return dataSource.transaction((manager) => fn(new ClientRepositoryAdapter({
+            repository: manager.getRepository(ClientEntity),
+            realmRepository: manager.getRepository(RealmEntity),
+        }, { lockRows: true })));
     }
 
     async validateJoinColumns(data: Partial<Client>): Promise<void> {

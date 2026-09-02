@@ -316,19 +316,28 @@ check('row counts unchanged after revert', await snapshot(), before);
  * loss, so they are exempt from the value comparison - which keeps
  * guarding every pre-existing column against a type change implemented
  * as DROP plus ADD.
+ *
+ * Columns the migration dropped are the mirror image: the revert re-adds
+ * them empty, so they exist only after the revert, and the re-run has to
+ * drop them again. They are exempt the same way, from the other side.
  */
 const valuesAfterRevert = await values();
 const addedColumns = new Set(Object.keys(valuesBefore).filter((column) => !(column in valuesAfterRevert)));
+const droppedColumns = new Set(Object.keys(valuesAfterRevert).filter((column) => !(column in valuesBefore)));
 const withoutAddedColumns = (snapshotValues) => Object.fromEntries(
     Object.entries(snapshotValues).filter(([column]) => !addedColumns.has(column)),
 );
-check('column values unchanged after revert', valuesAfterRevert, withoutAddedColumns(valuesBefore));
+const withoutDroppedColumns = (snapshotValues) => Object.fromEntries(
+    Object.entries(snapshotValues).filter(([column]) => !droppedColumns.has(column)),
+);
+check('column values unchanged after revert', withoutDroppedColumns(valuesAfterRevert), withoutAddedColumns(valuesBefore));
 
 await dataSource.runMigrations({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after re-run', await snapshot(), before);
 const valuesAfterRerun = await values();
 check('column values unchanged after re-run', withoutAddedColumns(valuesAfterRerun), withoutAddedColumns(valuesBefore));
 check('re-run restores the added columns', [...addedColumns].every((column) => column in valuesAfterRerun), true);
+check('re-run drops the dropped columns again', [...droppedColumns].every((column) => !(column in valuesAfterRerun)), true);
 check('no drift after re-run', await drift(), 0);
 
 let rejected = false;

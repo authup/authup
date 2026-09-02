@@ -38,10 +38,9 @@ function createEntity() : Client {
         secretEncrypted: false,
         redirectUri: 'https://app.example.com/cb',
         postLogoutRedirectUri: null,
+        backchannelLogoutUri: null,
         grantTypes: null,
-        scope: null,
         baseUrl: null,
-        rootUrl: null,
         accessPolicyId: '9c7a1f4e-0d2b-4a6c-8e1f-3b5d7a9c0e2f',
         accessPolicy: null,
         createdAt: now,
@@ -109,6 +108,7 @@ function mountForm(entity: Client) {
                 // stub them here (the kit deliberately does not install forms).
                 VCFormGroup: { template: '<div><slot name="label" /><slot /><slot name="hint" /></div>' },
                 VCFormInput: {
+                    name: 'VCFormInput',
                     props: ['modelValue', 'disabled'],
                     template: '<input />',
                 },
@@ -472,5 +472,63 @@ describe('AClientForm grant types', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('grantTypes', null);
+    });
+});
+
+// Both are plain text inputs bound like `displayName`: the entity value
+// hydrates the input, a typed value is submitted as is, and a cleared input
+// reaches the server as null (the kit's validup treats `''` as missing and
+// the transport nullifies it).
+describe('AClientForm home and back-channel logout urls', () => {
+    const findInput = (wrapper: ReturnType<typeof mountForm>['wrapper'], value: string) => wrapper
+        .findAllComponents({ name: 'VCFormInput' })
+        .find((input) => input.props('modelValue') === value);
+
+    it.each([
+        ['baseUrl', 'https://app.example.com', 'https://app.example.com/home'],
+        ['backchannelLogoutUri', 'https://app.example.com/logout', 'https://app.example.com/backchannel'],
+    ] as const)('hydrates %s from the entity and submits the typed value', async (key, initial, next) => {
+        const entity = createEntity();
+        entity[key] = initial;
+
+        const { wrapper, httpClient } = mountForm(entity);
+        await flushPromises();
+
+        const input = findInput(wrapper, initial);
+        expect(input).toBeDefined();
+
+        input!.vm.$emit('update:modelValue', next);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ [key]: next });
+    });
+
+    it.each([
+        ['baseUrl', 'https://app.example.com'],
+        ['backchannelLogoutUri', 'https://app.example.com/logout'],
+    ] as const)('submits null for %s when the input is cleared', async (key, initial) => {
+        const entity = createEntity();
+        entity[key] = initial;
+
+        const { wrapper, httpClient } = mountForm(entity);
+        await flushPromises();
+
+        const input = findInput(wrapper, initial);
+        expect(input).toBeDefined();
+
+        input!.vm.$emit('update:modelValue', '');
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty(key, null);
     });
 });

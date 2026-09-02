@@ -170,9 +170,10 @@ export class AuthorizeController {
 
             // Trim the client to a deliberate DTO before it reaches the
             // anonymous SSR hydration payload — never disclose redirect_uri
-            // patterns (the trusted-origin set), grant_types, internal
-            // base/root URLs, auth methods, or the secret storage flags to an
-            // unauthenticated visitor. (ClientEntity.secret is additionally
+            // patterns (the trusted-origin set), grant_types, the home URL,
+            // the back-channel logout endpoint, auth methods, or the secret
+            // storage flags to an unauthenticated visitor. (ClientEntity.secret
+            // is additionally
             // select:false, so the secret is never loaded — but the DTO must not
             // rely on that alone: a future entity/query change could unset it.)
             client = {

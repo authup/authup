@@ -67,8 +67,8 @@ export type OAuth2AuthorizeParameters = Partial<AuthorizeParameters>;
  * `GET /authorize/info` are both unauthenticated, so the row is trimmed
  * to these five fields before it leaves the server: never the
  * redirect_uri patterns (the trusted-origin set), the grant types, the
- * internal base and root URLs, the authentication method or the secret
- * storage flags.
+ * home URL, the back-channel logout endpoint, the authentication method
+ * or the secret storage flags.
  */
 export type ClientSummary = Pick<Client, 'id' | 'name' | 'displayName' | 'builtIn' | 'createdAt'>;
 

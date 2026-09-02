@@ -92,3 +92,24 @@ export function usePageError() {
         reset, 
     };
 }
+
+/**
+ * Whether a value is an absolute http(s) URL and may be rendered as a link.
+ * An allow-list rather than a scheme deny-list: the value is admin-entered
+ * client configuration, and an `<a href>` navigates whatever scheme it is
+ * given.
+ */
+export function isHttpURL(value: unknown): value is string {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    let parsed: URL;
+    try {
+        parsed = new URL(value);
+    } catch {
+        return false;
+    }
+
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+}

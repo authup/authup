@@ -438,6 +438,14 @@ describe('core/entities/client/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
+        it('should open one repository transaction for the write and none on create (#3526)', async () => {
+            const entity = await service.create(createFakeClient(), createAllowAllActor());
+            expect(repository.transactionCalls).toBe(0);
+
+            await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
+            expect(repository.transactionCalls).toBe(1);
+        });
+
         it('should generate secret when confidential client has no secret', async () => {
             const entity = repository.seed(createFakeClient({
                 name: 'client',

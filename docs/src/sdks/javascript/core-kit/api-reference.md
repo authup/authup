@@ -4,7 +4,7 @@
 
 **Type**
 ```typescript
-import { Realm } from '@authup/core-kit';
+import { Policy, Realm } from '@authup/core-kit';
 
 interface Client {
     id: string,
@@ -39,13 +39,13 @@ interface Client {
 
     redirectUri: string | null,
 
+    postLogoutRedirectUri: string | null,
+
+    backchannelLogoutUri: string | null,
+
     grantTypes: string | null,
 
-    scope: string | null,
-
     baseUrl: string | null,
-
-    rootUrl: string | null,
 
     // ------------------------------------------------------------------
 
@@ -58,10 +58,15 @@ interface Client {
     realmId: Realm['id'],
 
     realm: Realm,
+
+    accessPolicyId: Policy['id'] | null,
+
+    accessPolicy: Policy | null,
 }
 ```
 
 **References**
+- [Policy](#policy)
 - [Realm](#realm)
 
 ## `IdentityProvider`

@@ -77,6 +77,60 @@ function buildRedirectPatternSchema(name: string) {
         .nullable();
 }
 
+/**
+ * Schema for the back-channel logout endpoint. The server POSTs to it, so it
+ * is ONE absolute http(s) URL: no wildcard, no userinfo, and no comma in the
+ * host or path. A redirect-style pattern list pasted here parses as a single
+ * URL whose path carries the comma and the second entry, and the server would
+ * POST to that verbatim. A comma in the query string stays allowed, since
+ * that is a legitimate part of one URL. `z.url()` alone accepts every
+ * parseable scheme, `javascript:` included, so the scheme is allow-listed
+ * here rather than denied.
+ */
+const backchannelLogoutUriSchema = z
+    .url()
+    .check((ctx) => {
+        let parsed: URL;
+        try {
+            parsed = new URL(ctx.value);
+        } catch {
+            return;
+        }
+
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            ctx.issues.push({
+                input: ctx.value,
+                code: 'custom',
+                message: 'The backchannelLogoutUri must be an http(s) URL.',
+            });
+        }
+
+        if (parsed.username || parsed.password) {
+            ctx.issues.push({
+                input: ctx.value,
+                code: 'custom',
+                message: 'The backchannelLogoutUri must not carry userinfo.',
+            });
+        }
+
+        if (ctx.value.includes('*')) {
+            ctx.issues.push({
+                input: ctx.value,
+                code: 'custom',
+                message: 'The backchannelLogoutUri must be a single endpoint, not a pattern.',
+            });
+        }
+
+        if (parsed.host.includes(',') || parsed.pathname.includes(',')) {
+            ctx.issues.push({
+                input: ctx.value,
+                code: 'custom',
+                message: 'The backchannelLogoutUri must be a single endpoint, not a comma separated list.',
+            });
+        }
+    })
+    .nullable();
+
 export class ClientValidator extends Container<Client> {
     protected override initialize() {
         super.initialize();
@@ -184,6 +238,12 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
+            'backchannelLogoutUri',
+            { optional: true },
+            createValidator(backchannelLogoutUriSchema),
+        );
+
+        this.mount(
             'baseUrl',
             { optional: true },
             createValidator(
@@ -192,21 +252,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'rootUrl',
-            { optional: true },
-            createValidator(
-                z.url().nullable(),
-            ),
-        );
-
-        this.mount(
             'grantTypes',
-            { optional: true },
-            createValidator(z.string().min(3).max(512).nullable()),
-        );
-
-        this.mount(
-            'scope',
             { optional: true },
             createValidator(z.string().min(3).max(512).nullable()),
         );

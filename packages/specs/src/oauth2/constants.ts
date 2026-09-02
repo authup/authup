@@ -23,6 +23,13 @@ export enum OAuth2TokenKind {
      * only the challenge routes opt in.
      */
     MFA = 'mfa_token',
+    /**
+     * OIDC Back-Channel Logout 1.0 logout token: pushed to a client's
+     * registered back-channel logout URI when a session ends. Never a
+     * bearer, so the authorization middleware and the adapters deny it
+     * like every non-access kind.
+     */
+    LOGOUT = 'logout_token',
 }
 
 export enum OAuth2SubKind {

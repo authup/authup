@@ -8,6 +8,7 @@
 import type { Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IOAuth2BackchannelLogoutNotifier } from '../../oauth2/backchannel-logout/types.ts';
 
 export type SessionOwner = {
     sub: string,
@@ -109,6 +110,12 @@ export type SessionManagerOptions = {
 export type SessionManagerContext = {
     options: SessionManagerOptions,
     repository: ISessionRepository,
+    /**
+     * Pushes an OIDC back-channel logout token to every client the session
+     * issued a token for (plan 064). Optional so a minimal graph, and every
+     * fake-backed spec, constructs the manager without one.
+     */
+    backchannelLogoutNotifier?: IOAuth2BackchannelLogoutNotifier,
 };
 
 export interface ISessionManager {
@@ -158,6 +165,10 @@ export interface ISessionManager {
     /**
      * Revoke (delete) a session by id, forcing re-authentication. Idempotent —
      * a no-op when the session does not exist.
+     *
+     * The ONE chokepoint every session end goes through, because it is where
+     * the back-channel logout is pushed: a caller deleting the row on the
+     * repository directly ends the session without telling any client.
      *
      * @param id
      */

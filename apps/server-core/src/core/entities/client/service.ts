@@ -187,7 +187,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const validated = await this.validator.run(data, { group });
 
         // Reserve the system-provisioned client names (`system`, the console
-        // clients) so an API caller can't create or rename a client onto them — that would
+        // clients) so an API caller can't create or rename a client onto them: that would
         // collide on unique(name, realmId) or shadow the builtIn client.
         // Provisioning and runtime hooks bypass this service, so they remain
         // free to manage the reserved clients. builtIn clients are exempt
@@ -248,7 +248,30 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 entity.secretEncrypted = false;
             }
 
-            await this.repository.save(entity);
+            // Only the write runs inside the transaction: it pins one pooled
+            // connection, and the evaluator, join-column and uniqueness reads
+            // above each take their own from the same pool, so wrapping them
+            // too deadlocks the DataSource under ten concurrent saves. The
+            // fresh row is lock-read and this request's patch merged onto it,
+            // so a concurrent writer's columns survive (#3526).
+            const patch: Partial<Client> = { ...validated };
+            if (entity.authMethod !== ClientAuthMethod.SECRET) {
+                patch.secret = null;
+                patch.secretHashed = false;
+                patch.secretEncrypted = false;
+            } else if (validated.secret) {
+                patch.secret = entity.secret;
+            }
+
+            const { id } = entity;
+            entity = await this.repository.transaction(async (repository) => {
+                const current = await repository.findOneWithSecret({ id });
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                return repository.save(repository.merge(current, patch));
+            });
 
             return {
                 entity,

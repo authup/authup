@@ -35,3 +35,38 @@ describe('ClientValidator redirect patterns', () => {
         await expect(validator.run({ [key]: 'https://app.example.com/**,javascript:alert(document.cookie)//' }, { group: ValidatorGroup.UPDATE })).rejects.toThrow();
     });
 });
+
+describe('ClientValidator backchannelLogoutUri', () => {
+    const validator = new ClientValidator();
+
+    it('should accept one https endpoint', async () => {
+        const output = await validator.run({ backchannelLogoutUri: 'https://app.example.com/logout' }, { group: ValidatorGroup.UPDATE });
+
+        expect(output.backchannelLogoutUri).toEqual('https://app.example.com/logout');
+    });
+
+    it('should accept a query string carrying a comma (a single URL is never split)', async () => {
+        const value = 'https://app.example.com/logout?tenants=a,b';
+        const output = await validator.run({ backchannelLogoutUri: value }, { group: ValidatorGroup.UPDATE });
+
+        expect(output.backchannelLogoutUri).toEqual(value);
+    });
+
+    it('should accept null (no push)', async () => {
+        const output = await validator.run({ backchannelLogoutUri: null }, { group: ValidatorGroup.UPDATE });
+
+        expect(output.backchannelLogoutUri).toBeNull();
+    });
+
+    it.each([
+        ['a wildcard', 'https://*.example.com/logout'],
+        // a pasted pattern list parses as ONE URL with the comma in its path
+        ['a comma separated list', 'https://app.example.com/logout,https://alt.example.com/logout'],
+        ['userinfo', 'https://user:secret@app.example.com/logout'],
+        ['a custom scheme', 'myapp://logout'],
+        // eslint-disable-next-line no-script-url -- the scheme under test
+        ['a script-capable scheme', 'javascript:alert(document.cookie)//'],
+    ])('should reject %s', async (_label, value) => {
+        await expect(validator.run({ backchannelLogoutUri: value }, { group: ValidatorGroup.UPDATE })).rejects.toThrow();
+    });
+});

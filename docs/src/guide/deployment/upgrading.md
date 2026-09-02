@@ -5,7 +5,90 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.62)
+## Next release (after v1.0.0-beta.63)
+
+### `auth_clients.scope` and `auth_clients.root_url` are dropped
+
+Both columns are gone, and the migration removes them together with their
+data. `scope` was a text copy of the client's scope list that nothing has read
+since #3354: the authorization endpoint grants a client exactly the scopes
+bound in `auth_client_scopes`, so a value in the column never granted
+anything (and writing the column alone was the trap #3347 closed). `rootUrl`
+was stored and never resolved against anything. Values set through the API or
+a provisioning file are lost.
+
+**Action required only if you set either.** Export them before upgrading if
+you want to keep them:
+
+```sql
+SELECT id, name, realm_id, scope, root_url
+FROM auth_clients
+WHERE scope IS NOT NULL OR root_url IS NOT NULL;
+```
+
+A scope list that was meant to grant something belongs in the client's scope
+bindings (`POST /client-scopes`, or `globalScopes` / `realmScopes` on the
+client in a provisioning file). A provisioning file that still declares
+`scope` or `rootUrl` on a client keeps loading: the validator strips keys it
+does not mount, so the values are ignored silently rather than rejected. A
+request body carrying them is stripped the same way.
+
+`baseUrl` is the surviving link field and now has a consumer: the account
+console's Applications page renders each consented application's name as a
+link to it when the value is an `http(s)` URL.
+
+### User and client updates take a row lock on MySQL and PostgreSQL
+
+`POST /users/:id`, `PUT /users/:id` and the client equivalents now perform
+their write inside a database transaction that locks the row
+(`SELECT ... FOR UPDATE`); validation and authorization run before it, outside
+the transaction. Two concurrent updates of one row used to interleave:
+each read the row, merged its own fields and saved the whole thing, so the
+second save silently restored what the first had changed. The reported case
+was a display-name edit racing an email change and undoing the
+`email_verified` reset; a deactivation racing any other edit could be undone
+the same way.
+
+No action required. Concurrent updates of one user or client now serialize,
+so the second waits for the first instead of overwriting it. SQLite is
+unchanged: it has no row lock, so two updates still interleave there, which
+is one more reason it is not a production database. Registration, password
+recovery and the writes a federated login makes to its user are not covered.
+
+### Back-channel logout
+
+Authup implements OpenID Connect Back-Channel Logout 1.0. A client gains a
+nullable `backchannelLogoutUri` (`auth_clients.backchannel_logout_uri`, added
+by the migration; `null` on every existing row, and the provisioned system
+clients leave it null). Set it to one absolute `http(s)` URL (no wildcard, no
+list) and Authup POSTs a `logout_token` there whenever a session the client
+received tokens for is revoked: `DELETE /sessions/:id`, `DELETE /sessions`,
+`/logout` with a verified `id_token_hint`, and the refresh-token replay
+reaction. An expiring session sends nothing.
+
+Discovery advertises `backchannel_logout_supported` and
+`backchannel_logout_session_supported`. The token carries `kind: logout_token`,
+a new value in the `kind` vocabulary next to `access_token`, `refresh_token`,
+`id_token` and `mfa_token`; no Authup endpoint accepts it as a bearer, and a
+consumer switching on `kind` only ever sees it at its own back-channel
+endpoint. Delivery is best effort: an application that is down or answers a
+non-2xx status is logged on the server and the logout succeeds regardless.
+See the [OAuth2 guide](../development/api-oauth2.md#7-back-channel-logout).
+
+No action required unless you want the push.
+
+### Security fix: a revoked session no longer answers from the cache
+
+Revoking a session (`DELETE /sessions/:id`, `DELETE /sessions`, `/logout`
+with a verified `id_token_hint`, the refresh-token replay reaction) removed
+the row but left the session's cache entry in place, because the cache key
+was read from the entity after the ORM had already cleared its id. Authup's
+own API resolves the bearer's session through that cache, so an access token
+of a revoked session kept working against it until the token expired (15
+minutes by default). Refresh was unaffected: the token rows die with the row.
+The entry is now dropped with the row and the very next request answers 401.
+
+No action required.
 
 ### `email_verified` is a real column, and every existing user starts unverified
 
@@ -427,6 +510,8 @@ authup choice: RFC 7009 asks a public client to identify itself by
 `client_id` and the server to verify token ownership, but a public
 `client_id` proves nothing, and possession of the token already lets its
 holder use it. Revoking is the benign action.
+
+## v1.0.0-beta.63
 
 ### Introspecting an expired token now returns its payload
 

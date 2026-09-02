@@ -39,18 +39,20 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         applyRealmScopeSelect(qb, 'consent', ['sub', 'subKind']);
 
         // Always expose only a client SUMMARY (id / name / displayName /
-        // builtIn) — NEVER the full ClientEntity (redirectUri + post-logout
-        // patterns = the trusted-origin set, grantTypes, baseUrl/rootUrl,
-        // secret-storage flags, accessPolicyId). `client` is deliberately
-        // absent from relations.allowed so a raw ?include=client cannot force
-        // the full-column join; the self-service Applications tab still gets
-        // the display name from this fixed projection.
+        // builtIn / baseUrl), NEVER the full ClientEntity: redirectUri +
+        // post-logout patterns are the trusted-origin set, and grantTypes,
+        // backchannelLogoutUri, the secret-storage flags and accessPolicyId
+        // are admin-only configuration. `client` is deliberately absent from
+        // relations.allowed so a raw ?include=client cannot force the
+        // full-column join; the self-service Applications page still gets
+        // the display name and the home link from this fixed projection.
         qb.leftJoin('consent.client', 'client')
             .addSelect([
                 'client.id',
                 'client.name',
                 'client.displayName',
                 'client.builtIn',
+                'client.baseUrl',
             ]);
 
         if (options.owner) {

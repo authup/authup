@@ -13,6 +13,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Affiché à tous les utilisateurs de cette application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Modèle d\'URI vers lequel un navigateur peut rediriger après une connexion réussie',
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Modèle d’URI vers lequel une déconnexion initiée par le RP peut rediriger. Distinct des URI de redirection de connexion. Sans entrée, la déconnexion se termine toujours sur la page de confirmation.',
+    [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Adresse de l\'application. Affichée comme lien dans la console de compte. Sans entrée, seul le nom apparaît.',
+    [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Point de terminaison qui reçoit un jeton de déconnexion à la fin d\'une session (OIDC Back-Channel Logout). Une URL http(s), sans modèle. Sans entrée, rien n\'est envoyé.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restreint les types d’autorisation OAuth2 que ce client peut utiliser. Sans sélection, tous sont autorisés.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Méthode d’authentification',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Aucune',

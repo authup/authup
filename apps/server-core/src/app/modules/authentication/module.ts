@@ -9,9 +9,11 @@ import type { Session } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { SessionEntity } from '../../../adapters/database/domains/index.ts';
 import type { IContainer } from 'eldin';
-import { SessionManager } from '../../../core/index.ts';
+import { OAuth2BackchannelLogoutNotifier, SessionManager } from '../../../core/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
+import { OAuth2InjectionToken } from '../oauth2/index.ts';
 
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -25,7 +27,15 @@ export class AuthenticationModule implements IModule {
 
     constructor() {
         this.name = ModuleName.AUTHENTICATION;
-        this.dependencies = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
+        // OAUTH2 for the back-channel logout notifier the manager pushes
+        // through (signer, token inventory, client repository). No cycle:
+        // OAUTH2 stands on DATABASE, CACHE, CONFIG and IDENTITY only.
+        this.dependencies = [
+            ModuleName.DATABASE,
+            ModuleName.CACHE,
+            ModuleName.CONFIG,
+            ModuleName.OAUTH2,
+        ];
     }
 
     async setup(container: IContainer): Promise<void> {
@@ -47,6 +57,13 @@ export class AuthenticationModule implements IModule {
                 return new SessionManager({
                     repository,
                     options: { maxAge: config.tokenRefreshMaxAge + 3_600 },
+                    backchannelLogoutNotifier: new OAuth2BackchannelLogoutNotifier({
+                        signer: c.resolve(OAuth2InjectionToken.TokenSigner),
+                        sessionTokenRepository: c.resolve(OAuth2InjectionToken.SessionTokenRepository),
+                        clientRepository: c.resolve(OAuth2InjectionToken.ClientRepository),
+                        options: { issuer: config.publicUrl },
+                        logger: c.resolve(LoggerInjectionKey),
+                    }),
                 });
             },
         });

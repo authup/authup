@@ -21,10 +21,9 @@ export type ClientCreatePayload = Pick<Client, 'name'> &
         'secretHashed' |
         'redirectUri' |
         'postLogoutRedirectUri' |
+        'backchannelLogoutUri' |
         'baseUrl' |
-        'rootUrl' |
         'grantTypes' |
-        'scope' |
         'realmId' |
         'accessPolicyId'>>;
 export type ClientUpdatePayload = Partial<ClientCreatePayload>;

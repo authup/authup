@@ -43,6 +43,19 @@ export interface IClientRepository extends IEntityRepository<Client> {
     getBoundRoles(entity: string | Client): Promise<Role[]>;
 
     getBoundPermissions(entity: string | Client): Promise<PermissionPolicyBinding[]>;
+
+    /**
+     * Runs `fn` inside one database transaction. Single-row reads on the
+     * handed-in repository (`findOneBy`, `findOneWithSecret`) are taken FOR
+     * UPDATE where the driver supports it and `save` commits with the
+     * callback, so a read-modify-write across the three calls cannot revert
+     * a concurrent write (#3526). Keep the callback to calls on the handed-in repository:
+     * the transaction pins one pooled connection, and anything else that
+     * reaches the DataSource (the permission evaluator, `validateJoinColumns`,
+     * `checkUniqueness`) takes a second one, which exhausts the pool under
+     * concurrent saves.
+     */
+    transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R>;
 }
 
 export interface IClientService {

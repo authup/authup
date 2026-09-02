@@ -41,10 +41,9 @@ class FakeClientRepository implements IOAuth2ClientRepository {
             // the verifier rejects pattern-less clients outright (OAuth 2.1)
             redirectUri: 'https://app.example.com/**',
             postLogoutRedirectUri: null,
+            backchannelLogoutUri: null,
             grantTypes: null,
-            scope: null,
             baseUrl: null,
-            rootUrl: null,
             accessPolicyId: null,
             accessPolicy: null,
             createdAt: now,

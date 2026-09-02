@@ -265,7 +265,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             // A changed address carries none of the old one's verification, and
             // `email` is NOT on the self-manage denylist, so without this a user
             // verifies their own address and then edits it to someone else's
-            // while the claim keeps asserting `email_verified: true` — the very
+            // while the claim keeps asserting `email_verified: true`: the very
             // account-linking takeover the claim is read for (#3519).
             //
             // The old value has to be re-read: the entity loaded above carries
@@ -278,7 +278,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             // and vouch for the new one in one request. One merely ECHOED back
             // is not: `AUserForm` posts its whole reactive state on every save,
             // hydrated from the record it loaded, so treating presence alone as
-            // an assertion made the rule unreachable from the console — every
+            // an assertion made the rule unreachable from the console: every
             // address change there carried the stale `true` straight through.
             let emailChanged = false;
             if (
@@ -335,7 +335,35 @@ export class UserService extends AbstractEntityService implements IUserService {
                 entity.password = await credentialsService.protect(validated.password);
             }
 
-            await this.repository.save(entity);
+            // Only the write runs inside the transaction. It pins one pooled
+            // connection, and the permission evaluator, the join-column check
+            // and the email re-read above each take their own from the same
+            // pool, so wrapping them too deadlocks the DataSource under ten
+            // concurrent saves. The fresh row is lock-read and this request's
+            // patch merged onto it: TypeORM writes only the columns that
+            // differ, so a concurrent writer's columns survive (#3526).
+            const patch: Partial<User> = { ...validated };
+            // The name-lock revert means "do not touch the name": a stale
+            // originalName must not overwrite a concurrent rename.
+            if (entity.name === originalName) {
+                delete patch.name;
+            }
+            if (emailChanged) {
+                patch.emailVerified = false;
+            }
+            if (validated.password) {
+                patch.password = entity.password;
+            }
+
+            const { id } = entity;
+            entity = await this.repository.transaction(async (repository) => {
+                const current = await repository.findOneBy({ id });
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                return repository.save(repository.merge(current, patch));
+            });
 
             return {
                 entity,

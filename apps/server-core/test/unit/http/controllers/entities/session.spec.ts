@@ -140,6 +140,23 @@ describe('session', () => {
         expect(afterB.data).toHaveLength(0);
     });
 
+    it('refuses the bearer of a revoked session on its very next request', async () => {
+        const admin = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const revoked = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+
+        const victim = bearer(revoked.access_token);
+        const introspect = await victim.token.introspect({ token: revoked.access_token }, { authorizationHeaderInherit: true });
+        const sessionId = introspect.session_id!;
+
+        // The session row is cached on creation and the authorization
+        // middleware resolves it through that cache, so the revoke has to
+        // drop the entry as well as the row.
+        await bearer(admin.access_token).session.delete(sessionId);
+
+        await expectClientError(() => victim.session.getMany(), { status: 401 });
+        await expectClientError(() => suite.client.session.getOne(sessionId), { status: 404 });
+    });
+
     it('denies a non-privileged user from force-logging-out another user', async () => {
         const password = 'session-nonpriv-pw';
         const fakeUser = createFakeUser({ password });

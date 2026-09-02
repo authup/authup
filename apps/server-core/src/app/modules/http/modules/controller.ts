@@ -802,7 +802,10 @@ export class HTTPControllerModule {
 
     createSessionController(container: IContainer) {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
-        const service = new SessionService({ repository });
+        const service = new SessionService({
+            repository,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+        });
         const config = container.resolve(ConfigInjectionKey);
 
         return new SessionController({

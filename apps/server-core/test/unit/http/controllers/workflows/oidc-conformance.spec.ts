@@ -84,6 +84,9 @@ describe('OIDC conformance smoke', () => {
 
         // authup extensions (RP-initiated logout, RFC 7009 revocation, RFC 7662)
         expect(discovery.end_session_endpoint.endsWith('/logout')).toBe(true);
+        // OIDC Back-Channel Logout 1.0 (plan 064): a logout token with `sid`
+        expect(discovery.backchannel_logout_supported).toBe(true);
+        expect(discovery.backchannel_logout_session_supported).toBe(true);
         expect(discovery.revocation_endpoint.endsWith('/token/revoke')).toBe(true);
         expect(discovery.introspection_endpoint.endsWith('/token/introspect')).toBe(true);
         expect(Array.isArray(discovery.prompt_values_supported)).toBe(true);

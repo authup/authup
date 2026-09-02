@@ -81,11 +81,6 @@ export const SYSTEM_CLIENT_DEFINITIONS: SystemClientDefinition[] = [
  * separately-hosted surface (plan 078 "relocatable by choice") registers
  * its origin via TRUSTED_ORIGINS rather than editing the client row.
  *
- * The `scope` column is descriptive only. Scope authorization resolves
- * through the `auth_client_scopes` junction, which
- * `SystemClientProvisioner.ensureForRealm` fills from the definition's
- * `scopeNames`.
- *
  * `accessPolicyId` and `displayName` are deliberately NOT part of this set:
  * the MERGE must neither wipe an admin-bound access policy nor undo a
  * relabel.
@@ -105,7 +100,6 @@ export function buildSystemClientAttributes(
         builtIn: true,
         active: true,
         grantTypes: 'authorization_code refresh_token',
-        scope: definition.scopeNames.join(' '),
         redirectUri: originPatterns,
         postLogoutRedirectUri: originPatterns,
     };
