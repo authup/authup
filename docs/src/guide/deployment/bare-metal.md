@@ -73,7 +73,8 @@ The output should be similar to the following:
 i Server: Starting... 
 √ Server: Started
 i Server: Environment: production
-i Server: WritableDirectoryPath: xxx
+i Server: LogDirectoryPath: xxx
+i Server: ProvisioningDirectoryPath: xxx
 i Server: URL: http://127.0.0.1:3000
 i Server: Docs-URL: http://127.0.0.1:3000/docs/
 i Server: Generating documentation...

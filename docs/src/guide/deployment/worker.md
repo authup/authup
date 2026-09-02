@@ -123,16 +123,11 @@ the container would be reported unhealthy forever.
 ```yaml
 version: '3.8'
 
-volumes:
-    authup:
-
 services:
     server-core:
         image: authup/authup:latest
         container_name: server-core
         restart: unless-stopped
-        volumes:
-            - authup:/var/lib/authup
         ports:
             - "3001:3000"
         environment:
@@ -167,14 +162,15 @@ services:
         command: start worker
 ```
 
-The worker needs no volume and no published port. It does need the same
+The worker needs no published port of its own. It does need the same
 database as the API, since the sweeps are plain deletes against the shared
 schema. This split is for the server databases (MySQL and Postgres): a SQLite
 worker container would open its own database file inside the container and
 sweep nothing of the API's data, so a SQLite deployment keeps the sweeps in
-the API process instead. Note the worker's rotating file logs under
-`WRITABLE_DIRECTORY_PATH` are ephemeral without a volume; the console output
-for `docker logs` remains.
+the API process instead. Neither container carries a volume: the image keeps
+no durable state, and the worker's rotating file logs under
+`LOG_DIRECTORY_PATH` are ephemeral without one. Mount `/var/log/authup` to
+keep them; the console output for `docker logs` remains either way.
 
 ## Kubernetes
 

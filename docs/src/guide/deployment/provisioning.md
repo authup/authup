@@ -233,9 +233,11 @@ immediately.
 
 ## File-Based Provisioning
 
-Place one or more provisioning files in the `provisioning/` subdirectory of the writable directory.
-The writable directory defaults to `./writable` (relative to the application root) and can be configured
-via the `WRITABLE_DIRECTORY_PATH` environment variable. The Docker image sets it to `/var/lib/authup`.
+Place one or more provisioning files in the provisioning directory.
+It defaults to `./provisioning` (relative to the application root) and can be configured
+via the `PROVISIONING_DIRECTORY_PATH` environment variable. The Docker image sets it to
+`/etc/authup/provisioning`, next to the configuration file: these files are operator-authored
+input, and the process only ever reads them.
 
 Supported formats: `.json`, `.yaml`, `.yml`, `.ts`, `.mts`, `.mjs`, `.js`.
 
@@ -258,17 +260,17 @@ dropped. Write provisioning files in camelCase.
 
 ### Docker / Kubernetes
 
-Mount your provisioning files into the container's writable directory:
+Mount your provisioning files into the container's provisioning directory:
 
 ```bash
-docker run -v /path/to/provisioning:/var/lib/authup/provisioning authup/authup
+docker run -v /path/to/provisioning:/etc/authup/provisioning authup/authup
 ```
 
-Or set the writable directory explicitly:
+Or set the provisioning directory explicitly:
 
 ```bash
 docker run \
-  -e WRITABLE_DIRECTORY_PATH=/data \
+  -e PROVISIONING_DIRECTORY_PATH=/data/provisioning \
   -v /path/to/provisioning:/data/provisioning \
   authup/authup
 ```

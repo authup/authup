@@ -57,7 +57,7 @@ export default {
 
     /**
      * Base path for resolving relative paths (e.g. a relative
-     * writableDirectoryPath). File-only (no environment variable).
+     * logDirectoryPath). File-only (no environment variable).
      * default: process working directory
      */
     rootPath: '/opt/authup',
@@ -217,15 +217,24 @@ export default {
 
     core: {
         /**
-         * Directory the application writes to at runtime (log files in
-         * production) and reads file-based provisioning from
-         * (<writableDirectoryPath>/provisioning). Relative paths are resolved
+         * Directory the production log files are written to. This is the one
+         * directory the process writes to. Relative paths are resolved
          * against rootPath. The SQLite database is NOT placed here - its path
          * comes from the database configuration (db.database / DB_DATABASE).
-         * env: WRITABLE_DIRECTORY_PATH
-         * default: writable
+         * env: LOG_DIRECTORY_PATH
+         * default: logs
          */
-        writableDirectoryPath: 'writable',
+        logDirectoryPath: 'logs',
+
+        /**
+         * Directory file-based provisioning is read from. Operator-authored
+         * input, read-only to the process, so it belongs next to the
+         * configuration file rather than in the log directory. Relative paths
+         * are resolved against rootPath.
+         * env: PROVISIONING_DIRECTORY_PATH
+         * default: provisioning
+         */
+        provisioningDirectoryPath: 'provisioning',
 
         /**
          * Enable logging. File-only (no environment variable).
@@ -635,7 +644,8 @@ accountConsole:
 authConsole:
   path: ''
 core:
-  writableDirectoryPath: writable
+  logDirectoryPath: logs
+  provisioningDirectoryPath: provisioning
   worker:
     enabled: true
   migrationEnabled: true
@@ -678,7 +688,8 @@ core:
 
 ```dotenv [.env]
 NODE_ENV=production
-WRITABLE_DIRECTORY_PATH=writable
+LOG_DIRECTORY_PATH=logs
+PROVISIONING_DIRECTORY_PATH=provisioning
 THEME_DIRECTORY_PATH=/etc/authup/theme
 THEME_FRAGMENTS_ENABLED=false
 WORKER_ENABLED=true

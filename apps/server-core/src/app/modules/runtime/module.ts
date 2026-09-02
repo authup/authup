@@ -27,7 +27,8 @@ export class RuntimeModule implements IModule {
         const logger = container.resolve(LoggerInjectionKey);
 
         logger.debug(`Environment: ${config.env}`);
-        logger.debug(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
+        logger.debug(`LogDirectoryPath: ${config.logDirectoryPath}`);
+        logger.debug(`ProvisioningDirectoryPath: ${config.provisioningDirectoryPath}`);
         logger.debug(`Port: ${config.port}`);
         logger.debug(`Host: ${config.host}`);
         logger.debug(`Base-URL: ${config.publicUrl}`);

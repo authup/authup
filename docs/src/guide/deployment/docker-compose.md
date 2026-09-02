@@ -29,11 +29,15 @@ argument list; `start` is also the image's default command, and the former
 `server/core` prefix is deprecated (accepted with a notice on stderr for the
 rest of the 1.0.0-beta line, removed in v1.0.0).
 
+The container carries no volume, because the image keeps no durable state:
+every durable value lives in the database. Mount `/etc/authup` to supply the
+configuration file and the provisioning directory (see the examples below),
+and `/var/log/authup` only if you want the log files outside the container.
+The console transport writes to stdout regardless, so `docker compose logs`
+works without it.
+
 ```yaml
 version: '3.8'
-
-volumes:
-    authup:
 
 services:
   server-core:
@@ -41,11 +45,6 @@ services:
       pull_policy: always
       container_name: server-core
       restart: unless-stopped
-      volumes:
-        # Docker managed volume
-        - authup:/var/lib/authup
-        # storage in mounted volume
-        #- ./writable:/var/lib/authup
       ports:
         - "3001:3000"
       environment:
@@ -100,16 +99,11 @@ main backend service and forward it to the port `3001` on the local machine.
 ```yaml
 version: '3.8'
 
-volumes:
-    authup:
-
 services:
   authup:
     image: authup/authup:latest
     container_name: authup
     restart: unless-stopped
-    volumes:
-      - authup:/var/lib/authup
     ports:
       - "3001:3000"
     environment:
@@ -165,7 +159,6 @@ This shows an example of how to run authup alongside other services (postgres & 
 version: '3.8'
 
 volumes:
-    authup_data:
     postgres_data:
     redis_data:
 
@@ -174,8 +167,6 @@ services:
         image: authup/authup:latest
         container_name: server-core
         restart: unless-stopped
-        volumes:
-            - authup_data:/var/lib/authup
         ports:
             - "3001:3000"
         depends_on:

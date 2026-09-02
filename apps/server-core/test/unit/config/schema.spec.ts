@@ -204,7 +204,8 @@ describe('src/app/modules/config/constants.ts', () => {
         });
 
         it('should skip an empty string', () => {
-            expect(readEnv('writableDirectoryPath', '')).toBeUndefined();
+            expect(readEnv('logDirectoryPath', '')).toBeUndefined();
+            expect(readEnv('provisioningDirectoryPath', '')).toBeUndefined();
         });
 
         /**

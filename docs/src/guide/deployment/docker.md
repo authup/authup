@@ -36,11 +36,16 @@ One container runs the whole deployment. It serves the API and every console:
 
 ```shell
 docker run \
-  -v authup:/var/lib/authup \
   -p 3001:3000 \
   -e PUBLIC_URL=http://localhost:3001 \
   authup/authup:latest start
 ```
+
+The image keeps no durable state, so there is nothing to persist: every
+durable value lives in the database. Mount `/etc/authup` to supply the
+configuration file and the provisioning directory, and `/var/log/authup` only
+if you want the log files outside the container. The console transport writes
+to stdout regardless, so `docker logs` works without it.
 
 The container command is the CLI's own argument list (`start`, `start worker`,
 `migration run`, ...), and `start` is the image's default command. The former

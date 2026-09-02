@@ -66,8 +66,6 @@ export default defineComponent({
   server-core:
     image: authup/authup:latest
     restart: unless-stopped
-    volumes:
-      - authup:/var/lib/authup
     ports:
       - "3001:3000"
     environment:
@@ -86,10 +84,7 @@ export default defineComponent({
       - POSTGRES_PASSWORD=secret
 
   redis:
-    image: redis:7
-
-volumes:
-  authup:`;
+    image: redis:7`;
 
         return { snippet };
     },

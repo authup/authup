@@ -37,9 +37,8 @@ export type CoreWorkerConfig = {
 
 export type CoreConfig = {
     /**
-     * Directory the application writes to at runtime (log files in
-     * production) and reads file-based provisioning from
-     * (`<writableDirectoryPath>/provisioning`).
+     * Directory the production log files are written to. This is the one
+     * directory the process writes to.
      *
      * The SQLite database is NOT placed here - its path comes from the
      * database configuration (`db.database` / `DB_DATABASE`), resolved
@@ -48,9 +47,22 @@ export type CoreConfig = {
      * Relative or absolute path. If the path is relative, the rootPath will be
      * appended.
      *
-     * default: writable
+     * default: logs
      */
-    writableDirectoryPath: string,
+    logDirectoryPath: string,
+
+    /**
+     * Directory file-based provisioning is read from.
+     *
+     * Operator-authored input, read-only to the process, so it belongs
+     * next to the configuration file rather than in the log directory.
+     *
+     * Relative or absolute path. If the path is relative, the rootPath will be
+     * appended.
+     *
+     * default: provisioning
+     */
+    provisioningDirectoryPath: string,
 
     // ----------------------------------------------------
 

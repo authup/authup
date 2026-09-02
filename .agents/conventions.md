@@ -321,25 +321,35 @@ copy, not an oversight.
   where it hands the value to the library.
 - **Every path key is resolved against `rootPath` after the `...parsed` spread**
   in `normalizeConfig`, so consumers receive an absolute path and none of them
-  has to know what the process cwd was. server-core's own is
-  `writableDirectoryPath`; the console-side path keys
+  has to know what the process cwd was. server-core's own are
+  `logDirectoryPath` and `provisioningDirectoryPath`; the console-side path keys
   (`theme.directoryPath`, `<name>Console.path`) live in the console
   registries now and are resolved for them by the CLI (`resolvePaths` in
   `apps/authup/src/console/config.ts`), against server-core's `rootPath`, so one
   document means the same directory to every service it configures. A new
   server-core path key joins that block; computing it *before* the spread
   reads a default `rootPath` rather than the configured one (the
-  `writableDirectoryPath` bug, fixed after v1.0.0-beta.62; it silently
-  ignored `rootPath` and stayed relative).
-- **`writableDirectoryPath` does not hold the database.** It holds the
-  production log files and is where `<dir>/provisioning` is read from; that is
-  the whole of it. The sqlite file comes from `db.database` / `DB_DATABASE`,
-  which typeorm-extension resolves against the process cwd
-  (`resolveSQLiteDatabasePath`), so pointing `WRITABLE_DIRECTORY_PATH` at a
-  volume does NOT move the database onto it. The Docker image defaults the key
-  to `/var/lib/authup`; everything else defaults to `<rootPath>/writable`,
-  which is what keeps an unprivileged `npx` start working (any absolute system
-  path needs root or a pre-chowned directory).
+  `writableDirectoryPath` bug, fixed after v1.0.0-beta.62 on the key these two
+  replaced; it silently ignored `rootPath` and stayed relative).
+- **Logs are written, provisioning is read, so they never share a directory.**
+  `logDirectoryPath` (`LOG_DIRECTORY_PATH`, default `logs`) is the ONE
+  directory the process writes to; `provisioningDirectoryPath`
+  (`PROVISIONING_DIRECTORY_PATH`, default `provisioning`) is operator-authored
+  input a running process must never be able to rewrite, and it names the
+  directory itself rather than a `provisioning` subdirectory of it. Same rule
+  the theme directory already follows (architecture.md → *Console Theming*):
+  a process-writable directory must not hold what the process serves or reads
+  as configuration. The predecessor key `writableDirectoryPath` conflated the
+  two.
+- **`logDirectoryPath` does not hold the database.** It holds the production
+  log files; that is the whole of it. The sqlite file comes from
+  `db.database` / `DB_DATABASE`, which typeorm-extension resolves against the
+  process cwd (`resolveSQLiteDatabasePath`), so pointing `LOG_DIRECTORY_PATH`
+  at a volume does NOT move the database onto it. The Docker image defaults
+  the two keys to `/var/log/authup` and `/etc/authup/provisioning`; everything
+  else defaults to `<rootPath>/logs` and `<rootPath>/provisioning`, which is
+  what keeps an unprivileged `npx` start working (any absolute system path
+  needs root or a pre-chowned directory).
 
 ## Upstream (Own) Libraries
 

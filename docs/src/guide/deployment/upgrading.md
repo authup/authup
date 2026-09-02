@@ -583,8 +583,9 @@ holder use it. Revoking is the benign action.
 
 The built tree moved from `/usr/src/app` to `/opt/authup`, and the
 configuration file is read from `/etc/authup` instead of the working
-directory. The writable state stays at `/var/lib/authup`, so one mount per
-concern: code under `/opt`, configuration under `/etc`, state under `/var/lib`.
+directory. One mount per concern: code under `/opt`, configuration under
+`/etc`, log files under `/var/log`. There is no state directory any more (see
+the next entry).
 
 **Action required if you mount a configuration file.** Mount it at the new
 path; the old one is not read any more.
@@ -600,6 +601,53 @@ Miss this and nothing fails loudly: the container boots on its defaults. A
 release read `/usr/src/app/authup.yml` (the v1.0.0-beta.63 image read the
 retired `authup.server.core.conf` family from its working directory), so a
 deployment moving to `authup.yml` changes the name and the mount path at once.
+
+### `writableDirectoryPath` is replaced by two purpose-named keys
+
+The key named one directory for two things that sit on opposite sides of a
+trust line: the production log files the process writes, and the provisioning
+files an operator authors and the process only reads. It is gone, replaced by
+one key per concern.
+
+| Was | Is | Environment variable | Default |
+|---|---|---|---|
+| `writableDirectoryPath` (log files) | `logDirectoryPath` | `LOG_DIRECTORY_PATH` | `logs` |
+| `writableDirectoryPath` (provisioning) | `provisioningDirectoryPath` | `PROVISIONING_DIRECTORY_PATH` | `provisioning` |
+
+Both resolve against `rootPath` when relative, exactly as the old key did.
+`logDirectoryPath` is now the only directory the process writes to, so the
+provisioning directory can be mounted read-only (`:ro`).
+
+**Provisioning is read from the new key directly, not from a `provisioning`
+subdirectory of it.** The old key appended one; this one names the directory
+itself. A deployment whose files sit at `<rootPath>/writable/provisioning`
+either points `PROVISIONING_DIRECTORY_PATH` at that path or moves them to
+`<rootPath>/provisioning`.
+
+**Action required if you set the old key or use file-based provisioning.**
+`WRITABLE_DIRECTORY_PATH` is no longer read, and neither is a
+`writableDirectoryPath` in `authup.yml`.
+
+In the image, provisioning moved to `/etc/authup/provisioning` (next to the
+configuration file it belongs with) and the log files to `/var/log/authup`.
+The `/var/lib/authup` volume is gone. Nothing durable was ever in it: the
+database is postgres or mysql, the signing and encryption keys are `auth_keys`
+rows, the cache is redis, so it held `http.log` and `error.log` and nothing
+else. Drop the mount, and mount the provisioning directory at its new path.
+
+```diff
+ volumes:
+-  - authup:/var/lib/authup
+-  - ./provisioning:/var/lib/authup/provisioning
++  - ./provisioning:/etc/authup/provisioning
+```
+
+A mount kept at `/var/lib/authup` is not an error. It silently does nothing,
+and so does a provisioning directory the new key does not find: file-based
+provisioning stops being applied with no error at all, the same quiet failure
+the beta.63 entry below warns about. The log files are written inside the
+container layer unless `/var/log/authup` is mounted, which is the ordinary
+posture for a container that logs to a collector.
 
 ## v1.0.0-beta.63
 

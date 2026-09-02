@@ -77,7 +77,6 @@ import { DatabaseInjectionKey } from '../database/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
-import path from 'node:path';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
 import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -104,7 +103,7 @@ export class ProvisionerModule implements IModule {
         const sources = [...this.sources];
 
         const config = container.resolve(ConfigInjectionKey);
-        const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
+        const provisioningDir = config.provisioningDirectoryPath;
         if (fs.existsSync(provisioningDir)) {
             sources.push(new FileProvisioningSource({
                 cwd: provisioningDir,

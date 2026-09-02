@@ -68,7 +68,7 @@ export default defineComponent({
                 bullets: [
                     'One image, two commands',
                     'ENV- or file-based configuration',
-                    'Persistent writable volume',
+                    'Stateless container, no volume required',
                 ],
                 href: '/guide/deployment/docker',
                 accent: 'var(--au-color-accent-b)',
