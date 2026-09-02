@@ -60,7 +60,7 @@ export default {
      * writableDirectoryPath). File-only (no environment variable).
      * default: process working directory
      */
-    rootPath: '/usr/src/app',
+    rootPath: '/opt/authup',
 
     /**
      * API base URL.

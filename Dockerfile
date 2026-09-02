@@ -1,8 +1,6 @@
 FROM node:24-alpine
 
-RUN mkdir -p /usr/src/app
-
-WORKDIR /usr/src/app
+WORKDIR /opt/authup
 
 COPY . .
 
@@ -15,7 +13,7 @@ COPY ./entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x ./entrypoint.sh
 
-RUN mkdir -p /var/lib/authup
+RUN mkdir -p /etc/authup /var/lib/authup
 
 ENV HOST=0.0.0.0
 ENV PORT=3000

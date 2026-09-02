@@ -2963,9 +2963,13 @@ The container command is the CLI's own argument list: `entrypoint.sh` strips
 an OPTIONAL leading `server/core` (a binary selector from when the image
 carried several) with a one-line deprecation notice on stderr, changes into
 `apps/server-core` (typeorm's cwd-relative driver fallback) and `exec`s the
-CLI with `--configDirectory /usr/src/app` plus the arguments as given. The
+CLI with `--configDirectory /etc/authup` plus the arguments as given. The
 prefix stays accepted for the rest of the 1.0.0-beta line and is removed in
-v1.0.0. `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
+v1.0.0. The image follows the FHS (issue #3543): the built tree is
+`/opt/authup` (`WORKDIR`), the configuration file is `/etc/authup/authup.yml`
+and the writable state is `/var/lib/authup`, with no fallback read at the
+former `/usr/src/app/authup.yml`, which no release ever read.
+`HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
 unconditional exports, so `-e PORT=4000` reaches the server, and the
 `HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
 default command. That probe fits `start` and `start core` only: a `start

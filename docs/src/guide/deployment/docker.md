@@ -27,7 +27,7 @@ $ mkdir authup && cd authup
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.
-In case of a configuration file, mount it into the container's working directory using `-v ./authup.yml:/usr/src/app/authup.yml`.
+In case of a configuration file, mount it at `/etc/authup/authup.yml` using `-v ./authup.yml:/etc/authup/authup.yml`.
 
 
 ## Step. 3: Boot up

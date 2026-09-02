@@ -135,8 +135,8 @@ core:
 ```
 
 In the following compose file example you can see that the
-configuration file is mounted into the container under `/usr/src/app` which is the default location for 
-configuration files.
+configuration file is mounted into the container under `/etc/authup`, which is where the image
+reads it from.
 
 ```yaml
 version: '3.8'
@@ -147,7 +147,7 @@ services:
     container_name: authup
     restart: unless-stopped
     volumes:
-      - ./authup.yml:/usr/src/app/authup.yml
+      - ./authup.yml:/etc/authup/authup.yml
     ports:
       - "3001:3000"
     environment:

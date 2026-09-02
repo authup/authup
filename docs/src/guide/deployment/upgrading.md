@@ -579,6 +579,28 @@ authup choice: RFC 7009 asks a public client to identify itself by
 `client_id` proves nothing, and possession of the token already lets its
 holder use it. Revoking is the benign action.
 
+### Docker: the image follows the FHS (`/opt/authup`, `/etc/authup`)
+
+The built tree moved from `/usr/src/app` to `/opt/authup`, and the
+configuration file is read from `/etc/authup` instead of the working
+directory. The writable state stays at `/var/lib/authup`, so one mount per
+concern: code under `/opt`, configuration under `/etc`, state under `/var/lib`.
+
+**Action required if you mount a configuration file.** Mount it at the new
+path; the old one is not read any more.
+
+```diff
+ volumes:
+-  - ./authup.yml:/usr/src/app/authup.yml
++  - ./authup.yml:/etc/authup/authup.yml
+```
+
+Miss this and nothing fails loudly: the container boots on its defaults. A
+`rootPath` in that file that spelled `/usr/src/app` needs the same change. No
+release read `/usr/src/app/authup.yml` (the v1.0.0-beta.63 image read the
+retired `authup.server.core.conf` family from its working directory), so a
+deployment moving to `authup.yml` changes the name and the mount path at once.
+
 ## v1.0.0-beta.63
 
 ### Introspecting an expired token now returns its payload
