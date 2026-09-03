@@ -23,6 +23,11 @@ export default defineConfig({
     // `/console/account` on its own origin. See src/config.ts for the runtime
     // configuration contract.
     base: '/console/account/',
+    // Vite's default port is the seeded `DEVELOPMENT_ORIGIN`; `strictPort`
+    // keeps it that way. See apps/client-admin-console/vite.config.ts. Only
+    // one standalone console can hold the port, so run the other through
+    // `authup dev` (or give it its own TRUSTED_ORIGINS entry).
+    server: { strictPort: true },
     plugins: [
         vuePlugin(),
         tailwindcss(),

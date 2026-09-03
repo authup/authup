@@ -18,19 +18,24 @@ runtime configuration contract (`window.__AUTHUP__` via the
 
 The dev server needs a running authup server to talk to.
 
-1. Start (or pick) an authup server and allow the dev origin, so the
-   per-realm `account-console` OAuth2 client accepts the sign-in
-   round-trip from the vite origin:
+1. Start (or pick) an authup server. Outside production the vite origin
+   (`http://localhost:5173`) is seeded into the trusted origins already, so
+   the per-realm `account-console` OAuth2 client accepts the sign-in
+   round-trip with no configuration:
 
    ```sh
-   TRUSTED_ORIGINS=localhost:5173 authup start
+   authup start
    ```
 
    From the repository, after `npm run build`:
 
    ```sh
-   TRUSTED_ORIGINS=localhost:5173 npm run cli -w apps/server-core -- start
+   npm run cli -w apps/server-core -- start
    ```
+
+   Only one standalone console can hold the port, so if the admin console's
+   dev server already has it, run this one through `authup dev` instead or
+   give it its own `TRUSTED_ORIGINS` entry.
 
 2. Run the dev server with the API URL injected:
 

@@ -127,7 +127,7 @@ describe('readConfigFromEnv', () => {
         expect(readConfigFromEnv().trustedOrigins).toEqual([
             'https://admin.example.com',
             'https://hub.example.com',
-            'http://localhost:3010',
+            'http://localhost:5173',
         ]);
     });
 

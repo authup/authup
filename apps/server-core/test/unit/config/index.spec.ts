@@ -45,13 +45,13 @@ describe('src/config/*.ts', () => {
                 publicUrl: 'https://auth.example.com/sub/path',
                 trustedOrigins: [
                     'https://auth.example.com',
-                    'http://localhost:3010',
+                    'http://localhost:5173',
                 ],
             } as any);
 
             expect(origins).toEqual([
                 'https://auth.example.com',
-                'http://localhost:3010',
+                'http://localhost:5173',
             ]);
         });
     });
@@ -142,7 +142,7 @@ describe('src/config/*.ts', () => {
                 'https://app.example.com',
                 'http://hub.local',
                 'https://hub.local',
-                'http://localhost:3010',
+                'http://localhost:5173',
             ]);
         });
 

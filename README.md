@@ -132,7 +132,7 @@ one listener, with hot module replacement.
 $ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
 ```
 
-It listens on `http://localhost:3010/console/admin/`.
+It listens on `http://localhost:5173/console/admin/`.
 
 ## Applications
 The repository contains the following runnable applications:

@@ -673,6 +673,27 @@ runs no migrations, so a fallback there would create a database file, report
 configuration was missing in a non-production environment. Such a process now
 starts against an empty local SQLite file rather than exiting.
 
+### The seeded development origin moves to vite's default port
+
+`DEVELOPMENT_ORIGIN`, the origin appended to `trustedOrigins` outside
+production, changes from `http://localhost:3010` to `http://localhost:5173`.
+The admin console's dev server no longer pins a port, so it takes vite's
+default like the account console, and both now pin `strictPort` so a taken
+port fails loudly instead of shifting to an origin nothing trusts.
+
+This makes the account console's standalone dev server work with no
+configuration for the first time: it was already on 5173, which was not the
+seeded origin, so its sign-in round-trip was refused unless
+`TRUSTED_ORIGINS` named it by hand.
+
+Only one standalone console can hold the port. Run the other through
+`authup dev`, which serves every console on the API's own origin and needs no
+seeded origin at all, or give it its own `TRUSTED_ORIGINS` entry.
+
+**Action required only if** you run a console dev server on `:3010` (a
+non-production deployment trusted that origin automatically and no longer
+does). Set `TRUSTED_ORIGINS=localhost:3010`, or move to the default port.
+
 ## v1.0.0-beta.63
 
 ### Introspecting an expired token now returns its payload

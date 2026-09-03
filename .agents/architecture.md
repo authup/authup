@@ -1346,9 +1346,9 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
-  `http://localhost:3010` is dev-seeded (`DEVELOPMENT_ORIGIN`,
+  `http://localhost:5173` is dev-seeded (`DEVELOPMENT_ORIGIN`,
   `@authup/server-config`) so the admin console's standalone dev server
-  (`npm run dev -w apps/client-admin-console`, vite on :3010) works on first
+  (`npm run dev -w apps/client-admin-console`, vite on :5173) works on first
   run; the served console at `<publicUrl>/console/admin` needs no entry,
   since publicUrl's own origin is always in the set, and neither does
   `authup dev` (Development mode below), which serves every console on
@@ -3436,8 +3436,8 @@ against a running dev server during verification, and the resulting
 `HttpOnly` session cookie was confirmed unreadable from JavaScript with no
 bearer token anywhere in the shell payload. This is the loop's main
 fidelity win over the pre-102 standalone console dev server (`npm run dev`
-in `apps/client-admin-console`, on `:3010`, or `apps/client-account-console`,
-on vite's default `:5173`): both run cross-origin against the API's `:3000`,
+in `apps/client-admin-console` or `apps/client-account-console`, both on
+vite's default `:5173`): both run cross-origin against the API's `:3000`,
 where `cookieSession` resolves false and the browser-PKCE path is all that
 is reachable, so neither ever exercised what a served console actually does
 in production.
