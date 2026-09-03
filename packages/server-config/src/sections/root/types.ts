@@ -88,6 +88,42 @@ export type RootConfig = {
     publicUrl: string,
 
     /**
+     * Where a service INSIDE the deployment reaches the API, e.g.
+     * `http://authup:3000` on a Kubernetes cluster network.
+     *
+     * `publicUrl` is where a BROWSER reaches the deployment, and there is no
+     * rule that the same address resolves from inside it: a container
+     * published on another port, a cluster whose ingress hostname is external
+     * only, a TLS terminator whose certificate a self-call would have to
+     * trust.
+     *
+     * Its one reader is `@authup/server-auth-console`, the only console that
+     * renders server-side (it fetches `GET /authorize/info` and `GET /`).
+     * server-core's own self-calls do NOT read it and must not start to: its
+     * internal client resolves the actual listen address per request, which
+     * is strictly better than any configured value. So this key is for the
+     * callers that have no listener of their own to ask.
+     *
+     * Nothing derived from it is user-facing: it never reaches a browser, and
+     * `publicUrl` remains the issuer, the cookie scope and the address every
+     * console hands the page it serves.
+     *
+     * A path is allowed and means what it means on `publicUrl`: the address
+     * may name an internal proxy that strips a prefix before server-core's
+     * root-relative routes see the request. Only the address the CLI DERIVES
+     * for a composed process is necessarily path-less, because that one goes
+     * straight to the listener with no proxy in between.
+     *
+     * Defaults to `publicUrl`, which is right whenever the deployment is
+     * reachable at one address from both sides. `authup start` overrides it
+     * with its own listen address unless the document names one, because
+     * there the API is this very process.
+     *
+     * default: publicUrl
+     */
+    internalUrl: string,
+
+    /**
      * Trusted first-party app origins (besides publicUrl), used as redirect
      * targets for the per-realm public system clients. Does NOT drive CORS
      * (the API reflects any origin by default; an explicit CORS allowlist goes

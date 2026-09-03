@@ -48,6 +48,7 @@ export type AuthupConfig = ToObjectLiteral<
 
 /**
  * The keys with no static default: `publicUrl` is derived from a listener's
- * host and port, `db` falls back to typeorm-extension's driver default.
+ * host and port, `internalUrl` from `publicUrl`, and `db` falls back to
+ * typeorm-extension's driver default.
  */
-export type AuthupConfigDerivedKey = 'publicUrl' | 'db';
+export type AuthupConfigDerivedKey = 'publicUrl' | 'internalUrl' | 'db';

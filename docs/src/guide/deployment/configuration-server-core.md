@@ -9,7 +9,7 @@ Most options can also be provided as environment variables (shown in the `.env` 
 A few options are file-only and have no environment variable — they are marked as such.
 
 Not every option below sits under `core`. `env`, `host`, `rootPath`,
-`publicUrl` and `trustedOrigins` are top-level, the two theme options are
+`publicUrl`, `internalUrl` and `trustedOrigins` are top-level, the two theme options are
 `theme.directoryPath` and `theme.fragmentsEnabled`, and the console options are
 `adminConsole.*`, `accountConsole.*` and `authConsole.*`. The
 `authup.yml` tab shows each one at its place.
@@ -73,6 +73,31 @@ export default {
      * (a wildcard bind address renders as localhost)
      */
     publicUrl: 'http://localhost:3000',
+
+    /**
+     * API base URL for calls made from INSIDE the deployment, e.g. a
+     * cluster service address.
+     * `publicUrl` is where a browser reaches authup, and nothing
+     * guarantees that address resolves from inside: a container
+     * published on another port, an ingress hostname that only exists
+     * outside, a TLS terminator a self-call would have to trust. The
+     * hosted auth pages render server-side (they read /authorize/info
+     * and /), so those calls take this address instead.
+     * Nothing derived from it reaches a browser: publicUrl stays the
+     * issuer, the cookie scope and the API address the served consoles
+     * hand their pages.
+     * A path is allowed and means what it means on publicUrl: the
+     * address may name an internal proxy that strips a prefix.
+     * `authup start` overrides it with its own listen address unless
+     * the document names a DIFFERENT address, since there the API is
+     * that very process. Setting it equal to publicUrl therefore
+     * changes nothing: it names no inside address, and reaching
+     * yourself through your own ingress is what this key exists to
+     * avoid. Run the console as its own service to control that hop.
+     * env: INTERNAL_URL
+     * default: publicUrl
+     */
+    internalUrl: 'http://authup:3000',
 
     /**
      * Additional trusted origins. Entries are http(s) origins
@@ -696,6 +721,7 @@ MIGRATION_ENABLED=true
 PORT=3000
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3000
+# INTERNAL_URL=http://authup:3000
 MTLS_PUBLIC_URL=https://mtls.example.com
 CERTIFICATE_SOURCE=forwarded
 TRUST_PROXY=1

@@ -35,7 +35,7 @@ import type { Config, ConfigInput } from './types';
  * (`url`, `port`, `host`); every other section stays under the key the
  * document nests it at.
  */
-export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'internalUrl' | 'db'>({
     ...AUTH_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,
@@ -76,6 +76,11 @@ export function resolveConfig(
     return {
         url: values.url,
         apiUrl: values.publicUrl,
+        // `internalUrl` falls back to `publicUrl`, so an operator who has one
+        // address for both sides configures nothing. The composed `authup
+        // start` overrides this with its own listen address unless the
+        // document named one.
+        apiInternalUrl: values.internalUrl,
         port: values.port,
         host: values.host,
         distPath: values.path,

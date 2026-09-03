@@ -418,6 +418,26 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             authConsoleURL.href,
             authShell,
         );
+        // `/logout` is the one auth page that renders with no backend at
+        // all -- it drives its end-session call from the browser -- so the
+        // probes above never touched the SSR fetch, which is how #3550 went
+        // unnoticed here. A workflow page is gated on the feature flags the
+        // service reads over HTTP, so it answers 200 only when that call
+        // reached the API.
+        //
+        // It does NOT reproduce #3550 and is not claimed to: this run names
+        // publicUrl and the listen port the same, so the fetch resolves
+        // either way. What it covers is the render path existing at all.
+        // Reproducing the bug needs the two to differ, which would put the
+        // console urls (and the /logout hop below) on a port nothing here
+        // listens on; that shape is unit-tested instead, in
+        // apps/authup/test/unit/console-api-url.spec.ts and
+        // apps/server-auth-console/test/unit/handler.spec.ts.
+        await assertConsoleServed(
+            `${name}/client-auth-console`,
+            'console/auth/password-forgot',
+            'window.__AUTHUP__',
+        );
         // window.__AUTHUP__ rather than the shell markup: it only appears if
         // the `<!--account-config-->` marker was found and replaced, which is
         // that console's entire runtime contract. Without it the SPA silently

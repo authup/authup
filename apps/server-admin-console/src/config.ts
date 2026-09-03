@@ -35,7 +35,7 @@ import type { Config, ConfigInput } from './types';
  * (`url`, `port`, `host`); every other section stays under the key the
  * document nests it at.
  */
-export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'db'>({
+export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'internalUrl' | 'db'>({
     ...ADMIN_CONSOLE_SCHEMA,
     ...ROOT_SCHEMA,
     [SECTION_KEY.THEME]: THEME_SCHEMA,

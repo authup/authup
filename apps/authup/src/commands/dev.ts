@@ -28,7 +28,7 @@ import {
 } from '@authup/server-core';
 import { defineCommand } from 'citty';
 import type { Application } from 'orkos';
-import { assertConsolePath, readConsoleConfigs } from '../console/index.ts';
+import { applyInternalApiUrl, assertConsolePath, readConsoleConfigs } from '../console/index.ts';
 import type { Mount } from '../dev/index.ts';
 import {
     assertNotProduction,
@@ -69,6 +69,11 @@ export function defineCLIDevCommand(configFs: ConfigReadFsOptions = {}) {
             assertNotProduction(config.env);
 
             const consoles = await readConsoleConfigs(configFs);
+
+            // Same self-call rule as `start`: the auth console's render
+            // fetches from inside this process, so it must not go out to the
+            // browser-facing address and back (#3550).
+            applyInternalApiUrl(consoles, config);
 
             // Resolved here rather than inside each builder so the mounts and
             // the rate-limit exemption below cannot disagree about where a

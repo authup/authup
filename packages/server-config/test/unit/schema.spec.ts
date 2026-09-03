@@ -176,15 +176,15 @@ describe('SCHEMA', () => {
     });
 
     /**
-     * `publicUrl` is derived from a listener's host and port, and `db` falls
-     * back to typeorm-extension's driver default; every other key has to
-     * carry a value a service can start on.
+     * `publicUrl` is derived from a listener's host and port, `internalUrl`
+     * from `publicUrl`, and `db` falls back to typeorm-extension's driver
+     * default; every other key has to carry a value a service can start on.
      */
     it('defaults every key but the derived ones', () => {
         const defaults = buildSchemaDefaults<AuthupConfig>(SCHEMA);
 
         for (const { key } of DECLARATIONS) {
-            if (key === 'publicUrl' || key === 'db') {
+            if (key === 'publicUrl' || key === 'internalUrl' || key === 'db') {
                 expect(defaults).not.toHaveProperty(key);
             } else {
                 expect(defaults).toHaveProperty(key);
@@ -271,6 +271,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
             'db',
             'env',
             'host',
+            'internalUrl',
             'publicUrl',
             'redis',
             'rootPath',

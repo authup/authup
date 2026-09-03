@@ -21,6 +21,7 @@ export enum EnvironmentVariable {
     // deployment
     NODE_ENV = 'NODE_ENV',
     PUBLIC_URL = 'PUBLIC_URL',
+    INTERNAL_URL = 'INTERNAL_URL',
     TRUSTED_ORIGINS = 'TRUSTED_ORIGINS',
     REDIS = 'REDIS',
     SMTP = 'SMTP',

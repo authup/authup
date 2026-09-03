@@ -22,7 +22,7 @@ import {
 import { defineCommand } from 'citty';
 import type { Application } from 'orkos';
 import type { ConsoleApplication } from '../console/index.ts';
-import { buildConsoleApplications, readConsoleConfigs } from '../console/index.ts';
+import { applyInternalApiUrl, buildConsoleApplications, readConsoleConfigs } from '../console/index.ts';
 
 const ROLES = ['core', 'worker', 'console'] as const;
 const CONSOLE_NAMES = ['admin', 'account', 'auth'] as const;
@@ -141,8 +141,17 @@ export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
                             return;
                         }
 
+                        const consoleConfigs = await readConsoleConfigs(configFs);
+
+                        // The auth console renders server-side, so it needs
+                        // an address that resolves from inside this process.
+                        // Its default, `publicUrl`, is the BROWSER's address
+                        // and need not be one: under `-p 3001:3000` it names
+                        // a port nothing listens on here (#3550).
+                        applyInternalApiUrl(consoleConfigs, config);
+
                         consoles.push(...await buildConsoleApplications(
-                            await readConsoleConfigs(configFs),
+                            consoleConfigs,
                             config.publicUrl,
                         ));
 

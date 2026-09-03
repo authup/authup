@@ -98,7 +98,7 @@ describe('src/app/modules/config/constants.ts', () => {
             const defaults = buildSchemaDefaults<Config>(CONFIG_SCHEMA);
 
             for (const key of CONFIG_KEYS) {
-                if (key === 'publicUrl' || key === 'db') {
+                if (key === 'publicUrl' || key === 'internalUrl' || key === 'db') {
                     expect(defaults).not.toHaveProperty(key);
                 } else {
                     expect(defaults).toHaveProperty(key);
