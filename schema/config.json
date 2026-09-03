@@ -24,6 +24,12 @@
             "description": "Externally reachable base URL of the API. Derived from host and port when unset.",
             "x-authup-env": "PUBLIC_URL"
         },
+        "internalUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL a service inside the deployment reaches the API at, e.g. http://authup:3000 on a cluster network. Used for server-side calls only (the auth console renders its pages from the API); publicUrl stays the issuer and the address handed to the browser. Defaults to publicUrl.",
+            "x-authup-env": "INTERNAL_URL"
+        },
         "trustedOrigins": {
             "type": "array",
             "items": {
