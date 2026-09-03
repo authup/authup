@@ -84,11 +84,17 @@
         "core": {
             "type": "object",
             "properties": {
-                "writableDirectoryPath": {
+                "logDirectoryPath": {
                     "type": "string",
-                    "description": "Directory the application writes to at runtime (production log files) and reads file-based provisioning from. The SQLite database is not placed here; a relative path resolves against rootPath.",
-                    "default": "writable",
-                    "x-authup-env": "WRITABLE_DIRECTORY_PATH"
+                    "description": "Directory the production log files are written to. A relative path resolves against rootPath.",
+                    "default": "logs",
+                    "x-authup-env": "LOG_DIRECTORY_PATH"
+                },
+                "provisioningDirectoryPath": {
+                    "type": "string",
+                    "description": "Directory file-based provisioning is read from. Read-only to the process; a relative path resolves against rootPath.",
+                    "default": "provisioning",
+                    "x-authup-env": "PROVISIONING_DIRECTORY_PATH"
                 },
                 "logger": {
                     "type": "boolean",
