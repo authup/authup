@@ -24,13 +24,16 @@ export default defineConfig({
     // configuration contract.
     base: '/console/admin/',
     // The standalone dev server (`npm run dev`, JS-token mode against
-    // VITE_API_URL): this port, 3010, is the origin `trustedOrigins` seeds
-    // outside production (`DEVELOPMENT_ORIGIN` in `@authup/server-config`),
-    // so the login redirect is allowed without any TRUSTED_ORIGINS
-    // configuration. `npm run dev` at the repository root (`authup dev`)
-    // needs no such seed: it serves this console on server-core's own
-    // origin instead, so no cross-origin redirect is ever made.
-    server: { port: 3010 },
+    // VITE_API_URL) keeps vite's default port, which is the origin
+    // `trustedOrigins` seeds outside production (`DEVELOPMENT_ORIGIN` in
+    // `@authup/server-config`), so the login redirect is allowed without any
+    // TRUSTED_ORIGINS configuration. `strictPort` is what makes that hold: on
+    // a taken port vite otherwise shifts to the next one silently, and the
+    // seeded origin stops applying while the console still comes up.
+    // `npm run dev` at the repository root (`authup dev`) needs no seed at
+    // all: it serves this console on server-core's own origin, so no
+    // cross-origin redirect is ever made.
+    server: { strictPort: true },
     experimental: {
         // Asset URLs that JavaScript resolves at RUNTIME (the preload helper
         // fetching a lazy route's stylesheet) must be relative to the

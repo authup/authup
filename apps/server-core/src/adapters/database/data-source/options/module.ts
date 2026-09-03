@@ -12,6 +12,7 @@ import {
     CodeTransformation,
     isCodeTransformation,
     readDataSourceOptionsFromEnv,
+    useEnv,
 } from 'typeorm-extension';
 import {
     ClientEntity,
@@ -68,15 +69,60 @@ import {
 } from '../../domains/index.ts';
 import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
 
+const NO_DATABASE_CONFIGURED = 'No database is configured. Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
+
+/**
+ * Whether the environment names a database connection without naming a driver.
+ *
+ * `readDataSourceOptionsFromEnv` reports the TYPE alone, so it answers nothing
+ * for an environment that carries every credential but no `DB_TYPE`. Read the
+ * connection keys through typeorm-extension's own reader rather than a local
+ * key list, so this cannot drift from what it accepts (each one is `DB_*` or
+ * its `TYPEORM_*` alias). The list-valued keys are excluded deliberately: they
+ * default to `[]` and would report every environment as configured.
+ */
+function hasDatabaseConnectionEnv() : boolean {
+    const env = useEnv();
+
+    return typeof env.url !== 'undefined' ||
+        typeof env.host !== 'undefined' ||
+        typeof env.port !== 'undefined' ||
+        typeof env.username !== 'undefined' ||
+        typeof env.password !== 'undefined' ||
+        typeof env.database !== 'undefined';
+}
+
 export class DataSourceOptionsBuilder {
     buildWithEnv() {
         const options = readDataSourceOptionsFromEnv();
 
         if (!options) {
-            throw new AuthupError('The database configuration could not be read from env variables.');
+            throw new AuthupError(NO_DATABASE_CONFIGURED);
         }
 
         return this.normalize(options);
+    }
+
+    // the application boot path: the `db` config key documents the
+    // better-sqlite3 driver default, and DatabaseModule refuses that driver in
+    // production downstream. buildWithEnv stays strict for the migration CLI
+    // and the CI scripts, which apply no environment check and would otherwise
+    // silently target sqlite and report nothing to do.
+    buildWithEnvOrDefault() {
+        const options = readDataSourceOptionsFromEnv();
+        if (options) {
+            return this.normalize(options);
+        }
+
+        // The default answers "nothing is configured", never a half-written
+        // configuration: a `DB_HOST` or `DB_DATABASE` left without a `DB_TYPE`
+        // would otherwise redirect every write to a local file, silently
+        // outside production.
+        if (hasDatabaseConnectionEnv()) {
+            throw new AuthupError(NO_DATABASE_CONFIGURED);
+        }
+
+        return this.normalize({ type: 'better-sqlite3', database: 'db.sqlite' });
     }
 
     buildWith(options: DataSourceOptions) {

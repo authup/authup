@@ -67,9 +67,9 @@ export default defineComponent({
     image: authup/authup:latest
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
-      - PUBLIC_URL=http://localhost:3001
+      - PUBLIC_URL=http://localhost:3000
       - DB_TYPE=postgres
       - DB_HOST=postgres
       - DB_USERNAME=authup

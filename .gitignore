@@ -1,6 +1,7 @@
 .claude/settings.local.json
 .DS_Store
 dist
+db.sqlite
 node_modules
 *.log
 npm-debug.log*

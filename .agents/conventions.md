@@ -350,6 +350,43 @@ copy, not an oversight.
   else defaults to `<rootPath>/logs` and `<rootPath>/provisioning`, which is
   what keeps an unprivileged `npx` start working (any absolute system path
   needs root or a pre-chowned directory).
+- **With no database configured at all, the boot path falls back to sqlite,
+  outside production.** `db` carries no default and
+  `readDataSourceOptionsFromEnv()` returns nothing unless the driver type is
+  set (typeorm-extension's `hasEnvDataSourceOptions()` is `!!useEnv('type')`,
+  which reads `DB_TYPE` or `TYPEORM_CONNECTION`, else the scheme of `DB_URL` or
+  `TYPEORM_URL`), so `DatabaseModule.buildDataSourceOptions` calls
+  `DataSourceOptionsBuilder.buildWithEnvOrDefault`, which supplies
+  `better-sqlite3` plus the same `db.sqlite` name typeorm-extension derives for
+  that driver, resolved against the process cwd like any other sqlite path.
+  The gate is the TYPE alone, so the fallback is guarded rather than
+  unconditional: a WRONG value still fails the read, and an environment that
+  names a CONNECTION without a type (`DB_HOST`, `DB_DATABASE`, `DB_URL` or a
+  `TYPEORM_*` alias) is refused with the same error `buildWithEnv` raises,
+  never answered with sqlite. `hasDatabaseConnectionEnv` reads those keys
+  through typeorm-extension's own `useEnv()` rather than a local list, so it
+  cannot drift from what the reader accepts, and it excludes the list-valued
+  keys, which default to `[]` and would report every environment as
+  configured. The default therefore answers "nothing is configured" and
+  nothing else: without the guard a forgotten `DB_TYPE` would have redirected
+  every write to a local file, silently outside production, since production
+  refuses the driver anyway.
+  Production is the exception, because `isDatabaseTypeSupportedForEnvironment`
+  refuses `better-sqlite3` there. That is why the Docker image
+  (`NODE_ENV=production`) still requires postgres or mysql, and why that
+  refusal carries the actionable message naming the `DB_*` variables: with the
+  fallback in place it is the only error an operator with no database
+  configuration ever sees. **`buildWithEnv` stays strict and the two methods
+  must not be collapsed into one.** It is what the `migration` CLI command and
+  the two `scripts/` CI runners call, none of which applies the environment
+  check, so an unconfigured `migration run` would create a sqlite file, read
+  sqlite's empty migrations array, report "No migrations are pending" and exit
+  `0`. That is the same silent success the round-trip's `dist` pre-flight
+  exists to catch (testing.md → *Migration Tests*). The fallback exists because
+  it was already documented while nothing implemented it (the `db` entry's own
+  description, published as the JSON Schema, its `types.ts` doc comment, and
+  the database guide's opening line), so no surface booted unconfigured,
+  `npx authup start` included.
 
 ## Upstream (Own) Libraries
 

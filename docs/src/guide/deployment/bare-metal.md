@@ -49,6 +49,12 @@ Place `authup.yml` in the project root, or point the CLI elsewhere with
 `--configDirectory <path>` / `--configFile <path>`. The server settings live
 under `core`; environment variables always override file values.
 
+A database is optional outside production. With none configured, Authup falls
+back to SQLite and writes `db.sqlite` into the directory the CLI was started
+from, which is enough to try it out locally. A production environment refuses
+SQLite, so point `DB_*` or a `db:` block at PostgreSQL or MySQL for anything
+beyond that (see [Database](./configuration-server-core-database.md)).
+
 ## Step. 4: Boot up
 
 Add some scripts to `package.json`.

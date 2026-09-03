@@ -93,9 +93,8 @@ export default {
      * token — only add origins you control. A wildcard host trusts every
      * subdomain, so use one only where you control the whole domain.
      * The consoles authup serves need no entry: they are on the
-     * publicUrl origin. In non-production, the admin console's standalone
-     * vite dev server origin (http://localhost:3010) is seeded
-     * automatically.
+     * publicUrl origin. In non-production, a console's standalone vite dev
+     * server origin (http://localhost:5173) is seeded automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */

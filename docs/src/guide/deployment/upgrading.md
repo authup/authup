@@ -649,6 +649,51 @@ the beta.63 entry below warns about. The log files are written inside the
 container layer unless `/var/log/authup` is mounted, which is the ordinary
 posture for a container that logs to a collector.
 
+### Authup boots on SQLite when no database is configured
+
+Outside production, a process started with no database configuration now falls
+back to the `better-sqlite3` driver and writes `db.sqlite` into the working
+directory, instead of exiting with "The database configuration could not be
+read from env variables.". That is what the `db` configuration key and the
+[Database](./configuration-server-core-database.md) guide have both described
+for some time, while nothing implemented it, so no surface booted
+unconfigured. `npx authup@latest start` now works with no configuration at all.
+
+**Production is unchanged.** `better-sqlite3` is still refused when the
+environment is `production`, which is what the Docker image sets, so a
+container still requires PostgreSQL or MySQL. That refusal now names the
+variables to set instead of reading as a generic environment failure.
+
+`authup migration run` and the two CI runners under `apps/server-core/scripts/`
+are deliberately not covered and still fail when nothing is configured. SQLite
+runs no migrations, so a fallback there would create a database file, report
+"No migrations are pending" and exit `0`.
+
+**Action required only if** you relied on the crash as the signal that database
+configuration was missing in a non-production environment. Such a process now
+starts against an empty local SQLite file rather than exiting.
+
+### The seeded development origin moves to vite's default port
+
+`DEVELOPMENT_ORIGIN`, the origin appended to `trustedOrigins` outside
+production, changes from `http://localhost:3010` to `http://localhost:5173`.
+The admin console's dev server no longer pins a port, so it takes vite's
+default like the account console, and both now pin `strictPort` so a taken
+port fails loudly instead of shifting to an origin nothing trusts.
+
+This makes the account console's standalone dev server work with no
+configuration for the first time: it was already on 5173, which was not the
+seeded origin, so its sign-in round-trip was refused unless
+`TRUSTED_ORIGINS` named it by hand.
+
+Only one standalone console can hold the port. Run the other through
+`authup dev`, which serves every console on the API's own origin and needs no
+seeded origin at all, or give it its own `TRUSTED_ORIGINS` entry.
+
+**Action required only if** you run a console dev server on `:3010` (a
+non-production deployment trusted that origin automatically and no longer
+does). Set `TRUSTED_ORIGINS=localhost:3010`, or move to the default port.
+
 ## v1.0.0-beta.63
 
 ### Introspecting an expired token now returns its payload

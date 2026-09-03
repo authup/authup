@@ -1,8 +1,10 @@
 # Database
 
-By default, the database is run with `SQLite`,
-but for a production environment we recommend using `MySQL` or `Postgres` since they provide
-superior performance, scalability and advanced features such as built-in replication.
+With no database configured, `SQLite` is used, which is enough to run Authup locally.
+For anything beyond that, `MySQL` or `Postgres` is a requirement rather than a recommendation:
+Authup refuses to start on `SQLite` when the environment is `production`, and the Docker image
+sets `NODE_ENV=production`. They are also the better fit for a real deployment, since they
+provide superior performance, scalability and advanced features such as built-in replication.
 
 ## MySQL
 

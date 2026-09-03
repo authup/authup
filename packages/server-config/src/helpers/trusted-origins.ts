@@ -10,12 +10,18 @@ import { expandToOrigins } from './origins.ts';
 const PRODUCTION = 'production';
 
 /**
- * The dev console's own listener. In non-production it runs on its own port
- * while the API answers on `core.port`, so it is seeded into the trusted
- * origins: without it the redirect allowlist (`<origin>/**`) and CORS
+ * A standalone console dev server's own listener. In non-production it runs on
+ * its own port while the API answers on `core.port`, so it is seeded into the
+ * trusted origins: without it the redirect allowlist (`<origin>/**`) and CORS
  * reject the realm-selection login and a first run is dead on arrival.
+ *
+ * It is vite's default port, which is what every console's dev server binds
+ * (each pins `strictPort`, so a taken port fails loudly rather than shifting
+ * to an unseeded one). Only one console can hold it at a time, which is the
+ * standalone loop's limit rather than this constant's: `authup dev` serves
+ * every console on the API's own origin and needs no seed at all.
  */
-export const DEVELOPMENT_ORIGIN = 'http://localhost:3010';
+export const DEVELOPMENT_ORIGIN = 'http://localhost:5173';
 
 /**
  * The trusted origins as every consumer needs them: bare origins

@@ -112,14 +112,14 @@ $ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-c
 ```
 
 It gives hot module replacement against the running backend, but it costs
-fidelity: served on a different origin (`http://localhost:3010` for the
-admin console) than the API, it signs in with the standalone browser
+fidelity: served on a different origin (`http://localhost:5173`, vite's
+default) than the API, it signs in with the standalone browser
 authorization-code (PKCE) flow rather than the cookie-session credential a
 served console uses in production.
 
 ::: warning Sign out of the hosted pages first
 
-Cookies ignore ports, so `localhost:3010` and `localhost:3000` are the same
+Cookies ignore ports, so `localhost:5173` and `localhost:3000` are the same
 HOST to the browser. A standalone console started while a session from the
 hosted auth pages is still open therefore seeds itself from that session's
 path-`/` token cookies and comes up already signed in, without ever running

@@ -28,7 +28,7 @@ the browser-side authorization-code flow instead of the session cookie.
 ## Development
 
 ```shell
-VITE_API_URL=http://localhost:3000 npm run dev    # vite on http://localhost:3010/console/admin/
+VITE_API_URL=http://localhost:3000 npm run dev    # vite on http://localhost:5173/console/admin/
 npm run build                                       # dist/, what server-core serves
 npm run test
 ```
