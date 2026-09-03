@@ -66,20 +66,23 @@ export default defineComponent({
   server-core:
     image: authup/authup:latest
     restart: unless-stopped
-    volumes:
-      - authup:/var/lib/authup
     ports:
       - "3001:3000"
     environment:
       - PUBLIC_URL=http://localhost:3001
       - DB_TYPE=postgres
       - DB_HOST=postgres
+      - DB_USERNAME=authup
+      - DB_PASSWORD=secret
+      - DB_DATABASE=authup
       - REDIS=redis://redis:6379
     command: start
     depends_on: [postgres, redis]
 
   postgres:
     image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=authup
       - POSTGRES_USER=authup
@@ -89,7 +92,7 @@ export default defineComponent({
     image: redis:7
 
 volumes:
-  authup:`;
+  postgres_data:`;
 
         return { snippet };
     },

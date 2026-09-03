@@ -9,6 +9,7 @@ The following guide is based on some shared assumptions:
 - Min. `2` cores
 - Min. `5G` hard disk
 - One available port on the host system if you want to map the service to your local machine (default: `3000`)
+- A reachable PostgreSQL or MySQL database. The image runs in production mode, which does not support SQLite, so it does not start until `DB_*` names a server database (see [Database](./configuration-server-core-database.md))
 
 
 ## Step. 1: Create a new project
@@ -27,7 +28,7 @@ $ mkdir authup && cd authup
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.
-In case of a configuration file, mount it into the container's working directory using `-v ./authup.yml:/usr/src/app/authup.yml`.
+In case of a configuration file, mount it at `/etc/authup/authup.yml` using `-v ./authup.yml:/etc/authup/authup.yml`.
 
 
 ## Step. 3: Boot up
@@ -36,11 +37,16 @@ One container runs the whole deployment. It serves the API and every console:
 
 ```shell
 docker run \
-  -v authup:/var/lib/authup \
   -p 3001:3000 \
   -e PUBLIC_URL=http://localhost:3001 \
   authup/authup:latest start
 ```
+
+The image keeps no durable state, so there is nothing to persist: every
+durable value lives in the database. Mount `/etc/authup` to supply the
+configuration file and the provisioning directory, and `/var/log/authup` only
+if you want the log files outside the container. The console transport writes
+to stdout regardless, so `docker logs` works without it.
 
 The container command is the CLI's own argument list (`start`, `start worker`,
 `migration run`, ...), and `start` is the image's default command. The former

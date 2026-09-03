@@ -175,7 +175,8 @@ describe('src/config/*.ts', () => {
             const config = await normalizeConfig();
 
             expect(config.rootPath).toEqual(process.cwd());
-            expect(config.writableDirectoryPath).toEqual(path.join(process.cwd(), 'writable'));
+            expect(config.logDirectoryPath).toEqual(path.join(process.cwd(), 'logs'));
+            expect(config.provisioningDirectoryPath).toEqual(path.join(process.cwd(), 'provisioning'));
         });
 
         it('should honor a configured root path', async () => {
@@ -184,22 +185,42 @@ describe('src/config/*.ts', () => {
             expect(config.rootPath).toEqual(path.join(path.sep, 'srv', 'authup'));
         });
 
-        it('should resolve a relative writableDirectoryPath against the root path', async () => {
+        it('should resolve a relative logDirectoryPath against the root path', async () => {
             const config = await normalizeConfig({
                 rootPath: path.join(path.sep, 'srv', 'authup'),
-                writableDirectoryPath: 'writable',
+                logDirectoryPath: 'logs',
             });
 
-            expect(config.writableDirectoryPath).toEqual(path.join(path.sep, 'srv', 'authup', 'writable'));
+            expect(config.logDirectoryPath).toEqual(path.join(path.sep, 'srv', 'authup', 'logs'));
         });
 
-        it('should keep an absolute writableDirectoryPath', async () => {
+        it('should keep an absolute logDirectoryPath', async () => {
             const config = await normalizeConfig({
                 rootPath: path.join(path.sep, 'srv', 'authup'),
-                writableDirectoryPath: path.join(path.sep, 'var', 'lib', 'authup'),
+                logDirectoryPath: path.join(path.sep, 'var', 'log', 'authup'),
             });
 
-            expect(config.writableDirectoryPath).toEqual(path.join(path.sep, 'var', 'lib', 'authup'));
+            expect(config.logDirectoryPath).toEqual(path.join(path.sep, 'var', 'log', 'authup'));
+        });
+
+        it('should resolve a relative provisioningDirectoryPath against the root path', async () => {
+            const config = await normalizeConfig({
+                rootPath: path.join(path.sep, 'srv', 'authup'),
+                provisioningDirectoryPath: 'provisioning',
+            });
+
+            expect(config.provisioningDirectoryPath)
+                .toEqual(path.join(path.sep, 'srv', 'authup', 'provisioning'));
+        });
+
+        it('should keep an absolute provisioningDirectoryPath', async () => {
+            const config = await normalizeConfig({
+                rootPath: path.join(path.sep, 'srv', 'authup'),
+                provisioningDirectoryPath: path.join(path.sep, 'etc', 'authup', 'provisioning'),
+            });
+
+            expect(config.provisioningDirectoryPath)
+                .toEqual(path.join(path.sep, 'etc', 'authup', 'provisioning'));
         });
 
         it('should default passwordMinLength to 10', async () => {

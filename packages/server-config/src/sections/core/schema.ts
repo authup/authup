@@ -49,16 +49,28 @@ const middlewareType = z.boolean().or(z.record(z.string(), z.any()));
  */
 export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
     {
-        writableDirectoryPath: {
+        // The one directory the process WRITES to. Kept apart from the
+        // provisioning directory below, which is operator-authored input a
+        // running process must never be able to rewrite (the rule the theme
+        // directory already follows).
+        logDirectoryPath: {
             type: stringType,
-            default: 'writable',
-            description: 'Directory the application writes to at runtime (production log files) and reads file-based provisioning from. ' +
-            'The SQLite database is not placed here; a relative path resolves against rootPath.',
-            env: EnvironmentVariable.WRITABLE_DIRECTORY_PATH,
+            default: 'logs',
+            description: 'Directory the production log files are written to. A relative path resolves against rootPath.',
+            env: EnvironmentVariable.LOG_DIRECTORY_PATH,
             readEnv: readEnvString,
             // Relative to `rootPath`, so one document means the same directory
             // to every service it configures, whichever process cwd each was
             // started from.
+            resolve: ({ value, get }) => resolveRootRelativePath(value as string, get('rootPath') as string),
+        },
+
+        provisioningDirectoryPath: {
+            type: stringType,
+            default: 'provisioning',
+            description: 'Directory file-based provisioning is read from. Read-only to the process; a relative path resolves against rootPath.',
+            env: EnvironmentVariable.PROVISIONING_DIRECTORY_PATH,
+            readEnv: readEnvString,
             resolve: ({ value, get }) => resolveRootRelativePath(value as string, get('rootPath') as string),
         },
 

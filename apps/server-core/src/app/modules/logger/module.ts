@@ -40,7 +40,7 @@ export class LoggerModule implements IModule {
         container.register(LoggerInjectionKey, {
             useFactory: () => createLogger({
                 env: result.data.env,
-                directory: result.data.writableDirectoryPath,
+                directory: result.data.logDirectoryPath,
             }),
         });
     }

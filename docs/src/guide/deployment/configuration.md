@@ -21,12 +21,15 @@ service off, say so: `REDIS=false`, not `REDIS=`.
 ## Configuration File
 
 One file holds the configuration: `authup.yml`, discovered in the **current working
-directory** of the process. Every CLI command (`start`, `core`, `console`,
-`migration`, `healthcheck`, `config`) honors it, and the lookup can be redirected with
+directory** of the process. Every CLI command (`start`, `dev`, `migration`,
+`healthcheck`, `config`) honors it, and the lookup can be redirected with
 two global CLI flags:
 
 - `--configDirectory <path>`: directory to search instead of the cwd.
 - `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
+
+The Docker image passes `--configDirectory /etc/authup`, so in a container the
+file is `/etc/authup/authup.yml`. See [Docker](./docker.md).
 
 `migration generate` is the one exception: it is a development tool for a
 repository checkout, targets the local compose databases and ignores both flags.

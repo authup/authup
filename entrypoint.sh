@@ -9,7 +9,7 @@
 
 set -e
 
-BASE_DIR=/usr/src/app
+BASE_DIR=/opt/authup
 
 # One binary, so the container command is the CLI's own argument list:
 # `start`, `start worker`, `start console admin`, `migration run`. The
@@ -27,9 +27,9 @@ fi
 cd "${BASE_DIR}/apps/server-core"
 
 # The configuration file is looked up in the cwd, which the line above
-# has just moved somewhere no operator would mount into. Name the image
-# root explicitly, so /usr/src/app/authup.yml is what the documentation
-# says it is. An empty or unknown command is the CLI's to refuse (usage,
-# exit 1), so the container never terminates successfully having started
-# nothing.
-exec node ../authup/dist/index.mjs --configDirectory "${BASE_DIR}" "$@"
+# has just moved somewhere no operator would mount into. Name /etc/authup
+# explicitly: it is where the FHS puts configuration and what the
+# documentation says. An empty or unknown command is the CLI's to refuse
+# (usage, exit 1), so the container never terminates successfully having
+# started nothing.
+exec node ../authup/dist/index.mjs --configDirectory /etc/authup "$@"

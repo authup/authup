@@ -2212,10 +2212,16 @@ pages rendered unthemed.
   'none'` stops framing, not same-document overlay. So Layers 1-3 are
   filesystem-only **forever**, and any future per-realm rung may carry
   **data only** (a theme name, or a token map through the same validator),
-  never a stylesheet and never markup. The default is deliberately NOT
-  under `writableDirectoryPath`: pairing a process-writable directory with
-  login-page content injection would turn any write primitive landing there
-  into persistent branding control on the IdP origin.
+  never a stylesheet and never markup. The theme directory is deliberately
+  NOT under a directory the process writes to: pairing a process-writable
+  directory with login-page content injection would turn any write primitive
+  landing there into persistent branding control on the IdP origin. That is
+  the precedent the provisioning split followed. `writableDirectoryPath` used
+  to be both the log directory and the provisioning root, so the same write
+  primitive would have reached authorization data; `logDirectoryPath` is now
+  the only thing the process writes, and `provisioningDirectoryPath` sits
+  next to the configuration file, read-only to it (conventions.md →
+  *Configuration Naming*).
 - **`themeFragmentsEnabled`** (`THEME_FRAGMENTS_ENABLED`, default false)
   opts into `fragments/head.html`, spliced last (so it overrides the
   manifest) and passed through VERBATIM. No sanitizer: a partial one
@@ -2969,9 +2975,21 @@ The container command is the CLI's own argument list: `entrypoint.sh` strips
 an OPTIONAL leading `server/core` (a binary selector from when the image
 carried several) with a one-line deprecation notice on stderr, changes into
 `apps/server-core` (typeorm's cwd-relative driver fallback) and `exec`s the
-CLI with `--configDirectory /usr/src/app` plus the arguments as given. The
+CLI with `--configDirectory /etc/authup` plus the arguments as given. The
 prefix stays accepted for the rest of the 1.0.0-beta line and is removed in
-v1.0.0. `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
+v1.0.0. The image follows the FHS (issue #3543): the built tree is
+`/opt/authup` (`WORKDIR`) and the configuration file is
+`/etc/authup/authup.yml`, with no fallback read at the former
+`/usr/src/app/authup.yml`, which no release ever read. It keeps **no state
+directory at all**, because nothing durable is on disk: the database is
+postgres or mysql, the signing and encryption keys are `auth_keys` rows, the
+cache is redis. The two path keys it does set are named for what they hold:
+`PROVISIONING_DIRECTORY_PATH` is `/etc/authup/provisioning` (operator input,
+read next to the configuration file it belongs with) and `LOG_DIRECTORY_PATH`
+is `/var/log/authup` (the one directory written to). The retired
+`/var/lib/authup` volume held `http.log` and `error.log` and nothing else, so
+an operator drops that mount rather than repointing it.
+`HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
 unconditional exports, so `-e PORT=4000` reaches the server, and the
 `HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
 default command. That probe fits `start` and `start core` only: a `start

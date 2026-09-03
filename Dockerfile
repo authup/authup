@@ -1,8 +1,6 @@
 FROM node:24-alpine
 
-RUN mkdir -p /usr/src/app
-
-WORKDIR /usr/src/app
+WORKDIR /opt/authup
 
 COPY . .
 
@@ -15,12 +13,16 @@ COPY ./entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x ./entrypoint.sh
 
-RUN mkdir -p /var/lib/authup
+# Configuration is operator input and read-only to the process; the log
+# directory is the one thing it writes. There is no state directory: every
+# durable value lives in the database.
+RUN mkdir -p /etc/authup /var/log/authup
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV NODE_ENV=production
-ENV WRITABLE_DIRECTORY_PATH=/var/lib/authup
+ENV PROVISIONING_DIRECTORY_PATH=/etc/authup/provisioning
+ENV LOG_DIRECTORY_PATH=/var/log/authup
 
 EXPOSE 3000
 

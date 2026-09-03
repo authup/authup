@@ -57,7 +57,6 @@ export default defineComponent({
 docker run -d \\
   --name authup \\
   -p 3000:3000 \\
-  -v authup:/var/lib/authup \\
   authup/authup:latest \\
   start`,
             },

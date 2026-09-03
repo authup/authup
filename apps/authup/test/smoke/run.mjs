@@ -100,7 +100,9 @@ function createTempDirectory(name) {
     return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `${name}-`)));
 }
 
-function buildChildEnv(writableDirectory) {
+// Everything one run writes: the log files and the sqlite database. The run
+// provisions from no files, so only the default source runs.
+function buildChildEnv(scratchDirectory) {
     const env = { ...process.env };
 
     delete env.PORT;
@@ -115,9 +117,14 @@ function buildChildEnv(writableDirectory) {
     }
 
     env.NODE_ENV = 'development';
-    env.WRITABLE_DIRECTORY_PATH = writableDirectory;
+    env.LOG_DIRECTORY_PATH = scratchDirectory;
+    // Pinned inside the run's own scratch directory, which holds no
+    // provisioning files: the default resolves against the child's cwd, so a
+    // provisioning/ directory appearing in the workspace would otherwise join
+    // the smoke run silently.
+    env.PROVISIONING_DIRECTORY_PATH = path.join(scratchDirectory, 'provisioning');
     env.DB_TYPE = 'better-sqlite3';
-    env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
+    env.DB_DATABASE = path.join(scratchDirectory, 'authup.sql');
 
     // PORT and HOST name what the CLI has to listen on: the config file
     // written below disagrees about both, and the environment wins.
@@ -373,15 +380,15 @@ function run(command, args, options = {}) {
 
 async function executeScenario(name, cliExec, cliArgs, cwd) {
     const tempDirectory = createTempDirectory(`authup-smoke-${name}`);
-    const writableDirectory = path.join(tempDirectory, 'writable');
-    fs.mkdirSync(writableDirectory, { recursive: true });
+    const scratchDirectory = path.join(tempDirectory, 'scratch');
+    fs.mkdirSync(scratchDirectory, { recursive: true });
     writeServerConfig(tempDirectory);
 
     log(`${name}: starting ${cliExec} ${cliArgs.join(' ')}`);
 
     const child = spawn(cliExec, [...cliArgs, 'start', `--configDirectory=${tempDirectory}`], {
         cwd,
-        env: buildChildEnv(writableDirectory),
+        env: buildChildEnv(scratchDirectory),
         stdio: 'inherit',
     });
 
@@ -510,8 +517,8 @@ async function executeWorkspaceScenario() {
  */
 async function executeSplitScenario() {
     const tempDirectory = createTempDirectory('authup-smoke-split');
-    const writableDirectory = path.join(tempDirectory, 'writable');
-    fs.mkdirSync(writableDirectory, { recursive: true });
+    const scratchDirectory = path.join(tempDirectory, 'scratch');
+    fs.mkdirSync(scratchDirectory, { recursive: true });
     writeServerConfig(tempDirectory);
 
     const cliEntry = path.join(packageDirectory, 'dist', 'index.mjs');
@@ -528,13 +535,13 @@ async function executeSplitScenario() {
 
     const api = spawn(process.execPath, [cliEntry, 'start', 'core', configArg], {
         cwd,
-        env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
+        env: { ...buildChildEnv(scratchDirectory), ...consoleEnv },
         stdio: 'inherit',
     });
 
     const consoles = spawn(process.execPath, [cliEntry, 'start', 'console', configArg], {
         cwd,
-        env: { ...buildChildEnv(writableDirectory), ...consoleEnv },
+        env: { ...buildChildEnv(scratchDirectory), ...consoleEnv },
         stdio: 'inherit',
     });
 
