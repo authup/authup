@@ -107,7 +107,7 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', Environm
     // special-cased in server-core's environment read, outside the registry.
     db: {
         type: z.custom<DatabaseConnectionOptions>((value) => isObject(value)),
-        description: 'Database connection (TypeORM data source options). Without one the better-sqlite3 driver default of typeorm-extension applies.',
+        description: 'Database connection (TypeORM data source options). Without one, and outside production, the better-sqlite3 driver default applies.',
         path: 'db',
     },
     redis: {

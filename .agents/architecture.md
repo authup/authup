@@ -3144,7 +3144,7 @@ boots on its defaults).
 this service reads: the zod `type`, the `default` (a static value, or a
 thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
 `db` carry none, the first is derived from host and port in `normalizeConfig`,
-the second falls back to typeorm-extension's driver default; `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `core.host` + `core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
+the second falls back to the sqlite driver default on the boot path alone, in `DataSourceOptionsBuilder` rather than in typeorm-extension (conventions.md -> *Configuration Naming*); `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `core.host` + `core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
 operator-facing `description`, and for the 51 env-backed keys the
 `EnvironmentVariable` plus a `readEnv` reader. The mapped
 `Schema` type is the exhaustiveness guard: a `Config` key with no

@@ -54,9 +54,11 @@ export default defineComponent({
                 label: '1. Install',
                 snippet: `docker pull authup/authup:latest
 
+# reads the .env from step 2
 docker run -d \\
   --name authup \\
   -p 3000:3000 \\
+  --env-file .env \\
   authup/authup:latest \\
   start`,
             },
@@ -67,13 +69,13 @@ docker run -d \\
 USER_ADMIN_PASSWORD=start123
 
 DB_TYPE=postgres
-DB_HOST=postgres
+DB_HOST=postgres.example.com
 DB_PORT=5432
 DB_USERNAME=authup
 DB_PASSWORD=secret
 DB_DATABASE=authup
 
-REDIS=redis://redis:6379
+REDIS=redis://cache.example.com:6379
 PUBLIC_URL=https://auth.example.com`,
             },
             {

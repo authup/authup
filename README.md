@@ -21,6 +21,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Features](#features)
 - [Documentation](#documentation)
 - [Usage](#usage)
+  - [Quick Start](#quick-start)
   - [Production](#production)
   - [Development](#development)
 - [Applications](#applications)
@@ -54,37 +55,54 @@ To read the docs, visit [https://authup.org](https://authup.org)
 
 How Authup can be configured and set up in detail, you can find out [here](https://authup.org/guide/deployment/).
 
-### Production
-#### Docker
+### Quick Start
 
-The **recommended** and optimal way to set up authup is using docker.
-
-One container runs the whole deployment. To start it with default settings on http://localhost:3001/, execute the following command:
-
-```shell
-$ docker run \
-  -p 3001:3000 \
-  -e PUBLIC_URL=http://localhost:3001 \
-  authup/authup:latest start
-```
-
-That service also serves the admin console at http://localhost:3001/console/admin and the account console at http://localhost:3001/console/account.
-
-#### Bare Metal
-
-The easiest way to get the framework up and running, is by using the global CLI.
-Therefore, execute the following shell command.
+The fastest way to try Authup out is the global CLI. It needs no configuration:
 
 ```shell
 $ npx authup@latest start
 ```
 
-To find out how to configure and set up the bare metal variant in detail, click here.
+With no database configured, Authup falls back to SQLite and writes `db.sqlite`
+into the current working directory. That is meant for trying things out and for
+local development. It is not a production setup.
 
-This will launch the following with default settings:
-- Backend Application: `http://localhost:3001/`
-- Admin Console: `http://localhost:3001/console/admin`
-- Account Console: `http://localhost:3001/console/account`
+It serves:
+- API: `http://localhost:3000/`
+- Auth console (login, consent, register, password recovery): served under `http://localhost:3000/console/auth/`
+- Admin console: `http://localhost:3000/console/admin`
+- Account console: `http://localhost:3000/console/account`
+
+To find out how to configure and set up the bare metal variant in detail, click
+[here](https://authup.org/guide/deployment/bare-metal).
+
+### Production
+
+The **recommended** and optimal way to set up authup is using docker.
+One container runs the whole deployment against a PostgreSQL or MySQL database you already have.
+
+```shell
+$ docker run \
+  -p 3000:3000 \
+  -e PUBLIC_URL=http://localhost:3000 \
+  -e DB_TYPE=postgres \
+  -e DB_HOST=postgres.example.com \
+  -e DB_PORT=5432 \
+  -e DB_USERNAME=authup \
+  -e DB_PASSWORD=secret \
+  -e DB_DATABASE=authup \
+  authup/authup:latest start
+```
+
+The image runs in production mode, which does not support SQLite, so it does not start until a server database is configured, via `DB_*` or a `db:` block in `authup.yml`.
+
+It serves:
+- API: `http://localhost:3000/`
+- Auth console (login, consent, register, password recovery): served under `http://localhost:3000/console/auth/`
+- Admin console: `http://localhost:3000/console/admin`
+- Account console: `http://localhost:3000/console/account`
+
+For the full setup, including a compose file that brings the database with it, see the [deployment guide](https://authup.org/guide/deployment/).
 
 ### Development
 
@@ -104,23 +122,25 @@ $ npm run build
 $ npm run cli-dev --workspace=apps/server-core -- start
 ```
 
-It serves the admin console at `http://localhost:3001/console/admin` from that package's built `dist/`.
+It serves the API at `http://localhost:3000/`. server-core serves no console of its
+own: run `npm run dev` in the repository root to get the API and every console on
+one listener, with hot module replacement.
 
-**4**. To work on the admin console itself, start its dev server in a second terminal
+**4**. To work on the admin console against a standalone dev server instead, start it in a second terminal
 
 ```shell
-$ VITE_API_URL=http://localhost:3001 npm run dev --workspace=apps/client-admin-console
+$ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
 ```
 
-It listens on `http://localhost:3000/console/admin/`.
+It listens on `http://localhost:3010/console/admin/`.
 
 ## Applications
 The repository contains the following runnable applications:
 
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](apps/authup)             | CLI         | The operator CLI, and the only binary. It runs server-core in the same process: `start`, `worker`, `migration` and `healthcheck`. |
-| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/console/admin`. |
+| [authup](apps/authup)             | CLI         | The operator CLI, and the binary an ordinary deployment runs. It runs every service in the same process: `start` (roles: `core`, `worker`, `console`), `migration`, `healthcheck` and `config`. |
+| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served at `/console/admin` by `server-admin-console`. |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
 ## Packages

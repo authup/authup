@@ -112,8 +112,8 @@ export type RootConfig = {
     trustedOrigins: string[],
 
     /**
-     * Database connection. Without one the better-sqlite3 driver default of
-     * typeorm-extension applies.
+     * Database connection. Without one, and outside production, the
+     * better-sqlite3 driver default applies.
      */
     db?: DatabaseConnectionOptions,
 

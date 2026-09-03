@@ -201,7 +201,7 @@ export class DatabaseModule implements IModule {
             // below is what narrows it.
             options = this.optionsBuilder.buildWith(config.db as DataSourceOptions);
         } else {
-            options = this.optionsBuilder.buildWithEnv();
+            options = this.optionsBuilder.buildWithEnvOrDefault();
         }
 
         if (!isDatabaseTypeSupported(options.type)) {
@@ -209,7 +209,7 @@ export class DatabaseModule implements IModule {
         }
 
         if (!isDatabaseTypeSupportedForEnvironment(options.type, config.env)) {
-            throw new AuthupError(`Database type ${options.type} is not supported for ${config.env}.`);
+            throw new AuthupError(`Database type "${options.type}" is not supported in the ${config.env} environment. Set DB_TYPE to "postgres" or "mysql" together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE, or declare "db" in authup.yml. With no database configured at all, "better-sqlite3" is the fallback.`);
         }
 
         const cacheResult = container.tryResolve(CacheInjectionKey);

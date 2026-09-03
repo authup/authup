@@ -9,7 +9,7 @@ The following guide is based on some shared assumptions:
 - Min. `5G` hard disk
 - Docker `v20.x` is [installed](https://docs.docker.com/get-docker/)
 - One available port on the host system if you want to map the service to your local machine (default: `3000`)
-- A reachable PostgreSQL or MySQL database. The image runs in production mode, which does not support SQLite, so it does not start until `DB_*` names a server database. The [Multiple services](#multiple-services) example below brings one up alongside Authup
+- A reachable PostgreSQL or MySQL database. The image runs in production mode, which does not support SQLite, so it does not start until a server database is configured, via `DB_*` or a `db:` block in `authup.yml`. The [Quick Start](#quick-start) example below brings one up alongside Authup
 - This guide assumes [Compose v2](https://docs.docker.com/compose/compose-file/)
 
 
@@ -21,7 +21,7 @@ examples show how to configure authup using the options described in the [config
 paste and modify the example you want to use into a `docker-compose.yml` file.
 
 The following example shows a sensible default configuration for getting started with Authup.
-This starts the one container a deployment needs: `start` runs the API
+This starts the one Authup container a deployment needs: `start` runs the API
 and every console on one listener (the auth console at `/console/auth`, the admin
 console at `/console/admin`, the account console at `/console/account`). To run the
 consoles as their own service instead, see
@@ -30,8 +30,9 @@ argument list; `start` is also the image's default command, and the former
 `server/core` prefix is deprecated (accepted with a notice on stderr for the
 rest of the 1.0.0-beta line, removed in v1.0.0).
 
-The container carries no volume, because the image keeps no durable state:
-every durable value lives in the database. Mount `/etc/authup` to supply the
+The Authup container carries no volume, because the image keeps no durable
+state: every durable value lives in the database. The volume in the example
+below belongs to the `postgres` service. Mount `/etc/authup` to supply the
 configuration file and the provisioning directory (see the examples below),
 and `/var/log/authup` only if you want the log files outside the container.
 The console transport writes to stdout regardless, so `docker compose logs`
@@ -40,6 +41,9 @@ works without it.
 ```yaml
 version: '3.8'
 
+volumes:
+    postgres_data:
+
 services:
   server-core:
       image: authup/authup:latest
@@ -47,22 +51,29 @@ services:
       container_name: server-core
       restart: unless-stopped
       ports:
-        - "3001:3000"
+        - "3000:3000"
+      depends_on:
+        - postgres
       environment:
-        - PUBLIC_URL=http://localhost:3001
+        - PUBLIC_URL=http://localhost:3000
+        - DB_TYPE=postgres
+        - DB_HOST=postgres
+        - DB_PORT=5432
+        - DB_USERNAME=postgres
+        - DB_PASSWORD=postgres
+        - DB_DATABASE=postgres
       command: start
-      networks:
-          authup:
 
-networks:
-    authup:
-        driver: bridge
-        driver_opts:
-            com.docker.network.bridge.name: authup
-        ipam:
-            driver: default
-            config:
-                - subnet: 172.23.1.0/24
+  postgres:
+      image: postgres:14
+      container_name: postgres
+      restart: unless-stopped
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      environment:
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_DB=postgres
 ```
 
 Then start the service using the following command:
@@ -94,8 +105,12 @@ It is recommended to operate the service behind a reverse proxy. For example [ng
 
 ### Environment variables
 
-The following example shows how to configure the Authup service using environment variables. This will start only the
-main backend service and forward it to the port `3001` on the local machine.
+The following example shows how to configure the Authup service using environment variables, forwarding it to port
+`3000` on the local machine.
+
+This example shows only the keys under discussion. Add the `postgres` service,
+its top-level `volumes` entry and the `DB_*` variables from the
+[Quick Start](#quick-start) to make it start.
 
 ```yaml
 version: '3.8'
@@ -106,9 +121,9 @@ services:
     container_name: authup
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
-        - PUBLIC_URL=http://localhost:3001
+        - PUBLIC_URL=http://localhost:3000
         - USER_ADMIN_PASSWORD=test-password
     command: start
 ```
@@ -133,6 +148,10 @@ In the following compose file example you can see that the
 configuration file is mounted into the container under `/etc/authup`, which is where the image
 reads it from.
 
+This example shows only the keys under discussion. Add the `postgres` service,
+its top-level `volumes` entry and the `DB_*` variables from the
+[Quick Start](#quick-start) to make it start.
+
 ```yaml
 version: '3.8'
 
@@ -144,17 +163,18 @@ services:
     volumes:
       - ./authup.yml:/etc/authup/authup.yml
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
-      - PUBLIC_URL=http://localhost:3001
+      - PUBLIC_URL=http://localhost:3000
     command: start
 
 ```
 
 
-### Multiple services
+### Additional services
 
-This shows an example of how to run authup alongside other services (postgres & redis) and connect to them.
+The Quick Start above already runs a database. This shows how to add further services, such as redis, and
+connect authup to them.
 
 ```yaml
 version: '3.8'
@@ -169,12 +189,12 @@ services:
         container_name: server-core
         restart: unless-stopped
         ports:
-            - "3001:3000"
+            - "3000:3000"
         depends_on:
             - postgres
             - redis
         environment:
-            - PUBLIC_URL=http://localhost:3001
+            - PUBLIC_URL=http://localhost:3000
             - DB_TYPE=postgres
             - DB_HOST=postgres
             - DB_PORT=5432

@@ -129,7 +129,7 @@ services:
         container_name: server-core
         restart: unless-stopped
         ports:
-            - "3001:3000"
+            - "3000:3000"
         environment:
             - PUBLIC_URL=http://localhost:3000
             - DB_TYPE=postgres

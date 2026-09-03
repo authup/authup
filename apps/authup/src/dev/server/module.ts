@@ -49,7 +49,9 @@ const VITE_FS_DENY_DEFAULT = [
  * Both `*.sql` and `writable/**` are listed on purpose: the first covers a
  * database wherever it was configured to live, the second covers the
  * hand-made `db.sql.<something>.bak` copies a working checkout accumulates,
- * which no extension pattern catches.
+ * which no extension pattern catches. `*.sqlite` is the third: with no
+ * database configured the boot path falls back to `better-sqlite3` and writes
+ * `db.sqlite` into the process cwd, which `*.sql` does not match.
  *
  * This is defence in depth. The primary control is that `authup dev` refuses
  * to start at all when the resolved environment is production.
@@ -57,6 +59,7 @@ const VITE_FS_DENY_DEFAULT = [
 const CONSOLE_FS_DENY = [
     ...VITE_FS_DENY_DEFAULT,
     '**/*.sql',
+    '**/*.sqlite',
     '**/authup.yml',
     '**/.env',
     '**/.env.*',

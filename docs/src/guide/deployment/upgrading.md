@@ -649,6 +649,30 @@ the beta.63 entry below warns about. The log files are written inside the
 container layer unless `/var/log/authup` is mounted, which is the ordinary
 posture for a container that logs to a collector.
 
+### Authup boots on SQLite when no database is configured
+
+Outside production, a process started with no database configuration now falls
+back to the `better-sqlite3` driver and writes `db.sqlite` into the working
+directory, instead of exiting with "The database configuration could not be
+read from env variables.". That is what the `db` configuration key and the
+[Database](./configuration-server-core-database.md) guide have both described
+for some time, while nothing implemented it, so no surface booted
+unconfigured. `npx authup@latest start` now works with no configuration at all.
+
+**Production is unchanged.** `better-sqlite3` is still refused when the
+environment is `production`, which is what the Docker image sets, so a
+container still requires PostgreSQL or MySQL. That refusal now names the
+variables to set instead of reading as a generic environment failure.
+
+`authup migration run` and the two CI runners under `apps/server-core/scripts/`
+are deliberately not covered and still fail when nothing is configured. SQLite
+runs no migrations, so a fallback there would create a database file, report
+"No migrations are pending" and exit `0`.
+
+**Action required only if** you relied on the crash as the signal that database
+configuration was missing in a non-production environment. Such a process now
+starts against an empty local SQLite file rather than exiting.
+
 ## v1.0.0-beta.63
 
 ### Introspecting an expired token now returns its payload

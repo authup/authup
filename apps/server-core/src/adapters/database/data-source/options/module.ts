@@ -73,10 +73,19 @@ export class DataSourceOptionsBuilder {
         const options = readDataSourceOptionsFromEnv();
 
         if (!options) {
-            throw new AuthupError('The database configuration could not be read from env variables.');
+            throw new AuthupError('No database is configured. Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.');
         }
 
         return this.normalize(options);
+    }
+
+    // the application boot path: the `db` config key documents the
+    // better-sqlite3 driver default, and DatabaseModule refuses that driver in
+    // production downstream. buildWithEnv stays strict for the migration CLI
+    // and the CI scripts, which apply no environment check and would otherwise
+    // silently target sqlite and report nothing to do.
+    buildWithEnvOrDefault() {
+        return this.normalize(readDataSourceOptionsFromEnv() ?? { type: 'better-sqlite3', database: 'db.sqlite' });
     }
 
     buildWith(options: DataSourceOptions) {

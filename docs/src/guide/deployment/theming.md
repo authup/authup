@@ -119,6 +119,10 @@ links and the login backdrop at once.
 
 **3. Run it.**
 
+The image needs a server database, so add the `DB_*` variables from
+[Docker](./docker) to the command below, or set `THEME_DIRECTORY_PATH` and the
+mount on the `authup` service of a compose file that already has one.
+
 ```bash
 docker run --rm -p 3000:3000 \
   -e THEME_DIRECTORY_PATH=/etc/authup/theme \
