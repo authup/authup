@@ -841,6 +841,53 @@ API. The six page GETs became a stateless hop:
   No loopback, no database, no session. That is what retired the SSR
   self-call machinery server-core used to carry (see *The internal HTTP
   client* below).
+- **It is the ONE console that fetches server-side, so its API address is
+  two values, not one** (issue #3550). `Config.apiUrl` is the BROWSER's: it
+  becomes the hydration payload's `baseURL`, from which the console derives
+  its HTTP client and its cookie path, so it must be the address a visitor
+  can reach. `Config.apiInternalUrl` is the deployment's own, and it is what
+  `createAPIClient` dispatches against. The second is the document key
+  `internalUrl` (`INTERNAL_URL`, declared at the root of `authup.yml` next
+  to `publicUrl` in `@authup/server-config`), whose `resolve` falls back to
+  `publicUrl`, so a deployment reachable at one address from both sides
+  configures nothing. **`publicUrl` is not an address the inside of a
+  deployment is entitled to.** A container published on another port, a
+  cluster whose ingress hostname exists only outside it, a terminator whose
+  certificate a self-call would have to trust: each makes the two different
+  answers, and one port mapping was enough to break every hosted auth page.
+  Published as `-p 3001:3000` with `PUBLIC_URL=http://localhost:3001`,
+  nothing listened on 3001 inside the container and the render's own fetch
+  was refused, so `/authorize` and the four workflow pages answered 502
+  while the API, both static consoles and `/logout` answered 200. `/logout`
+  is the tell — it drives its call from the browser, so it is the one auth
+  page that renders without reaching the API. The composed roles (`start`
+  and `dev`) additionally override the resolved value with server-core's own
+  listen address when the document names none
+  (`applyInternalApiUrl` / `buildInternalUrl` in
+  `apps/authup/src/console/api-url.ts`), because there the API is that very
+  process and the CLI is the only place that knows both — the same reason it
+  owns the mount composition. An explicitly configured `internalUrl` wins
+  even there: a composed process may still be told to take an egress route,
+  and since the key resolves to `publicUrl` when unset, `internalUrl !==
+  publicUrl` IS the "was one configured" question, and an explicitly EQUAL
+  value is treated as unset on purpose: it names no distinct inside address,
+  while the composed process knows one that cannot fail. Honouring it would
+  send a process through its own ingress and TLS to reach itself, which is
+  the configuration that produced this issue. The address the CLI DERIVES
+  carries NO path — server-core mounts every route root-relative, since the
+  proxy strips `publicUrl`'s prefix before a request arrives, so a self-call
+  must not re-add it (the same subtraction
+  `createPublicToInternalURLRewriter` makes). A CONFIGURED `internalUrl` may
+  carry one, and it means there what it means on `publicUrl`: an internal
+  proxy that strips a prefix. The zod type is deliberately the same `z.url()`
+  for both. Unlike that rewriter the swap here is on `baseURL` rather than at
+  the transport layer, because nothing derived from it reaches a caller:
+  there is no `redirect_uri` to be compared byte for byte at redemption.
+  server-core's own internal client is deliberately NOT repointed at the
+  key — it resolves its actual listen address per request, which is
+  strictly better than any configured value — and the two static consoles
+  never read it, since they hand `apiUrl` to the browser and call nothing
+  themselves.
 - **Flow continuity**: workflow links carry a same-origin `redirect` query
   param (the original `/authorize` path + query) so "back to login" restores
   the authorize request. `sanitizeRelativeRedirect()` moved to
@@ -2007,7 +2054,8 @@ apps/server-auth-console/src/       — the SSR console service
   render.ts                         — renderPage(event, config, { url, data, theme }): template,
                                       manifest and render entry memoized for the process lifetime
   payload.ts                        — the anonymous hydration reads (authorize info, status features) + the
-                                      workflow-page payload assembly
+                                      workflow-page payload assembly. createAPIClient dispatches against
+                                      config.apiInternalUrl, never the browser-facing config.apiUrl
   resolve.ts                        — resolvePackagePath/resolveDistPath (locter locateUp resolution of
                                       @authup/client-auth-console, anchored on this package)
   redirect.ts                       — sanitizeRelativeRedirect (open-redirect guard on the `redirect` param)
@@ -3045,7 +3093,12 @@ an origin check: `normalizeConfig` and each console's own `resolve*Config`
 already refuse a console url that is not publicUrl's origin. **The
 subtraction is the MOUNT's alone**: the console's own `basePath`, which
 rebases its asset hrefs and builds its links, stays the full browser-facing
-path. The console
+path. The composed roles additionally hand the auth console this process's own
+listen address as its INTERNAL api url, unless the document named one
+(`applyInternalApiUrl`, `console/api-url.ts`), because it is the one console
+that fetches server-side and `publicUrl` need not resolve from inside the
+deployment at all; see *Auth Workflow UI* above for the 502 that produced and
+for the `internalUrl` key a split deployment sets instead. The console
 role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
@@ -3142,9 +3195,10 @@ boots on its defaults).
 `@authup/server-config` declares every key of the document once as a
 `SchemaEntry`, and `app/modules/config/constants.ts` selects the ones
 this service reads: the zod `type`, the `default` (a static value, or a
-thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
-`db` carry none, the first is derived from host and port in `normalizeConfig`,
-the second falls back to the sqlite driver default on the boot path alone, in `DataSourceOptionsBuilder` rather than in typeorm-extension (conventions.md -> *Configuration Naming*); `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `core.host` + `core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
+thunk for the two process-derived keys `env` and `rootPath`; `publicUrl`,
+`internalUrl` and `db` carry none: `publicUrl` is derived from host and port in `normalizeConfig`,
+`internalUrl` from `publicUrl` (see *Auth Workflow UI*),
+and `db` falls back to the sqlite driver default on the boot path alone, in `DataSourceOptionsBuilder` rather than in typeorm-extension (conventions.md -> *Configuration Naming*); `publicUrl` is derived by `resolvePublicUrl` in `@authup/server-config` from `core.host` + `core.port`, which are DOCUMENT keys rather than facts about whichever process is asking, so a console computes the identical issuer with no server-core anywhere -- that is what lets a console stand alone, and it is why the console registries carry the core section), an
 operator-facing `description`, and for the 51 env-backed keys the
 `EnvironmentVariable` plus a `readEnv` reader. The mapped
 `Schema` type is the exhaustiveness guard: a `Config` key with no

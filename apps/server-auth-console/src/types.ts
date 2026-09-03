@@ -56,6 +56,21 @@ export type Config = {
      */
     apiUrl: string,
     /**
+     * Where THIS PROCESS reaches server-core: the document's `internalUrl`.
+     * This is the one console that renders server-side, so the two addresses
+     * are different questions, and a container port mapping is enough to make
+     * them different answers: published as `-p 3001:3000`, `apiUrl` names a
+     * port nothing listens on inside the container and every hosted page
+     * answers 502 (#3550). On a cluster network it is the service DNS name,
+     * so the render never leaves for the ingress and back.
+     *
+     * Defaults to {@link apiUrl}, which is right whenever the deployment
+     * answers at one address from both sides. The composed `authup start`
+     * overrides it with its own listen address unless the document named one,
+     * the same self-call rule server-core's internal client follows.
+     */
+    apiInternalUrl: string,
+    /**
      * Where the standalone service listens. Unrelated to `url`: behind a
      * reverse proxy the two always differ.
      */

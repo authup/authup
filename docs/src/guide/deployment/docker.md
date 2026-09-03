@@ -25,8 +25,8 @@ $ mkdir authup && cd authup
 
 `PORT` and `HOST` are honored inside the container. The image defaults them to
 `3000` and `0.0.0.0`, so the rule when the container is run is as follows:
-- The API listens on port `3000` and the examples publish it unchanged (`"3000:3000"`). Setting `PORT=4000` under `environment` moves the listener to `4000`, so the mapping must follow it (`"4000:4000"`); the built-in healthcheck follows `PORT` on its own, and the image's `EXPOSE 3000` is metadata that pins nothing. The `start console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
-- **Publish the port the listener binds.** A mapping that publishes a different port (`"8080:3000"`) leaves `PUBLIC_URL` naming a port nothing listens on inside the container, and the auth console renders its pages by calling the API at that address, so `/console/auth/*` answers `502` while the API and the two static consoles work. To publish on a different host port, move the listener with `PORT` and map that port to itself.
+- The API listens on port `3000` and the examples publish it unchanged (`"3000:3000"`). Setting `PORT=4000` under `environment` moves the listener to `4000`, so the *container side* of the mapping follows it (`"8080:4000"` is fine); the built-in healthcheck follows `PORT` on its own, and the image's `EXPOSE 3000` is metadata that pins nothing. The `start console` role is the exception: each console binds its own port (`3020` auth, `3021` admin, `3022` account), see [Console Replicas](./console-replicas.md).
+- **The host side is free** (`"8080:3000"`), as long as `PUBLIC_URL` names the port you published: that is the address a browser reaches, and the only address it has to be right for. `start` calls its own API on its listen address rather than through `PUBLIC_URL`, so the two need not agree.
 
 
 Follow the instructions for [configuring](./configuration.md) Authup using a configuration file or via environment variables.
@@ -91,8 +91,8 @@ The container command is the CLI's own argument list (`start`, `start worker`,
 stderr for the rest of the 1.0.0-beta line and is removed in v1.0.0.
 
 `PUBLIC_URL` is the address the browser reaches the container at, and the
-consoles derive the API address from it, so it must name the published port.
-That is the same port the listener binds, per the rule in Step 2.
+consoles derive the API address they hand the browser from it, so it must name
+the published port and the host that reaches it.
 
 Now all should be set up, and you are ready to go :tada:
 

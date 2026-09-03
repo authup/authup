@@ -36,11 +36,11 @@ const serviceType = z.string()
 /**
  * The deployment-wide keys, at the ROOT of `authup.yml`.
  *
- * `publicUrl` and `db` carry no default on purpose: the first is derived from
- * host and port by whoever owns a listener, the second falls back to
- * typeorm-extension's driver default.
+ * `publicUrl`, `internalUrl` and `db` carry no default on purpose: the first
+ * is derived from host and port by whoever owns a listener, the second from
+ * the first, and the third falls back to typeorm-extension's driver default.
  */
-export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', EnvironmentVariable>({
+export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'internalUrl' | 'db', EnvironmentVariable>({
     env: {
         type: z.string(),
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
@@ -79,6 +79,19 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'db', Environm
             get('env') as string,
         ),
         env: EnvironmentVariable.PUBLIC_URL,
+        readEnv: readEnvString,
+    },
+    internalUrl: {
+        type: z.url(),
+        description: 'Base URL a service inside the deployment reaches the API at, e.g. http://authup:3000 on a cluster network. ' +
+            'Used for server-side calls only (the auth console renders its pages from the API); publicUrl stays the issuer and the address handed to the browser. Defaults to publicUrl.',
+        path: 'internalUrl',
+        // Falls back to the public address, which is right whenever the
+        // deployment answers at one address from both sides. It resolves
+        // rather than defaults because `publicUrl` is itself derived, and a
+        // static default cannot read another key.
+        resolve: ({ value, get }) => (value as string | undefined) || get('publicUrl') as string,
+        env: EnvironmentVariable.INTERNAL_URL,
         readEnv: readEnvString,
     },
     trustedOrigins: {

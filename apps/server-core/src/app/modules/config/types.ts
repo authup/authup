@@ -50,4 +50,4 @@ export type ConfigFactory = () => Promise<Config> | Config;
  * Keys without a static default: publicUrl is derived from host and port in
  * normalizeConfig, db falls back to typeorm-extension's driver default.
  */
-export type ConfigSchemaDerivedKey = 'publicUrl' | 'db';
+export type ConfigSchemaDerivedKey = 'publicUrl' | 'internalUrl' | 'db';

@@ -16,9 +16,42 @@ import type { Config } from './types';
  * The service hydrates ANONYMOUSLY. It holds no credential of its own and
  * asks server-core only for what an unauthenticated visitor may see, which
  * is the whole of what these pages render.
+ *
+ * It dispatches against `apiInternalUrl`, never the browser-facing `apiUrl`:
+ * this is a server-side call, so it must not depend on the public address
+ * resolving from inside the deployment. Unlike server-core's own internal
+ * client the swap is on `baseURL` rather than at the transport layer,
+ * because nothing derived from it reaches a caller -- there is no
+ * `redirect_uri` here to be compared byte for byte later.
  */
 export function createAPIClient(config: Config) : Client {
-    return new Client({ baseURL: config.apiUrl });
+    return new Client({ baseURL: config.apiInternalUrl });
+}
+
+/**
+ * Report an outbound failure to the operator and raise one the visitor may
+ * see, which is deliberately not the same error.
+ *
+ * hapic embeds the resolved request URL in its message, and this service has
+ * no error middleware: routup answers with `event.error.message` verbatim, on
+ * the public login page. That URL is `apiInternalUrl`, which on a split
+ * deployment names a service on the operator's own network, so an API that is
+ * merely down would publish its internal address to every anonymous visitor.
+ * It was harmless while the value was `publicUrl`, an address the browser
+ * already had.
+ *
+ * The rule and the remedy are server-core's own (`sanitizeError` /
+ * `describeError`): the caller gets a message it can act on, the detail goes
+ * to the log. `console.error` rather than a logger because a console handler
+ * is built from a config alone and is given none -- and because this line is
+ * the only trace such a failure leaves, which is how #3550 was diagnosed in
+ * the first place.
+ */
+function failWithoutAddress(error: unknown) : never {
+    // eslint-disable-next-line no-console
+    console.error('[authup] the auth console could not reach the API:', error);
+
+    throw new Error('The identity provider could not be reached.');
 }
 
 /**
@@ -27,9 +60,13 @@ export function createAPIClient(config: Config) : Client {
  * failure propagates rather than defaulting to false.
  */
 export async function readFeatures(client: Client) : Promise<StatusResponseFeatures> {
-    const status : StatusResponse = await client.status.get();
+    try {
+        const status : StatusResponse = await client.status.get();
 
-    return status.features;
+        return status.features;
+    } catch (e) {
+        return failWithoutAddress(e);
+    }
 }
 
 /**
@@ -37,10 +74,14 @@ export async function readFeatures(client: Client) : Promise<StatusResponseFeatu
  * The browser's query is forwarded verbatim: the answer is derived from all
  * of it, the `provider` hint and the closed `error` marker set included.
  */
-export function readAuthorizeInfo(client: Client, event: IAppEvent) : Promise<AuthorizeInfo> {
+export async function readAuthorizeInfo(client: Client, event: IAppEvent) : Promise<AuthorizeInfo> {
     const { search } = new URL(event.request.url);
 
-    return client.authorize.getInfo(search);
+    try {
+        return await client.authorize.getInfo(search);
+    } catch (e) {
+        return failWithoutAddress(e);
+    }
 }
 
 export type WorkflowPageOptions = {

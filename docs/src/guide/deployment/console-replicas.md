@@ -243,6 +243,10 @@ services:
         restart: unless-stopped
         environment:
             - PUBLIC_URL=https://auth.example.com
+            # The auth console renders its pages server-side, so it calls the
+            # API itself. Point those calls at the API on this network rather
+            # than back out through the ingress.
+            - INTERNAL_URL=http://authup-api:3000
         command: start console
         # The image probes the API port, which this process never opens.
         # Probe the auth console: it cannot be disabled, so it is always
@@ -255,5 +259,18 @@ services:
 Run `migration run` once before starting either service, and add a
 [worker](./worker.md) for the sweeps. The console service takes no `DB_*` and
 no `REDIS`: it reads `PUBLIC_URL` (to derive its own url and the API address
-it injects into the console), its own section, and the
+it injects into the console), `INTERNAL_URL`, its own section, and the
 [theme](./theming.md) directory when one is configured.
+
+`INTERNAL_URL` matters to the **auth console** alone, and it is the one thing
+this topology needs that a single container does not. The two static consoles
+hand `PUBLIC_URL` to the browser and make no call of their own; the auth
+console renders `/authorize` and the workflow pages on the server, from
+`GET /authorize/info` and `GET /`. Without it those calls leave the network for
+`PUBLIC_URL` and come back through the ingress, which is a wasted round trip
+where it works at all: on a cluster whose ingress address does not resolve
+from inside, or behind a terminator presenting a certificate the process does
+not trust, the console answers `500` for the hosted login page (`502` to the
+browser, once the proxy in front of it has its say) while the API and both
+static consoles are fine. It defaults to `PUBLIC_URL`, so a deployment
+reachable at one address from both sides sets nothing.
