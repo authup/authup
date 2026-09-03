@@ -359,13 +359,18 @@ copy, not an oversight.
   `DataSourceOptionsBuilder.buildWithEnvOrDefault`, which supplies
   `better-sqlite3` plus the same `db.sqlite` name typeorm-extension derives for
   that driver, resolved against the process cwd like any other sqlite path.
-  The gate is the TYPE alone: a WRONG value still fails, and a lone
-  `DB_DATABASE` or `DB_HOST` is ignored along with everything else, so the
-  fallback answers "nothing configured" and never rescues a half-written
-  configuration. Outside production that is silent, which is the one place the
-  fallback is weaker than the throw it replaced; in production the refusal
-  below names the variables, so a half-written configuration still fails loud
-  where it matters.
+  The gate is the TYPE alone, so the fallback is guarded rather than
+  unconditional: a WRONG value still fails the read, and an environment that
+  names a CONNECTION without a type (`DB_HOST`, `DB_DATABASE`, `DB_URL` or a
+  `TYPEORM_*` alias) is refused with the same error `buildWithEnv` raises,
+  never answered with sqlite. `hasDatabaseConnectionEnv` reads those keys
+  through typeorm-extension's own `useEnv()` rather than a local list, so it
+  cannot drift from what the reader accepts, and it excludes the list-valued
+  keys, which default to `[]` and would report every environment as
+  configured. The default therefore answers "nothing is configured" and
+  nothing else: without the guard a forgotten `DB_TYPE` would have redirected
+  every write to a local file, silently outside production, since production
+  refuses the driver anyway.
   Production is the exception, because `isDatabaseTypeSupportedForEnvironment`
   refuses `better-sqlite3` there. That is why the Docker image
   (`NODE_ENV=production`) still requires postgres or mysql, and why that

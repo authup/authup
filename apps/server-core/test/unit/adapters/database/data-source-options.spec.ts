@@ -67,6 +67,18 @@ describe('adapters/database/data-source/options', () => {
         expect((options as { database?: string }).database).toEqual('db.sqlite');
     });
 
+    it('should refuse a half-written configuration rather than falling back', () => {
+        withDatabaseEnv({ DB_HOST: '127.0.0.1', DB_DATABASE: 'app' }, () => {
+            expect(() => new DataSourceOptionsBuilder().buildWithEnvOrDefault()).toThrow(AuthupError);
+        });
+    });
+
+    it('should refuse it under the TYPEORM_ aliases as well', () => {
+        withDatabaseEnv({ TYPEORM_HOST: '127.0.0.1' }, () => {
+            expect(() => new DataSourceOptionsBuilder().buildWithEnvOrDefault()).toThrow(AuthupError);
+        });
+    });
+
     it('should keep a configured database type over the fallback', () => {
         const options = withDatabaseEnv({ DB_TYPE: 'postgres' }, () => new DataSourceOptionsBuilder().buildWithEnvOrDefault());
 

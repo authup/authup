@@ -50,22 +50,10 @@ export default defineComponent({
     setup() {
         const tabs: Tab[] = [
             {
-                id: 'install',
-                label: '1. Install',
-                snippet: `docker pull authup/authup:latest
-
-# reads the .env from step 2
-docker run -d \\
-  --name authup \\
-  -p 3000:3000 \\
-  --env-file .env \\
-  authup/authup:latest \\
-  start`,
-            },
-            {
                 id: 'configure',
-                label: '2. Configure',
+                label: '1. Configure',
                 snippet: `# .env
+# Point these at your own PostgreSQL, Redis and public address.
 USER_ADMIN_PASSWORD=start123
 
 DB_TYPE=postgres
@@ -77,6 +65,19 @@ DB_DATABASE=authup
 
 REDIS=redis://cache.example.com:6379
 PUBLIC_URL=https://auth.example.com`,
+            },
+            {
+                id: 'install',
+                label: '2. Install',
+                snippet: `docker pull authup/authup:latest
+
+# reads the .env from step 1
+docker run -d \\
+  --name authup \\
+  -p 3000:3000 \\
+  --env-file .env \\
+  authup/authup:latest \\
+  start`,
             },
             {
                 id: 'use',
@@ -94,7 +95,7 @@ curl https://auth.example.com/users \\
             },
         ];
 
-        const active = ref<TabId>('install');
+        const active = ref<TabId>('configure');
         const copied = ref(false);
 
         const currentSnippet = computed(() => tabs.find((t) => t.id === active.value)?.snippet ?? '');

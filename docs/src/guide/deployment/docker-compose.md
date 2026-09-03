@@ -76,6 +76,11 @@ services:
         - POSTGRES_DB=postgres
 ```
 
+The credentials above are placeholders that let the example run as pasted. The
+`postgres` service publishes no host port, so it is reachable only from the
+compose network, but change both halves of the pair before this is anything but
+a local trial.
+
 Then start the service using the following command:
 
 ```bash
