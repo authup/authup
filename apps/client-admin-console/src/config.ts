@@ -18,6 +18,14 @@ export type AdminConsoleConfigInput = {
     apiUrl?: string,
 
     /**
+     * Where the account console is served, e.g.
+     * `https://example.com/console/account`. Optional: absent (a standalone
+     * host, or a dist served by an older server) it is derived from the API
+     * URL under the default segment.
+     */
+    accountConsoleUrl?: string,
+
+    /**
      * Path the app is served under (the vue-router history base).
      * default: /console/admin
      */
@@ -55,6 +63,7 @@ export type AdminConsoleConfigInput = {
 
 export type AdminConsoleConfig = {
     apiUrl: string,
+    accountConsoleUrl: string,
     basePath: string,
     clientId: string,
     /**
@@ -120,6 +129,10 @@ export function resolveAdminConsoleConfig(
 
     return {
         apiUrl,
+        // The default segment is where server-core's own derivation puts it,
+        // so a standalone host and an older server keep today's link.
+        accountConsoleUrl: (injected.accountConsoleUrl || `${apiUrl}/console/account`)
+            .replace(/\/+$/, ''),
         basePath,
         clientId: injected.clientId || CLIENT_ADMIN_CONSOLE_NAME,
         cookiePath: resolveCookiePath(apiUrl, origin),

@@ -33,7 +33,12 @@ const USER_AGENT = 'link-spec-agent';
 const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
 
 describe('identity-provider link flow', () => {
-    const suite = createTestApplication();
+    const accountConsoleUrl = 'https://account.example.net/account';
+    const suite = createTestApplication({
+        config: (config) => {
+            config.accountConsole.url = accountConsoleUrl;
+        },
+    });
 
     let idpServer: Server;
     let idpURL: string;
@@ -182,7 +187,8 @@ describe('identity-provider link flow', () => {
         expect(url.searchParams.get('redirect_uri')).toContain(`identity-providers/${provider.id}/authorize-in`);
 
         const target = await completeCallback(state);
-        expect(target.pathname).toEqual('/console/account/connected-accounts');
+        expect(target.origin).toEqual('https://account.example.net');
+        expect(target.pathname).toEqual('/account/connected-accounts');
         expect(target.searchParams.get('linkError')).toBeNull();
 
         const handle = handleOf(target);

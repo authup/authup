@@ -12,7 +12,7 @@ import {
     buildUserFakeEmail, 
     isUserFakeEmail, 
 } from '@authup/core-kit';
-import { ValidatorGroup, generateName } from '@authup/kit';
+import { ValidatorGroup, generateName, omitRecord } from '@authup/kit';
 import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { assignFormProperties, useTranslations } from '../../../core';
 import { useValidup } from '@validup/vue';
@@ -155,7 +155,16 @@ export default defineComponent({
 
             busy.value = true;
             try {
-                await manager.createOrUpdate(form);
+                // The admin-only keys have to be gated on the PAYLOAD, not only
+                // in the template: a self-edit is evaluated against the
+                // `system.user-names-self-manage` denylist, which denies on key
+                // presence rather than on a changed value, so posting them at
+                // their unchanged values rejects the whole save.
+                await manager.createOrUpdate(
+                    props.canManage ?
+                        form :
+                        omitRecord({ ...form }, ['active', 'nameLocked', 'emailVerified']),
+                );
             } finally {
                 busy.value = false;
             }

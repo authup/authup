@@ -13,12 +13,14 @@ describe('src/config', () => {
     it('should apply injected configuration', () => {
         const config = resolveAdminConsoleConfig({
             apiUrl: 'https://auth.example.com/',
+            accountConsoleUrl: 'https://auth.example.com/account/',
             basePath: '/console/admin/',
             clientId: 'my-admin-client',
             features: { adminConsole: false },
         });
 
         expect(config.apiUrl).toEqual('https://auth.example.com');
+        expect(config.accountConsoleUrl).toEqual('https://auth.example.com/account');
         expect(config.basePath).toEqual('/console/admin');
         expect(config.clientId).toEqual('my-admin-client');
         expect(config.enabled).toBeFalsy();
@@ -35,6 +37,8 @@ describe('src/config', () => {
         const config = resolveAdminConsoleConfig({}, { origin: 'https://auth.example.com' });
         expect(config.apiUrl).toEqual('https://auth.example.com');
         expect(config.basePath).toEqual('/console/admin');
+        // a standalone host, or a dist served by an older server
+        expect(config.accountConsoleUrl).toEqual('https://auth.example.com/console/account');
 
         // served under a sub-path: the api sits at the prefix
         expect(resolveAdminConsoleConfig({ basePath: '/auth/console/admin' }, { origin: 'https://example.com' }).apiUrl)

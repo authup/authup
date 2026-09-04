@@ -272,7 +272,30 @@ describe.each(CONSOLES)('$name console session', ({
         });
         expect(issuance.status).toEqual(401);
 
-        // 7) sign out: the credential is dropped, the session revoked and the
+        // 7) revoking ANOTHER device is not a sign-out: the cookie is cleared
+        //    for the caller's OWN session only, or the account console's
+        //    Sessions page would log the visitor out of the browser it is
+        //    revoking a phone from.
+        const otherLogin = await suite.client
+            .token
+            .createWithPassword({ username: user.name, password });
+        const otherIntrospect = await suite.client.token.introspect(
+            { token: otherLogin.access_token },
+            { authorizationHeaderInherit: true },
+        );
+        expect(otherIntrospect.session_id).not.toEqual(sessionBody.session_id);
+
+        const dropOther = await request('DELETE', `/sessions/${otherIntrospect.session_id}`, {
+            headers: {
+                'sec-fetch-site': 'same-origin',
+                origin: publicOrigin,
+            },
+        });
+        expect(dropOther.status).toEqual(202);
+        expect(dropOther.headers.getSetCookie()).toHaveLength(0);
+        expect(jar.get(SESSION_COOKIE)).toEqual(secret);
+
+        // 8) sign out: the credential is dropped, the session revoked and the
         //    cookie cleared.
         // Sign-out IS the entity delete now: it revokes the row and, because a
         // console cookie was presented, clears it too (plan 088).

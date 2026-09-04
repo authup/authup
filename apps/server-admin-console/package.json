@@ -58,6 +58,7 @@
         "@ebec/http": "^4.3.2",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.0",
+        "orkos": "^1.1.1",
         "routup": "^6.1.0",
         "zod": "^4.5.4"
     },

@@ -24,27 +24,48 @@ import { parseConfig } from './parse.ts';
  * @param options
  */
 export async function readConfig(options: ConfigRawReadOptions<Config> = {}) : Promise<Config> {
+    // The environment is read unless the caller says otherwise, and the `fn`
+    // below is what carries the DB_* block, so neither may be spread away by
+    // the caller's own options: both are applied AFTER `...options`.
+    let envDataSource : DatabaseConnectionOptions | undefined;
+    const captureEnvDataSource = () => {
+        // The DB_* names come from typeorm-extension and stay outside the registry.
+        if (hasEnvDataSourceOptions()) {
+            // the configuration surface is deliberately untyped here: `db` is
+            // authup's own loose shape, and typeorm's driver union carries
+            // dialects (mariadb) this service does not support anyway. The
+            // supported set is asserted at connect time.
+            envDataSource = readDataSourceOptionsFromEnv() as DatabaseConnectionOptions;
+        }
+    };
+    const env = options.env ?? true;
+    const envOptions = isObject(env) ? env : {};
+
     const raw = await readConfigRaw(
         CONFIG_SCHEMA,
         {
+            ...options,
             fs: options.fs,
-            env: options.env ?
+            env: env ?
                 {
-                    ...(isObject(options.env) ? options.env : {}),
-                    fn: (options) => {
-                        // The DB_* names come from typeorm-extension and stay outside the registry.
-                        if (hasEnvDataSourceOptions()) {
-                        // the configuration surface is deliberately untyped here: `db` is
-                        // authup's own loose shape, and typeorm's driver union carries
-                        // dialects (mariadb) this service does not support anyway. The
-                        // supported set is asserted at connect time.
-                            options.db = readDataSourceOptionsFromEnv() as DatabaseConnectionOptions;
-                        }
+                    ...envOptions,
+                    fn: (config) => {
+                        envOptions.fn?.(config);
+                        captureEnvDataSource();
                     },
                 } : false,
-            ...options,
         },
     );
+
+    if (envDataSource) {
+        const db = raw.db ?? { type: envDataSource.type };
+        for (const [key, value] of Object.entries(envDataSource)) {
+            if (typeof value !== 'undefined') {
+                db[key] = value;
+            }
+        }
+        raw.db = db;
+    }
 
     return normalizeConfig(raw);
 }

@@ -106,6 +106,7 @@ export async function createHandler(
         theme,
         config: {
             apiUrl: config.apiUrl,
+            accountConsoleUrl: config.accountConsoleUrl,
             basePath,
             // The service serving a console is the authority on whether
             // it is serving it, so the flag is its own rather than read

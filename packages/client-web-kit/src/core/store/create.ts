@@ -19,6 +19,7 @@ import type {
 } from '@authup/specs';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client } from '@authup/core-http-kit';
+import { extractErrorContext } from '../error';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
 import type {
@@ -672,13 +673,30 @@ export function createStore(context: StoreCreateContext) {
      * shape of its own.
      *
      * There is nothing to renew here: the credential either still names a live
-     * session or it does not, and a failure propagates to the caller exactly
-     * like a failed introspection does.
+     * session or it does not. A 401 means the session is gone and clears stale
+     * identity state; other failures still propagate to the caller.
      */
     const revalidateCookieSession = async () : Promise<void> => {
         const generation = tokenGeneration.value;
 
-        const introspection = await client.account.getSession();
+        let introspection : OAuth2TokenIntrospectionResponse;
+        try {
+            introspection = await client.account.getSession();
+        } catch (e) {
+            if (extractErrorContext(e).status !== 401) {
+                throw e;
+            }
+
+            if (generation === tokenGeneration.value && (user.value || realm.value)) {
+                await cleanup();
+            }
+
+            return;
+        }
+
+        if (generation !== tokenGeneration.value) {
+            return;
+        }
 
         if (!introspection.active) {
             // The credential is gone, or its session ended server-side. Drop
@@ -703,9 +721,15 @@ export function createStore(context: StoreCreateContext) {
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
 
         if (context.cookieSession) {
-            if (!validated.value || resolutionStale.value) {
-                await revalidateCookieSession();
-            }
+            // Unconditional, unlike the bearer branch below: the credential is
+            // an opaque cookie this code cannot inspect, the authentication
+            // hook is inert here and nothing pushes a revocation, so a
+            // `validated` short-circuit would leave a session that ended
+            // elsewhere (another tab's sign-out, an admin force-logout, a
+            // lapsed row) rendering as signed in until a reload. One small
+            // GET /sessions/@me/introspect per navigation is the price of
+            // noticing that on the next one.
+            await revalidateCookieSession();
 
             if (user.value && !lastAuthOrigin.value) {
                 lastAuthOrigin.value = StoreAuthOrigin.RESTORE;

@@ -58,15 +58,49 @@ function failWithoutAddress(error: unknown) : never {
  * The feature flags every workflow page gates its form on. A page that
  * cannot reach them must not silently claim a workflow is disabled, so the
  * failure propagates rather than defaulting to false.
+ *
+ * Read ONCE and held for the reader's lifetime, the same shape render.ts
+ * keeps for the dist template, manifest and render entry: `GET /` reports
+ * the version and the boot-config feature flags, none of which changes
+ * without a restart, so a TTL would be a number with nothing behind it.
+ * Without it every workflow page render is an API call, and under the
+ * composed `authup start` those all arrive over loopback on one shared
+ * rate-limit key. Only a SUCCESS is held, so an API that was down at the
+ * first render is retried rather than remembered as broken.
+ *
+ * The cache is instance-scoped rather than module-scoped (098 C4): the
+ * answer depends on which API the client was built against, so two handlers
+ * in one process must not share one, and a module slot would additionally
+ * leak between test cases.
  */
-export async function readFeatures(client: Client) : Promise<StatusResponseFeatures> {
-    try {
-        const status : StatusResponse = await client.status.get();
+export function createFeaturesReader(client: Client) : () => Promise<StatusResponseFeatures> {
+    let cached : StatusResponseFeatures | undefined;
+    let pending : Promise<StatusResponseFeatures> | undefined;
 
-        return status.features;
-    } catch (e) {
-        return failWithoutAddress(e);
-    }
+    return () => {
+        if (cached) {
+            return Promise.resolve(cached);
+        }
+
+        if (pending) {
+            return pending;
+        }
+
+        pending = client.status.get()
+            .then((status: StatusResponse) => {
+                cached = status.features;
+
+                return cached;
+            })
+            .catch((e) => failWithoutAddress(e));
+
+        const clear = () => {
+            pending = undefined;
+        };
+        pending.then(clear, clear);
+
+        return pending;
+    };
 }
 
 /**
