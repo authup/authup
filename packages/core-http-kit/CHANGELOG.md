@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core,core-kit:** Client.scope and Client.rootUrl are gone from the domain type, the validator, the API payloads and the query schema, and the migration drops both columns with their data.
+* `email_verified` no longer reflects `User.active`. Every existing user backfills to unverified, so a relying party gating on the claim stops matching until the addresses are verified again or an admin sets the field. Claims that mirror a nullable column are now omitted rather than answered as `null` on both introspection endpoints and in every id_token; test for absence rather than for `null`. `User` gains a required `emailVerified` property.
+* **server-auth-console,server-core:** the auth pages render in their own service ([#3511](https://github.com/authup/authup/issues/3511))
+* **server-core,client-admin-console,authup:** @authup/client-admin-console is a runtime dependency of server-core and is served by it (plan 081).
+* **server-core:** `IClient` gains a required `account` member.
+
+### Features
+
+* **server-auth-console,server-core:** the auth pages render in their own service ([#3511](https://github.com/authup/authup/issues/3511)) ([5d0df26](https://github.com/authup/authup/commit/5d0df26d8df77deee1e9e40e8065ce850cbf7111))
+* **server-core,client-admin-console,authup:** serve the admin console from server-core as a static SPA ([#3501](https://github.com/authup/authup/issues/3501)) ([1ea842c](https://github.com/authup/authup/commit/1ea842cf10e64559b140876ec1a757d9f338377c))
+* **server-core,core-http-kit:** authorize info endpoint ([#3510](https://github.com/authup/authup/issues/3510)) ([9ba7b8d](https://github.com/authup/authup/commit/9ba7b8de36ff19718cb2294aa37b7a5d9b51dc35))
+* **server-core,core-kit:** back-channel logout, locked user/client writes, client column cleanup ([#3540](https://github.com/authup/authup/issues/3540)) ([ba6215a](https://github.com/authup/authup/commit/ba6215ac28f07dec84cc829fdad9d02d8572d2d5))
+* **server-core:** authenticate the account console with an opaque session cookie ([#3498](https://github.com/authup/authup/issues/3498)) ([d84b730](https://github.com/authup/authup/commit/d84b730b293c4c8f86af41d752ca1b771772600f))
+
+
+### Bug Fixes
+
+* email_verified gets a column of its own, and the OIDC claims get declared ([#3525](https://github.com/authup/authup/issues/3525)) ([05d2783](https://github.com/authup/authup/commit/05d2783b43eca4fc01adb1b7eba1d9989339cb19))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/core-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/specs bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

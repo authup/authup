@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### Features
+
+* **client-web-nuxt:** allow namespacing the session cookies ([#3529](https://github.com/authup/authup/issues/3529)) ([d526bcc](https://github.com/authup/authup/commit/d526bcc62724965ad2f1dc89aa67e008ecf71728))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#3537](https://github.com/authup/authup/issues/3537)) ([0ba8493](https://github.com/authup/authup/commit/0ba8493d76b742ee22572f15d65bfcc76bf71032))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/client-web-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/core-http-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

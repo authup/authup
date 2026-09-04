@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `defineCLIConfigCommand` is no longer exported by `@authup/server-core`, and the package no longer ships `dist/config-schema.json`.
+
+### Features
+
+* configuration is a property of the document, and a console is a service ([#3515](https://github.com/authup/authup/issues/3515)) ([b6fe8ef](https://github.com/authup/authup/commit/b6fe8ef5ceefc7f9564c0c85680fc18f1df9286b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

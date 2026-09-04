@@ -1,7 +1,7 @@
 {
     "name": "@authup/core-http-kit",
     "type": "module",
-    "version": "1.0.0-beta.63",
+    "version": "1.0.0-beta.64",
     "description": "Package containing global constants, types & interfaces.",
     "license": "Apache-2.0",
     "exports": {
@@ -58,10 +58,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.63",
-        "@authup/core-kit": "^1.0.0-beta.63",
-        "@authup/kit": "^1.0.0-beta.63",
-        "@authup/specs": "^1.0.0-beta.63",
+        "@authup/access": "^1.0.0-beta.64",
+        "@authup/core-kit": "^1.0.0-beta.64",
+        "@authup/kit": "^1.0.0-beta.64",
+        "@authup/specs": "^1.0.0-beta.64",
         "@hapic/oauth2": "^4.0.2",
         "@posva/event-emitter": "^1.0.3",
         "@rapiq/codec-url": "^2.2.0",
@@ -69,7 +69,7 @@
         "hapic": "^3.0.2"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.63",
+        "@authup/errors": "^1.0.0-beta.64",
         "vitest": "^4.0.14"
     },
     "publishConfig": {

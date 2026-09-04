@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core,core-kit:** Client.scope and Client.rootUrl are gone from the domain type, the validator, the API payloads and the query schema, and the migration drops both columns with their data.
+* `email_verified` no longer reflects `User.active`. Every existing user backfills to unverified, so a relying party gating on the claim stops matching until the addresses are verified again or an admin sets the field. Claims that mirror a nullable column are now omitted rather than answered as `null` on both introspection endpoints and in every id_token; test for absence rather than for `null`. `User` gains a required `emailVerified` property.
+* **server-core:** `IClient` gains a required `account` member.
+* **server-core:** POST/GET /token/introspect answer 401 to a request carrying no credentials. Send a live bearer (the introspected token itself, or the caller's own) or confidential client credentials. Public (authMethod 'none') clients cannot introspect by client_id alone.
+
+### Features
+
+* **server-core,core-kit:** back-channel logout, locked user/client writes, client column cleanup ([#3540](https://github.com/authup/authup/issues/3540)) ([ba6215a](https://github.com/authup/authup/commit/ba6215ac28f07dec84cc829fdad9d02d8572d2d5))
+* **server-core:** authenticate the account console with an opaque session cookie ([#3498](https://github.com/authup/authup/issues/3498)) ([d84b730](https://github.com/authup/authup/commit/d84b730b293c4c8f86af41d752ca1b771772600f))
+* **server-core:** require authorization on the token introspection endpoint ([#3493](https://github.com/authup/authup/issues/3493)) ([4ea479a](https://github.com/authup/authup/commit/4ea479a744d6f2b96c28e6ea1709a7c2ac23511e))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#3537](https://github.com/authup/authup/issues/3537)) ([0ba8493](https://github.com/authup/authup/commit/0ba8493d76b742ee22572f15d65bfcc76bf71032))
+* email_verified gets a column of its own, and the OIDC claims get declared ([#3525](https://github.com/authup/authup/issues/3525)) ([05d2783](https://github.com/authup/authup/commit/05d2783b43eca4fc01adb1b7eba1d9989339cb19))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/specs bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

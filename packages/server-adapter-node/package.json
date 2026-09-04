@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-node",
     "type": "module",
-    "version": "1.0.0-beta.63",
+    "version": "1.0.0-beta.64",
     "description": "A Node http (req/res) adapter plugin for authup.",
     "exports": {
         "./package.json": "./package.json",
@@ -53,10 +53,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-adapter-kit": "^1.0.0-beta.63"
+        "@authup/server-adapter-kit": "^1.0.0-beta.64"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.63",
+        "@authup/errors": "^1.0.0-beta.64",
         "vitest": "^4.0.18"
     },
     "publishConfig": {

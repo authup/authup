@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `email_verified` no longer reflects `User.active`. Every existing user backfills to unverified, so a relying party gating on the claim stops matching until the addresses are verified again or an admin sets the field. Claims that mirror a nullable column are now omitted rather than answered as `null` on both introspection endpoints and in every id_token; test for absence rather than for `null`. `User` gains a required `emailVerified` property.
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#3537](https://github.com/authup/authup/issues/3537)) ([0ba8493](https://github.com/authup/authup/commit/0ba8493d76b742ee22572f15d65bfcc76bf71032))
+* email_verified gets a column of its own, and the OIDC claims get declared ([#3525](https://github.com/authup/authup/issues/3525)) ([05d2783](https://github.com/authup/authup/commit/05d2783b43eca4fc01adb1b7eba1d9989339cb19))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/core-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/errors bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/specs bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

@@ -1,5 +1,66 @@
 # Change Log
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **docker,server-config:** FHS image layout, and one directory per concern ([#3546](https://github.com/authup/authup/issues/3546))
+* **authup,server-core:** `authup core` is `authup start core`, `authup console [name]` is `authup start console [name]`, and `authup start --worker` is `authup start worker` (the flag is refused with a message naming the role). In a container, pass the command directly (`start`, `start worker`, `migration run`); the `server/core` prefix is deprecated and prints a notice. `PORT` and `HOST` are honored inside the container instead of being forced.
+* `authup worker` and `server/core worker` are gone; use `authup start --worker` / `server/core start --worker`. `COMPONENTS_ENABLED` and `core.componentsEnabled` are no longer read; use `WORKER_ENABLED` and `core.worker.enabled`. A worker process fed `WORKER_ENABLED=false` refuses to start.
+* **server-config:** an `authup.yml` section moves to the document root (`server.core.port` -> `core.port`, `server.adminConsole.enabled` -> `adminConsole.enabled`, and so on for the other two consoles). No environment variable changes. The prefix arrived with `authup.yml` in the current beta and never shipped in a release, so no migration is offered; the file read is permissive, so a document still carrying `server:` has that whole subtree skipped in silence.
+* **authup,server-console-kit,server-admin-console,server-account-console,server-auth-console,server-core:** an experimental dev command serves the consoles from source ([#3522](https://github.com/authup/authup/issues/3522))
+* `defineCLIConfigCommand` is no longer exported by `@authup/server-core`, and the package no longer ships `dist/config-schema.json`.
+* **server-console-kit,server-admin-console,server-account-console,authup,server-core:** the consoles become services ([#3513](https://github.com/authup/authup/issues/3513))
+* **server-auth-console,server-core:** the auth pages render in their own service ([#3511](https://github.com/authup/authup/issues/3511))
+* **server-core,authup:** one authup.yml replaces the conf file family ([#3509](https://github.com/authup/authup/issues/3509))
+* **server-core,authup:** move the operator CLI into the authup package ([#3507](https://github.com/authup/authup/issues/3507))
+* **server-core,client-web-kit:** /admin, /account and /public move to /console/admin, /console/account and /console/auth/assets with no redirect. Rebuild and redeploy every console together with the server (a dist built for the old base serves a blank console); update proxy rules and bookmarks. buildConsoleLoginURL's output changed, so kit and server must be on the same release. Standalone hosts injecting basePath keep working with their own value; the defaults changed.
+* **server-core,client-admin-console,authup:** @authup/client-admin-console is a runtime dependency of server-core and is served by it (plan 081).
+
+### Features
+
+* **authup,server-console-kit,server-admin-console,server-account-console,server-auth-console,server-core:** an experimental dev command serves the consoles from source ([#3522](https://github.com/authup/authup/issues/3522)) ([1bb3ab5](https://github.com/authup/authup/commit/1bb3ab50ae496051865650c1d0432ff46e5549cb))
+* **authup,server-core:** start takes a role, and the container command is the CLI's own argv ([#3541](https://github.com/authup/authup/issues/3541)) ([779c95d](https://github.com/authup/authup/commit/779c95d4c6cfcfc8862cbc9fb55e7d9cfd0ddda2))
+* configuration is a property of the document, and a console is a service ([#3515](https://github.com/authup/authup/issues/3515)) ([b6fe8ef](https://github.com/authup/authup/commit/b6fe8ef5ceefc7f9564c0c85680fc18f1df9286b))
+* **docker,server-config:** FHS image layout, and one directory per concern ([#3546](https://github.com/authup/authup/issues/3546)) ([d092d17](https://github.com/authup/authup/commit/d092d179822bb3b60db8157370284ef6328c1cde))
+* **server-auth-console,server-core:** the auth pages render in their own service ([#3511](https://github.com/authup/authup/issues/3511)) ([5d0df26](https://github.com/authup/authup/commit/5d0df26d8df77deee1e9e40e8065ce850cbf7111))
+* **server-console-kit,server-admin-console,server-account-console,authup,server-core:** the consoles become services ([#3513](https://github.com/authup/authup/issues/3513)) ([adb6073](https://github.com/authup/authup/commit/adb6073b7ef7006f1f963c6769844453b6ba7543))
+* **server-core,authup:** move the operator CLI into the authup package ([#3507](https://github.com/authup/authup/issues/3507)) ([3dcfbcd](https://github.com/authup/authup/commit/3dcfbcd50497f99f9683d14b3ed64b2f6a2e0ae0))
+* **server-core,authup:** one authup.yml replaces the conf file family ([#3509](https://github.com/authup/authup/issues/3509)) ([7fa9217](https://github.com/authup/authup/commit/7fa9217f7bc03afef4bc46756ceb884d37c8c62b))
+* **server-core,client-admin-console,authup:** serve the admin console from server-core as a static SPA ([#3501](https://github.com/authup/authup/issues/3501)) ([1ea842c](https://github.com/authup/authup/commit/1ea842cf10e64559b140876ec1a757d9f338377c))
+* **server-core,client-web-kit:** mount the consoles under /console/{admin,account,auth} ([#3503](https://github.com/authup/authup/issues/3503)) ([581e52c](https://github.com/authup/authup/commit/581e52cb9bd70ecb0753d065d4d3f2e5331d5492))
+* the worker is a flag on start, and componentsEnabled becomes core.worker.enabled ([#3538](https://github.com/authup/authup/issues/3538)) ([55d740e](https://github.com/authup/authup/commit/55d740ea2142c28de7442c34096a0deab7bebb99))
+
+
+### Bug Fixes
+
+* **authup:** subtract the deployment path prefix from the console mount ([#3534](https://github.com/authup/authup/issues/3534)) ([96e8425](https://github.com/authup/authup/commit/96e8425b0f74689319274b42f0832dec2b88bc20)), closes [#3531](https://github.com/authup/authup/issues/3531)
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#3537](https://github.com/authup/authup/issues/3537)) ([0ba8493](https://github.com/authup/authup/commit/0ba8493d76b742ee22572f15d65bfcc76bf71032))
+* **server-config,server-auth-console,authup:** reach the API on an internal address ([#3551](https://github.com/authup/authup/issues/3551)) ([a7f56f5](https://github.com/authup/authup/commit/a7f56f5b80b0f97d40cafafa4153477933a5e84b)), closes [#3550](https://github.com/authup/authup/issues/3550)
+* **server-core,docs:** boot on sqlite when no database is configured ([#3549](https://github.com/authup/authup/issues/3549)) ([a730461](https://github.com/authup/authup/commit/a730461746457be2d2a74a055e7c1470a76413b2))
+
+
+### Code Refactoring
+
+* **server-config:** drop the server. prefix from every config section ([#3533](https://github.com/authup/authup/issues/3533)) ([775d095](https://github.com/authup/authup/commit/775d095b5fd49e66422153fa97b08eb375e241ab))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-account-console bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-admin-console bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-auth-console bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-config-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-console-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/server-core bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 
