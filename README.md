@@ -106,27 +106,21 @@ For the full setup, including a compose file that brings the database with it, s
 
 ### Development
 
-**1**. Installation
+Install the workspace dependencies, build once, and start the unified development
+loop:
+
 ```shell
 $ npm i
-```
-
-**2**. Build packages
-```shell
 $ npm run build
+$ npm run dev
 ```
 
-**3**. Start the backend
+This runs the experimental `authup dev` command: server-core and every console
+share `http://localhost:3000/`, the consoles use hot module replacement, and
+server-core runs directly from TypeScript source.
 
-```shell
-$ npm run cli-dev --workspace=apps/server-core -- start
-```
-
-It serves the API at `http://localhost:3000/`. server-core serves no console of its
-own: run `npm run dev` in the repository root to get the API and every console on
-one listener, with hot module replacement.
-
-**4**. To work on the admin console against a standalone dev server instead, start it in a second terminal
+To work on the admin console against a standalone dev server instead, start it in
+a second terminal:
 
 ```shell
 $ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
@@ -135,35 +129,45 @@ $ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-c
 It listens on `http://localhost:5173/console/admin/`.
 
 ## Applications
-The repository contains the following runnable applications:
+The repository contains the following application workspaces:
 
-| Name                              | Type        | Description                                                                                           |
-|-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](apps/authup)             | CLI         | The operator CLI, and the binary an ordinary deployment runs. It runs every service in the same process: `start` (roles: `core`, `worker`, `console`), `migration`, `healthcheck` and `config`. |
-| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served at `/console/admin` by `server-admin-console`. |
-| [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
+| Name | Type | Description |
+|---|---|---|
+| [authup](apps/authup) | CLI | The operator binary. It composes the core and enabled console services in one process and provides the `start`, `migration`, `healthcheck`, and `config` commands. |
+| [client-account-console](apps/client-account-console) | Bundle | The end-user self-service SPA, served by `server-account-console` or hosted as static files. |
+| [client-admin-console](apps/client-admin-console) | Bundle | The administration SPA, served by `server-admin-console` or hosted as static files. |
+| [client-auth-console](apps/client-auth-console) | Bundle | The server-rendered login, consent, registration, and account-recovery UI rendered by `server-auth-console`. |
+| [server-account-console](apps/server-account-console) | Service | Serves the account console bundle with runtime configuration and theming. |
+| [server-admin-console](apps/server-admin-console) | Service | Serves the admin console bundle with runtime configuration and theming. |
+| [server-auth-console](apps/server-auth-console) | Service | Renders the hosted auth workflow pages on the identity-provider origin. |
+| [server-core](apps/server-core) | Service | Provides the OAuth2/OpenID Connect endpoints and management API; it renders no console and ships no binary. |
 
 ## Packages
 The repository contains the following packages:
 
-| Name                                                            | Type        | Description                                                                                               |
-|-----------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
-| [access](packages/access)                                       | Library     | A package for evaluating permissions and policies.                                                        |
-| [client-web-kit](packages/client-web-kit)                       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
-| [client-web-kit-theme](packages/client-web-kit-theme)           | Library     | Kit-level vuecs theme composing `@vuecs/theme-tailwind` with overrides `@authup/client-web-kit` needs.    |
-| [client-web-nuxt](packages/client-web-nuxt)                     | Library     | A package for the integration in a nuxt web application.                                                  |
-| [client-web-theme](packages/client-web-theme)                   | Library     | Authup app theme for vuecs components, built on `@vuecs/theme-tailwind`; ships a single CSS entry.        |
-| [core-kit](packages/core-kit)                                   | Library     | A package providing functions, interfaces and utilities for the core service.                             |
-| [core-http-kit](packages/core-http-kit)                         | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
-| [core-realtime-kit](packages/core-realtime-kit)                 | Library     | A package for the core socket service.                                                                    |
-| [errors](packages/errors)                                       | Library     | A package containing error codes and a basic error class.                                                 |
-| [kit](packages/kit)                                             | Library     | A package containing general (context independent) utilities.                                             |
-| [server-adapter-kit](packages/server-adapter-kit)               | Library     | Core token verification logic, caching, and shared types for server adapters.                             |
-| [server-adapter-node](packages/server-adapter-node)             | Library     | A Node `IncomingMessage` middleware adapter for token verification.                                       |
-| [server-adapter-socket-io](packages/server-adapter-socket-io)   | Library     | A socket.io middleware adapter for token verification.                                                    |
-| [server-adapter-web](packages/server-adapter-web)               | Library     | A transport-neutral Web `Request` adapter primitive for token verification.                                |
-| [server-kit](packages/server-kit)                               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
-| [specs](packages/specs)                                         | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
+| Name | Description |
+|---|---|
+| [access](packages/access) | Permission and policy evaluation. |
+| [client-web-kit](packages/client-web-kit) | Reusable Vue components, composables, and web utilities. |
+| [client-web-kit-theme](packages/client-web-kit-theme) | Base vuecs theme and component styles for `client-web-kit`. |
+| [client-web-nuxt](packages/client-web-nuxt) | Nuxt integration for Authup web clients. |
+| [client-web-theme](packages/client-web-theme) | Authup's application theme for vuecs components. |
+| [core-http-kit](packages/core-http-kit) | HTTP client and resource APIs for Authup. |
+| [core-kit](packages/core-kit) | Shared core constants, types, and utilities. |
+| [core-realtime-kit](packages/core-realtime-kit) | Toolkit for Authup realtime clients. |
+| [errors](packages/errors) | Shared error codes and error classes. |
+| [i18n](packages/i18n) | Framework-agnostic translations and locale registry. |
+| [kit](packages/kit) | General context-independent utilities. |
+| [server-adapter-kit](packages/server-adapter-kit) | Shared token verification, caching, and types for server adapters. |
+| [server-adapter-node](packages/server-adapter-node) | Node.js request middleware for token verification. |
+| [server-adapter-socket-io](packages/server-adapter-socket-io) | Socket.IO middleware for token verification. |
+| [server-adapter-web](packages/server-adapter-web) | Web `Request` adapter primitive for token verification. |
+| [server-config](packages/server-config) | The complete declarative `authup.yml` configuration registry. |
+| [server-config-kit](packages/server-config-kit) | Configuration registries, environment readers, validation, defaults, and JSON Schema generation. |
+| [server-console-kit](packages/server-console-kit) | Shared console-serving, security-header, asset, shell, and theming mechanisms. |
+| [server-kit](packages/server-kit) | Shared server-side contracts and utilities. |
+| [server-test-kit](packages/server-test-kit) | Shared test fakes for server packages and applications. |
+| [specs](packages/specs) | Constants, types, and utilities for supported specifications. |
 
 ## Contributing
 
@@ -216,10 +220,10 @@ Made with 💚
 
 Authup is dual-licensed:
 
-- The **applications** ([server-core](apps/server-core), [client-admin-console](apps/client-admin-console), [authup CLI](apps/authup))
-  are published under the [AGPL-3.0](./LICENSE) — free for research, education, non-profits, and
-  open-source projects. A commercial license is available for organizations that cannot meet the
-  AGPL's conditions.
+- All **applications** under [apps/](apps) — the CLI, core and console services,
+  and client bundles — are published under the [AGPL-3.0](./LICENSE). A
+  commercial license is available for organizations that cannot meet the AGPL's
+  conditions.
 - All **packages** under [packages/](packages) (client libraries, SDKs, server adapters, shared kits)
   remain under the permissive [Apache 2.0 License](packages/kit/LICENSE) — integrating your own
   application with an Authup server never subjects it to the AGPL.
