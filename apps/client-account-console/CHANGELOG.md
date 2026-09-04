@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core,core-kit:** Client.scope and Client.rootUrl are gone from the domain type, the validator, the API payloads and the query schema, and the migration drops both columns with their data.
+* **client-web-kit:** `store.user`, the `USER_UPDATED` payload and the `setUser` parameter widen from `Pick<User, 'id' | 'name' | 'displayName'>` to include `email`. Reading `store.user` is unaffected. A caller that CONSTRUCTS one, `store.setUser({ id, name, displayName })`, no longer compiles; pass the whole user row, or add `email`. This is the mirror image of #3481, which narrowed the same alias and was released as breaking for the same reason.
+* `defineCLIConfigCommand` is no longer exported by `@authup/server-core`, and the package no longer ships `dist/config-schema.json`.
+* **server-core,authup:** move the operator CLI into the authup package ([#3507](https://github.com/authup/authup/issues/3507))
+* **server-core,client-web-kit:** /admin, /account and /public move to /console/admin, /console/account and /console/auth/assets with no redirect. Rebuild and redeploy every console together with the server (a dist built for the old base serves a blank console); update proxy rules and bookmarks. buildConsoleLoginURL's output changed, so kit and server must be on the same release. Standalone hosts injecting basePath keep working with their own value; the defaults changed.
+* **server-core:** `IClient` gains a required `account` member.
+
+### Features
+
+* configuration is a property of the document, and a console is a service ([#3515](https://github.com/authup/authup/issues/3515)) ([b6fe8ef](https://github.com/authup/authup/commit/b6fe8ef5ceefc7f9564c0c85680fc18f1df9286b))
+* **server-core,authup:** move the operator CLI into the authup package ([#3507](https://github.com/authup/authup/issues/3507)) ([3dcfbcd](https://github.com/authup/authup/commit/3dcfbcd50497f99f9683d14b3ed64b2f6a2e0ae0))
+* **server-core,client-web-kit:** mount the consoles under /console/{admin,account,auth} ([#3503](https://github.com/authup/authup/issues/3503)) ([581e52c](https://github.com/authup/authup/commit/581e52cb9bd70ecb0753d065d4d3f2e5331d5492))
+* **server-core,core-kit:** back-channel logout, locked user/client writes, client column cleanup ([#3540](https://github.com/authup/authup/issues/3540)) ([ba6215a](https://github.com/authup/authup/commit/ba6215ac28f07dec84cc829fdad9d02d8572d2d5))
+* **server-core:** authenticate the account console with an opaque session cookie ([#3498](https://github.com/authup/authup/issues/3498)) ([d84b730](https://github.com/authup/authup/commit/d84b730b293c4c8f86af41d752ca1b771772600f))
+
+
+### Bug Fixes
+
+* **client-account-console:** scope console session cookies to the deployment base path ([#3496](https://github.com/authup/authup/issues/3496)) ([8c7cf38](https://github.com/authup/authup/commit/8c7cf3885580bd76a831bf2b498c7c7ee8a45169)), closes [#3495](https://github.com/authup/authup/issues/3495)
+* **client-web-kit:** retain the introspection email on store.user ([#3517](https://github.com/authup/authup/issues/3517)) ([107aff4](https://github.com/authup/authup/commit/107aff4337abdabcabe2c5046281160e55726294)), closes [#3506](https://github.com/authup/authup/issues/3506)
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#3537](https://github.com/authup/authup/issues/3537)) ([0ba8493](https://github.com/authup/authup/commit/0ba8493d76b742ee22572f15d65bfcc76bf71032))
+* **server-core,docs:** boot on sqlite when no database is configured ([#3549](https://github.com/authup/authup/issues/3549)) ([a730461](https://github.com/authup/authup/commit/a730461746457be2d2a74a055e7c1470a76413b2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/client-web-theme bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/core-http-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/core-kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/i18n bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+    * @authup/specs bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 

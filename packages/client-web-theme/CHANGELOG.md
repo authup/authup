@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
+
+
+### Bug Fixes
+
+* **client-web-theme,client-admin-console:** restore the admin console full height chain ([#3523](https://github.com/authup/authup/issues/3523)) ([5ab0264](https://github.com/authup/authup/commit/5ab0264d2aa7b526c39a2168b349fc4cef737c4f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.63 to ^1.0.0-beta.64
+
 ## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
 
 
