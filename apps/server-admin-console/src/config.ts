@@ -6,6 +6,7 @@
  */
 
 import {
+    ACCOUNT_CONSOLE_SCHEMA,
     ADMIN_CONSOLE_SCHEMA,
     CORE_SCHEMA,
     ROOT_SCHEMA,
@@ -19,7 +20,7 @@ import {
     readSchemaFromEnv,
     resolveSchemaData,
 } from '@authup/server-config-kit';
-import type { CoreConfig, EnvironmentVariable } from '@authup/server-config';
+import type { AccountConsoleConfig, CoreConfig, EnvironmentVariable } from '@authup/server-config';
 import type { Config, ConfigInput } from './types';
 
 /**
@@ -49,6 +50,10 @@ export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'internalUr
         host: CORE_SCHEMA.host,
         port: CORE_SCHEMA.port,
     }),
+    // One key of the sibling console: where the "Manage account" link the
+    // console renders points. Derived from publicUrl like every other reader,
+    // so a relocated account console is linked where it is served.
+    [SECTION_KEY.ACCOUNT_CONSOLE]: defineSchema<Pick<AccountConsoleConfig, 'url'>, never, EnvironmentVariable>({ url: ACCOUNT_CONSOLE_SCHEMA.url }),
 });
 
 /**
@@ -76,6 +81,7 @@ export function resolveConfig(
     return {
         url: values.url,
         apiUrl: values.publicUrl,
+        accountConsoleUrl: values.accountConsole.url,
         enabled: values.enabled,
         port: values.port,
         host: values.host,

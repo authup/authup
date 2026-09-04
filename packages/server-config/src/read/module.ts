@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import { readConfigFileTree } from './fs.ts';
 import type { ConfigRawReadOptions } from './types.ts';
 import type { SchemaInput } from '@authup/server-config-kit';
-import { readSchemaFromFileTree  } from '@authup/server-config-kit';
+import { mergeSchemaData, readSchemaFromFileTree  } from '@authup/server-config-kit';
 import { readConfigRawFromEnv } from './env.ts';
 import type { ObjectLiteral } from '@authup/kit';
 
@@ -32,7 +31,10 @@ export async function readConfigRaw<T extends ObjectLiteral>(
     }
 
     if (fs && env) {
-        return merge(env, fs) as Partial<T>;
+        // Schema-aware, so a list read from the environment REPLACES the
+        // file's rather than being concatenated onto it, and the environment
+        // wins because `mergeSchemaData` takes the last defined value.
+        return mergeSchemaData(schema, fs, env);
     }
 
     if (fs) {

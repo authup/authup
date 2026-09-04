@@ -26,6 +26,7 @@ describe('createHandler', () => {
     const config = {
         url: 'https://example.com/console/admin',
         apiUrl: 'https://example.com',
+        accountConsoleUrl: 'https://account.example.net/account',
         enabled: true,
         port: 3021,
         host: '',
@@ -79,6 +80,7 @@ describe('createHandler', () => {
         // the payload names the API, not this service: the console derives
         // its http client and its cookie path from it
         expect(body).toContain('"apiUrl":"https://example.com"');
+        expect(body).toContain('"accountConsoleUrl":"https://account.example.net/account"');
         expect(body).toContain('"basePath":"/console/admin"');
         // a capability assertion of this deployment, not an operator setting
         expect(body).toContain('"cookieSession":true');

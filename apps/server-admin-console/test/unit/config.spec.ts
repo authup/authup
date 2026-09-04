@@ -20,6 +20,8 @@ const KEYS = [
     'ADMIN_CONSOLE_HOST',
     'ADMIN_CONSOLE_ENABLED',
     'ADMIN_CONSOLE_PATH',
+    // the sibling console this one links to
+    'ACCOUNT_CONSOLE_URL',
     // read by the publicUrl derivation, so a case that sets them must not
     // leak into the next one
     'SECRETS_ENCRYPTION_KEY',
@@ -92,6 +94,23 @@ describe('readConfigFromEnv', () => {
         process.env.ADMIN_CONSOLE_URL = 'https://console.example.com';
 
         expect(() => readConfigFromEnv()).toThrow(/not the origin of publicUrl/);
+    });
+
+    /**
+     * The console renders a "Manage account" link, so it needs where the
+     * sibling console is SERVED, not the default segment: a relocated account
+     * console was linked at a path nothing answers.
+     */
+    it('should carry the account console URL', () => {
+        process.env.PUBLIC_URL = 'https://example.com';
+
+        expect(readConfigFromEnv().accountConsoleUrl)
+            .toEqual('https://example.com/console/account');
+
+        process.env.ACCOUNT_CONSOLE_URL = 'https://example.com/account';
+
+        expect(readConfigFromEnv().accountConsoleUrl)
+            .toEqual('https://example.com/account');
     });
 
     it('should read the disabled flag as a boolean', () => {

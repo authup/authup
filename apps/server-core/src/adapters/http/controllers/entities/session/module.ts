@@ -214,7 +214,13 @@ export class SessionController {
         // a dead cookie the browser kept presenting on every request. Clearing
         // it removes that, and the same-origin gate is already upstream: a
         // cookie only authenticates at all when the middleware accepted it.
-        if (this.baseURL && useRequestCookie(event, SESSION_COOKIE)) {
+        // Only for the caller's OWN session: revoking another device must not
+        // drop the credential of the one doing the revoking.
+        if (
+            this.baseURL &&
+            resolvedId === useRequestSessionId(event) &&
+            useRequestCookie(event, SESSION_COOKIE)
+        ) {
             unsetSessionCookie(event, this.baseURL);
         }
 

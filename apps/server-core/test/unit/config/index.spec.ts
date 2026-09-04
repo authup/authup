@@ -16,6 +16,7 @@ import {
     it,
     vi,
 } from 'vitest';
+import { resetEnv } from 'typeorm-extension';
 import { readConfig } from '../../../src/app/modules/config/read.ts';
 import { normalizeConfig } from '../../../src/app/modules/config/read';
 import {
@@ -449,25 +450,49 @@ describe('src/config/*.ts', () => {
     });
 
     describe('readConfig', () => {
+        const isManagedEnv = (name: string) => name === 'PORT' ||
+            name === 'TRUSTED_ORIGINS' ||
+            name.startsWith('DB_') ||
+            name.startsWith('TYPEORM_');
+
+        // typeorm-extension memoizes the whole DB_* block into its runtime
+        // registry on the first `useEnv` and never re-reads process.env, so
+        // without this every case below sees whatever the global setup read
+        // at boot: `hasEnvDataSourceOptions()` stays false and the DB_* half
+        // of `readConfig` is never exercised. Production reads it once, after
+        // the environment is fixed, so only the suite needs the reset.
+        const resetEnvCache = () => resetEnv();
+
         let directory : string;
 
-        let portBackup : string | undefined;
+        let envBackup : Record<string, string | undefined> = {};
 
         beforeEach(async () => {
             directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-config-'));
 
-            portBackup = process.env.PORT;
-            delete process.env.PORT;
+            envBackup = Object.fromEntries(
+                Object.entries(process.env).filter(([name]) => isManagedEnv(name)),
+            );
+            for (const name of Object.keys(envBackup)) {
+                delete process.env[name];
+            }
+
+            resetEnvCache();
         });
 
         afterEach(async () => {
             await fs.promises.rm(directory, { recursive: true, force: true });
 
-            if (typeof portBackup === 'undefined') {
-                delete process.env.PORT;
-            } else {
-                process.env.PORT = portBackup;
+            for (const name of Object.keys(process.env)) {
+                if (isManagedEnv(name)) {
+                    delete process.env[name];
+                }
             }
+            for (const [name, value] of Object.entries(envBackup)) {
+                process.env[name] = value;
+            }
+
+            resetEnvCache();
         });
 
         it('should resolve a file value through the fs read path', async () => {
@@ -492,6 +517,104 @@ describe('src/config/*.ts', () => {
             const config = await readConfig({ env: true, fs: { cwd: directory } });
 
             expect(config.port).toEqual(5055);
+        });
+
+        it('should overlay the DB_* block without dropping file-only db options', async () => {
+            // the DB_* names come from typeorm-extension and are read by a
+            // callback the caller's own options must not be able to drop.
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                [
+                    'db:',
+                    '  type: mysql',
+                    '  host: file-host',
+                    '  port: 3307',
+                    '  username: file-user',
+                    '  password: file-password',
+                    '  database: filedb',
+                    '  ssl:',
+                    '    rejectUnauthorized: true',
+                    '  socketPath: /run/mysqld/mysqld.sock',
+                    '',
+                ].join('\n'),
+            );
+
+            process.env.DB_TYPE = 'mysql';
+            process.env.DB_HOST = 'env-host';
+            process.env.DB_DATABASE = 'envdb';
+
+            const config = await readConfig({ env: true, fs: { cwd: directory } });
+
+            expect(config.db!.host).toEqual('env-host');
+            expect(config.db!.port).toEqual(3307);
+            expect(config.db!.username).toEqual('file-user');
+            expect(config.db!.password).toEqual('file-password');
+            expect(config.db!.database).toEqual('envdb');
+            expect(config.db!.ssl).toEqual({ rejectUnauthorized: true });
+            expect(config.db!.socketPath).toEqual('/run/mysqld/mysqld.sock');
+        });
+
+        it('should run the caller env callback before applying the DB environment', async () => {
+            process.env.DB_TYPE = 'mysql';
+            process.env.DB_HOST = 'env-host';
+            process.env.DB_DATABASE = 'envdb';
+
+            let calls = 0;
+            const config = await readConfig({
+                fs: false,
+                env: {
+                    fn: (raw) => {
+                        calls += 1;
+                        raw.port = 5056;
+                        raw.db = {
+                            type: 'mysql',
+                            host: 'caller-host',
+                            database: 'caller-db',
+                        };
+                    },
+                },
+            });
+
+            expect(calls).toEqual(1);
+            expect(config.port).toEqual(5056);
+            expect(config.db!.host).toEqual('env-host');
+            expect(config.db!.database).toEqual('envdb');
+        });
+
+        it('should ignore environment values when env is explicitly disabled', async () => {
+            process.env.PORT = '5099';
+            process.env.DB_TYPE = 'mysql';
+            process.env.DB_HOST = 'env-host';
+
+            const config = await readConfig({ env: false, fs: false });
+
+            expect(config.port).not.toEqual(5099);
+            expect(config.db).toBeUndefined();
+        });
+
+        it('should let an env list replace a file list rather than append to it', async () => {
+            // trustedOrigins drives the system clients' redirect allowlist, so
+            // an origin narrowed away in the environment must not survive.
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                'trustedOrigins:\n  - https://old.example.com\n',
+            );
+
+            process.env.TRUSTED_ORIGINS = 'https://new.example.com';
+
+            const config = await readConfig({ env: true, fs: { cwd: directory } });
+
+            expect(config.trustedOrigins).toContain('https://new.example.com');
+            expect(config.trustedOrigins).not.toContain('https://old.example.com');
+        });
+
+        it('should read the environment when the caller passes none', async () => {
+            // ConfigModule.read() and, through it, ApplicationBuilder's default
+            // config factory pass no options at all.
+            process.env.PORT = '5066';
+
+            expect((await readConfig()).port).toEqual(5066);
+            expect((await readConfig({})).port).toEqual(5066);
         });
 
         it('should resolve an explicitly selected config file', async () => {

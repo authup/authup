@@ -32,6 +32,15 @@ type CookieUnsetCall = {
     options: CookieOptions
 };
 
+function createResponseError(status: number, message: string) {
+    return Object.assign(new Error(message), {
+        response: {
+            status,
+            data: { message },
+        },
+    });
+}
+
 function buildApp(options: {
     cookieSession?: boolean,
     seed?: Record<string, unknown>,
@@ -156,6 +165,96 @@ describe('core/store/cookie-session', () => {
 
         expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.user).toBeNull();
+    });
+
+    // Nothing pushes a revocation into cookie mode (the authentication hook is
+    // inert, no SESSION_EXPIRED listener), so an already-validated session must
+    // still be re-read on every resolve. Otherwise a session ended elsewhere
+    // renders as signed in until a reload.
+    it('settles a revoked session as unauthenticated on the next resolve', async () => {
+        // the resolve() promise-share dedup clears one macrotask after settle
+        // (pinned in lifecycle.spec.ts): step past it between the resolve()s
+        const nextMacroTask = () => new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
+        let revoked = false;
+        const { store, httpClient } = buildApp({
+            cookieSession: true,
+            handlers: {
+                'GET /sessions/@me/introspect': () => {
+                    if (revoked) {
+                        throw createResponseError(401, 'The session is no longer active.');
+                    }
+
+                    return { ...SESSION_RESPONSE };
+                },
+            },
+        });
+
+        await store.resolve();
+        expect(store.status).toEqual(StoreAuthStatus.AUTHENTICATED);
+
+        const introspects = () => httpClient.requests.filter(
+            (request) => new URL(request.url, 'http://localhost').pathname === '/sessions/@me/introspect',
+        ).length;
+        expect(introspects()).toEqual(1);
+
+        await nextMacroTask();
+
+        revoked = true;
+        await store.resolve();
+
+        expect(introspects()).toEqual(2);
+        expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+        expect(store.user).toBeNull();
+        expect(store.realm).toBeNull();
+    });
+
+    it('propagates a non-401 cookie-session failure', async () => {
+        const error = createResponseError(503, 'Service unavailable.');
+        const { store } = buildApp({
+            cookieSession: true,
+            handlers: {
+                'GET /sessions/@me/introspect': () => {
+                    throw error;
+                },
+            },
+        });
+
+        await expect(store.resolve()).rejects.toBe(error);
+    });
+
+    it('does not let a stale 401 clear a newer session', async () => {
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+        const { store } = buildApp({
+            cookieSession: true,
+            handlers: {
+                'GET /sessions/@me/introspect': async () => {
+                    await gate;
+
+                    throw createResponseError(401, 'The old session is no longer active.');
+                },
+            },
+        });
+
+        const resolving = store.resolve();
+
+        await store.logout({ revoke: false });
+        store.setRealm({ id: 'realm-new', name: 'new-realm' });
+        store.setUser({
+            id: 'user-new',
+            name: 'new-user',
+            displayName: 'New User',
+            email: 'new@example.com',
+        });
+
+        release();
+        await resolving;
+
+        expect(store.status).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(store.user).toMatchObject({ id: 'user-new' });
+        expect(store.realm).toMatchObject({ id: 'realm-new' });
     });
 
     it('ends the session over the wire on logout, without clearing the origin token cookies', async () => {

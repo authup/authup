@@ -579,7 +579,10 @@ export class HTTPControllerModule {
         });
 
         return new IdentityProviderController({
-            options: { baseURL: config.publicUrl },
+            options: {
+                baseURL: config.publicUrl,
+                accountConsoleUrl: config.accountConsole.url,
+            },
 
             repository,
             accountManager,

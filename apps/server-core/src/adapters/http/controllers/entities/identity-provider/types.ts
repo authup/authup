@@ -18,6 +18,12 @@ import type {
 
 export type IdentityProviderControllerOptions = {
     baseURL: string,
+    /**
+     * Where the account console is served. The link callback returns the
+     * browser there, so a console published at a path of its own must not be
+     * addressed at the default segment.
+     */
+    accountConsoleUrl: string,
 };
 
 export type IdentityProviderControllerContext = {

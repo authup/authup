@@ -20,8 +20,8 @@ import { ASSETS_PATH, HEALTH_PATH } from './constants';
 import {
     buildWorkflowPageData,
     createAPIClient,
+    createFeaturesReader,
     readAuthorizeInfo,
-    readFeatures,
 } from './payload';
 import { renderPage } from './render';
 import { resolveDistPath, setPackagePath } from './resolve';
@@ -60,6 +60,7 @@ export async function createHandler(
 
     const app = new App();
     const client = createAPIClient(config);
+    const readFeatures = createFeaturesReader(client);
 
     // The shell is stamped from the vc-locale / vc-color-mode cookies, and
     // without the plugin every cookie read answers undefined, which is a
@@ -101,7 +102,7 @@ export async function createHandler(
             method: 'get',
             path: page.url,
             fn: async (event) => {
-                const features = await readFeatures(client);
+                const features = await readFeatures();
 
                 return render(event, config, {
                     url: page.url,

@@ -6,6 +6,7 @@
  */
 
 import type {
+    AccountConsoleConfig,
     AdminConsoleConfig,
     CoreConfig,
     RootConfig,
@@ -28,7 +29,9 @@ export type ConfigInput = ToObjectLiteral<
     {
         [SECTION_KEY.THEME]: ThemeConfig,
         // only what the publicUrl derivation reads; see the registry
-        [SECTION_KEY.CORE]: Pick<CoreConfig, 'host' | 'port'>
+        [SECTION_KEY.CORE]: Pick<CoreConfig, 'host' | 'port'>,
+        // only where the sibling console is served; see the registry
+        [SECTION_KEY.ACCOUNT_CONSOLE]: Pick<AccountConsoleConfig, 'url'>
     } &
     AdminConsoleConfig
 >;
@@ -50,6 +53,12 @@ export type Config = {
      * path from it.
      */
     apiUrl: string,
+    /**
+     * Where the account console is served. Injected into the shell, because
+     * the console links to it ("Manage account") and a console published at
+     * a path of its own must not be linked at the default segment.
+     */
+    accountConsoleUrl: string,
     /**
      * Serve the console at all. Off, the shell still answers, and the SPA
      * renders the disabled notice from the injected feature flag.
