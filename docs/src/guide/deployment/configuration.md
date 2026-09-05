@@ -31,8 +31,10 @@ two global CLI flags:
 The Docker image passes `--configDirectory /etc/authup`, so in a container the
 file is `/etc/authup/authup.yml`. See [Docker](./docker.md).
 
-`migration generate` is the one exception: it is a development tool for a
-repository checkout, targets the local compose databases and ignores both flags.
+`migration generate` is not an operation of the `authup` binary: it is a
+development tool for a repository checkout, targets the local compose databases
+and lives in server-core's dev CLI alone
+(`npm run cli -w apps/server-core -- migration generate`).
 
 The extensions discovered are `yml`, `yaml`, `json`, `js`, `mjs`, `cjs`, `ts` and
 `mts`. Some options (nested middleware option objects, custom logger setups, ...)
