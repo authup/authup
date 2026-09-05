@@ -6474,7 +6474,7 @@ names into the header of every request on the origin, static assets included.
 they carry no `maxAge` and an open browser would keep sending one until it
 closes. `CookieName.USER` survives as a `@deprecated` name for that sweep.
 
-The same rule governs `realm_management`, which is narrowed to `{ id, name }`
+The same rule governs `realm_management`, which is narrowed to `{ id, name, displayName }` (the display name is the label the chrome renders and is kept when the row carries one)
 in `setRealmManagement` rather than at its call sites: the realm switcher hands
 over the whole table row, and `RealmMinimal` is a structural `Pick`, so the
 free-text `description` column rode along. The deprecated `setRealm` shim

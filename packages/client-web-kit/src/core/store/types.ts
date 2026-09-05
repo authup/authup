@@ -19,7 +19,7 @@ import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
 import type { StoreDispatcher } from './dispatcher';
 
-export type RealmMinimal = Pick<Realm, 'id' | 'name'>;
+export type RealmMinimal = Pick<Realm, 'id' | 'name'> & Partial<Pick<Realm, 'displayName'>>;
 export type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
 
 type StoreData = ReturnType<typeof createStore>;
