@@ -241,6 +241,20 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             attributesExtra[entityKey] = entity[entityKey];
         }
 
+        if (
+            user &&
+            typeof attributesSelf.email === 'string' &&
+            typeof attributesSelf.emailVerified === 'undefined'
+        ) {
+            // account.user is loaded under the default projection and carries
+            // no email (select: false); a mapped address that differs from the
+            // stored one drops its verification, as UserService.save does.
+            const current = await this.userRepository.findOneById(user.id);
+            if (current && current.email !== attributesSelf.email) {
+                attributesSelf.emailVerified = false;
+            }
+        }
+
         let output : User;
         if (user) {
             output = extendObject(user, attributesSelf);
