@@ -23,8 +23,8 @@ import {
     createFeaturesReader,
     readAuthorizeInfo,
 } from './payload';
-import { renderPage } from './render';
-import { resolveDistPath, setPackagePath } from './resolve';
+import { assertRenderContract, createRenderPage } from './render';
+import { resolveDistPath } from './resolve';
 import type { Config, RenderPage } from './types';
 
 const WORKFLOW_PAGES : {
@@ -54,9 +54,9 @@ const WORKFLOW_PAGES : {
 export async function createHandler(
     config: Config,
     themeProvider?: IThemeProvider,
-    render: RenderPage = renderPage,
+    render?: RenderPage,
 ) : Promise<IApp> {
-    setPackagePath(config.distPath);
+    const renderPage = render ?? createRenderPage(config.distPath);
 
     const app = new App();
     const client = createAPIClient(config);
@@ -90,7 +90,7 @@ export async function createHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/authorize',
-        fn: async (event) => render(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
             theme,
@@ -104,7 +104,7 @@ export async function createHandler(
             fn: async (event) => {
                 const features = await readFeatures();
 
-                return render(event, config, {
+                return renderPage(event, config, {
                     url: page.url,
                     data: buildWorkflowPageData(event, features, page),
                     theme,
@@ -119,7 +119,7 @@ export async function createHandler(
     app.use(defineCoreHandler({
         method: 'get',
         path: '/logout',
-        fn: async (event) => render(event, config, {
+        fn: async (event) => renderPage(event, config, {
             url: '/logout',
             data: {},
             theme,
@@ -129,14 +129,22 @@ export async function createHandler(
     // Only the assets directory is mounted, never dist/client itself: the
     // template and the ssr manifest are inputs of the render, not files to
     // serve. A missing bundle only disables the mount; the page routes
-    // report the actionable error.
-    const distPath = resolveDistPath();
+    // report the actionable error. A resolved one is checked against the
+    // render contract here, unless a substituted render never reads it.
+    const distPath = resolveDistPath(config.distPath);
     if (distPath) {
+        if (!render) {
+            await assertRenderContract(distPath);
+        }
+
+        // Every name carries a content hash, so a new build means new names.
         app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'client', 'assets'),
             {
                 fallthrough: false,
                 scan: false,
+                cacheMaxAge: 60 * 60 * 24 * 365,
+                cacheImmutable: true,
             },
         ));
     }

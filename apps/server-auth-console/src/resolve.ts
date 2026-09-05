@@ -10,73 +10,43 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path';
 
-let cachedPackagePath: string | undefined;
-let cachedDistPath: string | undefined;
-let overridePackagePath: string | undefined;
-
 /**
- * Point the resolution at a substituted package (config `distPath`)
- * instead of the node_modules walk. Called once at boot.
- */
-export function setPackagePath(value: string | undefined) : void {
-    overridePackagePath = value || undefined;
-    cachedPackagePath = undefined;
-    cachedDistPath = undefined;
-}
-
-/**
- * Locate the auth console package. The SSR auth workflow UI ships as
- * `@authup/client-auth-console` (a dependency of THIS service), so the
+ * Locate the auth console package: a substituted one (config `distPath`)
+ * first, else the SSR auth workflow UI shipped as
+ * `@authup/client-auth-console` (a dependency of THIS service), which the
  * node_modules ancestor walk from this package's own root (locter's
- * `locateUp`) finds it for the workspace (symlink onto
- * apps/client-auth-console) and for a published install alike. Only a
- * positive result is cached.
+ * `locateUp`) finds for the workspace (symlink onto
+ * apps/client-auth-console) and for a published install alike.
  *
  * The `cwd` anchor is behavioural, not incidental: it decides which
  * node_modules tree is walked, so it stays pinned to this package rather
  * than to the process cwd.
  */
-export function resolvePackagePath() : string | undefined {
-    if (cachedPackagePath) {
-        return cachedPackagePath;
-    }
-
-    if (overridePackagePath) {
-        cachedPackagePath = overridePackagePath;
-
-        return cachedPackagePath;
-    }
-
-    const manifest = locateUpSync(
+export function resolvePackagePath(distPath?: string) : string | undefined {
+    return distPath || locateUpSync(
         'node_modules/@authup/client-auth-console/package.json',
         { cwd: PACKAGE_PATH },
-    );
-    if (manifest) {
-        cachedPackagePath = manifest.directory;
-    }
-
-    return cachedPackagePath;
+    )?.directory;
 }
 
 /**
  * Locate the BUILT auth console bundle (`dist/client` template + assets,
- * `dist/server/server.js` render entry). Only a positive result is cached,
- * so a dev building the package after boot is picked up on the next
- * request.
+ * `dist/server/server.js` render entry). A half-built package is no bundle:
+ * without the render entry there is nothing to render with.
  */
-export function resolveDistPath() : string | undefined {
-    if (cachedDistPath) {
-        return cachedDistPath;
+export function resolveDistPath(distPath?: string) : string | undefined {
+    const packagePath = resolvePackagePath(distPath);
+    if (!packagePath) {
+        return undefined;
     }
 
-    const packagePath = resolvePackagePath();
-    if (packagePath) {
-        const distPath = path.join(packagePath, 'dist');
-
-        if (fs.existsSync(path.join(distPath, 'client', 'index.html'))) {
-            cachedDistPath = distPath;
-        }
+    const candidate = path.join(packagePath, 'dist');
+    if (
+        fs.existsSync(path.join(candidate, 'client', 'index.html')) &&
+        fs.existsSync(path.join(candidate, 'server', 'server.js'))
+    ) {
+        return candidate;
     }
 
-    return cachedDistPath;
+    return undefined;
 }
