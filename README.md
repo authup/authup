@@ -104,6 +104,10 @@ It serves:
 
 For the full setup, including a compose file that brings the database with it, see the [deployment guide](https://authup.org/guide/deployment/).
 
+Rather than writing those files by hand, run `npm create authup@latest`: a few
+prompts write a compose project, helm values, a `docker run` env file or a
+bare-metal project, with the image tag and the npm range pinned to the release.
+
 ### Development
 
 Install the workspace dependencies, build once, and start the unified development

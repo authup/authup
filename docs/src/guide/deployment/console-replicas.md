@@ -11,6 +11,13 @@ and mounts no console at all, and a console set running `authup start console`,
 which serves the console pages and nothing else. Same image, same `PUBLIC_URL`; only
 the API set reaches the database and the cache.
 
+::: tip Wizard
+The compose and helm targets of `npm create authup@latest` ask whether the
+consoles run as their own service. Answering yes emits the two services shown
+below, `start core` and `start console`, and turns Redis on, since the split
+requires it (see [Redis is required](#redis-is-required)).
+:::
+
 ## The two roles
 
 | | API set | Console set |

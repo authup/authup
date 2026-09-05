@@ -9,6 +9,14 @@ CLI described here runs the same command, in the same process; it is the
 quickstart and bare-metal path to it.
 :::
 
+::: tip Wizard
+`npm create authup@latest` writes the `package.json` and `authup.yml` the steps
+below build by hand, plus a `.env` holding the secrets (`DB_*`,
+`USER_ADMIN_PASSWORD`, `SMTP`) that `authup start` loads from the directory it
+is started in, with the `authup` dependency pinned to the wizard's own release.
+What remains is `npm install`, `npx authup config validate` and `npm start`.
+:::
+
 ## Requirements
 The following guide is based on some shared assumptions:
 

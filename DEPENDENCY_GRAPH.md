@@ -8,12 +8,15 @@ graph TD
         kit
         errors
         server-config-kit
+        create-authup
     end
 
     subgraph Layer 1
+        server-config
         specs
         core-realtime-kit
         i18n
+        server-console-kit
     end
 
     subgraph Layer 2
@@ -43,19 +46,30 @@ graph TD
 
     subgraph Apps
         server-core
+        server-account-console
+        server-admin-console
+        server-auth-console
         client-account-console
         client-admin-console
         client-auth-console
         authup
     end
 
-    %% Foundation has no internal deps
+    %% Foundation has no internal deps at runtime.
+    %% create-authup: devDependencies only, for the schema drift spec
+    create-authup --> server-config
+    create-authup --> server-config-kit
 
     %% Layer 1
+    server-config --> core-kit
+    server-config --> kit
+    server-config --> server-config-kit
     specs --> errors
     specs --> kit
     core-realtime-kit --> kit
     i18n --> errors
+    server-console-kit --> errors
+    server-console-kit --> kit
 
     %% Layer 2
     access --> errors
@@ -99,7 +113,6 @@ graph TD
     client-web-kit --> core-http-kit
     client-web-kit --> core-kit
     client-web-kit --> core-realtime-kit
-    client-web-kit --> errors
     client-web-kit --> i18n
     client-web-kit --> kit
     client-web-kit --> specs
@@ -112,18 +125,34 @@ graph TD
 
     %% Apps
     server-core --> access
-    server-core --> client-account-console
-    server-core --> client-admin-console
-    server-core --> client-auth-console
     server-core --> core-http-kit
     server-core --> core-kit
     server-core --> errors
     server-core --> i18n
     server-core --> kit
+    server-core --> server-config
     server-core --> server-config-kit
+    server-core --> server-console-kit
     server-core --> server-kit
     server-core --> server-test-kit
     server-core --> specs
+    server-account-console --> client-account-console
+    server-account-console --> kit
+    server-account-console --> server-config
+    server-account-console --> server-config-kit
+    server-account-console --> server-console-kit
+    server-admin-console --> client-admin-console
+    server-admin-console --> kit
+    server-admin-console --> server-config
+    server-admin-console --> server-config-kit
+    server-admin-console --> server-console-kit
+    server-auth-console --> client-auth-console
+    server-auth-console --> core-http-kit
+    server-auth-console --> errors
+    server-auth-console --> kit
+    server-auth-console --> server-config
+    server-auth-console --> server-config-kit
+    server-auth-console --> server-console-kit
     client-account-console --> client-web-kit
     client-account-console --> client-web-kit-theme
     client-account-console --> client-web-theme
@@ -132,13 +161,6 @@ graph TD
     client-account-console --> i18n
     client-account-console --> kit
     client-account-console --> specs
-    client-auth-console --> client-web-kit
-    client-auth-console --> client-web-kit-theme
-    client-auth-console --> client-web-theme
-    client-auth-console --> core-http-kit
-    client-auth-console --> core-kit
-    client-auth-console --> i18n
-    client-auth-console --> kit
     client-admin-console --> access
     client-admin-console --> client-web-kit
     client-admin-console --> client-web-kit-theme
@@ -148,5 +170,20 @@ graph TD
     client-admin-console --> i18n
     client-admin-console --> kit
     client-admin-console --> specs
+    client-auth-console --> client-web-kit
+    client-auth-console --> client-web-kit-theme
+    client-auth-console --> client-web-theme
+    client-auth-console --> core-http-kit
+    client-auth-console --> core-kit
+    client-auth-console --> i18n
+    client-auth-console --> kit
+    authup --> client-auth-console
+    authup --> errors
+    authup --> kit
+    authup --> server-account-console
+    authup --> server-admin-console
+    authup --> server-auth-console
+    authup --> server-config-kit
+    authup --> server-console-kit
     authup --> server-core
 ```
