@@ -9,3 +9,7 @@ export type CLIConfigArgs = {
     configDirectory?: string,
     configFile?: string,
 };
+
+export type CLIMigrationCommandOptions = {
+    generate?: boolean,
+};
