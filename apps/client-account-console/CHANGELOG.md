@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.1-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.1-beta.64) (2026-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+    * @authup/client-web-theme bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+    * @authup/core-http-kit bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+    * @authup/i18n bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+    * @authup/kit bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+    * @authup/specs bumped from ^1.0.0-beta.64 to ^1.0.1-beta.64
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

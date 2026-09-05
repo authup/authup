@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.64) (2026-09-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* resolveConfig and readConfigFromEnv of the three console services return a Promise; an embedder calling either directly needs an await.
+
+### Bug Fixes
+
+* work the beta.64 audit backlog ([#3555](https://github.com/authup/authup/issues/3555)) ([2332346](https://github.com/authup/authup/commit/23323463284dde07befd743479d20bf160c1e567))
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

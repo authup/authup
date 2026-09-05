@@ -51,8 +51,8 @@
         "routup": "^6.1.0"
     },
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.64",
-        "@authup/kit": "^1.0.0-beta.64",
+        "@authup/errors": "^1.0.1-beta.64",
+        "@authup/kit": "^1.0.1-beta.64",
         "@routup/basic": "^3.0.0",
         "@validup/zod": "^2.0.1",
         "eldin": "^1.3.0",

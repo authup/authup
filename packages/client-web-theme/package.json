@@ -1,7 +1,7 @@
 {
   "name": "@authup/client-web-theme",
   "type": "module",
-  "version": "1.0.0-beta.64",
+  "version": "1.0.1-beta.64",
   "description": "Authup theme for vuecs components, built on top of @vuecs/theme-tailwind.",
   "license": "Apache-2.0",
   "exports": {
@@ -50,7 +50,7 @@
   },
   "homepage": "https://github.com/authup/authup#readme",
   "dependencies": {
-    "@authup/client-web-kit-theme": "^1.0.0-beta.64"
+    "@authup/client-web-kit-theme": "^1.0.1-beta.64"
   },
   "devDependencies": {
     "@vuecs/button": "^1.4.1",
