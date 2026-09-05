@@ -34,12 +34,15 @@ npm run lint:fix               # lint with auto-fix
 | `authup-admin-console`     | apps/server-admin-console       |
 | `authup-account-console`   | apps/server-account-console     |
 | `authup-auth-console`      | apps/server-auth-console        |
+| `create-authup`            | packages/create-authup          |
 
 `authup` is the operator binary and the only one an ordinary deployment runs. It composes the whole ecosystem in process behind ONE listener verb whose positional is a role: `start` (server-core plus every enabled console on one listener), `start core` (the API and the IdP alone), `start worker` (the background worker alone: no listener, no migrations), `start console [admin|account|auth]` (one console service, or every enabled one, each on its own port), plus `migration`, `healthcheck` and `config`. `start` validates the role by hand before anything boots, since citty does not check a positional's `options` (see architecture.md → *Process topology*). `apps/server-core` ships no `bin` field, and its `src/cli/` stays as the `defineCLI*Command` source plus dev-only tooling (`npm run cli -w apps/server-core` drives `migration generate`).
 
 The three console SERVICES each ship a `bin` of their own, which starts that service alone against the environment (no `authup.yml`, since the composed document reaches them through the CLI roles). They are the escape hatch for a deployment that runs a console without the CLI; `authup start console` is the supported route.
 
 The console BUNDLES (`apps/client-admin-console`, `apps/client-account-console`, `apps/client-auth-console`) ship no binary and no process: each is a built `dist/` that the matching `apps/server-*-console` service resolves out of `node_modules` and serves.
+
+`create-authup` is the install wizard (`npm create authup`): it writes deployment files for docker run, compose, helm and bare metal and has zero runtime dependencies, so it never runs a service; every file it writes invokes the `authup` CLI or the image.
 
 ## Detailed Guides
 

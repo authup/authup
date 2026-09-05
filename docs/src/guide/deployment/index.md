@@ -2,6 +2,7 @@
 
 The Authup Deployment Guide is a comprehensive resource for users looking to deploy Authup on various targets 🚀: 
 
+- **`npm create authup`**: an interactive wizard that writes the files for any of the targets below (`npm create authup@latest`).
 - **`Bare Metal`**: [Bare Metal](./bare-metal) deploy Authup directly on the host system using NodeJs.
 - **`Docker`**: [Docker](./docker) deploy Authup as a docker container (**recommended**).
 - **`Docker Compose`**: [Docker Compose](./docker-compose) integrate Authup into a docker-compose environment.

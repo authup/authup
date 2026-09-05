@@ -8,6 +8,14 @@ consoles can be moved out the same way, an API set running `start core` next
 to a console set running `start console`; see
 [Console Replicas](./console-replicas.md).
 
+::: tip Wizard
+The compose and helm targets of `npm create authup@latest` ask whether the
+sweeps run in a worker of their own. Answering yes emits the worker service
+shown below; the compose target also sets `WORKER_ENABLED=false` and
+`MIGRATION_ENABLED=false` on the API service, while the helm target enables
+the chart's worker deployment and its migration job.
+:::
+
 The worker is the same image and the same binary, started in a different role:
 
 ```bash

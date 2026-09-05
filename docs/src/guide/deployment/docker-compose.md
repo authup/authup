@@ -2,6 +2,13 @@
 
 This section will help you set up Authup in a **docker-compose** environment.
 
+::: tip Wizard
+`npm create authup@latest` writes a `docker-compose.yml` plus the `.env` holding
+its secrets from a few prompts (public URL, bundled or external database, admin
+password, mail). Answering yes to the worker or console split adds the services
+described in [Worker](./worker.md) and [Console Replicas](./console-replicas.md).
+:::
+
 ## Requirements
 The following guide is based on some shared assumptions:
 
