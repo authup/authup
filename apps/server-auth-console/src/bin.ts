@@ -6,23 +6,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { serve } from 'routup/node';
-import { readConfigFromEnv } from './config';
-import { createServer } from './server';
+import process from 'node:process';
+import { createApplication } from './application';
 
 /**
- * The standalone entry. It reads the keys this service declares from the
- * environment; `authup.yml` reaches the service through the CLI roles
- * (`authup start console auth`), which hand each factory its own section, and that
- * is also how it is started in practice.
+ * The standalone entry: the same application `authup start console auth`
+ * starts, configured from the environment alone. `authup.yml` reaches this
+ * service through the CLI roles, which hand each factory its own section, and
+ * that is also how it is started in practice.
  */
-const config = readConfigFromEnv();
-const app = await createServer(config);
+const application = createApplication();
+await application.setup();
 
-const server = serve(app, {
-    port: config.port,
-    hostname: config.host,
-    silent: true,
-});
-
-await server.ready();
+const shutdown = () => application.teardown()
+    .then(() => process.exit(0), () => process.exit(1));
+process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);

@@ -141,16 +141,33 @@ describe('readConsoleConfigs', () => {
      * above normalizes first and would throw before the console ever sees the
      * value.
      */
-    it('should refuse a foreign origin on the standalone path too', () => {
-        expect(() => resolveAccountConsoleConfig({
+    it('should refuse a foreign origin on the standalone path too', async () => {
+        await expect(resolveAccountConsoleConfig({
             publicUrl: 'https://idp.example.com',
             url: 'https://accounts.other.example.com',
-        } as never)).toThrow(/not the origin of publicUrl/);
+        } as never)).rejects.toThrow(/not the origin of publicUrl/);
 
         // a path of its own stays fully supported
-        expect(() => resolveAccountConsoleConfig({
+        await expect(resolveAccountConsoleConfig({
             publicUrl: 'https://idp.example.com',
             url: 'https://idp.example.com/accounts',
-        } as never)).not.toThrow();
+        } as never)).resolves.toBeDefined();
+    });
+
+    /**
+     * The file reader hands values over verbatim, and server-core's own read
+     * passes this document (it never mounts the theme section), so the
+     * consoles are the only reader that can refuse it. `authup config
+     * validate` does; a console that boots on it has fragments enabled.
+     */
+    it('should refuse a document value the schema rejects', async () => {
+        write([
+            'publicUrl: https://idp.example.com',
+            'theme:',
+            '  fragmentsEnabled: no',
+            '',
+        ].join('\n'));
+
+        await expect(readConsoleConfigs({ cwd: directory })).rejects.toThrow();
     });
 });
