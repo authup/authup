@@ -54,7 +54,10 @@ export function installChunkLoadRecovery(router: Router, context: ChunkLoadRecov
             return;
         }
 
-        const { href } = router.resolve(to);
+        // vue-router's href is origin-relative while the preload handler stores
+        // the document's absolute url; resolved against it, both name one
+        // target the same way.
+        const { href } = new URL(router.resolve(to).href, location.href);
         recover(href, () => location.assign(href));
     });
 

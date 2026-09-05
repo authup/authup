@@ -33,7 +33,7 @@ function createStorage() {
     };
 }
 
-function createSuite() {
+function createSuite(options: { href?: string } = {}) {
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -45,7 +45,7 @@ function createSuite() {
     });
 
     const location = {
-        href: 'http://localhost/console/admin/roles',
+        href: options.href ?? 'http://localhost/console/admin/roles',
         assign: vi.fn(),
         reload: vi.fn(),
     };
@@ -80,7 +80,7 @@ describe('src/chunk-recovery', () => {
             await navigate(router, '/users');
 
             expect(location.assign).toHaveBeenCalledTimes(1);
-            expect(location.assign).toHaveBeenCalledWith('/users');
+            expect(location.assign).toHaveBeenCalledWith('http://localhost/users');
         });
 
         it('should not load the same target again within one document', async () => {
@@ -99,7 +99,7 @@ describe('src/chunk-recovery', () => {
             await navigate(router, '/roles');
 
             expect(location.assign).toHaveBeenCalledTimes(2);
-            expect(location.assign).toHaveBeenLastCalledWith('/roles');
+            expect(location.assign).toHaveBeenLastCalledWith('http://localhost/roles');
         });
 
         it('should load the same target again once a mount cleared the marker', async () => {
@@ -153,6 +153,28 @@ describe('src/chunk-recovery', () => {
             dispatchPreloadError();
 
             expect(location.reload).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('both failures on one target', () => {
+        it('should load once when a dependency fails and then the chunk', async () => {
+            const { router, location } = createSuite({ href: 'http://localhost/users' });
+
+            dispatchPreloadError();
+            await navigate(router, '/users');
+
+            expect(location.reload).toHaveBeenCalledTimes(1);
+            expect(location.assign).not.toHaveBeenCalled();
+        });
+
+        it('should load once when the chunk fails and then a dependency', async () => {
+            const { router, location } = createSuite({ href: 'http://localhost/users' });
+
+            await navigate(router, '/users');
+            dispatchPreloadError();
+
+            expect(location.assign).toHaveBeenCalledTimes(1);
+            expect(location.reload).not.toHaveBeenCalled();
         });
     });
 });
