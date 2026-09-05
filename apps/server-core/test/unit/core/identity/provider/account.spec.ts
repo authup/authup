@@ -28,6 +28,7 @@ import claims from '../../../../data/jwt.json';
 import {
     IdentityProviderAccountEntity,
     IdentityProviderAccountRepositoryAdapter,
+    IdentityProviderAttributeMappingEntity,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingEntity,
     IdentityProviderPermissionMappingRepository,
@@ -371,5 +372,81 @@ describe('core/identity/provider/account', () => {
         });
 
         expect(userPermission).toEqual(null);
+    });
+
+    it('should clear emailVerified when a mapped address differs from the stored one', async () => {
+        const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const mapping = await mappings.save(mappings.create({
+            synchronizationMode: 'always',
+            targetName: 'email',
+            targetValue: 'mapped@example.com',
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
+        }));
+
+        const buildIdentity = () : IdentityProviderIdentity => ({
+            data: claims,
+            id: 'mailer',
+            attributeCandidates: { name: ['mailer'] },
+            provider,
+        });
+        const created = await accountManager.save(buildIdentity());
+        expect(created.user.email).toEqual('mapped@example.com');
+
+        // the address was changed and vouched for in authup meanwhile
+        const users = suite.dataSource.getRepository(UserEntity);
+        await users.update(created.user.id, { email: 'verified@example.com', emailVerified: true });
+
+        await accountManager.save(buildIdentity());
+
+        const row = await users.findOne({
+            where: { id: created.user.id },
+            select: {
+                id: true, 
+                email: true, 
+                emailVerified: true, 
+            },
+        });
+        expect(row?.email).toEqual('mapped@example.com');
+        expect(row?.emailVerified).toEqual(false);
+
+        await mappings.remove(mapping);
+    });
+
+    it('should keep emailVerified when the mapped address matches the stored one', async () => {
+        const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const mapping = await mappings.save(mappings.create({
+            synchronizationMode: 'always',
+            targetName: 'email',
+            targetValue: 'same@example.com',
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
+        }));
+
+        const buildIdentity = () : IdentityProviderIdentity => ({
+            data: claims,
+            id: 'mailer-same',
+            attributeCandidates: { name: ['mailer-same'] },
+            provider,
+        });
+        const created = await accountManager.save(buildIdentity());
+
+        const users = suite.dataSource.getRepository(UserEntity);
+        await users.update(created.user.id, { emailVerified: true });
+
+        await accountManager.save(buildIdentity());
+
+        const row = await users.findOne({
+            where: { id: created.user.id },
+            select: {
+                id: true,
+                email: true,
+                emailVerified: true,
+            },
+        });
+        expect(row?.email).toEqual('same@example.com');
+        expect(row?.emailVerified).toEqual(true);
+
+        await mappings.remove(mapping);
     });
 });

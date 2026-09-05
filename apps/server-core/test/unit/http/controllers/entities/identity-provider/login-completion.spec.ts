@@ -223,6 +223,8 @@ describe('identity-provider login completion', () => {
             {
                 headers: {
                     'user-agent': USER_AGENT,
+                    'sec-fetch-site': 'same-origin',
+                    origin: new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin,
                     ...(cookie ? { cookie: `authup_federated_login=${cookie}` } : {}),
                 },
             },
@@ -387,6 +389,7 @@ describe('identity-provider login completion', () => {
                     'user-agent': USER_AGENT,
                     // what a browser actually sends: the origin of the page
                     // it is on, which is publicUrl's
+                    'sec-fetch-site': 'same-origin',
                     origin: new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin,
                     cookie: `authup_federated_login=${pendingLoginCookie}`,
                 },
@@ -429,7 +432,26 @@ describe('identity-provider login completion', () => {
             {
                 headers: {
                     'user-agent': USER_AGENT,
+                    'sec-fetch-site': 'same-origin',
                     origin: 'https://app.example.com',
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
+        );
+
+        expect(response.status).toEqual(400);
+    });
+
+    it('refuses a completion that carries no fetch metadata', async () => {
+        await runFederatedLogin();
+
+        const response = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${provider.id}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
                     cookie: `authup_federated_login=${pendingLoginCookie}`,
                 },
             },

@@ -54,12 +54,12 @@ describe('buildInternalUrl', () => {
 });
 
 describe('applyInternalApiUrl', () => {
-    function consoles(input: Record<string, any> = {}) : ConsoleConfigs {
-        return { auth: resolveAuthConsoleConfig({ publicUrl: 'https://idp.example.com', ...input }) } as ConsoleConfigs;
+    async function consoles(input: Record<string, any> = {}) : Promise<ConsoleConfigs> {
+        return { auth: await resolveAuthConsoleConfig({ publicUrl: 'https://idp.example.com', ...input }) } as ConsoleConfigs;
     }
 
-    it('should point the auth console at this process own listener', () => {
-        const value = consoles();
+    it('should point the auth console at this process own listener', async () => {
+        const value = await consoles();
 
         applyInternalApiUrl(value, {
             publicUrl: 'https://idp.example.com',
@@ -74,10 +74,10 @@ describe('applyInternalApiUrl', () => {
         expect(value.auth.apiUrl).toEqual('https://idp.example.com');
     });
 
-    it('should keep a configured internalUrl, because the operator named the network', () => {
+    it('should keep a configured internalUrl, because the operator named the network', async () => {
         // the kubernetes case: the API is reached at a cluster service name,
         // and a composed process may still be told to use one
-        const value = consoles({ internalUrl: 'http://authup.authup.svc:3000' });
+        const value = await consoles({ internalUrl: 'http://authup.authup.svc:3000' });
 
         applyInternalApiUrl(value, {
             publicUrl: 'https://idp.example.com',
@@ -89,14 +89,14 @@ describe('applyInternalApiUrl', () => {
         expect(value.auth.apiInternalUrl).toEqual('http://authup.authup.svc:3000');
     });
 
-    it('should still take the listener when an explicit internalUrl equals publicUrl', () => {
+    it('should still take the listener when an explicit internalUrl equals publicUrl', async () => {
         // deliberate, not an approximation of provenance: a value spelled out
         // to equal the public one names no inside address, and honouring it
         // would send this process through its own ingress and TLS to reach
         // itself -- the configuration #3550 reported. A deployment that wants
         // the long way round runs the console as its own service, where
         // nothing is overridden.
-        const value = consoles({ internalUrl: 'https://idp.example.com' });
+        const value = await consoles({ internalUrl: 'https://idp.example.com' });
 
         applyInternalApiUrl(value, {
             publicUrl: 'https://idp.example.com',
@@ -108,11 +108,11 @@ describe('applyInternalApiUrl', () => {
         expect(value.auth.apiInternalUrl).toEqual('http://127.0.0.1:3000');
     });
 
-    it('should keep a configured internalUrl that only differs by path', () => {
+    it('should keep a configured internalUrl that only differs by path', async () => {
         // a path is allowed and means what it means on publicUrl: an internal
         // proxy that strips a prefix. Only the DERIVED address is necessarily
         // path-less, because it goes straight to the listener.
-        const value = consoles({ internalUrl: 'https://idp.example.com/auth' });
+        const value = await consoles({ internalUrl: 'https://idp.example.com/auth' });
 
         applyInternalApiUrl(value, {
             publicUrl: 'https://idp.example.com',

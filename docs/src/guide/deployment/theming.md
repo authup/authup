@@ -484,13 +484,15 @@ different flow.
 - `dist/server/server.js` exporting `render(ctx)`, plus `CONTRACT_VERSION`
   once the contract moves past version 1 (omitting it means version 1)
 
-::: warning Nothing verifies this at boot
-`CONTRACT_VERSION` is exported but not read: the serving service loads
-`render` and calls it. A bundle written against an older contract therefore
-produces subtly wrong auth pages rather than a failed start. Version 3 is
-current; a version 2 bundle strands every federated login on the login form,
-because it does not know it has to redeem the login handle. Check the version
-yourself when you substitute the package.
+::: tip The contract is verified at boot
+When a built bundle resolves, the service loads `dist/server/server.js` at
+boot and refuses to start unless its exported `CONTRACT_VERSION` (omitting
+it means version 1) is 3, naming the entry, the version found and the
+version required. Version 3 is current; a version 2 bundle would strand
+every federated login on the login form, because it does not know it has to
+redeem the login handle, so it is refused rather than rendered. A missing or
+half-built bundle (no `dist/server/server.js`) does not fail the boot: every
+page answers the actionable "not built or installed" error instead.
 :::
 
 The types are published in the package's `src/contract.ts`

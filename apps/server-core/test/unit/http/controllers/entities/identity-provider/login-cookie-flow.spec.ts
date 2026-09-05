@@ -170,7 +170,7 @@ describe('identity-provider login (cookie transport)', () => {
         expect(hosted.search).not.toContain(pendingLoginId as string);
 
         // 3. the page completes it with no payload at all
-        const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { origin: publicOrigin() } });
+        const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { 'sec-fetch-site': 'same-origin', origin: publicOrigin() } });
         expect(completed.status).toEqual(200);
 
         const grant = await completed.json();
@@ -179,7 +179,7 @@ describe('identity-provider login (cookie transport)', () => {
         // the cookie is spent, so a reload completes nothing
         expect(jar.get('authup_federated_login')).toBeUndefined();
 
-        const replay = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { origin: publicOrigin() } });
+        const replay = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { 'sec-fetch-site': 'same-origin', origin: publicOrigin() } });
         expect(replay.status).toEqual(400);
 
         // 4. the ladder issues the application's code, as for any login

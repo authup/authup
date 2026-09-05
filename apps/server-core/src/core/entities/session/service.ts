@@ -37,7 +37,8 @@ export type SessionServiceContext = {
     sessionManager: ISessionManager,
 };
 
-const SESSION_REVOKE_CONCURRENCY = 10;
+// below the default pool of ten: every revoke holds a connection
+const SESSION_REVOKE_CONCURRENCY = 5;
 
 export class SessionService extends AbstractEntityService implements ISessionService {
     protected repository: ISessionRepository;

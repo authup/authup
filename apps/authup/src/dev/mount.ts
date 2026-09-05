@@ -6,7 +6,10 @@
  */
 
 import type { Config as AuthConsoleConfig } from '@authup/server-auth-console';
-import { createHandler as createAuthConsoleHandler } from '@authup/server-auth-console';
+import {
+    createHandler as createAuthConsoleHandler,
+    resolvePackagePath as resolveAuthConsolePackagePath,
+} from '@authup/server-auth-console';
 import {
     InjectionKey,
     createApplication as createConsoleApplication,
@@ -18,7 +21,7 @@ import { App } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
 import { PACKAGE_PATH } from '../path.ts';
 import { createOpenInEditorGuard } from './middleware/index.ts';
-import { isSourceCheckout, resolveAuthConsolePackagePath } from './package.ts';
+import { isSourceCheckout } from './package.ts';
 import type { ConsoleDevServer } from './server/index.ts';
 import { createAuthConsoleDevServer, createStaticConsoleDevServer } from './server/index.ts';
 import type { Mount } from './types.ts';

@@ -3,7 +3,11 @@
 
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        // No dependency of this package emits a `/// <reference types="node" />`,
+        // so the node globals are not auto-discovered the way they are in the
+        // workspaces that pull typeorm or vite.
+        "types": ["node"]
     },
 
     "include": [

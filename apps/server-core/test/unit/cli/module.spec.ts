@@ -17,6 +17,7 @@ import {
     vi,
 } from 'vitest';
 import { CLI_CONFIG_ARGS, assertNoStrayPositionals } from '../../../src/cli/commands/config';
+import { defineCLIMigrationCommand } from '../../../src/cli/commands/migration';
 import { createCLIEntryPointCommand } from '../../../src/cli/module';
 import { PACKAGE_PATH } from '../../../src/path';
 
@@ -25,6 +26,9 @@ vi.mock('typeorm-extension', async (importOriginal) => ({
     ...await importOriginal<Record<string, unknown>>(),
     checkDatabase: () => {
         throw new Error('checkDatabase must not be reached from this spec.');
+    },
+    dropDatabase: () => {
+        throw new Error('dropDatabase must not be reached from this spec.');
     },
 }));
 
@@ -137,5 +141,11 @@ describe('src/cli/module', () => {
         await expect(runCommand(command, { rawArgs: ['migration', 'stauts'] }))
             .rejects
             .toThrow('Unknown migration operation "stauts". Expected one of: generate, revert, status, run.');
+    });
+
+    it('should keep generate out of the migration command the operator binary composes', async () => {
+        await expect(runCommand(defineCLIMigrationCommand(), { rawArgs: ['generate'] }))
+            .rejects
+            .toThrow('Unknown migration operation "generate". Expected one of: revert, status, run.');
     });
 });

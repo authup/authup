@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readConfigFromEnv } from '../../src';
+import { readConfigFromEnv, resolveConfig } from '../../src';
 
 const KEYS = [
     'PUBLIC_URL',
@@ -41,39 +41,39 @@ describe('readConfigFromEnv', () => {
      * made the same authup.yml mean different things depending on whether a
      * server-core process happened to be reading it.
      */
-    it('should derive the public URL from the core listener keys', () => {
-        expect(readConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
+    it('should derive the public URL from the core listener keys', async () => {
+        expect((await readConfigFromEnv()).apiUrl).toEqual('http://localhost:3000');
 
         process.env.HOST = '127.0.0.1';
         process.env.PORT = '4711';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.apiUrl).toEqual('http://127.0.0.1:4711');
         expect(config.url).toEqual('http://127.0.0.1:4711/console/account');
     });
 
-    it('should derive the console URL from the public URL', () => {
+    it('should derive the console URL from the public URL', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.url).toEqual('https://example.com/console/account');
         expect(config.apiUrl).toEqual('https://example.com');
     });
 
-    it('should derive the console URL from a public URL carrying a sub-path', () => {
+    it('should derive the console URL from a public URL carrying a sub-path', async () => {
         process.env.PUBLIC_URL = 'https://example.com/auth/';
 
-        expect(readConfigFromEnv().url)
+        expect((await readConfigFromEnv()).url)
             .toEqual('https://example.com/auth/console/account');
     });
 
-    it('should prefer an explicit console URL', () => {
+    it('should prefer an explicit console URL', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_URL = 'https://example.com/account';
 
-        expect(readConfigFromEnv().url)
+        expect((await readConfigFromEnv()).url)
             .toEqual('https://example.com/account');
     });
 
@@ -84,47 +84,47 @@ describe('readConfigFromEnv', () => {
      * bin never runs that normalization and used to boot into exactly the
      * state the refusal describes.
      */
-    it('should refuse a console published on another origin', () => {
+    it('should refuse a console published on another origin', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_URL = 'https://account.example.com';
 
-        expect(() => readConfigFromEnv()).toThrow(/not the origin of publicUrl/);
+        await expect(readConfigFromEnv()).rejects.toThrow(/not the origin of publicUrl/);
     });
 
-    it('should read the disabled flag as a boolean', () => {
+    it('should read the disabled flag as a boolean', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_ENABLED = 'false';
 
-        expect(readConfigFromEnv().enabled).toEqual(false);
+        expect((await readConfigFromEnv()).enabled).toEqual(false);
     });
 
-    it('should read the listen address as a number and a string', () => {
+    it('should read the listen address as a number and a string', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ACCOUNT_CONSOLE_PORT = '4022';
         process.env.ACCOUNT_CONSOLE_HOST = '127.0.0.1';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.port).toEqual(4022);
         expect(config.host).toEqual('127.0.0.1');
     });
 
-    it('should fall back to the default listen address', () => {
+    it('should fall back to the default listen address', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.port).toEqual(3022);
         expect(config.host).toEqual('0.0.0.0');
     });
 
-    it('should read the trusted origins as a list', () => {
+    it('should read the trusted origins as a list', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.TRUSTED_ORIGINS = 'https://admin.example.com,https://hub.example.com';
 
         // canonicalized and dev-seeded by the key's own resolver, so this
         // service gets the same list server-core does without being handed one
-        expect(readConfigFromEnv().trustedOrigins).toEqual([
+        expect((await readConfigFromEnv()).trustedOrigins).toEqual([
             'https://admin.example.com',
             'https://hub.example.com',
             'http://localhost:5173',
@@ -137,14 +137,26 @@ describe('readConfigFromEnv', () => {
      * matches nothing: the `ref` back link would then disappear for exactly
      * the origins written in the short form, with no diagnostic.
      */
-    it('should expand a bare host to both of its origins', () => {
+    it('should expand a bare host to both of its origins', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.NODE_ENV = 'production';
         process.env.TRUSTED_ORIGINS = 'hub.local';
 
-        expect(readConfigFromEnv().trustedOrigins)
+        expect((await readConfigFromEnv()).trustedOrigins)
             .toEqual(['http://hub.local', 'https://hub.local']);
 
         delete process.env.NODE_ENV;
+    });
+
+    /**
+     * The file reader hands values over verbatim, and `authup config validate`
+     * refuses a non-boolean here; the resolve has to refuse it too, or a
+     * document the validator rejects boots with fragments enabled.
+     */
+    it('should refuse a value the document schema rejects', async () => {
+        await expect(resolveConfig({
+            publicUrl: 'https://example.com',
+            theme: { fragmentsEnabled: 'no' },
+        } as never)).rejects.toThrow();
     });
 });

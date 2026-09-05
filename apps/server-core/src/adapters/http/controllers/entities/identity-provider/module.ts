@@ -96,6 +96,7 @@ import {
     getBodyRealmID,
     getRequestParamID,
     getRequestRealmID,
+    isSameOriginRequest,
     useRequestEventContext,
     useRequestIdentityOrFail,
     useRequestParamID,
@@ -860,18 +861,13 @@ export class IdentityProviderController {
      * CORS cannot carry that here: the default reflects every origin WITH
      * credentials, and `SameSite` is scoped to the registrable domain rather
      * than the origin, so a sibling subdomain's script is same-site and would
-     * both send the cookie and be allowed to read the response. A browser
-     * sends `Origin` on every POST, so requiring it to be publicUrl's own is
-     * what closes that. A request without the header is not a browser and
-     * carries no cookie of ours to begin with.
+     * both send the cookie and be allowed to read the response. The route
+     * therefore rides the shared predicate every cookie-authenticated surface
+     * does: `Sec-Fetch-Site: same-origin` is required and fails closed when
+     * absent, and `Origin` must be publicUrl's own.
      */
     private assertSameOrigin(event: IAppEvent) : void {
-        const origin = getRequestHeader(event, 'origin');
-        if (typeof origin !== 'string' || origin.length === 0) {
-            return;
-        }
-
-        if (origin !== new URL(this.options.baseURL).origin) {
+        if (!isSameOriginRequest(event, this.options.baseURL, { logger: this.logger })) {
             throw new BadRequestError('The login request is unknown or expired.');
         }
     }

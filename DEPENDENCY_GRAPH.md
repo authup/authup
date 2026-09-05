@@ -5,33 +5,36 @@
 ```mermaid
 graph TD
     subgraph Foundation
-        kit
-        errors
-        server-config-kit
         create-authup
+        errors
+        kit
+        server-config-kit
     end
 
     subgraph Layer 1
-        server-config
-        specs
+        access
         core-realtime-kit
         i18n
         server-console-kit
+        specs
     end
 
     subgraph Layer 2
-        access
         core-kit
-        server-kit
     end
 
     subgraph Layer 3
         core-http-kit
+        server-config
+        server-kit
+    end
+
+    subgraph Layer 4
         server-adapter-kit
         server-test-kit
     end
 
-    subgraph Layer 4
+    subgraph Layer 5
         server-adapter-node
         server-adapter-socket-io
         server-adapter-web
@@ -45,14 +48,14 @@ graph TD
     end
 
     subgraph Apps
-        server-core
-        server-account-console
-        server-admin-console
-        server-auth-console
+        authup
         client-account-console
         client-admin-console
         client-auth-console
-        authup
+        server-account-console
+        server-admin-console
+        server-auth-console
+        server-core
     end
 
     %% Foundation has no internal deps at runtime.
@@ -61,27 +64,19 @@ graph TD
     create-authup --> server-config-kit
 
     %% Layer 1
-    server-config --> core-kit
-    server-config --> kit
-    server-config --> server-config-kit
-    specs --> errors
-    specs --> kit
+    access --> errors
+    access --> kit
     core-realtime-kit --> kit
     i18n --> errors
     server-console-kit --> errors
     server-console-kit --> kit
+    specs --> errors
+    specs --> kit
 
     %% Layer 2
-    access --> errors
-    access --> kit
     core-kit --> errors
     core-kit --> kit
     core-kit --> specs
-    server-kit --> access
-    server-kit --> core-kit
-    server-kit --> core-realtime-kit
-    server-kit --> kit
-    server-kit --> specs
 
     %% Layer 3
     core-http-kit --> access
@@ -89,6 +84,16 @@ graph TD
     core-http-kit --> errors
     core-http-kit --> kit
     core-http-kit --> specs
+    server-config --> core-kit
+    server-config --> kit
+    server-config --> server-config-kit
+    server-kit --> access
+    server-kit --> core-kit
+    server-kit --> core-realtime-kit
+    server-kit --> kit
+    server-kit --> specs
+
+    %% Layer 4
     server-adapter-kit --> core-http-kit
     server-adapter-kit --> core-kit
     server-adapter-kit --> errors
@@ -100,7 +105,7 @@ graph TD
     server-test-kit --> kit
     server-test-kit --> server-kit
 
-    %% Layer 4
+    %% Layer 5
     server-adapter-node --> errors
     server-adapter-node --> server-adapter-kit
     server-adapter-socket-io --> errors
@@ -124,35 +129,15 @@ graph TD
     client-web-theme --> client-web-kit-theme
 
     %% Apps
-    server-core --> access
-    server-core --> core-http-kit
-    server-core --> core-kit
-    server-core --> errors
-    server-core --> i18n
-    server-core --> kit
-    server-core --> server-config
-    server-core --> server-config-kit
-    server-core --> server-console-kit
-    server-core --> server-kit
-    server-core --> server-test-kit
-    server-core --> specs
-    server-account-console --> client-account-console
-    server-account-console --> kit
-    server-account-console --> server-config
-    server-account-console --> server-config-kit
-    server-account-console --> server-console-kit
-    server-admin-console --> client-admin-console
-    server-admin-console --> kit
-    server-admin-console --> server-config
-    server-admin-console --> server-config-kit
-    server-admin-console --> server-console-kit
-    server-auth-console --> client-auth-console
-    server-auth-console --> core-http-kit
-    server-auth-console --> errors
-    server-auth-console --> kit
-    server-auth-console --> server-config
-    server-auth-console --> server-config-kit
-    server-auth-console --> server-console-kit
+    authup --> client-auth-console
+    authup --> errors
+    authup --> kit
+    authup --> server-account-console
+    authup --> server-admin-console
+    authup --> server-auth-console
+    authup --> server-config-kit
+    authup --> server-console-kit
+    authup --> server-core
     client-account-console --> client-web-kit
     client-account-console --> client-web-kit-theme
     client-account-console --> client-web-theme
@@ -177,13 +162,33 @@ graph TD
     client-auth-console --> core-kit
     client-auth-console --> i18n
     client-auth-console --> kit
-    authup --> client-auth-console
-    authup --> errors
-    authup --> kit
-    authup --> server-account-console
-    authup --> server-admin-console
-    authup --> server-auth-console
-    authup --> server-config-kit
-    authup --> server-console-kit
-    authup --> server-core
+    server-account-console --> client-account-console
+    server-account-console --> kit
+    server-account-console --> server-config
+    server-account-console --> server-config-kit
+    server-account-console --> server-console-kit
+    server-admin-console --> client-admin-console
+    server-admin-console --> kit
+    server-admin-console --> server-config
+    server-admin-console --> server-config-kit
+    server-admin-console --> server-console-kit
+    server-auth-console --> client-auth-console
+    server-auth-console --> core-http-kit
+    server-auth-console --> errors
+    server-auth-console --> kit
+    server-auth-console --> server-config
+    server-auth-console --> server-config-kit
+    server-auth-console --> server-console-kit
+    server-core --> access
+    server-core --> core-http-kit
+    server-core --> core-kit
+    server-core --> errors
+    server-core --> i18n
+    server-core --> kit
+    server-core --> server-config
+    server-core --> server-config-kit
+    server-core --> server-console-kit
+    server-core --> server-kit
+    server-core --> server-test-kit
+    server-core --> specs
 ```

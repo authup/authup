@@ -7,6 +7,7 @@
 
 import type { HydrationPayload, RenderContext, RenderResult } from '@authup/client-auth-console';
 import { resolveConfig } from '@authup/server-auth-console';
+import type { Config } from '@authup/server-auth-console';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -28,7 +29,7 @@ fs.writeFileSync(
     '<html><head><!--preload-links--></head><body><div id="app"><!--app-html--></div></body></html>',
 );
 
-const config = resolveConfig({ publicUrl: 'http://localhost:3000' });
+let config : Config;
 
 type ViteRenderContext = Pick<
     ViteDevServer,
@@ -43,6 +44,7 @@ type ViteRenderContext = Pick<
 let event : IAppEvent;
 
 beforeAll(async () => {
+    config = await resolveConfig({ publicUrl: 'http://localhost:3000' });
     event = await captureEvent('/logout');
 });
 

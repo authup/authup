@@ -56,8 +56,8 @@ export async function readConsoleConfigs(
     );
 
     return {
-        auth: resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_SCHEMA)),
-        admin: resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_SCHEMA)),
-        account: resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_SCHEMA)),
+        auth: await resolveAuthConsoleConfig(read<AuthConsoleConfigInput>(AUTH_CONSOLE_SCHEMA)),
+        admin: await resolveAdminConsoleConfig(read<AdminConsoleConfigInput>(ADMIN_CONSOLE_SCHEMA)),
+        account: await resolveAccountConsoleConfig(read<AccountConsoleConfigInput>(ACCOUNT_CONSOLE_SCHEMA)),
     };
 }

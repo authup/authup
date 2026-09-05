@@ -5,6 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { CONTRACT_VERSION as BundleContractVersion } from '@authup/client-auth-console';
+
+/**
+ * The render contract this service compiles against. The literal type fails
+ * the build the moment the bundle's constant moves without this one.
+ */
+export const CONTRACT_VERSION : typeof BundleContractVersion = 3;
+
 /**
  * The vite base the auth console bundle is built with. Asset hrefs in the
  * shell are emitted against it, so the service mounts its assets there and

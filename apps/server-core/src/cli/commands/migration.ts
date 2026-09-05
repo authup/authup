@@ -28,6 +28,7 @@ import {
 import type { IContainer } from 'eldin';
 import { CODE_PATH } from '../../path.ts';
 import { createCLIConfigModule } from './config.ts';
+import type { CLIMigrationCommandOptions } from './types.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',
@@ -38,8 +39,12 @@ enum MigrationOperation {
 
 const OPERATIONS = Object.values(MigrationOperation);
 
-function isMigrationOperation(value: string) : value is MigrationOperation {
-    return (OPERATIONS as string[]).includes(value);
+// generate targets the local compose databases and writes into the checkout,
+// so only the dev CLI opts into it.
+const OPERATOR_OPERATIONS = OPERATIONS.filter((op) => op !== MigrationOperation.GENERATE);
+
+function isMigrationOperation(value: string, operations: MigrationOperation[]) : value is MigrationOperation {
+    return (operations as string[]).includes(value);
 }
 
 async function runMigrationOperation(
@@ -177,22 +182,32 @@ async function generateMigrations(): Promise<void> {
     }
 }
 
-export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions<Config> = {}) {
+export function defineCLIMigrationCommand(
+    configFs: ConfigReadFsOptions<Config> = {},
+    options: CLIMigrationCommandOptions = {},
+) {
+    const operations = options.generate ? OPERATIONS : OPERATOR_OPERATIONS;
+
     return defineCommand({
-        meta: { name: 'migration', description: 'Apply, revert or generate the database migrations.' },
+        meta: {
+            name: 'migration',
+            description: options.generate ?
+                'Apply, revert or generate the database migrations.' :
+                'Apply, revert or inspect the database migrations.',
+        },
         args: {
             operation: {
                 required: true,
                 type: 'positional',
-                valueHint: OPERATIONS.join('|'),
+                valueHint: operations.join('|'),
             },
         },
         async setup(context) {
             // citty checks a positional's options nowhere, so an unknown operation
             // used to fall through to `runMigrations` (#3542).
             const { operation } = context.args;
-            if (!isMigrationOperation(operation)) {
-                throw new Error(`Unknown migration operation "${operation}". Expected one of: ${OPERATIONS.join(', ')}.`);
+            if (!isMigrationOperation(operation, operations)) {
+                throw new Error(`Unknown migration operation "${operation}". Expected one of: ${operations.join(', ')}.`);
             }
 
             try {

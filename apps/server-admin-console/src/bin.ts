@@ -6,23 +6,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { serve } from 'routup/node';
-import { readConfigFromEnv } from './config';
-import { createServer } from './server';
+import process from 'node:process';
+import { createApplication } from './application';
 
 /**
- * The standalone entry. It reads the keys the service needs from the
- * environment alone; the `adminConsole` section of `authup.yml` and
- * the composed loader arrive with the CLI roles (plan 101 D2-3), which is
- * also when this service stops being started this way in practice.
+ * The standalone entry: the same application `authup start console admin`
+ * starts, configured from the environment alone. The `adminConsole` section
+ * of `authup.yml` reaches this service through the CLI roles (plan 101 D2-3),
+ * which is also how it is started in practice.
  */
-const config = readConfigFromEnv();
-const app = await createServer(config);
+const application = createApplication();
+await application.setup();
 
-const server = serve(app, {
-    port: config.port,
-    hostname: config.host || undefined,
-    silent: true,
-});
-
-await server.ready();
+const shutdown = () => application.teardown()
+    .then(() => process.exit(0), () => process.exit(1));
+process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);
