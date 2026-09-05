@@ -51,7 +51,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/client-admin-console": "^1.0.0-beta.64",
-        "@authup/kit": "^1.0.0-beta.64",
+        "@authup/kit": "^1.0.1-beta.64",
         "@authup/server-config": "^1.0.0-beta.64",
         "@authup/server-config-kit": "^1.0.0-beta.64",
         "@authup/server-console-kit": "^1.0.0-beta.64",
