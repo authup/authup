@@ -30,9 +30,11 @@ function buildAnswers(overrides: Partial<Answers> = {}): Answers {
         smtp: false,
         registrationEnabled: false,
         passwordRecoveryEnabled: false,
+        emailVerificationEnabled: false,
         adminPassword: 'super: secret #1',
         workerSplit: false,
         consoleSplit: false,
+        tlsCertManager: false,
         ...overrides,
     };
 }
@@ -244,5 +246,33 @@ describe('renderHelm', () => {
     it('should refuse sqlite', () => {
         expect(() => renderHelm(buildAnswers({ db: { type: 'better-sqlite3' } }), VERSION))
             .toThrow(/postgres or mysql/);
+    });
+
+    it('should request the certificate from cert-manager only when asked, and name the secret otherwise', () => {
+        const managed = render({ tlsCertManager: true });
+        expect(managed).toContain('    tls: true\n    certManager: true\n');
+        expect(managed).not.toContain('-tls in the release namespace');
+
+        const manual = render();
+        expect(manual).toContain('  # TLS needs a secret named auth.example.com-tls in the release namespace, or set server.ingress.certManager: true.\n  ingress:\n');
+        expect(manual).not.toMatch(/^\s+certManager:/m);
+
+        const plain = render({ publicUrl: 'http://auth.example.com', tlsCertManager: true });
+        expect(plain).toContain('    tls: false\n');
+        expect(plain).not.toMatch(/^\s+certManager:/m);
+    });
+
+    it('should emit email verification only when on and keep the placeholders as comments', () => {
+        expect(parse(render({ emailVerificationEnabled: true })).server.features.emailVerification).toEqual(true);
+
+        const output = render();
+        expect(output).not.toContain('emailVerification');
+        expect(output).toContain('  # trustedOrigins:\n  #   - https://app.example.com\n');
+        expect(output).toContain('  # configuration: |\n');
+        expect(output).toContain('  # secretsEncryptionKey: <base64 32 bytes>\n');
+        const parsed = parse(output);
+        expect(parsed.server.trustedOrigins).toBeUndefined();
+        expect(parsed.server.configuration).toBeUndefined();
+        expect(parsed.auth.secretsEncryptionKey).toBeUndefined();
     });
 });

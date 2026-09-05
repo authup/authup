@@ -28,9 +28,11 @@ function buildAnswers(overrides: Partial<Answers> = {}): Answers {
         smtp: { url: 'smtps://mailer:secret@mail.example.com:465' },
         registrationEnabled: true,
         passwordRecoveryEnabled: true,
+        emailVerificationEnabled: false,
         adminPassword: 'admin pass',
         workerSplit: false,
         consoleSplit: false,
+        tlsCertManager: false,
         ...overrides,
     };
 }
@@ -45,7 +47,7 @@ describe('renderDocker', () => {
     });
 
     it('should pin the image to the version and comment the run command', () => {
-        const command = dockerRunCommand(VERSION);
+        const command = dockerRunCommand(VERSION, 3000);
         expect(command).toContain(`authup/authup:${VERSION}`);
         expect(command).toContain('--env-file authup.env');
         expect(command).not.toContain('latest');
@@ -106,6 +108,7 @@ describe('renderDocker', () => {
             smtp: false,
             registrationEnabled: false,
             passwordRecoveryEnabled: false,
+            emailVerificationEnabled: false,
         });
 
         expect(lines.some((line) => line.startsWith('REDIS='))).toBeFalsy();
@@ -121,5 +124,26 @@ describe('renderDocker', () => {
     it('should refuse a split', () => {
         expect(() => renderDocker(buildAnswers({ workerSplit: true }), VERSION)).toThrow(/split/);
         expect(() => renderDocker(buildAnswers({ consoleSplit: true }), VERSION)).toThrow(/split/);
+    });
+
+    it('should publish the port the public url dials and run detached with a restart policy', () => {
+        expect(dockerRunCommand(VERSION, 8080)).toEqual(`docker run -d --name authup --restart unless-stopped --env-file authup.env -p 8080:3000 authup/authup:${VERSION} start`);
+        expect(renderLines({ publicUrl: 'http://localhost:8080' })).toContain(`# ${dockerRunCommand(VERSION, 8080)}`);
+        expect(renderLines()).toContain(`# ${dockerRunCommand(VERSION, 3000)}`);
+    });
+
+    it('should trust the proxy in front of https and none for a directly dialed port', () => {
+        expect(renderLines()).toContain('TRUST_PROXY=1');
+        expect(renderLines({ publicUrl: 'http://localhost:8080' })).toContain('TRUST_PROXY=false');
+    });
+
+    it('should emit email verification only when on and keep the placeholders as comments', () => {
+        expect(renderLines({ emailVerificationEnabled: true })).toContain('EMAIL_VERIFICATION_ENABLED=true');
+        expect(renderLines().some((line) => line.startsWith('EMAIL_VERIFICATION_ENABLED'))).toBe(false);
+
+        const lines = renderLines();
+        expect(lines).toContain('# TRUSTED_ORIGINS=https://app.example.com');
+        expect(lines).toContain('# SECRETS_ENCRYPTION_KEY=<base64 32 bytes>');
+        expect(lines.some((line) => line.startsWith('TRUSTED_ORIGINS=') || line.startsWith('SECRETS_ENCRYPTION_KEY='))).toBe(false);
     });
 });

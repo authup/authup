@@ -10,10 +10,18 @@ import type { Ask } from '../../src/types.ts';
 import { collectAnswers } from '../../src/prompts.ts';
 
 // Answers are consumed in order; '' takes the prompt's fallback, the way readline's empty line does.
-function createScriptedAsk(script: string[]): { ask: Ask, questions: string[] } {
+function createScriptedAsk(script: string[]): {
+    ask: Ask, 
+    questions: string[], 
+    secrets: string[] 
+} {
     const questions: string[] = [];
-    const ask: Ask = async (question, fallback) => {
+    const secrets: string[] = [];
+    const ask: Ask = async (question, fallback, options) => {
         questions.push(question);
+        if (options?.secret) {
+            secrets.push(question);
+        }
         const answer = script.shift();
         if (answer === undefined) {
             throw new Error(`No scripted answer left for: ${question}`);
@@ -22,7 +30,11 @@ function createScriptedAsk(script: string[]): { ask: Ask, questions: string[] } 
         return answer === '' ? (fallback ?? '') : answer;
     };
 
-    return { ask, questions };
+    return {
+        ask, 
+        questions, 
+        secrets, 
+    };
 }
 
 function countAsked(questions: string[], text: string): number {
@@ -58,9 +70,11 @@ describe('collectAnswers', () => {
             smtp: false,
             registrationEnabled: false,
             passwordRecoveryEnabled: false,
+            emailVerificationEnabled: false,
             adminPassword: 'admin-secret',
             workerSplit: false,
             consoleSplit: false,
+            tlsCertManager: false,
         });
     });
 
@@ -169,7 +183,8 @@ describe('collectAnswers', () => {
 
     it('should require an smtp url once registration is on and refuse an http one', async () => {
         const script = [...COMPOSE_DEFAULTS];
-        script.splice(5, 2, 'y', '', 'http://mail.example.com', 'smtp://u:p@mail:587');
+        // registration, recovery, smtp url (refused, then accepted), email verification
+        script.splice(5, 2, 'y', '', 'http://mail.example.com', 'smtp://u:p@mail:587', '');
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -187,6 +202,7 @@ describe('collectAnswers', () => {
             'https://auth.example.com/?x=1',
             'https://auth.example.com/auth',
             'https://auth.example.com',
+            '',
             '', 
             '', 
             'db-secret', 
@@ -249,5 +265,42 @@ describe('collectAnswers', () => {
         expect(answers.db).toMatchObject({ host: 'db.internal', port: 5432 });
         expect(countAsked(questions, 'Database host')).toEqual(2);
         expect(questions.find((question) => question.includes('Database host'))).toContain('container itself');
+    });
+
+    it('should ask about email verification only while registration is on', async () => {
+        // target, url, database, bundled, db password, registration, recovery, smtp url, email verification, admin, worker, console, redis
+        const on = createScriptedAsk(['', URL, '', '', 'db-secret', 'y', '', 'smtp://u:p@mail:587', '', 'admin-secret', '', '', '']);
+        const { answers } = await collectAnswers(on.ask);
+        expect(answers.emailVerificationEnabled).toEqual(true);
+        expect(countAsked(on.questions, 'Verify email')).toEqual(1);
+
+        const off = createScriptedAsk([...COMPOSE_DEFAULTS]);
+        const result = await collectAnswers(off.ask);
+        expect(result.answers.emailVerificationEnabled).toEqual(false);
+        expect(countAsked(off.questions, 'Verify email')).toEqual(0);
+    });
+
+    it('should ask about cert-manager for helm over https only', async () => {
+        // target, url, cert-manager, database, bundled, db password, registration, recovery, admin, worker, console, redis
+        const helm = createScriptedAsk(['helm', URL, 'y', '', '', 'db-secret', '', '', 'admin-secret', '', '', '']);
+        const { answers } = await collectAnswers(helm.ask);
+        expect(answers.tlsCertManager).toEqual(true);
+        expect(countAsked(helm.questions, 'cert-manager')).toEqual(1);
+
+        const plain = createScriptedAsk(['helm', 'http://auth.example.com', '', '', 'db-secret', '', '', 'admin-secret', '', '', '']);
+        expect((await collectAnswers(plain.ask)).answers.tlsCertManager).toEqual(false);
+        expect(countAsked(plain.questions, 'cert-manager')).toEqual(0);
+
+        const compose = createScriptedAsk([...COMPOSE_DEFAULTS]);
+        await collectAnswers(compose.ask);
+        expect(countAsked(compose.questions, 'cert-manager')).toEqual(0);
+    });
+
+    it('should ask both passwords as secrets', async () => {
+        const { ask, secrets } = createScriptedAsk([...COMPOSE_DEFAULTS]);
+
+        await collectAnswers(ask);
+
+        expect(secrets).toEqual(['Database password', 'Admin password']);
     });
 });

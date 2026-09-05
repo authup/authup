@@ -67,9 +67,11 @@ function buildAnswers(overrides: Partial<Answers>): Answers {
         smtp: false,
         registrationEnabled: false,
         passwordRecoveryEnabled: false,
+        emailVerificationEnabled: false,
         adminPassword: 'not-the-default',
         workerSplit: false,
         consoleSplit: false,
+        tlsCertManager: false,
         ...overrides,
     };
 }

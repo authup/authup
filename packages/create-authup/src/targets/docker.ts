@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { describeExposure, trustProxyValue } from '../deployment.ts';
 import type { Answers, Rendered } from '../types.ts';
 
-export function dockerRunCommand(version: string): string {
-    return `docker run --env-file authup.env -p 3000:3000 authup/authup:${version} start`;
+export function dockerRunCommand(version: string, hostPort: number): string {
+    return `docker run -d --name authup --restart unless-stopped --env-file authup.env -p ${hostPort}:3000 authup/authup:${version} start`;
 }
 
 export function renderDocker(answers: Answers, version: string): Rendered {
@@ -20,9 +21,13 @@ export function renderDocker(answers: Answers, version: string): Rendered {
         throw new Error('The docker run target is one container: a worker or console split needs the compose or helm target.');
     }
 
+    const exposure = describeExposure(answers.publicUrl);
+
     // `docker run --env-file` reads KEY=value verbatim and does no quote handling, so values are written raw rather than through quoteEnv.
     const lines = [
         `PUBLIC_URL=${answers.publicUrl}`,
+        '# The proxies in front whose X-Forwarded-For is trusted, or false; authup trusts every hop by default.',
+        `TRUST_PROXY=${trustProxyValue(exposure)}`,
         `DB_TYPE=${answers.db.type}`,
         `DB_HOST=${answers.db.host}`,
         `DB_PORT=${answers.db.port}`,
@@ -47,13 +52,25 @@ export function renderDocker(answers: Answers, version: string): Rendered {
         lines.push('PASSWORD_RECOVERY_ENABLED=true');
     }
 
-    lines.push(`USER_ADMIN_PASSWORD=${answers.adminPassword}`);
+    if (answers.emailVerificationEnabled) {
+        lines.push('EMAIL_VERIFICATION_ENABLED=true');
+    }
+
+    lines.push(
+        `USER_ADMIN_PASSWORD=${answers.adminPassword}`,
+        '# Every downstream application origin, comma-separated; each may obtain a full-permission token.',
+        '# TRUSTED_ORIGINS=https://app.example.com',
+        '# Wraps the realm key store at rest (base64, 32 bytes). Write-once: back it up.',
+        '# SECRETS_ENCRYPTION_KEY=<base64 32 bytes>',
+    );
 
     return {
         'authup.env': [
             '# Environment of the authup container. It holds secrets: keep it out of version control.',
-            `# ${dockerRunCommand(version)}`,
+            `# ${dockerRunCommand(version, exposure.hostPort)}`,
             '# The database must exist already; the image runs in production mode and refuses sqlite.',
+            '# A configuration file or a provisioning directory is mounted with',
+            '# -v ./authup.yml:/etc/authup/authup.yml:ro -v ./provisioning:/etc/authup/provisioning:ro',
             '# https://authup.org/guide/deployment/docker',
             ...lines,
             '',

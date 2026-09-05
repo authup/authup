@@ -22,6 +22,7 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
     }
 
     const url = new URL(answers.publicUrl);
+    const tls = url.protocol === 'https:';
     const lines: string[] = [
         `# Written by npm create authup. Install with: ${HELM_COMMANDS.join(' && ')}`,
         '# Secrets in this file (auth.adminPassword, the database password, smtp.connectionString) can move to the chart\'s existingSecret keys; see the chart README.',
@@ -30,19 +31,26 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
         ...(answers.workerSplit || answers.consoleSplit ? [CHART_REQUIREMENT] : []),
         'server:',
         `  publicUrl: ${quoteYaml(answers.publicUrl)}`,
+        ...(tls && !answers.tlsCertManager ?
+            [`  # TLS needs a secret named ${url.hostname}-tls in the release namespace, or set server.ingress.certManager: true.`] :
+            []),
         '  ingress:',
         '    enabled: true',
         `    hostname: ${quoteYaml(url.hostname)}`,
-        `    tls: ${url.protocol === 'https:'}`,
+        `    tls: ${tls}`,
+        ...(tls && answers.tlsCertManager ? ['    certManager: true'] : []),
     ];
 
-    if (answers.registrationEnabled || answers.passwordRecoveryEnabled) {
+    if (answers.registrationEnabled || answers.passwordRecoveryEnabled || answers.emailVerificationEnabled) {
         lines.push('  features:');
         if (answers.registrationEnabled) {
             lines.push('    registration: true');
         }
         if (answers.passwordRecoveryEnabled) {
             lines.push('    passwordRecovery: true');
+        }
+        if (answers.emailVerificationEnabled) {
+            lines.push('    emailVerification: true');
         }
     }
 
@@ -53,6 +61,16 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
     if (answers.consoleSplit) {
         lines.push('  splitConsoles: true');
     }
+
+    lines.push(
+        '  # Every downstream application origin; each may obtain a full-permission token.',
+        '  # trustedOrigins:',
+        '  #   - https://app.example.com',
+        '  # An authup.yml the chart mounts, for the options that only the file can carry.',
+        '  # configuration: |',
+        '  #   core:',
+        '  #     passwordMinLength: 12',
+    );
 
     if (answers.workerSplit) {
         lines.push('', 'worker:', '  enabled: true');
@@ -95,7 +113,13 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
         );
     }
 
-    lines.push('', 'auth:', `  adminPassword: ${quoteYaml(answers.adminPassword)}`);
+    lines.push(
+        '',
+        'auth:',
+        `  adminPassword: ${quoteYaml(answers.adminPassword)}`,
+        '  # Wraps the realm key store at rest (base64, 32 bytes). Write-once: back it up.',
+        '  # secretsEncryptionKey: <base64 32 bytes>',
+    );
 
     if (answers.smtp) {
         lines.push('', 'smtp:', `  connectionString: ${quoteYaml(answers.smtp.url)}`);

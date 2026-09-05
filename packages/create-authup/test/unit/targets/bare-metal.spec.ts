@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 import { renderBareMetal } from '../../../src/targets/bare-metal.ts';
 import type { Answers } from '../../../src/types.ts';
 
@@ -28,9 +29,11 @@ function buildAnswers(overrides: Partial<Answers> = {}): Answers {
         smtp: false,
         registrationEnabled: false,
         passwordRecoveryEnabled: false,
+        emailVerificationEnabled: false,
         adminPassword: 'admin-secret',
         workerSplit: false,
         consoleSplit: false,
+        tlsCertManager: false,
         ...overrides,
     };
 }
@@ -122,19 +125,45 @@ describe('renderBareMetal', () => {
     it('should render the core section only for an enabled feature', () => {
         const files = renderBareMetal(buildAnswers({ registrationEnabled: true }), VERSION);
 
-        expect(files['authup.yml']).toContain('\ncore:\n  registrationEnabled: true\n');
+        expect(files['authup.yml']).toContain('\n  registrationEnabled: true\n');
         expect(files['authup.yml']).not.toContain('passwordRecoveryEnabled');
-        expect(renderBareMetal(buildAnswers(), VERSION)['authup.yml']).not.toContain('core:');
+        expect(renderBareMetal(buildAnswers(), VERSION)['authup.yml']).not.toContain('registrationEnabled');
     });
 
     it('should render both feature flags when both are on', () => {
         const files = renderBareMetal(buildAnswers({ registrationEnabled: true, passwordRecoveryEnabled: true }), VERSION);
 
-        expect(files['authup.yml']).toContain('\ncore:\n  registrationEnabled: true\n  passwordRecoveryEnabled: true\n');
+        expect(files['authup.yml']).toContain('\n  registrationEnabled: true\n  passwordRecoveryEnabled: true\n');
     });
 
     it('should refuse a worker or console split', () => {
         expect(() => renderBareMetal(buildAnswers({ workerSplit: true }), VERSION)).toThrow();
         expect(() => renderBareMetal(buildAnswers({ consoleSplit: true }), VERSION)).toThrow();
+    });
+
+    it('should listen where a directly dialed url says and trust the proxy in front otherwise', () => {
+        const direct = parse(renderBareMetal(buildAnswers({ publicUrl: 'http://localhost:8080' }), VERSION)['authup.yml']);
+        expect(direct.core.port).toEqual(8080);
+        expect(direct.core.trustProxy).toEqual(false);
+
+        const proxied = parse(renderBareMetal(buildAnswers(), VERSION)['authup.yml']);
+        expect(proxied.core.port).toBeUndefined();
+        expect(proxied.core.trustProxy).toEqual(1);
+
+        const local = parse(renderBareMetal(buildAnswers({ publicUrl: 'http://localhost:3000' }), VERSION)['authup.yml']);
+        expect(local.core.port).toBeUndefined();
+        expect(local.core.trustProxy).toEqual(false);
+    });
+
+    it('should emit email verification only when on and keep the placeholders as comments', () => {
+        const on = renderBareMetal(buildAnswers({ emailVerificationEnabled: true }), VERSION);
+        expect(parse(on['authup.yml']).core.emailVerificationEnabled).toEqual(true);
+
+        const off = renderBareMetal(buildAnswers(), VERSION);
+        expect(off['authup.yml']).not.toContain('emailVerificationEnabled');
+        expect(off['authup.yml']).toContain('# trustedOrigins:\n#   - https://app.example.com\n');
+        expect(parse(off['authup.yml']).trustedOrigins).toBeUndefined();
+        expect(off['.env']).toContain('# SECRETS_ENCRYPTION_KEY=\n');
+        expect(off['.env']).not.toMatch(/^SECRETS_ENCRYPTION_KEY=/m);
     });
 });

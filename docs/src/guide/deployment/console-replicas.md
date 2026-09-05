@@ -15,7 +15,8 @@ the API set reaches the database and the cache.
 The compose and helm targets of `npm create authup@latest` ask whether the
 consoles run as their own service. Answering yes emits the two services shown
 below, `start core` and `start console`, and turns Redis on, since the split
-requires it (see [Redis is required](#redis-is-required)).
+requires it (see [Redis is required](#redis-is-required)). On compose it also
+writes the nginx service and `nginx.conf` carrying the rules below.
 :::
 
 ## The two roles

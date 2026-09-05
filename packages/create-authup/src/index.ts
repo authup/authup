@@ -15,6 +15,7 @@ import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { createReadlineAsk } from './ask.ts';
 import { TARGETS } from './constants.ts';
+import { describeExposure } from './deployment.ts';
 import { collectAnswers } from './prompts.ts';
 import { dockerRunCommand } from './targets/docker.ts';
 import { HELM_COMMANDS } from './targets/helm.ts';
@@ -38,12 +39,13 @@ Flags:
 function nextSteps(answers: Answers): string[] {
     const steps: Record<Target, string[]> = {
         docker: [
-            dockerRunCommand(VERSION),
+            dockerRunCommand(VERSION, describeExposure(answers.publicUrl).hostPort),
             'The database must already exist: the image runs in production mode and refuses sqlite.',
         ],
         compose: [
             ...(answers.workerSplit ? ['docker compose run --rm authup migration run'] : []),
             'docker compose up -d',
+            ...(answers.consoleSplit ? ['The nginx service publishes the port; TLS, if any, terminates in front of it.'] : []),
         ],
         helm: [...HELM_COMMANDS],
         'bare-metal': ['npm install', 'npx authup config validate', 'npm start'],

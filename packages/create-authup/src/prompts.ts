@@ -7,9 +7,10 @@
 
 import { TARGETS } from './constants.ts';
 import type {
-    Answers, 
-    Ask, 
-    Database, 
+    Answers,
+    Ask,
+    AskOptions,
+    Database,
     Target,
 } from './types.ts';
 
@@ -20,11 +21,17 @@ const BUNDLED_REDIS_URL = 'redis://redis:6379';
 const REDIS_NOTE = 'Redis is required for a split deployment: the console sign-in and the token blocklist ride the cache.';
 
 // A refused answer re-asks with the reason on the line above, so the flow stays pure over `ask`.
-async function askUntil<T>(ask: Ask, question: string, fallback: string | undefined, parse: (answer: string) => Parsed<T>): Promise<T> {
+async function askUntil<T>(
+    ask: Ask,
+    question: string,
+    fallback: string | undefined,
+    parse: (answer: string) => Parsed<T>,
+    options?: AskOptions,
+): Promise<T> {
     let prefix = '';
 
     for (;;) {
-        const parsed = parse(await ask(prefix + question, fallback));
+        const parsed = parse(await ask(prefix + question, fallback, options));
         if ('value' in parsed) {
             return parsed.value;
         }
@@ -148,7 +155,7 @@ function askSecret(ask: Ask, question: string): Promise<string> {
         }
 
         return { value: answer };
-    });
+    }, { secret: true });
 }
 
 async function askDatabase(ask: Ask, target: Target): Promise<Database> {
@@ -193,6 +200,8 @@ async function askDatabase(ask: Ask, target: Target): Promise<Database> {
 export async function collectAnswers(ask: Ask): Promise<{ answers: Answers, notes: string[] }> {
     const target = await askChoice(ask, 'Deployment target', TARGETS, 'compose');
     const publicUrl = await askPublicUrl(ask, target);
+    const tlsCertManager = target === 'helm' && publicUrl.startsWith('https:') &&
+        await askYesNo(ask, 'Request the TLS certificate from cert-manager? The alternative is a <hostname>-tls secret in the release namespace', false);
     const db = await askDatabase(ask, target);
 
     const registrationEnabled = await askYesNo(ask, 'Enable user registration?', false);
@@ -200,6 +209,8 @@ export async function collectAnswers(ask: Ask): Promise<{ answers: Answers, note
     const smtp = registrationEnabled || passwordRecoveryEnabled ?
         { url: await askUrl(ask, 'SMTP connection URL (smtp(s)://user:pass@host:port)', ['smtp:', 'smtps:']) } :
         false;
+
+    const emailVerificationEnabled = registrationEnabled && await askYesNo(ask, 'Verify email addresses on registration?', true);
 
     const adminPassword = await askSecret(ask, 'Admin password');
 
@@ -234,9 +245,11 @@ export async function collectAnswers(ask: Ask): Promise<{ answers: Answers, note
             smtp,
             registrationEnabled,
             passwordRecoveryEnabled,
+            emailVerificationEnabled,
             adminPassword,
             workerSplit,
             consoleSplit,
+            tlsCertManager,
         },
         notes,
     };

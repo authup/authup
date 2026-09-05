@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { LISTEN_PORT, describeExposure, trustProxyValue } from '../deployment.ts';
 import type { Answers, Rendered } from '../types.ts';
 import { quoteEnv, quoteYaml } from '../utils.ts';
 
@@ -67,14 +68,25 @@ function renderConfig(answers: Answers): string {
         lines.push('', '# The connection URL is SMTP in .env.', 'smtp: true');
     }
 
-    const core = [
+    lines.push(
+        '',
+        '# Every downstream application origin; each may obtain a full-permission token.',
+        '# trustedOrigins:',
+        '#   - https://app.example.com',
+    );
+
+    // The process listens where the url says when nothing is in front; behind a proxy the default stays.
+    const exposure = describeExposure(answers.publicUrl);
+    lines.push(
+        '',
+        'core:',
+        ...(exposure.hostPort !== LISTEN_PORT ? [`  port: ${exposure.hostPort}`] : []),
+        '  # The proxies in front whose X-Forwarded-For is trusted, or false; authup trusts every hop by default.',
+        `  trustProxy: ${trustProxyValue(exposure)}`,
         ...(answers.registrationEnabled ? ['  registrationEnabled: true'] : []),
         ...(answers.passwordRecoveryEnabled ? ['  passwordRecoveryEnabled: true'] : []),
-    ];
-
-    if (core.length > 0) {
-        lines.push('', 'core:', ...core);
-    }
+        ...(answers.emailVerificationEnabled ? ['  emailVerificationEnabled: true'] : []),
+    );
 
     return `${lines.join('\n')}\n`;
 }
@@ -99,6 +111,11 @@ function renderEnv(answers: Answers): string {
     if (answers.smtp) {
         lines.push(`SMTP=${quoteEnv(answers.smtp.url)}`);
     }
+
+    lines.push(
+        '# Wraps the realm key store at rest (base64, 32 bytes). Write-once: back it up.',
+        '# SECRETS_ENCRYPTION_KEY=',
+    );
 
     return `${lines.join('\n')}\n`;
 }

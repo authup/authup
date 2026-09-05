@@ -6,7 +6,9 @@ This section will help you set up Authup in a **docker-compose** environment.
 `npm create authup@latest` writes a `docker-compose.yml` plus the `.env` holding
 its secrets from a few prompts (public URL, bundled or external database, admin
 password, mail). Answering yes to the worker or console split adds the services
-described in [Worker](./worker.md) and [Console Replicas](./console-replicas.md).
+described in [Worker](./worker.md) and [Console Replicas](./console-replicas.md);
+the console split also writes an `nginx.conf` and an nginx service carrying
+the routing rules, so the project runs as written.
 :::
 
 ## Requirements
