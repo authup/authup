@@ -135,6 +135,22 @@ describe('create-authup bin', () => {
         expect(fs.existsSync(path.join(cwd, 'authup.yml'))).toBeTruthy();
         expect(fs.existsSync(path.join(cwd, '.env'))).toBeTruthy();
         const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
-        expect(manifest.dependencies.authup).toEqual(`^${VERSION}`);
+        expect(manifest.dependencies.authup).toEqual(VERSION);
+    }, TIMEOUT);
+
+    it('should write the credential-bearing files owner-only', async () => {
+        const cwd = createTempDir();
+        const result = await runWizard(cwd, COMPOSE_LINES);
+
+        expect(result.code).toEqual(0);
+        // the passwords live in .env; docker-compose.yml carries only ${...} references
+        expect(fs.statSync(path.join(cwd, '.env')).mode & 0o777).toEqual(0o600);
+        expect(fs.statSync(path.join(cwd, 'docker-compose.yml')).mode & 0o777).not.toEqual(0o600);
+
+        // an overwrite has to reset the mode: writeFileSync's mode applies to a file it creates
+        fs.chmodSync(path.join(cwd, '.env'), 0o644);
+        const forced = await runWizard(cwd, COMPOSE_LINES, ['--force']);
+        expect(forced.code).toEqual(0);
+        expect(fs.statSync(path.join(cwd, '.env')).mode & 0o777).toEqual(0o600);
     }, TIMEOUT);
 });

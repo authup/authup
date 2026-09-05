@@ -106,7 +106,9 @@ For the full setup, including a compose file that brings the database with it, s
 
 Rather than writing those files by hand, run `npm create authup@latest`: a few
 prompts write a compose project, helm values, a `docker run` env file or a
-bare-metal project, with the image tag and the npm range pinned to the release.
+bare-metal project. The container targets pin the image tag and the bare-metal
+project pins the `authup` dependency to the release the wizard belongs to; the
+helm values name no tag, since the chart's `appVersion` owns it.
 
 ### Development
 

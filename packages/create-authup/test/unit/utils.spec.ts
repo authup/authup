@@ -6,11 +6,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { parse } from 'dotenv';
 import {
-    escapeComposeInterpolation, 
-    indent, 
-    quoteComposeEnv, 
-    quoteEnv, 
+    escapeComposeInterpolation,
+    indent,
+    isEnvRepresentable,
+    quoteComposeEnv,
+    quoteEnv,
     quoteYaml,
 } from '../../src/utils.ts';
 
@@ -27,6 +29,34 @@ describe('quoteEnv', () => {
 
     it('should double-quote a value carrying a single quote raw, since dotenv unescapes nothing', () => {
         expect(quoteEnv('it\'s \\ y')).toEqual('"it\'s \\ y"');
+    });
+
+    // The oracle for the encoder is the parser itself: dotenv is what `authup start` reads the emitted .env with.
+    it('should round-trip through the real dotenv parser', () => {
+        const values = [
+            'plain',
+            'pa ss #word',
+            'say "hi"',
+            'it\'s secret',
+            'it\'s "both"',
+            'p\\nass',
+            'trailing\\',
+            '$dollar ${braced}',
+            'a\'b"c\\d',
+        ];
+
+        for (const value of values) {
+            expect(isEnvRepresentable(value), value).toBe(true);
+            expect(parse(`K=${quoteEnv(value)}`).K, value).toEqual(value);
+        }
+    });
+
+    it('should refuse what it cannot encode, rather than corrupting it', () => {
+        // dotenv turns \\n and \\r inside double quotes into the control character, and a single quote rules the
+        // single-quoted form out, so these two shapes have no representation at all.
+        expect(isEnvRepresentable('it\'s p\\nass')).toBe(false);
+        expect(isEnvRepresentable('it\'s p\\rass')).toBe(false);
+        expect(parse(`K=${quoteEnv('it\'s p\\nass')}`).K).not.toEqual('it\'s p\\nass');
     });
 });
 

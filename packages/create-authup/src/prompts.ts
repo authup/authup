@@ -6,6 +6,7 @@
  */
 
 import { TARGETS } from './constants.ts';
+import { isEnvRepresentable } from './utils.ts';
 import type {
     Answers,
     Ask,
@@ -76,7 +77,9 @@ function askUrl(ask: Ask, question: string, protocols: readonly string[] = ['htt
     return askUntil<string>(ask, question, fallback, (answer) => {
         const trimmed = answer.trim();
         try {
-            if (protocols.includes(new URL(trimmed).protocol)) {
+            // a non-special scheme parses `smtp:mail` with an empty host, which would land in the file as written
+            const url = new URL(trimmed);
+            if (protocols.includes(url.protocol) && url.hostname !== '') {
                 return { value: trimmed };
             }
         } catch {
@@ -150,8 +153,8 @@ function askSecret(ask: Ask, question: string): Promise<string> {
         if (answer.length < 3 || answer.length > 256) {
             return { error: 'Use between 3 and 256 characters.' };
         }
-        if (answer.includes('\'') && answer.includes('"')) {
-            return { error: 'Use one kind of quote at most: a value carrying both cannot be written to a .env file.' };
+        if (!isEnvRepresentable(answer)) {
+            return { error: 'A single quote together with a \\n or \\r sequence has no .env representation. Choose another value.' };
         }
 
         return { value: answer };

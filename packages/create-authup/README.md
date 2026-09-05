@@ -41,12 +41,14 @@ Two flags: `--force` overwrites files that already exist (without it the
 conflicts are listed, nothing is written and the process exits 1), `--help`
 prints the usage.
 
-Versions are pinned to the wizard's own version: the image tag and the npm
-range are both `pkg.version`, never `latest`, so run `npm create authup@latest`
-to scaffold the current release. An emitted `authup.yml` is checked with
-`npx authup config validate`. The emitted helm values are validated in this
-package's test suite against the chart's own `values.schema.json`, vendored
-under `test/fixtures/`.
+Versions are pinned to the wizard's own version: the image tag and the
+`authup` dependency are both exactly `pkg.version`, never `latest` and never a
+range, so run `npm create authup@latest` to scaffold the current release. Helm
+is the exception and names no tag at all: the chart's `appVersion` owns the
+image, so the chart version is what selects the release there. An emitted
+`authup.yml` is checked with `npx authup config validate`, and the emitted helm
+values are validated in this package's test suite against the chart's own
+`values.schema.json`, vendored under `test/fixtures/`.
 
 The package holds zero runtime dependencies: prompts ride
 `node:readline/promises`, flags `node:util.parseArgs`, and every emitted

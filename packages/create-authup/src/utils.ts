@@ -12,9 +12,16 @@ export function quoteYaml(value: string): string {
 
 const PLAIN = /^[A-Za-z0-9_@:/.\-+=%?&,]*$/;
 
-// For the .env dotenv reads (`authup start` loads it from cwd): dotenv strips the surrounding quotes and unescapes
-// nothing but \n and \r inside double quotes, so a value is single-quoted when it carries no single quote and written
-// raw inside double quotes otherwise. askSecret refuses a value carrying both quote kinds, which no dotenv quoting holds.
+// Whether a value survives the .env round trip at all. dotenv strips the surrounding quotes and, inside DOUBLE quotes,
+// turns a literal \n or \r into the control character itself, with no escape that survives (it never unescapes a
+// doubled backslash). A value carrying a single quote, which rules the single-quoted form out, together with one of
+// those two sequences therefore has no representation, and `askSecret` refuses it rather than corrupting a password.
+export function isEnvRepresentable(value: string): boolean {
+    return !value.includes('\'') || !/\\[nr]/.test(value);
+}
+
+// For the .env dotenv reads (`authup start` loads it from cwd): a value is single-quoted when it carries no single
+// quote and written raw inside double quotes otherwise, which round-trips everything `isEnvRepresentable` admits.
 export function quoteEnv(value: string): string {
     if (PLAIN.test(value)) {
         return value;
@@ -24,7 +31,6 @@ export function quoteEnv(value: string): string {
         return `'${value}'`;
     }
 
-    // ponytail: dotenv expands a literal \n or \r inside double quotes; a secret spelling those two escapes is the residual.
     return `"${value}"`;
 }
 

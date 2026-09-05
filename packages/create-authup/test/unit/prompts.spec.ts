@@ -233,7 +233,7 @@ describe('collectAnswers', () => {
 
     it('should bound the admin password to the registry limits and keep its whitespace', async () => {
         const script = [...COMPOSE_DEFAULTS];
-        script.splice(7, 1, 'ab', 'a'.repeat(257), 'it\'s "both"', ' spaced secret ');
+        script.splice(7, 1, 'ab', 'a'.repeat(257), 'it\'s p\\nass', ' spaced secret ');
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);

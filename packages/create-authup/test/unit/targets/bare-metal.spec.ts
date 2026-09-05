@@ -43,7 +43,7 @@ describe('renderBareMetal', () => {
         const files = renderBareMetal(buildAnswers(), VERSION);
         const manifest = JSON.parse(files['package.json']);
 
-        expect(manifest.dependencies.authup).toEqual(`^${VERSION}`);
+        expect(manifest.dependencies.authup).toEqual(VERSION);
         expect(manifest.private).toEqual(true);
         expect(manifest.scripts.start).toEqual('authup start');
         expect(files['package.json']).not.toContain('latest');

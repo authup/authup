@@ -25,6 +25,10 @@ import { VERSION } from './version.ts';
 
 const DOCS_URL = 'https://authup.org/guide/deployment/';
 
+// The emitted files holding a password. They are written owner-only; the rest (compose file, nginx.conf, package.json,
+// authup.yml) carry none, since every secret rides an .env or, for helm, values.yaml.
+const SECRET_FILES = new Set(['.env', 'authup.env', 'values.yaml']);
+
 const USAGE = `Usage: npx create-authup [--force] [--help]
        npm create authup -- [--force] [--help]
 
@@ -100,7 +104,13 @@ async function main(): Promise<void> {
     }
 
     for (const name of files) {
-        fs.writeFileSync(path.join(process.cwd(), name), rendered[name], 'utf8');
+        const target = path.join(process.cwd(), name);
+        const secret = SECRET_FILES.has(name);
+        fs.writeFileSync(target, rendered[name], secret ? { encoding: 'utf8', mode: 0o600 } : 'utf8');
+        if (secret) {
+            // writeFileSync's mode applies to a file it creates, so an overwrite keeps whatever the old one had
+            fs.chmodSync(target, 0o600);
+        }
     }
 
     for (const note of notes) {

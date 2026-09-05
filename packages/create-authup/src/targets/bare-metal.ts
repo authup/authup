@@ -30,7 +30,8 @@ function renderPackageJson(version: string): string {
         private: true,
         type: 'module',
         scripts: { start: 'authup start' },
-        dependencies: { authup: `^${version}` },
+        // exact, like the image tag the container targets write: the wizard scaffolds one release, not a range
+        dependencies: { authup: version },
     };
 
     return `${JSON.stringify(manifest, null, 4)}\n`;
