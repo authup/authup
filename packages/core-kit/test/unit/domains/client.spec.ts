@@ -58,8 +58,17 @@ describe('ClientValidator backchannelLogoutUri', () => {
         expect(output.backchannelLogoutUri).toBeNull();
     });
 
+    it('should accept a value at the column length (2000)', async () => {
+        const value = 'https://app.example.com/'.padEnd(2000, 'a');
+        const output = await validator.run({ backchannelLogoutUri: value }, { group: ValidatorGroup.UPDATE });
+
+        expect(output.backchannelLogoutUri).toEqual(value);
+    });
+
     it.each([
         ['a wildcard', 'https://*.example.com/logout'],
+        // the column is varchar(2000); the driver would reject this as a 500
+        ['a value longer than the column (2000)', `https://app.example.com/${'a'.repeat(2000)}`],
         // a pasted pattern list parses as ONE URL with the comma in its path
         ['a comma separated list', 'https://app.example.com/logout,https://alt.example.com/logout'],
         ['userinfo', 'https://user:secret@app.example.com/logout'],
