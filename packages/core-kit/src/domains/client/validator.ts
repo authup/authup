@@ -89,6 +89,7 @@ function buildRedirectPatternSchema(name: string) {
  */
 const backchannelLogoutUriSchema = z
     .url()
+    .max(2000)
     .check((ctx) => {
         let parsed: URL;
         try {

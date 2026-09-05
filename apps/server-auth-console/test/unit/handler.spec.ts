@@ -12,9 +12,40 @@ import {
     expect,
     it,
 } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { serve } from 'routup/node';
 import { App, defineCoreHandler } from 'routup';
 import { createHandler, resolveConfig } from '../../src';
+import type { Config } from '../../src';
+
+const SHELL = '<!doctype html><html><head><!--preload-links--></head><body><div id="app"><!--app-html--></div></body></html>';
+
+const roots : string[] = [];
+
+/**
+ * A substituted console package: `package.json` marks the fake server entry
+ * as ESM (the service imports it by its exact `server.js` name), and every
+ * other file lands under `dist/`.
+ */
+async function writeBundle(files: Record<string, string>) : Promise<string> {
+    const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-auth-console-'));
+    roots.push(root);
+
+    await fs.promises.writeFile(path.join(root, 'package.json'), '{"type":"module"}');
+    for (const [name, content] of Object.entries(files)) {
+        const file = path.join(root, 'dist', name);
+        await fs.promises.mkdir(path.dirname(file), { recursive: true });
+        await fs.promises.writeFile(file, content);
+    }
+
+    return root;
+}
+
+afterAll(async () => {
+    await Promise.all(roots.map((root) => fs.promises.rm(root, { recursive: true, force: true })));
+});
 
 /**
  * The service renders the BUILT `@authup/client-auth-console` bundle, so
@@ -27,10 +58,11 @@ import { createHandler, resolveConfig } from '../../src';
 describe('createHandler', () => {
     let baseURL : string;
     let server : ReturnType<typeof serve>;
-
-    const config = resolveConfig({ publicUrl: 'https://example.com' });
+    let config : Config;
 
     beforeAll(async () => {
+        config = await resolveConfig({ publicUrl: 'https://example.com' });
+
         server = serve(await createHandler(config), { port: 0, silent: true });
         await server.ready();
 
@@ -89,6 +121,35 @@ describe('createHandler', () => {
 
         expect(asset.status).toEqual(200);
         expect(asset.headers.get('content-type')).toContain('javascript');
+        // every name carries a content hash, so a new build means new names
+        expect(asset.headers.get('cache-control')).toEqual('public,max-age=31536000,immutable');
+    });
+
+    it('does not share the resolved bundle between two handlers', async () => {
+        // the suite handler has rendered already; once more so the order of
+        // the tests above cannot decide what a shared cache would hold
+        await (await fetch(`${baseURL}/logout`)).text();
+
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'client/.vite/ssr-manifest.json': '{}',
+            'server/server.js': 'export const CONTRACT_VERSION = 3; export async function render() { return ["substituted-bundle", ""]; }',
+        });
+
+        const second = serve(
+            await createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })),
+            { port: 0, silent: true },
+        );
+        await second.ready();
+
+        try {
+            const url = (second.url ?? '').replace(/\/+$/, '');
+
+            expect(await (await fetch(`${url}/logout`)).text()).toContain('substituted-bundle');
+            expect(await (await fetch(`${baseURL}/logout`)).text()).not.toContain('substituted-bundle');
+        } finally {
+            await second.close(true);
+        }
     });
 
     it('renders through a substituted render function', async () => {
@@ -114,6 +175,56 @@ describe('createHandler', () => {
             expect(response.status).toEqual(200);
             expect(await response.text()).toContain('substituted:/logout');
             expect(seen).toEqual(['/logout']);
+        } finally {
+            await local.close(true);
+        }
+    });
+});
+
+/**
+ * A substituted package is a trust boundary the operator crossed on purpose,
+ * so the one thing the service can check for them, the render contract, is
+ * checked at boot rather than failing per request on `/authorize`.
+ */
+describe('createHandler bundle contract', () => {
+    it('refuses a bundle built against another contract version', async () => {
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'server/server.js': 'export const CONTRACT_VERSION = 2; export async function render() { return ["", ""]; }',
+        });
+
+        await expect(createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })))
+            .rejects.toThrow(/render-contract version 2, but this service requires 3/);
+    });
+
+    it('reads a bundle without the export as version 1', async () => {
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'server/server.js': 'export async function render() { return ["", ""]; }',
+        });
+
+        await expect(createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })))
+            .rejects.toThrow(/render-contract version 1/);
+    });
+
+    it('answers the actionable error per request for a half-built bundle', async () => {
+    // a client build without the server entry is not a bundle: boot
+    // succeeds, and every page names what is missing instead of a raw
+    // loader failure
+        const root = await writeBundle({ 'client/index.html': SHELL });
+
+        const local = serve(
+            await createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })),
+            { port: 0, silent: true },
+        );
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/logout`);
+
+            expect(response.status).toEqual(500);
+            expect(await response.text()).toContain('not built or installed');
         } finally {
             await local.close(true);
         }
@@ -167,7 +278,7 @@ describe('createHandler server-side fetch', () => {
     it('should default apiInternalUrl to the public url', async () => {
         // one address for both sides is the ordinary deployment, and it stays
         // configuration-free
-        const config = resolveConfig({ publicUrl: 'https://example.com' });
+        const config = await resolveConfig({ publicUrl: 'https://example.com' });
 
         expect(config.apiInternalUrl).toEqual(config.apiUrl);
     });
@@ -175,7 +286,7 @@ describe('createHandler server-side fetch', () => {
     it('should take apiInternalUrl from the documents internalUrl', async () => {
         // the kubernetes case: the render reaches the API on the cluster
         // network while the browser keeps the ingress address
-        const config = resolveConfig({
+        const config = await resolveConfig({
             publicUrl: 'https://idp.example.com',
             internalUrl: 'http://authup.authup.svc:3000',
         });
@@ -191,7 +302,7 @@ describe('createHandler server-side fetch', () => {
         // refused. A merely wrong-but-answering public url renders a page
         // built from garbage instead of failing.
         const config = {
-            ...resolveConfig({ publicUrl: 'http://127.0.0.1:1' }),
+            ...await resolveConfig({ publicUrl: 'http://127.0.0.1:1' }),
             apiInternalUrl: apiURL,
         };
 
@@ -231,7 +342,7 @@ describe('createHandler server-side fetch', () => {
         // hapic builds, not how the connection failed
         const internal = 'http://127.0.0.1:1';
         const config = {
-            ...resolveConfig({ publicUrl: 'https://idp.example.com' }),
+            ...await resolveConfig({ publicUrl: 'https://idp.example.com' }),
             apiInternalUrl: internal,
         };
 

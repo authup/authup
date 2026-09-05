@@ -35,7 +35,7 @@ export async function createCLIEntryPointCommand() {
         },
         subCommands: {
             healthcheck: defineCLIHealthCheckCommand(configFs),
-            migration: defineCLIMigrationCommand(configFs),
+            migration: defineCLIMigrationCommand(configFs, { generate: true }),
             start: defineCLIStartCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,

@@ -138,7 +138,7 @@ describe('identity-provider login (mfaRequired)', () => {
 
         // the completion still mints the pair: enrollment happens through the
         // ordinary authenticated API, which needs a real bearer
-        const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { origin: publicOrigin() } });
+        const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { 'sec-fetch-site': 'same-origin', origin: publicOrigin() } });
         expect(completed.status).toEqual(200);
 
         const { access_token: accessToken } = await completed.json();

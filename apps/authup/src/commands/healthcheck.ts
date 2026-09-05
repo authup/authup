@@ -16,6 +16,7 @@ import {
     readSchemaFromEnv,
     readSchemaFromFileTree,
 } from '@authup/server-config-kit';
+import { buildInternalUrl } from '../console/api-url.ts';
 
 export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
@@ -27,20 +28,18 @@ export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupC
                 buildSchemaDefaults<AuthupConfig>(SCHEMA),
                 readSchemaFromFileTree<AuthupConfig>(tree, SCHEMA),
                 readSchemaFromEnv<AuthupConfig>(SCHEMA),
-            );
+            ) as AuthupConfig;
 
-            // Both come from the same read the server does, so a probe cannot
-            // drift from the listener it is probing. The former literals (a
-            // hard-coded host and a port default of 3000 against a schema
-            // default of 3001) were dead only because buildSchemaDefaults
-            // always supplies both.
+            // `core.host` inherits the deployment-wide `host` (HOST) through
+            // its `resolve`, which this command deliberately does not run: the
+            // full resolver would let an unrelated cross-key invariant (a
+            // console url on a foreign origin, a short SECRETS_ENCRYPTION_KEY)
+            // fail the probe for the wrong reason. So the one fallback is
+            // spelled here, and a wildcard bind is looped back the way the
+            // composed roles reach their own listener.
             const healthCheck = http.request(
-                {
-                    path: '/',
-                    host: config.core?.host,
-                    port: config.core?.port,
-                    timeout: 2000,
-                },
+                buildInternalUrl(config.core.host || config.defaultHost, config.core.port),
+                { timeout: 2000 },
                 (res) => {
                     if (res.statusCode === 200) {
                         process.exit(0);

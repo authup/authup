@@ -103,12 +103,12 @@ export class ProvisionerModule implements IModule {
         const sources = [...this.sources];
 
         const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
         const provisioningDir = config.provisioningDirectoryPath;
         if (fs.existsSync(provisioningDir)) {
-            sources.push(new FileProvisioningSource({
-                cwd: provisioningDir,
-                logger: container.resolve(LoggerInjectionKey),
-            }));
+            sources.push(new FileProvisioningSource({ cwd: provisioningDir, logger }));
+        } else {
+            logger.info(`Provisioning directory ${provisioningDir} does not exist; file-based provisioning is skipped.`);
         }
 
         const composite = new CompositeProvisioningSource(sources);

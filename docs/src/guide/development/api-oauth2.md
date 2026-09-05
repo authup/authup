@@ -228,9 +228,9 @@ replay detection.
 
 Set the client's `backchannelLogoutUri` (admin console client form, or
 `POST /clients/:id` with `{"backchannelLogoutUri": "https://app.example.com/logout/backchannel"}`).
-It is one absolute `http(s)` URL, not a pattern list: no wildcards, no
-comma-separated values. `null` (the default, and what the provisioned system
-clients keep) disables the push for that client.
+It is one absolute `http(s)` URL of at most 2000 characters, not a pattern
+list: no wildcards, no comma-separated values. `null` (the default, and what
+the provisioned system clients keep) disables the push for that client.
 
 #### The request
 

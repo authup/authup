@@ -55,6 +55,7 @@
         "zod": "^4.5.4"
     },
     "devDependencies": {
+        "cross-env": "^10.1.0",
         "vitest": "^4.0.14"
     },
     "publishConfig": {

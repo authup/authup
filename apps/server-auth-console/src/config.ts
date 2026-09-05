@@ -16,9 +16,11 @@ import {
     buildSchemaDefaults,
     defineSchema,
     mergeSchemaData,
+    mountSchema,
     readSchemaFromEnv,
     resolveSchemaData,
 } from '@authup/server-config-kit';
+import { Container } from 'validup';
 import type { CoreConfig, EnvironmentVariable } from '@authup/server-config';
 import type { Config, ConfigInput } from './types';
 
@@ -52,24 +54,29 @@ export const CONFIG_SCHEMA = defineSchema<ConfigInput, 'publicUrl' | 'internalUr
 });
 
 /**
- * Turn the configuration namespace into the service's own shape: fill the
- * defaults, derive the one key that is derived rather than configured, and
- * rename. An empty `url` means the console sits on server-core's own origin
+ * Turn the configuration namespace into the service's own shape: validate the
+ * input against the declared zod types, fill the defaults, derive the one key
+ * that is derived rather than configured, and rename. An empty `url` means the console sits on server-core's own origin
  * under the default segment, which is the single-origin deployment.
  *
  * The defaults are layered SECTION-AWARE ({@link mergeSchemaData}): a spread
  * would let an input carrying one key of a section replace the whole section
  * and take every other key's default with it.
  */
-export function resolveConfig(
+export async function resolveConfig(
     input: Partial<ConfigInput>,
-) : Config {
+) : Promise<Config> {
+    const validator = new Container<ConfigInput>();
+    mountSchema(validator, CONFIG_SCHEMA);
+
+    const parsed = await validator.run(input);
+
     const values = resolveSchemaData<ConfigInput>(
         CONFIG_SCHEMA,
         mergeSchemaData<ConfigInput>(
             CONFIG_SCHEMA,
             buildSchemaDefaults<ConfigInput>(CONFIG_SCHEMA),
-            input,
+            parsed,
         ),
     ) as ConfigInput;
 
@@ -93,7 +100,7 @@ export function resolveConfig(
  * `authup.yml` reaches this service through the CLI roles, which compose this
  * very registry into the one document loader.
  */
-export function readConfigFromEnv() : Config {
+export async function readConfigFromEnv() : Promise<Config> {
     // The explicit type argument is load-bearing: inferred from the schema
     // object, a key declared without a default (the derived publicUrl) comes
     // back as unknown.

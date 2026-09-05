@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readConfigFromEnv } from '../../src';
+import { readConfigFromEnv, resolveConfig } from '../../src';
 
 const KEYS = [
     'PUBLIC_URL',
@@ -46,39 +46,39 @@ describe('readConfigFromEnv', () => {
      * made the same authup.yml mean different things depending on whether a
      * server-core process happened to be reading it.
      */
-    it('should derive the public URL from the core listener keys', () => {
-        expect(readConfigFromEnv().apiUrl).toEqual('http://localhost:3000');
+    it('should derive the public URL from the core listener keys', async () => {
+        expect((await readConfigFromEnv()).apiUrl).toEqual('http://localhost:3000');
 
         process.env.HOST = '127.0.0.1';
         process.env.PORT = '4711';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.apiUrl).toEqual('http://127.0.0.1:4711');
         expect(config.url).toEqual('http://127.0.0.1:4711/console/admin');
     });
 
-    it('should derive the console URL from the public URL', () => {
+    it('should derive the console URL from the public URL', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.url).toEqual('https://example.com/console/admin');
         expect(config.apiUrl).toEqual('https://example.com');
     });
 
-    it('should derive the console URL from a public URL carrying a sub-path', () => {
+    it('should derive the console URL from a public URL carrying a sub-path', async () => {
         process.env.PUBLIC_URL = 'https://example.com/auth/';
 
-        expect(readConfigFromEnv().url)
+        expect((await readConfigFromEnv()).url)
             .toEqual('https://example.com/auth/console/admin');
     });
 
-    it('should prefer an explicit console URL', () => {
+    it('should prefer an explicit console URL', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_URL = 'https://example.com/console';
 
-        expect(readConfigFromEnv().url)
+        expect((await readConfigFromEnv()).url)
             .toEqual('https://example.com/console');
     });
 
@@ -89,11 +89,11 @@ describe('readConfigFromEnv', () => {
      * bin never runs that normalization and used to boot into exactly the
      * state the refusal describes.
      */
-    it('should refuse a console published on another origin', () => {
+    it('should refuse a console published on another origin', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_URL = 'https://console.example.com';
 
-        expect(() => readConfigFromEnv()).toThrow(/not the origin of publicUrl/);
+        await expect(readConfigFromEnv()).rejects.toThrow(/not the origin of publicUrl/);
     });
 
     /**
@@ -101,40 +101,40 @@ describe('readConfigFromEnv', () => {
      * sibling console is SERVED, not the default segment: a relocated account
      * console was linked at a path nothing answers.
      */
-    it('should carry the account console URL', () => {
+    it('should carry the account console URL', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        expect(readConfigFromEnv().accountConsoleUrl)
+        expect((await readConfigFromEnv()).accountConsoleUrl)
             .toEqual('https://example.com/console/account');
 
         process.env.ACCOUNT_CONSOLE_URL = 'https://example.com/account';
 
-        expect(readConfigFromEnv().accountConsoleUrl)
+        expect((await readConfigFromEnv()).accountConsoleUrl)
             .toEqual('https://example.com/account');
     });
 
-    it('should read the disabled flag as a boolean', () => {
+    it('should read the disabled flag as a boolean', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_ENABLED = 'false';
 
-        expect(readConfigFromEnv().enabled).toEqual(false);
+        expect((await readConfigFromEnv()).enabled).toEqual(false);
     });
 
-    it('should read the listen address as a number and a string', () => {
+    it('should read the listen address as a number and a string', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
         process.env.ADMIN_CONSOLE_PORT = '4021';
         process.env.ADMIN_CONSOLE_HOST = '127.0.0.1';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.port).toEqual(4021);
         expect(config.host).toEqual('127.0.0.1');
     });
 
-    it('should fall back to the default listen address', () => {
+    it('should fall back to the default listen address', async () => {
         process.env.PUBLIC_URL = 'https://example.com';
 
-        const config = readConfigFromEnv();
+        const config = await readConfigFromEnv();
 
         expect(config.port).toEqual(3021);
         expect(config.host).toEqual('0.0.0.0');
@@ -147,7 +147,7 @@ describe('readConfigFromEnv', () => {
      * invariants, so selecting it would make this service refuse to start over
      * a key store, an MFA flag and an event log it does not have.
      */
-    it('should not inherit server-core own invariants', () => {
+    it('should not inherit server-core own invariants', async () => {
         const cases : Record<string, string>[] = [
             { SECRETS_ENCRYPTION_KEY: Buffer.alloc(16, 1).toString('base64') },
             { MFA_REQUIRED: 'true' },
@@ -159,12 +159,24 @@ describe('readConfigFromEnv', () => {
             Object.assign(process.env, env);
 
             try {
-                expect(() => readConfigFromEnv()).not.toThrow();
+                await expect(readConfigFromEnv()).resolves.toBeDefined();
             } finally {
                 for (const key of Object.keys(env)) {
                     delete process.env[key];
                 }
             }
         }
+    });
+
+    /**
+     * The file reader hands values over verbatim, and `authup config validate`
+     * refuses a non-boolean here; the resolve has to refuse it too, or a
+     * document the validator rejects boots with fragments enabled.
+     */
+    it('should refuse a value the document schema rejects', async () => {
+        await expect(resolveConfig({
+            publicUrl: 'https://example.com',
+            theme: { fragmentsEnabled: 'no' },
+        } as never)).rejects.toThrow();
     });
 });

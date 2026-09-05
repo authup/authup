@@ -52,14 +52,15 @@
     "dependencies": {
         "@authup/client-account-console": "^1.0.0-beta.64",
         "@authup/kit": "^1.0.0-beta.64",
-        "@authup/server-config-kit": "^1.0.0-beta.64",
         "@authup/server-config": "^1.0.0-beta.64",
+        "@authup/server-config-kit": "^1.0.0-beta.64",
         "@authup/server-console-kit": "^1.0.0-beta.64",
         "@ebec/http": "^4.3.2",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.0",
         "orkos": "^1.1.1",
         "routup": "^6.1.0",
+        "validup": "^2.0.1",
         "zod": "^4.5.4"
     },
     "devDependencies": {

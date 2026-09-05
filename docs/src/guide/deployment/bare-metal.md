@@ -166,7 +166,8 @@ $ authup healthcheck
 port, so API replicas can hand them over, and it refuses to start while
 `core.worker.enabled` is false. See [Worker](./worker.md).
 
-All commands honor `--configDirectory` / `--configFile` (except
-`migration generate`, a repository development tool that targets the local
-compose databases), and `migration` finds its migration files wherever it is
-started from.
+All commands honor `--configDirectory` / `--configFile`, and `migration`
+finds its migration files wherever it is started from. The `migration`
+operations are `run`, `revert` and `status`; `generate` is a repository
+development tool that exists only in server-core's dev CLI
+(`npm run cli -w apps/server-core -- migration generate`).

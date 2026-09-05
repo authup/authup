@@ -87,8 +87,8 @@ export type Config = {
 
 /**
  * How a page becomes a document. The default is this service's own
- * `renderPage`, reading the built bundle; a caller serving the console from
- * source substitutes one that reads through a vite dev server instead.
+ * `createRenderPage`, reading the built bundle; a caller serving the console
+ * from source substitutes one that reads through a vite dev server instead.
  */
 export type RenderPage = (
     event: IAppEvent,

@@ -217,6 +217,8 @@ Since plan 101 D2 the auth pages are NOT rendered by server-core, so its suite h
 
 That is the shape change worth internalizing: the service holds **no credential, no loopback and no database**, so there is nothing to inject a fake client into. It reads `GET /authorize/info` and `GET /` from whatever `apiUrl` names, and a spec stubs those by pointing `apiUrl` at a server it controls.
 
+A substituted PACKAGE is stubbed the same way, through config rather than DI: `handler.spec.ts`'s `writeBundle` writes a fake package under a tmp dir (`package.json` with `"type": "module"`, since locter's `read` is a native `import()` of the exact `dist/server/server.js` name the service reads, plus whatever `dist/` files the case needs) and passes it as `resolveConfig({ path })`. That is how the suite pins the boot-time `CONTRACT_VERSION` refusal, the half-built bundle answering the actionable per-request error, and two handlers in one process not sharing a resolved bundle.
+
 Caveats that survive the move:
 - The service renders from the **built** bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules), so rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the specs exercise a stale bundle. The two static console services have the same requirement for their own dists.
 - There is no just-in-time branch any more: it was a vite dev server inside server-core and left with the rendering, so the dist path is the only path and the JIT gate now decides nothing but the migrations glob (architecture.md → *The `cli-dev` JIT gate*).
@@ -282,9 +284,11 @@ function request(method: string, path: string, options: Record<string, any> = {}
 ```
 
 Note the harness binds its port AFTER the config is normalized, so `publicUrl`
-is NOT `suite.baseURL`. A spec asserting an `Origin` check (the federated
-login's completion endpoint) must read the config
-(`suite.container.resolve(ConfigInjectionKey).publicUrl`), not the base URL. See
+is NOT `suite.baseURL`. A spec exercising a same-origin check (the federated
+login's completion endpoint rides `isSameOriginRequest`, so a POST needs both
+`sec-fetch-site: same-origin` and an `Origin` equal to publicUrl's) must read
+the config (`suite.container.resolve(ConfigInjectionKey).publicUrl`), not the
+base URL. See
 `test/unit/http/controllers/entities/identity-provider/login-cookie-flow.spec.ts`.
 
 ## Page Tests (apps/client-auth-console)
@@ -363,7 +367,13 @@ lives in the packages. The suite is split in two accordingly.
   `start`'s own `setup` refuses a bad role before anything boots: an unknown
   role (the retired `authup start server.core` selector shape), a name after
   `core` or `worker`, an unknown console name and the tombstone `--worker`
-  flag, whose message names `start worker`. The composed-schema spec that sat here
+  flag, whose message names `start worker`. `healthcheck` dials the host the
+  listener inherits (root `host` / `HOST`, with `core.host` winning), never the
+  unresolved `core.host` coerced to localhost, and loops a wildcard bind back
+  to 127.0.0.1 (`test/unit/healthcheck.spec.ts`); it asserts on what the
+  command hands `http.request`, since a socket-level probe cannot tell the two
+  apart on a dev box, where every dialable host resolves to loopback. The
+  composed-schema spec that sat here
   is gone with `composeSchemas`: every configuration key is declared once in
   `@authup/server-config` now, so there is no pair of declarations left to
   prove consistent. The supervisor-era specs are gone with the supervisor: there is no entrypoint to

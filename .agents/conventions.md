@@ -340,7 +340,12 @@ copy, not an oversight.
   the theme directory already follows (architecture.md → *Console Theming*):
   a process-writable directory must not hold what the process serves or reads
   as configuration. The predecessor key `writableDirectoryPath` conflated the
-  two.
+  two. A configured provisioning directory that does not exist is reported
+  once at boot as an `info` line naming the resolved path and is never
+  refused: provisioning is optional, and the Docker image sets
+  `PROVISIONING_DIRECTORY_PATH` to `/etc/authup/provisioning` without
+  creating it, so a `warn` would land in `error.log` on every ordinary
+  container boot.
 - **`logDirectoryPath` does not hold the database.** It holds the production
   log files; that is the whole of it. The sqlite file comes from
   `db.database` / `DB_DATABASE`, which typeorm-extension resolves against the

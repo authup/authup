@@ -5,7 +5,41 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.63)
+## Next release (after v1.0.0-beta.64)
+
+### A substituted auth console package is verified at boot again
+
+With a built bundle in place, `authup start` / `authup start console auth`
+refuse to start when the bundle's `CONTRACT_VERSION` (missing = 1) is not
+the version this release requires (3), naming the entry and both versions.
+v1.0.0-beta.64 shipped without the check and rendered such a bundle. Rebuild
+the substituted package against the current `@authup/client-auth-console`
+contract. A missing bundle still answers the actionable per-request error
+rather than failing the boot.
+
+### `authup migration generate` is refused
+
+The `authup` binary's `migration` command accepts `run`, `revert` and `status`.
+`generate` is a repository development tool: it drops and recreates the local
+compose databases and writes the emitted files into the checkout, so outside a
+checkout it could only destroy a localhost database and produce nothing usable.
+It now answers `Unknown migration operation "generate". Expected one of:
+revert, status, run.` before touching anything. The development route is
+unchanged: `npm run cli -w apps/server-core -- migration generate`.
+
+### The console services validate their configuration at boot
+
+`resolveConfig` and `readConfigFromEnv` of `@authup/server-admin-console`,
+`@authup/server-account-console` and `@authup/server-auth-console` now run the
+document schema over the input before layering the defaults, so a value the
+schema rejects (a non-boolean `theme.fragmentsEnabled`, a `port` that is not a
+number) fails `authup start`, `authup start console` and the per-console bin
+with the offending path instead of reaching the listener as written. Only
+`authup config validate` caught those keys before. Validation is asynchronous,
+so both functions return a `Promise` now; the `authup` CLI awaits them, and an
+embedder calling either directly needs an `await`.
+
+## v1.0.0-beta.64
 
 ### `auth_clients.scope` and `auth_clients.root_url` are dropped
 
@@ -319,10 +353,6 @@ hard-codes `3001` anywhere a client reaches: a reverse proxy upstream, a
 `publicUrl`, a health check. Either set `core.port: 3001` to keep the
 old address, or move those references to 3000.
 
-The admin console's development server moves from `:3000` to `:3010` so it no
-longer collides with the API, and the trusted origin seeded in non-production
-follows it. That affects `npm run dev` in this repository only.
-
 ### The consoles are their own services
 
 `server-core` serves no console any more. Each console is a service package of
@@ -357,7 +387,7 @@ now run as separate services inside it.
 - **A themed deployment.** `theme.directoryPath` and `theme.fragmentsEnabled`
   are read by the console services now. In one container nothing changes; in a
   split one, mount the theme directory into the console containers.
-- **A substituted console.** `server.<name>Console.path` moved to the console
+- **A substituted console.** `<name>Console.path` moved to the console
   services with the serving. Setting it on an API-only process does nothing.
   The auth console is themed as well since this release, which is what closes
   the one window in which the hosted auth pages rendered unthemed.
@@ -642,10 +672,13 @@ else. Drop the mount, and mount the provisioning directory at its new path.
 +  - ./provisioning:/etc/authup/provisioning
 ```
 
-A mount kept at `/var/lib/authup` is not an error. It silently does nothing,
-and so does a provisioning directory the new key does not find: file-based
-provisioning stops being applied with no error at all, the same quiet failure
-the beta.63 entry below warns about. The log files are written inside the
+A mount kept at `/var/lib/authup` is not an error. It silently does nothing.
+From the release after v1.0.0-beta.64 on, a provisioning directory the new
+key does not find is reported once at boot, as an `info` line naming the
+resolved path (`Provisioning directory ... does not exist; file-based
+provisioning is skipped.`); it is not refused, since provisioning is optional
+and the image points the key at a directory it does not create. The log files
+are written inside the
 container layer unless `/var/log/authup` is mounted, which is the ordinary
 posture for a container that logs to a collector.
 

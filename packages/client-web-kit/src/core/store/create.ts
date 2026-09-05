@@ -212,10 +212,21 @@ export function createStore(context: StoreCreateContext) {
      * Kept as a working shim (kit cookie hydration + downstream seeding);
      * slated for removal in a future major.
      */
-    const setRealm = (input: RealmMinimal | null) => {
-        realm.value = input;
+    // Narrowed at the sink, not at the call sites: both realm refs are
+    // cookie-persisted, and callers hand over whole entity rows (the realm
+    // switcher passes the table row straight through), so the free-text
+    // `description` column would ride the header of every request. The
+    // display name is the one label the chrome renders, so it stays.
+    const pickRealm = (input: RealmMinimal) : RealmMinimal => ({
+        id: input.id,
+        name: input.name,
+        ...(typeof input.displayName !== 'undefined' ? { displayName: input.displayName } : {}),
+    });
 
-        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, input);
+    const setRealm = (input: RealmMinimal | null) => {
+        realm.value = input ? pickRealm(input) : null;
+
+        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, realm.value);
     };
 
     const realmManagement = ref<RealmMinimal | null>(null);
@@ -223,11 +234,7 @@ export function createStore(context: StoreCreateContext) {
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
 
     const setRealmManagement = (input: RealmMinimal | null) => {
-        // Narrowed at the sink, not at the call sites: the value is
-        // cookie-persisted, and callers hand over whole entity rows (the realm
-        // switcher passes the table row straight through), so the free-text
-        // `description` column would ride the header of every request.
-        realmManagement.value = input ? { id: input.id, name: input.name } : null;
+        realmManagement.value = input ? pickRealm(input) : null;
 
         context.dispatcher.emit(
             StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
