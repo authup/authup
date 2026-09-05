@@ -24,6 +24,7 @@ import {
 } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
 import { OAuth2ErrorCode } from '@authup/specs';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
 import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
@@ -162,7 +163,13 @@ describe('identity-provider authorization code grant', () => {
             suite,
             'POST',
             `identity-providers/${hosted.searchParams.get('provider')}/login-complete`,
-            { headers: { cookie: `authup_federated_login=${pendingLoginCookie}` } },
+            {
+                headers: {
+                    'sec-fetch-site': 'same-origin',
+                    origin: new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin,
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
         );
         expect(redeem.status).toEqual(200);
 

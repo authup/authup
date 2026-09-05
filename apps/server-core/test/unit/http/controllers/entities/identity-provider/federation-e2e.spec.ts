@@ -246,7 +246,13 @@ describe('authup federating to authup', () => {
             downstream,
             'POST',
             `identity-providers/${hostedURL.searchParams.get('provider')}/login-complete`,
-            { headers: { cookie: `authup_federated_login=${(pendingLoginCookie as RegExpMatchArray)[1]}` } },
+            {
+                headers: {
+                    'sec-fetch-site': 'same-origin',
+                    origin: new URL(downstreamPublicURL).origin,
+                    cookie: `authup_federated_login=${(pendingLoginCookie as RegExpMatchArray)[1]}`,
+                },
+            },
         );
         expect(redeem.status).toEqual(200);
         const grant = await redeem.json();
