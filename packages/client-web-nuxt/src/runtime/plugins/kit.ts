@@ -68,8 +68,9 @@ function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
             }
         }
 
-        if (options.serverApiURL) {
-            url = options.serverApiURL;
+        const serverOptions = runtimeConfig.authup as Pick<RuntimeOptions, 'serverApiURL'> | undefined;
+        if (serverOptions?.serverApiURL) {
+            url = serverOptions.serverApiURL;
         }
     }
 

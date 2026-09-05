@@ -15,6 +15,7 @@ npm install @authup/client-web-nuxt --save-dev
 Modify the `nuxt.config.ts` file and extend the modules section.
 The module can be configured with different [options](#options).
 In the following code snippet, the URL for the Authup API is provided via runtimeConfig.
+The one server-only option, `serverApiURL`, is written to the private `runtimeConfig.authup` rather than the public block, so the internal API address is never serialized into the rendered page; override it at runtime with `NUXT_AUTHUP_SERVER_API_URL` (not `NUXT_PUBLIC_AUTHUP_SERVER_API_URL`).
 
 ```typescript
 import { defineNuxtConfig } from 'nuxt';
@@ -53,6 +54,10 @@ export type RuntimeOptions = {
 
     /**
      * Explicit URL of the Authup API (server-side)
+     *
+     * Kept in the private `runtimeConfig.authup`, never in the public block
+     * that is serialized into every rendered page. The runtime override is
+     * `NUXT_AUTHUP_SERVER_API_URL`, not `NUXT_PUBLIC_AUTHUP_SERVER_API_URL`.
      */
     serverApiURL?: string,
 

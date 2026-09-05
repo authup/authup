@@ -13,6 +13,10 @@ export type RuntimeOptions = {
 
     /**
      * Explicit URL of the Authup API (server-side)
+     *
+     * Kept in the private `runtimeConfig.authup`, never in the public block
+     * that is serialized into every rendered page. The runtime override is
+     * `NUXT_AUTHUP_SERVER_API_URL`, not `NUXT_PUBLIC_AUTHUP_SERVER_API_URL`.
      */
     serverApiURL?: string,
 

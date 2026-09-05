@@ -16,7 +16,6 @@ import {
 import { merge } from 'smob';
 import './declare';
 import { fileURLToPath } from 'node:url';
-import type { RuntimeOptions } from './runtime/types';
 import type { ModuleOptions } from './types';
 
 export default defineNuxtModule<ModuleOptions>({
@@ -35,8 +34,10 @@ export default defineNuxtModule<ModuleOptions>({
 
         // Spread rather than enumerate: `ModuleOptions` IS `RuntimeOptions`, so a
         // hand-written list can only ever fall behind the type. `serverApiURL`
-        // already had, and the plugin read a value that never reached it.
-        const runtimeOptions : RuntimeOptions = { ...options };
+        // already had, and the plugin read a value that never reached it. It is
+        // the one server-only key and is split off into the private namespace:
+        // the public one is serialized into every rendered page.
+        const { serverApiURL, ...runtimeOptions } = options;
 
         nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {};
         if (nuxt.options.runtimeConfig.public.authup) {
@@ -46,6 +47,13 @@ export default defineNuxtModule<ModuleOptions>({
             );
         } else {
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
+        }
+
+        if (serverApiURL) {
+            nuxt.options.runtimeConfig.authup = merge(
+                (nuxt.options.runtimeConfig.authup || {}) as Record<string, unknown>,
+                { serverApiURL },
+            );
         }
 
         nuxt.options.alias['#authup/nuxt'] = resolver.resolve('./runtime/exports');
