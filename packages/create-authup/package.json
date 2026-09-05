@@ -1,0 +1,59 @@
+{
+    "name": "create-authup",
+    "type": "module",
+    "version": "1.0.0-beta.64",
+    "description": "Interactive wizard writing the deployment files for an authup installation: docker run, docker compose, helm values or a bare-metal project.",
+    "license": "Apache-2.0",
+    "bin": {
+        "create-authup": "dist/index.mjs"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js",
+        "check:types": "tsc -p tsconfig.test.json",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts"
+    },
+    "engines": {
+        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "authentication",
+        "oauth2",
+        "installer",
+        "wizard",
+        "scaffold",
+        "docker",
+        "compose",
+        "helm"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/create-authup"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {},
+    "devDependencies": {
+        "@authup/server-config": "^1.0.0-beta.64",
+        "@authup/server-config-kit": "^1.0.0-beta.64",
+        "@types/node": "^26.4.0",
+        "cross-env": "^10.1.0",
+        "vitest": "^4.0.14",
+        "yaml": "^2.9.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
