@@ -49,12 +49,12 @@ export default defineNuxtModule<ModuleOptions>({
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
         }
 
-        if (serverApiURL) {
-            nuxt.options.runtimeConfig.authup = merge(
-                (nuxt.options.runtimeConfig.authup || {}) as Record<string, unknown>,
-                { serverApiURL },
-            );
-        }
+        // Declared even when unset: Nuxt applies NUXT_AUTHUP_SERVER_API_URL only
+        // to a key the runtime config already carries.
+        nuxt.options.runtimeConfig.authup = merge(
+            (nuxt.options.runtimeConfig.authup || {}) as Record<string, unknown>,
+            { serverApiURL: serverApiURL ?? '' },
+        );
 
         nuxt.options.alias['#authup/nuxt'] = resolver.resolve('./runtime/exports');
 

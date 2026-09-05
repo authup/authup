@@ -64,12 +64,12 @@ describe('module', () => {
         expect(nuxt.options.runtimeConfig.authup).toEqual({ serverApiURL: 'http://mine:3000' });
     });
 
-    it('leaves the private runtime config untouched without serverApiURL', async () => {
+    it('declares the private key empty without serverApiURL so the environment can fill it', async () => {
         const nuxt = createNuxt();
 
         await module({ apiURL: 'https://auth.example.com' }, nuxt as unknown as Nuxt);
 
         expect(nuxt.options.runtimeConfig.public.authup).toEqual({ apiURL: 'https://auth.example.com' });
-        expect(nuxt.options.runtimeConfig.authup).toBeUndefined();
+        expect(nuxt.options.runtimeConfig.authup).toEqual({ serverApiURL: '' });
     });
 });
