@@ -31,6 +31,7 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
+import { withProvisioningLock } from '../../../adapters/database/helpers/index.ts';
 import { SystemPolicyName } from '@authup/access';
 import {
     PermissionPolicyEntity,
@@ -99,7 +100,25 @@ export class ProvisionerModule implements IModule {
         this.sources = sources;
     }
 
+    /**
+     * Provisioning is a reconciliation pass of find-then-insert pairs with no
+     * guard between the two statements, so two replicas booting against an
+     * unprovisioned database interleave and either collide on a unique key or,
+     * for the four entity types whose unique tuple contains a nullable column,
+     * silently write duplicate rows. One mutex around the whole pass
+     * closes both halves; see `withProvisioningLock` (issue #3356).
+     */
     async setup(container: IContainer): Promise<void> {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        await withProvisioningLock(
+            dataSource,
+            () => this.provision(container),
+            { logger: container.resolve(LoggerInjectionKey) },
+        );
+    }
+
+    protected async provision(container: IContainer): Promise<void> {
         const sources = [...this.sources];
 
         const config = container.resolve(ConfigInjectionKey);
