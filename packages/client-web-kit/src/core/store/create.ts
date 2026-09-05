@@ -213,9 +213,9 @@ export function createStore(context: StoreCreateContext) {
      * slated for removal in a future major.
      */
     const setRealm = (input: RealmMinimal | null) => {
-        realm.value = input;
+        realm.value = input ? { id: input.id, name: input.name } : null;
 
-        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, input);
+        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, realm.value);
     };
 
     const realmManagement = ref<RealmMinimal | null>(null);

@@ -179,6 +179,22 @@ describe('core/store/install-cookies', () => {
         expect(accessTokenCall!.options.maxAge!).toBeLessThanOrEqual(3600);
     });
 
+    it('narrows a whole realm row to { id, name } before it reaches the realm cookie', () => {
+        const { store, setCalls } = buildApp();
+
+        const row = {
+            id: 'realm-1', 
+            name: 'master', 
+            description: 'never persisted', 
+        };
+        store.setRealm(row);
+
+        const realmCall = setCalls.find((call) => call.key === CookieName.REALM);
+        expect(realmCall).toBeDefined();
+        expect(realmCall!.value).toStrictEqual({ id: 'realm-1', name: 'master' });
+        expect(store.realm).toStrictEqual({ id: 'realm-1', name: 'master' });
+    });
+
     it('unsets every cookie on logout', async () => {
         const {
             store, 
