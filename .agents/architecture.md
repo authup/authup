@@ -1245,6 +1245,88 @@ one into every realm would fight the system MERGE on every boot).
 Scopes run first because they are leaf entities carrying no relations of their
 own, and a client in the same realm block may bind them via `realmScopes`.
 
+### Concurrent boots: the provisioning lock (issue #3356)
+
+Every write in the provisioner is find-then-insert with no guard between the
+two statements, so two replicas booting against an unprovisioned database
+interleave. `ProvisionerModule.setup` therefore holds a deployment-wide mutex
+around the whole pass (`withDatabaseLock`,
+`adapters/database/helpers/advisory-lock.ts`, holding the
+`PROVISIONING_DATABASE_LOCK` identity the provisioning module owns) and calls
+the untouched body as `provision()`. Nothing else changed: no write site is guarded, no port grew a
+method, and boot stays fatal.
+
+**One mutex rather than a guard per write site, because half the failures
+cannot raise an error to catch.** The insert sites split into two groups with
+opposite failure modes, and the issue text describes only the first:
+
+- `auth_realms` (unique on `name`), `auth_clients` and `auth_users` (unique on
+  `name, realm_id` with `realm_id` NOT NULL) and every junction (each unique
+  over its two id columns, both NOT NULL; the nullable `*_realm_id` and
+  `policy_id` companions are not part of the key) genuinely collide. The loser gets a driver-level unique violation
+  out of `save`, and since provisioning is a boot module that replica fails to
+  start. This is the reported crash, and the first statement that can reach it
+  is the master-realm insert, since the graph runs policies, permissions,
+  roles and scopes before realms.
+- `auth_permissions` and `auth_roles` (unique on `name, client_id, realm_id`)
+  and `auth_scopes` / `auth_policies` (unique on `name, realm_id`) are unique
+  over a tuple containing a NULLABLE column, and every row the default source
+  declares for them is global, so both columns are null. All three dialects
+  treat nulls as distinct in a unique index (postgres defaults to `NULLS
+  DISTINCT`, mysql and sqlite permit repeated nulls), so nothing raises and
+  both replicas simply insert. Nothing cleans them up afterwards
+  (`PolicyProvisioningSynchronizer.cleanupStaleTopLevel` only prunes names
+  absent from the declared set, so a duplicate of a declared name survives).
+
+The second group is why the issue's own options 1 and 2, which catch the
+duplicate-key error and re-read, were not taken: there is no error to catch
+for the entire global permission catalogue, both global roles, every global
+scope and every system policy. Serialization does not care whether the
+database refuses the second insert, so it is the only shape that closes both
+halves. Making the second group structurally safe needs `NULLS NOT DISTINCT`
+or an expression index over coalesced sentinels, which TypeORM cannot express
+in entity metadata; that is tracked separately and is a schema change, not a
+behaviour one.
+
+**Mechanics that are load-bearing.** The lock is SESSION-scoped in both
+dialects, so it takes a dedicated query runner for its whole lifetime:
+`dataSource.query()` would acquire and release on different pooled
+connections. It is also COUNTED in both, so it is acquired exactly once, and
+it is released explicitly in a `finally` before the runner goes back to the
+pool. Skipping that release leaks the lock onto a pooled connection for the
+lifetime of the process, and a second `setup()` in that process then
+deadlocks against itself. The acquisition answer is normalized rather than
+tested for truthiness: postgres returns a JS boolean, and mysql2 returns the
+STRING `'1'` or `'0'` (verified against a live server), so a truthiness check
+reads a lock held by another session as acquired and makes the whole mechanism
+inert on mysql.
+
+`better-sqlite3` is a passthrough that creates no runner at all, the same
+shape and the same reasoning as `isDatabaseTypeRowLockable`: one database file
+per container means a second replica cannot reach it, and the driver hands out
+ONE shared query runner (`this.queryRunner ??= ...`), so holding one here
+would nest inside whatever else is running.
+
+**On timeout it throws rather than proceeding unlocked.** Proceeding is the
+pre-fix behaviour, which is the thing being removed; failing the boot is what
+today's losing replica does anyway, and the deployment restarts it, by which
+point the winner has finished and the pass is a no-op. Boot stays fatal for
+the same reason it always was: provisioning seeds the authorization graph, and
+a replica that comes up without the master realm, the admin user or the
+permission catalogue passes a container health check while being useless.
+
+**Two residuals, stated rather than papered over.** The lock serializes boot
+against boot; it does not serialize a booting replica against a live one
+serving `POST /realms`, which calls the same three realm provisioners. The two
+sides of that race are not symmetric, which is worth being exact about:
+`RealmService.save` wraps each provisioner and logs, so the request side
+degrades to a warn line, while the boot side's own backfill loop has no catch
+and can still abort on the client the request just created. That window is a
+realm created in the seconds a replica takes to boot, and the restart
+reconciles it. And `RealmService.save` itself runs no `checkUniqueness`, so
+two concurrent `POST /realms` with one name give the loser an unmapped 500
+rather than a 409.
+
 ### Wildcard Realm Entry (`realms[].attributes.name: "*"`, plan 082)
 
 A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
