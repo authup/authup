@@ -17,6 +17,7 @@ export * from './openid/index.ts';
 export * from './password-forgot/index.ts';
 export * from './password-reset/index.ts';
 export * from './register/index.ts';
+export * from './schema/index.ts';
 export * from './status/index.ts';
 export * from './token/index.ts';
 export * from './userinfo/index.ts';

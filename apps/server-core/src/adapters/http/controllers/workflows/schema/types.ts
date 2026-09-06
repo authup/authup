@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './describe.ts';
-export * from './discovery.ts';
-export * from './hash.ts';
-export * from './module.ts';
-export * from './relations.ts';
-export * from './types.ts';
+export type SchemaControllerOptions = {
+    enabled: boolean,
+};
+
+export type SchemaControllerContext = {
+    options: SchemaControllerOptions,
+};
