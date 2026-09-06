@@ -1250,9 +1250,10 @@ own, and a client in the same realm block may bind them via `realmScopes`.
 Every write in the provisioner is find-then-insert with no guard between the
 two statements, so two replicas booting against an unprovisioned database
 interleave. `ProvisionerModule.setup` therefore holds a deployment-wide mutex
-around the whole pass (`withProvisioningLock`,
-`adapters/database/helpers/advisory-lock.ts`) and calls the untouched body as
-`provision()`. Nothing else changed: no write site is guarded, no port grew a
+around the whole pass (`withDatabaseLock`,
+`adapters/database/helpers/advisory-lock.ts`, holding the
+`PROVISIONING_DATABASE_LOCK` identity the provisioning module owns) and calls
+the untouched body as `provision()`. Nothing else changed: no write site is guarded, no port grew a
 method, and boot stays fatal.
 
 **One mutex rather than a guard per write site, because half the failures

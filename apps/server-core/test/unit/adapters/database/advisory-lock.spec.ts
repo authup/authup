@@ -7,12 +7,19 @@
 
 import type { DataSource, DatabaseType } from 'typeorm';
 import { describe, expect, it } from 'vitest';
-import { withProvisioningLock } from '../../../../src/adapters/database/helpers/index.ts';
+import type { DatabaseLock } from '../../../../src/adapters/database/helpers/index.ts';
+import { withDatabaseLock } from '../../../../src/adapters/database/helpers/index.ts';
+
+const LOCK: DatabaseLock = {
+    name: 'authup:test',
+    key: [4711, 2],
+};
 
 type QueryAnswer = unknown | ((sql: string) => unknown);
 
 type FakeDataSourceState = {
     statements: string[],
+    parameters: unknown[][],
     runnersCreated: number,
     runnersReleased: number
 };
@@ -32,6 +39,7 @@ function createFakeDataSource(
 ): { dataSource: DataSource, state: FakeDataSourceState } {
     const state: FakeDataSourceState = {
         statements: [],
+        parameters: [],
         runnersCreated: 0,
         runnersReleased: 0,
     };
@@ -48,8 +56,9 @@ function createFakeDataSource(
                 release: async () => {
                     state.runnersReleased += 1;
                 },
-                query: async (sql: string) => {
+                query: async (sql: string, parameters: unknown[] = []) => {
                     state.statements.push(sql);
+                    state.parameters.push(parameters);
 
                     if (queue.length > 0) {
                         const answer = queue.shift();
@@ -75,7 +84,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
     it('should pass through without a query runner on better-sqlite3', async () => {
         const fake = createFakeDataSource('better-sqlite3');
 
-        const output = await withProvisioningLock(fake.dataSource, async () => 'done');
+        const output = await withDatabaseLock(fake.dataSource, LOCK, async () => 'done');
 
         expect(output).toEqual('done');
         // One database file per container, so there is nothing to serialize,
@@ -88,7 +97,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         const fake = createFakeDataSource('postgres', [[{ acquired: true }]]);
         const order: string[] = [];
 
-        await withProvisioningLock(fake.dataSource, async () => {
+        await withDatabaseLock(fake.dataSource, LOCK, async () => {
             order.push(`callback after ${fake.state.statements.length} statement(s)`);
         });
 
@@ -99,10 +108,24 @@ describe('adapters/database/helpers/advisory-lock', () => {
         expect(fake.state.runnersReleased).toEqual(1);
     });
 
+    it.each([
+        ['postgres', 'postgres' as DatabaseType, [4711, 2]],
+        ['mysql', 'mysql' as DatabaseType, ['authup:test']],
+    ])('should bind the caller lock identity on %s', async (_label, type, expected) => {
+        const fake = createFakeDataSource(type, [[{ acquired: true }]]);
+
+        await withDatabaseLock(fake.dataSource, LOCK, async () => undefined);
+
+        // Bound, never interpolated, so a lock name never reaches the
+        // statement text, and both statements address the same lock.
+        expect(fake.state.parameters).toEqual([expected, expected]);
+        expect(fake.state.statements.every((statement) => !statement.includes('authup:test'))).toBeTruthy();
+    });
+
     it('should acquire and release around the callback on mysql', async () => {
         const fake = createFakeDataSource('mysql', [[{ acquired: 1 }]]);
 
-        await withProvisioningLock(fake.dataSource, async () => undefined);
+        await withDatabaseLock(fake.dataSource, LOCK, async () => undefined);
 
         expect(fake.state.statements[0]).toContain('GET_LOCK');
         expect(fake.state.statements[1]).toContain('RELEASE_LOCK');
@@ -119,7 +142,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         const fake = createFakeDataSource(type, [[{ acquired: value }]]);
 
         let ran = false;
-        await withProvisioningLock(fake.dataSource, async () => {
+        await withDatabaseLock(fake.dataSource, LOCK, async () => {
             ran = true;
         });
 
@@ -136,9 +159,9 @@ describe('adapters/database/helpers/advisory-lock', () => {
         const fake = createFakeDataSource(type, [[{ acquired: value }]]);
 
         let ran = false;
-        await expect(withProvisioningLock(fake.dataSource, async () => {
+        await expect(withDatabaseLock(fake.dataSource, LOCK, async () => {
             ran = true;
-        }, { waitTimeout: 0, wait: noWait })).rejects.toThrow(/provisioning lock/);
+        }, { waitTimeout: 0, wait: noWait })).rejects.toThrow(/database lock/);
 
         expect(ran).toBeFalsy();
     });
@@ -153,7 +176,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         const waits: number[] = [];
         let ran = false;
 
-        await withProvisioningLock(fake.dataSource, async () => {
+        await withDatabaseLock(fake.dataSource, LOCK, async () => {
             ran = true;
         }, {
             waitTimeout: 1_000,
@@ -168,7 +191,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         expect(fake.state.statements).toHaveLength(4);
     });
 
-    it('should fail the boot rather than provision unserialized when the wait runs out', async () => {
+    it('should fail rather than run the callback unserialized when the wait runs out', async () => {
         const fake = createFakeDataSource('postgres', [
             [{ acquired: false }],
             [{ acquired: false }],
@@ -177,14 +200,14 @@ describe('adapters/database/helpers/advisory-lock', () => {
 
         let ran = false;
 
-        await expect(withProvisioningLock(fake.dataSource, async () => {
+        await expect(withDatabaseLock(fake.dataSource, LOCK, async () => {
             ran = true;
         }, {
             waitTimeout: 200, 
             pollInterval: 100, 
             wait: noWait, 
         }))
-            .rejects.toThrow(/Timed out after 200ms waiting for the provisioning lock/);
+            .rejects.toThrow(/Timed out after 200ms waiting for the database lock "authup:test"/);
 
         expect(ran).toBeFalsy();
         // Nothing was acquired, so nothing is unlocked, but the runner is
@@ -197,7 +220,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         const fake = createFakeDataSource('postgres', [[{ acquired: true }]]);
         const error = new Error('provisioning blew up');
 
-        await expect(withProvisioningLock(fake.dataSource, async () => {
+        await expect(withDatabaseLock(fake.dataSource, LOCK, async () => {
             throw error;
         })).rejects.toBe(error);
 
@@ -214,7 +237,7 @@ describe('adapters/database/helpers/advisory-lock', () => {
         ]);
         const error = new Error('provisioning blew up');
 
-        await expect(withProvisioningLock(fake.dataSource, async () => {
+        await expect(withDatabaseLock(fake.dataSource, LOCK, async () => {
             throw error;
         })).rejects.toBe(error);
 

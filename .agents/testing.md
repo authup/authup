@@ -111,15 +111,17 @@ each for a global permission, role, scope and policy. It is
 `describe.skipIf`-gated to mysql/postgres because the provisioning lock is a
 deliberate passthrough on better-sqlite3 (one database file per container, so
 a second replica cannot exist). Confirm it is honest by making
-`withProvisioningLock` an unconditional passthrough: without the lock it fails
+`withDatabaseLock` an unconditional passthrough: without the lock it fails
 with `duplicate key value violates unique constraint
 "UQ_9b95dc8c08d8b11a80a6798a640"`, the `auth_realms(name)` collision issue
 #3356 reports. One DataSource is enough to model two replicas, because each
 `setup()` takes its own query runner and the lock is arbitrated per session.
 The lock's own unit spec
 (`test/unit/adapters/database/advisory-lock.spec.ts`) runs on every dialect
-over a fake DataSource and pins the mysql answer shape: mysql2 returns the
-STRING `'1'`/`'0'`, so a truthiness check would make the lock inert there.
+over a fake DataSource and pins two things a broken implementation would
+otherwise pass silently: the mysql answer shape (mysql2 returns the STRING
+`'1'`/`'0'`, so a truthiness check makes the lock inert there), and that the
+caller's lock identity is BOUND into both statements rather than interpolated.
 
 ## Test Layers (server-core)
 

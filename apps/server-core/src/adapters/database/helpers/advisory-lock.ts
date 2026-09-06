@@ -10,38 +10,36 @@ import type { Logger } from '@authup/server-kit';
 import type { DataSource, DatabaseType } from 'typeorm';
 
 /**
- * The mutex identity. Arbitrary, but it must stay STABLE across releases: a
- * changed key is a different mutex, so during a rolling deploy the outgoing
- * and the incoming replica would each hold their own and provision at once.
+ * A mutex identity. The two dialects address a lock differently, so a lock
+ * carries both spellings and the caller owns the values.
  *
- * postgres takes two int4 keys, mysql one string of at most 64 characters.
- *
- * The two are not scoped alike, which is confirmed rather than assumed: a
+ * The two are also not scoped alike, which is confirmed rather than assumed: a
  * postgres advisory lock carries the database OID, so two databases in one
  * cluster do not contend, while a mysql named lock is scoped to the mysqld
- * INSTANCE, so two authup databases on one server share this mutex. That is
- * left as it is. The consequence is that one deployment's first boot delays
- * the other's rather than corrupting it, and both are bounded by the wait
- * budget below.
+ * INSTANCE, so two databases on one server share the lock.
  */
-const LOCK_KEY_NAMESPACE = 16725;
-const LOCK_KEY_ID = 1;
-const LOCK_NAME = 'authup:provisioning';
+export type DatabaseLock = {
+    /** mysql: the `GET_LOCK` name, at most 64 characters. */
+    name: string,
+    /** postgres: the two int4 keys `pg_try_advisory_lock` takes. */
+    key: [number, number]
+};
 
-export const PROVISIONING_LOCK_WAIT_TIMEOUT = 60_000;
-export const PROVISIONING_LOCK_POLL_INTERVAL = 500;
+export const DATABASE_LOCK_WAIT_TIMEOUT = 60_000;
+export const DATABASE_LOCK_POLL_INTERVAL = 500;
 
-type AdvisoryLockStatements = {
+type DatabaseLockStatements = {
     acquire: string,
-    release: string
+    release: string,
+    parameters: unknown[]
 };
 
 /**
  * The statements for a session-scoped advisory lock, or undefined for a driver
  * that has none.
  *
- * The keys are inlined rather than bound, so the two dialects' placeholder
- * syntaxes never enter the picture; both values are compile-time constants.
+ * The identity is BOUND rather than interpolated, so a lock name never reaches
+ * the statement text. Both statements of a dialect take the same parameters.
  *
  * better-sqlite3 falls through deliberately. One database file per container
  * means a second replica cannot reach it, so there is nothing to serialize.
@@ -50,17 +48,19 @@ type AdvisoryLockStatements = {
  * whatever else is running. Same shape and same reasoning as
  * `isDatabaseTypeRowLockable`.
  */
-function statementsFor(type: DatabaseType): AdvisoryLockStatements | undefined {
+function statementsFor(type: DatabaseType, lock: DatabaseLock): DatabaseLockStatements | undefined {
     switch (type) {
         case 'postgres':
             return {
-                acquire: `SELECT pg_try_advisory_lock(${LOCK_KEY_NAMESPACE}, ${LOCK_KEY_ID}) AS acquired`,
-                release: `SELECT pg_advisory_unlock(${LOCK_KEY_NAMESPACE}, ${LOCK_KEY_ID})`,
+                acquire: 'SELECT pg_try_advisory_lock($1, $2) AS acquired',
+                release: 'SELECT pg_advisory_unlock($1, $2)',
+                parameters: [lock.key[0], lock.key[1]],
             };
         case 'mysql':
             return {
-                acquire: `SELECT GET_LOCK('${LOCK_NAME}', 0) AS acquired`,
-                release: `SELECT RELEASE_LOCK('${LOCK_NAME}')`,
+                acquire: 'SELECT GET_LOCK(?, 0) AS acquired',
+                release: 'SELECT RELEASE_LOCK(?)',
+                parameters: [lock.name],
             };
         default:
             return undefined;
@@ -84,7 +84,7 @@ function isAcquired(rows: unknown): boolean {
     return value === true || value === 1 || value === '1';
 }
 
-export type ProvisioningLockOptions = {
+export type DatabaseLockOptions = {
     logger?: Logger,
     /** Total time to wait for the lock before giving up. */
     waitTimeout?: number,
@@ -95,44 +95,36 @@ export type ProvisioningLockOptions = {
 };
 
 /**
- * Run `fn` while holding the deployment-wide provisioning mutex.
+ * Run `fn` while holding a database-wide advisory lock, for work that must not
+ * run on two connections at once.
  *
- * Provisioning is a reconciliation pass built out of find-then-insert pairs
- * with no guard between the two statements, so two replicas booting against an
- * unprovisioned database interleave. One mutex around the whole pass is what
- * closes that, rather than a guard per write site, and it is the only shape
- * that closes BOTH halves of the failure. Half the tables carry a unique key
- * that raises on the loser (`auth_realms`, `auth_clients`, `auth_users`, every
- * junction), and half carry one that cannot: `auth_permissions`,
- * `auth_roles`, `auth_scopes` and `auth_policies` are unique over a tuple
- * containing a NULLABLE column, and every row the default source declares for
- * them is global, so the duplicates are simply written and nothing raises. A
- * duplicate-key guard is unreachable there by construction (issue #3356).
+ * Three mechanics are load-bearing, and each is a way this can be broken
+ * without any visible symptom:
  *
- * The lock is SESSION-scoped in both dialects, so it needs a dedicated query
- * runner for its whole lifetime: `dataSource.query()` would acquire and
- * release on different pooled connections. It is also COUNTED in both, so it
- * is acquired exactly once. Not releasing it explicitly would leak it onto a
- * pooled connection for the lifetime of the process, and a second `setup()`
- * in the same process would then deadlock against itself.
+ * - The lock is SESSION-scoped in both dialects, so it takes a dedicated query
+ *   runner for its whole lifetime. `dataSource.query()` would acquire and
+ *   release on different pooled connections.
+ * - It is COUNTED in both, so it is acquired exactly once.
+ * - It is released explicitly before the runner goes back to the pool. Skipping
+ *   that leaks the lock onto a pooled connection for the lifetime of the
+ *   process, and the next call in that process deadlocks against itself.
  *
- * On timeout this THROWS rather than proceeding unlocked. Proceeding is the
- * pre-fix behaviour, which is the thing being removed; failing the boot is
- * what today's losing replica does anyway, and the deployment already restarts
- * it, by which point the winner has finished and the pass is a no-op.
+ * On timeout this THROWS rather than running `fn` unlocked, so a caller that
+ * cannot tolerate an unserialized run does not silently get one.
  */
-export async function withProvisioningLock<R>(
+export async function withDatabaseLock<R>(
     dataSource: DataSource,
+    lock: DatabaseLock,
     fn: () => Promise<R>,
-    options: ProvisioningLockOptions = {},
+    options: DatabaseLockOptions = {},
 ): Promise<R> {
-    const statements = statementsFor(dataSource.options.type);
+    const statements = statementsFor(dataSource.options.type, lock);
     if (!statements) {
         return fn();
     }
 
-    const waitTimeout = options.waitTimeout ?? PROVISIONING_LOCK_WAIT_TIMEOUT;
-    const pollInterval = options.pollInterval ?? PROVISIONING_LOCK_POLL_INTERVAL;
+    const waitTimeout = options.waitTimeout ?? DATABASE_LOCK_WAIT_TIMEOUT;
+    const pollInterval = options.pollInterval ?? DATABASE_LOCK_POLL_INTERVAL;
     const wait = options.wait ?? ((ms: number) => new Promise<void>((resolve) => {
         setTimeout(resolve, ms);
     }));
@@ -150,20 +142,20 @@ export async function withProvisioningLock<R>(
         let waited = 0;
 
         for (;;) {
-            acquired = isAcquired(await queryRunner.query(statements.acquire));
+            acquired = isAcquired(await queryRunner.query(statements.acquire, statements.parameters));
             if (acquired) {
                 break;
             }
 
             if (waited >= waitTimeout) {
                 throw new InternalError(
-                    `Timed out after ${waitTimeout}ms waiting for the provisioning lock. ` +
-                    'Another replica is provisioning this database; this one will reconcile on restart.',
+                    `Timed out after ${waitTimeout}ms waiting for the database lock "${lock.name}". ` +
+                    'Another process holds it.',
                 );
             }
 
             if (waited === 0) {
-                options.logger?.info('Another replica holds the provisioning lock. Waiting for it to finish.');
+                options.logger?.info(`Another process holds the database lock "${lock.name}". Waiting for it to finish.`);
             }
 
             await wait(pollInterval);
@@ -174,11 +166,11 @@ export async function withProvisioningLock<R>(
     } finally {
         if (acquired) {
             try {
-                await queryRunner.query(statements.release);
+                await queryRunner.query(statements.release, statements.parameters);
             } catch {
                 // A leaked lock self-releases when the session ends, so this
                 // must never displace whatever the caller is already throwing.
-                options.logger?.warn('Could not release the provisioning lock.');
+                options.logger?.warn(`Could not release the database lock "${lock.name}".`);
             }
         }
 
