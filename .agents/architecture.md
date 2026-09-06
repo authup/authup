@@ -521,6 +521,22 @@ Three properties of that shape are load-bearing:
   (`'collection' | 'record'`) and `trapi.config.ts` maps it onto the constant,
   keeping the record subset declared exactly once.
 
+**Known limit: the projection covers reads, not the two bulk deletes.**
+`DELETE /sessions` and `DELETE /session-tokens` decode a rapiq query too
+(`decodeQuery(..., { parameters: ['filters'] })`, which is what discriminates
+the self-service revoke from the admin force-logout), but they carry no marker
+and the document declares no query parameters for them. Nothing reports it:
+the marker sweep walks `@DGet`, and the coverage check asks whether each
+registered SCHEMA has a marked collection read, which `session` and
+`sessionToken` both do. So the gap is invisible to both guards by
+construction rather than by oversight. It is worth knowing because the
+consequence is not merely undocumented but misleading: `DELETE
+/session-tokens` REQUIRES a target filter and answers 400 without one, so an
+operation the document describes as taking no input can only ever fail. Fixing
+it means teaching the marker a filters-only shape; the reason it was not folded
+in here is that it widens the decorator contract for three operations, which is
+a change worth making on its own rather than inside this one.
+
 **The handler is an inline preset in `trapi.config.ts`**, composed as
 `preset: { name: 'authup', extends: ['@routup/decorators/preset'], methods: [querySchemaHandler] }`
 and built with `method()` from `@trapi/core`. It reads both arguments, resolves
@@ -648,13 +664,25 @@ Where it is NOT mounted is the design:
 **Authenticated, ungated, and switchable.** `ForceLoggedInMiddleware` with no
 permission gate: the descriptions are the upper bound of what may be ASKED,
 never of what a caller may read, and every answer stays subject to that
-caller's own permissions. What the login gate buys is that the whole surface is
-not enumerable anonymously; what `core.querySchemaDiscoveryEnabled`
-(`QUERY_SCHEMA_DISCOVERY_ENABLED`, **default true**) buys is not serving it at
-all, since one request enumerates every entity, column and relation a caller
-would otherwise probe for one endpoint at a time. That is the GraphQL
-disable-introspection posture, and it is a toggle rather than a default-off
-because the surface is documentation for a caller that already authenticated.
+caller's own permissions. `core.querySchemaDiscoveryEnabled`
+(`QUERY_SCHEMA_DISCOVERY_ENABLED`, **default true**) turns the routes off
+entirely, which is the GraphQL disable-introspection posture, and it is a
+toggle rather than a default-off because the surface is documentation for a
+caller that already authenticated.
+
+**The login gate does NOT make the vocabulary secret, and nothing here should
+be written as though it does.** `/docs` is mounted with no authentication and
+`core.middlewareSwagger` defaults to true, so the same 26 descriptions,
+`indexes` included, are readable anonymously at `/docs/openapi.json` on a
+default deployment. That is deliberate rather than an oversight: an OpenAPI
+document is public API documentation, and `/docs` already published every
+entity component schema, which is every column name of every entity, long
+before this projection existed. What `/schemas` adds over the document is not
+confidentiality but freshness and addressability: it is served by the running
+process rather than by a build artifact, it carries `meta.hash` so a client can
+tell whether its copy is current, and it answers per entity. Treat the query
+vocabulary as public and keep the real defence where it already is, on the
+reads themselves, which stay permission-gated and per-actor narrowed.
 Disabled, both routes answer 404 and `meta.schema` is unaffected. The single
 lookup guards own-property, because the description record is a plain object
 literal and `/schemas/constructor` would otherwise answer with a member of
@@ -3644,10 +3672,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the seven security toggles
+**Env semantics are per entry, not per type**: the eight security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.
