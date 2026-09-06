@@ -73,7 +73,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 | app/modules/logger           | Logging (Winston)                                                                                          |
 | app/modules/vault            | Secret management                                                                                          |
 | app/modules/runtime          | Runtime lifecycle                                                                                          |
-| app/modules/swagger          | API documentation generation                                                                               |
+| app/modules/swagger          | API documentation generation. The document itself is built by `trapi generate` plus the `scripts/openapi-query-schemas.mjs` pass, never at runtime; this only serves it (see *Query vocabulary discovery*) |
 | app/modules/provisioning     | Wires repository adapters to core provisioning synchronizers; hosts provisioning sources (default, file, composite) |
 
 ## Repository Pattern (Ports & Adapters)
@@ -466,6 +466,252 @@ usable at the service level and nothing in core depends on TypeORM:
   `defineSchemaRegistryWithDataSource` with the `registry` option;
   already-registered schemas take precedence). Nothing is wired today — the
   explicit allow-lists stay the sole query surface.
+
+### Query vocabulary discovery (plan 077)
+
+**One registry, three projections, and the parity is provable rather than
+asserted.** `schemaRegistry` is what the decoder enforces; every surface that
+PUBLISHES the vocabulary is a projection of it, serving the same
+`SchemaDescription` objects `describeQuerySchema` memoizes:
+
+- `meta.schema` on every query-capable response (issue #1649, plan 076): the
+  full description on a collection read, the `RECORD_QUERY_PARAMETERS` subset
+  on a record read;
+- `GET /schemas` and `GET /schemas/:name`;
+- the OpenAPI document's root `x-authup-schemas` map, projected at build time.
+
+None of the three re-derives anything: `describeSchemaRegistry()`
+(`core/query/describe.ts`) is one pass over `schemaRegistry.getAll()`, and what
+it returns is what all three serve, byte for byte, `indexes` included. Nothing
+is filtered on the way out, which is what makes the parity spec a deep-equal
+rather than a shape comparison (testing.md → *The OpenAPI parity gate*).
+Stripping `indexes` from one projection would buy nothing (it has shipped on
+the wire in `meta.schema` since #1649) and would cost exactly that: the claim
+stops being checkable by equality and becomes a per-key convention two
+surfaces can disagree about. `computeSchemaRegistryHash()` (`core/query/hash.ts`)
+fingerprints the whole set and is likewise computed once and read everywhere:
+`x-authup-schema-hash` in the document, `meta.hash` on `GET /schemas`, and the
+comparison the swagger middleware makes at boot.
+
+**`@DQuerySchema` binds a route to its schema, and it is a decorator because
+trapi reads decorators.** `@DQuerySchema(EntityType.ROLE, 'collection')` /
+`(EntityType.ROLE, 'record')` sits next to `@DGet` on each of the query-capable
+reads (`adapters/http/decorators/query-schema.ts`), a runtime no-op like the
+routup preset's own `DTags` / `DDescription` / `DHidden`. It cannot validate
+its own arguments, since it runs at class-definition time and a throw there
+would take the server down over a documentation concern; the argument types are
+the guard at the call site and the trapi handler is the guard at build time.
+
+Three properties of that shape are load-bearing:
+
+- **It is per METHOD, so a dual-mounted controller inherits it on every mount.**
+  The extension lands on both `/roles` and `/realms/{realmId}/roles` with no
+  path-string map anywhere, which is what a hand-maintained route map would rot
+  by: forget one mount and a per-schema completeness check still passes.
+- **A response-component heuristic cannot replace it.** Deriving the schema
+  name from the 200 component (`EntityCollectionResponse<X>` → lowercase-first
+  `X`) is falsified on day one by `PolicyController`, which returns
+  `EntityCollectionResponse<PolicyResponse>` and yields `policyResponse`, a name
+  the registry does not hold.
+- **Both arguments must be an enum member or a string literal.**
+  `@trapi/metadata` folds a decorator argument from the identifier's own value
+  declaration, and for an import that declaration is the `ImportSpecifier`,
+  which carries no initializer, so passing `RECORD_QUERY_PARAMETERS` itself
+  resolves to `unresolvable`. The route therefore names a SHAPE
+  (`'collection' | 'record'`) and `trapi.config.ts` maps it onto the constant,
+  keeping the record subset declared exactly once.
+
+**The handler is an inline preset in `trapi.config.ts`**, composed as
+`preset: { name: 'authup', extends: ['@routup/decorators/preset'], methods: [querySchemaHandler] }`
+and built with `method()` from `@trapi/core`. It reads both arguments, resolves
+the name through `schemaRegistry.getOrFail` (because `EntityType` is wider than
+the registry, four of its members carrying no schema, so the marker's own type
+cannot rule them out) and pushes an `x-query-schema` extension onto the method
+draft. Both failure modes throw and fail the generate: an argument the resolver
+cannot fold, and a schema name the registry does not hold. Skipping either
+would emit an operation that reads as unmarked or points at nothing, which is
+the silent gap the marker exists to close.
+
+**What a decorator handler can and cannot set is not obvious and decided the
+architecture.** `draft.extensions` and `draft.responses` land on the emitted
+operation; `draft.parameters` and `draft.operationId` are SILENTLY DISCARDED,
+because `MethodGenerator` rebuilds both from its own walk. That is why
+everything except the marker itself is assigned after the generate rather than
+by the handler. Root-level keys have the same problem from the other side: an
+extension attaches per controller, per operation or per property and never at
+the document root, so `x-authup-schemas` and `x-authup-schema-hash` ride
+`swagger.data.extra` (trapi's `specificationExtra`, merged into the finished
+spec), which is the only channel that reaches it.
+
+**`scripts/openapi-query-schemas.mjs` is the post-generate pass**, chained as
+`"build:swagger": "trapi generate && node scripts/openapi-query-schemas.mjs"`.
+It reads the EMITTED DOCUMENT rather than the registry, so it carries no
+runtime dependency of its own and cannot describe a registry other than the one
+the document was generated from; the only thing it reads from `src/` is the
+declaration pair the source cross-check compares. It does four things:
+
+1. **Appends the five query parameters** to each marked operation, described
+   from that entity's own `x-authup-schemas` entry, plus the
+   `x-query-schema.discovery` pointer into that map (written here rather than
+   by the handler, because it is a statement about the assembled document and
+   only resolvable once the root map exists). A record read gets only what its
+   marker's parameter subset covers.
+2. **Synthesizes the path parameters** trapi could not see. 61 of the
+   templated operations declared no `realmId`: every `/realms/{realmId}/…`
+   mount reads the segment through `getRequestRealmID(event)` rather than a
+   `@DPath` parameter, and trapi builds an operation's parameters solely from
+   its TypeScript parameter declarations. OpenAPI requires every variable of a
+   path template to be declared, so undeclared, the whole realm-scoped half of
+   the API is uncallable from anything generated off the document.
+3. **Declares a `default` error response** referencing one `ErrorResponse`
+   component. Authup answers every failure with one body whatever the status
+   (`serializeError(sanitizeError(e))`), which is exactly what `default`
+   describes. `code` stays a plain string rather than an enum of the closed
+   `ErrorCode` set: an OpenAPI enum is closed on the wire too, so a generated
+   client would fail to deserialize an error carrying a code added after it was
+   generated.
+4. **Assigns operation ids from method plus path.** `@trapi/swagger` builds one
+   from the TypeScript method name alone and uniquifies collisions with a
+   positional `_2` suffix in traversal order, so `GetMany_17` is
+   `GET /permission-policies` and inserting a controller that sorts earlier
+   renumbers everything after it. Method plus path is the only identity in this
+   document that is stable under insertion, and it is unique by construction;
+   uniqueness is still asserted, because the segment transform folds separators
+   away and two paths differing only in punctuation would collide silently.
+
+**It APPENDS to `parameters` and never assigns.** 136 parameters are already
+there, all `in: path`, and an assignment would delete every one of them and
+break every templated route while the document still looked plausible. The pass
+ends by re-deriving each path template's variable set and failing the build on
+one that is still missing, which is the guard for the NEXT enrichment rather
+than for this one.
+
+**The parameters are generic and comma-separated, never one bracket parameter
+per key.** Per-key enums multiply the document by the size of every allow-list,
+nested `deepObject` is spec-undefined (OAI #1706), and rapiq accepts two filter
+dialects on one parameter, which no schema can capture. The deeper reason is
+that a first-class enum READS as a guarantee while the relation gate (#3295)
+and the field visibility conditions (#3322) strip per actor, so a client
+generated against it would call the document wrong. Each description therefore
+carries the upper-bound caveat, and `fields` states the UNION of `default` and
+`allowed`, since those are disjoint halves of one allow-list and naming
+`allowed` alone would advertise `email` as the only selectable column of a user.
+
+**Three coverage guards, all failing the build**, because an enrichment nothing
+checks is a convention rather than an invariant:
+
+| Guard | Fails on |
+|---|---|
+| marker → document | a marker naming a schema `x-authup-schemas` does not describe |
+| registry → operations | a registered schema no collection read is marked with (the direction a per-operation map cannot see). The exclusion list is empty, which is the strongest state it can be in, and an entry that stops being needed fails the build the way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does |
+| marker → source | a `describeQuerySchema` call in an UNMARKED method. The reverse is allowed and deliberate: `PolicyController.getOneExpanded` delegates, and `GET /userinfo` answers a flat claims document |
+
+**`apps/server-core/tsconfig.json` declares `baseUrl` explicitly, and that line
+is what makes the whole document typed.** `@trapi/metadata`'s `loadTSConfig`
+reads the config as plain JSON and runs `convertCompilerOptionsFromJson`, which
+neither follows `extends` nor sets `pathsBasePath`, so the root config's
+`baseUrl` never reaches trapi and every `paths` entry is looked up under
+`apps/server-core/` instead of the repository root. Missed, they fall through
+node_modules onto the workspace symlink, i.e. onto `packages/*/dist/*.d.ts`:
+the entire typed payload surface becomes a function of 21 build artifacts
+existing, collapsing to `additionalProperties: true` (204 component schemas → 30)
+when they do not. **trapi still exits 0 and reports success**, so a CI run on a
+warm nx cache that skipped the package builds would publish a fully untyped
+specification behind a green check. It is a no-op for `tsc`, which already
+inherited `baseUrl: "."` from the root config and resolves an inherited relative
+`baseUrl` against the declaring config's directory, which is that same root.
+
+**`GET /schemas` + `GET /schemas/:name`** (`controllers/workflows/schema/`,
+`core/query/discovery.ts`; typed as `client.schema.getMany()/getOne(name)` in
+`@authup/core-http-kit`). The response is deliberately NOT the entity envelope:
+a schema is not an entity, so the collection `meta` carries what a reader of a
+static bound needs, the `version` that produced it, the `hash` a cached copy is
+compared against, and `recordParameters`, the subset a single-record read
+decodes. That last one is one list shared by every entity, so it is advertised
+once in `meta` rather than repeated in 26 descriptions or served from a second
+endpoint. `getOne` takes a plain string rather than an `EntityType`, because the
+registry is documented as extensible and the natural caller reads the name back
+out of a response's own `meta.schema`.
+
+Where it is NOT mounted is the design:
+
+- **flat only, never dual-mounted.** A schema is realm-independent policy, so a
+  copy under `/realms/:realmId/schemas` would advertise an identical document
+  under a path implying it varies by realm.
+- **never `.well-known/*`** (RFC 8615): authup's `.well-known` is the
+  realm-scoped OIDC surface.
+- **never a per-entity `/roles/schema`.** `schema` matches the entity name
+  charset `/^[a-z0-9-_.]+$/`, so that path is a valid `GET /roles/:id` lookup
+  today and would shadow a role someone named `schema`. A genuine route
+  collision, not a stylistic preference.
+
+**Authenticated, ungated, and switchable.** `ForceLoggedInMiddleware` with no
+permission gate: the descriptions are the upper bound of what may be ASKED,
+never of what a caller may read, and every answer stays subject to that
+caller's own permissions. What the login gate buys is that the whole surface is
+not enumerable anonymously; what `core.querySchemaDiscoveryEnabled`
+(`QUERY_SCHEMA_DISCOVERY_ENABLED`, **default true**) buys is not serving it at
+all, since one request enumerates every entity, column and relation a caller
+would otherwise probe for one endpoint at a time. That is the GraphQL
+disable-introspection posture, and it is a toggle rather than a default-off
+because the surface is documentation for a caller that already authenticated.
+Disabled, both routes answer 404 and `meta.schema` is unaffected. The single
+lookup guards own-property, because the description record is a plain object
+literal and `/schemas/constructor` would otherwise answer with a member of
+`Object.prototype`.
+
+**No handler sets an ETag on any of this, and that is not an omission.** routup
+derives a content ETag for every JSON response and answers `If-None-Match`
+itself, OVERWRITING whatever the handler set, so a hand-rolled registry-hash
+ETag would never reach a client and the comparison would never match.
+Conditional GET is therefore left to routup, which is already correct here
+because the body is a pure function of the registry; the fingerprint a caller
+wants to compare rides in `meta.hash` and in `x-authup-schema-hash`, where
+nothing can overwrite it.
+
+**The document is served next to the UI, at `/docs/openapi.json`**
+(`adapters/http/middleware/built-in/swagger.ts`). That route is the only
+machine-readable one, since `@routup/swagger-ui` inlines the document into its
+HTML shell and answers every other path under the mount with that same shell,
+so it must be registered BEFORE the plugin or it is unreachable and the failure
+is a 200 carrying the wrong content type rather than an error. Two more
+properties of that middleware:
+
+- **a missing document disables the surface instead of aborting the boot.**
+  `swaggerUI()` reads the file synchronously inside its own `install` and
+  nothing catches that, while the gate defaults on and `build:server:js`
+  carries `clean: true` and wipes the directory the document lives in. So an
+  interrupted build used to leave a server that would not start, over
+  documentation.
+- **it warns when the document's `x-authup-schema-hash` disagrees with the
+  running process's own.** Under `authup dev` server-core runs from source
+  while the document is always the last built one, so this line is the only
+  signal that the two have drifted.
+
+**The docs site publishes the same projection.**
+`scripts/query-reference.mjs` renders the per-entity tables of
+`docs/src/guide/development/api-query-reference.md` out of the emitted
+document, and `.github/workflows/docs.yml` writes it before it builds the site,
+exactly as it writes `authup config schema` into
+`docs/src/public/schema/config.json`. Generated and gitignored for the same
+reason both are: a committed table would be wrong within a release and nothing
+would say so. It reads the document rather than the registry because only the
+document carries both halves the page needs, the descriptions AND the
+`x-query-schema` markers that say which routes each one governs. The prose half
+(`api-query-language.md`) is committed, since the dialect changes when rapiq's
+does rather than when a schema does. One consequence to keep in mind: the
+generated page is absent from a plain checkout, so `config.mjs` carries an
+`ignoreDeadLinks` entry for it and names the local command that produces it.
+
+**Two plan-077 questions are settled and should not be re-litigated.**
+Per-actor EFFECTIVE vocabulary, when it comes, evolves `meta.schema` and not a
+`GET /schemas/:name?effective=true`: `meta.schema` rides a response that is
+already per-actor and already uncacheable, while an effective mode on the
+discovery route would make the body depend on the caller and break the
+fingerprint comparison the whole surface is built around. And the discovery
+toggle ships default-ON: the routes are authenticated, they publish an upper
+bound rather than an entitlement, and a default-off documentation surface is
+one nobody discovers.
 
 ### Adapter Implementation
 
@@ -1077,6 +1323,7 @@ Controller conventions:
 - Read the routup event via `@DContext() event: IAppEvent`
 - Read the body via `@DBody() data: <RequestType>` (decorator awaits `readRequestBody` internally)
 - Read query via `useRequestQuery(event)` from `@routup/basic/query`
+- A method that decodes one additionally carries `@DQuerySchema(<EntityType>, 'collection' | 'record')` next to its `@DGet`. It is a build-time marker with no runtime effect, and it is what puts the endpoint's query parameters into the OpenAPI document; a `describeQuerySchema` call in an unmarked method fails the build. See *Query vocabulary discovery*.
 - Read path params via `@DPath('id') id: string` or `event.params.id`
 - Build actor via `buildActorContext(event)`
 - For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating — route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
