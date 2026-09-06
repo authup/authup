@@ -10,6 +10,16 @@ import type { Logger } from '@authup/server-kit';
 import type { DataSource, DatabaseType } from 'typeorm';
 
 /**
+ * REMOVAL TRIGGER: this is a deliberate local fallback, not a permanent home.
+ * The mechanism is dialect knowledge and belongs upstream, next to its exact
+ * structural sibling `withForeignKeyChecksDisabled`; proposed as
+ * tada5hi/typeorm-extension#1441. When that lands, delete this file and call
+ * the library, keeping the spec as the conformance check that it treats
+ * mysql's string answer and the sqlite passthrough the way this deployment
+ * needs. The one call site is `ProvisionerModule.setup`.
+ */
+
+/**
  * A mutex identity. The two dialects address a lock differently, so a lock
  * carries both spellings and the caller owns the values.
  *
