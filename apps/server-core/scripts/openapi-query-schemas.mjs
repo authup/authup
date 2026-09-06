@@ -35,6 +35,7 @@ const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'
 
 const SCHEMA_MAP_KEY = 'x-authup-schemas';
 const MARKER_KEY = 'x-query-schema';
+const ERROR_SCHEMA_NAME = 'ErrorResponse';
 
 /**
  * Registered schemas that legitimately serve no collection read, and so may
@@ -42,7 +43,7 @@ const MARKER_KEY = 'x-query-schema';
  * entry whose schema DOES have a marked collection read fails the build, the
  * way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does.
  *
- * Empty today, and that is the strongest possible state — every registered
+ * Empty today, which is the strongest state it can be in: every registered
  * schema is reachable from the document.
  */
 const COLLECTION_COVERAGE_EXCLUSIONS = [];
@@ -141,8 +142,8 @@ function readSchemaIdentifiers() {
  *
  * A marked method with NO describe call is fine and not reported: two of them
  * exist deliberately (`PolicyController.getOneExpanded` delegates to `getOne`,
- * and `GET /userinfo` answers a flat claims document). The reverse — a
- * describe call outside a marked method — is a route that decodes a query and
+ * and `GET /userinfo` answers a flat claims document). The reverse is not:
+ * a describe call outside a marked method is a route that decodes a query and
  * documents none, which is the gap the marker exists to close.
  */
 function assertMarkersMatchDescribeCalls(failures) {
@@ -206,7 +207,7 @@ function assertMarkersMatchDescribeCalls(failures) {
 /**
  * The document's own halves: a marker points at a schema name, the root map
  * resolves it. Checked in both directions, because each miss is silent in a
- * different way — a dangling pointer documents a vocabulary nothing serves,
+ * different way. A dangling pointer documents a vocabulary nothing serves,
  * and an unreferenced schema is an endpoint whose query surface never made it
  * into the document at all.
  */
@@ -350,7 +351,7 @@ function buildFilterParameter(description) {
  * description, not a subset and its superset: `default` is the projection a
  * request naming no field receives, `allowed` the columns it has to ask for
  * (`client.secret`, `key.certificate`, `user.email`). What a caller may
- * select is the union, so the union is what the description states — naming
+ * select is the union, so the union is what the description states. Naming
  * `allowed` alone would read as if the opt-in half were the whole surface.
  */
 function buildFieldsParameter(description, record) {
@@ -515,6 +516,84 @@ function enrichQueryOperations(document) {
     return { enriched, appended };
 }
 
+/**
+ * Every operation declared a 200 and nothing else, so a generated client had
+ * no error model at all. Authup answers every failure with one body, whatever
+ * the status - `serializeError(sanitizeError(e))` in the error middleware -
+ * which is exactly what `default` is for.
+ *
+ * Per-status responses are deliberately sparse. Which statuses an operation
+ * can answer with is not derivable from the document: whether a route is
+ * authenticated lives in its middleware list, so a blanket 401/403/404 would
+ * be a guess stamped on 227 operations. The one status that IS derivable is
+ * the 400 a collection read answers when its query fails to decode, and that
+ * is worth stating next to the parameters this pass just added.
+ */
+function declareErrorResponses(document) {
+    document.components = document.components ?? {};
+    document.components.schemas = document.components.schemas ?? {};
+
+    document.components.schemas[ERROR_SCHEMA_NAME] = {
+        type: 'object',
+        description: [
+            'The uniform error body. Every failing request answers with this shape, whatever the status;',
+            'the status carries the severity and `code` the semantics.',
+            'Subclasses add their own members - `issues` on a validation failure, `error` and `error_description` on the OAuth2 surface - so the object is open.',
+        ].join(' '),
+        properties: {
+            name: {
+                type: 'string',
+                description: 'Class name of the error that was raised.',
+            },
+            message: {
+                type: 'string',
+                description: 'Human-readable summary. Replaced with a generic line on a 5xx, so no internal detail reaches the caller.',
+            },
+            code: {
+                type: 'string',
+                description: 'Semantic error code, one of `@authup/errors` `ErrorCode`. Stable across releases and the value to branch on.',
+            },
+            '@instanceof': {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'The error\'s marker chain, most general first. `@authup/errors` guards match on it, so a rehydrated error keeps its inheritance.',
+            },
+        },
+        required: ['name', 'message', 'code'],
+        additionalProperties: true,
+    };
+
+    const reference = { $ref: `#/components/schemas/${ERROR_SCHEMA_NAME}` };
+    const content = { 'application/json': { schema: reference } };
+
+    let declared = 0;
+
+    for (const { operation } of operations(document)) {
+        operation.responses = operation.responses ?? {};
+
+        if (!operation.responses.default) {
+            operation.responses.default = {
+                description: 'The request failed. The status carries the semantics, the body is the uniform error object.',
+                content,
+            };
+            declared++;
+        }
+
+        const decodes = (operation.parameters ?? [])
+            .some((entry) => entry.in === 'query' && entry.name === 'filter');
+
+        if (decodes && !operation.responses['400']) {
+            operation.responses['400'] = {
+                description: 'The `filter` expression could not be parsed, or it named a key the schema does not allow. Every other query parameter fails soft: an unknown key is dropped rather than rejected, and so is an unknown key in the bracket filter form.',
+                content,
+            };
+            declared++;
+        }
+    }
+
+    return declared;
+}
+
 function pascalCase(input) {
     return input
         .split(/[^A-Za-z0-9]+/)
@@ -599,6 +678,7 @@ if (failures.length > 0) {
 const pathParameters = synthesizePathParameters(document);
 const { enriched, appended } = enrichQueryOperations(document);
 const operationIds = assignOperationIds(document, failures);
+const responses = declareErrorResponses(document);
 
 // Every path variable has to be declared by every operation on that path, and
 // the enrichment appends rather than assigns for exactly that reason: an
@@ -630,4 +710,4 @@ if (failures.length > 0) {
 // the enriched document is what this pass changed.
 fs.writeFileSync(DOCUMENT_PATH, JSON.stringify(document, null, 4));
 
-console.log(`[openapi] ${operationIds} operations: ${enriched} query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized`);
+console.log(`[openapi] ${operationIds} operations: ${enriched} query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized, ${responses} error responses declared`);
