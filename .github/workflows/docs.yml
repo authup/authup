@@ -7,6 +7,13 @@ on:
         paths:
             - 'docs/**'
             - 'apps/authup/**'
+            # deliberately the whole workspace rather than the query
+            # subtree: the reference page derives its per-entity tables from
+            # the schema registry, but its route lists from the
+            # `@DQuerySchema` markers on the controllers and its release from
+            # the manifest, so a narrower filter would let a newly mounted
+            # read go missing from a published page with nothing to notice it.
+            - 'apps/server-core/**'
             - 'packages/server-config/**'
             - 'packages/server-config-kit/**'
             - '.github/workflows/docs.yml'
@@ -16,6 +23,13 @@ on:
         paths:
             - 'docs/**'
             - 'apps/authup/**'
+            # deliberately the whole workspace rather than the query
+            # subtree: the reference page derives its per-entity tables from
+            # the schema registry, but its route lists from the
+            # `@DQuerySchema` markers on the controllers and its release from
+            # the manifest, so a narrower filter would let a newly mounted
+            # read go missing from a published page with nothing to notice it.
+            - 'apps/server-core/**'
             - 'packages/server-config/**'
             - 'packages/server-config-kit/**'
             - '.github/workflows/docs.yml'
@@ -51,8 +65,19 @@ jobs:
                   mkdir -p docs/src/public/schema
                   node apps/authup/dist/index.mjs config schema > docs/src/public/schema/config.json
 
-            # after the schema, and again: the repo build above ran the
-            # vitepress build before the file existed.
+            # The per-entity query vocabulary, one section per registered
+            # schema, read out of the OpenAPI document the build above
+            # emitted. Generated for the same reason as the schema: the
+            # published tables are a projection of the registry, so a page
+            # that could lag behind it would document a query surface no
+            # deployment serves.
+            - name: Generate query reference
+              run: |
+                  node apps/server-core/scripts/query-reference.mjs \
+                      > docs/src/guide/development/api-query-reference.md
+
+            # after the generated pages, and again: the repo build above ran
+            # the vitepress build before they existed.
             - name: Build docs
               run: npm run build -w docs
 

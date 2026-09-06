@@ -32,6 +32,20 @@ const guideContributingSidebar = [
 export default defineConfig({
     title: 'Authup',
     base: '/',
+    /**
+     * `api-query-reference` is generated, not committed: the docs workflow
+     * writes it from the server-core schema registry before it builds the
+     * site, so the published tables cannot lag behind the registry. It is
+     * therefore absent from a plain checkout, and the link to it from
+     * `api-query-language` would fail the build here rather than in CI.
+     *
+     * To have the real page while working on the docs locally:
+     *
+     *   npm run build -w apps/server-core
+     *   node apps/server-core/scripts/query-reference.mjs \
+     *       > docs/src/guide/development/api-query-reference.md
+     */
+    ignoreDeadLinks: [/(^|\/)api-query-reference$/],
     themeConfig: {
         socialLinks: [
             {
@@ -368,6 +382,14 @@ export default defineConfig({
                         {
                             text: 'OAuth2',
                             link: '/guide/development/api-oauth2',
+                        },
+                        {
+                            text: 'Query Language',
+                            link: '/guide/development/api-query-language',
+                        },
+                        {
+                            text: 'Query Reference',
+                            link: '/guide/development/api-query-reference',
                         },
                         {
                             text: 'Examples',
