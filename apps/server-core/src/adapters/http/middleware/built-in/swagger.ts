@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger-ui';
 import { swaggerUI } from '@routup/swagger-ui';
 import type { IApp, Plugin } from 'routup';
+import { defineCoreHandler } from 'routup';
 import type { Logger } from '@authup/server-kit';
 import { normalizeError } from '@authup/errors';
 
@@ -68,10 +69,12 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
     if (schemaHash) {
         const documentHash = document[SCHEMA_HASH_KEY];
         if (documentHash !== schemaHash) {
+            const found = typeof documentHash === 'string' ? documentHash : 'none';
+
             // Under `authup dev` server-core runs from source while the
             // document is always the last built one, so this line is the
             // only signal that the two have drifted apart.
-            logger?.warn(`The OpenAPI document ${documentPath} was generated for a different query vocabulary than this process serves (document: ${documentHash || 'none'}, runtime: ${schemaHash}). Rebuild it with "npm run build".`);
+            logger?.warn(`The OpenAPI document ${documentPath} was generated for a different query vocabulary than this process serves (document: ${found}, runtime: ${schemaHash}). Rebuild it with "npm run build".`);
         }
     }
 
@@ -81,7 +84,7 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
             // Registered BEFORE the UI: that plugin answers every unmatched
             // path under the mount with its HTML shell, so a route declared
             // after it is never reached.
-            router.get('/openapi.json', (event) => {
+            router.get('/openapi.json', defineCoreHandler((event) => {
                 event.response.headers.set('content-type', 'application/json; charset=utf-8');
 
                 // The file verbatim rather than a re-serialization of the
@@ -89,7 +92,7 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
                 // built. routup computes the ETag and answers a conditional
                 // request from it.
                 return content;
-            });
+            }));
 
             swaggerUI(documentPath, options).install(router);
         },

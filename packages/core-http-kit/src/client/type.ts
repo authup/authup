@@ -32,6 +32,7 @@ import type {
     IRoleAPI,
     IRoleAttributeAPI,
     IRolePermissionAPI,
+    ISchemaAPI,
     IScopeAPI,
     ISessionAPI,
     ISessionTokenAPI,
@@ -94,6 +95,14 @@ export interface IClient extends IBaseClient {
     readonly roleAttribute : IRoleAttributeAPI;
 
     readonly rolePermission : IRolePermissionAPI;
+
+    /**
+     * The queryable vocabulary of every registered entity: which columns may
+     * be projected, filtered and sorted on, which relations traversed, and
+     * the pagination bound. Gated behind `querySchemaDiscoveryEnabled` —
+     * a deployment that closed the surface answers 404.
+     */
+    readonly schema : ISchemaAPI;
 
     readonly scope : IScopeAPI;
 
