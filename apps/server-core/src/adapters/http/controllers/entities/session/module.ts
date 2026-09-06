@@ -32,9 +32,10 @@ import {
     resolveIntrospectionSubject, 
     sessionSchema, 
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestIdentity, useRequestSessionId } from '../../../request/index.ts';
-import { IdentityType } from '@authup/core-kit';
+import { EntityType, IdentityType } from '@authup/core-kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { OAuth2SubKind, serializeOAuth2Scope } from '@authup/specs';
 import { useRequestCookie } from '@routup/basic/cookie';
@@ -146,6 +147,7 @@ export class SessionController {
         };
     }
 
+    @DQuerySchema(EntityType.SESSION, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -165,6 +167,7 @@ export class SessionController {
         };
     }
 
+    @DQuerySchema(EntityType.SESSION, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

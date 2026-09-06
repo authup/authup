@@ -12,6 +12,7 @@ import type {
     TrustAnchorUpdatePayload,
 } from '@authup/core-http-kit';
 import type { TrustAnchor } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import {
     DBody,
@@ -30,6 +31,7 @@ import {
     describeQuerySchema,
     trustAnchorSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -50,6 +52,7 @@ export class TrustAnchorController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.TRUST_ANCHOR, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -67,6 +70,7 @@ export class TrustAnchorController {
         };
     }
 
+    @DQuerySchema(EntityType.TRUST_ANCHOR, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

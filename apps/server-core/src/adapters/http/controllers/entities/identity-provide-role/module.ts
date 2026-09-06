@@ -24,6 +24,7 @@ import type {
     IdentityProviderRoleMappingUpdatePayload,
 } from '@authup/core-http-kit';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type {
     IIdentityProviderRoleMappingService,
 } from '../../../../../core/index.ts';
@@ -32,6 +33,7 @@ import {
     describeQuerySchema,
     identityProviderRoleMappingSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -50,6 +52,7 @@ export class IdentityProviderRoleMappingController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -69,6 +72,7 @@ export class IdentityProviderRoleMappingController {
         };
     }
 
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

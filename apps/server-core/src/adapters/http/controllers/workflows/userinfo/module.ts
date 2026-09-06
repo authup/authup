@@ -14,7 +14,9 @@ import {
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { User } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IUserService } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -37,6 +39,7 @@ export class UserInfoController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.USER, 'record')
     @DGet('', [ForceLoggedInMiddleware])
     async get(
         @DContext() event: IAppEvent,

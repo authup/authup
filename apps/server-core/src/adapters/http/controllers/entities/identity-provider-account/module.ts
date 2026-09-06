@@ -14,6 +14,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
@@ -26,6 +27,7 @@ import {
     describeQuerySchema,
     identityProviderAccountSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
@@ -42,6 +44,7 @@ export class IdentityProviderAccountController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER_ACCOUNT, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -61,6 +64,7 @@ export class IdentityProviderAccountController {
         };
     }
 
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER_ACCOUNT, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

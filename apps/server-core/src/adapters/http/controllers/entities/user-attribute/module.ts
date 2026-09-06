@@ -24,12 +24,14 @@ import type {
     UserAttributeUpdatePayload,
 } from '@authup/core-http-kit';
 import type { UserAttribute } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IUserAttributeService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     userAttributeSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -46,6 +48,7 @@ export class UserAttributeController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.USER_ATTRIBUTE, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -78,6 +81,7 @@ export class UserAttributeController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.USER_ATTRIBUTE, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,

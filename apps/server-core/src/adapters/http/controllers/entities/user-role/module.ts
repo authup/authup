@@ -23,12 +23,14 @@ import type {
     UserRoleCreatePayload,
 } from '@authup/core-http-kit';
 import type { UserRole } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IUserRoleService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     userRoleSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -47,6 +49,7 @@ export class UserRoleController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.USER_ROLE, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -79,6 +82,7 @@ export class UserRoleController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.USER_ROLE, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

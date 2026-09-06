@@ -39,6 +39,7 @@ import type {
     OpenIDIdentityProvider,
 } from '@authup/core-kit';
 import {
+    EntityType,
     EventName,
     EventRefType,
     EventScope,
@@ -102,6 +103,7 @@ import {
     useRequestParamID,
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
@@ -150,6 +152,7 @@ export class IdentityProviderController {
     // does not extend with extra attributes, so the response is the schema's
     // fields.default projection. The record read below carries them and is
     // gated for exactly that reason.
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'collection')
     @DGet('', [])
     async getProviders(
         @DContext() event: IAppEvent,
@@ -173,6 +176,7 @@ export class IdentityProviderController {
         };
     }
 
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getProvider(
         @DPath('id') id: string,

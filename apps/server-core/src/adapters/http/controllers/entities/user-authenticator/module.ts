@@ -15,7 +15,7 @@ import {
     DPost,
     DTags,
 } from '@routup/decorators';
-import { IdentityType } from '@authup/core-kit';
+import { EntityType, IdentityType } from '@authup/core-kit';
 import type { UserAuthenticator } from '@authup/core-kit';
 import { BadRequestError } from '@authup/errors';
 import type { IAppEvent } from 'routup';
@@ -34,6 +34,7 @@ import {
     describeQuerySchema,
     userAuthenticatorSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestIdentity } from '../../../request/index.ts';
 
@@ -69,6 +70,7 @@ export class UserAuthenticatorController {
         return id;
     }
 
+    @DQuerySchema(EntityType.USER_AUTHENTICATOR, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DPath('id') id: string,
@@ -104,6 +106,7 @@ export class UserAuthenticatorController {
         return result;
     }
 
+    @DQuerySchema(EntityType.USER_AUTHENTICATOR, 'record')
     @DGet('/:deviceId', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

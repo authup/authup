@@ -20,6 +20,7 @@ import {
 import { EntityNotFoundError } from '@authup/errors';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { Client } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
@@ -36,6 +37,7 @@ import {
     clientSchema,
     describeQuerySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -62,6 +64,7 @@ export class ClientController {
         this.repository = ctx.repository;
     }
 
+    @DQuerySchema(EntityType.CLIENT, 'collection')
     @DGet('', [])
     async getMany(
         @DContext() event: IAppEvent,
@@ -81,6 +84,7 @@ export class ClientController {
         };
     }
 
+    @DQuerySchema(EntityType.CLIENT, 'record')
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,

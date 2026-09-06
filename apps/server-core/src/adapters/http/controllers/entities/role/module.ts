@@ -26,12 +26,14 @@ import type {
     RoleUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Role } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IRoleService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     roleSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -48,6 +50,7 @@ export class RoleController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.ROLE, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(@DContext() event: IAppEvent): Promise<EntityCollectionResponse<Role>> {
         const actor = buildActorContext(event);
@@ -63,6 +66,7 @@ export class RoleController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.ROLE, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
