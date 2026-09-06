@@ -12,6 +12,7 @@ import type { IContainer } from 'eldin';
 import { OAuth2BackchannelLogoutNotifier, SessionManager } from '../../../core/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { OAuth2InjectionToken } from '../oauth2/index.ts';
 
@@ -62,6 +63,7 @@ export class AuthenticationModule implements IModule {
                         sessionTokenRepository: c.resolve(OAuth2InjectionToken.SessionTokenRepository),
                         clientRepository: c.resolve(OAuth2InjectionToken.ClientRepository),
                         options: { issuer: config.publicUrl },
+                        eventService: c.resolve(DatabaseInjectionKey.EventService),
                         logger: c.resolve(LoggerInjectionKey),
                     }),
                 });

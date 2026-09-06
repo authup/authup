@@ -6,12 +6,16 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Client, Session } from '@authup/core-kit';
+import type { Client, IdentityType, Session } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
+import { normalizeError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { describeError } from '../../../utils/index.ts';
 import type { ISessionRevokeNotifier } from '../../authentication/session/types.ts';
+import type { IEventService } from '../../entities/event/types.ts';
 import type { IOAuth2ClientRepository } from '../client/types.ts';
 import type { ISessionTokenRepository } from '../session-token/types.ts';
 import type { IOAuth2TokenSigner } from '../token/signer/types.ts';
@@ -34,6 +38,8 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
 
     protected options: OAuth2BackchannelLogoutNotifierOptions;
 
+    protected eventService?: IEventService;
+
     protected logger?: Logger;
 
     constructor(ctx: OAuth2BackchannelLogoutNotifierContext) {
@@ -41,6 +47,7 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
         this.sessionTokenRepository = ctx.sessionTokenRepository;
         this.clientRepository = ctx.clientRepository;
         this.options = ctx.options;
+        this.eventService = ctx.eventService;
         this.logger = ctx.logger;
     }
 
@@ -74,8 +81,12 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
             return;
         }
 
+        let jti: string | undefined;
+
         try {
-            const logoutToken = await this.signer.sign(this.buildPayload(session, client));
+            const payload = this.buildPayload(session, client);
+            const logoutToken = await this.signer.sign(payload);
+            jti = payload.jti;
 
             // `redirect: 'manual'`: a 3xx is the RP's refusal, not an
             // invitation to POST the token somewhere else.
@@ -94,10 +105,51 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
                 this.logger?.warn(
                     `The back-channel logout of client ${client.id} was refused with status ${response.status}.`,
                 );
+                await this.record(session, client, { jti, status: response.status });
+                return;
             }
+
+            await this.record(session, client, { jti });
         } catch (e) {
             this.logger?.warn(describeError(e, `The back-channel logout of client ${client.id} failed.`));
+            await this.record(session, client, { jti, errorCode: describeFailureCode(e) });
         }
+    }
+
+    /**
+     * One audit row per delivery (plan 064 stage 3), so an operator can see
+     * which RPs actually received the push. The row is about the CLIENT
+     * (the RP told), attributed to the session's subject like the LOGOUT
+     * row, and realm-scoped like the token's `iss`. `jti` correlates it with
+     * the RP's own log of the logout token; a failed one carries the status
+     * the RP answered or the code of the failure that kept it from answering.
+     * A CODE and never the rendered error: the subject reads its own rows
+     * self-service, and the message names the RP's resolved address, which
+     * is the log's business (`describeError` above) and not theirs.
+     */
+    protected async record(
+        session: Session,
+        client: Client,
+        data: {
+            jti?: string, 
+            status?: number, 
+            errorCode?: string 
+        },
+    ): Promise<void> {
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: data.status !== undefined || data.errorCode !== undefined ?
+                EventName.BACKCHANNEL_LOGOUT_FAILED :
+                EventName.BACKCHANNEL_LOGOUT,
+            refType: EventRefType.CLIENT,
+            refId: client.id,
+            clientId: client.id,
+            sessionId: session.id,
+            actorType: session.subKind as `${IdentityType}`,
+            actorId: session.sub,
+            realmId: client.realmId,
+            data,
+        });
     }
 
     protected buildPayload(session: Session, client: Client): OAuth2TokenPayload {
@@ -131,4 +183,23 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
 
         return `${base}/realms/${client.realm.name}`;
     }
+}
+
+/**
+ * The first `code` on the error or its cause chain (`ECONNREFUSED`,
+ * `ENOTFOUND`, `ERR_TLS_CERT_ALTNAME_INVALID`, ...), else the error's name
+ * (`TimeoutError` for the abort, `Error` for a failed signing).
+ */
+function describeFailureCode(input: unknown): string {
+    let current: unknown = input;
+    // bounded like describeCauseChain: a cause chain can be cyclic
+    for (let depth = 0; isObject(current) && depth < 8; depth++) {
+        const { code, cause } = current as { code?: unknown, cause?: unknown };
+        if (typeof code === 'string') {
+            return code;
+        }
+        current = cause;
+    }
+
+    return normalizeError(input).name;
 }
