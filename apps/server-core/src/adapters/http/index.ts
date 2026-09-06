@@ -8,6 +8,7 @@
 export * from './adapters/index.ts';
 export * from './constants.ts';
 export * from './controllers/index.ts';
+export * from './decorators/index.ts';
 export * from './internal-client/index.ts';
 export * from './middleware/index.ts';
 export * from './request/index.ts';
