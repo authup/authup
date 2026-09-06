@@ -3,6 +3,7 @@
     "compilerOptions": {
         "strictPropertyInitialization": false,
         "allowImportingTsExtensions": true,
+        "baseUrl": "../..",
         "paths": {
             "@authup/access": ["./packages/access/src"],
             "@authup/server-config-kit": ["./packages/server-config-kit/src"],
