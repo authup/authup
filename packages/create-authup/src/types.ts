@@ -56,3 +56,12 @@ export type Exposure = {
     /** the port a container target publishes, or a bare-metal process listens on */
     hostPort: number
 };
+
+/** The streams `createReadlineAsk` drives; they are arguments so the terminal behaviour is testable. */
+export type ReadlineAskContext = {
+    input?: NodeJS.ReadableStream & { isTTY?: boolean },
+    output?: NodeJS.WritableStream & { isTTY?: boolean }
+};
+
+/** What `createReadlineAsk` hands back: the prompt function and the way to release the streams. */
+export type ReadlineAskResult = { ask: Ask, close(): void };

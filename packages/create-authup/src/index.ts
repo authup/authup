@@ -14,7 +14,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { createReadlineAsk } from './ask.ts';
-import { TARGETS } from './constants.ts';
+import { SECRET_FILES, TARGETS } from './constants.ts';
 import { describeExposure } from './deployment.ts';
 import { collectAnswers } from './prompts.ts';
 import { dockerRunCommand } from './targets/docker.ts';
@@ -24,10 +24,6 @@ import type { Answers, Target } from './types.ts';
 import { VERSION } from './version.ts';
 
 const DOCS_URL = 'https://authup.org/guide/deployment/';
-
-// The emitted files holding a password. They are written owner-only; the rest (compose file, nginx.conf, package.json,
-// authup.yml) carry none, since every secret rides an .env or, for helm, values.yaml.
-const SECRET_FILES = new Set(['.env', 'authup.env', 'values.yaml']);
 
 const USAGE = `Usage: npx create-authup [--force] [--help]
        npm create authup -- [--force] [--help]

@@ -8,7 +8,7 @@
 import process from 'node:process';
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
-import type { Ask } from './types.ts';
+import type { ReadlineAskContext, ReadlineAskResult } from './types.ts';
 
 type PendingLine = {
     resolve: (line: string) => void,
@@ -17,23 +17,31 @@ type PendingLine = {
 
 const CLOSED_MESSAGE = 'Input ended before every question was answered.';
 
-export function createReadlineAsk(): { ask: Ask, close(): void } {
+/**
+ * The readline seam. The streams are arguments rather than `process.stdin` / `process.stdout` reached for directly,
+ * so the echo behaviour below is testable without a terminal: a spec passes a pair of in-memory streams claiming to
+ * be one.
+ */
+export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResult {
+    const input = ctx.input || process.stdin;
+    const target = ctx.output || process.stdout;
+
     // On a terminal readline echoes what is typed through the output stream itself, so muting that stream while a
     // secret's line is read is what keeps the password off the screen. Piped input takes none of this path.
-    const terminal = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+    const terminal = Boolean(input.isTTY && target.isTTY);
     let muted = false;
     const output = new Writable({
         write(chunk, _encoding, callback) {
             if (!muted) {
-                process.stdout.write(chunk);
+                target.write(chunk);
             }
             callback();
         },
     });
     const rl = createInterface({
-        input: process.stdin, 
-        output, 
-        terminal, 
+        input,
+        output,
+        terminal,
     });
 
     // readline emits every line of one stdin chunk synchronously, while the next question is only registered on a
@@ -92,7 +100,7 @@ export function createReadlineAsk(): { ask: Ask, close(): void } {
                 const { line, buffered } = await readLine();
                 if (buffered && terminal && !secret) {
                     // a type-ahead answer never echoed after this prompt, so the next prompt would overwrite the line
-                    process.stdout.write(`${line}\n`);
+                    target.write(`${line}\n`);
                 }
 
                 return fallback !== undefined && line.trim() === '' ? fallback : line;
@@ -100,7 +108,7 @@ export function createReadlineAsk(): { ask: Ask, close(): void } {
                 if (secret) {
                     // the Enter was swallowed with the echo
                     muted = false;
-                    process.stdout.write('\n');
+                    target.write('\n');
                 }
             }
         },

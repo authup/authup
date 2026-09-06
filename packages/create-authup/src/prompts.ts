@@ -19,6 +19,7 @@ type Parsed<T> = { value: T } | { error: string };
 
 const ENGINE_PORTS = { postgres: 5432, mysql: 3306 } as const;
 const BUNDLED_REDIS_URL = 'redis://redis:6379';
+const UNREPRESENTABLE = 'A single quote together with a \\n or \\r sequence has no .env representation. Choose another value.';
 const REDIS_NOTE = 'Redis is required for a split deployment: the console sign-in and the token blocklist ride the cache.';
 
 // A refused answer re-asks with the reason on the line above, so the flow stays pure over `ask`.
@@ -94,8 +95,12 @@ function askUrl(ask: Ask, question: string, protocols: readonly string[] = ['htt
 function askText(ask: Ask, question: string, fallback?: string): Promise<string> {
     return askUntil<string>(ask, question, fallback, (answer) => {
         const trimmed = answer.trim();
+        if (trimmed === '') {
+            return { error: 'A value is required.' };
+        }
 
-        return trimmed === '' ? { error: 'A value is required.' } : { value: trimmed };
+        // a host, user or database name reaches the same .env the secrets do
+        return isEnvRepresentable(trimmed) ? { value: trimmed } : { error: UNREPRESENTABLE };
     });
 }
 
@@ -154,7 +159,7 @@ function askSecret(ask: Ask, question: string): Promise<string> {
             return { error: 'Use between 3 and 256 characters.' };
         }
         if (!isEnvRepresentable(answer)) {
-            return { error: 'A single quote together with a \\n or \\r sequence has no .env representation. Choose another value.' };
+            return { error: UNREPRESENTABLE };
         }
 
         return { value: answer };

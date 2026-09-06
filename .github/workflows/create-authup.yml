@@ -1,0 +1,62 @@
+# The wizard writes deployment files for tools that live outside this repository, so its unit suite can only check
+# what it emits against a vendored snapshot. This job checks the same documents against the tools themselves: docker
+# compose and nginx, the chart published at https://helm.authup.org, and the authup CLI. The schedule is what makes
+# it a drift guard rather than a one-time verification: a chart release moves the contract without touching a file
+# here, and the run fails with the command that refreshes the vendored fixtures.
+
+name: create-authup
+
+on:
+    push:
+        branches: [develop, master, next, beta, alpha]
+        paths:
+            - 'packages/create-authup/**'
+            - '.github/workflows/create-authup.yml'
+    pull_request:
+        types: [opened, synchronize]
+        paths:
+            - 'packages/create-authup/**'
+            - '.github/workflows/create-authup.yml'
+    schedule:
+        # Mondays, early. The chart is the moving part, and nothing in this repository announces its release.
+        -   cron: '17 5 * * 1'
+    workflow_dispatch:
+
+env:
+    NODE_VERSION: 24
+    NODE_REGISTRY: 'https://registry.npmjs.org'
+
+permissions:
+    contents: read
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    artifacts:
+        name: Verify emitted artifacts
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            # the wizard's own dist, and the authup CLI the bare-metal document is validated with
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Set up Helm
+                uses: azure/setup-helm@v4
+
+            # CI makes the run strict: a tool that is absent fails instead of skipping, so the job cannot go green
+            # having checked nothing.
+            -   name: Verify
+                run: |
+                    npm run test:artifacts --workspace=packages/create-authup
