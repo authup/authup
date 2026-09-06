@@ -124,7 +124,13 @@ export class HTTPMiddlewareModule {
         const middleware = createSwaggerMiddleware({
             documentPath: path.join(DIST_PATH, 'swagger.json'),
             baseURL: config.publicUrl,
+            schemaHash: computeSchemaRegistryHash(),
+            logger: container.resolve(LoggerInjectionKey),
         });
+
+        if (!middleware) {
+            return;
+        }
 
         router.use('/docs', middleware);
     }

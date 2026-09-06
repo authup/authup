@@ -183,6 +183,17 @@ export type CoreConfig = {
      */
     middlewareSwagger: MiddlewareOptions,
 
+    /**
+     * Serve the query-schema discovery routes (GET /schemas and
+     * GET /schemas/:name), which report the queryable vocabulary of every
+     * registered entity to an authenticated caller. Disabling them answers
+     * both with 404: one call enumerates every entity, column and relation
+     * the caller would otherwise have to probe for, so a deployment may
+     * prefer not to serve that recon surface at all.
+     * default: true
+     */
+    querySchemaDiscoveryEnabled: boolean,
+
     // ----------------------------------------------------
 
     /**
