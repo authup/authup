@@ -515,6 +515,63 @@ function enrichQueryOperations(document) {
     return { enriched, appended };
 }
 
+function pascalCase(input) {
+    return input
+        .split(/[^A-Za-z0-9]+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join('');
+}
+
+/**
+ * `Ucfirst(<method name>)` plus a positional `_2` / `_3` suffix is what trapi
+ * emits, so 186 of the 227 ids carry a number that says nothing and moves the
+ * day a controller is inserted ahead of another - every method of a generated
+ * client renames on an unrelated change.
+ *
+ * Method plus path is the only identity in the document that is stable under
+ * insertion, and it is unique by construction: one operation per method per
+ * path. `draft.operationId` is discarded by `MethodGenerator`, which rebuilds
+ * the field itself, so this has to happen on the emitted document rather than
+ * in the decorator handler.
+ */
+function buildOperationId(method, template) {
+    const segments = template.split('/').filter(Boolean);
+
+    if (segments.length === 0) {
+        return `${method}Root`;
+    }
+
+    return segments.reduce((carry, segment) => {
+        const variable = segment.match(/^\{(.+)\}$/);
+
+        return carry + (variable ? `By${pascalCase(variable[1])}` : pascalCase(segment));
+    }, method);
+}
+
+function assignOperationIds(document, failures) {
+    const used = new Map();
+
+    for (const {
+        template,
+        method,
+        operation,
+    } of operations(document)) {
+        const id = buildOperationId(method, template);
+        const previous = used.get(id);
+
+        if (previous) {
+            failures.push(`operationId '${id}' is claimed by both ${previous} and ${method.toUpperCase()} ${template}.`);
+            continue;
+        }
+
+        used.set(id, `${method.toUpperCase()} ${template}`);
+        operation.operationId = id;
+    }
+
+    return used.size;
+}
+
 // --------------------------------------------------------------------------
 
 function report(failures) {
@@ -541,6 +598,7 @@ if (failures.length > 0) {
 
 const pathParameters = synthesizePathParameters(document);
 const { enriched, appended } = enrichQueryOperations(document);
+const operationIds = assignOperationIds(document, failures);
 
 // Every path variable has to be declared by every operation on that path, and
 // the enrichment appends rather than assigns for exactly that reason: an
@@ -572,4 +630,4 @@ if (failures.length > 0) {
 // the enriched document is what this pass changed.
 fs.writeFileSync(DOCUMENT_PATH, JSON.stringify(document, null, 4));
 
-console.log(`[openapi] ${enriched} operations query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized`);
+console.log(`[openapi] ${operationIds} operations: ${enriched} query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized`);
