@@ -6,6 +6,7 @@
  */
 
 import type { Logger } from '@authup/server-kit';
+import type { IEventService } from '../../entities/event/types.ts';
 import type { IOAuth2ClientRepository } from '../client/types.ts';
 import type { ISessionTokenRepository } from '../session-token/types.ts';
 import type { IOAuth2TokenSigner } from '../token/signer/types.ts';
@@ -33,5 +34,10 @@ export type OAuth2BackchannelLogoutNotifierContext = {
     sessionTokenRepository: ISessionTokenRepository,
     clientRepository: IOAuth2ClientRepository,
     options: OAuth2BackchannelLogoutNotifierOptions,
+    /**
+     * Records one audit row per delivery (plan 064 stage 3): sent, or failed
+     * with the status or error the RP answered.
+     */
+    eventService?: IEventService,
     logger?: Logger,
 };

@@ -4034,7 +4034,7 @@ local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
 
-### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064 Stages 1+2)
+### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064)
 
 `Client.backchannelLogoutUri` (`auth_clients.backchannel_logout_uri`, nullable
 `varchar(2000)`; one absolute http(s) URL of at most 2000 characters, no
@@ -4130,8 +4130,34 @@ other RP on that session that it ended.
   The URI is an `AClientForm` field, absent from `buildSystemClientAttributes`
   (a system client has no RP behind it) and from the anonymous
   `ClientSummary`.
-- **Deferred (plan 064 Stage 3):** a per-delivery audit event in
-  `auth_events`. Today the only trace of a failed push is the warn line.
+- **Every delivery leaves an `auth_events` row (plan 064 Stage 3).** The
+  notifier records `backchannelLogout` for a `2xx` and
+  `backchannelLogoutFailed` for anything else, one row per client, so an
+  operator can list which RPs actually received the push
+  (`GET /events?filter[name]=backchannelLogoutFailed`). The row is about the
+  CLIENT (`refType: client`, `refId` and `clientId` the RP's id), carries the
+  ended session under `sessionId`, is attributed to the session's subject
+  like the `logout` row, and is realm-scoped to the client's realm like the
+  token's `iss`. `data.jti` is the logout token's id, so the row can be
+  matched against the RP's own log of what it received; a failed row adds
+  `status` (the RP answered, with that code) or `errorCode` (it never
+  answered: the first `code` on the error's cause chain, `ECONNREFUSED`,
+  `ENOTFOUND`, `ERR_TLS_CERT_ALTNAME_INVALID`, else the error's name,
+  `TimeoutError` for the abort), and a signing failure carries no `jti`
+  because no token existed. **The row carries a CODE and never the rendered
+  error**: `describeCauseChain` renders the innermost message with its
+  `address=` and `port=`, a DNS failure names the RP hostname, a TLS failure
+  the certificate's altnames, and the row is attributed to the session's
+  subject, whom `EventService.getMany` answers with their own rows
+  self-service while `backchannelLogoutUri` itself is withheld from them
+  (absent from `ClientSummary`, gated by `CLIENT_READ`). The rendering stays
+  in the `warn` line, which is the log's. A client with
+  no `backchannelLogoutUri` never enters the audience, so nothing is recorded
+  for it: "skipped" would be one row per silent client per logout, which is
+  noise rather than a trace. The rows ride the default retention and are
+  recorded through the same `IEventService` every other OAuth2 emit uses,
+  handed to the notifier by the `AuthenticationModule`, so a `record()`
+  failure is swallowed there and never reaches the revoke.
 
 ## Application Access Policy (plan 052)
 
@@ -6073,8 +6099,11 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   rather than a new key because `sanitizeEventData`'s allow-list is closed),
   `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
   (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
-  `client.builtIn`), `LOGOUT` (end-session hint revoke), `REGISTER` /
-  `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
+  `client.builtIn`), `LOGOUT` (end-session hint revoke),
+  `BACKCHANNEL_LOGOUT` / `BACKCHANNEL_LOGOUT_FAILED` (one per RP the
+  `OAuth2BackchannelLogoutNotifier` delivers a logout token to, `refType:
+  client`, `data.jti` plus `status` or `errorCode`; see *Back-channel logout*),
+  `REGISTER` / `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
   **key / trust-anchor lifecycle** (issue #3269): `KeyService` /
   `TrustAnchorService` record ENTITY-scope `created`/`updated`/`deleted`
   rows themselves (both entities are deliberately subscriber-less, so the

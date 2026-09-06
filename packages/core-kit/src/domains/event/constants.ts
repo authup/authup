@@ -26,6 +26,8 @@ export enum EventName {
     MFA_CHALLENGE_FAILED = 'mfaChallengeFailed',
     IDENTITY_PROVIDER_LINKED = 'identityProviderLinked',
     IDENTITY_PROVIDER_UNLINKED = 'identityProviderUnlinked',
+    BACKCHANNEL_LOGOUT = 'backchannelLogout',
+    BACKCHANNEL_LOGOUT_FAILED = 'backchannelLogoutFailed',
     CREATED = 'created',
     UPDATED = 'updated',
     DELETED = 'deleted',

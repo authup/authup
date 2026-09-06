@@ -285,3 +285,17 @@ notified concurrently, each request times out after 5 seconds, and a client
 that is unreachable or answers a non-`2xx` status is logged on the server and
 otherwise ignored. The API call that ended the session succeeds regardless.
 Do not treat a missing push as proof that the session is still alive.
+
+Every delivery is recorded in the security event log
+(`GET /events?filter[name]=backchannelLogout` for the pushes that landed,
+`filter[name]=backchannelLogoutFailed` for the ones that did not). A row
+names the client and the ended session, and its `data.jti` is the `jti` of
+the logout token, so it can be matched against your application's own log of
+the tokens it received. A failed row carries the `status` your endpoint
+answered with, or the `errorCode` when no answer arrived (`ECONNREFUSED`,
+`ENOTFOUND`, `TimeoutError` after the 5 seconds); one carrying no `jti` at
+all is a token that could never be signed, so nothing was sent to you. The
+rows are attributed to the user who was signed out, not to your client, so
+your own client credentials list none of them: reading another subject's
+rows takes the `EVENT_READ` permission, an administrator's. Clients without
+a `backchannelLogoutUri` are never contacted and leave no row.
