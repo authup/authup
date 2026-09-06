@@ -59,9 +59,12 @@ import type { DecodeQueryOptions, QueryDecodeContext } from './types.ts';
 export const schemaRegistry = new SchemaRegistry();
 
 /**
- * Every registered entity schema. Exported so the invariant guard can
- * enumerate them: `SchemaRegistry` keeps its map protected and exposes
- * no iterator (tada5hi/rapiq#904).
+ * The declaration list the registry is built from, exported so the
+ * invariant guards can walk exactly what this service DECLARES. To
+ * enumerate what is REGISTERED — the declarations plus anything a
+ * persistence layer added through the extension point above — call
+ * `schemaRegistry.getAll()` (rapiq 2.2.0, tada5hi/rapiq#904); the two
+ * are the same set today.
  */
 export const schemas : Schema<any>[] = [
     clientSchema,

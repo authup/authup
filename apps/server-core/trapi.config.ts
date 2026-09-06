@@ -1,6 +1,11 @@
 import { defineConfig } from '@trapi/cli';
 import { method, readString } from '@trapi/core';
-import { RECORD_QUERY_PARAMETERS } from './src/core/query/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    computeSchemaRegistryHash,
+    describeSchemaRegistry,
+    schemaRegistry,
+} from './src/core/query/index.ts';
 
 /**
  * Carries the `@DQuerySchema` marker (`src/adapters/http/decorators/`)
@@ -18,9 +23,10 @@ import { RECORD_QUERY_PARAMETERS } from './src/core/query/index.ts';
  * an imported constant resolves to `unresolvable`. Enum members and
  * string literals resolve, which is why both arguments are those.
  *
- * An argument the type resolver cannot fold fails the generate.
- * Skipping it instead would emit an operation that looks unmarked,
- * which is precisely the silent gap the marker exists to close.
+ * An argument the type resolver cannot fold, and a schema name the
+ * registry does not hold, both fail the generate. Skipping either would
+ * emit an operation that looks unmarked or points at nothing, which is
+ * precisely the silent gap the marker exists to close.
  */
 const querySchemaHandler = method({
     match: { name: 'DQuerySchema', on: 'method' },
@@ -31,6 +37,11 @@ const querySchemaHandler = method({
         if (!schema || (shape !== 'collection' && shape !== 'record')) {
             throw new Error(`@DQuerySchema on '${draft.name}' has unresolvable arguments.`);
         }
+
+        // `EntityType` is wider than the registry: four of its members carry no
+        // schema, so the marker's own type cannot rule them out. Resolving here
+        // makes the pointer a promise the document keeps.
+        schemaRegistry.getOrFail(schema);
 
         draft.extensions.push({
             key: 'x-query-schema',
@@ -74,6 +85,23 @@ export default defineConfig({
                         },
                     },
                 },
+            },
+            /**
+             * The queryable surface as one document, projected at the
+             * spec root: a route's `x-query-schema` names a schema, and
+             * this is where that name resolves. It is the SAME
+             * description `meta.schema` carries on the matching
+             * response — the projection is byte-identical, `indexes`
+             * and all — so a client can validate one against the other.
+             *
+             * Merged in through `swagger.data.extra`: an extension
+             * attaches per controller, per operation or per property,
+             * never at the root, and `specificationExtra` is the only
+             * channel that reaches it.
+             */
+            extra: {
+                'x-authup-schemas': describeSchemaRegistry(),
+                'x-authup-schema-hash': computeSchemaRegistryHash(),
             },
         },
     },
