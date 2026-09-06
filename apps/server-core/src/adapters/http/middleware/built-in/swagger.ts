@@ -60,6 +60,13 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
     try {
         content = readFileSync(documentPath, 'utf-8');
         document = JSON.parse(content);
+
+        // `JSON.parse` answers a valid `null` for a file holding `null`, and
+        // a truncated write is valid JSON often enough to matter, so the
+        // parse succeeding says nothing about the shape being usable.
+        if (document === null || typeof document !== 'object' || Array.isArray(document)) {
+            throw new SyntaxError('the document is not a JSON object.');
+        }
     } catch (e) {
         logger?.warn(`The OpenAPI document ${documentPath} could not be read, so the documentation surface is not served. Build it with "npm run build". Reason: ${normalizeError(e).message}`);
 

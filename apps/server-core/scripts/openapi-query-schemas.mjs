@@ -572,11 +572,11 @@ function enrichQueryOperations(document) {
  * the 400 a collection read answers when its query fails to decode, and that
  * is worth stating next to the parameters this pass just added.
  */
-function declareErrorResponses(document) {
+function declareErrorResponses(document, failures) {
     document.components = document.components ?? {};
     document.components.schemas = document.components.schemas ?? {};
 
-    document.components.schemas[ERROR_SCHEMA_NAME] = {
+    const schema = {
         type: 'object',
         description: [
             'The uniform error body. Every failing request answers with this shape, whatever the status;',
@@ -605,6 +605,20 @@ function declareErrorResponses(document) {
         required: ['name', 'message', 'code'],
         additionalProperties: true,
     };
+
+    // trapi keys components by bare declaration name, so a future authup type
+    // called `ErrorResponse` would land here and be overwritten in silence.
+    // An identical component is this script's own previous run, since it
+    // rewrites the document in place and has to stay idempotent.
+    const existing = document.components.schemas[ERROR_SCHEMA_NAME];
+
+    if (existing && JSON.stringify(existing) !== JSON.stringify(schema)) {
+        failures.push(`The document already declares a different '${ERROR_SCHEMA_NAME}' component, so the shared error schema cannot claim that name; rename one of the two.`);
+
+        return 0;
+    }
+
+    document.components.schemas[ERROR_SCHEMA_NAME] = schema;
 
     const reference = { $ref: `#/components/schemas/${ERROR_SCHEMA_NAME}` };
     const content = { 'application/json': { schema: reference } };
@@ -721,7 +735,7 @@ if (failures.length > 0) {
 const pathParameters = synthesizePathParameters(document);
 const { enriched, appended } = enrichQueryOperations(document);
 const operationIds = assignOperationIds(document, failures);
-const responses = declareErrorResponses(document);
+const responses = declareErrorResponses(document, failures);
 
 // Every path variable has to be declared by every operation on that path, and
 // the enrichment appends rather than assigns for exactly that reason: an
