@@ -47,6 +47,14 @@ const MARKER_KEY = 'x-query-schema';
  */
 const COLLECTION_COVERAGE_EXCLUSIONS = [];
 
+/**
+ * What a path variable holds, where the answer is not the variable's own
+ * name. These parameters are SYNTHESIZED (see `synthesizePathParameters`), so
+ * there is no decorator to hang a description on and nothing else in the
+ * document says that a realm is addressable by name as well as by id.
+ */
+const PATH_PARAMETER_DESCRIPTIONS = { realmId: 'The realm, addressed by id or by name.' };
+
 const UPPER_BOUND_NOTE = 'This is the static upper bound: per-actor relation and column gates may narrow it silently on any given request.';
 
 const RECORD_SHAPE_NOTE = 'Single-record reads are still converging on this vocabulary; one that does not decode it yet answers with its default projection.';
@@ -67,6 +75,12 @@ function operations(document) {
     }
 
     return output;
+}
+
+function pathVariables(template) {
+    return template.matchAll(/\{([^}]+)\}/g)
+        .map((match) => match[1])
+        .toArray();
 }
 
 function list(input) {
@@ -259,6 +273,55 @@ function appendParameters(operation, parameters) {
             operation.parameters.push(parameter);
             appended++;
         }
+    }
+
+    return appended;
+}
+
+/**
+ * OpenAPI requires every variable of a path template to be declared, and 61
+ * operations declare none: the `/realms/{realmId}/…` mounts read the segment
+ * through `getRequestRealmID(event)` rather than through a `@DPath`
+ * parameter, so trapi's parameter walk never sees it. Undeclared, swagger-ui
+ * renders no input for it and a generated client has no way to fill it.
+ *
+ * Synthesized from the path template rather than from a list of known names,
+ * so a route that grows a variable the handler reads off the event is covered
+ * the day it is added.
+ */
+function synthesizePathParameters(document) {
+    let appended = 0;
+
+    for (const { template, operation } of operations(document)) {
+        const declared = new Set(
+            (operation.parameters ?? [])
+                .filter((entry) => entry.in === 'path')
+                .map((entry) => entry.name),
+        );
+
+        const missing = pathVariables(template)
+            .filter((name) => !declared.has(name))
+            .map((name) => ({
+                name,
+                in: 'path',
+                required: true,
+                description: PATH_PARAMETER_DESCRIPTIONS[name] ?? '',
+                schema: { type: 'string' },
+            }));
+
+        appended += appendParameters(operation, missing);
+
+        // Path parameters read in template order; a synthesized one appended
+        // to the tail would otherwise render below the segment it precedes.
+        const order = pathVariables(template);
+        const ordered = operation.parameters
+            .filter((entry) => entry.in === 'path')
+            .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+
+        operation.parameters = [
+            ...ordered,
+            ...operation.parameters.filter((entry) => entry.in !== 'path'),
+        ];
     }
 
     return appended;
@@ -476,10 +539,37 @@ if (failures.length > 0) {
     report(failures);
 }
 
+const pathParameters = synthesizePathParameters(document);
 const { enriched, appended } = enrichQueryOperations(document);
+
+// Every path variable has to be declared by every operation on that path, and
+// the enrichment appends rather than assigns for exactly that reason: an
+// earlier draft assigned `operation.parameters` and would have dropped the
+// 136 path parameters trapi emits.
+for (const {
+    template,
+    method,
+    operation,
+} of operations(document)) {
+    const declared = new Set(
+        (operation.parameters ?? [])
+            .filter((entry) => entry.in === 'path')
+            .map((entry) => entry.name),
+    );
+
+    for (const name of pathVariables(template)) {
+        if (!declared.has(name)) {
+            failures.push(`${method.toUpperCase()} ${template}: path variable '${name}' is undeclared after enrichment.`);
+        }
+    }
+}
+
+if (failures.length > 0) {
+    report(failures);
+}
 
 // Same shape trapi writes, so the only difference between the generated and
 // the enriched document is what this pass changed.
 fs.writeFileSync(DOCUMENT_PATH, JSON.stringify(document, null, 4));
 
-console.log(`[openapi] ${enriched} operations query-enriched (${appended} query parameters)`);
+console.log(`[openapi] ${enriched} operations query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized`);
