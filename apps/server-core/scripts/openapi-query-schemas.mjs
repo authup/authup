@@ -49,6 +49,24 @@ const ERROR_SCHEMA_NAME = 'ErrorResponse';
 const COLLECTION_COVERAGE_EXCLUSIONS = [];
 
 /**
+ * Marked reads that carry no `describeQuerySchema` call of their own, and so
+ * cannot be cross-checked against one. Both delegate the description to
+ * another method: the expanded policy read answers through `getOne`, and
+ * `/userinfo` answers a flat user whose vocabulary `UserService.getOne`
+ * decodes. Every entry has to earn its place, the way an unused
+ * `COLLECTION_COVERAGE_EXCLUSIONS` entry does.
+ *
+ * The list exists so the cross-check can fail CLOSED. Without it a marked
+ * method with no recognized call is indistinguishable from one whose call the
+ * source pattern below simply failed to match, and a guard that cannot tell
+ * those apart silently stops covering whatever it stops matching.
+ */
+const MARKERS_WITHOUT_DESCRIBE = [
+    'src/adapters/http/controllers/entities/policy/module.ts::POLICY',
+    'src/adapters/http/controllers/workflows/userinfo/module.ts::USER',
+];
+
+/**
  * What a path variable holds, where the answer is not the variable's own
  * name. These parameters are SYNTHESIZED (see `synthesizePathParameters`), so
  * there is no decorator to hang a description on and nothing else in the
@@ -148,6 +166,7 @@ function readSchemaIdentifiers() {
  */
 function assertMarkersMatchDescribeCalls(failures) {
     const identifiers = readSchemaIdentifiers();
+    const excused = new Set(MARKERS_WITHOUT_DESCRIBE);
 
     for (const file of walk(CONTROLLERS_PATH)) {
         const source = fs.readFileSync(file, 'utf8');
@@ -170,6 +189,7 @@ function assertMarkersMatchDescribeCalls(failures) {
                     shape: marker[2],
                     start: marker.index,
                     end: marker.index + offset,
+                    described: false,
                 });
             }
 
@@ -182,6 +202,10 @@ function assertMarkersMatchDescribeCalls(failures) {
         while (call !== null) {
             const block = blocks.find((entry) => call.index >= entry.start && call.index < entry.end);
             const member = identifiers.get(call[1]);
+
+            if (block) {
+                block.described = true;
+            }
 
             if (!block) {
                 failures.push(`${name}: describeQuerySchema(${call[1]}) sits in a method carrying no @DQuerySchema marker.`);
@@ -201,6 +225,25 @@ function assertMarkersMatchDescribeCalls(failures) {
 
             call = calls.exec(source);
         }
+
+        for (const block of blocks) {
+            if (block.described) {
+                continue;
+            }
+
+            const key = `${name}::${block.member}`;
+
+            if (excused.has(key)) {
+                excused.delete(key);
+                continue;
+            }
+
+            failures.push(`${name}: @DQuerySchema(EntityType.${block.member}) describes nothing. Either the method lost its describeQuerySchema call, or the call is written in a form this check does not match; record it in MARKERS_WITHOUT_DESCRIBE only if it legitimately delegates.`);
+        }
+    }
+
+    for (const key of excused) {
+        failures.push(`MARKERS_WITHOUT_DESCRIBE holds '${key}', which now describes a schema of its own or no longer carries a marker; drop the entry.`);
     }
 }
 
