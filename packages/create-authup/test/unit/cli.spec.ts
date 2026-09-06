@@ -138,7 +138,8 @@ describe('create-authup bin', () => {
         expect(manifest.dependencies.authup).toEqual(VERSION);
     }, TIMEOUT);
 
-    it('should write the credential-bearing files owner-only', async () => {
+    // Windows has no POSIX mode: chmod only toggles the read-only bit there, so the mode assertions cannot hold.
+    it.skipIf(process.platform === 'win32')('should write the credential-bearing files owner-only', async () => {
         const cwd = createTempDir();
         const result = await runWizard(cwd, COMPOSE_LINES);
 

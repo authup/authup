@@ -8,7 +8,9 @@
 import type { Answers, Rendered } from '../types.ts';
 import { quoteYaml } from '../utils.ts';
 
-export const CHART_REQUIREMENT = '# The worker and the console split need the authup chart tracking authup v1.0.0-beta.64 or later.';
+// The chart version, not the authup version: it is what `helm install` selects, and 0.4.0 is the first that carries
+// worker.* and server.splitConsoles (0.3.0 rejects both through its values schema).
+export const CHART_REQUIREMENT = '# The worker and the console split need the authup helm chart 0.4.0 or later.';
 
 export const HELM_COMMANDS: string[] = [
     'helm repo add authup https://helm.authup.org',
