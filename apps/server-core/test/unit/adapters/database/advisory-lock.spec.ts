@@ -216,6 +216,29 @@ describe('adapters/database/helpers/advisory-lock', () => {
         expect(fake.state.runnersReleased).toEqual(1);
     });
 
+    // A poll interval that never advances the budget, or a budget the budget
+    // can never reach, would loop forever hammering the try-lock. Refused
+    // before the dialect gate, so sqlite reports it too rather than passing a
+    // call the lock-taking dialects reject.
+    it.each([
+        ['a zero poll interval', 'postgres' as DatabaseType, { pollInterval: 0 }],
+        ['a negative poll interval', 'postgres' as DatabaseType, { pollInterval: -1 }],
+        ['a NaN poll interval', 'postgres' as DatabaseType, { pollInterval: NaN }],
+        ['a NaN wait budget', 'postgres' as DatabaseType, { waitTimeout: NaN }],
+        ['a negative wait budget', 'postgres' as DatabaseType, { waitTimeout: -1 }],
+        ['a zero poll interval on sqlite', 'better-sqlite3' as DatabaseType, { pollInterval: 0 }],
+    ])('should refuse %s', async (_label, type, overrides) => {
+        const fake = createFakeDataSource(type, [[{ acquired: true }]]);
+
+        let ran = false;
+        await expect(withDatabaseLock(fake.dataSource, LOCK, async () => {
+            ran = true;
+        }, { wait: noWait, ...overrides })).rejects.toThrow(/poll interval|wait budget/);
+
+        expect(ran).toBeFalsy();
+        expect(fake.state.runnersCreated).toEqual(0);
+    });
+
     it('should release the lock and rethrow untouched when the callback fails', async () => {
         const fake = createFakeDataSource('postgres', [[{ acquired: true }]]);
         const error = new Error('provisioning blew up');

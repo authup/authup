@@ -128,13 +128,25 @@ export async function withDatabaseLock<R>(
     fn: () => Promise<R>,
     options: DatabaseLockOptions = {},
 ): Promise<R> {
+    const waitTimeout = options.waitTimeout ?? DATABASE_LOCK_WAIT_TIMEOUT;
+    const pollInterval = options.pollInterval ?? DATABASE_LOCK_POLL_INTERVAL;
+
+    // The budget below is counted in poll intervals, so an interval that does
+    // not advance it (zero, negative, NaN) or a budget it can never reach (NaN)
+    // turns the wait into an unbounded loop that hammers the database with
+    // try-lock queries and never times out. Checked before the dialect gate, so
+    // a caller does not discover it only on the dialect that takes the lock.
+    if (!(pollInterval > 0) || !(waitTimeout >= 0)) {
+        throw new InternalError(
+            'The database lock needs a non-negative wait budget and a positive poll interval.',
+        );
+    }
+
     const statements = statementsFor(dataSource.options.type, lock);
     if (!statements) {
         return fn();
     }
 
-    const waitTimeout = options.waitTimeout ?? DATABASE_LOCK_WAIT_TIMEOUT;
-    const pollInterval = options.pollInterval ?? DATABASE_LOCK_POLL_INTERVAL;
     const wait = options.wait ?? ((ms: number) => new Promise<void>((resolve) => {
         setTimeout(resolve, ms);
     }));
