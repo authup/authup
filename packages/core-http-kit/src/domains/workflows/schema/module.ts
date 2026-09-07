@@ -16,7 +16,11 @@ export class SchemaAPI extends BaseAPI implements ISchemaAPI {
     }
 
     async getOne(name: string): Promise<SchemaRecordResponse> {
-        const response = await this.client.get(`schemas/${name}`);
+        // Encoded because the name is a plain string by contract, not an
+        // `EntityType`: the registry is documented as extensible, so a caller
+        // may legitimately pass one this package does not know, and a `/` in
+        // it would otherwise address a different route entirely.
+        const response = await this.client.get(`schemas/${encodeURIComponent(name)}`);
 
         return response.data;
     }

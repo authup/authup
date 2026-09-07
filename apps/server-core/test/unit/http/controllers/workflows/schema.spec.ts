@@ -114,4 +114,14 @@ describe('src/http/controllers/workflows/schema/*.ts (discovery disabled)', () =
             { status: 404 },
         );
     });
+
+    // The 404 above is what an AUTHENTICATED caller sees. The login gate is
+    // middleware and runs before the flag is read, so the flag's state is not
+    // observable without a credential, which is what the config description
+    // and the discovery section of architecture.md both claim.
+    it('should refuse an anonymous caller before it reports the route as absent', async () => {
+        const response = await httpRequest(suite, 'GET', '/schemas');
+
+        expect(response.status).toEqual(401);
+    });
 });

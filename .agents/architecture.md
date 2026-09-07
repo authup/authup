@@ -680,7 +680,10 @@ process rather than by a build artifact, it carries `meta.hash` so a client can
 tell whether its copy is current, and it answers per entity. Treat the query
 vocabulary as public and keep the real defence where it already is, on the
 reads themselves, which stay permission-gated and per-actor narrowed.
-Disabled, both routes answer 404 and `meta.schema` is unaffected. The single
+Disabled, both routes answer 404 and `meta.schema` is unaffected. The 404 is
+what an AUTHENTICATED caller sees: `ForceLoggedInMiddleware` runs before the
+flag is read, so an anonymous request is refused with 401 either way, and the
+flag's state is not observable without a credential. The single
 lookup guards own-property, because the description record is a plain object
 literal and `/schemas/constructor` would otherwise answer with a member of
 `Object.prototype`.

@@ -85,7 +85,13 @@ export function describeQuerySchema(
 export function describeSchemaRegistry() : Record<string, SchemaDescription> {
     const named = schemaRegistry.getAll()
         .filter((schema) : schema is Schema<any> & { name: string } => typeof schema.name === 'string')
-        .sort((a, b) => (a.name < b.name ? -1 : 1));
+        .sort((a, b) => {
+            if (a.name === b.name) {
+                return 0;
+            }
+
+            return a.name < b.name ? -1 : 1;
+        });
 
     const output : Record<string, SchemaDescription> = {};
     for (const schema of named) {
