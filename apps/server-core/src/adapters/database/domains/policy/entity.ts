@@ -24,6 +24,13 @@ import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realmId'])
+// A global row (realm_id NULL) is outside the constraint above, since every dialect treats
+// NULLs as distinct. The migration GlobalEntityUniqueness1788793885495 adds a unique index
+// over the same tuple with the NULL coalesced; it is declared here, under a given name (the
+// builder never names an index it does not synchronize), so the schema builder
+// matches it by name and leaves it alone (synchronize: false), because an expression index
+// cannot be described in entity metadata. Issue #3559.
+@Index('IDX_auth_policies_global_name', { synchronize: false })
 @Entity({ name: 'auth_policies' })
 @Tree('closure-table', {
     closureTableName: 'auth_policy_tree',

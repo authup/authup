@@ -2964,6 +2964,24 @@ guard.
 | **Realm-bound** | client, user | No — always belong to a specific realm |
 | **Junction** | role-permission, user-role, etc. | Inherit realm from parent entities |
 
+**Global uniqueness is enforced by an extra index, not by the `@Unique`**
+(issue #3559). Each of the four global-capable tables is unique over a tuple
+that contains `realm_id` (and `client_id` on permission and role), and all three
+dialects treat NULLs as distinct in a unique index, so the constraint enforces
+nothing for a row whose tuple holds a NULL: every global row (the whole built-in
+catalogue), and on permission and role every realm-scoped row with no client.
+Migration
+`1788793885495-GlobalEntityUniqueness` adds one unique index per table over the
+same tuple with the NULLs coalesced onto `''`: hand-written DDL, declared on the
+entity as an unsynced, hand-named `@Index` so the drift gate leaves it alone
+(conventions.md → *Database Migrations*). MySQL and PostgreSQL carry it; sqlite
+(synchronize only, one file per container, so no replica to race) keeps the
+nullable unique alone, the same reason the #3356 provisioning lock is a
+passthrough there. Pre-existing duplicates abort the migration naming their
+tables; merging is the operator's (upgrading.md), since the losers are
+referenced by junction rows a migration cannot re-point on the deployment's
+behalf.
+
 ### Realm Defaulting
 
 All entity services default `realmId` to the actor's realm when not provided:

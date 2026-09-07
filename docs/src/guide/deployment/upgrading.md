@@ -7,6 +7,52 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Global permissions, roles, scopes and policies are unique by name
+
+The unique key of `auth_permissions`, `auth_roles`, `auth_scopes` and
+`auth_policies` contains a nullable column (`realm_id`, plus `client_id` on the
+first two), and every database treats NULLs as distinct in a unique index, so the
+key never refused a second row whose tuple holds a NULL: two global rows with one
+name, and on permissions and roles two realm-scoped rows with one name and no
+client. Migration `1788793885495-GlobalEntityUniqueness` adds one unique index per
+table over the same columns with the NULLs coalesced, on MySQL and PostgreSQL,
+applied by the next boot with migrations enabled or by `authup migration run`.
+SQLite keeps the previous behaviour: it never runs migrations, and one database
+file per container leaves no second replica to race.
+
+**Action required only if your deployment already holds duplicate rows.** The API
+has always refused them and the boot is serialised across replicas from
+v1.0.0-beta.65 on, so the realistic source is a multi-replica first boot on an
+earlier release, which produced global duplicates. The migration checks every
+table for a repeated `(name, client_id, realm_id)` or `(name, realm_id)` tuple,
+NULLs included, and aborts naming the affected tables instead of failing on the
+index. Find the groups:
+
+```sql
+SELECT name, client_id, realm_id, COUNT(*) FROM auth_permissions GROUP BY name, client_id, realm_id HAVING COUNT(*) > 1;
+SELECT name, client_id, realm_id, COUNT(*) FROM auth_roles       GROUP BY name, client_id, realm_id HAVING COUNT(*) > 1;
+SELECT name, realm_id, COUNT(*)            FROM auth_scopes      GROUP BY name, realm_id            HAVING COUNT(*) > 1;
+SELECT name, realm_id, COUNT(*)            FROM auth_policies    GROUP BY name, realm_id            HAVING COUNT(*) > 1;
+```
+
+For each group keep one row (the oldest `created_at` is the usual choice), move
+every reference onto it, then delete the others. A permission is referenced by
+`permission_id` in `auth_role_permissions`, `auth_user_permissions`,
+`auth_client_permissions`, `auth_identity_provider_permission_mappings` and
+`auth_permission_policies`. A role by `role_id` in `auth_user_roles`,
+`auth_client_roles`, `auth_role_permissions`, `auth_role_attributes` and
+`auth_identity_provider_role_mappings`. A scope by `scope_id` in
+`auth_client_scopes`. A policy by `policy_id` in `auth_permission_policies`,
+`auth_policy_attributes`, `auth_role_permissions`, `auth_user_permissions` and
+`auth_client_permissions`, by `auth_clients.access_policy_id`, by
+`auth_policies.parent_id`, and by the `auth_policy_tree` closure table.
+
+Re-point a reference with `UPDATE <table> SET <column> = '<survivor id>' WHERE <column> = '<loser id>'`.
+A junction row that then duplicates one that the survivor already holds is refused
+by that table's own unique key; delete that row instead.
+Do the re-pointing before deleting a loser: every junction cascades on delete, so
+deleting a row that still holds references drops them silently.
+
 ### Client secrets rotate through `POST /clients/:id/secret`
 
 `secretHashed` and `secretEncrypted` are create-time properties now. An update
