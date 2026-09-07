@@ -23,11 +23,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const PACKAGE_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DOCUMENT_PATH = path.join(PACKAGE_PATH, 'dist', 'swagger.json');
 const CONTROLLERS_PATH = path.join(PACKAGE_PATH, 'src', 'adapters', 'http', 'controllers');
 const ENTITIES_PATH = path.join(PACKAGE_PATH, 'src', 'core', 'entities');
 
@@ -67,10 +65,10 @@ const MARKERS_WITHOUT_DESCRIBE = [
 ];
 
 /**
- * What a path variable holds, where the answer is not the variable's own
- * name. These parameters are SYNTHESIZED (see `synthesizePathParameters`), so
- * there is no decorator to hang a description on and nothing else in the
- * document says that a realm is addressable by name as well as by id.
+ * What a path variable holds, where the answer is not the variable's own name.
+ * trapi declares every path-template variable itself since 2.1.0
+ * (tada5hi/trapi#896) but has no description to give it, and nothing else in
+ * the document says that a realm is addressable by name as well as by id.
  */
 const PATH_PARAMETER_DESCRIPTIONS = { realmId: 'The realm, addressed by id or by name.' };
 
@@ -317,55 +315,6 @@ function appendParameters(operation, parameters) {
             operation.parameters.push(parameter);
             appended++;
         }
-    }
-
-    return appended;
-}
-
-/**
- * OpenAPI requires every variable of a path template to be declared, and 61
- * operations declare none: the `/realms/{realmId}/…` mounts read the segment
- * through `getRequestRealmID(event)` rather than through a `@DPath`
- * parameter, so trapi's parameter walk never sees it. Undeclared, swagger-ui
- * renders no input for it and a generated client has no way to fill it.
- *
- * Synthesized from the path template rather than from a list of known names,
- * so a route that grows a variable the handler reads off the event is covered
- * the day it is added.
- */
-function synthesizePathParameters(document) {
-    let appended = 0;
-
-    for (const { template, operation } of operations(document)) {
-        const declared = new Set(
-            (operation.parameters ?? [])
-                .filter((entry) => entry.in === 'path')
-                .map((entry) => entry.name),
-        );
-
-        const missing = pathVariables(template)
-            .filter((name) => !declared.has(name))
-            .map((name) => ({
-                name,
-                in: 'path',
-                required: true,
-                description: PATH_PARAMETER_DESCRIPTIONS[name] ?? '',
-                schema: { type: 'string' },
-            }));
-
-        appended += appendParameters(operation, missing);
-
-        // Path parameters read in template order; a synthesized one appended
-        // to the tail would otherwise render below the segment it precedes.
-        const order = pathVariables(template);
-        const ordered = operation.parameters
-            .filter((entry) => entry.in === 'path')
-            .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
-
-        operation.parameters = [
-            ...ordered,
-            ...operation.parameters.filter((entry) => entry.in !== 'path'),
-        ];
     }
 
     return appended;
@@ -651,120 +600,80 @@ function declareErrorResponses(document, failures) {
     return declared;
 }
 
-function pascalCase(input) {
-    return input
-        .split(/[^A-Za-z0-9]+/)
-        .filter(Boolean)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
-}
-
-/**
- * `Ucfirst(<method name>)` plus a positional `_2` / `_3` suffix is what trapi
- * emits, so 186 of the 227 ids carry a number that says nothing and moves the
- * day a controller is inserted ahead of another - every method of a generated
- * client renames on an unrelated change.
- *
- * Method plus path is the only identity in the document that is stable under
- * insertion, and it is unique by construction: one operation per method per
- * path. `draft.operationId` is discarded by `MethodGenerator`, which rebuilds
- * the field itself, so this has to happen on the emitted document rather than
- * in the decorator handler.
- */
-function buildOperationId(method, template) {
-    const segments = template.split('/').filter(Boolean);
-
-    if (segments.length === 0) {
-        return `${method}Root`;
-    }
-
-    return segments.reduce((carry, segment) => {
-        const variable = segment.match(/^\{(.+)\}$/);
-
-        return carry + (variable ? `By${pascalCase(variable[1])}` : pascalCase(segment));
-    }, method);
-}
-
-function assignOperationIds(document, failures) {
-    const used = new Map();
-
-    for (const {
-        template,
-        method,
-        operation,
-    } of operations(document)) {
-        const id = buildOperationId(method, template);
-        const previous = used.get(id);
-
-        if (previous) {
-            failures.push(`operationId '${id}' is claimed by both ${previous} and ${method.toUpperCase()} ${template}.`);
-            continue;
-        }
-
-        used.set(id, `${method.toUpperCase()} ${template}`);
-        operation.operationId = id;
-    }
-
-    return used.size;
-}
-
 // --------------------------------------------------------------------------
 
-function report(failures) {
-    console.error('[openapi] the documented query surface and the served one disagree.\n');
-    failures.forEach((failure) => console.error(`  - ${failure}`));
-    console.error('');
-    process.exit(1);
-}
+/**
+ * Enrich a generated OpenAPI document in place: document the rapiq query
+ * vocabulary of every marked read, declare the shared error response, and
+ * assert that what the document advertises is what the server decodes.
+ *
+ * Called from `trapi.config.ts` through the `swagger.transform` hook, so the
+ * whole pipeline stays one `trapi generate`. Throws on any disagreement, which
+ * aborts the generate rather than leaving a written-then-rejected document on
+ * disk.
+ */
+function describePathParameters(document) {
+    let described = 0;
 
-if (!fs.existsSync(DOCUMENT_PATH)) {
-    console.error(`[openapi] ${path.relative(PACKAGE_PATH, DOCUMENT_PATH)} is missing; run \`trapi generate\` first.`);
-    process.exit(1);
-}
+    for (const { operation } of operations(document)) {
+        for (const parameter of operation.parameters ?? []) {
+            const description = PATH_PARAMETER_DESCRIPTIONS[parameter.name];
 
-const document = JSON.parse(fs.readFileSync(DOCUMENT_PATH, 'utf8'));
-const failures = [];
-
-assertMarkersMatchDescribeCalls(failures);
-assertDocumentCoverage(document, failures);
-
-if (failures.length > 0) {
-    report(failures);
-}
-
-const pathParameters = synthesizePathParameters(document);
-const { enriched, appended } = enrichQueryOperations(document);
-const operationIds = assignOperationIds(document, failures);
-const responses = declareErrorResponses(document, failures);
-
-// Every path variable has to be declared by every operation on that path, and
-// the enrichment appends rather than assigns for exactly that reason: an
-// earlier draft assigned `operation.parameters` and would have dropped the
-// 136 path parameters trapi emits.
-for (const {
-    template,
-    method,
-    operation,
-} of operations(document)) {
-    const declared = new Set(
-        (operation.parameters ?? [])
-            .filter((entry) => entry.in === 'path')
-            .map((entry) => entry.name),
-    );
-
-    for (const name of pathVariables(template)) {
-        if (!declared.has(name)) {
-            failures.push(`${method.toUpperCase()} ${template}: path variable '${name}' is undeclared after enrichment.`);
+            if (description && parameter.in === 'path' && !parameter.description) {
+                parameter.description = description;
+                described++;
+            }
         }
     }
+
+    return described;
 }
 
-if (failures.length > 0) {
-    report(failures);
+export function enrichOpenAPIDocument(document) {
+    const failures = [];
+
+    assertMarkersMatchDescribeCalls(failures);
+    assertDocumentCoverage(document, failures);
+
+    if (failures.length === 0) {
+        const { enriched, appended } = enrichQueryOperations(document);
+        const responses = declareErrorResponses(document, failures);
+        const described = describePathParameters(document);
+
+        // trapi declares every path-template variable itself since 2.1.0
+        // (tada5hi/trapi#896), and the enrichment APPENDS rather than assigns
+        // so it cannot drop them. This re-checks both, because the failure is
+        // an invalid document rather than an error.
+        for (const {
+            template,
+            method,
+            operation,
+        } of operations(document)) {
+            const declared = new Set(
+                (operation.parameters ?? [])
+                    .filter((entry) => entry.in === 'path')
+                    .map((entry) => entry.name),
+            );
+
+            for (const name of pathVariables(template)) {
+                if (!declared.has(name)) {
+                    failures.push(`${method.toUpperCase()} ${template}: path variable '${name}' is undeclared.`);
+                }
+            }
+        }
+
+        if (failures.length === 0) {
+            return {
+                enriched,
+                appended,
+                responses,
+                described,
+            };
+        }
+    }
+
+    throw new Error([
+        'the documented query surface and the served one disagree.',
+        ...failures.map((failure) => `  - ${failure}`),
+    ].join('\n'));
 }
-
-// Same shape trapi writes, so the only difference between the generated and
-// the enriched document is what this pass changed.
-fs.writeFileSync(DOCUMENT_PATH, JSON.stringify(document, null, 4));
-
-console.log(`[openapi] ${operationIds} operations: ${enriched} query-enriched (${appended} query parameters), ${pathParameters} path parameters synthesized, ${responses} error responses declared`);

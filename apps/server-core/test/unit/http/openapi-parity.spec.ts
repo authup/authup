@@ -363,7 +363,12 @@ describe('openapi document parity', () => {
             const operation = requireDocument().paths?.['/realms/{realmId}/users/{id}']?.get;
 
             expect(operation).toBeDefined();
-            expect(parameterNames(operation, 'path')).toEqual(['realmId', 'id']);
+
+            // Sorted, because the order is trapi's: it declares the variable a
+            // `@DPath` argument names, then synthesizes the rest of the
+            // template. Which comes first carries no meaning in OpenAPI, and
+            // pinning it would fail on a change that broke nothing.
+            expect(parameterNames(operation, 'path').sort()).toEqual(['id', 'realmId']);
 
             // A record read decodes neither a filter, a sort nor a page, so it
             // advertises none of the three.

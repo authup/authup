@@ -1,4 +1,5 @@
 import { defineConfig } from '@trapi/cli';
+import { enrichOpenAPIDocument } from './scripts/openapi-query-schemas.mjs';
 import { method, readString } from '@trapi/core';
 import {
     RECORD_QUERY_PARAMETERS,
@@ -64,8 +65,12 @@ export default defineConfig({
     },
     swagger: {
         version: 'v3.2',
+        transform: (spec) => {
+            enrichOpenAPIDocument(spec);
+        },
         data: {
             name: 'API Documentation',
+            operationIdStrategy: 'path',
             securityDefinitions: {
                 bearer: {
                     type: 'apiKey',
