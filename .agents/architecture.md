@@ -201,13 +201,18 @@ usable at the service level and nothing in core depends on TypeORM:
   traversal itself). Enforcement is two-part: the rapiq SQL adapter
   force-selects every column a condition reads (operand projection —
   the condition cannot go into the statement, a TypeORM selection must
-  stay a bare column for hydration), and EVERY `findMany` adapter runs
-  its fetched rows through `redactFieldConditions(query, entities)`
-  (`app/modules/database/repositories/query.ts`, wrapping
+  stay a bare column for hydration), and EVERY `findMany` adapter reads
+  its rows through `fetchMany(qb, query)`
+  (`app/modules/database/repositories/query.ts`), which executes the
+  builder and runs the module-private `redactFieldConditions` (wrapping
   `@rapiq/adapter-memory`'s `applyFieldConditions`) — failing values are
-  REDACTED, rows never drop, totals stay exact. The sweep is universal
-  because enforcement is fail-open by construction: a `findMany` that
-  skips the call ships the value. Author conditions FAIL-CLOSED over
+  REDACTED, rows never drop, totals stay exact. Enforcement is fail-open
+  by construction (a fetch that skips the redaction ships the value), so
+  it is structural rather than a convention (#3329): `fetchMany` is the
+  only exported fetch, and the root eslint config refuses a bare
+  `getManyAndCount` under every `repositories/` directory except that
+  file, so a new adapter cannot fetch a collection without redacting.
+  Author conditions FAIL-CLOSED over
   missing columns (positive legs + a presence guard like
   `ne('realmId', null)`): `@rapiq/adapter-memory` unifies a missing column
   with `null`, so a negated leg — or an `ownOrNull` reach's

@@ -10,7 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, redactFieldConditions } from '../query.ts';
+import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -40,11 +40,11 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
         const { pagination } = applyQuery(qb, query);
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
         await this.repository.extendManyWithEA(entities);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

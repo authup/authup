@@ -14,7 +14,7 @@ import type {
     DeepPartial, 
     Repository,
 } from 'typeorm';
-import { applyQuery, redactFieldConditions } from '../query.ts';
+import { applyQuery, fetchMany } from '../query.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
@@ -65,10 +65,10 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
             qb.andWhere('identityProviderAccount.userRealmId = :ownerRealmId', { ownerRealmId: options.realmId });
         }
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

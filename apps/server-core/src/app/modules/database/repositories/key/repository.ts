@@ -22,7 +22,7 @@ import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, redactFieldConditions } from '../query.ts';
+import { applyQuery, fetchMany } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
     ClientEntity,
@@ -330,10 +330,10 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
         applyRealmScopeSelect(qb, 'keyEntity');
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

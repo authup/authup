@@ -25,6 +25,16 @@ export default eslintConfig(
         },
     },
     {
+        files: ['apps/server-core/src/app/modules/**/repositories/**/*.ts'],
+        ignores: ['apps/server-core/src/app/modules/database/repositories/query.ts'],
+        rules: {
+            'no-restricted-properties': ['error', {
+                property: 'getManyAndCount',
+                message: 'Read collections through fetchMany (app/modules/database/repositories/query.ts): it enforces the field visibility conditions, a bare getManyAndCount ships the gated columns (#3329).',
+            }],
+        },
+    },
+    {
         files: ['**/*.vue'],
         languageOptions: { globals: { NodeJS: 'readonly' } },
     },

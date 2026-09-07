@@ -11,7 +11,7 @@ import type { PermissionPolicyBinding } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, redactFieldConditions } from '../query.ts';
+import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -45,10 +45,10 @@ export class RoleRepositoryAdapter implements IRoleRepository {
 
         const { pagination } = applyQuery(qb, query);
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,
