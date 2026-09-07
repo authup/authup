@@ -25,11 +25,31 @@ client rotating its own secret under `client_self_manage`, and records a
 `clientSecretRotated` event. A plain client still takes `secret` on update.
 See [Client Secrets](../development/api-oauth2.md#client-secrets).
 
-`secretEncrypted: true` is refused with `400` on create and on the endpoint,
-and fails the startup when a provisioning file declares it, until encrypted
-storage ships in a later release. The flag never encrypted anything, and a
-row carrying it over a plaintext is now read-gated like any plaintext instead
-of being projected to every reader that passed the read pre-gate.
+Encrypted storage ships in the same release. `secretEncrypted: true` on
+create, `mode: 'encrypted'` on the endpoint and `secretEncrypted: true` in a
+provisioning file store the secret as a cipher blob under the client realm's
+encryption key, the key that already protects MFA seeds, and a reader whose
+permissions cover the client gets the plaintext back on every read. Before,
+the flag encrypted nothing. A row that carries it from an earlier release
+still holds a plaintext: it keeps authenticating, it is read-gated like any
+plaintext now instead of being projected to every reader that passed the read
+pre-gate, and its next rotation without a `mode` stores the new secret
+encrypted. Declaring `secretHashed` and `secretEncrypted` together answers
+`400`.
+
+`auth_clients.secret` is widened from 256 to 512 characters by the migration
+`1788782400000-WidenClientSecret`, applied by the next boot with migrations
+enabled or by `authup migration run`. It is written by hand on both dialects
+so the values survive; a generated migration would have dropped the column.
+Reverting it fails while a client holds an encrypted secret (a value longer
+than 256 characters): rotate such clients to `plain` or `hashed` first.
+
+An encrypted secret depends on its realm's encryption key. `DELETE /keys/:id`
+on such a key now answers `409` while client secrets reference it, as it did
+for MFA seeds, and `force` destroys them: those clients stop authenticating
+until rotated. Disabling the key has the same effect and is reversible. Set
+`SECRETS_ENCRYPTION_KEY` in production so the key material is wrapped at rest
+(see [configuration](configuration-server-core.md)).
 
 Two smaller changes in the same area. A secret submitted on create or to the
 endpoint that happens to look like a bcrypt hash is hashed like any other
