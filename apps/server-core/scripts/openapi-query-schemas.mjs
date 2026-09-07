@@ -4,68 +4,32 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  *
- * Documents the rapiq query vocabulary on the operations that decode one,
- * and refuses to let a build through when the surface the document advertises
- * and the one the code serves have drifted apart.
+ * Documents the rapiq query vocabulary on the operations that decode one.
  *
- * It reads the emitted document rather than the schema registry: every fact
- * it needs is already in there, as the per-operation `x-query-schema` marker
- * the trapi handler stamps and the `x-authup-schemas` map the config emits at
- * the root. So the enrichment has no runtime dependency of its own and cannot
- * describe a registry other than the one the document was generated from.
- * The only thing it reads from `src/` is the pair of declarations the
- * cross-check compares, which exist nowhere else.
+ * A pure function over the emitted document: every fact it needs is already
+ * in there, as the per-operation `x-query-schema` marker the trapi handler
+ * stamps and the `x-authup-schemas` map the config emits at the root. It
+ * reads no file and knows no registry, so it cannot describe one other than
+ * the one the document was generated from.
  *
- * Chained after the generate:
+ * Called from `trapi.config.ts` through the `swagger.transform` hook, so the
+ * whole pipeline is one `trapi generate`. It exists only because two things
+ * are not expressible in trapi yet: a decorator handler cannot attach the
+ * parameters it derives (tada5hi/trapi#907), and there is no way to declare a
+ * response that applies to every operation (tada5hi/trapi#908). With both, the
+ * generation is entirely config plus the handler and this file goes away.
  *
- *   trapi generate && node scripts/openapi-query-schemas.mjs
+ * What this deliberately does NOT do is assert anything. The invariants that
+ * keep the marker, the `describeQuerySchema` call and the document equal live
+ * in `test/unit/http/openapi-coverage.spec.ts`, which is where this repository
+ * keeps invariants, and they run whether or not anyone builds the document.
  */
-
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const PACKAGE_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CONTROLLERS_PATH = path.join(PACKAGE_PATH, 'src', 'adapters', 'http', 'controllers');
-const ENTITIES_PATH = path.join(PACKAGE_PATH, 'src', 'core', 'entities');
 
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
 
 const SCHEMA_MAP_KEY = 'x-authup-schemas';
 const MARKER_KEY = 'x-query-schema';
 const ERROR_SCHEMA_NAME = 'ErrorResponse';
-
-/**
- * Registered schemas that legitimately serve no collection read, and so may
- * stay unreachable from any operation. Every entry has to earn its place: an
- * entry whose schema DOES have a marked collection read fails the build, the
- * way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does.
- *
- * Empty today, which is the strongest state it can be in: every registered
- * schema is reachable from the document.
- */
-const COLLECTION_COVERAGE_EXCLUSIONS = [];
-
-/**
- * Marked reads that carry no `describeQuerySchema` call of their own, and so
- * cannot be cross-checked against one. The expanded policy read answers
- * through `getOne`, `/userinfo` answers a flat user whose vocabulary
- * `UserService.getOne` decodes, and the two bulk revokes answer a count
- * rather than rows, so they have no `meta` to describe into even though they
- * decode a filter. Every entry has to earn its place, the way an unused
- * `COLLECTION_COVERAGE_EXCLUSIONS` entry does.
- *
- * The list exists so the cross-check can fail CLOSED. Without it a marked
- * method with no recognized call is indistinguishable from one whose call the
- * source pattern below simply failed to match, and a guard that cannot tell
- * those apart silently stops covering whatever it stops matching.
- */
-const MARKERS_WITHOUT_DESCRIBE = [
-    'src/adapters/http/controllers/entities/policy/module.ts::POLICY',
-    'src/adapters/http/controllers/workflows/userinfo/module.ts::USER',
-    'src/adapters/http/controllers/entities/session/module.ts::SESSION',
-    'src/adapters/http/controllers/entities/session-token/module.ts::SESSION_TOKEN',
-];
 
 /**
  * What a path variable holds, where the answer is not the variable's own name.
@@ -97,12 +61,6 @@ function operations(document) {
     return output;
 }
 
-function pathVariables(template) {
-    return template.matchAll(/\{([^}]+)\}/g)
-        .map((match) => match[1])
-        .toArray();
-}
-
 function list(input) {
     return input.join(', ');
 }
@@ -110,195 +68,6 @@ function list(input) {
 // --------------------------------------------------------------------------
 // Coverage
 // --------------------------------------------------------------------------
-
-function walk(directory) {
-    const output = [];
-
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-        const target = path.join(directory, entry.name);
-
-        if (entry.isDirectory()) {
-            output.push(...walk(target));
-        } else if (entry.name.endsWith('.ts')) {
-            output.push(target);
-        }
-    }
-
-    return output;
-}
-
-/**
- * Every schema identifier a controller can pass to `describeQuerySchema`,
- * mapped onto the `EntityType` member its own declaration names. Both halves
- * live in one file per entity, so the mapping is read rather than derived
- * from a naming convention: nothing here assumes `roleSchema` describes
- * `EntityType.ROLE`.
- */
-function readSchemaIdentifiers() {
-    const output = new Map();
-
-    for (const file of walk(ENTITIES_PATH)) {
-        if (path.basename(file) !== 'schema.ts') {
-            continue;
-        }
-
-        const source = fs.readFileSync(file, 'utf8');
-        const identifier = source.match(/export const (\w+)\s*=\s*defineSchema/);
-        const member = source.match(/\bname:\s*EntityType\.(\w+)/);
-
-        if (identifier && member) {
-            output.set(identifier[1], member[1]);
-        }
-    }
-
-    return output;
-}
-
-/**
- * The marker and the `meta.schema` the route actually answers with are two
- * independent statements about one route, written a dozen lines apart. This
- * is what keeps them equal.
- *
- * A marked method with NO describe call is fine and not reported: two of them
- * exist deliberately (`PolicyController.getOneExpanded` delegates to `getOne`,
- * and `GET /userinfo` answers a flat claims document). The reverse is not:
- * a describe call outside a marked method is a route that decodes a query and
- * documents none, which is the gap the marker exists to close.
- */
-function assertMarkersMatchDescribeCalls(failures) {
-    const identifiers = readSchemaIdentifiers();
-    const excused = new Set(MARKERS_WITHOUT_DESCRIBE);
-
-    for (const file of walk(CONTROLLERS_PATH)) {
-        const source = fs.readFileSync(file, 'utf8');
-        const name = path.relative(PACKAGE_PATH, file);
-
-        const blocks = [];
-        const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record|filters)'\)$/gm;
-
-        let marker = markers.exec(source);
-        while (marker !== null) {
-            // A method body ends at the first closing brace back at member
-            // indentation; anything nested inside it is indented deeper.
-            const offset = source.slice(marker.index).search(/^ {4}\}$/m);
-
-            if (offset === -1) {
-                failures.push(`${name}: @DQuerySchema(EntityType.${marker[1]}) is not attached to a method.`);
-            } else {
-                blocks.push({
-                    member: marker[1],
-                    shape: marker[2],
-                    start: marker.index,
-                    end: marker.index + offset,
-                    described: false,
-                });
-            }
-
-            marker = markers.exec(source);
-        }
-
-        const calls = /describeQuerySchema\(\s*(\w+)\s*(?:,\s*(\w+)\s*)?\)/g;
-
-        let call = calls.exec(source);
-        while (call !== null) {
-            const block = blocks.find((entry) => call.index >= entry.start && call.index < entry.end);
-            const member = identifiers.get(call[1]);
-
-            if (block) {
-                block.described = true;
-            }
-
-            if (!block) {
-                failures.push(`${name}: describeQuerySchema(${call[1]}) sits in a method carrying no @DQuerySchema marker.`);
-            } else if (!member) {
-                failures.push(`${name}: describeQuerySchema(${call[1]}) names no declared entity schema.`);
-            } else if (member !== block.member) {
-                failures.push(`${name}: marked EntityType.${block.member} but describes ${call[1]} (EntityType.${member}).`);
-            }
-
-            if (block && member === block.member) {
-                const expected = block.shape === 'record' ? 'RECORD_QUERY_PARAMETERS' : undefined;
-
-                if (call[2] !== expected) {
-                    failures.push(`${name}: marked shape '${block.shape}' but describes with ${call[2] ? `\`${call[2]}\`` : 'the full vocabulary'}.`);
-                }
-            }
-
-            call = calls.exec(source);
-        }
-
-        for (const block of blocks) {
-            if (block.described) {
-                continue;
-            }
-
-            const key = `${name}::${block.member}`;
-
-            if (excused.has(key)) {
-                excused.delete(key);
-                continue;
-            }
-
-            failures.push(`${name}: @DQuerySchema(EntityType.${block.member}) describes nothing. Either the method lost its describeQuerySchema call, or the call is written in a form this check does not match; record it in MARKERS_WITHOUT_DESCRIBE only if it legitimately delegates.`);
-        }
-    }
-
-    for (const key of excused) {
-        failures.push(`MARKERS_WITHOUT_DESCRIBE holds '${key}', which now describes a schema of its own or no longer carries a marker; drop the entry.`);
-    }
-}
-
-/**
- * The document's own halves: a marker points at a schema name, the root map
- * resolves it. Checked in both directions, because each miss is silent in a
- * different way. A dangling pointer documents a vocabulary nothing serves,
- * and an unreferenced schema is an endpoint whose query surface never made it
- * into the document at all.
- */
-function assertDocumentCoverage(document, failures) {
-    const described = document[SCHEMA_MAP_KEY];
-
-    if (!described) {
-        failures.push(`The document carries no \`${SCHEMA_MAP_KEY}\`; the generate emits it from \`swagger.data.extra\`.`);
-        return;
-    }
-
-    const collections = new Set();
-
-    for (const {
-        template, 
-        method, 
-        operation, 
-    } of operations(document)) {
-        const marked = operation[MARKER_KEY];
-        if (!marked) {
-            continue;
-        }
-
-        if (!described[marked.schema]) {
-            failures.push(`${method.toUpperCase()} ${template}: marked as '${marked.schema}', which \`${SCHEMA_MAP_KEY}\` does not describe.`);
-            continue;
-        }
-
-        if (!marked.parameters) {
-            collections.add(marked.schema);
-        }
-    }
-
-    const excluded = new Set(COLLECTION_COVERAGE_EXCLUSIONS);
-
-    for (const name of Object.keys(described)) {
-        if (!collections.has(name) && !excluded.has(name)) {
-            failures.push(`Schema '${name}' is registered but no collection read is marked with it; mark the route, or record why not in COLLECTION_COVERAGE_EXCLUSIONS.`);
-        }
-    }
-
-    for (const name of excluded) {
-        if (collections.has(name) || !described[name]) {
-            failures.push(`COLLECTION_COVERAGE_EXCLUSIONS holds '${name}', which needs no exclusion any more; drop the entry.`);
-        }
-    }
-}
 
 // --------------------------------------------------------------------------
 // Enrichment
@@ -653,48 +422,21 @@ function describePathParameters(document) {
 export function enrichOpenAPIDocument(document) {
     const failures = [];
 
-    assertMarkersMatchDescribeCalls(failures);
-    assertDocumentCoverage(document, failures);
+    const { enriched, appended } = enrichQueryOperations(document, failures);
+    const responses = declareErrorResponses(document, failures);
+    const described = describePathParameters(document);
 
-    if (failures.length === 0) {
-        const { enriched, appended } = enrichQueryOperations(document, failures);
-        const responses = declareErrorResponses(document, failures);
-        const described = describePathParameters(document);
-
-        // trapi declares every path-template variable itself since 2.1.0
-        // (tada5hi/trapi#896), and the enrichment APPENDS rather than assigns
-        // so it cannot drop them. This re-checks both, because the failure is
-        // an invalid document rather than an error.
-        for (const {
-            template,
-            method,
-            operation,
-        } of operations(document)) {
-            const declared = new Set(
-                (operation.parameters ?? [])
-                    .filter((entry) => entry.in === 'path')
-                    .map((entry) => entry.name),
-            );
-
-            for (const name of pathVariables(template)) {
-                if (!declared.has(name)) {
-                    failures.push(`${method.toUpperCase()} ${template}: path variable '${name}' is undeclared.`);
-                }
-            }
-        }
-
-        if (failures.length === 0) {
-            return {
-                enriched,
-                appended,
-                responses,
-                described,
-            };
-        }
+    if (failures.length > 0) {
+        throw new Error([
+            'the query vocabulary could not be attached to the document.',
+            ...failures.map((failure) => `  - ${failure}`),
+        ].join('\n'));
     }
 
-    throw new Error([
-        'the documented query surface and the served one disagree.',
-        ...failures.map((failure) => `  - ${failure}`),
-    ].join('\n'));
+    return {
+        enriched,
+        appended,
+        responses,
+        described,
+    };
 }
