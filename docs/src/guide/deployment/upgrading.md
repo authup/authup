@@ -12,10 +12,11 @@ either requires operator action or deliberately changes behavior.
 A reader projecting `secret` (`?fields=+secret` on `/clients`, or
 `fields[client]` on the client-permission, client-role and client-scope
 collections) used to receive the bcrypt hash of every client that passed the
-read pre-gate, foreign realms included; only plaintext values were gated per
-row. A hash of an admin-chosen secret is offline-crackable and no reader needs
-another realm's, so a hashed value now takes the same gate a plaintext or an
-encrypted one does: it is projected on the reader's own client row and on rows
+read pre-gate, foreign realms included. In v1.0.0-beta.64 only a plaintext value
+(both flags `false`) was gated per row; the encrypted mode, new in this release,
+is gated from the start. A hash of an admin-chosen secret is offline-crackable
+and no reader needs another realm's, so a hashed value now takes that same
+gate: it is projected on the reader's own client row and on rows
 the reader's permissions cover, and redacted elsewhere. `GET /clients/:id`
 with `?fields=+secret` answers `403` for a foreign hashed row, as it already did
 for a foreign plaintext one. A `realm_admin` listing clients with the field
