@@ -50,6 +50,15 @@ jobs:
                     VERSION="${VERSION#v}"
                     echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+                    # A malformed version would publish malformed tags and, worse, move the
+                    # floating 1 / 1.0 / 1.0.0 tags onto whatever the dispatched ref builds.
+                    # workflow_dispatch takes the value from a human; the release path leaves
+                    # it empty when release-please cut nothing, and then publishes nothing.
+                    if [[ -n "$VERSION" && ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+                        echo "::error::Invalid version '$VERSION'. Expected MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-PRERELEASE."
+                        exit 1
+                    fi
+
                     # latest deliberately follows prereleases while no stable line exists (docs reference authup/authup:latest)
                     TAGS="latest"
                     IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
