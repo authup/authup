@@ -81,6 +81,7 @@ export class SessionTokenController {
      * itself survives, so the other applications riding it stay signed in.
      */
     @DDelete('', [ForceLoggedInMiddleware])
+    @DQuerySchema(EntityType.SESSION_TOKEN, 'filters')
     async dropMany(
         @DContext() event: IAppEvent,
     ): Promise<SessionTokenDeleteManyResult> {

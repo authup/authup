@@ -1,5 +1,6 @@
 import { defineConfig } from '@trapi/cli';
 import { enrichOpenAPIDocument } from './scripts/openapi-query-schemas.mjs';
+import { Parameter } from '@rapiq/core';
 import { method, readString } from '@trapi/core';
 import {
     RECORD_QUERY_PARAMETERS,
@@ -29,13 +30,19 @@ import {
  * emit an operation that looks unmarked or points at nothing, which is
  * precisely the silent gap the marker exists to close.
  */
+const SHAPE_PARAMETERS: Record<string, `${Parameter}`[] | undefined> = {
+    collection: undefined,
+    record: RECORD_QUERY_PARAMETERS,
+    filters: [Parameter.FILTERS],
+};
+
 const querySchemaHandler = method({
     match: { name: 'DQuerySchema', on: 'method' },
     apply: (ctx, draft) => {
         const schema = readString(ctx.argument(0));
         const shape = readString(ctx.argument(1));
 
-        if (!schema || (shape !== 'collection' && shape !== 'record')) {
+        if (!schema || (shape !== 'collection' && shape !== 'record' && shape !== 'filters')) {
             throw new Error(`@DQuerySchema on '${draft.name}' has unresolvable arguments.`);
         }
 
@@ -46,8 +53,8 @@ const querySchemaHandler = method({
 
         draft.extensions.push({
             key: 'x-query-schema',
-            value: shape === 'record' ?
-                { schema, parameters: RECORD_QUERY_PARAMETERS } :
+            value: SHAPE_PARAMETERS[shape] ?
+                { schema, parameters: SHAPE_PARAMETERS[shape] } :
                 { schema },
         });
     },

@@ -184,6 +184,7 @@ export class SessionController {
     }
 
     @DDelete('', [ForceLoggedInMiddleware])
+    @DQuerySchema(EntityType.SESSION, 'filters')
     async dropMany(
         @DContext() event: IAppEvent,
     ): Promise<SessionDeleteManyResponse> {

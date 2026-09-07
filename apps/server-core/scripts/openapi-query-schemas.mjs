@@ -48,10 +48,11 @@ const COLLECTION_COVERAGE_EXCLUSIONS = [];
 
 /**
  * Marked reads that carry no `describeQuerySchema` call of their own, and so
- * cannot be cross-checked against one. Both delegate the description to
- * another method: the expanded policy read answers through `getOne`, and
- * `/userinfo` answers a flat user whose vocabulary `UserService.getOne`
- * decodes. Every entry has to earn its place, the way an unused
+ * cannot be cross-checked against one. The expanded policy read answers
+ * through `getOne`, `/userinfo` answers a flat user whose vocabulary
+ * `UserService.getOne` decodes, and the two bulk revokes answer a count
+ * rather than rows, so they have no `meta` to describe into even though they
+ * decode a filter. Every entry has to earn its place, the way an unused
  * `COLLECTION_COVERAGE_EXCLUSIONS` entry does.
  *
  * The list exists so the cross-check can fail CLOSED. Without it a marked
@@ -62,6 +63,8 @@ const COLLECTION_COVERAGE_EXCLUSIONS = [];
 const MARKERS_WITHOUT_DESCRIBE = [
     'src/adapters/http/controllers/entities/policy/module.ts::POLICY',
     'src/adapters/http/controllers/workflows/userinfo/module.ts::USER',
+    'src/adapters/http/controllers/entities/session/module.ts::SESSION',
+    'src/adapters/http/controllers/entities/session-token/module.ts::SESSION_TOKEN',
 ];
 
 /**
@@ -171,7 +174,7 @@ function assertMarkersMatchDescribeCalls(failures) {
         const name = path.relative(PACKAGE_PATH, file);
 
         const blocks = [];
-        const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record)'\)$/gm;
+        const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record|filters)'\)$/gm;
 
         let marker = markers.exec(source);
         while (marker !== null) {
@@ -301,7 +304,7 @@ function assertDocumentCoverage(document, failures) {
 // Enrichment
 // --------------------------------------------------------------------------
 
-function appendParameters(operation, parameters) {
+function appendParameters(operation, parameters, failures, label) {
     if (!Array.isArray(operation.parameters)) {
         operation.parameters = [];
     }
@@ -311,10 +314,18 @@ function appendParameters(operation, parameters) {
     for (const parameter of parameters) {
         const present = operation.parameters.some((entry) => entry.name === parameter.name && entry.in === parameter.in);
 
-        if (!present) {
-            operation.parameters.push(parameter);
-            appended++;
+        // Appending rather than assigning is what keeps trapi's own path
+        // parameters, but it also means a name it already emitted would keep
+        // its own description and silently drop the documented one. That is a
+        // documentation change hiding inside an unrelated edit, so it fails.
+        if (present) {
+            failures.push(`${label}: a '${parameter.name}' ${parameter.in} parameter is already declared, so the documented query vocabulary cannot be attached to it.`);
+
+            continue;
         }
+
+        operation.parameters.push(parameter);
+        appended++;
     }
 
     return appended;
@@ -357,7 +368,8 @@ function buildFieldsParameter(description, record) {
         in: 'query',
         required: false,
         description: [
-            'Project a subset of columns: `fields=id,name`.',
+            'Project a subset of columns: `fields=id,name`, which REPLACES the default projection.',
+            'A leading `+` adds to it and a leading `-` removes from it (`fields=+email`, `fields=-name`).',
             'Per relation: `fields[$root]=id&fields[realm]=name`.',
             `Selectable: ${list(selectable)}.`,
             optional.length > 0 && projection.length > 0 ?
@@ -434,7 +446,12 @@ function buildPaginationParameters(description) {
             schema: {
                 type: 'integer',
                 minimum: 1,
-                ...(maxLimit ? { maximum: maxLimit } : {}),
+                // Deliberately no `maximum`: the server CLAMPS a larger
+                // value rather than rejecting it, and `maximum` is an
+                // input assertion, so declaring it would have a strict
+                // client reject a request the API answers. The ceiling
+                // is in the description, and machine-readably under
+                // `x-authup-schemas.<name>.pagination.maxLimit`.
             },
         },
         {
@@ -457,13 +474,17 @@ function buildPaginationParameters(description) {
  * documents, so a schema that stops declaring a vocabulary stops advertising
  * it here with no edit.
  */
-function enrichQueryOperations(document) {
+function enrichQueryOperations(document, failures) {
     const described = document[SCHEMA_MAP_KEY];
 
     let enriched = 0;
     let appended = 0;
 
-    for (const { operation } of operations(document)) {
+    for (const {
+        template,
+        method,
+        operation,
+    } of operations(document)) {
         const marked = operation[MARKER_KEY];
         if (!marked) {
             continue;
@@ -495,7 +516,7 @@ function enrichQueryOperations(document) {
             parameters.push(...buildPaginationParameters(description));
         }
 
-        appended += appendParameters(operation, parameters.filter(Boolean));
+        appended += appendParameters(operation, parameters.filter(Boolean), failures, `${method.toUpperCase()} ${template}`);
 
         // The pointer is written here rather than by the decorator handler
         // because it is a statement about the assembled document: it is only
@@ -636,7 +657,7 @@ export function enrichOpenAPIDocument(document) {
     assertDocumentCoverage(document, failures);
 
     if (failures.length === 0) {
-        const { enriched, appended } = enrichQueryOperations(document);
+        const { enriched, appended } = enrichQueryOperations(document, failures);
         const responses = declareErrorResponses(document, failures);
         const described = describePathParameters(document);
 
