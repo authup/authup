@@ -17,6 +17,7 @@ import type {
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
 import type { IProvisioningSynchronizer } from '../../types.ts';
+import type { IRealmCipher } from '../../../key/types.ts';
 
 export type ClientProvisioningSynchronizerContext = {
     clientRepository: IClientRepository,
@@ -30,4 +31,10 @@ export type ClientProvisioningSynchronizerContext = {
 
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
+
+    /**
+     * Encrypts a file-declared secret stored in encrypted mode under the
+     * client realm's enc key; without it such a declaration fails the boot.
+     */
+    cipher?: IRealmCipher,
 };

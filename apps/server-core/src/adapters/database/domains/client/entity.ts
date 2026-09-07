@@ -93,9 +93,11 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
+    // 512, not 256: a 256-character secret in encrypted mode is a ~420
+    // character cipher blob (plan 105).
     @Column({
         type: 'varchar',
-        length: 256,
+        length: 512,
         select: false,
         nullable: true,
     })

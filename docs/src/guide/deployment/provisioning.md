@@ -343,6 +343,13 @@ realms:
           relations:
             globalRoles:
               - project-manager
+      clients:
+        - attributes:
+            name: acme-app
+            authMethod: secret
+            # a plaintext (hashed before it is stored) or a bcrypt hash
+            secret: replace-with-a-strong-secret
+            secretHashed: true
 ```
 
 ## Schema Reference
@@ -503,8 +510,19 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `authMethod`, `tokenBindingMethod`, `secret`, `displayName`, `redirectUri` |
+| `attributes` | object             | `name` (required), `authMethod`, `tokenBindingMethod`, `secret`, `secretHashed`, `secretEncrypted`, `displayName`, `redirectUri` |
 | `relations`  | object             | See below                            |
+
+A client with `authMethod: secret` declares its `secret` in the file. With
+`secretHashed: true` the value is either the plaintext, which is hashed before
+it is stored, or an already bcrypt-hashed value, which is kept as it is, so a
+file under version control does not have to hold the plaintext. Without the
+flag the secret is stored as written and stays readable through the API.
+With `secretEncrypted: true` the value is either the plaintext, which is
+encrypted under the realm's encryption key before it is stored, or a value
+that already is such a cipher blob (`v1.<key id>.<payload>`), which is kept as
+it is; the secret stays readable through the API for a permitted reader.
+Declaring both flags fails the startup.
 
 **Client relations:**
 

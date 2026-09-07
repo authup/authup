@@ -509,7 +509,9 @@ export default {
          * Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the
          * realm key store's material at rest — the per-realm JWT signing
          * private keys and the auto-generated per-realm encryption keys
-         * that protect MFA seeds. Generate one with:
+         * that protect MFA seeds and client secrets stored in encrypted
+         * mode. Without it those values are encrypted under a key that
+         * sits unwrapped in the same database. Generate one with:
          * openssl rand -base64 32
          * or:
          * node -e "console.log(crypto.randomBytes(32).toString('base64'))"

@@ -212,15 +212,25 @@ export class ClientValidator extends Container<Client> {
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
+        // The storage mode is a create-time property (like realmId): on an
+        // existing client it changes only through the secret rotation
+        // endpoint, together with a plaintext the server holds in hand, so
+        // a flag can never be flipped over a value it does not describe.
         this.mount(
             'secretEncrypted',
-            { optional: true },
+            {
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
+            },
             createValidator(z.boolean()),
         );
 
         this.mount(
             'secretHashed',
-            { optional: true },
+            {
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
+            },
             createValidator(z.boolean()),
         );
 

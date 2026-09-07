@@ -25,6 +25,119 @@ Authup supports wildcard patterns in registered redirect URIs as a convenience f
 Wildcard redirect URIs deviate from [RFC 6749 §3.1.2.3](https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2.3), which requires exact string matching. This is acceptable when client registration is restricted to administrators. For production deployments, prefer exact redirect URIs to minimize open-redirect risk.
 :::
 
+## Client Secrets
+
+A confidential client (`authMethod: secret`) stores its secret in one of three
+modes. The mode is chosen when the client is created, through the two flags
+`secretHashed` and `secretEncrypted` (never both):
+
+| Mode | Flags | Stored as | Can it be read back? |
+|---|---|---|---|
+| `plain` (default) | both `false` | the plaintext | yes, by a reader whose permissions cover the client |
+| `hashed` | `secretHashed: true` | a bcrypt hash | no |
+| `encrypted` | `secretEncrypted: true` | a cipher blob under the realm's encryption key | yes, by a reader whose permissions cover the client |
+
+`encrypted` is the recoverable mode that keeps the plaintext out of the
+database. The value is encrypted at rest (AES-256-GCM) under the client
+realm's encryption key, the same automatically generated per-realm key that
+protects MFA seeds. A reader whose permissions cover the client gets the
+decrypted secret back on any read that projects the field
+(`?fields=+secret`; the default projection omits `secret`), exactly as for a
+`plain` secret; a read never returns the ciphertext. The secret is tied to that key's lifecycle:
+while the key is disabled such clients cannot authenticate, and deleting the
+key destroys their secrets, so `DELETE /keys/:id` answers `409` while client
+secrets reference it and needs `force` to proceed. Set `secretsEncryptionKey`
+(`SECRETS_ENCRYPTION_KEY`, see the
+[server configuration](../deployment/configuration-server-core.md)) so the
+realm key itself is wrapped at rest. Declaring `secretHashed` and
+`secretEncrypted` together answers `400`.
+
+The flags are create-time properties. An update (`POST /clients/:id`) ignores
+them; the mode changes only through the rotation endpoint, together with a new
+secret. A client created in `hashed` or `encrypted` mode answers with the
+stored form in `secret` (the hash, or the cipher blob), not with the value you
+sent, so keep the plaintext you chose; an encrypted secret can be read back
+later with `GET /clients/:id?fields=+secret`.
+
+### Rotating a secret
+
+`POST /clients/:id/secret` replaces the secret and, optionally, the mode. Both
+body fields are optional: without `secret` the server generates one, without
+`mode` the client keeps its current mode. `mode` is one of `plain`, `hashed`
+or `encrypted`.
+
+```shell
+curl -X POST 'http://localhost:3000/clients/YOUR_CLIENT_ID/secret' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{ "mode": "hashed" }'
+```
+
+```json
+{
+    "data": {
+        "id": "YOUR_CLIENT_ID",
+        "name": "acme-app",
+        "authMethod": "secret",
+        "secretHashed": true,
+        "secretEncrypted": false
+    },
+    "meta": {
+        "secret": "GENERATED_PLAINTEXT"
+    }
+}
+```
+
+`meta.secret` is the plaintext, returned in this response only; a hashed
+secret cannot be read back later. The previous secret stops working as soon as
+the response is sent, so update the application before it next authenticates.
+The same route exists under a realm, `POST /realms/:realmId/clients/:id/secret`.
+
+Rotating into `encrypted` mode works the same way, and the secret stays
+readable afterwards:
+
+```shell
+curl -X POST 'http://localhost:3000/clients/YOUR_CLIENT_ID/secret' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{ "mode": "encrypted" }'
+```
+
+```json
+{
+    "data": {
+        "id": "YOUR_CLIENT_ID",
+        "name": "acme-app",
+        "authMethod": "secret",
+        "secretHashed": false,
+        "secretEncrypted": true
+    },
+    "meta": {
+        "secret": "GENERATED_PLAINTEXT"
+    }
+}
+```
+
+A client whose `secretEncrypted` flag predates encrypted storage still holds
+a plaintext and keeps authenticating with it. Rotating it without a `mode`
+stores the new secret encrypted, which is what the flag was meant to say.
+
+The caller needs the `client_update` permission for the client's realm. A
+client may rotate its own secret with `POST /clients/@me/secret` under
+`client_self_manage`, keeping its current mode; a mode change is an
+administrator's call and answers `403` for a self-managing client. A public
+client (`authMethod: none`) has no secret and answers `400`.
+
+Every rotation is recorded as a `clientSecretRotated` event in the security
+event log. The event carries the mode and never the secret.
+
+### Changing the secret of a plain client
+
+While a client is in `plain` mode, `POST /clients/:id` with a `secret` still
+sets a new plaintext. On a hashed or encrypted client the same request answers
+`400` and names the rotation endpoint, so an update can never downgrade a
+protected secret.
+
 ## Flows
 
 ### 1. Password Flow

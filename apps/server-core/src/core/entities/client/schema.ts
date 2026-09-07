@@ -29,12 +29,14 @@ const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY
  * client-permission / client-role / client-scope, which never run
  * `ClientService`'s read path.
  *
- * Only rows exposing a PLAINTEXT secret are guarded: `null`, hashed
- * and encrypted values stay visible to any actor that passed the read
- * pre-gate (the historical service semantics). A plaintext value is
- * additionally visible on the actor's OWN client row (the `getOne`
- * isMe bypass, list-shaped) and on rows the compiled permission
- * condition covers. A non-expressible (`post`) or settled-deny compile
+ * Only rows exposing a READABLE secret are guarded: `null` and hashed
+ * values stay visible to any actor that passed the read pre-gate (the
+ * historical service semantics). A plaintext value is additionally
+ * visible on the actor's OWN client row (the `getOne` isMe bypass,
+ * list-shaped) and on rows the compiled permission condition covers.
+ * `secretEncrypted` is deliberately NOT a leg: the flag never encrypted
+ * anything (#3351), and once it does (plan 105 PR 2) the value is
+ * decrypted for exactly the readers a plaintext value reaches. A non-expressible (`post`) or settled-deny compile
  * yields no permission leg — fail closed for plaintext rows rather
  * than falling back to per-row evaluation.
  *
@@ -54,7 +56,6 @@ async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdic
     const visible : ICondition[] = [
         eq('secret', null),
         eq('secretHashed', true),
-        eq('secretEncrypted', true),
     ];
 
     if (compiled.verdict === 'conditional') {

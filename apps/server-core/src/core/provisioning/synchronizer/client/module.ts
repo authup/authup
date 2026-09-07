@@ -13,8 +13,12 @@ import type {
     Role,
     Scope,
 } from '@authup/core-kit';
-import { pickRecord } from '@authup/kit';
+import { isBCryptHash, pickRecord } from '@authup/kit';
+import { ClientCredentialsService } from '../../../authentication/credential/entities/client/module.ts';
+import { assertSecretModeExclusive } from '../../../entities/client/service.ts';
 import type { IClientRepository } from '../../../entities/index.ts';
+import { isRealmCipherBlob } from '../../../key/realm-cipher.ts';
+import type { IRealmCipher } from '../../../key/types.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
@@ -27,6 +31,8 @@ import type { ClientProvisioningSynchronizerContext } from './types.ts';
 
 export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningEntity> {
     protected clientRepository: IClientRepository;
+
+    protected cipher?: IRealmCipher;
 
     protected permissionResolver: ProvisioningEntityResolver<Permission>;
 
@@ -48,6 +54,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         super();
 
         this.clientRepository = ctx.clientRepository;
+        this.cipher = ctx.cipher;
 
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.roleResolver = new ProvisioningEntityResolver(ctx.roleRepository);
@@ -75,6 +82,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
         this.canonicalizeName(input.attributes);
+        await this.protectSecret(input.attributes);
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
@@ -206,5 +214,32 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             ...input,
             attributes,
         };
+    }
+
+    /**
+     * The synchronizer writes attributes straight to the repository, so it
+     * is the one client write path that bypasses the credential service. A
+     * file declaring `secretHashed: true` carries either a plaintext or a
+     * bcrypt hash (GitOps should not have to hold plaintext), which makes
+     * this the ONE place that sniffs the input, and only for that mode.
+     */
+    protected async protectSecret(attributes: ClientProvisioningEntity['attributes']): Promise<void> {
+        assertSecretModeExclusive(attributes);
+
+        if (typeof attributes.secret !== 'string') {
+            return;
+        }
+
+        const isProtected = attributes.secretHashed ?
+            isBCryptHash(attributes.secret) :
+            attributes.secretEncrypted && isRealmCipherBlob(attributes.secret);
+
+        if (
+            !isProtected &&
+            (attributes.secretHashed || attributes.secretEncrypted)
+        ) {
+            const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
+            attributes.secret = await credentialsService.protect(attributes.secret, attributes);
+        }
     }
 }

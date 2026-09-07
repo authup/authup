@@ -14,6 +14,8 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 import type {
     ClientCreatePayload,
     ClientSavePayload,
+    ClientSecretRotatePayload,
+    ClientSecretRotateResponse,
     ClientUpdatePayload,
     IClientAPI,
 } from './types';
@@ -70,6 +72,15 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         data: ClientSavePayload,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async rotateSecret(
+        id: Client['id'],
+        data: ClientSecretRotatePayload = {},
+    ): Promise<ClientSecretRotateResponse> {
+        const response = await this.client.post(`clients/${id}/secret`, data);
 
         return response.data;
     }

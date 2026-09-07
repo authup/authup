@@ -6,6 +6,7 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
+import { isBCryptHash } from '@authup/kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -46,10 +47,16 @@ describe('http/controllers (client secret projection)', () => {
     let ownClientId: string;
     let foreignClientId: string;
     let foreignHashedClientId: string;
+    let ownEncryptedClientId: string;
+    let foreignEncryptedClientId: string;
 
     const ownClientSecret = 'secret-projection-own';
     const foreignClientSecret = 'secret-projection-foreign';
-    const foreignHashedSecret = '$2b$10$secret-projection-hash';
+    // a plaintext the server hashes at create; the projection then carries
+    // the bcrypt form, never this value
+    const foreignHashedSecret = 'secret-projection-hashed';
+    const ownEncryptedSecret = 'secret-projection-own-encrypted';
+    const foreignEncryptedSecret = 'secret-projection-foreign-encrypted';
     const restrictedActorSecret = 'secret-projection-actor';
 
     beforeAll(async () => {
@@ -82,6 +89,25 @@ describe('http/controllers (client secret projection)', () => {
             secretEncrypted: false,
         });
         foreignHashedClientId = foreignHashedClient.id;
+
+        // encrypted secrets follow the plaintext rule: decrypted for a reader
+        // whose reach covers the row, redacted otherwise
+        const { data: ownEncryptedClient } = await suite.client.client.create({
+            ...createFakeClient(),
+            secret: ownEncryptedSecret,
+            secretHashed: false,
+            secretEncrypted: true,
+        });
+        ownEncryptedClientId = ownEncryptedClient.id;
+
+        const { data: foreignEncryptedClient } = await suite.client.client.create({
+            ...createFakeClient(),
+            realmId: realmB.id,
+            secret: foreignEncryptedSecret,
+            secretHashed: false,
+            secretEncrypted: true,
+        });
+        foreignEncryptedClientId = foreignEncryptedClient.id;
 
         // global relation targets, bindable to clients of any realm
         const { data: permission } = await suite.client.permission.create({
@@ -186,7 +212,20 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(1);
-        expect(response.data[0].secret).toEqual(foreignHashedSecret);
+        expect(isBCryptHash(response.data[0].secret!)).toBe(true);
+        expect(response.data[0].secret).not.toEqual(foreignHashedSecret);
+    });
+
+    it('decrypts an own encrypted secret and redacts a foreign one', async () => {
+        const response = await restrictedActor.client.getMany({
+            fields: ['+secret'],
+            filters: { id: [ownEncryptedClientId, foreignEncryptedClientId] },
+        });
+
+        expect(response.data).toHaveLength(2);
+        const byId = new Map(response.data.map((row) => [row.id, row]));
+        expect(byId.get(ownEncryptedClientId)!.secret).toEqual(ownEncryptedSecret);
+        expect(byId.get(foreignEncryptedClientId)!.secret).toBeUndefined();
     });
 
     it('gates the client-permission fields[client] projection', async () => {
@@ -215,7 +254,8 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(1);
-        expect(response.data[0].client!.secret).toEqual(foreignHashedSecret);
+        expect(isBCryptHash(response.data[0].client!.secret!)).toBe(true);
+        expect(response.data[0].client!.secret).not.toEqual(foreignHashedSecret);
     });
 
     it('gates the client-role fields[client] projection', async () => {

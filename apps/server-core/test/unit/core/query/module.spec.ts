@@ -275,7 +275,6 @@ describe('core/query', () => {
                 ['realmId', null],
                 ['secret', null],
                 ['secretHashed', true],
-                ['secretEncrypted', true],
                 ['realmId', 'realm-a'],
             ]);
         });
@@ -293,7 +292,6 @@ describe('core/query', () => {
                 ['realmId', null],
                 ['secret', null],
                 ['secretHashed', true],
-                ['secretEncrypted', true],
             ]);
         });
 
@@ -320,7 +318,6 @@ describe('core/query', () => {
                 ['realmId', null],
                 ['secret', null],
                 ['secretHashed', true],
-                ['secretEncrypted', true],
                 ['id', selfId],
             ]);
         });

@@ -143,7 +143,6 @@ import {
     PermissionService,
     PolicyCheckerService,
     PolicyService,
-    RealmCipher,
     RealmService,
     RegistrationService,
     RoleAttributeService,
@@ -319,6 +318,7 @@ export class HTTPControllerModule {
         const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator({
             identityResolver,
             certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
         });
 
         const eventService = container.resolve(DatabaseInjectionKey.EventService);
@@ -607,6 +607,9 @@ export class HTTPControllerModule {
         const service = new ClientService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
         });
         return new ClientController({
             service,
@@ -906,7 +909,7 @@ export class HTTPControllerModule {
             repository,
             userRepository,
             cache: container.resolve(CacheInjectionKey),
-            cipher: new RealmCipher({ keyStore: container.resolve(OAuth2InjectionToken.KeyStore) }),
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
             mailClient: container.resolve(MailInjectionKey),
