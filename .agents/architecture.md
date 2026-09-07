@@ -602,7 +602,11 @@ only place the document said a realm is addressable by name as well as by id.
 **Nothing here asserts anything.** The invariants that keep the marker, the
 `describeQuerySchema` call and the document equal live in
 `test/unit/http/openapi-coverage.spec.ts`, which is where this repository keeps
-invariants, and they run whether or not anyone regenerates the document.
+invariants. Only the marker-to-source half runs unconditionally; the two that
+read the emitted document are inside a `describe.skipIf(!document)`, because
+`build:server:js` wipes `dist/` and a checkout in that state is ordinary rather
+than broken. So a suite run that never regenerated the document has checked the
+source pairing and nothing about the document itself.
 
 **The parameters are generic and comma-separated, never one bracket parameter
 per key.** Per-key enums multiply the document by the size of every allow-list,
@@ -615,14 +619,15 @@ carries the upper-bound caveat, and `fields` states the UNION of `default` and
 `allowed`, since those are disjoint halves of one allow-list and naming
 `allowed` alone would advertise `email` as the only selectable column of a user.
 
-**Three coverage guards, all failing the build**, because an enrichment nothing
-checks is a convention rather than an invariant:
+**Three coverage guards**, because a projection nothing checks is a convention
+rather than an invariant. They fail the SUITE rather than the build, since they
+moved into `openapi-coverage.spec.ts` when the post-generation pass went away:
 
-| Guard | Fails on |
-|---|---|
-| marker → document | a marker naming a schema `x-authup-schemas` does not describe |
-| registry → operations | a registered schema no collection read is marked with (the direction a per-operation map cannot see). The exclusion list is empty, which is the strongest state it can be in, and an entry that stops being needed fails the build the way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does |
-| marker → source | a `describeQuerySchema` call in an UNMARKED method. The reverse is allowed and deliberate: `PolicyController.getOneExpanded` delegates, and `GET /userinfo` answers a flat claims document |
+| Guard | Fails on | Needs a built document |
+|---|---|---|
+| marker → document | a marker naming a schema `x-authup-schemas` does not describe | yes |
+| registry → operations | a registered schema no collection read is marked with (the direction a per-operation map cannot see). The exclusion list is empty, which is the strongest state it can be in, and an entry that stops being needed fails the way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does | yes |
+| marker → source | a `describeQuerySchema` call in an UNMARKED method, and a marked method that describes nothing unless it is a reviewed `MARKERS_WITHOUT_DESCRIBE` entry. Four delegate legitimately: the expanded policy read, `GET /userinfo`, and the two bulk revokes, which answer a count rather than rows | no |
 
 **The document's type content used to depend on 21 build artifacts, silently.**
 `@trapi/metadata`'s `loadTSConfig` read the config as plain JSON and ran

@@ -362,6 +362,14 @@ export default defineConfig({
             methods: [querySchemaHandler],
         },
         tsconfig: 'tsconfig.json',
+        // The metadata cache is ON by default, and its key covers the source
+        // files, the compiler options and the handler's own `apply` source
+        // text. It does NOT cover this file: every description below is a
+        // captured variable, and the file is outside the entry glob, so
+        // editing one and rebuilding serves the cached document and exits 0.
+        // Reproduced. The generate takes about a second, so the cache buys
+        // nothing against a silently stale artifact.
+        cache: false,
     },
     swagger: {
         version: 'v3.2',

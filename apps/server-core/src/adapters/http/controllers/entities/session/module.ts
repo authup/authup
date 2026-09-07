@@ -183,6 +183,22 @@ export class SessionController {
         return { data: entity, meta: { schema: describeQuerySchema(sessionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
+    /**
+     * Revoke sessions. The filter decides WHICH of two things this does, so
+     * read the key list before sending one.
+     *
+     * Naming a target (`id`, `sub`, `subKind`, `userId`, `clientId` or
+     * `realmId`) is the administrative force-logout, gated by
+     * `SESSION_DELETE` and a per-session realm match. Naming NONE of them is
+     * the self-service "log out my other devices", which revokes every
+     * session of the caller except the current one.
+     *
+     * The schema allows `expiresAt` and `seenAt` as filter keys because a
+     * collection READ sorts and filters on them, but neither is a target
+     * here: a filter naming only those selects the self-service branch, so
+     * `?filter[expiresAt]=...` sent to prune stale rows would instead log the
+     * caller out everywhere else.
+     */
     @DDelete('', [ForceLoggedInMiddleware])
     @DQuerySchema(EntityType.SESSION, 'filters')
     async dropMany(

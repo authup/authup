@@ -147,7 +147,13 @@ describe('openapi query surface coverage', () => {
 
             for (const file of walk(CONTROLLERS_PATH)) {
                 const source = fs.readFileSync(file, 'utf8');
-                const name = path.relative(PACKAGE_PATH, file);
+
+                // Posix separators whatever the platform: the key is compared
+                // against the forward-slash literals in
+                // `MARKERS_WITHOUT_DESCRIBE`, so on Windows a native path
+                // would match none of them and fail every excused marker
+                // twice over.
+                const name = path.relative(PACKAGE_PATH, file).split(path.sep).join('/');
 
                 const blocks : {
                     member: string, 
