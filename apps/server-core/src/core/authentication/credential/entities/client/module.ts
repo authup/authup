@@ -5,10 +5,13 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { createNanoID, isBCryptHash } from '@authup/kit';
+import { timingSafeEqual } from 'node:crypto';
+import { createNanoID } from '@authup/kit';
 import { compare, hash } from '@authup/server-kit';
 import { type Client, ClientAuthMethod } from '@authup/core-kit';
 import type { ICredentialService } from '../../types.ts';
+
+export type ClientSecretTarget = Pick<Client, 'secretHashed' | 'secretEncrypted'>;
 
 export class ClientCredentialsService implements ICredentialService<Client> {
     async verify(input: string, entity: Client): Promise<boolean> {
@@ -20,19 +23,19 @@ export class ClientCredentialsService implements ICredentialService<Client> {
             return compare(input, entity.secret);
         }
 
-        // todo: secret encrypted missing (decrypt)
-
-        return input === entity.secret;
+        return constantTimeEqual(input, entity.secret);
     }
 
-    async protect(input: string, entity: Pick<Client, 'secretHashed'>): Promise<string> {
+    /**
+     * The input is always a plaintext: the caller decides the storage mode
+     * and this method applies it. There is deliberately no "is it already a
+     * hash" sniff, so a plaintext shaped like a bcrypt hash is protected
+     * like any other and never stored raw.
+     */
+    async protect(input: string, entity: ClientSecretTarget): Promise<string> {
         if (entity.secretHashed) {
-            return isBCryptHash(input) ?
-                input :
-                hash(input);
+            return hash(input);
         }
-
-        // todo: secret encrypted missing (encrypt)
 
         return input;
     }
@@ -40,4 +43,15 @@ export class ClientCredentialsService implements ICredentialService<Client> {
     generateSecret() {
         return createNanoID(64);
     }
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+    const left = Buffer.from(a);
+    const right = Buffer.from(b);
+
+    if (left.byteLength !== right.byteLength) {
+        return false;
+    }
+
+    return timingSafeEqual(left, right);
 }

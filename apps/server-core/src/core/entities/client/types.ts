@@ -58,6 +58,16 @@ export interface IClientRepository extends IEntityRepository<Client> {
     transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R>;
 }
 
+/**
+ * What a secret rotation hands back: the saved record and the plaintext,
+ * which exists in this result only (the stored form is hashed in hashed
+ * mode and never derived back).
+ */
+export type ClientSecretRotateResult = {
+    entity: Client,
+    secret: string,
+};
+
 export interface IClientService {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Client>>;
     getOne(
@@ -78,4 +88,15 @@ export interface IClientService {
         created: boolean 
     }>;
     delete(id: string, actor: ActorContext): Promise<Client>;
+    /**
+     * Replace the client's secret (generated when `data.secret` is absent)
+     * and, optionally, its storage mode. The ONLY writer of a secret on a
+     * client that is not in plain mode.
+     */
+    rotateSecret(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realmId?: string,
+    ): Promise<ClientSecretRotateResult>;
 }

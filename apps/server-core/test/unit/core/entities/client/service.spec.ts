@@ -11,9 +11,13 @@ import { applyQuery } from '@rapiq/adapter-memory';
 import {
     CLIENT_ADMIN_CONSOLE_NAME,
     CLIENT_RESERVED_NAMES,
+    ClientSecretMode,
+    EventName,
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
+import { isBCryptHash } from '@authup/kit';
+import { hash } from '@authup/server-kit';
 import type { Client, Realm } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import {
@@ -34,6 +38,7 @@ import {
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { FakeClientRepository } from './fake-repository.ts';
+import { FakeEventService } from '../../helpers/fake-event-service.ts';
 import { createFakeClient } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/client/service', () => {
@@ -46,9 +51,27 @@ describe('core/entities/client/service', () => {
         realmRepository = new FakeRealmRepository();
         service = new ClientService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
     });
+
+    const buildSelfActor = (clientId: string): FakeActorContext => {
+        const realmId = randomUUID();
+        return {
+            permissionEvaluator: new FakePermissionEvaluator(),
+            identity: {
+                type: IdentityType.CLIENT,
+                data: {
+                    id: clientId,
+                    realmId,
+                    realm: {
+                        id: realmId,
+                        name: 'test',
+                    } as Realm,
+                } as Client,
+            },
+        };
+    };
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
@@ -228,6 +251,20 @@ describe('core/entities/client/service', () => {
                 name: 'secret-client',
                 secret: 'plain',
                 secretEncrypted: false,
+                secretHashed: false,
+            }));
+
+            const actor = createAllowAllActor();
+            await service.getOne(entity.id, actor);
+
+            expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
+        });
+
+        it('should perform per-record check for a legacy secretEncrypted row (the flag never encrypted anything)', async () => {
+            const entity = repository.seed(createFakeClient({
+                name: 'legacy-encrypted',
+                secret: 'plain',
+                secretEncrypted: true,
                 secretHashed: false,
             }));
 
@@ -424,6 +461,33 @@ describe('core/entities/client/service', () => {
         });
     });
 
+    describe('create (secret storage)', () => {
+        it('should hash the secret in hashed mode without sniffing the input', async () => {
+            const lookalike = '$2b$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456';
+
+            const entity = await service.create(
+                createFakeClient({ secret: lookalike, secretHashed: true }),
+                createAllowAllActor(),
+            );
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).not.toEqual(lookalike);
+            expect(isBCryptHash(stored!.secret!)).toBe(true);
+        });
+
+        it('should refuse encrypted mode on create until it is implemented', async () => {
+            await expect(
+                service.create(createFakeClient({ secretEncrypted: true }), createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should refuse hashed and encrypted at once', async () => {
+            await expect(
+                service.create(createFakeClient({ secretHashed: true, secretEncrypted: true }), createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+    });
+
     describe('update', () => {
         it('should update an existing client', async () => {
             const entity = repository.seed(createFakeClient({ name: 'old-name' }));
@@ -472,6 +536,51 @@ describe('core/entities/client/service', () => {
         });
     });
 
+    describe('update (secret storage)', () => {
+        it('should store a secret on a plain client verbatim', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: 'old-plain',
+                secretHashed: false,
+                secretEncrypted: false,
+            }));
+
+            await service.update(entity.id, { secret: 'new-plain' }, createAllowAllActor());
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual('new-plain');
+            expect(stored!.secretHashed).toBe(false);
+        });
+
+        it('should refuse a secret on a hashed client (rotate it through the endpoint instead)', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: await hash('old'),
+                secretHashed: true,
+            }));
+
+            await expect(
+                service.update(entity.id, { secret: 'new-plain' }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secretHashed).toBe(true);
+            expect(isBCryptHash(stored!.secret!)).toBe(true);
+        });
+
+        it('should ignore a storage mode flag sent on update', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: 'keep',
+                secretHashed: false,
+                secretEncrypted: false,
+            }));
+
+            await service.update(entity.id, { secretHashed: true }, createAllowAllActor());
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual('keep');
+            expect(stored!.secretHashed).toBe(false);
+        });
+    });
+
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
@@ -502,24 +611,6 @@ describe('core/entities/client/service', () => {
     });
 
     describe('self-edit fallback', () => {
-        const buildSelfActor = (clientId: string): FakeActorContext => {
-            const realmId = randomUUID();
-            return {
-                permissionEvaluator: new FakePermissionEvaluator(),
-                identity: {
-                    type: IdentityType.CLIENT,
-                    data: {
-                        id: clientId,
-                        realmId,
-                        realm: {
-                            id: realmId,
-                            name: 'test',
-                        } as Realm,
-                    } as Client,
-                },
-            };
-        };
-
         it('should allow self-edit without CLIENT_UPDATE when actor is the client itself', async () => {
             const entity = repository.seed(createFakeClient({ name: 'self-client' }));
 
@@ -606,6 +697,200 @@ describe('core/entities/client/service', () => {
 
             const result = await service.update(entity.id, { displayName: 'kept' }, actor);
             expect(result.realmId).toBe(realmId);
+        });
+    });
+
+    describe('rotateSecret', () => {
+        it('should store a provided plaintext hashed and hand the plaintext back once', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'old' }));
+
+            const result = await service.rotateSecret(
+                entity.id,
+                { secret: 'start1234', mode: ClientSecretMode.HASHED },
+                createAllowAllActor(),
+            );
+
+            expect(result.secret).toEqual('start1234');
+            expect(result.entity.secretHashed).toBe(true);
+            expect(result.entity.secretEncrypted).toBe(false);
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).not.toEqual('start1234');
+            expect(isBCryptHash(stored!.secret!)).toBe(true);
+        });
+
+        it('should generate a secret when none is supplied', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'old' }));
+
+            const result = await service.rotateSecret(entity.id, {}, createAllowAllActor());
+
+            expect(result.secret).toHaveLength(64);
+            expect(result.secret).not.toEqual('old');
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual(result.secret);
+        });
+
+        it('should keep the current mode when none is supplied', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: await hash('old'),
+                secretHashed: true,
+            }));
+
+            const result = await service.rotateSecret(entity.id, {}, createAllowAllActor());
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secretHashed).toBe(true);
+            expect(isBCryptHash(stored!.secret!)).toBe(true);
+            expect(stored!.secret).not.toEqual(result.secret);
+        });
+
+        it('should store a plain secret verbatim when switched to plain mode', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: await hash('old'),
+                secretHashed: true,
+            }));
+
+            await service.rotateSecret(
+                entity.id,
+                { secret: 'start1234', mode: ClientSecretMode.PLAIN },
+                createAllowAllActor(),
+            );
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual('start1234');
+            expect(stored!.secretHashed).toBe(false);
+            expect(stored!.secretEncrypted).toBe(false);
+        });
+
+        it('should refuse encrypted mode until it is implemented', async () => {
+            const entity = repository.seed(createFakeClient());
+
+            await expect(
+                service.rotateSecret(entity.id, { mode: ClientSecretMode.ENCRYPTED }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should refuse a client that does not authenticate by secret', async () => {
+            const entity = repository.seed(createFakeClient({
+                authMethod: 'none',
+                secret: null,
+            }));
+
+            await expect(
+                service.rotateSecret(entity.id, {}, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should throw NotFoundError when entity does not exist', async () => {
+            await expect(
+                service.rotateSecret(randomUUID(), {}, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+        });
+
+        it('should gate on CLIENT_UPDATE with the row and its realm', async () => {
+            const entity = repository.seed(createFakeClient({ realmId: randomUUID() }));
+
+            const actor = createAllowAllActor();
+            await service.rotateSecret(entity.id, {}, actor);
+
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_UPDATE });
+
+            const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_UPDATE);
+            expect(call).toBeDefined();
+            expect(call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES)).toHaveProperty('id', entity.id);
+            expect(call!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(entity.realmId);
+        });
+
+        it('should throw when actor lacks permission', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'keep' }));
+
+            await expect(
+                service.rotateSecret(entity.id, {}, createDenyAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual('keep');
+        });
+
+        it('should let a client rotate its own secret under CLIENT_SELF_MANAGE', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'old' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            const result = await service.rotateSecret(entity.id, { secret: 'start1234' }, actor);
+            expect(result.secret).toEqual('start1234');
+
+            const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_SELF_MANAGE);
+            expect(call).toBeDefined();
+            const attrs = call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            expect(attrs).toHaveProperty('secret');
+            expect(attrs).not.toHaveProperty('secretHashed');
+            expect(attrs).not.toHaveProperty('secretEncrypted');
+        });
+
+        it('should present a mode change to the self-manage policy', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'old' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            await service.rotateSecret(entity.id, { mode: ClientSecretMode.HASHED }, actor);
+
+            const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_SELF_MANAGE);
+            const attrs = call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            expect(attrs).toHaveProperty('secretHashed', true);
+            expect(attrs).toHaveProperty('secretEncrypted', false);
+        });
+
+        it('should deny a client rotating another client\'s secret', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'keep' }));
+
+            const actor = buildSelfActor(randomUUID());
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            await expect(
+                service.rotateSecret(entity.id, {}, actor),
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('should record a clientSecretRotated event carrying the mode and never the secret', async () => {
+            const eventService = new FakeEventService();
+            const auditedService = new ClientService({
+                repository,
+                realmRepository,
+                eventService,
+            });
+            const entity = repository.seed(createFakeClient({ realmId: randomUUID() }));
+
+            const result = await auditedService.rotateSecret(
+                entity.id,
+                { secret: 'start1234', mode: ClientSecretMode.HASHED },
+                createAllowAllActor(),
+            );
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0]).toMatchObject({
+                name: EventName.CLIENT_SECRET_ROTATED,
+                refType: 'client',
+                refId: entity.id,
+                realmId: entity.realmId,
+                data: { kind: ClientSecretMode.HASHED },
+            });
+            expect(JSON.stringify(eventService.recordCalls[0])).not.toContain(result.secret);
         });
     });
 

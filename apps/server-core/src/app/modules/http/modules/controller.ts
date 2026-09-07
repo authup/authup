@@ -607,6 +607,8 @@ export class HTTPControllerModule {
         const service = new ClientService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
         });
         return new ClientController({
             service,

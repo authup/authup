@@ -28,6 +28,7 @@ export enum EventName {
     IDENTITY_PROVIDER_UNLINKED = 'identityProviderUnlinked',
     BACKCHANNEL_LOGOUT = 'backchannelLogout',
     BACKCHANNEL_LOGOUT_FAILED = 'backchannelLogoutFailed',
+    CLIENT_SECRET_ROTATED = 'clientSecretRotated',
     CREATED = 'created',
     UPDATED = 'updated',
     DELETED = 'deleted',

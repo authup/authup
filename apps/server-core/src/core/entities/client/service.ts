@@ -11,15 +11,22 @@ import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     CLIENT_RESERVED_NAMES,
     ClientAuthMethod,
+    ClientSecretMode,
+    ClientSecretRotateValidator,
     ClientValidator,
+    EntityType,
+    EventName,
+    EventScope,
     PermissionName,
+    getClientSecretMode,
 } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
-import type { IClientRepository, IClientService } from './types.ts';
+import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
@@ -27,6 +34,8 @@ import { clientSchema } from './schema.ts';
 export type ClientServiceContext = {
     repository: IClientRepository;
     realmRepository: IRealmRepository;
+    eventService?: IEventService;
+    requestContext?: () => EventRequestContext | undefined;
 };
 
 export class ClientService extends AbstractEntityService implements IClientService {
@@ -36,11 +45,20 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
     protected validator: ClientValidator;
 
+    protected secretValidator: ClientSecretRotateValidator;
+
+    protected eventService?: IEventService;
+
+    protected requestContext?: () => EventRequestContext | undefined;
+
     constructor(ctx: ClientServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.validator = new ClientValidator();
+        this.secretValidator = new ClientSecretRotateValidator();
+        this.eventService = ctx.eventService;
+        this.requestContext = ctx.requestContext;
     }
 
     async getMany(
@@ -93,10 +111,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
+        // A hashed value discloses nothing; every other stored form is the
+        // secret itself (encrypted rows are decrypted for a permitted reader
+        // from plan 105 PR 2 on), so it takes the reach evaluate.
         if (
             !isMe &&
             entity.secret &&
-            !entity.secretEncrypted &&
             !entity.secretHashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
@@ -199,6 +219,19 @@ export class ClientService extends AbstractEntityService implements IClientServi
             !(entity && entity.builtIn && entity.name === validated.name)
         ) {
             throw new ValidationError(`The client name '${validated.name}' is reserved.`);
+        }
+
+        assertSecretModeSupported(validated);
+
+        // A protected secret is replaced only through rotateSecret, together
+        // with the mode it is stored under; the metadata path must never be
+        // able to downgrade it (plan 105).
+        if (
+            entity &&
+            typeof validated.secret === 'string' &&
+            getClientSecretMode(entity) !== ClientSecretMode.PLAIN
+        ) {
+            throw new ValidationError('The secret of a hashed or encrypted client is rotated through POST /clients/:id/secret.');
         }
 
         await this.repository.validateJoinColumns(validated);
@@ -327,6 +360,134 @@ export class ClientService extends AbstractEntityService implements IClientServi
         };
     }
 
+    async rotateSecret(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realmId?: string,
+    ): Promise<ClientSecretRotateResult> {
+        const where: Record<string, any> = isUUID(idOrName) ?
+            { id: idOrName } :
+            { name: idOrName };
+
+        if (realmId) {
+            const realm = await this.realmRepository.resolve(realmId);
+            if (!realm) {
+                throw new EntityNotFoundError();
+            }
+
+            where.realmId = realm.id;
+        }
+
+        const entity = await this.repository.findOneWithSecret(where);
+        if (!entity) {
+            throw new EntityNotFoundError();
+        }
+
+        const isMe = !!actor.identity &&
+            actor.identity.type === 'client' &&
+            actor.identity.data.id === entity.id;
+
+        let isSelfEdit = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+        } catch (e) {
+            if (!isMe) {
+                throw e;
+            }
+
+            isSelfEdit = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
+        }
+
+        if (entity.authMethod !== ClientAuthMethod.SECRET) {
+            throw new ValidationError('Only a client authenticating by secret holds a secret to rotate.');
+        }
+
+        const validated = await this.secretValidator.run(data);
+
+        const currentMode = getClientSecretMode(entity);
+        const mode = validated.mode ?? currentMode;
+        const flags = {
+            secretHashed: mode === ClientSecretMode.HASHED,
+            secretEncrypted: mode === ClientSecretMode.ENCRYPTED,
+        };
+        assertSecretModeSupported(flags);
+
+        const credentialsService = new ClientCredentialsService();
+        const secret = validated.secret ?? credentialsService.generateSecret();
+
+        if (isSelfEdit) {
+            // The mode flags reach the policy only when they change, so the
+            // self-manage denylist refuses a self-managing client's downgrade
+            // and permits a plain rotation, with no rule of its own here.
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.CLIENT_SELF_MANAGE,
+                data: definePolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
+                        secret,
+                        ...(mode !== currentMode ? flags : {}),
+                    },
+                    ...this.resourceRealmMatch(entity),
+                }),
+            });
+        } else {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.CLIENT_UPDATE,
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            });
+        }
+
+        // Protect BEFORE the write and take no row lock: these three columns
+        // have exactly one writer, and the update path's patch never carries
+        // them, so there is no lost update to defend against (#3526), and
+        // nothing that could reach the key store inside a pinned connection.
+        entity.secret = await credentialsService.protect(secret, flags);
+        entity.secretHashed = flags.secretHashed;
+        entity.secretEncrypted = flags.secretEncrypted;
+
+        const saved = await this.repository.save(entity);
+
+        await this.recordSecretRotated(saved, actor, mode);
+
+        return { entity: saved, secret };
+    }
+
+    /**
+     * Metadata-only audit row for a credential rotation: the mode it was
+     * stored under, never the secret in any form.
+     */
+    protected async recordSecretRotated(
+        entity: Client,
+        actor: ActorContext,
+        mode: `${ClientSecretMode}`,
+    ): Promise<void> {
+        if (!this.eventService) {
+            return;
+        }
+
+        const requestContext = this.requestContext ?
+            this.requestContext() :
+            undefined;
+
+        await this.eventService.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.CLIENT_SECRET_ROTATED,
+            refType: EntityType.CLIENT,
+            refId: entity.id,
+            realmId: entity.realmId ?? null,
+            actorType: actor.identity?.type ?? null,
+            actorId: actor.identity?.data.id ?? null,
+            actorName: actor.identity?.data.name ?? null,
+            sessionId: requestContext?.sessionId ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? null,
+            data: { kind: mode },
+        });
+    }
+
     async delete(
         id: string,
         actor: ActorContext,
@@ -348,5 +509,16 @@ export class ClientService extends AbstractEntityService implements IClientServi
         entity.id = entityId;
 
         return entity;
+    }
+}
+
+/**
+ * The encrypted storage flag is refused outright until plan 105 PR 2 backs
+ * it with the realm cipher: a flag nothing honours must not be persistable
+ * (#3351). PR 2 turns this into the "never both flags" rule.
+ */
+export function assertSecretModeSupported(flags: Pick<Partial<Client>, 'secretHashed' | 'secretEncrypted'>): void {
+    if (flags.secretEncrypted) {
+        throw new ValidationError('Encrypted client secrets are not supported yet.');
     }
 }
