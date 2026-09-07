@@ -6,7 +6,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import { ValidatorGroup } from '@authup/kit';
-import { ClientValidator } from '../../../src';
+import {
+    ClientSecretMode,
+    ClientSecretRotateValidator,
+    ClientValidator,
+    getClientSecretMode,
+} from '../../../src';
 
 describe('ClientValidator redirect patterns', () => {
     const validator = new ClientValidator();
@@ -77,5 +82,39 @@ describe('ClientValidator backchannelLogoutUri', () => {
         ['a script-capable scheme', 'javascript:alert(document.cookie)//'],
     ])('should reject %s', async (_label, value) => {
         await expect(validator.run({ backchannelLogoutUri: value }, { group: ValidatorGroup.UPDATE })).rejects.toThrow();
+    });
+});
+
+describe('ClientSecretRotateValidator', () => {
+    const validator = new ClientSecretRotateValidator();
+
+    it('should accept an empty body (server generates, mode unchanged)', async () => {
+        const output = await validator.run({});
+
+        expect(output).toEqual({});
+    });
+
+    it('should accept a plaintext secret and a storage mode', async () => {
+        const output = await validator.run({ secret: 'start1234', mode: ClientSecretMode.HASHED });
+
+        expect(output).toEqual({ secret: 'start1234', mode: 'hashed' });
+    });
+
+    it('should reject an unknown storage mode', async () => {
+        await expect(validator.run({ mode: 'plaintext' })).rejects.toThrow();
+    });
+
+    it('should reject a secret shorter than three characters', async () => {
+        await expect(validator.run({ secret: 'ab' })).rejects.toThrow();
+    });
+});
+
+describe('getClientSecretMode', () => {
+    it.each([
+        [{ secretHashed: false, secretEncrypted: false }, ClientSecretMode.PLAIN],
+        [{ secretHashed: true, secretEncrypted: false }, ClientSecretMode.HASHED],
+        [{ secretHashed: false, secretEncrypted: true }, ClientSecretMode.ENCRYPTED],
+    ])('should derive the mode from the two storage flags (%o)', (flags, expected) => {
+        expect(getClientSecretMode(flags)).toEqual(expected);
     });
 });

@@ -7,7 +7,7 @@
 
 import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
-import { CLIENT_CERTIFICATE_URI_PREFIX, ClientAuthMethod } from './constants';
+import { CLIENT_CERTIFICATE_URI_PREFIX, ClientAuthMethod, ClientSecretMode } from './constants';
 import type { Client } from './entity';
 
 export function isClientNameValid(name: string, options: NameValidOptions = {}) : boolean {
@@ -20,4 +20,18 @@ export function isClientPublic(client: Pick<Client, 'authMethod'>): boolean {
 
 export function buildClientCertificateURI(clientId: string): string {
     return `${CLIENT_CERTIFICATE_URI_PREFIX}${clientId}`;
+}
+
+export function getClientSecretMode(
+    client: Pick<Client, 'secretHashed' | 'secretEncrypted'>,
+): `${ClientSecretMode}` {
+    if (client.secretHashed) {
+        return ClientSecretMode.HASHED;
+    }
+
+    if (client.secretEncrypted) {
+        return ClientSecretMode.ENCRYPTED;
+    }
+
+    return ClientSecretMode.PLAIN;
 }
