@@ -93,7 +93,11 @@ export function describeSchemaRegistry() : Record<string, SchemaDescription> {
             return a.name < b.name ? -1 : 1;
         });
 
-    const output : Record<string, SchemaDescription> = {};
+    // Prototype-less, because the keys are schema NAMES and the registry is
+    // documented as extensible: a storage-derived schema called `__proto__`
+    // would otherwise hit the legacy setter, leaving the key absent from
+    // discovery and from the hash with nothing raised.
+    const output : Record<string, SchemaDescription> = Object.create(null);
     for (const schema of named) {
         output[schema.name] = describeQuerySchema(schema);
     }

@@ -78,8 +78,7 @@ function readDocument() {
 /**
  * Which routes each schema governs, split by read shape, in document order.
  * A schema with no marked route is not an error here: the coverage check
- * that would call it one runs in `openapi-query-schemas.mjs`, before this
- * page is ever generated.
+ * that would call it one is `test/unit/http/openapi-coverage.spec.ts`.
  */
 function readRoutes(document) {
     const output = new Map();
@@ -92,11 +91,26 @@ function readRoutes(document) {
             }
 
             if (!output.has(marker.schema)) {
-                output.set(marker.schema, { collection: [], record: [] });
+                output.set(marker.schema, {
+                    collection: [], 
+                    record: [], 
+                    filters: [], 
+                });
             }
 
             const route = `${method.toUpperCase()} ${template}`;
-            output.get(marker.schema)[marker.parameters ? 'record' : 'collection'].push(route);
+
+            // The group follows the parameter subset the marker declares, not
+            // merely whether it declares one: the bulk revokes decode filters
+            // alone, so they are neither a collection read nor a record one.
+            const subset = marker.parameters;
+            let group = 'collection';
+
+            if (subset) {
+                group = subset.length === 1 && subset[0] === 'filters' ? 'filters' : 'record';
+            }
+
+            output.get(marker.schema)[group].push(route);
         }
     }
 
@@ -110,10 +124,10 @@ function readRoutes(document) {
  * (`client.secret`, `key.certificate`, `user.email`). What a caller may
  * select is therefore the union.
  *
- * Same derivation as `buildFieldsParameter` in `openapi-query-schemas.mjs`,
- * which states the same rule in the OpenAPI parameter description. Both
- * read the same description, so the two cannot disagree about the SET; if
- * the wording of the two ever does, this page is the one a human reads.
+ * Same derivation as `buildFieldsParameter` in `trapi.config.ts`, which
+ * states the same rule in the OpenAPI parameter description. Both read the
+ * same description, so the two cannot disagree about the SET; if the wording
+ * of the two ever does, this page is the one a human reads.
  */
 function readFields(description) {
     const fields = description.fields ?? {};
@@ -161,9 +175,14 @@ function buildParameterTable(description) {
         rows.push(['`include`', rendered.length > 0 ? rendered.join(', ') : 'none']);
     }
 
-    const maxLimit = description.pagination?.maxLimit;
-    if (maxLimit) {
-        rows.push(['`page[limit]`', `at most ${code(maxLimit)}`]);
+    // Both keys, because the document advertises both wherever a schema
+    // declares pagination. A ceiling is what `maxLimit` adds, not what makes
+    // the parameter exist.
+    if (description.pagination) {
+        const { maxLimit } = description.pagination;
+
+        rows.push(['`page[limit]`', maxLimit ? `at most ${code(maxLimit)}` : 'any positive integer']);
+        rows.push(['`page[offset]`', 'rows to skip before the page starts']);
     }
 
     const table = [
@@ -212,6 +231,10 @@ function buildSection(name, description, routes) {
 
         if (routes.record.length > 0) {
             lines.push(`Record: ${codes(routes.record)}`, '');
+        }
+
+        if (routes.filters.length > 0) {
+            lines.push(`Filter only: ${codes(routes.filters)}`, '');
         }
     }
 

@@ -101,7 +101,13 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
                 return content;
             }));
 
-            swaggerUI(documentPath, options).install(router);
+            // The parsed document rather than the path, so the file is read
+            // exactly once. Handed a path, the plugin re-reads it during
+            // install: a document that changed or vanished after the check
+            // above would then either abort the boot this guard exists to
+            // prevent, or leave the UI rendering something other than what
+            // `/openapi.json` serves.
+            swaggerUI(document, options).install(router);
         },
     };
 }
