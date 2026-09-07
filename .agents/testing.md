@@ -123,6 +123,21 @@ otherwise pass silently: the mysql answer shape (mysql2 returns the STRING
 `'1'`/`'0'`, so a truthiness check makes the lock inert there), and that the
 caller's lock identity is BOUND into both statements rather than interpolated.
 
+**The global uniqueness index is gated the same way.**
+`test/unit/adapters/database/global-uniqueness.spec.ts` boots an EMPTY
+synchronized secondary database (the schema a deployment carries before the
+migration), runs `1788793885495-GlobalEntityUniqueness`'s own `up()` through a
+query runner, and asserts that the entity-declared index name matches the
+migration's, that `createSchemaBuilder().log()` reports the same drift before
+and after (the property the drift gate relies on), that typeorm's own loader
+sees the index, that a second global row with one name is refused on all four
+tables while one name per realm plus once globally stays allowed, that `down()`
+is real, and that the pre-check names the tables holding duplicates. It is
+`describe.skipIf`-gated to mysql/postgres because sqlite never runs the
+migration, and it has this shape because the suite synchronizes its schema from
+the entities: an index declared `synchronize: false` is never created by that
+path, so no other spec can observe the constraint.
+
 ## Test Layers (server-core)
 
 ### Service-Level Tests

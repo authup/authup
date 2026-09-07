@@ -23,6 +23,13 @@ import { RealmEntity } from '../realm/index.ts';
 import { ClientEntity } from '../client/entity.ts';
 
 @Unique(['name', 'clientId', 'realmId'])
+// Global rows (realm_id and client_id NULL) are outside the constraint above, since every
+// dialect treats NULLs as distinct. The migration GlobalEntityUniqueness1788793885495 adds a
+// unique index over the same tuple with the NULLs coalesced; it is declared here, under a
+// given name (the builder never names an index it does not synchronize), so the
+// schema builder matches it by name and leaves it alone (synchronize: false), because an
+// expression index cannot be described in entity metadata. Issue #3559.
+@Index('IDX_auth_permissions_global_name', { synchronize: false })
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity {
     @PrimaryGeneratedColumn('uuid')
