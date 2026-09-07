@@ -52,12 +52,16 @@ jobs:
 
                     # latest deliberately follows prereleases while no stable line exists (docs reference authup/authup:latest)
                     TAGS="latest"
+                    IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
+                    TAGS+=$'\n'"$MAJOR"$'\n'"$MAJOR.$MINOR"
                     if [[ "$VERSION" == *-* ]]; then
                         PRERELEASE="${VERSION#*-}"
-                        TAGS+=$'\n'"${PRERELEASE%%.*}"
-                    else
-                        IFS='.' read -r MAJOR MINOR _ <<< "$VERSION"
-                        TAGS+=$'\n'"$MAJOR"$'\n'"$MAJOR.$MINOR"
+                        # The floating semver tags follow the beta line too. They cannot be
+                        # removed from the registry, so leaving them on the last release that
+                        # published them (1.0.0-beta.53) would keep serving a stale image to
+                        # every deployment pinning 1 / 1.0 / 1.0.0. Drop the MAJOR.MINOR.PATCH
+                        # line below once stable v1.0.0 ships and the tags mean what they say.
+                        TAGS+=$'\n'"$MAJOR.$MINOR.$PATCH"$'\n'"${PRERELEASE%%.*}"
                     fi
                     TAGS+=$'\n'"$VERSION"
 
