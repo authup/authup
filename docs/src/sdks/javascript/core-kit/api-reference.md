@@ -69,6 +69,22 @@ interface Client {
 - [Policy](#policy)
 - [Realm](#realm)
 
+## `ClientSecretMode`
+
+**Type**
+```typescript
+enum ClientSecretMode {
+    PLAIN = 'plain',
+    HASHED = 'hashed',
+    ENCRYPTED = 'encrypted',
+}
+```
+
+How a [Client](#client)'s `secret` is stored, encoded on the record as
+`secretHashed` / `secretEncrypted` (never both). `getClientSecretMode(client)`
+maps the two flags onto it. `encrypted` is declared but refused until
+encrypted storage ships.
+
 ## `IdentityProvider`
 
 **Type**

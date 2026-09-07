@@ -7,6 +7,36 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Client secrets rotate through `POST /clients/:id/secret`
+
+`secretHashed` and `secretEncrypted` are create-time properties now. An update
+(`POST /clients/:id`, or `PUT /clients/:id` on an existing row) ignores both
+flags; before, flipping `secretHashed` on a plaintext client marked the
+plaintext as hashed and the client stopped authenticating. The storage mode
+changes only through the new endpoint, together with a new secret.
+`ClientUpdatePayload` in `@authup/core-http-kit` no longer carries the two
+flags, so a caller spelling them on an update fails its type check. Drop them.
+
+An update carrying `secret` on a hashed client answers `400` naming the
+endpoint; it used to hash and store the value. Use `POST /clients/:id/secret`
+(`client.client.rotateSecret(id, { secret?, mode? })` in the SDK). It answers
+the record plus the plaintext once under `meta.secret`, accepts `@me` for a
+client rotating its own secret under `client_self_manage`, and records a
+`clientSecretRotated` event. A plain client still takes `secret` on update.
+See [Client Secrets](../development/api-oauth2.md#client-secrets).
+
+`secretEncrypted: true` is refused with `400` on create and on the endpoint,
+and fails the startup when a provisioning file declares it, until encrypted
+storage ships in a later release. The flag never encrypted anything, and a
+row carrying it over a plaintext is now read-gated like any plaintext instead
+of being projected to every reader that passed the read pre-gate.
+
+Two smaller changes in the same area. A secret submitted on create or to the
+endpoint that happens to look like a bcrypt hash is hashed like any other
+value; it used to be stored as given and could never verify. And a
+provisioning file that declares `secretHashed: true` with a plaintext now
+stores the hash, while a bcrypt value in the file is kept verbatim.
+
 ### A substituted auth console package is verified at boot again
 
 With a built bundle in place, `authup start` / `authup start console auth`
