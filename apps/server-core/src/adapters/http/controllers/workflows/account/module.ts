@@ -33,7 +33,7 @@ import type { AccountControllerContext, AccountControllerOptions } from './types
 // template expression all fold to `unresolvable`, and the controller then
 // emits at the document ROOT, where its two routes collide with the other
 // console's and half of them are dropped from the OpenAPI document
-// (tada5hi/trapi#904). `ACCOUNT_CONSOLE_PATH` stays the value the login flow
+// (tada5hi/trapi#906). `ACCOUNT_CONSOLE_PATH` stays the value the login flow
 // builds its cookie scope and callback URL from, and `console-session.spec.ts`
 // drives the whole flow against its own literal paths, so a drift either way
 // fails it: a moved mount stops answering, and a moved constant mints a
