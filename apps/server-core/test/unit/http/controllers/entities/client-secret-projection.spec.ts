@@ -49,12 +49,14 @@ describe('http/controllers (client secret projection)', () => {
     let foreignHashedClientId: string;
     let ownEncryptedClientId: string;
     let foreignEncryptedClientId: string;
+    let ownHashedClientId: string;
 
     const ownClientSecret = 'secret-projection-own';
     const foreignClientSecret = 'secret-projection-foreign';
     // a plaintext the server hashes at create; the projection then carries
     // the bcrypt form, never this value
     const foreignHashedSecret = 'secret-projection-hashed';
+    const ownHashedSecret = 'secret-projection-own-hashed';
     const ownEncryptedSecret = 'secret-projection-own-encrypted';
     const foreignEncryptedSecret = 'secret-projection-foreign-encrypted';
     const restrictedActorSecret = 'secret-projection-actor';
@@ -89,6 +91,14 @@ describe('http/controllers (client secret projection)', () => {
             secretEncrypted: false,
         });
         foreignHashedClientId = foreignHashedClient.id;
+
+        const { data: ownHashedClient } = await suite.client.client.create({
+            ...createFakeClient(),
+            secret: ownHashedSecret,
+            secretHashed: true,
+            secretEncrypted: false,
+        });
+        ownHashedClientId = ownHashedClient.id;
 
         // encrypted secrets follow the plaintext rule: decrypted for a reader
         // whose reach covers the row, redacted otherwise
@@ -205,15 +215,31 @@ describe('http/controllers (client secret projection)', () => {
         expect(byId.get(foreignClientId)!.secret).toBeUndefined();
     });
 
-    it('keeps a foreign HASHED secret visible to a permitted reader', async () => {
+    it('keeps an own-realm HASHED secret visible and redacts a foreign one', async () => {
         const response = await restrictedActor.client.getMany({
             fields: ['+secret'],
-            filters: { id: [foreignHashedClientId] },
+            filters: { id: [ownHashedClientId, foreignHashedClientId] },
         });
 
-        expect(response.data).toHaveLength(1);
-        expect(isBCryptHash(response.data[0].secret!)).toBe(true);
-        expect(response.data[0].secret).not.toEqual(foreignHashedSecret);
+        expect(response.data).toHaveLength(2);
+        const byId = new Map(response.data.map((row) => [row.id, row]));
+        // a covered reader gets the hash, never the plaintext; a foreign
+        // realm's hash is offline-crackable and is redacted (#3328)
+        expect(isBCryptHash(byId.get(ownHashedClientId)!.secret!)).toBe(true);
+        expect(byId.get(ownHashedClientId)!.secret).not.toEqual(ownHashedSecret);
+        expect(byId.get(foreignHashedClientId)!.secret).toBeUndefined();
+    });
+
+    it('serves an own-realm hashed secret on a single read and denies a foreign one', async () => {
+        const own = await restrictedActor.client.getOne(ownHashedClientId, { fields: ['+secret'] });
+        expect(isBCryptHash(own.data.secret!)).toBe(true);
+
+        // the single read has no field to redact, so a foreign hashed row is
+        // refused outright, exactly as a foreign plaintext row already was
+        await expectClientError(
+            () => restrictedActor.client.getOne(foreignHashedClientId, { fields: ['+secret'] }),
+            { status: 403 },
+        );
     });
 
     it('decrypts an own encrypted secret and redacts a foreign one', async () => {
@@ -247,15 +273,15 @@ describe('http/controllers (client secret projection)', () => {
         expect(foreignRow.client!.secret).toBeUndefined();
     });
 
-    it('keeps a hashed secret visible on the client-permission fields[client] projection', async () => {
+    it('redacts a foreign hashed secret on the client-permission fields[client] projection', async () => {
         const response = await restrictedActor.clientPermission.getMany({
             fields: { client: ['id', 'secret'] },
             filters: { clientId: [foreignHashedClientId] },
         });
 
         expect(response.data).toHaveLength(1);
-        expect(isBCryptHash(response.data[0].client!.secret!)).toBe(true);
-        expect(response.data[0].client!.secret).not.toEqual(foreignHashedSecret);
+        expect(response.data[0].client).toBeDefined();
+        expect(response.data[0].client!.secret).toBeUndefined();
     });
 
     it('gates the client-role fields[client] projection', async () => {

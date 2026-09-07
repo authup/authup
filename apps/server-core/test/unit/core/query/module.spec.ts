@@ -270,11 +270,10 @@ describe('core/query', () => {
 
             const field = findField(parsed, 'secret');
             expect(field!.condition).toBeDefined();
-            // realm presence guard, non-plaintext legs, then the compiled leg
+            // realm presence guard, the null leg, then the compiled leg
             expect(collectFieldConditions(field!.condition!)).toEqual([
                 ['realmId', null],
                 ['secret', null],
-                ['secretHashed', true],
                 ['realmId', 'realm-a'],
             ]);
         });
@@ -291,7 +290,6 @@ describe('core/query', () => {
             expect(collectFieldConditions(field!.condition!)).toEqual([
                 ['realmId', null],
                 ['secret', null],
-                ['secretHashed', true],
             ]);
         });
 
@@ -317,7 +315,6 @@ describe('core/query', () => {
             expect(collectFieldConditions(field!.condition!)).toEqual([
                 ['realmId', null],
                 ['secret', null],
-                ['secretHashed', true],
                 ['id', selfId],
             ]);
         });

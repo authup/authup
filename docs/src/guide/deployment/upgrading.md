@@ -7,6 +7,20 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### A hashed client secret is read-gated like a plaintext one
+
+A reader projecting `secret` (`?fields=+secret` on `/clients`, or
+`fields[client]` on the client-permission, client-role and client-scope
+collections) used to receive the bcrypt hash of every client that passed the
+read pre-gate, foreign realms included; only plaintext values were gated per
+row. A hash of an admin-chosen secret is offline-crackable and no reader needs
+another realm's, so a hashed value now takes the same gate a plaintext or an
+encrypted one does: it is projected on the reader's own client row and on rows
+the reader's permissions cover, and redacted elsewhere. `GET /clients/:id`
+with `?fields=+secret` answers `403` for a foreign hashed row, as it already did
+for a foreign plaintext one. A `realm_admin` listing clients with the field
+projected sees the change; an `admin` does not.
+
 ### Global permissions, roles, scopes and policies are unique by name
 
 The unique key of `auth_permissions`, `auth_roles`, `auth_scopes` and

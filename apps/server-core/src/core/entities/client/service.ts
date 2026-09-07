@@ -126,14 +126,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
-        // A hashed value discloses nothing; every other stored form is the
-        // secret itself (encrypted rows are decrypted for a permitted reader
-        // from plan 105 PR 2 on), so it takes the reach evaluate.
-        if (
-            !isMe &&
-            entity.secret &&
-            !entity.secretHashed
-        ) {
+        // Every stored form takes the reach evaluate: a plaintext is the
+        // secret itself, an encrypted value is decrypted for a permitted
+        // reader (plan 105), and a hash is offline-crackable and has no
+        // reader-facing reason to cross realms (#3328).
+        if (!isMe && entity.secret) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: CLIENT_READ_PERMISSIONS,
                 data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),

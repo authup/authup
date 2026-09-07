@@ -213,11 +213,14 @@ usable at the service level and nothing in core depends on TypeORM:
   with `null`, so a negated leg — or an `ownOrNull` reach's
   null-inclusive realm leg — would match an unfetched column.
   Today's only gated column is `client.secret`: `allow` verdict →
-  ungated; otherwise visible iff the stored value discloses nothing
-  (`secret` null / hashed) OR covered by the compiled
-  `CLIENT_READ/UPDATE/DELETE` condition OR the actor's own client row
-  (self leg — preserves the service-level isMe contract in list
-  shape). `secretEncrypted` is deliberately NOT a leg (plan 105): the
+  ungated; otherwise visible iff `secret` is null OR covered by the
+  compiled `CLIENT_READ/UPDATE/DELETE` condition OR the actor's own
+  client row (self leg — preserves the service-level isMe contract in
+  list shape). A hashed value took no gate until #3328 (it stayed
+  visible to any pre-gated reader, foreign realms included): a bcrypt
+  hash of an admin-chosen secret is offline-crackable and no reader
+  needs another realm's, so it is gated like a plaintext, and
+  `ClientService.getOne` denies a foreign hashed row the same way. `secretEncrypted` is deliberately NOT a leg (plan 105): the
   flag encrypted nothing before the mode existed (#3351), and now that
   it does, the stored value is a realm cipher blob that
   `ClientService.revealSecret` decrypts AFTER the redaction has run, so
