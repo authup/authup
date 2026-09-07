@@ -6,13 +6,15 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * `auth_permissions`, `auth_roles`, `auth_scopes` and `auth_policies` are
  * unique over a tuple that contains a nullable column: `realm_id`, plus
  * `client_id` on the first two. Every supported dialect treats NULLs as
- * distinct in a unique index, so for a GLOBAL row the existing `UQ_*`
- * indexes enforce nothing, and the whole built-in catalogue is global.
+ * distinct in a unique index, so the existing `UQ_*` indexes enforce nothing
+ * for a row whose tuple holds a NULL: every global row (the whole built-in
+ * catalogue), and on permissions and roles every realm-scoped row with no
+ * client.
  *
  * This adds one unique index per table over the same tuple with the nullable
- * members coalesced onto the empty string (never a uuid), so two global rows
+ * members coalesced onto the empty string (never a uuid), so two such rows
  * with one name collide. The `UQ_*` indexes stay: they are what the entity
- * metadata describes, and they still serve the scoped rows.
+ * metadata describes, and they still serve the fully scoped rows.
  *
  * Hand-written DDL on both dialects, a documented exception: an index over a
  * functional key part cannot be described in entity metadata, so each entity
@@ -62,7 +64,7 @@ export class GlobalEntityUniqueness1788793885495 implements MigrationInterface {
         if (affected.length > 0) {
             throw new Error(
                 `Global entity uniqueness migration aborted: ${affected.join('; ')}. ` +
-                'A name must be unique among the global rows of a table (realm_id NULL, and client_id NULL where the column exists). ' +
+                'A name must be unique within its realm and, where the column exists, its client, a NULL scope included. ' +
                 'Merge each group onto one survivor and re-point or drop the junction rows that reference the others ' +
                 'before re-running; see docs/src/guide/deployment/upgrading.md.',
             );

@@ -24,7 +24,7 @@ import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realmId'])
-// Global rows (realm_id NULL) are outside the constraint above, since every dialect treats
+// A global row (realm_id NULL) is outside the constraint above, since every dialect treats
 // NULLs as distinct. The migration GlobalEntityUniqueness1788793885495 adds a unique index
 // over the same tuple with the NULL coalesced; it is declared here, under a given name (the
 // builder never names an index it does not synchronize), so the schema builder

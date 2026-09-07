@@ -2964,11 +2964,13 @@ guard.
 | **Realm-bound** | client, user | No — always belong to a specific realm |
 | **Junction** | role-permission, user-role, etc. | Inherit realm from parent entities |
 
-**Global uniqueness is enforced by an extra index, not by the `@Unique`** (issue
-#3559). Each of the four global-capable tables is unique over a tuple that
-contains `realm_id` (and `client_id` on permission and role), and all three
+**Global uniqueness is enforced by an extra index, not by the `@Unique`**
+(issue #3559). Each of the four global-capable tables is unique over a tuple
+that contains `realm_id` (and `client_id` on permission and role), and all three
 dialects treat NULLs as distinct in a unique index, so the constraint enforces
-nothing for a global row while every built-in row is global. Migration
+nothing for a row whose tuple holds a NULL: every global row (the whole built-in
+catalogue), and on permission and role every realm-scoped row with no client.
+Migration
 `1788793885495-GlobalEntityUniqueness` adds one unique index per table over the
 same tuple with the NULLs coalesced onto `''`: hand-written DDL, declared on the
 entity as an unsynced, hand-named `@Index` so the drift gate leaves it alone

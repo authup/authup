@@ -11,18 +11,22 @@ either requires operator action or deliberately changes behavior.
 
 The unique key of `auth_permissions`, `auth_roles`, `auth_scopes` and
 `auth_policies` contains a nullable column (`realm_id`, plus `client_id` on the
-first two), and every database treats NULLs as distinct in a unique index, so two
-global rows with one name were never refused. Migration
-`1788793885495-GlobalEntityUniqueness` adds one unique index per table over the
-same columns with the NULLs coalesced, on MySQL and PostgreSQL, applied by the
-next boot with migrations enabled or by `authup migration run`. SQLite keeps the
-previous behaviour: it never runs migrations, and one database file per container
-leaves no second replica to race.
+first two), and every database treats NULLs as distinct in a unique index, so the
+key never refused a second row whose tuple holds a NULL: two global rows with one
+name, and on permissions and roles two realm-scoped rows with one name and no
+client. Migration `1788793885495-GlobalEntityUniqueness` adds one unique index per
+table over the same columns with the NULLs coalesced, on MySQL and PostgreSQL,
+applied by the next boot with migrations enabled or by `authup migration run`.
+SQLite keeps the previous behaviour: it never runs migrations, and one database
+file per container leaves no second replica to race.
 
-**Action required only if your deployment already holds such duplicates.** That
-takes a multi-replica first boot on a release before v1.0.0-beta.65 (the
-provisioning lock that prevents it shipped there). The migration checks first and
-aborts naming the affected tables instead of failing on the index. Find the groups:
+**Action required only if your deployment already holds duplicate rows.** The API
+has always refused them and the boot is serialised across replicas from
+v1.0.0-beta.65 on, so the realistic source is a multi-replica first boot on an
+earlier release, which produced global duplicates. The migration checks every
+table for a repeated `(name, client_id, realm_id)` or `(name, realm_id)` tuple,
+NULLs included, and aborts naming the affected tables instead of failing on the
+index. Find the groups:
 
 ```sql
 SELECT name, client_id, realm_id, COUNT(*) FROM auth_permissions GROUP BY name, client_id, realm_id HAVING COUNT(*) > 1;
@@ -44,8 +48,8 @@ every reference onto it, then delete the others. A permission is referenced by
 `auth_policies.parent_id`, and by the `auth_policy_tree` closure table.
 
 Re-point a reference with `UPDATE <table> SET <column> = '<survivor id>' WHERE <column> = '<loser id>'`.
-A junction row that then duplicates one the survivor already holds is refused by
-that table's own unique key; delete that row instead.
+A junction row that then duplicates one that the survivor already holds is refused
+by that table's own unique key; delete that row instead.
 Do the re-pointing before deleting a loser: every junction cascades on delete, so
 deleting a row that still holds references drops them silently.
 
