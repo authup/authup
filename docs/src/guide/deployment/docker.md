@@ -2,6 +2,15 @@
 
 This section will help you spin up Authup as a **docker** container.
 
+::: tip Wizard
+`npm create authup@latest` writes an `authup.env` file holding the environment
+this page configures, from a few prompts (public URL, database, admin
+password). The `docker run -d --name authup --restart unless-stopped --env-file authup.env -p <port>:3000 authup/authup:<version> start`
+line it prints is the single-container form of the compose example below, with
+the published port taken from the public URL and the image tag pinned to the
+release the wizard belongs to.
+:::
+
 ## Requirements
 The following guide is based on some shared assumptions:
 

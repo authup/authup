@@ -5,6 +5,7 @@
 ```mermaid
 graph TD
     subgraph Foundation
+        create-authup
         errors
         kit
         server-config-kit
@@ -57,7 +58,10 @@ graph TD
         server-core
     end
 
-    %% Foundation has no internal deps
+    %% Foundation has no internal deps at runtime.
+    %% create-authup: devDependencies only, for the schema drift spec
+    create-authup --> server-config
+    create-authup --> server-config-kit
 
     %% Layer 1
     access --> errors
