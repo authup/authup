@@ -33,6 +33,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SECRET_MODE]: 'Stockage',
     [TranslatorTranslationClientKey.SECRET_MODE_PLAIN]: 'En clair (peut être affiché à nouveau)',
     [TranslatorTranslationClientKey.SECRET_MODE_HASHED]: 'Haché (affiché une seule fois)',
+    [TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED]: 'Chiffré (peut être affiché à nouveau)',
+    [TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED_HINT]: 'Le secret est stocké chiffré avec la clé de chiffrement du realm et peut être affiché à nouveau à un lecteur autorisé. Désactiver ou supprimer cette clé empêche ces clients de s\'authentifier.',
     [TranslatorTranslationClientKey.SECRET_SHOW_ONCE]: 'Copiez le secret maintenant. Il ne sera plus affiché.',
     [TranslatorTranslationClientKey.SECRET_COPY]: 'Copier',
     [TranslatorTranslationClientKey.SECRET_COPIED]: 'Copié',

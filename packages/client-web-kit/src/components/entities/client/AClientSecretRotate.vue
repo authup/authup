@@ -78,6 +78,8 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_MODE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_MODE_PLAIN },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_MODE_HASHED },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED_HINT },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_SHOW_ONCE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_COPY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.SECRET_COPIED },
@@ -93,15 +95,15 @@ export default defineComponent({
         const secret = ref<string | null>(null);
         const copied = ref(false);
 
-        // encrypted storage lands with the second half of plan 105
         const modeOptions = computed<FormOption[]>(() => [
             { value: ClientSecretMode.PLAIN, label: translations.secretModePlain },
             { value: ClientSecretMode.HASHED, label: translations.secretModeHashed },
+            { value: ClientSecretMode.ENCRYPTED, label: translations.secretModeEncrypted },
         ]);
 
-        // A legacy row may carry a mode the dialog does not offer (its
-        // `secretEncrypted` flag never encrypted anything); the default must
-        // be an offered one, or an untouched submit is refused.
+        // The default must be an offered mode, or an untouched submit is
+        // refused; a row carrying a mode the dialog does not offer falls
+        // back to plain.
         const defaultMode = () : `${ClientSecretMode}` => {
             const mode = getClientSecretMode(props.entity);
 
@@ -116,6 +118,8 @@ export default defineComponent({
         });
 
         const v = useValidup(new ClientSecretRotateValidator(), form);
+
+        const isEncryptedMode = computed(() => v.fields.mode.$model.value === ClientSecretMode.ENCRYPTED);
 
         const setMode = (next: unknown) => {
             v.fields.mode.$model.value = next as `${ClientSecretMode}`;
@@ -187,6 +191,7 @@ export default defineComponent({
             secret,
             copied,
             modeOptions,
+            isEncryptedMode,
             setMode,
             setOpen,
             submit,
@@ -295,6 +300,12 @@ export default defineComponent({
                                 :options="modeOptions"
                                 @update:model-value="setMode"
                             />
+                            <template
+                                v-if="isEncryptedMode"
+                                #hint
+                            >
+                                {{ translations.secretModeEncryptedHint }}
+                            </template>
                         </VCFormGroup>
                     </IFieldValidation>
                     <div class="flex gap-2">

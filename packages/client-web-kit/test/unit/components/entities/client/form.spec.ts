@@ -12,7 +12,7 @@ import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-
 import { flushPromises, mount } from '@vue/test-utils';
 import { VCButton } from '@vuecs/button';
 import vuecs from '@vuecs/core';
-import { install as installForms } from '@vuecs/forms';
+import { VCFormRadioGroup, install as installForms } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AClientForm from '../../../../../src/components/entities/client/AClientForm.vue';
@@ -693,18 +693,34 @@ describe('AClientForm secret rotation', () => {
         wrapper.unmount();
     });
 
-    // A legacy row may carry `secretEncrypted` although the dialog offers no
-    // such option (the flag never encrypted anything); the default must be
-    // an offered mode, or an untouched submit answers 400.
-    it('defaults to an offered mode for a legacy secretEncrypted client', async () => {
+    it('offers the plain, hashed and encrypted storage modes', async () => {
+        const { wrapper } = mountForm(createHashedEntity());
+        await flushPromises();
+
+        const rotate = await openDialog(wrapper);
+        const group = rotate.findComponent(VCFormRadioGroup);
+        expect(group.exists()).toBe(true);
+
+        const values = (group.props('options') as { value: unknown }[])
+            .map((option) => option.value);
+        expect(values).toEqual(['plain', 'hashed', 'encrypted']);
+
+        wrapper.unmount();
+    });
+
+    // A legacy row carries `secretEncrypted` although the flag never encrypted
+    // anything. The dialog now offers that mode, so an untouched submit turns
+    // the row into a real encrypted secret rather than falling back to plain,
+    // and the hint explaining what the mode depends on is rendered for it.
+    it('rotates a legacy secretEncrypted client into an encrypted secret by default', async () => {
         const entity = createEntity();
         entity.secretEncrypted = true;
         const { wrapper, httpClient } = mountForm(entity, {
             'POST /clients/:id/secret': () => ({
                 data: {
-                    ...entity, 
-                    secretEncrypted: false, 
-                    updatedAt: '2026-01-02T00:00:00.000Z', 
+                    ...entity,
+                    secret: null,
+                    updatedAt: '2026-01-02T00:00:00.000Z',
                 },
                 meta: { secret: 'rotated-plaintext-three' },
             }),
@@ -712,11 +728,14 @@ describe('AClientForm secret rotation', () => {
         await flushPromises();
 
         const rotate = await openDialog(wrapper);
+        expect(rotate.findComponent(VCFormRadioGroup).props('modelValue')).toEqual('encrypted');
+        expect(document.body.textContent).toContain('encryption key');
+
         await submitDialog(rotate);
 
         const request = findRotateRequest(httpClient, entity.id);
         expect(request).toBeDefined();
-        expect(request!.body).toEqual({ mode: 'plain' });
+        expect(request!.body).toEqual({ mode: 'encrypted' });
 
         wrapper.unmount();
     });

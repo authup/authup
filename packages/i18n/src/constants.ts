@@ -64,6 +64,8 @@ export enum TranslatorTranslationClientKey {
     SECRET_MODE = 'secretMode',
     SECRET_MODE_PLAIN = 'secretModePlain',
     SECRET_MODE_HASHED = 'secretModeHashed',
+    SECRET_MODE_ENCRYPTED = 'secretModeEncrypted',
+    SECRET_MODE_ENCRYPTED_HINT = 'secretModeEncryptedHint',
     SECRET_SHOW_ONCE = 'secretShowOnce',
     SECRET_COPY = 'secretCopy',
     SECRET_COPIED = 'secretCopied',

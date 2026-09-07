@@ -33,6 +33,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SECRET_MODE]: 'Speicherung',
     [TranslatorTranslationClientKey.SECRET_MODE_PLAIN]: 'Klartext (kann erneut angezeigt werden)',
     [TranslatorTranslationClientKey.SECRET_MODE_HASHED]: 'Gehasht (wird einmal angezeigt)',
+    [TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED]: 'Verschlüsselt (kann erneut angezeigt werden)',
+    [TranslatorTranslationClientKey.SECRET_MODE_ENCRYPTED_HINT]: 'Das Geheimnis wird mit dem Verschlüsselungsschlüssel des Realms verschlüsselt gespeichert und kann berechtigten Lesern erneut angezeigt werden. Wird dieser Schlüssel deaktiviert oder gelöscht, können sich solche Clients nicht mehr authentifizieren.',
     [TranslatorTranslationClientKey.SECRET_SHOW_ONCE]: 'Kopiere das Geheimnis jetzt. Es wird nicht erneut angezeigt.',
     [TranslatorTranslationClientKey.SECRET_COPY]: 'Kopieren',
     [TranslatorTranslationClientKey.SECRET_COPIED]: 'Kopiert',
