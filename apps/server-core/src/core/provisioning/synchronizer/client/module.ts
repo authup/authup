@@ -13,7 +13,9 @@ import type {
     Role,
     Scope,
 } from '@authup/core-kit';
-import { pickRecord } from '@authup/kit';
+import { isBCryptHash, pickRecord } from '@authup/kit';
+import { ClientCredentialsService } from '../../../authentication/credential/entities/client/module.ts';
+import { assertSecretModeSupported } from '../../../entities/client/service.ts';
 import type { IClientRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
@@ -75,6 +77,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
         this.canonicalizeName(input.attributes);
+        await this.protectSecret(input.attributes);
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
@@ -206,5 +209,28 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             ...input,
             attributes,
         };
+    }
+
+    /**
+     * The synchronizer writes attributes straight to the repository, so it
+     * is the one client write path that bypasses the credential service. A
+     * file declaring `secretHashed: true` carries either a plaintext or a
+     * bcrypt hash (GitOps should not have to hold plaintext), which makes
+     * this the ONE place that sniffs the input, and only for that mode.
+     */
+    protected async protectSecret(attributes: ClientProvisioningEntity['attributes']): Promise<void> {
+        assertSecretModeSupported(attributes);
+
+        if (
+            attributes.secretHashed &&
+            typeof attributes.secret === 'string' &&
+            !isBCryptHash(attributes.secret)
+        ) {
+            const credentialsService = new ClientCredentialsService();
+            attributes.secret = await credentialsService.protect(attributes.secret, {
+                secretHashed: true,
+                secretEncrypted: false,
+            });
+        }
     }
 }
