@@ -73,7 +73,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 | app/modules/logger           | Logging (Winston)                                                                                          |
 | app/modules/vault            | Secret management                                                                                          |
 | app/modules/runtime          | Runtime lifecycle                                                                                          |
-| app/modules/swagger          | API documentation generation. The document itself is built by `trapi generate` plus the `scripts/openapi-query-schemas.mjs` pass, never at runtime; this only serves it (see *Query vocabulary discovery*) |
+| app/modules/swagger          | API documentation generation. The document itself is built by `trapi generate`, never at runtime; this only serves it (see *Query vocabulary discovery*) |
 | app/modules/provisioning     | Wires repository adapters to core provisioning synchronizers; hosts provisioning sources (default, file, composite) |
 
 ## Repository Pattern (Ports & Adapters)
@@ -518,24 +518,21 @@ Three properties of that shape are load-bearing:
   declaration, and for an import that declaration is the `ImportSpecifier`,
   which carries no initializer, so passing `RECORD_QUERY_PARAMETERS` itself
   resolves to `unresolvable`. The route therefore names a SHAPE
-  (`'collection' | 'record'`) and `trapi.config.ts` maps it onto the constant,
+  (`'collection' | 'record' | 'filters'`) and `trapi.config.ts` maps it onto the
+  parameter subset,
   keeping the record subset declared exactly once.
 
-**Known limit: the projection covers reads, not the two bulk deletes.**
-`DELETE /sessions` and `DELETE /session-tokens` decode a rapiq query too
-(`decodeQuery(..., { parameters: ['filters'] })`, which is what discriminates
-the self-service revoke from the admin force-logout), but they carry no marker
-and the document declares no query parameters for them. Nothing reports it:
-the marker sweep walks `@DGet`, and the coverage check asks whether each
-registered SCHEMA has a marked collection read, which `session` and
-`sessionToken` both do. So the gap is invisible to both guards by
-construction rather than by oversight. It is worth knowing because the
-consequence is not merely undocumented but misleading: `DELETE
-/session-tokens` REQUIRES a target filter and answers 400 without one, so an
-operation the document describes as taking no input can only ever fail. Fixing
-it means teaching the marker a filters-only shape; the reason it was not folded
-in here is that it widens the decorator contract for three operations, which is
-a change worth making on its own rather than inside this one.
+**The two bulk revokes are marked too, and they are why the shape is a
+vocabulary rather than a boolean.** `DELETE /sessions` and
+`DELETE /session-tokens` decode `parameters: ['filters']`, which is what
+discriminates the self-service revoke from the administrative force-logout, so
+they carry `@DQuerySchema(<EntityType>, 'filters')` on a `@DDelete`. Neither
+guard could have found them: the marker sweep walks the source for markers, and
+the coverage check asks whether each registered SCHEMA has a marked collection
+read, which `session` and `sessionToken` both have. The gap was invisible to
+both by construction, and its consequence was worse than an omission, since
+`DELETE /session-tokens` REQUIRES a target filter and answers 400 without one,
+so the document described an operation that could only fail.
 
 **The handler is an inline preset in `trapi.config.ts`**, composed as
 `preset: { name: 'authup', extends: ['@routup/decorators/preset'], methods: [querySchemaHandler] }`
@@ -559,12 +556,15 @@ the document root, so `x-authup-schemas` and `x-authup-schema-hash` ride
 `swagger.data.extra` (trapi's `specificationExtra`, merged into the finished
 spec), which is the only channel that reaches it.
 
-**`scripts/openapi-query-schemas.mjs` is the post-generate pass**, chained as
-`"build:swagger": "trapi generate && node scripts/openapi-query-schemas.mjs"`.
-It reads the EMITTED DOCUMENT rather than the registry, so it carries no
-runtime dependency of its own and cannot describe a registry other than the one
-the document was generated from; the only thing it reads from `src/` is the
-declaration pair the source cross-check compares. It does four things:
+**`scripts/openapi-query-schemas.mjs` runs inside the generate**, as the
+`swagger.transform` hook `trapi.config.ts` passes (trapi 2.1.0,
+tada5hi/trapi#898), so `build:swagger` is a plain `trapi generate`. It receives
+the EMITTED DOCUMENT rather than the registry, so it carries no runtime
+dependency of its own and cannot describe a registry other than the one the
+document was generated from; the only thing it reads from `src/` is the
+declaration pair the source cross-check compares. Failing, it THROWS, which
+aborts the generate rather than leaving a written-then-rejected document on
+disk. It does three things:
 
 1. **Appends the five query parameters** to each marked operation, described
    from that entity's own `x-authup-schemas` entry, plus the
@@ -572,35 +572,28 @@ declaration pair the source cross-check compares. It does four things:
    by the handler, because it is a statement about the assembled document and
    only resolvable once the root map exists). A record read gets only what its
    marker's parameter subset covers.
-2. **Synthesizes the path parameters** trapi could not see. 61 of the
-   templated operations declared no `realmId`: every `/realms/{realmId}/…`
-   mount reads the segment through `getRequestRealmID(event)` rather than a
-   `@DPath` parameter, and trapi builds an operation's parameters solely from
-   its TypeScript parameter declarations. OpenAPI requires every variable of a
-   path template to be declared, so undeclared, the whole realm-scoped half of
-   the API is uncallable from anything generated off the document.
-3. **Declares a `default` error response** referencing one `ErrorResponse`
+2. **Declares a `default` error response** referencing one `ErrorResponse`
    component. Authup answers every failure with one body whatever the status
    (`serializeError(sanitizeError(e))`), which is exactly what `default`
    describes. `code` stays a plain string rather than an enum of the closed
    `ErrorCode` set: an OpenAPI enum is closed on the wire too, so a generated
    client would fail to deserialize an error carrying a code added after it was
    generated.
-4. **Assigns operation ids from method plus path.** `@trapi/swagger` builds one
-   from the TypeScript method name alone and uniquifies collisions with a
-   positional `_2` suffix in traversal order, so `GetMany_17` is
-   `GET /permission-policies` and inserting a controller that sorts earlier
-   renumbers everything after it. Method plus path is the only identity in this
-   document that is stable under insertion, and it is unique by construction;
-   uniqueness is still asserted, because the segment transform folds separators
-   away and two paths differing only in punctuation would collide silently.
+3. **Describes the path parameters trapi synthesizes.** trapi declares every
+   path-template variable itself since 2.1.0 (tada5hi/trapi#896) but has no
+   description to give one, and nothing else in the document says that a realm
+   is addressable by name as well as by id. Stable operation ids come from
+   `operationIdStrategy: 'path'` (tada5hi/trapi#897) rather than from this
+   pass.
 
-**It APPENDS to `parameters` and never assigns.** 136 parameters are already
-there, all `in: path`, and an assignment would delete every one of them and
-break every templated route while the document still looked plausible. The pass
-ends by re-deriving each path template's variable set and failing the build on
-one that is still missing, which is the guard for the NEXT enrichment rather
-than for this one.
+**It APPENDS to `parameters` and never assigns.** Every path parameter is
+already there, and an assignment would delete every one of them and break every
+templated route while the document still looked plausible. Appending has its own
+edge, so a name already declared fails the build rather than keeping the
+incumbent: silently dropping the documented vocabulary onto a parameter someone
+else emitted is the same defect one layer down. The pass ends by re-deriving
+each path template's variable set and failing on one that is still missing,
+which now checks trapi's synthesis rather than its own.
 
 **The parameters are generic and comma-separated, never one bracket parameter
 per key.** Per-key enums multiply the document by the size of every allow-list,
@@ -622,20 +615,24 @@ checks is a convention rather than an invariant:
 | registry → operations | a registered schema no collection read is marked with (the direction a per-operation map cannot see). The exclusion list is empty, which is the strongest state it can be in, and an entry that stops being needed fails the build the way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does |
 | marker → source | a `describeQuerySchema` call in an UNMARKED method. The reverse is allowed and deliberate: `PolicyController.getOneExpanded` delegates, and `GET /userinfo` answers a flat claims document |
 
-**`apps/server-core/tsconfig.json` declares `baseUrl` explicitly, and that line
-is what makes the whole document typed.** `@trapi/metadata`'s `loadTSConfig`
-reads the config as plain JSON and runs `convertCompilerOptionsFromJson`, which
-neither follows `extends` nor sets `pathsBasePath`, so the root config's
-`baseUrl` never reaches trapi and every `paths` entry is looked up under
-`apps/server-core/` instead of the repository root. Missed, they fall through
-node_modules onto the workspace symlink, i.e. onto `packages/*/dist/*.d.ts`:
-the entire typed payload surface becomes a function of 21 build artifacts
-existing, collapsing to `additionalProperties: true` (204 component schemas → 30)
-when they do not. **trapi still exits 0 and reports success**, so a CI run on a
-warm nx cache that skipped the package builds would publish a fully untyped
-specification behind a green check. It is a no-op for `tsc`, which already
-inherited `baseUrl: "."` from the root config and resolves an inherited relative
-`baseUrl` against the declaring config's directory, which is that same root.
+**The document's type content used to depend on 21 build artifacts, silently.**
+`@trapi/metadata`'s `loadTSConfig` read the config as plain JSON and ran
+`convertCompilerOptionsFromJson`, which neither follows `extends` nor sets
+`pathsBasePath`, so the root config's `baseUrl` never reached trapi and every
+`paths` entry was looked up under `apps/server-core/` instead of the repository
+root. Missed, they fell through node_modules onto the workspace symlink, i.e.
+onto `packages/*/dist/*.d.ts`: the whole typed payload surface became a function
+of those dists existing, collapsing to `additionalProperties: true` (204
+component schemas to 30, 29 of them routup and DOM internals) when they did not,
+while trapi still exited 0 and reported success. A CI run on a warm nx cache
+that skipped the package builds would have published a fully untyped
+specification behind a green check.
+
+trapi resolves `extends` since 2.1.0 (tada5hi/trapi#893), so the explicit
+`baseUrl` this workspace carried as a workaround is gone. The property is worth
+keeping in mind rather than the line: nothing about a document generated from
+stale dists LOOKS wrong, so if the payload types ever thin out, suspect
+resolution before suspecting the annotations.
 
 **`GET /schemas` + `GET /schemas/:name`** (`controllers/workflows/schema/`,
 `core/query/discovery.ts`; typed as `client.schema.getMany()/getOne(name)` in
@@ -1351,7 +1348,7 @@ Controller conventions:
 - Read the routup event via `@DContext() event: IAppEvent`
 - Read the body via `@DBody() data: <RequestType>` (decorator awaits `readRequestBody` internally)
 - Read query via `useRequestQuery(event)` from `@routup/basic/query`
-- A method that decodes one additionally carries `@DQuerySchema(<EntityType>, 'collection' | 'record')` next to its `@DGet`. It is a build-time marker with no runtime effect, and it is what puts the endpoint's query parameters into the OpenAPI document; a `describeQuerySchema` call in an unmarked method fails the build. See *Query vocabulary discovery*.
+- A method that decodes one additionally carries `@DQuerySchema(<EntityType>, 'collection' | 'record' | 'filters')` next to its `@DGet` (or its `@DDelete`, for the two bulk revokes). It is a build-time marker with no runtime effect, and it is what puts the endpoint's query parameters into the OpenAPI document; a `describeQuerySchema` call in an unmarked method fails the build. See *Query vocabulary discovery*.
 - Read path params via `@DPath('id') id: string` or `event.params.id`
 - Build actor via `buildActorContext(event)`
 - For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating — route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
