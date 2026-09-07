@@ -6,6 +6,7 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
+import { isBCryptHash } from '@authup/kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -49,7 +50,9 @@ describe('http/controllers (client secret projection)', () => {
 
     const ownClientSecret = 'secret-projection-own';
     const foreignClientSecret = 'secret-projection-foreign';
-    const foreignHashedSecret = '$2b$10$secret-projection-hash';
+    // a plaintext the server hashes at create; the projection then carries
+    // the bcrypt form, never this value
+    const foreignHashedSecret = 'secret-projection-hashed';
     const restrictedActorSecret = 'secret-projection-actor';
 
     beforeAll(async () => {
@@ -186,7 +189,8 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(1);
-        expect(response.data[0].secret).toEqual(foreignHashedSecret);
+        expect(isBCryptHash(response.data[0].secret!)).toBe(true);
+        expect(response.data[0].secret).not.toEqual(foreignHashedSecret);
     });
 
     it('gates the client-permission fields[client] projection', async () => {
@@ -215,7 +219,8 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(1);
-        expect(response.data[0].client!.secret).toEqual(foreignHashedSecret);
+        expect(isBCryptHash(response.data[0].client!.secret!)).toBe(true);
+        expect(response.data[0].client!.secret).not.toEqual(foreignHashedSecret);
     });
 
     it('gates the client-role fields[client] projection', async () => {
