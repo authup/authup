@@ -7,6 +7,28 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Identity-provider secrets are encrypted at rest
+
+The OAuth2/OIDC `clientSecret` and the LDAP bind `password` of an identity
+provider are stored as cipher blobs under the provider realm's encryption key,
+the automatically generated per-realm key that already protects MFA seeds and
+client secrets in encrypted mode. Nothing changes on the API: a reader whose
+permissions cover the provider (`GET /identity-providers/:id`) gets the
+plaintext back, the login and link flows present it to the upstream as before,
+and the admin console's edit form is unaffected.
+
+A provider saved before this release keeps its plaintext until it is next
+saved; the value is encrypted on that save, whether the secret changed or not.
+To finish the migration, open and save each OAuth2, OIDC and LDAP provider
+once, or update it through the API.
+
+The secret is tied to the key's lifecycle: while the realm's encryption key is
+disabled, a login through the provider fails (the secret is not recoverable),
+and `DELETE /keys/:id` answers `409` while provider secrets reference the key,
+as it already does for client secrets and MFA seeds; `force` destroys them and
+the providers need a new secret. Set `secretsEncryptionKey`
+(`SECRETS_ENCRYPTION_KEY`) so the realm key itself is wrapped at rest.
+
 ### A hashed client secret is read-gated like a plaintext one
 
 A reader projecting `secret` (`?fields=+secret` on `/clients`, or

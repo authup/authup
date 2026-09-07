@@ -6540,12 +6540,24 @@ must be visible in `auth_events`). The table was folded into migration
   both methods — shape-aligned with `ISymmetricCipher.encrypt(plain)` plus a
   scope argument; every consumer knows its entity's realm, so a skippable
   assert would only invite forgetting it). Two consumers today: the MFA
-  seed cipher (`UserAuthenticatorService` ctx) and, since plan 105, client
+  seed cipher (`UserAuthenticatorService` ctx), since plan 105 client
   secrets in encrypted mode (`secretEncrypted`, see *Client secret storage
-  and rotation*), both resolving the one instance registered under
-  `OAuth2InjectionToken.RealmCipher`; plan 070 Stage 2 adds the IdP
-  `clientSecret` and the LDAP bind password over the same token, blob
-  discriminator and reveal rule.
+  and rotation*), and since plan 070 Stage 2 the identity-provider secrets:
+  `IdentityProviderRepositoryAdapter` encrypts exactly the attribute names
+  in `IDENTITY_PROVIDER_SECRET_ATTRIBUTES` (the OAuth2/OIDC `clientSecret`,
+  the LDAP bind `password`) inside `saveWithEA` and decrypts them after
+  every extra-attribute extension, so the protocol factories and the
+  admin form see plaintext while `auth_identity_provider_attributes`
+  holds blobs. A legacy plaintext passes through a read untouched and is
+  encrypted by the next save; a blob the cipher cannot open (unknown,
+  disabled or foreign key) is DROPPED from the entity, so a login through
+  that provider fails closed instead of presenting ciphertext upstream.
+  The adapter is registered under `IdentityInjectionKey.ProviderRepository`
+  as a lazy factory, because the identity module is set up before the
+  oauth2 module that registers the cipher; `countBlobReferences` counts
+  the attribute rows, so `DELETE /keys/:id` answers 409 while a provider
+  depends on the key. All three consumers resolve the one instance
+  registered under `OAuth2InjectionToken.RealmCipher`.
 - **Optional KEK — config `secretsEncryptionKey` (`SECRETS_ENCRYPTION_KEY`,
   base64 32 bytes, boot-validated when set):** the adapter persists
   `decryptionKey` material (RSA private keys AND oct material — never the

@@ -30,7 +30,6 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
-    IdentityProviderRepository,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
     PermissionEntity,
@@ -55,7 +54,6 @@ import {
     ClientScopeRepositoryAdapter,
     DatabaseInjectionKey,
     IdentityProviderAccountRepositoryAdapter,
-    IdentityProviderRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
     PermissionDatabaseProvider,
     PermissionPolicyRepositoryAdapter,
@@ -549,7 +547,6 @@ export class HTTPControllerModule {
 
     createIdentityProvider(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
-        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const accountManager = container.resolve(IdentityInjectionKey.ProviderAccountManager);
         const linkStore = container.resolve(IdentityInjectionKey.ProviderAccountLinkStore);
@@ -560,10 +557,7 @@ export class HTTPControllerModule {
 
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
-        const repository = new IdentityProviderRepositoryAdapter({
-            repository: new IdentityProviderRepository(dataSource),
-            realmRepository,
-        });
+        const repository = container.resolve(IdentityInjectionKey.ProviderRepository);
 
         const logger = container.resolve(LoggerInjectionKey);
         const eventService = container.resolve(DatabaseInjectionKey.EventService);

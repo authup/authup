@@ -6,6 +6,7 @@
  */
 
 export * from './account/index.ts';
+export * from './constants.ts';
 export * from './authentication/index.ts';
 export * from './mapper/index.ts';
 export * from './types.ts';
