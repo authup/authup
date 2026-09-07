@@ -13,7 +13,7 @@ import {
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { ACCOUNT_CONSOLE_SEGMENT } from '../../../constants.ts';
+import { ACCOUNT_CONSOLE_PATH, ACCOUNT_CONSOLE_SEGMENT } from '../../../constants.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AccountControllerContext, AccountControllerOptions } from './types.ts';
 
@@ -28,17 +28,7 @@ import type { AccountControllerContext, AccountControllerOptions } from './types
  * invariant 3). A proxy therefore routes these two exact paths to the API
  * set and the rest of the console's segment to the console set.
  */
-// The mount is spelled inline because trapi resolves a decorator path
-// argument only as a literal. An identifier, an imported constant or a
-// template expression all fold to `unresolvable`, and the controller then
-// emits at the document ROOT, where its two routes collide with the other
-// console's and half of them are dropped from the OpenAPI document
-// (tada5hi/trapi#906). `ACCOUNT_CONSOLE_PATH` stays the value the login flow
-// builds its cookie scope and callback URL from, and `console-session.spec.ts`
-// drives the whole flow against its own literal paths, so a drift either way
-// fails it: a moved mount stops answering, and a moved constant mints a
-// callback URL nothing serves.
-@DController('/console/account')
+@DController(ACCOUNT_CONSOLE_PATH)
 export class AccountController {
     protected options: AccountControllerOptions;
 

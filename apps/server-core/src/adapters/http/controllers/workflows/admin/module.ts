@@ -13,7 +13,7 @@ import {
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { ADMIN_CONSOLE_SEGMENT } from '../../../constants.ts';
+import { ADMIN_CONSOLE_PATH, ADMIN_CONSOLE_SEGMENT } from '../../../constants.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AdminControllerContext, AdminControllerOptions } from './types.ts';
 
@@ -24,17 +24,7 @@ import type { AdminControllerContext, AdminControllerOptions } from './types.ts'
  * The console itself is served by `@authup/server-admin-console`. See
  * {@link AccountController} for why these two routes stay on the API.
  */
-// The mount is spelled inline because trapi resolves a decorator path
-// argument only as a literal. An identifier, an imported constant or a
-// template expression all fold to `unresolvable`, and the controller then
-// emits at the document ROOT, where its two routes collide with the other
-// console's and half of them are dropped from the OpenAPI document
-// (tada5hi/trapi#906). `ADMIN_CONSOLE_PATH` stays the value the login flow
-// builds its cookie scope and callback URL from, and `console-session.spec.ts`
-// drives the whole flow against its own literal paths, so a drift either way
-// fails it: a moved mount stops answering, and a moved constant mints a
-// callback URL nothing serves.
-@DController('/console/admin')
+@DController(ADMIN_CONSOLE_PATH)
 export class AdminController {
     protected options: AdminControllerOptions;
 
