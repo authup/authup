@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { createNanoID } from '@authup/kit';
 import { compare, hash } from '@authup/server-kit';
 import { type Client, ClientAuthMethod } from '@authup/core-kit';
@@ -45,13 +45,14 @@ export class ClientCredentialsService implements ICredentialService<Client> {
     }
 }
 
+/**
+ * Compares the digests rather than the values: `timingSafeEqual` needs
+ * equal-length inputs, and a length check before it would leak the secret's
+ * length to a wrong-length guess.
+ */
 function constantTimeEqual(a: string, b: string): boolean {
-    const left = Buffer.from(a);
-    const right = Buffer.from(b);
-
-    if (left.byteLength !== right.byteLength) {
-        return false;
-    }
-
-    return timingSafeEqual(left, right);
+    return timingSafeEqual(
+        createHash('sha256').update(a).digest(),
+        createHash('sha256').update(b).digest(),
+    );
 }

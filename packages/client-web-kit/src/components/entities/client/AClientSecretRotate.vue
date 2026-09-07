@@ -93,18 +93,29 @@ export default defineComponent({
         const secret = ref<string | null>(null);
         const copied = ref(false);
 
-        const form = reactive<{ secret: string, mode: `${ClientSecretMode}` }>({
-            secret: '',
-            mode: getClientSecretMode(props.entity),
-        });
-
-        const v = useValidup(new ClientSecretRotateValidator(), form);
-
         // encrypted storage lands with the second half of plan 105
         const modeOptions = computed<FormOption[]>(() => [
             { value: ClientSecretMode.PLAIN, label: translations.secretModePlain },
             { value: ClientSecretMode.HASHED, label: translations.secretModeHashed },
         ]);
+
+        // A legacy row may carry a mode the dialog does not offer (its
+        // `secretEncrypted` flag never encrypted anything); the default must
+        // be an offered one, or an untouched submit is refused.
+        const defaultMode = () : `${ClientSecretMode}` => {
+            const mode = getClientSecretMode(props.entity);
+
+            return modeOptions.value.some((option) => option.value === mode) ?
+                mode :
+                ClientSecretMode.PLAIN;
+        };
+
+        const form = reactive<{ secret: string, mode: `${ClientSecretMode}` }>({
+            secret: '',
+            mode: defaultMode(),
+        });
+
+        const v = useValidup(new ClientSecretRotateValidator(), form);
 
         const setMode = (next: unknown) => {
             v.fields.mode.$model.value = next as `${ClientSecretMode}`;
@@ -112,7 +123,7 @@ export default defineComponent({
 
         const reset = () => {
             form.secret = '';
-            form.mode = getClientSecretMode(props.entity);
+            form.mode = defaultMode();
             secret.value = null;
             error.value = null;
             copied.value = false;

@@ -225,10 +225,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         // A protected secret is replaced only through rotateSecret, together
         // with the mode it is stored under; the metadata path must never be
-        // able to downgrade it (plan 105).
+        // able to downgrade it (plan 105). `null` counts: the save path would
+        // otherwise generate a replacement nobody is told about.
         if (
             entity &&
-            typeof validated.secret === 'string' &&
+            validated.secret !== undefined &&
             getClientSecretMode(entity) !== ClientSecretMode.PLAIN
         ) {
             throw new ValidationError('The secret of a hashed or encrypted client is rotated through POST /clients/:id/secret.');
@@ -406,7 +407,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         const validated = await this.secretValidator.run(data);
 
-        const currentMode = getClientSecretMode(entity);
+        // A legacy row may carry `secretEncrypted` over a value the flag never
+        // encrypted, so the effective mode is what the VALUE is: an empty
+        // body rotates such a row as plain and clears the flag. (Once the
+        // encrypted mode exists the blob prefix is the discriminator.)
+        const currentMode = entity.secretHashed ?
+            ClientSecretMode.HASHED :
+            ClientSecretMode.PLAIN;
         const mode = validated.mode ?? currentMode;
         const flags = {
             secretHashed: mode === ClientSecretMode.HASHED,
@@ -438,15 +445,33 @@ export class ClientService extends AbstractEntityService implements IClientServi
             });
         }
 
-        // Protect BEFORE the write and take no row lock: these three columns
-        // have exactly one writer, and the update path's patch never carries
-        // them, so there is no lost update to defend against (#3526), and
-        // nothing that could reach the key store inside a pinned connection.
-        entity.secret = await credentialsService.protect(secret, flags);
-        entity.secretHashed = flags.secretHashed;
-        entity.secretEncrypted = flags.secretEncrypted;
+        // Protect BEFORE the lock: hashing is CPU and encryption reaches the
+        // key store, and neither may run on a second pooled connection while
+        // the first is pinned FOR UPDATE (#3526, #3539).
+        const stored = await credentialsService.protect(secret, flags);
 
-        const saved = await this.repository.save(entity);
+        // TypeORM's save diffs against the FRESH row, so writing the entity
+        // read above would restore every column a concurrent update changed
+        // in between (an `authMethod` switch to `none` included). The write
+        // therefore lock-reads the current row and re-checks the one rule
+        // that depends on its state.
+        const { id } = entity;
+        const saved = await this.repository.transaction(async (repository) => {
+            const current = await repository.findOneWithSecret({ id });
+            if (!current) {
+                throw new EntityNotFoundError();
+            }
+
+            if (current.authMethod !== ClientAuthMethod.SECRET) {
+                throw new ValidationError('Only a client authenticating by secret holds a secret to rotate.');
+            }
+
+            current.secret = stored;
+            current.secretHashed = flags.secretHashed;
+            current.secretEncrypted = flags.secretEncrypted;
+
+            return repository.save(current);
+        });
 
         await this.recordSecretRotated(saved, actor, mode);
 

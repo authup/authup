@@ -566,6 +566,21 @@ describe('core/entities/client/service', () => {
             expect(isBCryptHash(stored!.secret!)).toBe(true);
         });
 
+        it('should refuse a null secret on a hashed client (it would replace the credential with a generated one)', async () => {
+            const stored = await hash('old');
+            const entity = repository.seed(createFakeClient({
+                secret: stored,
+                secretHashed: true,
+            }));
+
+            await expect(
+                service.update(entity.id, { secret: null }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+            const current = await repository.findOneWithSecret({ id: entity.id });
+            expect(current!.secret).toEqual(stored);
+        });
+
         it('should ignore a storage mode flag sent on update', async () => {
             const entity = repository.seed(createFakeClient({
                 secret: 'keep',
@@ -769,6 +784,30 @@ describe('core/entities/client/service', () => {
             await expect(
                 service.rotateSecret(entity.id, { mode: ClientSecretMode.ENCRYPTED }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should rotate a legacy secretEncrypted row as plain when no mode is given, clearing the flag', async () => {
+            // the flag never encrypted anything, so the row's effective mode is plain
+            const entity = repository.seed(createFakeClient({
+                secret: 'legacy-plain',
+                secretHashed: false,
+                secretEncrypted: true,
+            }));
+
+            const result = await service.rotateSecret(entity.id, {}, createAllowAllActor());
+
+            const stored = await repository.findOneWithSecret({ id: entity.id });
+            expect(stored!.secret).toEqual(result.secret);
+            expect(stored!.secretHashed).toBe(false);
+            expect(stored!.secretEncrypted).toBe(false);
+        });
+
+        it('should write inside one repository transaction (lock-read, like the update path)', async () => {
+            const entity = repository.seed(createFakeClient({ secret: 'old' }));
+
+            await service.rotateSecret(entity.id, {}, createAllowAllActor());
+
+            expect(repository.transactionCalls).toBe(1);
         });
 
         it('should refuse a client that does not authenticate by secret', async () => {

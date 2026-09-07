@@ -692,4 +692,32 @@ describe('AClientForm secret rotation', () => {
 
         wrapper.unmount();
     });
+
+    // A legacy row may carry `secretEncrypted` although the dialog offers no
+    // such option (the flag never encrypted anything); the default must be
+    // an offered mode, or an untouched submit answers 400.
+    it('defaults to an offered mode for a legacy secretEncrypted client', async () => {
+        const entity = createEntity();
+        entity.secretEncrypted = true;
+        const { wrapper, httpClient } = mountForm(entity, {
+            'POST /clients/:id/secret': () => ({
+                data: {
+                    ...entity, 
+                    secretEncrypted: false, 
+                    updatedAt: '2026-01-02T00:00:00.000Z', 
+                },
+                meta: { secret: 'rotated-plaintext-three' },
+            }),
+        });
+        await flushPromises();
+
+        const rotate = await openDialog(wrapper);
+        await submitDialog(rotate);
+
+        const request = findRotateRequest(httpClient, entity.id);
+        expect(request).toBeDefined();
+        expect(request!.body).toEqual({ mode: 'plain' });
+
+        wrapper.unmount();
+    });
 });

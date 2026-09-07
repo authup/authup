@@ -6,6 +6,7 @@
  */
 
 import type { Realm } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { createAllowAllActor } from '@authup/server-test-kit';
 import {
     afterAll,
@@ -13,6 +14,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import {
     ClientEntity,
@@ -107,6 +109,42 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         const row = await userRepository.findOneBy({ id: created.id });
         expect(row?.active).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
+    });
+
+    // A rotation lock-reads the row before its write, so a switch to `none`
+    // that lands between its unlocked read and its transaction is seen and
+    // the rotation is refused; TypeORM's save would otherwise diff the stale
+    // entity against the fresh row and write `authMethod: 'secret'` back. The
+    // interleaving is forced: the unlocked read runs the switch before it
+    // returns (the locked read inside the transaction uses another adapter
+    // instance, so the spy does not see it).
+    it('should not restore secret authentication a concurrent update switched off', async () => {
+        const created = await clientService.create({
+            ...createFakeClient(),
+            realmId: realm.id,
+        }, actor);
+
+        const read = clientRepository.findOneWithSecret.bind(clientRepository);
+        let switched = false;
+        const spy = vi.spyOn(clientRepository, 'findOneWithSecret').mockImplementation(async (where) => {
+            const row = await read(where);
+            if (!switched) {
+                switched = true;
+                await clientService.update(created.id, { authMethod: 'none', tokenBindingMethod: 'none' }, actor);
+            }
+
+            return row;
+        });
+
+        try {
+            await expect(clientService.rotateSecret(created.id, {}, actor)).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        } finally {
+            spy.mockRestore();
+        }
+
+        const row = await clientRepository.findOneWithSecret({ id: created.id });
+        expect(row?.authMethod).toBe('none');
+        expect(row?.secret).toBeNull();
     });
 
     it('should keep a concurrent client deactivation', async () => {
