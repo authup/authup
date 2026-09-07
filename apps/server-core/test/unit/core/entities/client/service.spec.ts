@@ -135,7 +135,7 @@ describe('core/entities/client/service', () => {
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('redacts uncovered plaintext secrets instead of dropping rows when the projection selects secret', async () => {
+        it('redacts uncovered plaintext and hashed secrets instead of dropping rows when the projection selects secret', async () => {
             const realmA = randomUUID();
             const realmB = randomUUID();
             const rows = repository.seed([
@@ -178,8 +178,8 @@ describe('core/entities/client/service', () => {
 
             // the schema gate rides the decoded query as a field visibility
             // condition — replaying it drops the uncovered PLAINTEXT value
-            // while every row keeps listing; hashed / secret-less rows keep
-            // their value regardless of the compiled condition
+            // while every row keeps listing; a secret-less row keeps its null,
+            // and a foreign HASHED value is redacted like a plaintext (#3328)
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
             expect(applied.data.map((row) => row.name).sort())
@@ -189,7 +189,7 @@ describe('core/entities/client/service', () => {
             expect(byName.get('safe')).toHaveProperty('secret', null);
             expect(byName.get('plain-covered')).toHaveProperty('secret', 'mysecret');
             expect(byName.get('plain-foreign')).not.toHaveProperty('secret');
-            expect(byName.get('hashed-foreign')).toHaveProperty('secret', '$2b$10$hash');
+            expect(byName.get('hashed-foreign')).not.toHaveProperty('secret');
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 

@@ -29,15 +29,16 @@ const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY
  * client-permission / client-role / client-scope, which never run
  * `ClientService`'s read path.
  *
- * Only rows exposing a READABLE secret are guarded: `null` and hashed
- * values stay visible to any actor that passed the read pre-gate (the
- * historical service semantics). A plaintext value is additionally
- * visible on the actor's OWN client row (the `getOne` isMe bypass,
- * list-shaped) and on rows the compiled permission condition covers.
- * `secretEncrypted` is deliberately NOT a leg: the flag never encrypted
- * anything (#3351), and once it does (plan 105 PR 2) the value is
- * decrypted for exactly the readers a plaintext value reaches. A non-expressible (`post`) or settled-deny compile
- * yields no permission leg — fail closed for plaintext rows rather
+ * Only a `null` value is visible to every actor that passed the read
+ * pre-gate. Every stored form takes the gate: a plaintext is the secret
+ * itself, an encrypted value is decrypted for exactly the readers a
+ * plaintext reaches (plan 105), and a hashed value, visible to any
+ * pre-gated reader until #3328, is a bcrypt hash of an admin-chosen
+ * secret and therefore offline-crackable, with no reader-facing reason
+ * to ship it across realms. A gated value is visible on the actor's OWN
+ * client row (the `getOne` isMe bypass, list-shaped) and on rows the
+ * compiled permission condition covers. A non-expressible (`post`) or
+ * settled-deny compile yields no permission leg — fail closed rather
  * than falling back to per-row evaluation.
  *
  * The outer `ne('realmId', null)` guard is semantically inert (clients
@@ -55,7 +56,6 @@ async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdic
 
     const visible : ICondition[] = [
         eq('secret', null),
-        eq('secretHashed', true),
     ];
 
     if (compiled.verdict === 'conditional') {

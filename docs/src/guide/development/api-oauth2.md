@@ -37,6 +37,11 @@ modes. The mode is chosen when the client is created, through the two flags
 | `hashed` | `secretHashed: true` | a bcrypt hash | no |
 | `encrypted` | `secretEncrypted: true` | a cipher blob under the realm's encryption key | yes, by a reader whose permissions cover the client |
 
+Whatever the mode, the stored value is projected only to a reader whose
+permissions cover the client, or to the client itself; the hash of a `hashed`
+secret is no exception, since a hash of an admin-chosen value is
+offline-crackable. A reader outside that reach gets the row without the field.
+
 `encrypted` is the recoverable mode that keeps the plaintext out of the
 database. The value is encrypted at rest (AES-256-GCM) under the client
 realm's encryption key, the same automatically generated per-realm key that
