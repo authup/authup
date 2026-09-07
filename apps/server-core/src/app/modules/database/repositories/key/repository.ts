@@ -25,6 +25,7 @@ import { validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
+    ClientEntity,
     DatabaseConflictError,
     KeyEntity,
     RealmEntity,
@@ -422,7 +423,15 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     }
 
     async countBlobReferences(keyId: string): Promise<number> {
-        return this.dataSource.getRepository(UserAuthenticatorEntity).countBy({ secret: Like(`${REALM_CIPHER_BLOB_VERSION}.${keyId}.%`) });
+        // every consumer of the realm cipher: the MFA seeds and the client
+        // secrets stored in encrypted mode.
+        const pattern = Like(`${REALM_CIPHER_BLOB_VERSION}.${keyId}.%`);
+        const [authenticators, clients] = await Promise.all([
+            this.dataSource.getRepository(UserAuthenticatorEntity).countBy({ secret: pattern }),
+            this.dataSource.getRepository(ClientEntity).countBy({ secret: pattern }),
+        ]);
+
+        return authenticators + clients;
     }
 
     async findHighestPriority(realmId: string, use: string): Promise<number | null> {

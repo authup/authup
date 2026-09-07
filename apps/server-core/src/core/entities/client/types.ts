@@ -99,4 +99,11 @@ export interface IClientService {
         actor: ActorContext,
         realmId?: string,
     ): Promise<ClientSecretRotateResult>;
+    /**
+     * Decrypt an encrypted stored secret in place for a reader who passed
+     * the gate. A blob that cannot be decrypted (unknown, disabled or
+     * foreign key) leaves the record without the field rather than failing
+     * the read. Plain and hashed values are untouched.
+     */
+    revealSecret(entity: Client): Promise<void>;
 }

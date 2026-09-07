@@ -38,6 +38,7 @@ import {
     OAuth2TokenSigner,
     OAuth2TokenVerifier,
 } from '../../../core/index.ts';
+import { RealmCipher } from '../../../core/key/realm-cipher.ts';
 import { OAuth2InjectionToken } from './constants.ts';
 import { IdentityInjectionKey } from '../identity/index.ts';
 import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
@@ -123,6 +124,13 @@ export class OAuth2Module implements IModule {
                 }
 
                 return new KeyRepositoryAdapter(c.resolve(DatabaseInjectionKey.DataSource), { secretsCipher });
+            },
+        });
+
+        container.register(OAuth2InjectionToken.RealmCipher, {
+            useFactory: (c) => {
+                const keyStore = c.resolve(OAuth2InjectionToken.KeyStore);
+                return new RealmCipher({ keyStore });
             },
         });
 

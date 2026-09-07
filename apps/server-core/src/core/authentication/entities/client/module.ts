@@ -10,6 +10,7 @@ import { ClientAuthMethod, IdentityType } from '@authup/core-kit';
 import { EntityCredentialsInvalidError, EntityInactiveError } from '@authup/errors';
 import { OAuth2ClientError } from '@authup/specs';
 import type { IIdentityResolver } from '../../../identity/index.ts';
+import type { IRealmCipher } from '../../../key/index.ts';
 import { ClientCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
 
@@ -18,11 +19,11 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
 
     protected credentialsService : ClientCredentialsService;
 
-    constructor(identityResolver: IIdentityResolver) {
+    constructor(identityResolver: IIdentityResolver, options: { cipher?: IRealmCipher } = {}) {
         super();
 
         this.identityResolver = identityResolver;
-        this.credentialsService = new ClientCredentialsService();
+        this.credentialsService = new ClientCredentialsService({ cipher: options.cipher });
     }
 
     async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {

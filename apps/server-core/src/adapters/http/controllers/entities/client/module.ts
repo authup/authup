@@ -117,6 +117,7 @@ export class ClientController {
                     const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                     if (withSecret) {
                         entity.secret = withSecret.secret;
+                        await this.service.revealSecret(entity);
                     }
                 }
             }

@@ -28,6 +28,7 @@ describe('http/controllers/client (secret rotation)', () => {
     const suite = createTestApplication();
 
     let entity: Client;
+    let encryptedClientId: string;
 
     beforeAll(async () => {
         await suite.setup();
@@ -95,14 +96,54 @@ describe('http/controllers/client (secret rotation)', () => {
         expect(data.secretHashed).toBe(false);
     });
 
-    it('should refuse the encrypted mode until it is implemented', async () => {
-        await expectClientError(
-            () => suite.client.client.rotateSecret(entity.id, { mode: ClientSecretMode.ENCRYPTED }),
-            { status: 400, code: ErrorCode.BAD_REQUEST },
-        );
+    it('should rotate to an encrypted secret that authenticates and is revealed to an admin', async () => {
+        const { data, meta } = await suite.client.client.rotateSecret(entity.id, { mode: ClientSecretMode.ENCRYPTED });
 
+        expect(data.secretEncrypted).toBe(true);
+        expect(data.secretHashed).toBe(false);
+        expect(meta.secret).toHaveLength(64);
+
+        const grant = await suite.client.token.createWithClientCredentials({
+            client_id: entity.id,
+            client_secret: meta.secret,
+        });
+        expect(grant.access_token).toBeDefined();
+
+        const { data: read } = await suite.client.client.getOne(entity.id, { fields: ['+secret'] });
+        expect(read.secret).toEqual(meta.secret);
+
+        const { data: rows } = await suite.client.client.getMany({ fields: ['+secret'], filters: { id: [entity.id] } });
+        expect(rows).toHaveLength(1);
+        expect(rows[0].secret).toEqual(meta.secret);
+    });
+
+    it('should create an encrypted client and reveal its secret to an admin', async () => {
+        const { data } = await suite.client.client.create({
+            ...createFakeClient(),
+            secret: 'created-encrypted',
+            secretEncrypted: true,
+        });
+        encryptedClientId = data.id;
+
+        expect(data.secretEncrypted).toBe(true);
+
+        const { data: read } = await suite.client.client.getOne(data.id, { fields: ['+secret'] });
+        expect(read.secret).toEqual('created-encrypted');
+
+        const grant = await suite.client.token.createWithClientCredentials({
+            client_id: data.id,
+            client_secret: 'created-encrypted',
+        });
+        expect(grant.access_token).toBeDefined();
+    });
+
+    it('should refuse hashed and encrypted at once', async () => {
         await expectClientError(
-            () => suite.client.client.create({ ...createFakeClient(), secretEncrypted: true }),
+            () => suite.client.client.create({
+                ...createFakeClient(), 
+                secretHashed: true, 
+                secretEncrypted: true, 
+            }),
             { status: 400, code: ErrorCode.BAD_REQUEST },
         );
     });
@@ -163,6 +204,28 @@ describe('http/controllers/client (secret rotation)', () => {
         await expectClientError(
             () => selfClient.client.rotateSecret(entity.id),
             { status: 403 },
+        );
+    });
+
+    // last: it crypto-shreds the realm's enc key
+    it('should count an encrypted client secret as a reference of the realm enc key', async () => {
+        const { data: keys } = await suite.client.key.getMany({ filters: { realmId: entity.realmId, use: 'enc' } });
+        expect(keys).toHaveLength(1);
+
+        await expectClientError(
+            () => suite.client.key.delete(keys[0].id),
+            { status: 409 },
+        );
+
+        await suite.client.key.delete(keys[0].id, { force: true });
+
+        // the shredded secret can no longer authenticate, and fails closed
+        await expectClientError(
+            () => suite.client.token.createWithClientCredentials({
+                client_id: encryptedClientId,
+                client_secret: 'created-encrypted',
+            }),
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 });

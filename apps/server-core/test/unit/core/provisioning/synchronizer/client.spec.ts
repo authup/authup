@@ -35,7 +35,9 @@ import type {
     IRoleRepository,
     IScopeRepository,
 } from '../../../../../src/core/entities/index.ts';
+import { isRealmCipherBlob } from '../../../../../src/core/key/index.ts';
 import { FakeClientRepository } from '../../entities/client/fake-repository.ts';
+import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 
 /**
  * The synchronizer writes attributes straight to the repository, so it is
@@ -47,11 +49,13 @@ describe('core/provisioning/synchronizer/client', () => {
     let clientRepository: FakeClientRepository;
     let synchronizer: ClientProvisioningSynchronizer;
     const realmId = randomUUID();
+    const cipher = createFakeRealmCipher(realmId);
 
     beforeEach(() => {
         clientRepository = new FakeClientRepository();
         synchronizer = new ClientProvisioningSynchronizer({
             clientRepository,
+            cipher,
             clientRoleRepository: new FakeEntityRepository<ClientRole>() as
                 FakeEntityRepository<ClientRole> & IClientRoleRepository,
             clientPermissionRepository: new FakeEntityRepository<ClientPermission>() as
@@ -130,9 +134,31 @@ describe('core/provisioning/synchronizer/client', () => {
         expect(stored.secret).toEqual('plain');
     });
 
-    it('should refuse the encrypted flag until it is implemented', async () => {
+    it('should encrypt a raw secret the file declares as encrypted', async () => {
+        await synchronizer.synchronize(buildInput({ secret: 'raw-secret', secretEncrypted: true }));
+
+        const [stored] = clientRepository.getAll();
+        expect(stored.secretEncrypted).toBe(true);
+        expect(isRealmCipherBlob(stored.secret!)).toBe(true);
+        expect(await cipher.decrypt(stored.secret!, realmId)).toEqual('raw-secret');
+    });
+
+    it('should keep a value that already is a cipher blob verbatim', async () => {
+        const blob = await cipher.encrypt('raw-secret', realmId);
+
+        await synchronizer.synchronize(buildInput({ secret: blob, secretEncrypted: true }));
+
+        const [stored] = clientRepository.getAll();
+        expect(stored.secret).toEqual(blob);
+    });
+
+    it('should refuse hashed and encrypted at once', async () => {
         await expect(
-            synchronizer.synchronize(buildInput({ secret: 'raw', secretEncrypted: true })),
+            synchronizer.synchronize(buildInput({
+                secret: 'raw', 
+                secretHashed: true, 
+                secretEncrypted: true, 
+            })),
         ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
         expect(clientRepository.getAll()).toHaveLength(0);

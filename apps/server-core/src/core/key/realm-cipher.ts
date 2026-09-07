@@ -18,6 +18,15 @@ export type RealmCipherContext = {
     keyStore: IKeyStore,
 };
 
+/**
+ * Whether a stored value is a realm cipher blob (`v1.<key_id>.<payload>`).
+ * The one discriminator every consumer uses: a value under an encrypted
+ * flag that is NOT a blob is a legacy plaintext the flag never protected.
+ */
+export function isRealmCipherBlob(value: string): boolean {
+    return value.startsWith(`${REALM_CIPHER_BLOB_VERSION}.`);
+}
+
 export class RealmCipher implements IRealmCipher {
     protected keyStore : IKeyStore;
 

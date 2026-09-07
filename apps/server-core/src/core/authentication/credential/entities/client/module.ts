@@ -6,14 +6,32 @@
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { AuthupError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { compare, hash } from '@authup/server-kit';
 import { type Client, ClientAuthMethod } from '@authup/core-kit';
+import { isRealmCipherBlob, isRealmCipherBlobError } from '../../../../key/index.ts';
+import type { IRealmCipher } from '../../../../key/index.ts';
 import type { ICredentialService } from '../../types.ts';
 
-export type ClientSecretTarget = Pick<Client, 'secretHashed' | 'secretEncrypted'>;
+export type ClientCredentialsServiceContext = {
+    /**
+     * Encrypts and decrypts secrets stored in encrypted mode under the
+     * client realm's enc key. Absent only in wiring that never meets such a
+     * client (the default provisioning source).
+     */
+    cipher?: IRealmCipher,
+};
+
+export type ClientSecretTarget = Pick<Partial<Client>, 'secretHashed' | 'secretEncrypted' | 'realmId'>;
 
 export class ClientCredentialsService implements ICredentialService<Client> {
+    protected cipher?: IRealmCipher;
+
+    constructor(ctx: ClientCredentialsServiceContext = {}) {
+        this.cipher = ctx.cipher;
+    }
+
     async verify(input: string, entity: Client): Promise<boolean> {
         if (!entity.secret || entity.authMethod !== ClientAuthMethod.SECRET) {
             return false;
@@ -21,6 +39,26 @@ export class ClientCredentialsService implements ICredentialService<Client> {
 
         if (entity.secretHashed) {
             return compare(input, entity.secret);
+        }
+
+        // A value under the encrypted flag that is not a blob is a legacy
+        // plaintext the flag never protected; it compares as plain.
+        if (entity.secretEncrypted && isRealmCipherBlob(entity.secret)) {
+            if (!this.cipher) {
+                return false;
+            }
+
+            try {
+                return constantTimeEqual(input, await this.cipher.decrypt(entity.secret, entity.realmId));
+            } catch (e) {
+                // an unknown, disabled or foreign key fails the credential
+                // closed; anything else is infrastructure and surfaces.
+                if (isRealmCipherBlobError(e)) {
+                    return false;
+                }
+
+                throw e;
+            }
         }
 
         return constantTimeEqual(input, entity.secret);
@@ -35,6 +73,18 @@ export class ClientCredentialsService implements ICredentialService<Client> {
     async protect(input: string, entity: ClientSecretTarget): Promise<string> {
         if (entity.secretHashed) {
             return hash(input);
+        }
+
+        if (entity.secretEncrypted) {
+            if (!this.cipher) {
+                throw new AuthupError('Encrypted client secrets need the realm cipher, which is not wired here.');
+            }
+
+            if (!entity.realmId) {
+                throw new AuthupError('An encrypted client secret needs the client realm.');
+            }
+
+            return this.cipher.encrypt(input, entity.realmId);
         }
 
         return input;

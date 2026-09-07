@@ -15,6 +15,7 @@ import type { OAuth2TokenConfirmation } from '@authup/specs';
 import { OAuth2ClientError } from '@authup/specs';
 import { isValidationError } from '@authup/errors';
 import { ClientCredentialsService } from '../../authentication/credential/index.ts';
+import type { IRealmCipher } from '../../key/index.ts';
 import type {
     ClientCertificateEvidence,
     IClientCertificateValidator,
@@ -24,6 +25,7 @@ import type { IIdentityResolver } from '../../identity/index.ts';
 export type OAuth2ClientAuthenticatorContext = {
     identityResolver: IIdentityResolver,
     certificateValidator: IClientCertificateValidator,
+    cipher?: IRealmCipher,
 };
 
 /**
@@ -40,15 +42,17 @@ export class OAuth2ClientAuthenticator {
     protected certificateValidator?: IClientCertificateValidator;
 
     constructor(ctx: IIdentityResolver | OAuth2ClientAuthenticatorContext) {
+        let cipher : IRealmCipher | undefined;
         if ('identityResolver' in ctx) {
             this.identityResolver = ctx.identityResolver;
             this.certificateValidator = ctx.certificateValidator;
+            cipher = ctx.cipher;
         } else {
             // Kept as a compatibility seam for focused secret/public-client
             // unit tests. Production wiring always supplies the validator.
             this.identityResolver = ctx;
         }
-        this.credentialsService = new ClientCredentialsService();
+        this.credentialsService = new ClientCredentialsService({ cipher });
     }
 
     async authenticate(

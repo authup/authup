@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { isBCryptHash } from '@authup/kit';
 import { hash } from '@authup/server-kit';
 import { ClientAuthMethod } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core/authentication/credential/entities/client/module.ts';
+import { isRealmCipherBlob } from '../../../../../src/core/key/index.ts';
+import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 
 function buildClient(data: Partial<Client>): Client {
     return {
@@ -67,6 +70,75 @@ describe('core/authentication/credential/client', () => {
         it('should refuse when the client holds no secret or does not authenticate by secret', async () => {
             expect(await service.verify('x', buildClient({ secret: null }))).toBe(false);
             expect(await service.verify('x', buildClient({ authMethod: ClientAuthMethod.NONE, secret: 'x' }))).toBe(false);
+        });
+    });
+
+    describe('encrypted', () => {
+        const realmId = randomUUID();
+        const cipher = createFakeRealmCipher(realmId);
+        const encrypting = new ClientCredentialsService({ cipher });
+
+        it('should encrypt into a realm cipher blob in encrypted mode', async () => {
+            const stored = await encrypting.protect('start1234', {
+                secretHashed: false, 
+                secretEncrypted: true, 
+                realmId, 
+            });
+
+            expect(isRealmCipherBlob(stored)).toBe(true);
+            expect(stored).not.toContain('start1234');
+        });
+
+        it('should decrypt and compare in encrypted mode', async () => {
+            const stored = await encrypting.protect('start1234', {
+                secretHashed: false, 
+                secretEncrypted: true, 
+                realmId, 
+            });
+            const client = buildClient({
+                secretEncrypted: true, 
+                secret: stored, 
+                realmId, 
+            });
+
+            expect(await encrypting.verify('start1234', client)).toBe(true);
+            expect(await encrypting.verify('start12345', client)).toBe(false);
+        });
+
+        it('should refuse a blob bound to another realm', async () => {
+            const stored = await encrypting.protect('start1234', {
+                secretHashed: false, 
+                secretEncrypted: true, 
+                realmId, 
+            });
+            const client = buildClient({
+                secretEncrypted: true, 
+                secret: stored, 
+                realmId: randomUUID(), 
+            });
+
+            expect(await encrypting.verify('start1234', client)).toBe(false);
+        });
+
+        it('should compare a legacy encrypted-flagged plaintext as plain (the flag never encrypted it)', async () => {
+            const client = buildClient({
+                secretEncrypted: true, 
+                secret: 'legacy', 
+                realmId, 
+            });
+
+            expect(await encrypting.verify('legacy', client)).toBe(true);
+            expect(await encrypting.verify('other', client)).toBe(false);
+        });
+
+        it('should refuse to encrypt without a cipher', async () => {
+            await expect(
+                service.protect('start1234', {
+                    secretHashed: false, 
+                    secretEncrypted: true, 
+                    realmId, 
+                }),
+            ).rejects.toThrow();
         });
     });
 });

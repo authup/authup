@@ -15,8 +15,10 @@ import type {
 } from '@authup/core-kit';
 import { isBCryptHash, pickRecord } from '@authup/kit';
 import { ClientCredentialsService } from '../../../authentication/credential/entities/client/module.ts';
-import { assertSecretModeSupported } from '../../../entities/client/service.ts';
+import { assertSecretModeExclusive } from '../../../entities/client/service.ts';
 import type { IClientRepository } from '../../../entities/index.ts';
+import { isRealmCipherBlob } from '../../../key/realm-cipher.ts';
+import type { IRealmCipher } from '../../../key/types.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
@@ -29,6 +31,8 @@ import type { ClientProvisioningSynchronizerContext } from './types.ts';
 
 export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningEntity> {
     protected clientRepository: IClientRepository;
+
+    protected cipher?: IRealmCipher;
 
     protected permissionResolver: ProvisioningEntityResolver<Permission>;
 
@@ -50,6 +54,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         super();
 
         this.clientRepository = ctx.clientRepository;
+        this.cipher = ctx.cipher;
 
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.roleResolver = new ProvisioningEntityResolver(ctx.roleRepository);
@@ -219,18 +224,22 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
      * this the ONE place that sniffs the input, and only for that mode.
      */
     protected async protectSecret(attributes: ClientProvisioningEntity['attributes']): Promise<void> {
-        assertSecretModeSupported(attributes);
+        assertSecretModeExclusive(attributes);
+
+        if (typeof attributes.secret !== 'string') {
+            return;
+        }
+
+        const isProtected = attributes.secretHashed ?
+            isBCryptHash(attributes.secret) :
+            attributes.secretEncrypted && isRealmCipherBlob(attributes.secret);
 
         if (
-            attributes.secretHashed &&
-            typeof attributes.secret === 'string' &&
-            !isBCryptHash(attributes.secret)
+            !isProtected &&
+            (attributes.secretHashed || attributes.secretEncrypted)
         ) {
-            const credentialsService = new ClientCredentialsService();
-            attributes.secret = await credentialsService.protect(attributes.secret, {
-                secretHashed: true,
-                secretEncrypted: false,
-            });
+            const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
+            attributes.secret = await credentialsService.protect(attributes.secret, attributes);
         }
     }
 }
