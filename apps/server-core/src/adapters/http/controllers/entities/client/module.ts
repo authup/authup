@@ -26,6 +26,8 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientCreatePayload,
     ClientSavePayload,
+    ClientSecretRotatePayload,
+    ClientSecretRotateResponse,
     ClientUpdatePayload,
     EntityCollectionResponse,
     EntityRecordResponse,
@@ -119,6 +121,7 @@ export class ClientController {
                     const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                     if (withSecret) {
                         entity.secret = withSecret.secret;
+                        await this.service.revealSecret(entity);
                     }
                 }
             }
@@ -185,6 +188,32 @@ export class ClientController {
 
         event.response.status = created ? 201 : 202;
         return { data: entity, meta: {} };
+    }
+
+    @DPost('/:id/secret', [ForceLoggedInMiddleware])
+    async rotateSecret(
+        @DPath('id') id: string,
+        @DBody() data: ClientSecretRotatePayload,
+        @DContext() event: IAppEvent,
+    ): Promise<ClientSecretRotateResponse> {
+        const identity = useRequestIdentity(event);
+        if (
+            identity &&
+            identity.type === 'client' &&
+            isSelfToken(id)
+        ) {
+            id = identity.id;
+        }
+
+        const actor = buildActorContext(event);
+        const { entity, secret } = await this.service.rotateSecret(
+            id,
+            data,
+            actor,
+            getRequestRealmID(event),
+        );
+
+        return { data: entity, meta: { secret } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

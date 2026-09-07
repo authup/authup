@@ -16,6 +16,7 @@ import type {
     ISessionRepository,
 } from '../../../../../core/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
+import type { IRealmCipher } from '../../../../../core/key/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     clientAuthBasic?: boolean,
@@ -41,6 +42,11 @@ export type HTTPAuthorizationMiddlewareContext = {
     sessionRepository: ISessionRepository,
     oauth2TokenVerifier: IOAuth2TokenVerifier,
     permissionProvider: IPermissionProvider,
+    /**
+     * Verifies a Basic-authenticated client whose secret is stored in
+     * encrypted mode; without it such a client cannot authenticate here.
+     */
+    cipher?: IRealmCipher,
 
     /**
      * Reports a cookie presented from an origin that is not publicUrl's, once

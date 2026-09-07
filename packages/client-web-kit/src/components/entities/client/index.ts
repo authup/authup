@@ -7,5 +7,6 @@
 
 export { AClient } from './AClient';
 export { default as AClientForm } from './AClientForm.vue';
+export { default as AClientSecretRotate } from './AClientSecretRotate.vue';
 export { AClientPicker } from './AClientPicker';
 export { AClients } from './AClients';

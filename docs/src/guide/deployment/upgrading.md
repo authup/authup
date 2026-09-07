@@ -7,6 +7,57 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Client secrets rotate through `POST /clients/:id/secret`
+
+`secretHashed` and `secretEncrypted` are create-time properties now. An update
+(`POST /clients/:id`, or `PUT /clients/:id` on an existing row) ignores both
+flags; before, flipping `secretHashed` on a plaintext client marked the
+plaintext as hashed and the client stopped authenticating. The storage mode
+changes only through the new endpoint, together with a new secret.
+`ClientUpdatePayload` in `@authup/core-http-kit` no longer carries the two
+flags, so a caller spelling them on an update fails its type check. Drop them.
+
+An update carrying `secret` on a hashed client answers `400` naming the
+endpoint; it used to hash and store the value. Use `POST /clients/:id/secret`
+(`client.client.rotateSecret(id, { secret?, mode? })` in the SDK). It answers
+the record plus the plaintext once under `meta.secret`, accepts `@me` for a
+client rotating its own secret under `client_self_manage`, and records a
+`clientSecretRotated` event. A plain client still takes `secret` on update.
+See [Client Secrets](../development/api-oauth2.md#client-secrets).
+
+Encrypted storage ships in the same release. `secretEncrypted: true` on
+create, `mode: 'encrypted'` on the endpoint and `secretEncrypted: true` in a
+provisioning file store the secret as a cipher blob under the client realm's
+encryption key, the key that already protects MFA seeds, and a reader whose
+permissions cover the client gets the plaintext back on a read that projects
+the field (`?fields=+secret`). Before,
+the flag encrypted nothing. A row that carries it from an earlier release
+still holds a plaintext: it keeps authenticating, it is read-gated like any
+plaintext now instead of being projected to every reader that passed the read
+pre-gate, and its next rotation without a `mode` stores the new secret
+encrypted. Declaring `secretHashed` and `secretEncrypted` together answers
+`400`.
+
+`auth_clients.secret` is widened from 256 to 512 characters by the migration
+`1788782400000-WidenClientSecret`, applied by the next boot with migrations
+enabled or by `authup migration run`. It is written by hand on both dialects
+so the values survive; a generated migration would have dropped the column.
+Reverting it fails while a client holds an encrypted secret (a value longer
+than 256 characters): rotate such clients to `plain` or `hashed` first.
+
+An encrypted secret depends on its realm's encryption key. `DELETE /keys/:id`
+on such a key now answers `409` while client secrets reference it, as it did
+for MFA seeds, and `force` destroys them: those clients stop authenticating
+until rotated. Disabling the key has the same effect and is reversible. Set
+`SECRETS_ENCRYPTION_KEY` in production so the key material is wrapped at rest
+(see [configuration](configuration-server-core.md)).
+
+Two smaller changes in the same area. A secret submitted on create or to the
+endpoint that happens to look like a bcrypt hash is hashed like any other
+value; it used to be stored as given and could never verify. And a
+provisioning file that declares `secretHashed: true` with a plaintext now
+stores the hash, while a bcrypt value in the file is kept verbatim.
+
 ### A substituted auth console package is verified at boot again
 
 With a built bundle in place, `authup start` / `authup start console auth`

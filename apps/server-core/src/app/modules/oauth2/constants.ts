@@ -26,6 +26,7 @@ import type {
     IOAuth2TokenRevoker,
     IOAuth2TokenSigner,
     IOAuth2TokenVerifier,
+    IRealmCipher,
     ISessionTokenRepository,
 } from '../../../core/index.ts';
 
@@ -50,6 +51,13 @@ export const OAuth2InjectionToken = {
      * (key management API).
      */
     KeyStore: new TypedToken<IKeyStore & IKeyRepository>('KeyStore'),
+
+    /**
+     * One realm cipher over the key store, shared by every consumer of the
+     * encrypted-at-rest mode (MFA seeds, client secrets): its per-key cipher
+     * cache is only useful when there is one of it.
+     */
+    RealmCipher: new TypedToken<IRealmCipher>('RealmCipher'),
 
     AccessTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('AccessTokenIssuer'),
     MfaTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('MfaTokenIssuer'),

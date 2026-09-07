@@ -92,6 +92,34 @@ describe('domains/validator-groups', () => {
         }
     });
 
+    it('should mount the client secret storage modes at CREATE and PROVISIONING only', async () => {
+        const validator = new ClientValidator();
+
+        const created = await validator.run(
+            { name: 'foo', secretHashed: true },
+            { group: ValidatorGroup.CREATE },
+        );
+        expect(created.secretHashed).toBe(true);
+
+        const updated = await validator.run(
+            {
+                secret: 'start1234', 
+                secretHashed: true, 
+                secretEncrypted: true, 
+            },
+            { group: ValidatorGroup.UPDATE },
+        );
+        expect(updated.secret).toEqual('start1234');
+        expect(updated).not.toHaveProperty('secretHashed');
+        expect(updated).not.toHaveProperty('secretEncrypted');
+
+        const provisioned = await validator.run(
+            { name: 'foo', secretHashed: true },
+            { group: ValidatorGroup.PROVISIONING },
+        );
+        expect(provisioned.secretHashed).toBe(true);
+    });
+
     it('should require email at CREATE but not at PROVISIONING', async () => {
         const validator = new UserValidator();
 

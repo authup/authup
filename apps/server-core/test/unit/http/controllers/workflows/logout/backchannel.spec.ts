@@ -17,7 +17,7 @@ import {
     it,
 } from 'vitest';
 import type { Client, Realm, User } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
+import { EventName, EventRefType, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { verifyToken } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
@@ -253,6 +253,18 @@ describe('back-channel logout', () => {
             iss: idToken.iss,
         });
         expect(idToken.iss).toEqual(`${publicUrl.replace(/\/+$/, '')}/realms/${realm.name}`);
+
+        // the delivery left its audit row, correlated with the token the RP got
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.BACKCHANNEL_LOGOUT, sessionId } });
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({
+            refType: EventRefType.CLIENT,
+            refId: client.id,
+            clientId: client.id,
+            actorId: user.id,
+            realmId: realm.id,
+            data: { jti: decodeJwtSegment(deliveries[0]!.token, 1).jti },
+        });
     });
 
     it('pushes one logout token when a verified id_token_hint ends the session', async () => {
@@ -319,5 +331,12 @@ describe('back-channel logout', () => {
         expect(deliveries).toHaveLength(1);
         // the session is gone regardless of what the client answered
         await expect(suite.client.session.getOne(sessionId)).rejects.toBeDefined();
+
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.BACKCHANNEL_LOGOUT_FAILED, sessionId } });
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({
+            refId: client.id,
+            data: { jti: decodeJwtSegment(deliveries[0]!.token, 1).jti, status: 500 },
+        });
     });
 });

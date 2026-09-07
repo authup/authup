@@ -7,7 +7,12 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Client, Realm, Session } from '@authup/core-kit';
-import { IdentityType } from '@authup/core-kit';
+import { 
+    EventName, 
+    EventRefType, 
+    EventScope, 
+    IdentityType, 
+} from '@authup/core-kit';
 import { createNoopLogger } from '@authup/server-kit';
 import { OAuth2TokenKind } from '@authup/specs';
 import {
@@ -21,6 +26,7 @@ import {
 import { OAUTH2_BACKCHANNEL_LOGOUT_EVENT } from '../../../../../src/core/oauth2/backchannel-logout/constants.ts';
 import { OAuth2BackchannelLogoutNotifier } from '../../../../../src/core/oauth2/backchannel-logout/module.ts';
 import type { IOAuth2ClientRepository } from '../../../../../src/core/oauth2/client/types.ts';
+import { FakeEventService } from '../../helpers/fake-event-service.ts';
 import { FakeOAuth2TokenSigner } from '../../helpers/fake-oauth2-token-signer.ts';
 import { FakeSessionTokenRepository } from '../../helpers/fake-session-token-repository.ts';
 
@@ -107,6 +113,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
     const logger = createNoopLogger();
 
     let sessionTokenRepository: FakeSessionTokenRepository;
+    let eventService: FakeEventService;
     let fetchMock: ReturnType<typeof vi.fn>;
     let warn: ReturnType<typeof vi.spyOn>;
     let session: Session;
@@ -128,6 +135,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             sessionTokenRepository,
             clientRepository,
             options: { issuer: 'https://auth.example.com/', ...options },
+            eventService,
             logger,
         });
 
@@ -137,6 +145,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
     beforeEach(() => {
         signer.signCalls = [];
         sessionTokenRepository = new FakeSessionTokenRepository();
+        eventService = new FakeEventService();
         session = createSession();
 
         fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
@@ -218,6 +227,31 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(warn).not.toHaveBeenCalled();
         });
 
+        it('records one audit row per delivered token, correlated by jti', async () => {
+            const a = createClient();
+            const b = createClient();
+            const { notifier } = buildNotifier([a, b]);
+
+            await notifier.notify(session, [a, b]);
+
+            expect(eventService.recordCalls).toHaveLength(2);
+            expect(eventService.recordCalls.map((call) => call.refId)).toEqual([a.id, b.id]);
+
+            const [row] = eventService.recordCalls;
+            expect(row).toMatchObject({
+                scope: EventScope.OAUTH2,
+                name: EventName.BACKCHANNEL_LOGOUT,
+                refType: EventRefType.CLIENT,
+                refId: a.id,
+                clientId: a.id,
+                sessionId: session.id,
+                actorType: IdentityType.USER,
+                actorId: session.sub,
+                realmId: a.realmId,
+            });
+            expect(row!.data).toEqual({ jti: signer.signCalls[0]!.jti });
+        });
+
         it('signs the claim set the specification requires and no nonce', async () => {
             const client = createClient();
             const { notifier } = buildNotifier([client], { issuer: 'https://auth.example.com/', maxAge: 120 });
@@ -273,6 +307,14 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(warn).toHaveBeenCalledTimes(1);
             expect(String(warn.mock.calls[0]![0])).toContain(client.id);
             expect(String(warn.mock.calls[0]![0])).toContain('500');
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0]).toMatchObject({
+                name: EventName.BACKCHANNEL_LOGOUT_FAILED,
+                refId: client.id,
+                sessionId: session.id,
+                data: { jti: signer.signCalls[0]!.jti, status: 500 },
+            });
         });
 
         it('logs and resolves when the delivery throws', async () => {
@@ -285,6 +327,35 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(warn).toHaveBeenCalledTimes(1);
             expect(String(warn.mock.calls[0]![0])).toContain(client.id);
             expect(String(warn.mock.calls[0]![0])).toContain('ECONNREFUSED');
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0]).toMatchObject({
+                name: EventName.BACKCHANNEL_LOGOUT_FAILED,
+                refId: client.id,
+                // a plain Error carries no code, so the name stands in
+                data: { jti: signer.signCalls[0]!.jti, errorCode: 'Error' },
+            });
+        });
+
+        it('records the code of a delivery that never got an answer, never its message', async () => {
+            const client = createClient();
+            const { notifier } = buildNotifier([client]);
+            // what undici raises for a refused connection: the address rides
+            // the cause's message, and the row must carry the code alone
+            fetchMock.mockRejectedValueOnce(new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), { code: 'ECONNREFUSED' }) }));
+            fetchMock.mockRejectedValueOnce(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
+            const cyclic = new Error('loop');
+            cyclic.cause = cyclic;
+            fetchMock.mockRejectedValueOnce(cyclic);
+
+            await notifier.notify(session, [client]);
+            await notifier.notify(session, [client]);
+            await notifier.notify(session, [client]);
+
+            expect(eventService.recordCalls[0]!.data).toEqual({ jti: signer.signCalls[0]!.jti, errorCode: 'ECONNREFUSED' });
+            expect(eventService.recordCalls[1]!.data).toEqual({ jti: signer.signCalls[1]!.jti, errorCode: 'TimeoutError' });
+            expect(eventService.recordCalls[2]!.data).toEqual({ jti: signer.signCalls[2]!.jti, errorCode: 'Error' });
+            expect(JSON.stringify(eventService.recordCalls)).not.toContain('10.0.0.1');
         });
 
         it('still delivers to the other clients when one delivery fails', async () => {
@@ -316,6 +387,15 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(fetchMock).not.toHaveBeenCalled();
             expect(warn).toHaveBeenCalledTimes(1);
             expect(String(warn.mock.calls[0]![0])).toContain(client.id);
+
+            // no token was signed, so there is no jti to correlate
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0]).toMatchObject({
+                name: EventName.BACKCHANNEL_LOGOUT_FAILED,
+                refId: client.id,
+                data: { errorCode: 'Error' },
+            });
+            expect(eventService.recordCalls[0]!.data!.jti).toBeUndefined();
         });
     });
 });

@@ -31,6 +31,7 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
+import { withDatabaseLock } from '../../../adapters/database/helpers/index.ts';
 import { SystemPolicyName } from '@authup/access';
 import {
     PermissionPolicyEntity,
@@ -55,7 +56,7 @@ import {
     extractWildcardRealmEntry,
 } from '../../../core/provisioning/wildcard/index.ts';
 import type { IProvisioningSource } from '../../../core/provisioning/types.ts';
-import { ProvisioningInjectionKey } from './constants.ts';
+import { PROVISIONING_DATABASE_LOCK, ProvisioningInjectionKey } from './constants.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
@@ -82,7 +83,8 @@ import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { SystemClientProvisioner } from '../../../core/entities/client/index.ts';
 import { KeyProvisioner } from '../../../core/key/index.ts';
-import type { IKeyStore } from '../../../core/key/index.ts';
+import type { IKeyStore, IRealmCipher } from '../../../core/key/index.ts';
+import { RealmCipher } from '../../../core/key/realm-cipher.ts';
 import { OAuth2InjectionToken } from '../oauth2/constants.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
@@ -99,7 +101,26 @@ export class ProvisionerModule implements IModule {
         this.sources = sources;
     }
 
+    /**
+     * Provisioning is a reconciliation pass of find-then-insert pairs with no
+     * guard between the two statements, so two replicas booting against an
+     * unprovisioned database interleave and either collide on a unique key or,
+     * for the four entity types whose unique tuple contains a nullable column,
+     * silently write duplicate rows. One mutex around the whole pass
+     * closes both halves; see `withDatabaseLock` (issue #3356).
+     */
     async setup(container: IContainer): Promise<void> {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        await withDatabaseLock(
+            dataSource,
+            PROVISIONING_DATABASE_LOCK,
+            () => this.provision(container),
+            { logger: container.resolve(LoggerInjectionKey) },
+        );
+    }
+
+    protected async provision(container: IContainer): Promise<void> {
         const sources = [...this.sources];
 
         const config = container.resolve(ConfigInjectionKey);
@@ -171,6 +192,27 @@ export class ProvisionerModule implements IModule {
             container.resolve<Repository<ClientScope>>(ClientScopeEntity),
         );
 
+        // The oauth2 module's key store registration is PREFERRED but
+        // optional, so provisioning stays runnable in minimal module graphs
+        // (test setup, CLI) where oauth2 never registered one; the locally
+        // constructed fallback handles the KEK identically. Sharing the
+        // instance when it exists matters because mint de-duplication is per
+        // adapter (see KeyRepositoryAdapter.mintExclusive): a second adapter
+        // has its own in-flight map, so the boot backfill and a concurrent
+        // realm-create request would each mint their own key. The same store
+        // backs the realm cipher a file-provisioned encrypted client secret
+        // is stored under.
+        const keyStore = container.has(OAuth2InjectionToken.KeyStore) ?
+            container.resolve<IKeyStore>(OAuth2InjectionToken.KeyStore) :
+            new KeyRepositoryAdapter(dataSource, {
+                secretsCipher: config.secretsEncryptionKey ?
+                    new SymmetricCipher(config.secretsEncryptionKey) :
+                    null,
+            });
+        const cipher = container.has(OAuth2InjectionToken.RealmCipher) ?
+            container.resolve<IRealmCipher>(OAuth2InjectionToken.RealmCipher) :
+            new RealmCipher({ keyStore });
+
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
             policyRepository,
@@ -187,6 +229,7 @@ export class ProvisionerModule implements IModule {
 
         const clientSynchronizer = new ClientProvisioningSynchronizer({
             clientRepository,
+            cipher,
             clientRoleRepository: new ClientRoleRepositoryAdapter(
                 container.resolve<Repository<ClientRole>>(ClientRoleEntity),
             ),
@@ -259,23 +302,6 @@ export class ProvisionerModule implements IModule {
         // Eager key minting (plan 071 hybrid model): every realm — incl.
         // pre-existing ones — holds sig + enc keys after startup, so the
         // management API shows them without waiting for first use.
-        //
-        // The oauth2 module's registration is PREFERRED but optional, so
-        // provisioning stays runnable in minimal module graphs (test setup,
-        // CLI) where oauth2 never registered one; the locally constructed
-        // fallback handles the KEK identically. Sharing the instance when
-        // it exists matters because mint de-duplication is per adapter
-        // (see KeyRepositoryAdapter.mintExclusive): a second adapter has
-        // its own in-flight map, so this backfill and a concurrent
-        // realm-create request would each mint their own key.
-        const keyStore = container.has(OAuth2InjectionToken.KeyStore) ?
-            container.resolve<IKeyStore>(OAuth2InjectionToken.KeyStore) :
-            new KeyRepositoryAdapter(dataSource, {
-                secretsCipher: config.secretsEncryptionKey ?
-                    new SymmetricCipher(config.secretsEncryptionKey) :
-                    null,
-            });
-
         const keyProvisioner = new KeyProvisioner({
             keyStore,
             logger: container.resolve(LoggerInjectionKey),

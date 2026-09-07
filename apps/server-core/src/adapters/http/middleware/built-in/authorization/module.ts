@@ -98,7 +98,7 @@ export class AuthorizationMiddleware {
         this.sessionRepository = ctx.sessionRepository;
         this.logger = ctx.logger;
 
-        this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver);
+        this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver, { cipher: ctx.cipher });
         this.userAuthenticator = new UserAuthenticator(ctx.identityResolver);
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;

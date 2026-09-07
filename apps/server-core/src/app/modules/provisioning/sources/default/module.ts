@@ -26,7 +26,6 @@ import {
 } from '@authup/core-kit';
 import type { IContainer } from 'eldin';
 import {
-    ClientCredentialsService,
     UserCredentialsService,
 } from '../../../../../core/index.ts';
 import type { Config } from '../../../config/index.ts';
@@ -277,8 +276,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
         ];
 
-        const clientCredentialsService = new ClientCredentialsService();
-
         let clientStrategy : ProvisioningEntityStrategy<Client> | undefined;
         if (config.clientSystemSecretReset) {
             clientStrategy = {
@@ -301,8 +298,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     authMethod: ClientAuthMethod.SECRET,
                     tokenBindingMethod: ClientTokenBindingMethod.NONE,
                     name: 'system',
-                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secretHashed: false }),
+                    secret: config.clientSystemSecret,
+                    // both flags spelled: the reset MERGE picks them by name,
+                    // and an undefined pick leaves a stale flag in place.
                     secretHashed: false,
+                    secretEncrypted: false,
                     active: config.clientSystemEnabled,
                 },
                 relations: { globalRoles: [ROLE_ADMIN_NAME] },

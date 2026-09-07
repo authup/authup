@@ -16,6 +16,7 @@
     "packages/core-http-kit": "1.0.0-beta.64",
     "packages/core-kit": "1.0.0-beta.64",
     "packages/core-realtime-kit": "1.0.0-beta.64",
+    "packages/create-authup": "1.0.0-beta.64",
     "packages/errors": "1.0.0-beta.64",
     "packages/i18n": "1.0.0-beta.64",
     "packages/kit": "1.0.0-beta.64",

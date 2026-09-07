@@ -8,4 +8,6 @@
 export * from './constants';
 export * from './entity';
 export * from './helpers';
+export * from './secret-rotate-validator';
+export * from './types';
 export * from './validator';

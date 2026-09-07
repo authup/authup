@@ -51,3 +51,13 @@ export const CLIENT_RESERVED_NAMES = [
     CLIENT_ADMIN_CONSOLE_NAME,
     CLIENT_ACCOUNT_CONSOLE_NAME,
 ];
+
+/**
+ * How a confidential client's secret is stored at rest. Encoded on the
+ * entity as the two flags `secretHashed` / `secretEncrypted` (never both).
+ */
+export enum ClientSecretMode {
+    PLAIN = 'plain',
+    HASHED = 'hashed',
+    ENCRYPTED = 'encrypted',
+}

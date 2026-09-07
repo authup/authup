@@ -213,11 +213,18 @@ usable at the service level and nothing in core depends on TypeORM:
   with `null`, so a negated leg — or an `ownOrNull` reach's
   null-inclusive realm leg — would match an unfetched column.
   Today's only gated column is `client.secret`: `allow` verdict →
-  ungated; otherwise visible iff NOT plaintext (`secret` null /
-  hashed / encrypted) OR covered by the compiled
+  ungated; otherwise visible iff the stored value discloses nothing
+  (`secret` null / hashed) OR covered by the compiled
   `CLIENT_READ/UPDATE/DELETE` condition OR the actor's own client row
   (self leg — preserves the service-level isMe contract in list
-  shape). SYSTEM decodes (no actor) pass ungated; a gate failure
+  shape). `secretEncrypted` is deliberately NOT a leg (plan 105): the
+  flag encrypted nothing before the mode existed (#3351), and now that
+  it does, the stored value is a realm cipher blob that
+  `ClientService.revealSecret` decrypts AFTER the redaction has run, so
+  it reaches exactly the readers a plaintext reaches and a read never
+  serves ciphertext (see *Client secret storage and rotation*). SYSTEM
+  decodes (no actor)
+  pass ungated; a gate failure
   strips the field. `ClientService.getMany`'s former WHERE-narrowing +
   per-row loop are gone — rows are no longer dropped when `secret` is
   selected, and a `post` verdict now strips plaintext values instead
@@ -1522,6 +1529,88 @@ one into every realm would fight the system MERGE on every boot).
 Scopes run first because they are leaf entities carrying no relations of their
 own, and a client in the same realm block may bind them via `realmScopes`.
 
+### Concurrent boots: the provisioning lock (issue #3356)
+
+Every write in the provisioner is find-then-insert with no guard between the
+two statements, so two replicas booting against an unprovisioned database
+interleave. `ProvisionerModule.setup` therefore holds a deployment-wide mutex
+around the whole pass (`withDatabaseLock`,
+`adapters/database/helpers/advisory-lock.ts`, holding the
+`PROVISIONING_DATABASE_LOCK` identity the provisioning module owns) and calls
+the untouched body as `provision()`. Nothing else changed: no write site is guarded, no port grew a
+method, and boot stays fatal.
+
+**One mutex rather than a guard per write site, because half the failures
+cannot raise an error to catch.** The insert sites split into two groups with
+opposite failure modes, and the issue text describes only the first:
+
+- `auth_realms` (unique on `name`), `auth_clients` and `auth_users` (unique on
+  `name, realm_id` with `realm_id` NOT NULL) and every junction (each unique
+  over its two id columns, both NOT NULL; the nullable `*_realm_id` and
+  `policy_id` companions are not part of the key) genuinely collide. The loser gets a driver-level unique violation
+  out of `save`, and since provisioning is a boot module that replica fails to
+  start. This is the reported crash, and the first statement that can reach it
+  is the master-realm insert, since the graph runs policies, permissions,
+  roles and scopes before realms.
+- `auth_permissions` and `auth_roles` (unique on `name, client_id, realm_id`)
+  and `auth_scopes` / `auth_policies` (unique on `name, realm_id`) are unique
+  over a tuple containing a NULLABLE column, and every row the default source
+  declares for them is global, so both columns are null. All three dialects
+  treat nulls as distinct in a unique index (postgres defaults to `NULLS
+  DISTINCT`, mysql and sqlite permit repeated nulls), so nothing raises and
+  both replicas simply insert. Nothing cleans them up afterwards
+  (`PolicyProvisioningSynchronizer.cleanupStaleTopLevel` only prunes names
+  absent from the declared set, so a duplicate of a declared name survives).
+
+The second group is why the issue's own options 1 and 2, which catch the
+duplicate-key error and re-read, were not taken: there is no error to catch
+for the entire global permission catalogue, both global roles, every global
+scope and every system policy. Serialization does not care whether the
+database refuses the second insert, so it is the only shape that closes both
+halves. Making the second group structurally safe needs `NULLS NOT DISTINCT`
+or an expression index over coalesced sentinels, which TypeORM cannot express
+in entity metadata; that is tracked separately and is a schema change, not a
+behaviour one.
+
+**Mechanics that are load-bearing.** The lock is SESSION-scoped in both
+dialects, so it takes a dedicated query runner for its whole lifetime:
+`dataSource.query()` would acquire and release on different pooled
+connections. It is also COUNTED in both, so it is acquired exactly once, and
+it is released explicitly in a `finally` before the runner goes back to the
+pool. Skipping that release leaks the lock onto a pooled connection for the
+lifetime of the process, and a second `setup()` in that process then
+deadlocks against itself. The acquisition answer is normalized rather than
+tested for truthiness: postgres returns a JS boolean, and mysql2 returns the
+STRING `'1'` or `'0'` (verified against a live server), so a truthiness check
+reads a lock held by another session as acquired and makes the whole mechanism
+inert on mysql.
+
+`better-sqlite3` is a passthrough that creates no runner at all, the same
+shape and the same reasoning as `isDatabaseTypeRowLockable`: one database file
+per container means a second replica cannot reach it, and the driver hands out
+ONE shared query runner (`this.queryRunner ??= ...`), so holding one here
+would nest inside whatever else is running.
+
+**On timeout it throws rather than proceeding unlocked.** Proceeding is the
+pre-fix behaviour, which is the thing being removed; failing the boot is what
+today's losing replica does anyway, and the deployment restarts it, by which
+point the winner has finished and the pass is a no-op. Boot stays fatal for
+the same reason it always was: provisioning seeds the authorization graph, and
+a replica that comes up without the master realm, the admin user or the
+permission catalogue passes a container health check while being useless.
+
+**Two residuals, stated rather than papered over.** The lock serializes boot
+against boot; it does not serialize a booting replica against a live one
+serving `POST /realms`, which calls the same three realm provisioners. The two
+sides of that race are not symmetric, which is worth being exact about:
+`RealmService.save` wraps each provisioner and logs, so the request side
+degrades to a warn line, while the boot side's own backfill loop has no catch
+and can still abort on the client the request just created. That window is a
+realm created in the seconds a replica takes to boot, and the restart
+reconciles it. And `RealmService.save` itself runs no `checkUniqueness`, so
+two concurrent `POST /realms` with one name give the loser an unmapped 500
+rather than a 409.
+
 ### Wildcard Realm Entry (`realms[].attributes.name: "*"`, plan 082)
 
 A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
@@ -1725,6 +1814,225 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
+
+### Client secret storage and rotation (plan 105)
+
+A confidential client's secret is stored in one of three modes,
+`ClientSecretMode` in `@authup/core-kit` (`plain | hashed | encrypted`),
+encoded on the entity as the two booleans `secretHashed` / `secretEncrypted`
+(never both; `getClientSecretMode(client)` maps them back). A `secretStorage`
+enum column is the cleaner model and costs a data migration plus a downstream
+field rename, so the booleans stay for this window. **All three modes
+ship**: plain and hashed with PR 1, encrypted with PR 2 over the realm
+cipher (see *Realm Key Store*), so an encrypted value is the same
+`v1.<key_id>.<payload>` AES-256-GCM blob under the client realm's enc key
+that protects the MFA seeds. Before PR 2 the flag encrypted nothing, and a
+flag nothing honours widened disclosure (#3351). The two flags are
+exclusive: `assertSecretModeExclusive` (`core/entities/client/service.ts`)
+runs in `save()` over the validated input and in the provisioning
+synchronizer before its save, and the endpoint takes ONE `mode`, so it cannot
+spell both. A row claiming both would verify under neither, so the
+combination answers 400.
+
+- **The mode is a create-time property, like `realmId`.** `ClientValidator`
+  mounts both flags for `CREATE` and `PROVISIONING` only, so an update
+  carrying them is stripped (`ClientUpdatePayload` omits them). Before, the
+  update transaction re-protected only when a `secret` rode along, so
+  `POST /clients/:id { secretHashed: true }` on a plaintext client marked
+  the plaintext as hashed: the read gate's hashed leg then trusted it and
+  `verify()` ran `compare()` against plaintext, so the client stopped
+  authenticating. A mode changes only together with a plaintext the server
+  holds in hand, which is the endpoint.
+- **`POST /clients/:id/secret` is the rotation endpoint** and the ONLY
+  writer of a secret on a client that is not in plain mode
+  (`IClientService.rotateSecret`). Dual-mounted under
+  `/realms/:realmId/clients/:id/secret` like every client route; `@me` /
+  `@self` resolve to the calling client for a client identity. Body
+  `ClientSecretRotatePayload` `{ secret?, mode? }`
+  (`ClientSecretRotateValidator`: 3 to 256 chars, a `ClientSecretMode`): a
+  missing `secret` is generated (`createNanoID(64)`), a missing `mode`
+  keeps the current one as `getClientSecretMode` reads it, and `plain` is
+  a valid target. That default is what turns a LEGACY row around: a client
+  whose `secretEncrypted` flag was set before the mode existed holds a
+  plaintext, and an empty-body rotation of it lands in encrypted mode, the
+  flag's stated intent, with a value that is a blob at last. Response 200
+  `ClientSecretRotateResponse` = `{ data: Client, meta: { secret } }`: the
+  record as stored (the bcrypt hash in hashed mode, the cipher blob in
+  encrypted mode) and the plaintext exactly once under `meta.secret`, the
+  MFA-enroll precedent for shown-once material.
+  `client.client.rotateSecret(id, payload?)` in core-http-kit. A client
+  whose `authMethod` is not `secret` answers 400: nothing to rotate.
+- **The gate is `CLIENT_UPDATE` with realm reach, or the client itself
+  under `CLIENT_SELF_MANAGE`.** `preEvaluate(CLIENT_UPDATE)`, then
+  `evaluate(CLIENT_UPDATE, ATTRIBUTES: row + realmMatch)`, so a
+  `realm_admin` rotates in its own realm only. When the pre-gate fails and
+  the actor IS the row (`isMe`), the service falls back to
+  `preEvaluate(CLIENT_SELF_MANAGE)` and evaluates it over
+  `{ secret, ...(mode changed ? { secretHashed, secretEncrypted } : {}) }`:
+  the flags reach the policy only when they change, so the existing
+  `system.client-names-self-manage` denylist refuses a self-managing
+  client's mode change and permits a rotation under the current mode, with
+  no rule of its own here. The pre-gate runs before the `authMethod` check
+  and the body validation.
+- **`secret` on create and update is always a plaintext.** Create protects
+  it per the create-time mode (a generated one when absent), and the
+  response entity carries what was stored: the plaintext for a plain
+  client, the bcrypt hash for a hashed one, the cipher blob for an
+  encrypted one (the plaintext of the last is read back through the reveal
+  rule below). Update accepts `secret` only while the client is plain and
+  stores it plain; on a hashed or encrypted client an update carrying
+  `secret` answers 400 naming the endpoint, a `null` included (the save
+  path would otherwise generate a replacement nobody is told about), so the
+  metadata path can never downgrade a protected secret. Switching
+  `authMethod` away from `secret` still clears the secret
+  and both flags, on the fresh row inside the #3526 transaction, which is
+  why there is no `DELETE /clients/:id/secret`.
+- **`protect()` no longer sniffs its input, and `verify()` decrypts.**
+  `ClientCredentialsService.protect(plain, { secretHashed, secretEncrypted, realmId })`
+  hashes in hashed mode, encrypts in encrypted mode
+  (`cipher.encrypt(plain, realmId)`; the service takes
+  `{ cipher?: IRealmCipher }` and throws when that mode is asked for with
+  no cipher wired or no realm) and returns the input in plain mode. The
+  former `isBCryptHash(input) ? input : hash(input)` existed because the
+  console posts its whole form back, and it stored a caller-chosen secret
+  that happened to look like a bcrypt hash raw, where it could never
+  verify; a lookalike plaintext is hashed like any other now.
+  `verify(input, client)` mirrors it: hashed is `compare`; encrypted AND
+  `isRealmCipherBlob(secret)` is decrypt then a constant-time compare, a
+  `RealmCipherBlobError` (an unknown, disabled or foreign key, a payload
+  failing GCM authentication) failing the credential CLOSED and anything
+  else surfacing as the infrastructure fault it is; plain is the
+  constant-time compare. `isRealmCipherBlob` (`core/key/realm-cipher.ts`, a
+  `v1.` prefix test) is the ONE discriminator every consumer uses, so a
+  legacy row whose flag was set before the mode existed holds a plaintext
+  and compares as plain; a bcrypt hash starts with `$2`, a blob with `v1.`,
+  so the two discriminators never both match. Both compares run over
+  SHA-256 digests rather than the values: `timingSafeEqual` needs
+  equal-length inputs, and a length check in front of it would leak the
+  secret's length to a wrong-length guess; the `===` it replaced was a
+  timing oracle on a credential path. Encrypted mode costs one key-row read
+  plus one AES-GCM decrypt per confidential-client authentication, at
+  `/token` and on Basic auth alike (`RealmCipher` caches the imported cipher
+  per key id, never the key's status). **The one sniff lives in
+  provisioning** (`ClientProvisioningSynchronizer.protectSecret`): a file
+  declaring `secretHashed: true` may carry a plaintext or a bcrypt hash, one
+  declaring `secretEncrypted: true` a plaintext or a cipher blob, since
+  GitOps should not have to hold plaintext, so a raw value is hashed or
+  encrypted before the save and an already protected one is kept verbatim.
+  The synchronizer saves attributes straight to the repository, the one client
+  write path that bypasses the credential service, which is how a raw
+  secret used to land under a flag the read gate trusts. The default source
+  emits the `system` client as `secret: config.clientSystemSecret,
+  secretHashed: false` and no longer routes it through an identity
+  `protect` call: it is plain by design, and that call passed no `realmId`,
+  so deleting it is what keeps a realm-scoped cipher out of a path that
+  runs before any realm row exists.
+- **Audit.** One `EventName.CLIENT_SECRET_ROTATED` (`clientSecretRotated`)
+  row per rotation: `EventScope.IDENTITY`, `refType: client`, `refId` the
+  client, `data: { kind: <mode> }` (`kind` is already in the sanitizer
+  allow-list), actor and request attribution from the injected request
+  context, `sessionId` included. Never the secret in any form.
+- **The #3351 fix is the read side, and the reveal rule is the plaintext
+  rule.** `secretReadGate` lost its `eq('secretEncrypted', true)` leg, so a
+  row carrying the flag is gated like plaintext, and `ClientService.getOne`
+  evaluates reach for every non-hashed value
+  (`entity.secret && !entity.secretHashed`) where it used to skip the
+  evaluate for a flagged row. A hashed value discloses nothing; every other
+  stored form is the secret itself. `revealSecret(entity)` then runs on
+  every read surface (the single read after its evaluate, the list after
+  the schema gate's redaction, a client's own record read): a value that is
+  a blob (`isRealmCipherBlob`) is decrypted in place for the reader who
+  passed, and a blob that cannot be decrypted (an unknown, disabled or
+  foreign key) or a service with no cipher wired answers the row WITHOUT
+  the field, never a 500 and never the ciphertext. A foreign `realm_admin`
+  therefore sees an encrypted row redacted exactly as it sees a plaintext
+  one. #3328 (reach-gating the hashed leg) stays a separate issue.
+- **The realm cipher is one DI token, `OAuth2InjectionToken.RealmCipher`**
+  (registered in `app/modules/oauth2/module.ts` over `KeyStore`), resolved
+  by every consumer of the encrypted-at-rest mode: the MFA seed cipher, the
+  client controller factory (the service's `cipher` ctx), the
+  `OAuth2ClientAuthenticator` context behind `/token`, the authorization
+  middleware's `ClientAuthenticator` behind Basic auth, and the provisioning
+  module for its client synchronizer (falling back to constructing one over
+  its own key store in a minimal module graph that never registered the
+  token). One instance, because its per-key cipher cache is only useful
+  when there is one of it. A `ClientCredentialsService` built without a
+  cipher refuses to protect in encrypted mode and verifies a blob as false.
+- **An encrypted secret is tied to the enc key's lifecycle.**
+  `KeyRepositoryAdapter.countBlobReferences` counts `auth_clients.secret`
+  next to the MFA seeds (`LIKE 'v1.<key_id>.%'` over both tables), so
+  `DELETE /keys/:id` on an enc key holding client secrets answers 409 with
+  the count and `?force=true` crypto-shreds them: such a client can no
+  longer authenticate afterwards (the decrypt fails closed) and needs a
+  rotation. Disabling the key is the reversible kill switch and stops every
+  client encrypted under it from authenticating until it is enabled again;
+  a passive key keeps decrypting, so a rotation is no sweep. That blast
+  radius is why the mode stays opt-in per client, why the kit's dialog says
+  so, and why a production deployment should set `SECRETS_ENCRYPTION_KEY`:
+  without the KEK the enc key's material sits unwrapped in `auth_keys`, and
+  a column encrypted under it in the same database is cohort parity, not a
+  defence against a database read.
+- **`auth_clients.secret` is `varchar(512)`** (entity `length: 512`): a
+  256-character plaintext encrypts to a blob of about 420 characters.
+  `1788782400000-WidenClientSecret` is HAND-WRITTEN on both dialects
+  (`ALTER COLUMN "secret" TYPE character varying(512)` /
+  `MODIFY COLUMN secret varchar(512) NULL`), the documented exception to
+  generated DDL: typeorm's `changeColumn` drops and re-adds a column whose
+  length differs, so `migration generate` emits a `DROP COLUMN` that empties
+  every client secret, `system` included (see
+  `.agents/references/typeorm.md`). `down()` narrows back to 256 and fails
+  when a row holds a longer value, which is exactly an encrypted secret:
+  rotate such clients to another mode before reverting.
+- **The write lock-reads the row; the protection happens before it.**
+  `rotateSecret` runs `protect()` BEFORE the transaction (hashing is CPU,
+  encryption reads `auth_keys`, and neither may run on a second pooled
+  connection while the first is pinned `FOR UPDATE`: the #3526 / #3539 pool
+  deadlock, invisible on sqlite), then writes inside the same
+  `repository.transaction` seam `save()` uses. The fresh row is lock-read,
+  `authMethod` is re-checked against it and the three columns are set on
+  it. The re-check is the PR 1 review fix: a concurrent switch to `none`
+  landing between the unlocked read and the lock is refused with 400 and
+  the cleared credential stays cleared, where saving the entity read above
+  would have had TypeORM diff it against the fresh row and write
+  `authMethod: 'secret'` back. The update path stays plain-only for the pool
+  reason: its own `protect()` runs inside the callback and must never need
+  the cipher there.
+
+The kit follows the same split. `AClientForm` keeps the secret input and
+the hashed switch on create; on edit it renders the secret input for a plain
+client only, drops `secretHashed` from the update payload and sends `secret`
+only when the field changed (an unchanged echo would re-save what is
+stored). Every secret client gets `AClientSecretRotate` on edit, a `VCModal`
+over `client.client.rotateSecret` with an optional secret, a plain / hashed /
+encrypted mode choice and a show-once panel with a copy button; a hint under
+the encrypted option says the value is stored under the realm's encryption
+key, can be shown again to a permitted reader, and that disabling or
+deleting that key stops such clients from authenticating. The dialog opens
+on the entity's current mode, so a legacy `secretEncrypted` client defaults
+to encrypted, and the rotated entity is adopted the way an update's response
+is.
+
+The create default stays plain (the cohort default is recoverable; flipping
+it is a separate decision). Pinned by
+`test/unit/http/controllers/entities/client-secret.spec.ts` (rotate to
+hashed, then `client_credentials` with the returned plaintext succeeds while
+the old secret answers `invalid_client`; the update-path 400; one audit row
+without the secret; rotate back to plain, readable via `?fields=+secret`;
+rotate to encrypted and create in encrypted mode, each authenticating at
+`/token` and revealed to an admin on the single and the list read; hashed
+and encrypted at once refused; a public client refused; self-rotation via
+`@me` with the mode change denied and a foreign client out of reach; and,
+last, the realm enc key answering 409 while the encrypted client references
+it, force-deleted, after which that client answers `invalid_client`),
+`client-secret-projection.spec.ts` (an own encrypted secret decrypted and a
+foreign one redacted for a restricted reader, without dropping the row),
+`user-concurrency.spec.ts` (a rotation interleaved with a switch to `none`
+is refused and the credential stays cleared) and
+`test/unit/core/provisioning/synchronizer/client.spec.ts` (a raw secret
+under `secretHashed: true` stored as bcrypt, a bcrypt value kept verbatim, a
+raw value re-hashed on merge, a plain value verbatim, a raw value under
+`secretEncrypted: true` encrypted, a cipher blob kept verbatim, both flags
+at once refused).
 
 ### Account Console (`/console/account`, plan 080)
 
@@ -2981,7 +3289,13 @@ The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
 `secretEncrypted` storage flags (downgrading either would persist the secret
 in plaintext). FK fields like `realmId` are usually validator-stripped on
-UPDATE already, but stay in the denylist as defense in depth.
+UPDATE already, but stay in the denylist as defense in depth. A
+self-managing client rotates its own secret through
+`POST /clients/@me/secret` (plan 105): the service hands the policy the two
+flags only when the requested mode differs from the current one, so this
+denylist is what refuses its mode change, while a rotation under the current
+mode passes with no rule of its own (see *Client secret storage and
+rotation*).
 
 Self-editable fields (e.g. `name`, `displayName`, `email`, `password`, `secret`, `redirectUri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`builtIn`, `id`, `createdAt`, `updatedAt`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
 
@@ -4311,7 +4625,7 @@ local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
 
-### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064 Stages 1+2)
+### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064)
 
 `Client.backchannelLogoutUri` (`auth_clients.backchannel_logout_uri`, nullable
 `varchar(2000)`; one absolute http(s) URL of at most 2000 characters, no
@@ -4407,8 +4721,34 @@ other RP on that session that it ended.
   The URI is an `AClientForm` field, absent from `buildSystemClientAttributes`
   (a system client has no RP behind it) and from the anonymous
   `ClientSummary`.
-- **Deferred (plan 064 Stage 3):** a per-delivery audit event in
-  `auth_events`. Today the only trace of a failed push is the warn line.
+- **Every delivery leaves an `auth_events` row (plan 064 Stage 3).** The
+  notifier records `backchannelLogout` for a `2xx` and
+  `backchannelLogoutFailed` for anything else, one row per client, so an
+  operator can list which RPs actually received the push
+  (`GET /events?filter[name]=backchannelLogoutFailed`). The row is about the
+  CLIENT (`refType: client`, `refId` and `clientId` the RP's id), carries the
+  ended session under `sessionId`, is attributed to the session's subject
+  like the `logout` row, and is realm-scoped to the client's realm like the
+  token's `iss`. `data.jti` is the logout token's id, so the row can be
+  matched against the RP's own log of what it received; a failed row adds
+  `status` (the RP answered, with that code) or `errorCode` (it never
+  answered: the first `code` on the error's cause chain, `ECONNREFUSED`,
+  `ENOTFOUND`, `ERR_TLS_CERT_ALTNAME_INVALID`, else the error's name,
+  `TimeoutError` for the abort), and a signing failure carries no `jti`
+  because no token existed. **The row carries a CODE and never the rendered
+  error**: `describeCauseChain` renders the innermost message with its
+  `address=` and `port=`, a DNS failure names the RP hostname, a TLS failure
+  the certificate's altnames, and the row is attributed to the session's
+  subject, whom `EventService.getMany` answers with their own rows
+  self-service while `backchannelLogoutUri` itself is withheld from them
+  (absent from `ClientSummary`, gated by `CLIENT_READ`). The rendering stays
+  in the `warn` line, which is the log's. A client with
+  no `backchannelLogoutUri` never enters the audience, so nothing is recorded
+  for it: "skipped" would be one row per silent client per logout, which is
+  noise rather than a trace. The rows ride the default retention and are
+  recorded through the same `IEventService` every other OAuth2 emit uses,
+  handed to the notifier by the `AuthenticationModule`, so a `record()`
+  failure is swallowed there and never reaches the revoke.
 
 ## Application Access Policy (plan 052)
 
@@ -6168,9 +6508,13 @@ must be visible in `auth_events`). The table was folded into migration
   **mandatorily** asserts the realm binding (payload-first + required realm on
   both methods — shape-aligned with `ISymmetricCipher.encrypt(plain)` plus a
   scope argument; every consumer knows its entity's realm, so a skippable
-  assert would only invite forgetting it). Consumer today: the MFA seed
-  cipher (`UserAuthenticatorService` ctx); plan 070 adds client
-  `secretEncrypted`, IdP `clientSecret`, LDAP bind password.
+  assert would only invite forgetting it). Two consumers today: the MFA
+  seed cipher (`UserAuthenticatorService` ctx) and, since plan 105, client
+  secrets in encrypted mode (`secretEncrypted`, see *Client secret storage
+  and rotation*), both resolving the one instance registered under
+  `OAuth2InjectionToken.RealmCipher`; plan 070 Stage 2 adds the IdP
+  `clientSecret` and the LDAP bind password over the same token, blob
+  discriminator and reveal rule.
 - **Optional KEK — config `secretsEncryptionKey` (`SECRETS_ENCRYPTION_KEY`,
   base64 32 bytes, boot-validated when set):** the adapter persists
   `decryptionKey` material (RSA private keys AND oct material — never the
@@ -6186,8 +6530,35 @@ must be visible in `auth_events`). The table was folded into migration
   (verify/decrypt-only), retire it `disabled`/delete when its artifacts
   drained.
 - **Realm delete = crypto-shredding:** `auth_keys.realm_id` is ON DELETE
-  CASCADE, so deleting a realm drops its enc keys and every seed encrypted
-  under them becomes unrecoverable noise.
+  CASCADE, so deleting a realm drops its enc keys and every seed and client
+  secret encrypted under them becomes unrecoverable noise.
+
+**Client secrets needed no redesign of the key entity (plan 105,
+2026-09-07).** The premise that `auth_keys` serves the JWK mechanism alone
+is outdated since plan 069: the enc store, the per-realm auto-mint, the KEK
+wrap, the lifecycle API and `IRealmCipher`'s self-describing blobs are all in
+place, so client secrets become the cipher's second consumer with nothing
+added on the key side. Six key-side candidates were evaluated against the
+code and five rejected: a per-purpose enc key column (the realm binding plus
+the blob's own key id already give everything it would), a generic
+`auth_secrets` envelope table (a JOIN on the `/token` client-auth hot path,
+and the released MFA blobs would have to migrate), a re-encrypt sweep on
+rotation (`decrypt` resolves the blob's own key id, so a passive key keeps
+decrypting), renaming `decryptionKey` / `encryptionKey` (cosmetic, and a wire
+break on `/keys`), and moving the KEK wrap out of the repository adapter (it
+sits on the hexagonal boundary on purpose). What plan 105 added is a DI token
+for the realm cipher (`OAuth2InjectionToken.RealmCipher`, registered in
+`app/modules/oauth2/module.ts`; the MFA controller factory used to `new` one
+inline and resolves the token now, like every client-secret consumer) and
+one more `LIKE 'v1.<id>.%'` over `auth_clients.secret` in
+`countBlobReferences`, so the enc-key 409 guard and the force crypto-shred
+cover clients. The blast radius grew with it: disabling a realm's enc key
+ends every encrypted client's authentication in that realm until it is
+enabled again, and a force delete ends it for good (see *Client secret
+storage and rotation*). That is one more reason to set
+`SECRETS_ENCRYPTION_KEY` in production: without the KEK the enc key material
+sits unwrapped in `auth_keys`, and a column encrypted under it in the same
+database is cohort parity, not a defence against a database read.
 
 **UI:** top-level `/keys` pages in client-admin-console (list + add + detail edit,
 realm-switch scoped like users/roles, nav entry gated on `KEY_*`), backed by
@@ -6350,8 +6721,11 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   rather than a new key because `sanitizeEventData`'s allow-list is closed),
   `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
   (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
-  `client.builtIn`), `LOGOUT` (end-session hint revoke), `REGISTER` /
-  `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
+  `client.builtIn`), `LOGOUT` (end-session hint revoke),
+  `BACKCHANNEL_LOGOUT` / `BACKCHANNEL_LOGOUT_FAILED` (one per RP the
+  `OAuth2BackchannelLogoutNotifier` delivers a logout token to, `refType:
+  client`, `data.jti` plus `status` or `errorCode`; see *Back-channel logout*),
+  `REGISTER` / `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
   **key / trust-anchor lifecycle** (issue #3269): `KeyService` /
   `TrustAnchorService` record ENTITY-scope `created`/`updated`/`deleted`
   rows themselves (both entities are deliberately subscriber-less, so the

@@ -167,6 +167,7 @@ export class HTTPMiddlewareModule {
             oauth2TokenVerifier,
             sessionManager,
             sessionRepository,
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             logger: container.resolve(LoggerInjectionKey),
             options: {
                 clientAuthBasic: config.clientAuthBasic,

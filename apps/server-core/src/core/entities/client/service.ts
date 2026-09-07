@@ -11,15 +11,24 @@ import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     CLIENT_RESERVED_NAMES,
     ClientAuthMethod,
+    ClientSecretMode,
+    ClientSecretRotateValidator,
     ClientValidator,
+    EntityType,
+    EventName,
+    EventScope,
     PermissionName,
+    getClientSecretMode,
 } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
-import type { IClientRepository, IClientService } from './types.ts';
+import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
+import type { IRealmCipher } from '../../key/index.ts';
+import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
@@ -27,6 +36,13 @@ import { clientSchema } from './schema.ts';
 export type ClientServiceContext = {
     repository: IClientRepository;
     realmRepository: IRealmRepository;
+    /**
+     * The realm cipher behind the encrypted storage mode. Without it that
+     * mode is refused and an encrypted value is never revealed.
+     */
+    cipher?: IRealmCipher;
+    eventService?: IEventService;
+    requestContext?: () => EventRequestContext | undefined;
 };
 
 export class ClientService extends AbstractEntityService implements IClientService {
@@ -36,11 +52,23 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
     protected validator: ClientValidator;
 
+    protected secretValidator: ClientSecretRotateValidator;
+
+    protected cipher?: IRealmCipher;
+
+    protected eventService?: IEventService;
+
+    protected requestContext?: () => EventRequestContext | undefined;
+
     constructor(ctx: ClientServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.validator = new ClientValidator();
+        this.secretValidator = new ClientSecretRotateValidator();
+        this.cipher = ctx.cipher;
+        this.eventService = ctx.eventService;
+        this.requestContext = ctx.requestContext;
     }
 
     async getMany(
@@ -52,10 +80,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
         // The per-row `secret` visibility gate lives on the client SCHEMA
         // (`fields.validateMany`, issue #3322), so it also covers the
         // `include=client` paths served by other services; the repository
-        // layer redacts unauthorized values without dropping rows.
-        return this.repository.findMany(
+        // layer redacts unauthorized values without dropping rows. An
+        // encrypted value that survived it is one the reader may see.
+        const result = await this.repository.findMany(
             await decodeQuery(query, { schema: clientSchema, actor }),
         );
+
+        await Promise.all(result.data.map((entity) => this.revealSecret(entity)));
+
+        return result;
     }
 
     async getOne(
@@ -93,10 +126,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
+        // A hashed value discloses nothing; every other stored form is the
+        // secret itself (encrypted rows are decrypted for a permitted reader
+        // from plan 105 PR 2 on), so it takes the reach evaluate.
         if (
             !isMe &&
             entity.secret &&
-            !entity.secretEncrypted &&
             !entity.secretHashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
@@ -105,7 +140,36 @@ export class ClientService extends AbstractEntityService implements IClientServi
             });
         }
 
+        await this.revealSecret(entity);
+
         return entity;
+    }
+
+    async revealSecret(entity: Client): Promise<void> {
+        if (
+            !entity.secret ||
+            !entity.secretEncrypted ||
+            !isRealmCipherBlob(entity.secret)
+        ) {
+            return;
+        }
+
+        if (!this.cipher) {
+            Reflect.deleteProperty(entity, 'secret');
+            return;
+        }
+
+        try {
+            entity.secret = await this.cipher.decrypt(entity.secret, entity.realmId);
+        } catch (e) {
+            // an unknown, disabled or foreign key: the row is still the
+            // reader's to see, the secret is not recoverable right now.
+            if (!isRealmCipherBlobError(e)) {
+                throw e;
+            }
+
+            Reflect.deleteProperty(entity, 'secret');
+        }
     }
 
     async create(
@@ -201,10 +265,24 @@ export class ClientService extends AbstractEntityService implements IClientServi
             throw new ValidationError(`The client name '${validated.name}' is reserved.`);
         }
 
+        assertSecretModeExclusive(validated);
+
+        // A protected secret is replaced only through rotateSecret, together
+        // with the mode it is stored under; the metadata path must never be
+        // able to downgrade it (plan 105). `null` counts: the save path would
+        // otherwise generate a replacement nobody is told about.
+        if (
+            entity &&
+            validated.secret !== undefined &&
+            getClientSecretMode(entity) !== ClientSecretMode.PLAIN
+        ) {
+            throw new ValidationError('The secret of a hashed or encrypted client is rotated through POST /clients/:id/secret.');
+        }
+
         await this.repository.validateJoinColumns(validated);
         await this.repository.checkUniqueness(validated, entity || undefined);
 
-        const credentialsService = new ClientCredentialsService();
+        const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
 
         if (entity) {
             if (
@@ -327,6 +405,154 @@ export class ClientService extends AbstractEntityService implements IClientServi
         };
     }
 
+    async rotateSecret(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realmId?: string,
+    ): Promise<ClientSecretRotateResult> {
+        const where: Record<string, any> = isUUID(idOrName) ?
+            { id: idOrName } :
+            { name: idOrName };
+
+        if (realmId) {
+            const realm = await this.realmRepository.resolve(realmId);
+            if (!realm) {
+                throw new EntityNotFoundError();
+            }
+
+            where.realmId = realm.id;
+        }
+
+        const entity = await this.repository.findOneWithSecret(where);
+        if (!entity) {
+            throw new EntityNotFoundError();
+        }
+
+        const isMe = !!actor.identity &&
+            actor.identity.type === 'client' &&
+            actor.identity.data.id === entity.id;
+
+        let isSelfEdit = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+        } catch (e) {
+            if (!isMe) {
+                throw e;
+            }
+
+            isSelfEdit = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
+        }
+
+        if (entity.authMethod !== ClientAuthMethod.SECRET) {
+            throw new ValidationError('Only a client authenticating by secret holds a secret to rotate.');
+        }
+
+        const validated = await this.secretValidator.run(data);
+
+        // A legacy row carrying `secretEncrypted` over a value the flag never
+        // protected defaults to the encrypted mode too: its stated intent is
+        // honoured by this rotation.
+        const currentMode = getClientSecretMode(entity);
+        const mode = validated.mode ?? currentMode;
+        const flags = {
+            secretHashed: mode === ClientSecretMode.HASHED,
+            secretEncrypted: mode === ClientSecretMode.ENCRYPTED,
+        };
+
+        const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
+        const secret = validated.secret ?? credentialsService.generateSecret();
+
+        if (isSelfEdit) {
+            // The mode flags reach the policy only when they change, so the
+            // self-manage denylist refuses a self-managing client's downgrade
+            // and permits a plain rotation, with no rule of its own here.
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.CLIENT_SELF_MANAGE,
+                data: definePolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
+                        secret,
+                        ...(mode !== currentMode ? flags : {}),
+                    },
+                    ...this.resourceRealmMatch(entity),
+                }),
+            });
+        } else {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.CLIENT_UPDATE,
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            });
+        }
+
+        // Protect BEFORE the lock: hashing is CPU and encryption reaches the
+        // key store, and neither may run on a second pooled connection while
+        // the first is pinned FOR UPDATE (#3526, #3539).
+        const stored = await credentialsService.protect(secret, { ...flags, realmId: entity.realmId });
+
+        // TypeORM's save diffs against the FRESH row, so writing the entity
+        // read above would restore every column a concurrent update changed
+        // in between (an `authMethod` switch to `none` included). The write
+        // therefore lock-reads the current row and re-checks the one rule
+        // that depends on its state.
+        const { id } = entity;
+        const saved = await this.repository.transaction(async (repository) => {
+            const current = await repository.findOneWithSecret({ id });
+            if (!current) {
+                throw new EntityNotFoundError();
+            }
+
+            if (current.authMethod !== ClientAuthMethod.SECRET) {
+                throw new ValidationError('Only a client authenticating by secret holds a secret to rotate.');
+            }
+
+            current.secret = stored;
+            current.secretHashed = flags.secretHashed;
+            current.secretEncrypted = flags.secretEncrypted;
+
+            return repository.save(current);
+        });
+
+        await this.recordSecretRotated(saved, actor, mode);
+
+        return { entity: saved, secret };
+    }
+
+    /**
+     * Metadata-only audit row for a credential rotation: the mode it was
+     * stored under, never the secret in any form.
+     */
+    protected async recordSecretRotated(
+        entity: Client,
+        actor: ActorContext,
+        mode: `${ClientSecretMode}`,
+    ): Promise<void> {
+        if (!this.eventService) {
+            return;
+        }
+
+        const requestContext = this.requestContext ?
+            this.requestContext() :
+            undefined;
+
+        await this.eventService.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.CLIENT_SECRET_ROTATED,
+            refType: EntityType.CLIENT,
+            refId: entity.id,
+            realmId: entity.realmId ?? null,
+            actorType: actor.identity?.type ?? null,
+            actorId: actor.identity?.data.id ?? null,
+            actorName: actor.identity?.data.name ?? null,
+            sessionId: requestContext?.sessionId ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? null,
+            data: { kind: mode },
+        });
+    }
+
     async delete(
         id: string,
         actor: ActorContext,
@@ -348,5 +574,16 @@ export class ClientService extends AbstractEntityService implements IClientServi
         entity.id = entityId;
 
         return entity;
+    }
+}
+
+/**
+ * The two storage flags encode one of three modes and are never both set:
+ * a hashed value cannot also be encrypted, and a row claiming both would
+ * verify under neither.
+ */
+export function assertSecretModeExclusive(flags: Pick<Partial<Client>, 'secretHashed' | 'secretEncrypted'>): void {
+    if (flags.secretHashed && flags.secretEncrypted) {
+        throw new ValidationError('A client secret is stored hashed or encrypted, never both.');
     }
 }
