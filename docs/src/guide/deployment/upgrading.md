@@ -43,9 +43,9 @@ every reference onto it, then delete the others. A permission is referenced by
 `auth_client_permissions`, by `auth_clients.access_policy_id`, by
 `auth_policies.parent_id`, and by the `auth_policy_tree` closure table.
 
-Re-point a reference with `UPDATE <table> SET <column> = '<survivor id>' WHERE
-<column> = '<loser id>'`. A junction row that then duplicates one the survivor
-already holds is refused by that table's own unique key; delete that row instead.
+Re-point a reference with `UPDATE <table> SET <column> = '<survivor id>' WHERE <column> = '<loser id>'`.
+A junction row that then duplicates one the survivor already holds is refused by
+that table's own unique key; delete that row instead.
 Do the re-pointing before deleting a loser: every junction cascades on delete, so
 deleting a row that still holds references drops them silently.
 
