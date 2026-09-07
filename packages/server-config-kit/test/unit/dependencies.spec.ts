@@ -20,24 +20,57 @@ function readPackageJSON() : Record<string, any> {
 // server-core's or server-kit's tail (native @node-rs/bcrypt and jsonwebtoken,
 // winston, redis, the socket.io emitter, @rapiq/core), so the dependency set is
 // pinned rather than merely reviewed.
+//
+// The pin guards that TAIL, not @authup/* as a category. `@authup/kit` is the
+// one internal dependency allowed through: it is a foundation package carrying
+// `destr` and `nanoid` and nothing else, every consumer of this package already
+// declares it, and the sibling portable package `@authup/server-console-kit`
+// declares it too. The blanket "no @authup dependency" rule this replaced was
+// stricter than its own rationale, and the cost of that gap was real: the
+// helpers were imported anyway, undeclared, which is invisible at runtime
+// (npm workspaces symlink every package into the root node_modules) and in the
+// dist (tsdown externalizes only DECLARED dependencies, so it inlined them) but
+// left nx without a `server-config-kit -> kit` edge, free to build this package
+// before `kit` had a dist to resolve against.
+const DEPENDENCIES_ALLOWED = [
+    '@authup/kit',
+    '@validup/zod',
+    'envix',
+    'validup',
+    'zod',
+];
+
+// Anything that would drag a native binding, a logger, a cache client or a
+// query layer in behind this package.
+const DEPENDENCIES_FORBIDDEN = [
+    '@authup/server-kit',
+    '@authup/server-core',
+    '@authup/core-kit',
+    '@rapiq/core',
+];
+
 describe('package.json', () => {
-    it('should declare no @authup dependency', () => {
+    it('should declare no dependency carrying server-core\'s or server-kit\'s tail', () => {
         const data = readPackageJSON();
 
-        for (const name of Object.keys(data.dependencies)) {
-            expect(name.startsWith('@authup/')).toEqual(false);
+        for (const name of DEPENDENCIES_FORBIDDEN) {
+            expect(Object.keys(data.dependencies)).not.toContain(name);
         }
     });
 
-    it('should declare exactly the four third-party dependencies', () => {
+    it('should declare no @authup dependency other than kit', () => {
         const data = readPackageJSON();
 
-        expect(Object.keys(data.dependencies).sort()).toEqual([
-            '@validup/zod',
-            'envix',
-            'validup',
-            'zod',
-        ]);
+        const internal = Object.keys(data.dependencies)
+            .filter((name) => name.startsWith('@authup/'));
+
+        expect(internal).toEqual(['@authup/kit']);
+    });
+
+    it('should declare exactly the five dependencies', () => {
+        const data = readPackageJSON();
+
+        expect(Object.keys(data.dependencies).sort()).toEqual(DEPENDENCIES_ALLOWED);
     });
 
     it('should declare no peer dependencies', () => {

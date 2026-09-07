@@ -8,7 +8,6 @@
 import type { SchemaInput } from '../types.ts';
 import { isSchemaEntryInput } from '../entry/check.ts';
 import { assertSchemaValue, isSchemaInput } from '../schema/check.ts';
-import { hasOwnProperty } from '@authup/kit';
 
 /**
  * The static defaults of every key that carries one. A function-valued
@@ -21,10 +20,6 @@ export function buildSchemaDefaults<T>(schema: SchemaInput<T>) : Partial<T> {
 
     const keys = Object.keys(schema) as (keyof SchemaInput<T>)[];
     for (const key of keys) {
-        if (!hasOwnProperty(schema, key)) {
-            continue;
-        }
-
         const data = schema[key];
 
         if (isSchemaEntryInput(data)) {

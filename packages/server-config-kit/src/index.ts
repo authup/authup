@@ -7,9 +7,12 @@
 
 /**
  * The config schema MECHANISM: generic over any config type, and carrying
- * NO `@authup/*` dependency at all, so a server package can read its own
- * configuration without depending on server-core and without inheriting
- * server-kit's tail. What it holds is the declaration shape, the
+ * `@authup/kit` as its ONE internal dependency (a foundation package holding
+ * `destr` and `nanoid`), so a server package can read its own configuration
+ * without depending on server-core and without inheriting server-kit's tail
+ * (native @node-rs/bcrypt and jsonwebtoken, winston, redis, the socket.io
+ * emitter, @rapiq/core). That tail is what `test/unit/dependencies.spec.ts`
+ * pins. What it holds is the declaration shape, the
  * environment readers and the passes over a registry (environment, file
  * tree, defaults, validator mounts, JSON Schema); WHICH keys exist is the
  * caller's registry, not this package's business.

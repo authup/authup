@@ -49,6 +49,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
+        "@authup/kit": "^1.0.0-beta.64",
         "@validup/zod": "^2.0.1",
         "envix": "^1.5.0",
         "validup": "^2.0.1",
