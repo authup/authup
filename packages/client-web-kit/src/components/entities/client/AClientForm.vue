@@ -32,11 +32,13 @@ import {
 import {
     type Client,
     ClientAuthMethod,
+    ClientSecretMode,
     ClientTokenBindingMethod,
     ClientValidator,
     EntityType,
     type Policy,
     buildClientCertificateURI,
+    getClientSecretMode,
 } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { OAuth2TokenGrant } from '@authup/specs';
@@ -46,10 +48,10 @@ import {
     ValidatorGroup,
     generateName,
     generateSecret,
-    isBCryptHash,
 } from '@authup/kit';
 import { ARealmPicker } from '../realm';
 import APolicyPicker from '../policy/APolicyPicker.vue';
+import AClientSecretRotate from './AClientSecretRotate.vue';
 import {
     AFormInputList,
     AFormSubmit,
@@ -59,11 +61,11 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
-import { VCIcon } from '@vuecs/icon';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
+        AClientSecretRotate,
         AFormSubmit,
         ANameInput,
         APolicyPicker,
@@ -72,7 +74,6 @@ export default defineComponent({
         AFormInputList,
         VCFormCheckbox,
         VCFormCheckboxGroup,
-        VCIcon,
 
         IFieldValidation,
     },
@@ -138,15 +139,15 @@ export default defineComponent({
             manager.data.value.realmId :
             storeRefs.realmId.value));
 
-        const isSecretHashed = computed(
-            () => {
-                if (!manager.data.value || manager.data.value.secret !== form.secret) {
-                    return false;
-                }
-
-                return isBCryptHash(form.secret);
-            },
-        );
+        // The storage mode is fixed at creation and changes only through the
+        // rotation endpoint, so an update may write the secret of a PLAIN
+        // client alone; every other secret client rotates through the dialog.
+        const isSecretEditable = computed(() => !isEditing.value || (
+            !!manager.data.value &&
+            getClientSecretMode(manager.data.value) === ClientSecretMode.PLAIN
+        ));
+        const isSecretRotatable = computed(() => isEditing.value &&
+            manager.data.value?.authMethod === ClientAuthMethod.SECRET);
 
         function initForm() {
             if (props.name) {
@@ -198,14 +199,42 @@ export default defineComponent({
 
         initForm();
 
+        // An update never carries the mode, and carries the secret only when
+        // the client is plain and the field changed: the server answers 400
+        // to a secret on a hashed client, and an unchanged echo of a plain
+        // one would only re-save what is already stored.
+        const buildPayload = () : Partial<Client> => {
+            const payload : Partial<Client> = { ...form };
+            if (!isEditing.value) {
+                return payload;
+            }
+
+            delete payload.secretHashed;
+
+            const changed = form.secret !== (manager.data.value?.secret ?? '');
+            if (!changed || !isSecretEditable.value) {
+                delete payload.secret;
+            }
+
+            return payload;
+        };
+
         const submit = async () => {
             if (v.$invalid.value) {
                 return;
             }
 
-            await manager.createOrUpdate(form);
+            await manager.createOrUpdate(buildPayload());
 
             assignFormProperties(form, manager.data.value, { fields: v.fields });
+        };
+
+        // the dialog answers with the rotated entity: adopt it the way an
+        // update does, so the parent refreshes and the form re-hydrates.
+        const handleSecretRotated = (entity: Client) => {
+            manager.data.value = entity;
+            manager.updated(entity);
+            initForm();
         };
 
         const translationsClient = useTranslationsForNamespace(
@@ -228,6 +257,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.CLIENT_CERTIFICATE_URI_HINT },
                 { key: TranslatorTranslationClientKey.IS_ACTIVE },
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
+                { key: TranslatorTranslationClientKey.SECRET_HASHED_HINT },
                 { key: TranslatorTranslationClientKey.GRANT_TYPES_HINT },
                 { key: TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT },
             ],
@@ -340,7 +370,9 @@ export default defineComponent({
             isEditing,
             isSecretAuthentication,
             isTLSAuthentication,
-            isSecretHashed,
+            isSecretEditable,
+            isSecretRotatable,
+            handleSecretRotated,
             authMethodOptions,
             tokenBindingMethodOptions,
             clientCertificateURI,
@@ -445,18 +477,13 @@ export default defineComponent({
                 </VCFormGroup>
             </template>
             <IFieldValidation
-                v-if="isSecretAuthentication"
+                v-if="isSecretAuthentication && isSecretEditable"
                 v-slot="{ value }"
                 :field="v.fields.secret"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.secret }}
-                        <template v-if="isSecretHashed">
-                            <span class="text-error-600 font-bold">
-                                <VCIcon name="fa6-solid:triangle-exclamation" />
-                            </span>
-                        </template>
                     </template>
                     <ASecretInput
                         :model-value="v.fields.secret.$model.value ?? ''"
@@ -464,9 +491,29 @@ export default defineComponent({
                     />
                 </VCFormGroup>
             </IFieldValidation>
+            <template v-if="isSecretAuthentication && isSecretRotatable && data">
+                <VCFormGroup>
+                    <template
+                        v-if="!isSecretEditable"
+                        #label
+                    >
+                        {{ translationsDefault.secret }}
+                    </template>
+                    <AClientSecretRotate
+                        :entity="data"
+                        @updated="handleSecretRotated"
+                    />
+                    <template
+                        v-if="!isSecretEditable"
+                        #hint
+                    >
+                        {{ translationsClient.secretHashedHint }}
+                    </template>
+                </VCFormGroup>
+            </template>
             <div class="flex flex-wrap -mx-2">
                 <div
-                    v-if="isSecretAuthentication"
+                    v-if="isSecretAuthentication && !isEditing"
                     class="flex-1 basis-0 px-2"
                 >
                     <IFieldValidation

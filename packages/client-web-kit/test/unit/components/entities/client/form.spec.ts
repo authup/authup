@@ -8,8 +8,9 @@
 import type { Client } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { createFakeClient } from '@authup/core-http-kit/testing';
-import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
+import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
+import { VCButton } from '@vuecs/button';
 import vuecs from '@vuecs/core';
 import { install as installForms } from '@vuecs/forms';
 import { createPinia } from 'pinia';
@@ -58,7 +59,7 @@ function createEntity() : Client {
     };
 }
 
-function mountForm(entity: Client) {
+function mountForm(entity?: Client, handlers: FakeHandlerMap = {}) {
     const pinia = createPinia();
     const httpClient = createFakeClient({
         handlers: {
@@ -70,6 +71,7 @@ function mountForm(entity: Client) {
                 },
                 meta: {},
             }),
+            ...handlers,
         },
     });
 
@@ -84,7 +86,7 @@ function mountForm(entity: Client) {
     };
 
     const wrapper = mount(AClientForm, {
-        props: { entity },
+        props: entity ? { entity } : {},
         global: {
             components: { VCIcon: { render: () => null } },
             stubs: {
@@ -101,6 +103,7 @@ function mountForm(entity: Client) {
                     template: '<input class="name-input-stub" />',
                 },
                 ASecretInput: {
+                    name: 'ASecretInput',
                     props: ['modelValue', 'disabled'],
                     template: '<input class="secret-input-stub" />',
                 },
@@ -117,6 +120,7 @@ function mountForm(entity: Client) {
                     template: '<textarea />',
                 },
                 VCFormSwitch: {
+                    name: 'VCFormSwitch',
                     props: ['modelValue', 'label', 'labelContent', 'disabled'],
                     template: '<input type="checkbox" />',
                 },
@@ -530,5 +534,162 @@ describe('AClientForm home and back-channel logout urls', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty(key, null);
+    });
+});
+
+// The storage mode is fixed at creation and only ever changed together with
+// a new secret, through `POST /clients/:id/secret`. So the edit form drops
+// the hashed switch, keeps the inline secret input for a plain client alone
+// (the one mode an update may still write), and offers the rotation dialog
+// to every secret-authenticating client. The dialog posts the typed secret
+// (or none, so the server generates one) plus the mode, and renders the
+// returned plaintext once.
+describe('AClientForm secret rotation', () => {
+    const BCRYPT = '$2b$10$C6UzMDM.H6dfI/f/IKcEeO7lB7l5iUj6uV2m2nHvL7v4l7f3Zo4Km';
+
+    function createHashedEntity() : Client {
+        const entity = createEntity();
+        entity.secret = BCRYPT;
+        entity.secretHashed = true;
+        return entity;
+    }
+
+    const findSwitches = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
+        .findAllComponents({ name: 'VCFormSwitch' });
+    const findRotate = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
+        .findComponent({ name: 'AClientSecretRotate' });
+    const findRotateRequest = (httpClient: FakeClient, id: string) => httpClient.requests.find(
+        (request) => request.method === 'POST' &&
+            new URL(request.url, 'http://localhost').pathname === `/clients/${id}/secret`,
+    );
+
+    // The dialog body is portaled to `document.body`, so it is reached
+    // through the component tree rather than the wrapper's own DOM.
+    async function openDialog(wrapper: ReturnType<typeof mountForm>['wrapper']) {
+        const rotate = findRotate(wrapper);
+        await rotate.findComponent(VCButton).trigger('click');
+        await flushPromises();
+
+        return rotate;
+    }
+
+    async function submitDialog(rotate: ReturnType<typeof findRotate>) {
+        const submit = rotate
+            .findAllComponents(VCButton)
+            .find((button) => button.props('type') === 'submit');
+        expect(submit).toBeDefined();
+
+        await submit!.trigger('click');
+        await flushPromises();
+    }
+
+    it('keeps the hashed switch and the inline secret input on create', async () => {
+        const { wrapper } = mountForm();
+        await flushPromises();
+
+        expect(findSwitches(wrapper)).toHaveLength(2);
+        expect(wrapper.find('.secret-input-stub').exists()).toBe(true);
+        expect(findRotate(wrapper).exists()).toBe(false);
+    });
+
+    it('renders the rotate button and no secret input for a hashed client', async () => {
+        const { wrapper } = mountForm(createHashedEntity());
+        await flushPromises();
+
+        expect(findSwitches(wrapper)).toHaveLength(1);
+        expect(wrapper.find('.secret-input-stub').exists()).toBe(false);
+        expect(findRotate(wrapper).exists()).toBe(true);
+    });
+
+    it('renders the secret input and the rotate button for a plain client', async () => {
+        const { wrapper } = mountForm(createEntity());
+        await flushPromises();
+
+        expect(findSwitches(wrapper)).toHaveLength(1);
+        expect(wrapper.find('.secret-input-stub').exists()).toBe(true);
+        expect(findRotate(wrapper).exists()).toBe(true);
+    });
+
+    it('sends neither the mode nor an unchanged secret on update', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity());
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).not.toHaveProperty('secretHashed');
+        expect(request!.body).not.toHaveProperty('secret');
+    });
+
+    it('sends the changed secret of a plain client on update', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity());
+        await flushPromises();
+
+        wrapper.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'next-secret');
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ secret: 'next-secret' });
+        expect(request!.body).not.toHaveProperty('secretHashed');
+    });
+
+    it('posts the typed secret and the mode, then shows the returned secret once', async () => {
+        const entity = createHashedEntity();
+        const { wrapper, httpClient } = mountForm(entity, {
+            'POST /clients/:id/secret': () => ({
+                data: { ...entity, updatedAt: '2026-01-02T00:00:00.000Z' },
+                meta: { secret: 'rotated-plaintext-one' },
+            }),
+        });
+        await flushPromises();
+
+        const rotate = await openDialog(wrapper);
+        rotate.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'typed-secret');
+        await flushPromises();
+
+        await submitDialog(rotate);
+
+        const request = findRotateRequest(httpClient, entity.id);
+        expect(request).toBeDefined();
+        expect(request!.body).toEqual({ secret: 'typed-secret', mode: 'hashed' });
+
+        // the show-once panel replaces the form and the parent is told
+        expect(rotate.findComponent({ name: 'ASecretInput' }).exists()).toBe(false);
+        expect(document.body.textContent).toContain('rotated-plaintext-one');
+        expect(wrapper.emitted('updated')).toHaveLength(1);
+        expect(wrapper.emitted('updated')![0]![0]).toMatchObject({ id: entity.id });
+
+        wrapper.unmount();
+    });
+
+    it('posts only the current mode when the secret is left blank', async () => {
+        const entity = createEntity();
+        const { wrapper, httpClient } = mountForm(entity, {
+            'POST /clients/:id/secret': () => ({
+                data: {
+                    ...entity, 
+                    secret: 'rotated-plaintext-two', 
+                    updatedAt: '2026-01-02T00:00:00.000Z', 
+                },
+                meta: { secret: 'rotated-plaintext-two' },
+            }),
+        });
+        await flushPromises();
+
+        const rotate = await openDialog(wrapper);
+        await submitDialog(rotate);
+
+        const request = findRotateRequest(httpClient, entity.id);
+        expect(request).toBeDefined();
+        expect(request!.body).toEqual({ mode: 'plain' });
+        expect(document.body.textContent).toContain('rotated-plaintext-two');
+
+        wrapper.unmount();
     });
 });
