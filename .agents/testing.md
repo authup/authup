@@ -313,6 +313,36 @@ the config (`suite.container.resolve(ConfigInjectionKey).publicUrl`), not the
 base URL. See
 `test/unit/http/controllers/entities/identity-provider/login-cookie-flow.spec.ts`.
 
+### The OpenAPI parity gate
+
+`test/unit/http/openapi-parity.spec.ts` is what makes the plan-077 claim
+falsifiable: the generated OpenAPI document, the rapiq decode allow-lists and
+the `meta.schema` wire key are three projections of ONE schema registry. It
+reads the built `dist/swagger.json`, asks a running server the same questions
+and requires the answers to be byte-identical, `indexes` included, in both read
+shapes. A record read is checked against the full `x-authup-schemas` entry
+PROJECTED onto the parameters its own `x-query-schema` marker declares, since
+the document states the narrower vocabulary by naming those parameters rather
+than by carrying a second, narrowed copy of the description. Completeness is
+checked against `schemaRegistry.getAll()` rather than against
+`describeSchemaRegistry()`, which is the projection the generate itself emits:
+routing the claim through the projection under test would let a schema the
+projection drops stay missing from the document unreported.
+
+It also walks every operation and requires each to declare every variable of
+its own path template. That is the regression guard for the enrichment's
+APPEND: the generic query parameters are appended to what trapi emitted, and an
+assignment there would delete the path variables of every templated route in
+one go, which no other spec would notice.
+
+Only the half that reads the document depends on a build, and it is skipped
+when `dist/swagger.json` is absent, because a checkout that has not run the
+swagger step is an ordinary state (`build:server:js` carries `clean: true` and
+wipes `dist/`). The registry-against-wire half still runs, so the file is never
+vacuous. The skip message goes to `process.stderr` and not through `console`:
+this runner swallows console output entirely, module scope and in-test alike,
+so a `console.warn` there is dead code.
+
 ## Page Tests (apps/client-auth-console)
 
 The auth console carries the same vitest + `@vue/test-utils` + `happy-dom`

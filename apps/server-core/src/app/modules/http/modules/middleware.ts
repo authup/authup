@@ -25,6 +25,7 @@ import {
 } from '../../../../adapters/http/index.ts';
 import { HTTPInjectionKey } from '../constants.ts';
 import { DIST_PATH } from '../../../../path.ts';
+import { computeSchemaRegistryHash } from '../../../../core/query/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
@@ -124,7 +125,13 @@ export class HTTPMiddlewareModule {
         const middleware = createSwaggerMiddleware({
             documentPath: path.join(DIST_PATH, 'swagger.json'),
             baseURL: config.publicUrl,
+            schemaHash: computeSchemaRegistryHash(),
+            logger: container.resolve(LoggerInjectionKey),
         });
+
+        if (!middleware) {
+            return;
+        }
 
         router.use('/docs', middleware);
     }

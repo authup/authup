@@ -23,12 +23,14 @@ import type {
     PermissionPolicyCreatePayload,
 } from '@authup/core-http-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IPermissionPolicyService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     permissionPolicySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -45,6 +47,7 @@ export class PermissionPolicyController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.PERMISSION_POLICY, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -78,6 +81,7 @@ export class PermissionPolicyController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.PERMISSION_POLICY, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

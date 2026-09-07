@@ -23,12 +23,14 @@ import type {
     EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientScope } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IClientScopeService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     clientScopeSchema,
     describeQuerySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -45,6 +47,7 @@ export class ClientScopeController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.CLIENT_SCOPE, 'collection')
     @DGet('', [])
     async getMany(
         @DContext() event: IAppEvent,
@@ -78,6 +81,7 @@ export class ClientScopeController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.CLIENT_SCOPE, 'record')
     @DGet('/:id', [])
     async getOne(
         @DPath('id') id: string,

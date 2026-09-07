@@ -13,7 +13,7 @@ import {
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { ADMIN_CONSOLE_SEGMENT } from '../../../constants.ts';
+import { ADMIN_CONSOLE_PATH, ADMIN_CONSOLE_SEGMENT } from '../../../constants.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AdminControllerContext, AdminControllerOptions } from './types.ts';
 
@@ -24,7 +24,7 @@ import type { AdminControllerContext, AdminControllerOptions } from './types.ts'
  * The console itself is served by `@authup/server-admin-console`. See
  * {@link AccountController} for why these two routes stay on the API.
  */
-@DController(`/${ADMIN_CONSOLE_SEGMENT}`)
+@DController(ADMIN_CONSOLE_PATH)
 export class AdminController {
     protected options: AdminControllerOptions;
 

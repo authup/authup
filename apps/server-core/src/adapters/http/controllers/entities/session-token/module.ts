@@ -14,6 +14,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { SessionToken } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse, EntityRecordResponse } from '@authup/core-http-kit';
@@ -23,6 +24,7 @@ import {
     describeQuerySchema,
     sessionTokenSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -39,6 +41,7 @@ export class SessionTokenController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.SESSION_TOKEN, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -55,6 +58,7 @@ export class SessionTokenController {
         };
     }
 
+    @DQuerySchema(EntityType.SESSION_TOKEN, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
@@ -77,6 +81,7 @@ export class SessionTokenController {
      * itself survives, so the other applications riding it stay signed in.
      */
     @DDelete('', [ForceLoggedInMiddleware])
+    @DQuerySchema(EntityType.SESSION_TOKEN, 'filters')
     async dropMany(
         @DContext() event: IAppEvent,
     ): Promise<SessionTokenDeleteManyResult> {

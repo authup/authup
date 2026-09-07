@@ -202,6 +202,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             default: true,
             description: 'Serve the Swagger UI and the OpenAPI document.',
         },
+        querySchemaDiscoveryEnabled: {
+            type: booleanType,
+            default: true,
+            description: 'Serve the query-schema discovery routes (GET /schemas and GET /schemas/:name), which report the queryable vocabulary of every registered entity to an authenticated caller. Disabled, both answer 404 to an authenticated caller; an anonymous one is refused with 401 either way, since the login gate runs first.',
+            env: EnvironmentVariable.QUERY_SCHEMA_DISCOVERY_ENABLED,
+            readEnv: readEnvBoolStrict,
+        },
 
         tokenRefreshMaxAge: {
             type: nonNegativeNumberType,

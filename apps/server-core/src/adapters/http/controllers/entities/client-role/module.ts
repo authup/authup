@@ -23,12 +23,14 @@ import type {
     EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientRole } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IClientRoleService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     clientRoleSchema,
     describeQuerySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -47,6 +49,7 @@ export class ClientRoleController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.CLIENT_ROLE, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -79,6 +82,7 @@ export class ClientRoleController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.CLIENT_ROLE, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

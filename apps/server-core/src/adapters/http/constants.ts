@@ -13,6 +13,10 @@
  * config cannot import a server constant); the console service's handler
  * spec catches a bundle built against another.
  */
-export const ADMIN_CONSOLE_SEGMENT = 'console/admin';
+export const ADMIN_CONSOLE_PATH = '/console/admin';
 
-export const ACCOUNT_CONSOLE_SEGMENT = 'console/account';
+export const ACCOUNT_CONSOLE_PATH = '/console/account';
+
+export const ADMIN_CONSOLE_SEGMENT = ADMIN_CONSOLE_PATH.slice(1);
+
+export const ACCOUNT_CONSOLE_SEGMENT = ACCOUNT_CONSOLE_PATH.slice(1);

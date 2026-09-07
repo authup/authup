@@ -26,12 +26,14 @@ import type {
     ScopeUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Scope } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IScopeService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     scopeSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -48,6 +50,7 @@ export class ScopeController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.SCOPE, 'collection')
     @DGet('', [])
     async getMany(
         @DContext() event: IAppEvent,
@@ -80,6 +83,7 @@ export class ScopeController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.SCOPE, 'record')
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,

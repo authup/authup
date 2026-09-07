@@ -113,6 +113,12 @@ console.log(response);
 
 ## Query Capability Discovery
 
+The grammar of the five query parameters, and the vocabulary each entity
+accepts, are documented at the REST level under
+[Query Language](../../../guide/development/api-query-language) and
+[Query Reference](../../../guide/development/api-query-reference). This section
+covers only how the client reads that vocabulary back off a response.
+
 Every query-capable `GET` describes its own queryable vocabulary under
 `meta.schema` — which `filter`, `fields`, `sort` and `include` keys the
 endpoint accepts, plus the pagination cap — so a consumer never has to

@@ -13,6 +13,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { Event } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
@@ -25,6 +26,7 @@ import {
     describeQuerySchema,
     eventSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
@@ -43,6 +45,7 @@ export class EventController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.EVENT, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -66,6 +69,7 @@ export class EventController {
         };
     }
 
+    @DQuerySchema(EntityType.EVENT, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

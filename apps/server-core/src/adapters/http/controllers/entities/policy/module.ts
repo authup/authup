@@ -14,6 +14,7 @@ import type {
     PolicySavePayload,
     PolicyUpdatePayload,
 } from '@authup/core-http-kit';
+import { EntityType } from '@authup/core-kit';
 import { serializeError } from '@authup/errors';
 import {
     DBody,
@@ -37,6 +38,7 @@ import {
     describeQuerySchema,
     policySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -61,6 +63,7 @@ export class PolicyController {
         this.checkerService = ctx.checkerService;
     }
 
+    @DQuerySchema(EntityType.POLICY, 'collection')
     @DGet('', [])
     async getMany(
         @DContext() event: IAppEvent,
@@ -80,6 +83,7 @@ export class PolicyController {
         };
     }
 
+    @DQuerySchema(EntityType.POLICY, 'record')
     @DGet('/:id/expanded', [])
     async getOneExpanded(
         @DPath('id') id: string,
@@ -88,6 +92,7 @@ export class PolicyController {
         return this.getOne(id, event, { expanded: true });
     }
 
+    @DQuerySchema(EntityType.POLICY, 'record')
     @DGet('/:id', [])
     async getOne(
         @DPath('id') id: string,

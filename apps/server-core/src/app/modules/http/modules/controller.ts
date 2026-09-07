@@ -114,6 +114,7 @@ import {
     PasswordForgotController,
     PasswordResetController,
     RegisterController,
+    SchemaController,
     StatusController,
     TokenController,
     UserInfoController,
@@ -216,6 +217,7 @@ export class HTTPControllerModule {
                 this.createAccountController(container),
                 this.createAdminController(container),
 
+                this.createSchemaController(container),
                 this.createStatusController(container),
 
                 clientController,
@@ -458,6 +460,12 @@ export class HTTPControllerModule {
             options: { authConsoleUrl: config.authConsole.url },
             endSessionService,
         });
+    }
+
+    createSchemaController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new SchemaController({ options: { enabled: config.querySchemaDiscoveryEnabled } });
     }
 
     createStatusController(container: IContainer) {

@@ -14,6 +14,7 @@ import type {
     PermissionUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Permission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { serializeError } from '@authup/errors';
 import {
     DBody,
@@ -37,6 +38,7 @@ import {
     describeQuerySchema,
     permissionSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -61,6 +63,7 @@ export class PermissionController {
         this.checkerService = ctx.checkerService;
     }
 
+    @DQuerySchema(EntityType.PERMISSION, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -119,6 +122,7 @@ export class PermissionController {
         };
     }
 
+    @DQuerySchema(EntityType.PERMISSION, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,

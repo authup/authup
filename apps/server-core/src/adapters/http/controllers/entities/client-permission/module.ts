@@ -24,12 +24,14 @@ import type {
     EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientPermission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     clientPermissionSchema,
     describeQuerySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -46,6 +48,7 @@ export class ClientPermissionController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.CLIENT_PERMISSION, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -93,6 +96,7 @@ export class ClientPermissionController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.CLIENT_PERMISSION, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

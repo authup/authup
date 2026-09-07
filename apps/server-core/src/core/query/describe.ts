@@ -7,6 +7,7 @@
 
 import { Parameter } from '@rapiq/core';
 import type { Schema, SchemaDescription } from '@rapiq/core';
+import { schemaRegistry } from './module.ts';
 
 /**
  * The parameter subset advertised on single-record reads: a record
@@ -63,6 +64,42 @@ export function describeQuerySchema(
     if (!output) {
         output = deepFreeze(schema.describe(parameters ? { parameters } : {}));
         bySignature.set(signature, output);
+    }
+
+    return output;
+}
+
+/**
+ * Every REGISTERED schema's full description, keyed and ordered by
+ * schema name. It is the whole queryable surface of the deployment in
+ * one document: the OpenAPI generator projects it as
+ * `x-authup-schemas`, so a route's `x-query-schema` pointer resolves
+ * against the same descriptions `meta.schema` returns per response.
+ *
+ * Read from the registry rather than from the `schemas` declaration
+ * array, so a schema a persistence layer adds through the documented
+ * extension point is described too. Ordered by code unit rather than
+ * by `localeCompare`, because the result is hashed and a locale must
+ * not be able to move a key.
+ */
+export function describeSchemaRegistry() : Record<string, SchemaDescription> {
+    const named = schemaRegistry.getAll()
+        .filter((schema) : schema is Schema<any> & { name: string } => typeof schema.name === 'string')
+        .sort((a, b) => {
+            if (a.name === b.name) {
+                return 0;
+            }
+
+            return a.name < b.name ? -1 : 1;
+        });
+
+    // Prototype-less, because the keys are schema NAMES and the registry is
+    // documented as extensible: a storage-derived schema called `__proto__`
+    // would otherwise hit the legacy setter, leaving the key absent from
+    // discovery and from the hash with nothing raised.
+    const output : Record<string, SchemaDescription> = Object.create(null);
+    for (const schema of named) {
+        output[schema.name] = describeQuerySchema(schema);
     }
 
     return output;

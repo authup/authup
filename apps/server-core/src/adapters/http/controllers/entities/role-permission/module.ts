@@ -24,12 +24,14 @@ import type {
     RolePermissionUpdatePayload,
 } from '@authup/core-http-kit';
 import type { RolePermission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IRolePermissionService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     rolePermissionSchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -46,6 +48,7 @@ export class RolePermissionController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.ROLE_PERMISSION, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -93,6 +96,7 @@ export class RolePermissionController {
         return { data: entity, meta: {} };
     }
 
+    @DQuerySchema(EntityType.ROLE_PERMISSION, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

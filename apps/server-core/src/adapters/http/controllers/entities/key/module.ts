@@ -24,12 +24,14 @@ import type {
     KeyUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Key } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IKeyService } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     keySchema,
 } from '../../../../../core/index.ts';
+import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -50,6 +52,7 @@ export class KeyController {
         this.service = ctx.service;
     }
 
+    @DQuerySchema(EntityType.KEY, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
@@ -67,6 +70,7 @@ export class KeyController {
         };
     }
 
+    @DQuerySchema(EntityType.KEY, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

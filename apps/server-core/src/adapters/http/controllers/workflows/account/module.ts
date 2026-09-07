@@ -13,7 +13,7 @@ import {
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { ACCOUNT_CONSOLE_SEGMENT } from '../../../constants.ts';
+import { ACCOUNT_CONSOLE_PATH, ACCOUNT_CONSOLE_SEGMENT } from '../../../constants.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AccountControllerContext, AccountControllerOptions } from './types.ts';
 
@@ -28,7 +28,7 @@ import type { AccountControllerContext, AccountControllerOptions } from './types
  * invariant 3). A proxy therefore routes these two exact paths to the API
  * set and the rest of the console's segment to the console set.
  */
-@DController(`/${ACCOUNT_CONSOLE_SEGMENT}`)
+@DController(ACCOUNT_CONSOLE_PATH)
 export class AccountController {
     protected options: AccountControllerOptions;
 
