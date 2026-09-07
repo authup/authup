@@ -9,7 +9,7 @@ import type { UserAttribute } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, redactFieldConditions } from '../query.ts';
+import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -30,10 +30,10 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
 
         applyRealmScopeSelect(qb, 'userAttribute', ['userId']);
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

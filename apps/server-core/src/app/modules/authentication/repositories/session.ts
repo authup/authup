@@ -11,7 +11,7 @@ import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit'
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
+import { applyQuery, fetchMany } from '../../database/repositories/query.ts';
 import { SESSION_EXPIRY_SWEEP_BATCH_SIZE, hashSessionSecret } from '../../../../core/index.ts';
 import type {
     ISessionRepository,
@@ -103,10 +103,10 @@ export class SessionRepository implements ISessionRepository {
             });
         }
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

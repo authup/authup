@@ -9,7 +9,7 @@ import type { IQuery } from '@rapiq/core';
 import { Query, hasFieldConditions } from '@rapiq/core';
 import { applyFieldConditions } from '@rapiq/adapter-memory';
 import { TypeormAdapter } from '@rapiq/adapter-typeorm';
-import type { SelectQueryBuilder } from 'typeorm';
+import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import type { EntityRepositoryPaginationMeta } from '@authup/server-kit';
 
 /**
@@ -30,8 +30,8 @@ import type { EntityRepositoryPaginationMeta } from '@authup/server-kit';
  * force-selects every column its condition reads (rapiq#830's operand
  * projection — the SQL counterpart of the plan-039 force-select
  * discipline, so a sparse replace-projection can neither over-redact
- * nor fail open on missing operands); the fetching adapter MUST then
- * run the rows through `redactFieldConditions` before returning them.
+ * nor fail open on missing operands); the fetching adapter then reads
+ * the rows through `fetchMany`, which is what runs the redaction.
  */
 export function applyQuery(
     queryBuilder: SelectQueryBuilder<any>,
@@ -54,15 +54,37 @@ export function applyQuery(
 }
 
 /**
+ * Execute a builder that `applyQuery` prepared and hand back the rows
+ * with the field visibility conditions enforced, plus the total the
+ * response meta needs. This is the ONE way a collection leaves the
+ * repository layer: the SQL path projects a gated column
+ * unconditionally, so a fetch that bypasses the redaction ships the
+ * value, which is why `getManyAndCount` is refused by lint under every
+ * repositories directory except this file (#3329). Post-processing
+ * that adds to the rows (the extra-attribute extension) runs on what
+ * this returns; the redaction touches gated columns alone.
+ */
+export async function fetchMany<T extends ObjectLiteral>(
+    queryBuilder: SelectQueryBuilder<T>,
+    query?: IQuery,
+) : Promise<{ data: T[], total: number }> {
+    const [entities, total] = await queryBuilder.getManyAndCount();
+
+    return {
+        data: redactFieldConditions(query, entities),
+        total,
+    };
+}
+
+/**
  * Enforce the field visibility conditions of a decoded query on
  * already-fetched rows: a gated column is dropped from every row that
- * fails its condition; no row is ever removed. The SQL execution path
- * projects gated columns unconditionally, so EVERY `findMany` adapter
- * must pass its fetched entities through this before returning them —
- * enforcement is fail-open by construction (a skipped call ships the
- * value). Condition-less queries pass through untouched.
+ * fails its condition; no row is ever removed. Condition-less queries
+ * pass through untouched. Module-private on purpose: `fetchMany` is the
+ * only exported fetch, so an adapter cannot obtain rows without passing
+ * through here.
  */
-export function redactFieldConditions<T>(query: IQuery | undefined, data: T[]) : T[] {
+function redactFieldConditions<T>(query: IQuery | undefined, data: T[]) : T[] {
     if (!query || !hasFieldConditions(query.fields)) {
         return data;
     }

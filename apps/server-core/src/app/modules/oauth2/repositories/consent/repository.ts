@@ -11,7 +11,7 @@ import { IdentityType  } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
-import { applyQuery, redactFieldConditions } from '../../../database/repositories/query.ts';
+import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
 import { CachePrefix, ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import type {
@@ -69,10 +69,10 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
             qb.andWhere('consent.realmId = :realmId', { realmId: options.realmId });
         }
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,

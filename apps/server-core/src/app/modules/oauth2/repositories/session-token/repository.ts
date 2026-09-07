@@ -10,7 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { In, LessThan } from 'typeorm';
-import { applyQuery, redactFieldConditions } from '../../../database/repositories/query.ts';
+import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
 import { deleteInBatches, resolveSweepBatchSize } from '../../../database/repositories/helpers.ts';
 import { SessionTokenEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isForeignKeyConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
@@ -179,10 +179,10 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
         this.joinSessionForGate(qb);
         this.joinClientSummary(qb);
 
-        const [entities, total] = await qb.getManyAndCount();
+        const { data: entities, total } = await fetchMany(qb, query);
 
         return {
-            data: redactFieldConditions(query, entities),
+            data: entities,
             meta: {
                 total,
                 ...pagination,
