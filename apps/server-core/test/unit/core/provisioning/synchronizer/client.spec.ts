@@ -64,8 +64,14 @@ describe('core/provisioning/synchronizer/client', () => {
                 FakeEntityRepository<Permission> & IPermissionRepository,
             scopeRepository: new FakeEntityRepository<Scope>() as
                 FakeEntityRepository<Scope> & IScopeRepository,
-            roleSynchronizer: { synchronize: async (input) => input },
-            permissionSynchronizer: { synchronize: async (input) => input },
+            roleSynchronizer: {
+                synchronize: async (input) => input,
+                synchronizeMany: async (inputs) => inputs,
+            },
+            permissionSynchronizer: {
+                synchronize: async (input) => input,
+                synchronizeMany: async (inputs) => inputs,
+            },
         });
     });
 

@@ -101,7 +101,9 @@ describe('ClientSecretRotateValidator', () => {
     });
 
     it('should reject an unknown storage mode', async () => {
-        await expect(validator.run({ mode: 'plaintext' })).rejects.toThrow();
+        const input: Record<string, unknown> = { mode: 'plaintext' };
+
+        await expect(validator.run(input)).rejects.toThrow();
     });
 
     it('should reject a secret shorter than three characters', async () => {
