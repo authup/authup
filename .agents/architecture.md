@@ -1201,10 +1201,22 @@ API. The six page GETs became a stateless hop:
   is enabled, otherwise a localized "disabled" notice (no 404, since stale
   email links should not dead-end). The same flags are exposed publicly on
   the root status endpoint `GET /` (`StatusController` →
-  `{ version, date, features: { registration, passwordRecovery,
-  emailVerification } }`, typed `StatusResponse` in
-  `@authup/core-http-kit`, consumed via `client.status.get()`), which is
-  where the auth console service reads them from.
+  `{ version, date, publicUrl, features, endpoints, consoles }`, typed
+  `StatusResponse` in `@authup/core-http-kit`, consumed via
+  `client.status.get()`), which is where the auth console service reads
+  them from. Since plan 107 the same body says where the deployment IS:
+  `publicUrl`, `endpoints: { openidConfiguration, realms, docs, openapi }`
+  and `consoles: { admin, account, auth }`, all built ONCE at boot in
+  `createStatusController` from `config` (two inline literals, one caller;
+  a second caller extracts a helper). `docs` / `openapi` are `null` while
+  `middlewareSwagger` is off (the flag, not the mount outcome: an
+  interrupted build already warns at boot and is documented), a disabled
+  console is `null` while `features` keeps saying why, and the auth console
+  is always present since the hosted login pages are the issuance surface.
+  The console urls are already absolute and are never re-prefixed;
+  `internalUrl` and `mtlsPublicUrl` never appear here. Everything emitted is
+  public already (the page GETs redirect to the auth console url, every
+  discovery issuer carries `publicUrl`).
 - **Sub-path deployment**: a console service works behind a
   prefix-stripping reverse proxy with no extra config. Its own public path
   is the path component of `<name>Console.url`
@@ -2720,7 +2732,7 @@ adapters/http/controllers/workflows/
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST + GET as above)
   auth-console.ts                   — redirectToAuthConsole(event, authConsoleUrl, page, params?): the ONE hop
                                       every hosted page GET takes, re-carrying the request's own query
-  status/module.ts                  — StatusController (GET / → version + feature flags)
+  status/module.ts                  — StatusController (GET / → version, publicUrl, feature flags, endpoints and console urls)
   account/module.ts                 — AccountController: the account console's two cookie-mode routes,
                                       GET /console/account/login/start (kick) + /callback (redemption). It serves
                                       no page: @authup/server-account-console does
@@ -3177,6 +3189,8 @@ let `GET /realms/<unknown-uuid>/users/<name>` match a cross-realm row.
 **Permission model**: the `realmScope` enum evaluates against the resolved `entity.realmId`. Mounting `/realms/:realmId/users` does not by itself grant cross-realm write access — the dual mount is a routing convenience, not an authorization shortcut. The global `admin` role (`realmScope: any`) **can** act cross-realm from any realm; a `realm_admin` (`own`/`ownOrNull`) cannot. (Route-realm precedence still applies to the body `realmId`.)
 
 **`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
+
+**The realm RECORD read carries the realm's OpenID surface as `meta.endpoints` (plan 107).** `GET /realms/:id` answers `RealmRecordResponse` (`EntityRecordResponse<Realm, RealmRecordMeta>` in `@authup/core-http-kit`): `data` stays the pure `Realm` row and `meta.endpoints` is `{ issuer, openidConfiguration, jwks }`, built by `buildRealmEndpoints(baseURL, realmName)` next to `resolveURL` in `apps/server-core/src/utils/url.ts`. That helper is the ONE derivation: the discovery document's `issuer` and `jwks_uri` read the same object, so the record's issuer equals the discovery issuer by construction (the token side is pinned by `oidc-conformance.spec.ts`, `id_token.iss === discovery.issuer`). The block is built in the controller's `get` only, because URL shaping from `options.baseURL` already lives there and the service stays transport-agnostic; `add` / `edit` / `put` / `drop` keep `meta: {}` and the collection keeps `meta: { ...pagination, schema }`. A consumer wanting every realm's issuer reads each record or derives it from the documented `<publicUrl>/realms/<name>` convention. `IRealmAPI` overrides only `getOne`, so the covariant return keeps the cast-free `ClientEntityAPIRegistry` proof green and nothing advertises `endpoints.*` as filterable; `Realm`, `EntityTypeMap` and `RealmSummary` are untouched. Pinned by `realm-openid.spec.ts` (the sub-path base, all three values) and `realm.spec.ts` (the record read against `config.publicUrl`, and a re-read after a rename answering the new issuer, which is the premise the admin page's re-read rests on).
 
 ## Policy-Permission Model (n:m)
 

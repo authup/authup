@@ -25,6 +25,7 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     RealmCreatePayload,
+    RealmRecordResponse,
     RealmSavePayload,
     RealmUpdatePayload,
 } from '@authup/core-http-kit';
@@ -41,7 +42,7 @@ import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.t
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
-import { resolveURL } from '../../../../../utils/index.ts';
+import { buildRealmEndpoints, resolveURL } from '../../../../../utils/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string,
@@ -104,10 +105,16 @@ export class RealmController {
 
     @DQuerySchema(EntityType.REALM, 'record')
     @DGet('/:id', [])
-    async get(@DPath('id') id: string): Promise<EntityRecordResponse<Realm>> {
+    async get(@DPath('id') id: string): Promise<RealmRecordResponse> {
         const entity = await this.service.getOne(id);
 
-        return { data: entity, meta: { schema: describeQuerySchema(realmSchema, RECORD_QUERY_PARAMETERS) } };
+        return {
+            data: entity,
+            meta: {
+                schema: describeQuerySchema(realmSchema, RECORD_QUERY_PARAMETERS),
+                endpoints: buildRealmEndpoints(this.options.baseURL, entity.name),
+            },
+        };
     }
 
     @DGet('/:id/.well-known/openid-configuration', [])
@@ -118,9 +125,10 @@ export class RealmController {
 
         const { baseURL } = this.options;
         const { mtlsBaseURL, clientCertificatesEnabled = false } = this.options;
+        const endpoints = buildRealmEndpoints(baseURL, entity.name);
 
         return {
-            issuer: resolveURL(baseURL, `realms/${entity.name}`).replace(/\/+$/, ''),
+            issuer: endpoints.issuer,
 
             authorization_endpoint: resolveURL(baseURL, 'authorize'),
 
@@ -132,7 +140,7 @@ export class RealmController {
             backchannel_logout_supported: true,
             backchannel_logout_session_supported: true,
 
-            jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
+            jwks_uri: endpoints.jwks,
 
             // OAuth 2.1 posture: the authorization endpoint issues codes
             // only — implicit/hybrid response types were dropped (plan 042).

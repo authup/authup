@@ -280,6 +280,8 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, `prompt_values_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#7-back-channel-logout)).
 
+The management read of a realm, `GET /realms/:id`, carries the three values an integrator copies out of that document under `meta.endpoints`: `issuer`, `openidConfiguration` and `jwks`. They are derived from the deployment's public url and the realm name, so a renamed realm answers with a new issuer. The realm collection, `GET /realms`, does not carry them: derive them from `<publicUrl>/realms/<name>` (the issuer; the discovery document and the JWKS sit under it) or read the record. The admin console shows them on the realm's page.
+
 ### 5. Federated login (external identity providers)
 
 Nothing changes for a relying party when the person signs in through an

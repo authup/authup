@@ -172,6 +172,7 @@ import { CacheInjectionKey } from '../../cache/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 import { MetricsInjectionKey } from '../../metrics/index.ts';
+import { resolveURL } from '../../../../utils/index.ts';
 
 export class HTTPControllerModule {
     async mount(router: IApp, container: IContainer): Promise<void> {
@@ -471,7 +472,23 @@ export class HTTPControllerModule {
     createStatusController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
 
-        return new StatusController({ options: { features: this.buildUIFeatures(config) } });
+        return new StatusController({
+            options: {
+                publicUrl: config.publicUrl,
+                features: this.buildUIFeatures(config),
+                endpoints: {
+                    openidConfiguration: resolveURL(config.publicUrl, '.well-known/openid-configuration'),
+                    realms: resolveURL(config.publicUrl, 'realms'),
+                    docs: config.middlewareSwagger ? resolveURL(config.publicUrl, 'docs') : null,
+                    openapi: config.middlewareSwagger ? resolveURL(config.publicUrl, 'docs/openapi.json') : null,
+                },
+                consoles: {
+                    admin: config.adminConsole.enabled ? config.adminConsole.url : null,
+                    account: config.accountConsole.enabled ? config.accountConsole.url : null,
+                    auth: config.authConsole.url,
+                },
+            },
+        });
     }
 
     createAdminController(container: IContainer) {

@@ -13,10 +13,35 @@ export type StatusResponseFeatures = {
     adminConsole: boolean,
 };
 
+/**
+ * Where the deployment's machine-readable surfaces are. `docs` and
+ * `openapi` are `null` while the swagger middleware is off.
+ */
+export type StatusResponseEndpoints = {
+    openidConfiguration: string,
+    realms: string,
+    docs: string | null,
+    openapi: string | null,
+};
+
+/**
+ * Where the consoles are published. A disabled console is `null`; the
+ * auth console is always present, since the hosted login pages are the
+ * issuance surface.
+ */
+export type StatusResponseConsoles = {
+    admin: string | null,
+    account: string | null,
+    auth: string,
+};
+
 export type StatusResponse = {
     version: string,
     date: string,
+    publicUrl: string,
     features: StatusResponseFeatures,
+    endpoints: StatusResponseEndpoints,
+    consoles: StatusResponseConsoles,
 };
 
 export interface IStatusAPI {

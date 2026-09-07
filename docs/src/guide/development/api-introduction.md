@@ -13,6 +13,50 @@ The document behind it is served next to it, at
 generator: the Swagger page inlines it into HTML and answers every other path
 under the mount with that same page.
 
+## Status endpoint
+
+`GET /` answers anonymously with what a client needs to find the rest of the
+deployment:
+
+```json
+{
+    "version": "1.0.0-beta.64",
+    "date": "2026-09-07T12:00:00.000Z",
+    "publicUrl": "https://auth.example.com",
+    "features": {
+        "registration": true,
+        "passwordRecovery": true,
+        "emailVerification": true,
+        "accountConsole": true,
+        "adminConsole": true
+    },
+    "endpoints": {
+        "openidConfiguration": "https://auth.example.com/.well-known/openid-configuration",
+        "realms": "https://auth.example.com/realms",
+        "docs": "https://auth.example.com/docs",
+        "openapi": "https://auth.example.com/docs/openapi.json"
+    },
+    "consoles": {
+        "admin": "https://auth.example.com/console/admin",
+        "account": "https://auth.example.com/console/account",
+        "auth": "https://auth.example.com/console/auth"
+    }
+}
+```
+
+- `publicUrl` is the address every other URL derives from.
+- `endpoints.openidConfiguration` redirects to the master realm's OpenID
+  provider metadata. Every realm's own document sits under `endpoints.realms`
+  as `<realms>/<name>/.well-known/openid-configuration`, and the realm record
+  read carries it too (see [OAuth2](./api-oauth2#discovery)).
+- `endpoints.docs` and `endpoints.openapi` are `null` while the swagger
+  middleware is off (`core.middlewareSwagger`).
+- `consoles.admin` and `consoles.account` are `null` while that console is
+  disabled (`adminConsole.enabled` / `accountConsole.enabled`); `features`
+  says the same in boolean form. `consoles.auth` is always present, because
+  the hosted login pages are the issuance surface and cannot be turned off.
+- `features` is unchanged from earlier releases.
+
 ## What You'll Learn
 This section is structured as follows:
 - [OAuth2](./api-oauth2): A guide on how to implement OAuth2 flows for secure authentication and authorization.
