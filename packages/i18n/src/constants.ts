@@ -252,6 +252,9 @@ export enum TranslatorTranslationAppKey {
     URL_GENERATOR_HINT = 'urlGeneratorHint',
     REDIRECT_URL = 'redirectUrl',
     GENERATED_URL = 'generatedUrl',
+    ISSUER = 'issuer',
+    OPENID_CONFIGURATION_URL = 'openidConfigurationUrl',
+    JWKS_URL = 'jwksUrl',
 
     TOGGLE_NAVIGATION = 'toggleNavigation',
 
@@ -474,6 +477,8 @@ export enum TranslatorTranslationActionKey {
     HIDE = 'hide',
     REMOVE = 'remove',
     RETRY = 'retry',
+    COPY = 'copy',
+    COPIED = 'copied',
 }
 
 /**

@@ -10,6 +10,7 @@ import {
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
+import type { RealmEndpoints } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
@@ -28,7 +29,7 @@ export default defineComponent({
     async setup() {
         const toast = useToast();
         const errorToast = useErrorToast();
-        const handleFailed = (e: Error) => errorToast.show(e);
+        const handleFailed = (e: unknown) => errorToast.show(e);
         const route = useRoute();
         const router = useRouter();
 
@@ -39,13 +40,13 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.GENERAL,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.REALM, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.REALM,
+                    count: 1,
                 },
             ],
         );
@@ -58,11 +59,14 @@ export default defineComponent({
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
         let entity : Ref<Realm | null> = ref(null);
+        let endpoints : Ref<RealmEndpoints | null> = ref(null);
         try {
-            entity = ref(await httpClient
+            const response = await httpClient
                 .realm
-                .getOne(route.params.id as string)
-                .then((response) => response.data));
+                .getOne(route.params.id as string);
+
+            entity = ref(response.data);
+            endpoints = ref(response.meta.endpoints);
         } catch {
             await router.replace({ path: '/realms' });
         }
@@ -105,7 +109,23 @@ export default defineComponent({
             }
 
             if (entity.value) {
+                const previousName = entity.value.name;
+
                 extendObject(entity.value, e);
+
+                // A rename moves the issuer, and the update response carries
+                // no meta, so the endpoints are re-read from the record.
+                if (typeof e.name !== 'undefined' && e.name !== previousName) {
+                    try {
+                        const response = await httpClient
+                            .realm
+                            .getOne(entity.value.id);
+
+                        endpoints.value = response.meta.endpoints;
+                    } catch (error) {
+                        handleFailed(error);
+                    }
+                }
             }
         };
 
@@ -113,6 +133,7 @@ export default defineComponent({
             heading,
             breadcrumbItems,
             entity,
+            endpoints,
             items,
             handleUpdated,
             handleFailed,
@@ -149,6 +170,7 @@ export default defineComponent({
         <div>
             <RouterView
                 :entity="entity"
+                :endpoints="endpoints"
                 @updated="handleUpdated"
                 @failed="handleFailed"
             />

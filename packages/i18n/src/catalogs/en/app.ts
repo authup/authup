@@ -45,6 +45,9 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Generate an authorize url by picking the scopes it needs to function.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'Redirect URL',
     [TranslatorTranslationAppKey.GENERATED_URL]: 'Generated URL',
+    [TranslatorTranslationAppKey.ISSUER]: 'Issuer',
+    [TranslatorTranslationAppKey.OPENID_CONFIGURATION_URL]: 'OpenID configuration URL',
+    [TranslatorTranslationAppKey.JWKS_URL]: 'JWKS URL',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Toggle navigation',
 
