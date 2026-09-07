@@ -41,8 +41,9 @@ modes. The mode is chosen when the client is created, through the two flags
 database. The value is encrypted at rest (AES-256-GCM) under the client
 realm's encryption key, the same automatically generated per-realm key that
 protects MFA seeds. A reader whose permissions cover the client gets the
-decrypted secret back on every read, exactly as for a `plain` secret; a read
-never returns the ciphertext. The secret is tied to that key's lifecycle:
+decrypted secret back on any read that projects the field
+(`?fields=+secret`; the default projection omits `secret`), exactly as for a
+`plain` secret; a read never returns the ciphertext. The secret is tied to that key's lifecycle:
 while the key is disabled such clients cannot authenticate, and deleting the
 key destroys their secrets, so `DELETE /keys/:id` answers `409` while client
 secrets reference it and needs `force` to proceed. Set `secretsEncryptionKey`

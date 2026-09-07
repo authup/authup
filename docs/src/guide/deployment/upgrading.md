@@ -29,7 +29,8 @@ Encrypted storage ships in the same release. `secretEncrypted: true` on
 create, `mode: 'encrypted'` on the endpoint and `secretEncrypted: true` in a
 provisioning file store the secret as a cipher blob under the client realm's
 encryption key, the key that already protects MFA seeds, and a reader whose
-permissions cover the client gets the plaintext back on every read. Before,
+permissions cover the client gets the plaintext back on a read that projects
+the field (`?fields=+secret`). Before,
 the flag encrypted nothing. A row that carries it from an earlier release
 still holds a plaintext: it keeps authenticating, it is read-gated like any
 plaintext now instead of being projected to every reader that passed the read

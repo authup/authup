@@ -299,7 +299,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     tokenBindingMethod: ClientTokenBindingMethod.NONE,
                     name: 'system',
                     secret: config.clientSystemSecret,
+                    // both flags spelled: the reset MERGE picks them by name,
+                    // and an undefined pick leaves a stale flag in place.
                     secretHashed: false,
+                    secretEncrypted: false,
                     active: config.clientSystemEnabled,
                 },
                 relations: { globalRoles: [ROLE_ADMIN_NAME] },
