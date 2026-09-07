@@ -556,44 +556,46 @@ the document root, so `x-authup-schemas` and `x-authup-schema-hash` ride
 `swagger.data.extra` (trapi's `specificationExtra`, merged into the finished
 spec), which is the only channel that reaches it.
 
-**`scripts/openapi-query-schemas.mjs` runs inside the generate**, as the
-`swagger.transform` hook `trapi.config.ts` passes (trapi 2.1.0,
-tada5hi/trapi#898), so `build:swagger` is a plain `trapi generate`. It receives
-the EMITTED DOCUMENT rather than the registry, so it carries no runtime
-dependency of its own and cannot describe a registry other than the one the
-document was generated from; the only thing it reads from `src/` is the
-declaration pair the source cross-check compares. Failing, it THROWS, which
-aborts the generate rather than leaving a written-then-rejected document on
-disk. It does three things:
+**Nothing rewrites the document.** The whole surface is produced during the
+generate, so `build:swagger` is a plain `trapi generate` and there is no
+artifact between it and `dist/swagger.json`:
 
-1. **Appends the five query parameters** to each marked operation, described
-   from that entity's own `x-authup-schemas` entry, plus the
-   `x-query-schema.discovery` pointer into that map (written here rather than
-   by the handler, because it is a statement about the assembled document and
-   only resolvable once the root map exists). A record read gets only what its
-   marker's parameter subset covers.
-2. **Declares a `default` error response** referencing one `ErrorResponse`
-   component. Authup answers every failure with one body whatever the status
+1. **The handler contributes the query parameters** (`draft.parameters`, trapi
+   2.1.1, tada5hi/trapi#907), described from the schema it just resolved, plus
+   the `x-query-schema` extension carrying the discovery pointer. A record read
+   gets only what its shape's parameter subset covers. They are appended after
+   the parameters trapi derived from the method signature, so a contribution
+   can add to an operation but never displace a path variable. Note `in` must
+   be `queryProp`, not `query`: `query` marks the whole query bag that the
+   parameter generator decomposes, and a contributed parameter skips that
+   decomposition, so both emitters would drop it.
+2. **The `default` error response is document-wide** (`swagger.data.responses`,
+   #908). Authup answers every failure with one body whatever the status
    (`serializeError(sanitizeError(e))`), which is exactly what `default`
-   describes. `code` stays a plain string rather than an enum of the closed
-   `ErrorCode` set: an OpenAPI enum is closed on the wire too, so a generated
-   client would fail to deserialize an error carrying a code added after it was
-   generated.
-3. **Describes the path parameters trapi synthesizes.** trapi declares every
-   path-template variable itself since 2.1.0 (tada5hi/trapi#896) but has no
-   description to give one, and nothing else in the document says that a realm
-   is addressable by name as well as by id. Stable operation ids come from
-   `operationIdStrategy: 'path'` (tada5hi/trapi#897) rather than from this
-   pass.
+   describes, and the `ErrorResponse` component it references rides
+   `data.extra` alongside the registry map. `code` stays a plain string rather
+   than an enum of the closed `ErrorCode` set: an OpenAPI enum is closed on the
+   wire too, so a generated client would fail to deserialize an error carrying
+   a code added after it was generated.
+3. **The 400 stays on the handler**, because only a read that decodes a FILTER
+   can answer one: every other query parameter fails soft, dropping an unknown
+   key rather than rejecting it. Keyed on the filter rather than on being a
+   collection read, since the two bulk revokes decode filters alone.
 
-**It APPENDS to `parameters` and never assigns.** Every path parameter is
-already there, and an assignment would delete every one of them and break every
-templated route while the document still looked plausible. Appending has its own
-edge, so a name already declared fails the build rather than keeping the
-incumbent: silently dropping the documented vocabulary onto a parameter someone
-else emitted is the same defect one layer down. The pass ends by re-deriving
-each path template's variable set and failing on one that is still missing,
-which now checks trapi's synthesis rather than its own.
+Stable operation ids come from `operationIdStrategy: 'path'` (#897), and every
+path-template variable is declared by trapi itself (#896).
+
+**The one thing lost when the rewriting pass went away** is the description on
+the `realmId` path variable, on 61 operations. A contributed parameter is
+appended after the derived ones, so it cannot describe a variable trapi
+synthesizes without emitting a duplicate, and the description is wanted on the
+write verbs too, which carry no marker for a handler to fire on. It was the
+only place the document said a realm is addressable by name as well as by id.
+
+**Nothing here asserts anything.** The invariants that keep the marker, the
+`describeQuerySchema` call and the document equal live in
+`test/unit/http/openapi-coverage.spec.ts`, which is where this repository keeps
+invariants, and they run whether or not anyone regenerates the document.
 
 **The parameters are generic and comma-separated, never one bracket parameter
 per key.** Per-key enums multiply the document by the size of every allow-list,

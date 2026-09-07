@@ -8,7 +8,7 @@
 | tsdown           | Package JS bundling (rolldown-based)               |
 | Vite             | every console BUNDLE: the auth console's SSR build (`apps/client-auth-console/`) and the two SPA builds (`apps/client-account-console/`, `apps/client-admin-console/`). The console SERVICES that serve them are tsdown like every other server package |
 | Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app has been a Nuxt app since plan 081 |
-| trapi            | OpenAPI document generation off the routup decorators (`build:swagger` in `apps/server-core`, plus the `scripts/openapi-query-schemas.mjs` pass chained after it). Its tsconfig read is not TypeScript's: see architecture.md → *Query vocabulary discovery* before touching `apps/server-core/tsconfig.json` |
+| trapi            | OpenAPI document generation off the routup decorators (`build:swagger` in `apps/server-core`). The query surface is contributed by a preset handler during the generate, so nothing rewrites the document afterwards: see architecture.md → *Query vocabulary discovery* |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
