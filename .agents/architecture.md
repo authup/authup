@@ -6548,10 +6548,17 @@ must be visible in `auth_events`). The table was folded into migration
   the LDAP bind `password`) inside `saveWithEA` and decrypts them after
   every extra-attribute extension, so the protocol factories and the
   admin form see plaintext while `auth_identity_provider_attributes`
-  holds blobs. A legacy plaintext passes through a read untouched and is
-  encrypted by the next save; a blob the cipher cannot open (unknown,
-  disabled or foreign key) is DROPPED from the entity, so a login through
-  that provider fails closed instead of presenting ciphertext upstream.
+  holds blobs. The write side never sniffs its input, the plan-105
+  `protect()` rule: every value a caller writes is encrypted, a secret
+  that starts with `v1.` included, because a read reveals and so nothing
+  legitimately echoes a blob back, and keeping a prefix-matched value raw
+  would let a caller bypass the encryption while a genuine `v1.` secret
+  could never round-trip (stored raw, dropped by the next read). The
+  prefix stays the discriminator on the READ side only: a legacy plaintext
+  passes through a read untouched and is encrypted by the next save; a
+  blob the cipher cannot open (malformed, unknown, disabled or foreign
+  key) is DROPPED from the entity, so a login through that provider fails
+  closed instead of presenting ciphertext upstream.
   The adapter is registered under `IdentityInjectionKey.ProviderRepository`
   as a lazy factory, because the identity module is set up before the
   oauth2 module that registers the cipher; `countBlobReferences` counts

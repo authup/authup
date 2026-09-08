@@ -107,6 +107,31 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         expect((reread as OAuth2IdentityProvider).clientSecret).toEqual('legacy-plain');
     });
 
+    it('encrypts a secret that starts with the blob prefix instead of trusting it', async () => {
+        // the adapter never sniffs its input: a caller cannot write a raw
+        // value by prefixing it, and an upstream secret that genuinely
+        // starts with `v1.` round-trips like any other
+        const oauth2 = createFakeOAuth2IdentityProvider({ clientSecret: 'v1.looks-like-a-blob' });
+        const { data: created } = await suite.client.identityProvider.create(oauth2);
+
+        const value = await stored(created.id, 'clientSecret');
+        expect(value).not.toEqual(oauth2.clientSecret);
+        expect(isRealmCipherBlob(value!)).toBe(true);
+
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+        expect((read as OAuth2IdentityProvider).clientSecret).toEqual('v1.looks-like-a-blob');
+
+        const ldap = createFakeLdapIdentityProvider({ password: 'v1.key.payload' });
+        const { data: createdLdap } = await suite.client.identityProvider.create(ldap);
+
+        const password = await stored(createdLdap.id, 'password');
+        expect(password).not.toEqual(ldap.password);
+        expect(isRealmCipherBlob(password!)).toBe(true);
+
+        const { data: readLdap } = await suite.client.identityProvider.getOne(createdLdap.id);
+        expect((readLdap as LdapIdentityProvider).password).toEqual('v1.key.payload');
+    });
+
     it('stores the LDAP bind password as a blob and answers the plaintext', async () => {
         const input = createFakeLdapIdentityProvider();
         const { data: created } = await suite.client.identityProvider.create(input);

@@ -208,12 +208,15 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
     }
 
     /**
-     * Encrypt a secret for storage. A value that already is a blob is
-     * kept (a caller echoing what it read), and without a cipher the value
-     * is stored as given, which is the pre-plan-070 behaviour.
+     * Encrypt a secret for storage. The input is never sniffed: every
+     * value a caller writes is a plaintext (a read reveals, so nothing
+     * echoes a blob back), and a secret that happens to start with the
+     * blob prefix must round-trip like any other rather than be stored
+     * raw and dropped by the next read. Without a cipher the value is
+     * stored as given, which is the pre-plan-070 behaviour.
      */
     private async protect(value: string, realmId: string): Promise<string> {
-        if (!this.cipher || isRealmCipherBlob(value)) {
+        if (!this.cipher) {
             return value;
         }
 
