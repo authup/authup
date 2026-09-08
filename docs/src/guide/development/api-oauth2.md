@@ -51,7 +51,8 @@ decrypted secret back on any read that projects the field
 `plain` secret; a read never returns the ciphertext. The secret is tied to that key's lifecycle:
 while the key is disabled such clients cannot authenticate, and deleting the
 key destroys their secrets, so `DELETE /keys/:id` answers `409` while client
-secrets reference it and needs `force` to proceed. Set `secretsEncryptionKey`
+secrets (or identity-provider secrets, which the same key protects) reference
+it and needs `force` to proceed. Set `secretsEncryptionKey`
 (`SECRETS_ENCRYPTION_KEY`, see the
 [server configuration](../deployment/configuration-server-core.md)) so the
 realm key itself is wrapped at rest. Declaring `secretHashed` and

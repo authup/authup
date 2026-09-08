@@ -52,6 +52,7 @@ import {
     IdentityRoleProvider,
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
+import { OAuth2InjectionToken } from '../oauth2/constants.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 
@@ -156,13 +157,21 @@ export class IdentityModule implements IModule {
 
         // ---------------------------------------------
 
-        const identityProviderRepository = new IdentityProviderRepositoryAdapter({
-            repository: new IdentityProviderRepository(dataSource),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        // Resolved lazily: the realm cipher that protects the provider
+        // secrets at rest is registered by the oauth2 module, which is set
+        // up after this one, so it can only be looked up on first use.
+        container.register(IdentityInjectionKey.ProviderRepository, {
+            useFactory: (c) => new IdentityProviderRepositoryAdapter({
+                repository: new IdentityProviderRepository(dataSource),
+                realmRepository: c.resolve<Repository<Realm>>(RealmEntity),
+                cipher: c.has(OAuth2InjectionToken.RealmCipher) ?
+                    c.resolve(OAuth2InjectionToken.RealmCipher) :
+                    undefined,
+            }),
         });
         container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
             useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
-                repository: identityProviderRepository,
+                repository: c.resolve(IdentityInjectionKey.ProviderRepository),
                 accountManager: c.resolve(IdentityInjectionKey.ProviderAccountManager),
                 clientFactory: c.resolve(LDAPInjectionKey.ClientFactory),
             }),

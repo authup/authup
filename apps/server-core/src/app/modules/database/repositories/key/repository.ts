@@ -27,6 +27,7 @@ import { getRandomValues } from 'uncrypto';
 import {
     ClientEntity,
     DatabaseConflictError,
+    IdentityProviderAttributeEntity,
     KeyEntity,
     RealmEntity,
     UserAuthenticatorEntity,
@@ -423,15 +424,17 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     }
 
     async countBlobReferences(keyId: string): Promise<number> {
-        // every consumer of the realm cipher: the MFA seeds and the client
-        // secrets stored in encrypted mode.
+        // every consumer of the realm cipher: the MFA seeds, the client
+        // secrets stored in encrypted mode and the identity-provider
+        // secrets (the OAuth2 client secret, the LDAP bind password).
         const pattern = Like(`${REALM_CIPHER_BLOB_VERSION}.${keyId}.%`);
-        const [authenticators, clients] = await Promise.all([
+        const [authenticators, clients, providerAttributes] = await Promise.all([
             this.dataSource.getRepository(UserAuthenticatorEntity).countBy({ secret: pattern }),
             this.dataSource.getRepository(ClientEntity).countBy({ secret: pattern }),
+            this.dataSource.getRepository(IdentityProviderAttributeEntity).countBy({ value: pattern }),
         ]);
 
-        return authenticators + clients;
+        return authenticators + clients + providerAttributes;
     }
 
     async findHighestPriority(realmId: string, use: string): Promise<number | null> {

@@ -10,6 +10,7 @@ import type {
     IIdentityPermissionProvider,
     IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
+    IIdentityProviderRepository,
     IIdentityResolver,
     IIdentityRoleProvider,
     IdentityProviderLdapCollectionAuthenticator,
@@ -22,4 +23,5 @@ export const IdentityInjectionKey = {
     ProviderAccountManager: new TypedToken<IIdentityProviderAccountManager>('AccountManager'),
     ProviderAccountLinkStore: new TypedToken<IIdentityProviderAccountLinkStore>('ProviderAccountLinkStore'),
     ProviderLdapCollectionAuthenticator: new TypedToken<IdentityProviderLdapCollectionAuthenticator>('ProviderLdapCollectionAuthenticator'),
+    ProviderRepository: new TypedToken<IIdentityProviderRepository>('ProviderRepository'),
 } as const;
