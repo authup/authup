@@ -44,7 +44,10 @@ deployment:
 }
 ```
 
-- `publicUrl` is the address every other URL derives from.
+- `publicUrl` is the address the `endpoints` derive from. The console URLs
+  default to `<publicUrl>/console/<name>` and can be configured to another
+  path on the same origin (`<name>Console.url`), so read them from
+  `consoles` rather than deriving them.
 - `endpoints.openidConfiguration` redirects to the master realm's OpenID
   provider metadata. Every realm's own document sits under `endpoints.realms`
   as `<realms>/<name>/.well-known/openid-configuration`, and the realm record
