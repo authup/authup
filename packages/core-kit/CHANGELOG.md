@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* `secretHashed` / `secretEncrypted` sent on a client update are ignored; rotate the secret through `POST /clients/:id/secret` to change the storage mode.
+* resolveConfig and readConfigFromEnv of the three console services return a Promise; an embedder calling either directly needs an await.
+
+### Features
+
+* record an audit event per back-channel logout delivery ([#3560](https://github.com/authup/authup/issues/3560)) ([4fbcd57](https://github.com/authup/authup/commit/4fbcd577bb91078bf8efdbe453685741224bb32c))
+* rotate client secrets through a dedicated endpoint and encrypt them at rest ([#3562](https://github.com/authup/authup/issues/3562)) ([440f964](https://github.com/authup/authup/commit/440f9641996a816bbc60e81b71cb50f52dbc31b2))
+
+
+### Bug Fixes
+
+* work the beta.64 audit backlog ([#3555](https://github.com/authup/authup/issues/3555)) ([2332346](https://github.com/authup/authup/commit/23323463284dde07befd743479d20bf160c1e567))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/specs bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

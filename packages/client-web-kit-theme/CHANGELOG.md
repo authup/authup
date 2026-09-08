@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([c1532f7](https://github.com/authup/authup/commit/c1532f7c05fb1c81f7ee7745f4bacc9dccb35b5a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

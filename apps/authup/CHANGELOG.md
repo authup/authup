@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* resolveConfig and readConfigFromEnv of the three console services return a Promise; an embedder calling either directly needs an await.
+
+### Bug Fixes
+
+* **authup,client-web-kit,server-config-kit:** declare missing internal dependencies ([6bc436f](https://github.com/authup/authup/commit/6bc436f17e48016dc27308b4a54005570a6eb9e0))
+* work the beta.64 audit backlog ([#3555](https://github.com/authup/authup/issues/3555)) ([2332346](https://github.com/authup/authup/commit/23323463284dde07befd743479d20bf160c1e567))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-account-console bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-admin-console bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-auth-console bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-config bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-config-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-console-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-core bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

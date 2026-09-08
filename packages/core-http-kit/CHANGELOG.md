@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* `secretHashed` / `secretEncrypted` sent on a client update are ignored; rotate the secret through `POST /clients/:id/secret` to change the storage mode.
+
+### Features
+
+* **core-http-kit,server-core,client-admin-console,i18n:** expose realm endpoints and deployment urls ([#3570](https://github.com/authup/authup/issues/3570)) ([cd18972](https://github.com/authup/authup/commit/cd1897203c61ff381adbe0a69bdcc11a8dfcbce1))
+* rotate client secrets through a dedicated endpoint and encrypt them at rest ([#3562](https://github.com/authup/authup/issues/3562)) ([440f964](https://github.com/authup/authup/commit/440f9641996a816bbc60e81b71cb50f52dbc31b2))
+* **server-core:** project the query schema registry into the OpenAPI document ([#3561](https://github.com/authup/authup/issues/3561)) ([f04f631](https://github.com/authup/authup/commit/f04f6313f0af4a83c675745b7497a729ca176cdf))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/core-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/specs bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 
