@@ -45,6 +45,9 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Erzeuge eine Autorisierungs-URL, indem du die benötigten Bereiche auswählst.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'Weiterleitungs-URL',
     [TranslatorTranslationAppKey.GENERATED_URL]: 'Generierte URL',
+    [TranslatorTranslationAppKey.ISSUER]: 'Issuer',
+    [TranslatorTranslationAppKey.OPENID_CONFIGURATION_URL]: 'OpenID-Konfigurations-URL',
+    [TranslatorTranslationAppKey.JWKS_URL]: 'JWKS-URL',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Navigation umschalten',
 

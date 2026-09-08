@@ -14,6 +14,7 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 import type {
     IRealmAPI,
     RealmCreatePayload,
+    RealmRecordResponse,
     RealmSavePayload,
     RealmUpdatePayload,
 } from './types';
@@ -25,7 +26,7 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
         return response.data;
     }
 
-    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>): Promise<EntityRecordResponse<Realm>> {
+    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>): Promise<RealmRecordResponse> {
         const response = await this.client.get(`realms/${id}${buildQueryString(record)}`);
 
         return response.data;

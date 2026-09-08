@@ -45,6 +45,9 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Générez une URL d\'autorisation en choisissant les portées dont elle a besoin pour fonctionner.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'URL de redirection',
     [TranslatorTranslationAppKey.GENERATED_URL]: 'URL générée',
+    [TranslatorTranslationAppKey.ISSUER]: 'Émetteur',
+    [TranslatorTranslationAppKey.OPENID_CONFIGURATION_URL]: 'URL de configuration OpenID',
+    [TranslatorTranslationAppKey.JWKS_URL]: 'URL JWKS',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Basculer la navigation',
 

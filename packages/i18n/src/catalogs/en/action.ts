@@ -29,4 +29,6 @@ export const TranslatorTranslationActionEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationActionKey.HIDE]: 'Hide',
     [TranslatorTranslationActionKey.REMOVE]: 'Remove',
     [TranslatorTranslationActionKey.RETRY]: 'Retry',
+    [TranslatorTranslationActionKey.COPY]: 'Copy',
+    [TranslatorTranslationActionKey.COPIED]: 'Copied',
 };

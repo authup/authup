@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RealmEndpoints } from '@authup/core-http-kit';
+
 /**
  * Resolve a relative path against a base URL while preserving the base's path
  * component. The native `new URL(relative, base)` treats a base without a
@@ -17,4 +19,17 @@ export function resolveURL(base: string, relative: string): string {
     const normalized = base.endsWith('/') ? base : `${base}/`;
     const stripped = relative.startsWith('/') ? relative.slice(1) : relative;
     return new URL(stripped, normalized).href;
+}
+
+/**
+ * The realm's OpenID surface, derived once for the discovery document and
+ * the record read so the two cannot drift. The issuer carries no trailing
+ * slash (it must equal the `iss` claim byte for byte).
+ */
+export function buildRealmEndpoints(baseURL: string, realmName: string): RealmEndpoints {
+    return {
+        issuer: resolveURL(baseURL, `realms/${realmName}`).replace(/\/+$/, ''),
+        openidConfiguration: resolveURL(baseURL, `realms/${realmName}/.well-known/openid-configuration`),
+        jwks: resolveURL(baseURL, `realms/${realmName}/jwks`),
+    };
 }

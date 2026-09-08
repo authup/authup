@@ -36,18 +36,31 @@ function createController(realm: Realm, baseURL = 'https://auth.example.com') {
     });
 }
 
-describe('RealmController.getOpenIdConfiguration', () => {
-    const realmId = randomUUID();
-    const realm: Realm = {
-        id: realmId,
-        name: 'master',
-        displayName: null,
-        description: null,
-        builtIn: true,
-        createdAt: '2026-01-01T00:00:00.000Z',
-        updatedAt: '2026-01-01T00:00:00.000Z',
-    };
+const realmId = randomUUID();
+const realm: Realm = {
+    id: realmId,
+    name: 'master',
+    displayName: null,
+    description: null,
+    builtIn: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+};
 
+describe('RealmController.get', () => {
+    it('should carry the realm endpoints under meta for a sub-path base', async () => {
+        const controller = createController(realm, 'https://auth.example.com/api');
+        const { meta } = await controller.get(realmId);
+
+        expect(meta.endpoints).toEqual({
+            issuer: 'https://auth.example.com/api/realms/master',
+            openidConfiguration: 'https://auth.example.com/api/realms/master/.well-known/openid-configuration',
+            jwks: 'https://auth.example.com/api/realms/master/jwks',
+        });
+    });
+});
+
+describe('RealmController.getOpenIdConfiguration', () => {
     it('should construct issuer from realm name (matching the JWT iss claim format)', async () => {
         const controller = createController(realm);
         const config = await controller.getOpenIdConfiguration(realmId);

@@ -12,6 +12,8 @@ import {
     expect,
     it,
 } from 'vitest';
+import type { Config } from '../../../../../src/index.ts';
+import { ConfigInjectionKey } from '../../../../../src/index.ts';
 import { createFakeRealm, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
 import { createTestApplication } from '../../../../app/index.ts';
 
@@ -48,12 +50,18 @@ describe('src/http/controllers/realm', () => {
     });
 
     it('should read resource', async () => {
-        const { data: response } = await suite.client
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
+
+        const { data: response, meta } = await suite.client
             .realm
             .getOne(details.id!);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response);
+
+        expect(meta.endpoints.openidConfiguration).toEqual(
+            new URL(`realms/${details.name}/.well-known/openid-configuration`, config.publicUrl).href,
+        );
     });
 
     it('should read resource by name', async () => {
@@ -66,12 +74,24 @@ describe('src/http/controllers/realm', () => {
     });
 
     it('should update resource', async () => {
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
+
+        details.name = createFakeRealm().name;
+
         const { data: response } = await suite.client
             .realm
             .update(details.id!, details);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response);
+
+        const { meta } = await suite.client
+            .realm
+            .getOne(details.id!);
+
+        expect(meta.endpoints.issuer).toEqual(
+            new URL(`realms/${details.name}`, config.publicUrl).href,
+        );
     });
 
     it('should delete resource', async () => {

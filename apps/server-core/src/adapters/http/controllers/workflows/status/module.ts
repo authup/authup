@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
+import type {
+    StatusResponse,
+    StatusResponseConsoles,
+    StatusResponseEndpoints,
+    StatusResponseFeatures,
+} from '@authup/core-http-kit';
 import {
     DController,
     DGet,
@@ -15,7 +20,10 @@ import path from 'node:path';
 import { PACKAGE_PATH } from '../../../../../path.ts';
 
 export type StatusControllerOptions = {
+    publicUrl: string,
     features: StatusResponseFeatures,
+    endpoints: StatusResponseEndpoints,
+    consoles: StatusResponseConsoles,
 };
 
 export type StatusControllerContext = {
@@ -48,7 +56,10 @@ export class StatusController {
         return {
             version: await this.resolveVersion(),
             date: new Date().toISOString(),
+            publicUrl: this.options.publicUrl,
             features: this.options.features,
+            endpoints: this.options.endpoints,
+            consoles: this.options.consoles,
         };
     }
 }
