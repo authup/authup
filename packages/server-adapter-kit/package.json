@@ -60,7 +60,7 @@
         "@authup/server-kit": "^1.0.0-beta.65",
         "@authup/specs": "^1.0.0-beta.65",
         "@isaacs/ttlcache": "^2.1.4",
-        "jose": "^6.2.11",
+        "jose": "^6.2.12",
         "redis-extension": "^2.0.4"
     },
     "devDependencies": {
