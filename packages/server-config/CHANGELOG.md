@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* resolveConfig and readConfigFromEnv of the three console services return a Promise; an embedder calling either directly needs an await.
+
+### Features
+
+* **server-core:** project the query schema registry into the OpenAPI document ([#3561](https://github.com/authup/authup/issues/3561)) ([f04f631](https://github.com/authup/authup/commit/f04f6313f0af4a83c675745b7497a729ca176cdf))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#3573](https://github.com/authup/authup/issues/3573)) ([867a3a2](https://github.com/authup/authup/commit/867a3a230c825649213194be824b69ab6fd6aac4))
+* work the beta.64 audit backlog ([#3555](https://github.com/authup/authup/issues/3555)) ([2332346](https://github.com/authup/authup/commit/23323463284dde07befd743479d20bf160c1e567))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+    * @authup/server-config-kit bumped from ^1.0.0-beta.64 to ^1.0.0-beta.65
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 

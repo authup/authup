@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* `secretHashed` / `secretEncrypted` sent on a client update are ignored; rotate the secret through `POST /clients/:id/secret` to change the storage mode.
+* resolveConfig and readConfigFromEnv of the three console services return a Promise; an embedder calling either directly needs an await.
+
+### Features
+
+* **core-http-kit,server-core,client-admin-console,i18n:** expose realm endpoints and deployment urls ([#3570](https://github.com/authup/authup/issues/3570)) ([cd18972](https://github.com/authup/authup/commit/cd1897203c61ff381adbe0a69bdcc11a8dfcbce1))
+* **create-authup:** add the install wizard package ([#3556](https://github.com/authup/authup/issues/3556)) ([5ae55bb](https://github.com/authup/authup/commit/5ae55bba7de988e258f13d81fd562d93b4c694b3))
+* record an audit event per back-channel logout delivery ([#3560](https://github.com/authup/authup/issues/3560)) ([4fbcd57](https://github.com/authup/authup/commit/4fbcd577bb91078bf8efdbe453685741224bb32c))
+* rotate client secrets through a dedicated endpoint and encrypt them at rest ([#3562](https://github.com/authup/authup/issues/3562)) ([440f964](https://github.com/authup/authup/commit/440f9641996a816bbc60e81b71cb50f52dbc31b2))
+* **server-core:** encrypt identity-provider secrets at rest ([#3569](https://github.com/authup/authup/issues/3569)) ([73e8a4e](https://github.com/authup/authup/commit/73e8a4ecfb9c1bec13b6c64321a5a8e72c08a034))
+* **server-core:** project the query schema registry into the OpenAPI document ([#3561](https://github.com/authup/authup/issues/3561)) ([f04f631](https://github.com/authup/authup/commit/f04f6313f0af4a83c675745b7497a729ca176cdf))
+
+
+### Bug Fixes
+
+* **authup,client-web-kit,server-config-kit:** declare missing internal dependencies ([6bc436f](https://github.com/authup/authup/commit/6bc436f17e48016dc27308b4a54005570a6eb9e0))
+* **deps:** bump azure/setup-helm from 4 to 5 ([#3571](https://github.com/authup/authup/issues/3571)) ([5b27ff2](https://github.com/authup/authup/commit/5b27ff29924f28e43d4099969b1229cf505d8697))
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#3573](https://github.com/authup/authup/issues/3573)) ([867a3a2](https://github.com/authup/authup/commit/867a3a230c825649213194be824b69ab6fd6aac4))
+* **deps:** drop the root overrides and dedupe typeorm, vue-router and pinia ([2ccd9e1](https://github.com/authup/authup/commit/2ccd9e16e0ec19d73b7ae2ed54277694e39b4ca7))
+* ensure consistent version for release ([c1532f7](https://github.com/authup/authup/commit/c1532f7c05fb1c81f7ee7745f4bacc9dccb35b5a))
+* **server-core:** enforce uniqueness of global permissions, roles, scopes and policies ([#3565](https://github.com/authup/authup/issues/3565)) ([a49ce82](https://github.com/authup/authup/commit/a49ce82374442f813e9e1638996fdee77a9659aa))
+* **server-core:** make the field-condition redaction structural on every findMany ([#3567](https://github.com/authup/authup/issues/3567)) ([0df6eaa](https://github.com/authup/authup/commit/0df6eaa70825b9c937c63a52ef2a77b5d7078801)), closes [#3329](https://github.com/authup/authup/issues/3329)
+* **server-core:** read-gate hashed client secrets like plaintext ones ([#3566](https://github.com/authup/authup/issues/3566)) ([d4e0ee3](https://github.com/authup/authup/commit/d4e0ee3820ae6af7d0a57933879f026b34482be5)), closes [#3328](https://github.com/authup/authup/issues/3328)
+* **server-core:** serialize provisioning across replicas with an advisory lock ([#3558](https://github.com/authup/authup/issues/3558)) ([8bb218c](https://github.com/authup/authup/commit/8bb218c18dd3f13379aa58d97266a3bcfcf89727))
+* work the beta.64 audit backlog ([#3555](https://github.com/authup/authup/issues/3555)) ([2332346](https://github.com/authup/authup/commit/23323463284dde07befd743479d20bf160c1e567))
+
 ## [1.0.0-beta.64](https://github.com/authup/authup/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2026-09-04)
 
 
