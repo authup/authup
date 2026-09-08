@@ -126,7 +126,7 @@ caller's lock identity is BOUND into both statements rather than interpolated.
 **The global uniqueness index is gated the same way.**
 `test/unit/adapters/database/global-uniqueness.spec.ts` boots an EMPTY
 synchronized secondary database (the schema a deployment carries before the
-migration), runs `1788793885495-GlobalEntityUniqueness`'s own `up()` through a
+migration), runs `1788782400000-WidenClientSecretAndGlobalUniqueness`'s own `up()` through a
 query runner, and asserts that the entity-declared index name matches the
 migration's, that `createSchemaBuilder().log()` reports the same drift before
 and after (the property the drift gate relies on), that typeorm's own loader

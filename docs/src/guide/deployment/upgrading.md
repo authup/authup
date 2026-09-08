@@ -51,7 +51,7 @@ The unique key of `auth_permissions`, `auth_roles`, `auth_scopes` and
 first two), and every database treats NULLs as distinct in a unique index, so the
 key never refused a second row whose tuple holds a NULL: two global rows with one
 name, and on permissions and roles two realm-scoped rows with one name and no
-client. Migration `1788793885495-GlobalEntityUniqueness` adds one unique index per
+client. Migration `1788782400000-WidenClientSecretAndGlobalUniqueness` adds one unique index per
 table over the same columns with the NULLs coalesced, on MySQL and PostgreSQL,
 applied by the next boot with migrations enabled or by `authup migration run`.
 SQLite keeps the previous behaviour: it never runs migrations, and one database
@@ -122,7 +122,7 @@ encrypted. Declaring `secretHashed` and `secretEncrypted` together answers
 `400`.
 
 `auth_clients.secret` is widened from 256 to 512 characters by the migration
-`1788782400000-WidenClientSecret`, applied by the next boot with migrations
+`1788782400000-WidenClientSecretAndGlobalUniqueness`, applied by the next boot with migrations
 enabled or by `authup migration run`. It is written by hand on both dialects
 so the values survive; a generated migration would have dropped the column.
 Reverting it fails while a client holds an encrypted secret (a value longer

@@ -1999,7 +1999,7 @@ combination answers 400.
   defence against a database read.
 - **`auth_clients.secret` is `varchar(512)`** (entity `length: 512`): a
   256-character plaintext encrypts to a blob of about 420 characters.
-  `1788782400000-WidenClientSecret` is HAND-WRITTEN on both dialects
+  `1788782400000-WidenClientSecretAndGlobalUniqueness` is HAND-WRITTEN on both dialects
   (`ALTER COLUMN "secret" TYPE character varying(512)` /
   `MODIFY COLUMN secret varchar(512) NULL`), the documented exception to
   generated DDL: typeorm's `changeColumn` drops and re-adds a column whose
@@ -2991,7 +2991,7 @@ dialects treat NULLs as distinct in a unique index, so the constraint enforces
 nothing for a row whose tuple holds a NULL: every global row (the whole built-in
 catalogue), and on permission and role every realm-scoped row with no client.
 Migration
-`1788793885495-GlobalEntityUniqueness` adds one unique index per table over the
+`1788782400000-WidenClientSecretAndGlobalUniqueness` adds one unique index per table over the
 same tuple with the NULLs coalesced onto `''`: hand-written DDL, declared on the
 entity as an unsynced, hand-named `@Index` so the drift gate leaves it alone
 (conventions.md → *Database Migrations*). MySQL and PostgreSQL carry it; sqlite

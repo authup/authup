@@ -97,16 +97,16 @@ const TARGETS: Target[] = [
 
 async function loadMigration(): Promise<MigrationInterface> {
     if (dialect === 'mysql') {
-        const { GlobalEntityUniqueness1788793885495 } = await import(
-            '../../../../src/adapters/database/migrations/mysql/1788793885495-GlobalEntityUniqueness.ts',
+        const { WidenClientSecretAndGlobalUniqueness1788782400000 } = await import(
+            '../../../../src/adapters/database/migrations/mysql/1788782400000-WidenClientSecretAndGlobalUniqueness.ts',
         );
-        return new GlobalEntityUniqueness1788793885495();
+        return new WidenClientSecretAndGlobalUniqueness1788782400000();
     }
 
-    const { GlobalEntityUniqueness1788793885495 } = await import(
-        '../../../../src/adapters/database/migrations/postgres/1788793885495-GlobalEntityUniqueness.ts',
+    const { WidenClientSecretAndGlobalUniqueness1788782400000 } = await import(
+        '../../../../src/adapters/database/migrations/postgres/1788782400000-WidenClientSecretAndGlobalUniqueness.ts',
     );
-    return new GlobalEntityUniqueness1788793885495();
+    return new WidenClientSecretAndGlobalUniqueness1788782400000();
 }
 
 describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () => {

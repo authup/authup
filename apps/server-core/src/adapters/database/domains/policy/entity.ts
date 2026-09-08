@@ -25,7 +25,7 @@ import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realmId'])
 // A global row (realm_id NULL) is outside the constraint above, since every dialect treats
-// NULLs as distinct. The migration GlobalEntityUniqueness1788793885495 adds a unique index
+// NULLs as distinct. The migration WidenClientSecretAndGlobalUniqueness1788782400000 adds a unique index
 // over the same tuple with the NULL coalesced; it is declared here, under a given name (the
 // builder never names an index it does not synchronize), so the schema builder
 // matches it by name and leaves it alone (synchronize: false), because an expression index

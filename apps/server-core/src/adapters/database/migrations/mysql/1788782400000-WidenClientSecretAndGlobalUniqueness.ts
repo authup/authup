@@ -1,7 +1,34 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Global entity uniqueness (issue #3559).
+ * The v1.0.0-beta.65 migration window, folded into one file per dialect
+ * before the release: the `auth_clients.secret` widening (plan 105) and the
+ * global entity uniqueness index (issue #3559). Both halves are hand-written
+ * DDL, each a documented exception to generated migrations, for the reasons
+ * below.
+ *
+ * ## `auth_clients.secret` (plan 105)
+ *
+ * Widens the column from 256 to 512 characters for the encrypted storage
+ * mode: a secret of up to 256 characters becomes a realm cipher blob of about
+ * 420 characters. typeorm's `changeColumn` drops and re-adds a column whenever
+ * its length differs (the `1785871780234` precedent), so `migration generate`
+ * would emit a `DROP COLUMN` that empties every client secret. `MODIFY COLUMN`
+ * widens in place and keeps the values (utf8mb4 varchar(256) already carries
+ * a two-byte length prefix, so the change is in-place on InnoDB).
+ *
+ * `down()` narrows back to 256 and fails in strict mode if a row holds a
+ * longer value, which is exactly a secret stored in encrypted mode: rotate
+ * such clients to another mode before reverting.
+ *
+ * ## Global entity uniqueness (issue #3559)
  *
  * `auth_permissions`, `auth_roles`, `auth_scopes` and `auth_policies` are
  * unique over a tuple that contains a nullable column: `realm_id`, plus
@@ -16,29 +43,30 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * with one name collide. The `UQ_*` indexes stay: they are what the entity
  * metadata describes, and they still serve the fully scoped rows.
  *
- * Hand-written DDL on both dialects, a documented exception: an index over a
- * functional key part cannot be described in entity metadata, so each entity
- * declares it with `synchronize: false` under a GIVEN name, which the schema
- * builder matches by name and neither creates nor drops. The name is given
- * rather than derived for two reasons: the builder never names an index it
- * does not synchronize, and on this dialect the derived `IDX_<hash>` over the
- * column list already belongs to the `UQ_*` constraint, which MySQL stores as
- * a unique index under exactly that name (see the `Default` migrations).
+ * An index over a functional key part cannot be described in entity
+ * metadata, so each entity declares it with `synchronize: false` under a
+ * GIVEN name, which the schema builder matches by name and neither creates
+ * nor drops. The name is given rather than derived for two reasons: the
+ * builder never names an index it does not synchronize, and on this dialect
+ * the derived `IDX_<hash>` over the column list already belongs to the `UQ_*`
+ * constraint, which MySQL stores as a unique index under exactly that name
+ * (see the `Default` migrations).
  * `test/unit/adapters/database/global-uniqueness.spec.ts` pins the entity's
  * name against the one written here. The leading key part is `name`, which no
  * foreign key uses, so the implicit-FK-index trap that bites `down()` on
  * MySQL (see `1786436332251-QueryIndexes`) does not apply.
  *
  * Pre-existing duplicates abort the boot with an actionable message before
- * any DDL runs. They would abort it anyway, since the unique index fails on
- * them; the check decides whether the operator reads which tables are
- * affected or a hash-named driver error. Merging is deliberately left to the
- * operator (docs/src/guide/deployment/upgrading.md): the losers are referenced
- * from junction rows that have to be re-pointed or dropped, and a migration
- * cannot know which of two same-named global roles a deployment meant.
+ * any DDL runs, the column widening included. They would abort it anyway,
+ * since the unique index fails on them; the check decides whether the
+ * operator reads which tables are affected or a hash-named driver error.
+ * Merging is deliberately left to the operator
+ * (docs/src/guide/deployment/upgrading.md): the losers are referenced from
+ * junction rows that have to be re-pointed or dropped, and a migration cannot
+ * know which of two same-named global roles a deployment meant.
  */
-export class GlobalEntityUniqueness1788793885495 implements MigrationInterface {
-    name = 'GlobalEntityUniqueness1788793885495';
+export class WidenClientSecretAndGlobalUniqueness1788782400000 implements MigrationInterface {
+    name = 'WidenClientSecretAndGlobalUniqueness1788782400000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const targets: [table: string, columns: string[]][] = [
@@ -70,6 +98,8 @@ export class GlobalEntityUniqueness1788793885495 implements MigrationInterface {
             );
         }
 
+        await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `secret` varchar(512) NULL');
+
         await queryRunner.query(`
             CREATE UNIQUE INDEX \`IDX_auth_permissions_global_name\` ON \`auth_permissions\` (\`name\`, (COALESCE(\`client_id\`, '')), (COALESCE(\`realm_id\`, '')))
         `);
@@ -97,5 +127,7 @@ export class GlobalEntityUniqueness1788793885495 implements MigrationInterface {
         await queryRunner.query(`
             DROP INDEX \`IDX_auth_permissions_global_name\` ON \`auth_permissions\`
         `);
+
+        await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `secret` varchar(256) NULL');
     }
 }
