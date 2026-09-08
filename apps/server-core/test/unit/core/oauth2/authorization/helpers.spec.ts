@@ -106,3 +106,16 @@ describe('deriveAmrAcr', () => {
         expect(deriveAmrAcr(null)).toEqual({});
     });
 });
+
+describe('classifyAuthorizeFailure', () => {
+    it('should map the three gate refusals onto their metric outcomes', () => {
+        expect(classifyAuthorizeFailure(OAuth2AccessDeniedError.forClient())).toBe('denied');
+        expect(classifyAuthorizeFailure(OAuth2LoginRequiredError.realmMismatch())).toBe('login_required');
+        expect(classifyAuthorizeFailure(OAuth2MfaRequiredError.challengeRequired())).toBe('mfa_required');
+    });
+
+    it('should classify anything else as an error', () => {
+        expect(classifyAuthorizeFailure(new Error('boom'))).toBe('error');
+        expect(classifyAuthorizeFailure(undefined)).toBe('error');
+    });
+});

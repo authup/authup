@@ -21,6 +21,7 @@ import {
     expect,
     it,
 } from 'vitest';
+import { OAuth2AuthorizationGate } from '../../../../../src/core/oauth2/authorization/gate.ts';
 import { OAuth2Authorization } from '../../../../../src/core/oauth2/authorization/module.ts';
 import type {
     IOAuth2AccessPolicyEvaluator,
@@ -722,5 +723,121 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
         ).rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
 
         expect(evaluator.calls).toHaveLength(0);
+    });
+});
+
+describe('OAuth2AuthorizationGate', () => {
+    const realmId = randomUUID();
+    const sessionId = randomUUID();
+    const userId = randomUUID();
+
+    const identity: UserIdentity = {
+        type: OAuth2SubKind.USER,
+        data: {
+            id: userId,
+            name: 'user',
+            realmId,
+            realm: { id: realmId, name: 'master' },
+        } as UserIdentity['data'],
+    };
+
+    const evaluatorCalls: { policyId: string, subject: IdentityPolicyData }[] = [];
+    let evaluatorAllowed = true;
+    const evaluator: IOAuth2AccessPolicyEvaluator = {
+        async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
+            evaluatorCalls.push({ policyId, subject });
+            return evaluatorAllowed;
+        },
+    };
+
+    it('should run only the identity, realm, MFA backstop and access-policy gates for a bare realm_id input', async () => {
+        const sessionManager = new FakeSessionManager();
+        evaluatorCalls.length = 0;
+        evaluatorAllowed = true;
+        let challengeCalls = 0;
+        const mfaChallengeProvider: IUserAuthenticatorChallengeProvider = {
+            challenge: async () => {
+                challengeCalls++;
+                return {
+                    required: true, 
+                    enrollmentRequired: false, 
+                    kinds: [], 
+                };
+            },
+        };
+
+        const gate = new OAuth2AuthorizationGate({
+            sessionManager,
+            mfaChallengeProvider,
+            accessPolicyEvaluator: evaluator,
+            promptLoginMaxAge: 60,
+            mfaFreshnessMaxAge: 60,
+        });
+
+        // a session far older than both freshness windows: prompt=login and
+        // an acr step-up would refuse it, but a device approval carries neither
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const createdAt = new Date((nowSeconds - 3600) * 1000).toISOString();
+        const mfaAt = new Date((nowSeconds - 3600) * 1000).toISOString();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            createdAt,
+            mfaAt,
+        });
+
+        const client: Client = {
+            id: randomUUID(),
+            accessPolicyId: randomUUID(),
+            realmId,
+        } as Client;
+
+        const result = await gate.evaluate({ realm_id: realmId }, identity, { sessionId, client });
+
+        expect(result.authTime).toBe(Math.floor(new Date(createdAt).getTime() / 1000));
+        expect(result.session?.id).toBe(sessionId);
+        expect(challengeCalls).toBe(1);
+        expect(evaluatorCalls).toHaveLength(1);
+        expect(evaluatorCalls[0].policyId).toBe(client.accessPolicyId);
+
+        // realm binding still runs
+        await expect(
+            gate.evaluate({ realm_id: randomUUID() }, identity, { sessionId, client }),
+        ).rejects.toMatchObject({ code: ErrorCode.OAUTH_LOGIN_REQUIRED });
+
+        // the MFA backstop still runs: no proof on the session refuses
+        const bareSessionManager = new FakeSessionManager();
+        await bareSessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            createdAt,
+            mfaAt: null,
+        });
+        const bareGate = new OAuth2AuthorizationGate({
+            sessionManager: bareSessionManager,
+            mfaChallengeProvider,
+            accessPolicyEvaluator: evaluator,
+        });
+        await expect(
+            bareGate.evaluate({ realm_id: realmId }, identity, { sessionId, client }),
+        ).rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+
+        // the access policy still decides, and its error carries no redirect
+        evaluatorAllowed = false;
+        let denied: unknown;
+        try {
+            await gate.evaluate({ realm_id: realmId }, identity, { sessionId, client });
+        } catch (e) {
+            denied = e;
+        }
+        expect(isOAuth2AccessDeniedError(denied)).toBe(true);
+        if (isOAuth2AccessDeniedError(denied)) {
+            expect(denied.redirectUri).toBeNull();
+            expect(denied.state).toBeNull();
+        }
     });
 });
