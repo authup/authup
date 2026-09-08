@@ -247,55 +247,71 @@ Sort each runtime dependency of a **published** package by one question: **would
 
 Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it — e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
 
-## Root `vue` / `vue-router` overrides track every bump of theirs
+## The root `package.json` carries NO `overrides`, and an exact pin there is what CAUSED the duplicate copies
 
-The root `package.json` `overrides` block pins `vue` to an exact patch. That pin
-must move whenever ANY dependency bump (dependabot's `minorandpatch` group
-included, not only a `@vuecs/*` bump) pulls the `@vue/*` subpackages to a newer
-patch. With the pin behind, npm nests vue's own runtime deps under
-`node_modules/vue/node_modules/@vue/{reactivity,runtime-core,runtime-dom,server-renderer}`
-at the OLD patch while the compiler packages sit at the top level at the new
-one. Two symptoms, both in the CI `Test Packages` / `Build Packages` jobs and
-both in files nobody touched: `@vue/test-utils` (a top-level package peering
-`@vue/server-renderer`) fails every client-web-kit SSR spec with
-`Cannot find package '@vue/server-renderer'`, and two `@vue/reactivity` copies
-give `vue-tsc` two `RefSymbol` identities (`Property '[RefSymbol]' is missing`).
-It has recurred four times (the July 2026 `@vuecs` bump, #3317, #3461, #3516). Fix:
-set `overrides.vue` to the new patch, `npm install --force`, then verify
-`node_modules/vue/node_modules/@vue` is gone and
-`node_modules/@vue/server-renderer` is hoisted. A dependabot PR whose table
-lists `vue` needs this before merge; its own CI already shows the failure.
+The root manifest carried an `overrides` block for years: exact pins on
+`vue`, `vue-router` and `typeorm`, caret pins on `validup`, `@vuecs/core`,
+`@ebec/core`, the `@validup/*` and `@ilingo/*` families, `ilingo` and
+`@trapi/core`. It was removed on 2026-09-08, after the dependabot bump
+#3573 broke `build:types` in server-core with 33 errors over two
+incompatible `DataSource` types: the workspace had moved to `typeorm@1.1.1`
+while the pin still said `1.1.0`, so the lock held a nested `1.1.0` under
+`apps/server-core` next to the hoisted `1.1.1`. The previous version of
+this section recorded four `vue` / `vue-router` recurrences of the same
+face and prescribed realigning the pin on every bump. That prescription
+was fighting the pin itself. Do not re-add one.
 
-`vue-router` carries an override for the same reason and needs the same care
-on a bump of its own. The duplication arrives from the other direction: the six
-workspaces declare the new range while `nuxt` (`^5.2.0`) and
-`@vuecs/navigation` (`^4.x || ^5.x`) are satisfied by the old patch, so npm
-hoists the OLD one to the root and nests a copy of the new one under every
-workspace that asked for it. Two nominal type identities again, and the symptom
-is a `check:types` failure in `packages/client-web-nuxt` alone
-(`src/runtime/middleware/00.root.ts`, `TS2345`, one `vue-router/dist/index-*`
-path "not assignable" to another) — the router is a `provide`/`inject`
-singleton, so a second copy is a runtime hazard and not only a typing one.
+**Mechanism, so the treadmill is recognised if someone proposes it again.**
+An exact override rewrites every edge onto one literal, which npm dedupes
+into one node, but that node can never be REPLACED: arborist hoists a newer
+version by replacing the root node when the new version satisfies every
+edge into it, and the pin forbids exactly that. So when the workspaces move
+past the pinned patch, npm nests a fresh copy under each workspace that
+asked, and the "downward" and "upward" duplication stories the old section
+told were both this one refusal. Measured on the same manifests: with no
+override at all, a resolution from scratch yields ONE copy of every package
+that used to be pinned, and the caret pins on `@ilingo/validup`,
+`@ilingo/validup-vue` and `@validup/vue` had not even been effective (the
+lock carried three nested copies of each under them; without them, one).
 
-**Adding the override is not enough by itself**: npm will not re-resolve a
-lockfile entry that already satisfies its dependents, so `npm install --force`
-leaves the old resolution in place and the tree unchanged. Delete that
-package's entries from `package-lock.json` (the hoisted one and every nested
-one), then `npm install --package-lock-only --force` followed by
-`npm install --force`. Do NOT reach for `rm -rf node_modules package-lock.json`:
-a full regeneration does produce a correct single-copy tree, but it rewrote
-~22k lock lines and re-resolved unrelated transitive versions, which is not
-reviewable inside a dependency PR. The targeted splice leaves a lock diff that
-only removes the duplicated subtrees.
+**Two packages nest for a reason unrelated to overrides, and only lock
+inertia decides where they land.** `pinia@4` has a REQUIRED peer on
+`@vue/devtools-api@^8`, while `vitepress` (the `docs` workspace) depends on
+`@vue/devtools-api@^7`. Whichever the placer puts at the root first wins and
+the other side nests: with `7.x` at the root, `pinia` lands under every
+workspace that declares it, and `vue-router@5`, which optionally peers on
+`pinia`, follows it there. The correct shape is `@vue/devtools-api@8` at the
+root, `7.x` nested under `vitepress`, and `pinia` plus `vue-router` hoisted,
+which is what a fresh resolution produces. A second, weaker pressure sits on
+`vue-router` alone: it optionally peers on `vite`, the root `vite@8`
+optionally peers on `esbuild ^0.27 || ^0.28`, and `packages/client-web-nuxt`
+carries a nested `esbuild@0.25` for `@nuxt/module-builder` through
+`unbuild@3.6.1` (both at their latest release). Without `--force`, placing
+`vue-router` for that workspace answers ERESOLVE over that chain, which is
+why every install in this repo still needs `npm install --force`.
 
-**Both overrides must stay EXACT versions, and a caret is not an improvement** —
-which is worth stating because relaxing the pin is the obvious way to stop
-having to realign it. It was measured: with `^3.5.42` / `^5.3.0` npm re-created
-the five nested `vue-router` copies the exact pin had just collapsed. An exact
-pin rewrites every spec to one identical string, which npm dedupes to a single
-node; a range leaves the specs as ranges and npm is free to satisfy them
-per-consumer. The manual realignment on each bump is the price of the single
-copy, not an oversight.
+**When a bump leaves nested copies behind, splice; never dedupe or
+regenerate.** `npm dedupe` was tried and added a sixth `vue-router` under
+`nuxt` while rewriting 2,900 lock lines; deleting the lock produces a
+correct tree but re-resolves every transitive version, which is not
+reviewable inside a dependency PR. The targeted procedure: delete every
+lock entry of the nested package AND of its blocker (for `vue-router` and
+`pinia` that is `@vue/devtools-api` as well), root and nested, children
+included, i.e. every key matching `(^|/)node_modules/<name>(/|$)`; then
+`npm install --package-lock-only --force`; then `npm install --force`. The
+lock diff then only removes the nested subtrees and moves the blocker.
+
+**Verify the lock, not the working tree, and expect exactly four
+complaints:** `npm ls --all --package-lock-only 2>&1 | grep invalid` reports
+`cac`, `commander`, `unplugin` and `universal-cookie`, all inside nuxt's
+and vitepress's own trees and all older than any of this, and nothing else.
+One trap to know about while splicing: **under `--force`, arborist accepts
+an invalid non-peer edge rather than re-placing it.** Splicing typeorm's
+nested `yargs@18` subtree by mistake left typeorm's `yargs ^18` edge
+resolving to the root `yargs@17`, and `--package-lock-only --force`
+reported nothing. An entry spliced by mistake is put back by hand, copied
+from the previous lock, never re-resolved.
+
 
 ## Interfaces & Types
 
