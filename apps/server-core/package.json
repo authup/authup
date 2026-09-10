@@ -146,7 +146,7 @@
         "supertest": "^7.2.2",
         "testcontainers": "^12.1.0",
         "ts-node": "^10.8.2",
-        "unplugin-swc": "^1.5.11",
+        "unplugin-swc": "^1.6.0",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
