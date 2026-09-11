@@ -57,7 +57,7 @@
         "@rapiq/core": "^2.2.0"
     },
     "devDependencies": {
-        "vitest": "^4.0.14"
+        "vitest": "^5.0.0"
     },
     "publishConfig": {
         "access": "public"
