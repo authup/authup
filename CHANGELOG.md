@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.65) (2026-09-11)
+
+
+### Features
+
+* expose complete authorization through introspection ([#3584](https://github.com/authup/authup/issues/3584)) ([3240951](https://github.com/authup/authup/commit/32409512c342f7e0cfd9a70eb638b5c9023da571))
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

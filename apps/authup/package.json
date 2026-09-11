@@ -1,7 +1,7 @@
 {
     "name": "authup",
     "type": "module",
-    "version": "1.0.0-beta.65",
+    "version": "1.0.1-beta.65",
     "description": "This is the CLI for the authup ecosystem.",
     "license": "AGPL-3.0-only",
     "files": [
@@ -49,14 +49,14 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.65",
-        "@authup/kit": "^1.0.0-beta.65",
-        "@authup/server-account-console": "^1.0.0-beta.65",
-        "@authup/server-admin-console": "^1.0.0-beta.65",
-        "@authup/server-auth-console": "^1.0.0-beta.65",
-        "@authup/server-config": "^1.0.0-beta.65",
-        "@authup/server-config-kit": "^1.0.0-beta.65",
-        "@authup/server-console-kit": "^1.0.0-beta.65",
+        "@authup/errors": "^1.0.1-beta.65",
+        "@authup/kit": "^1.0.1-beta.65",
+        "@authup/server-account-console": "^1.0.1-beta.65",
+        "@authup/server-admin-console": "^1.0.1-beta.65",
+        "@authup/server-auth-console": "^1.0.1-beta.65",
+        "@authup/server-config": "^1.0.1-beta.65",
+        "@authup/server-config-kit": "^1.0.1-beta.65",
+        "@authup/server-console-kit": "^1.0.1-beta.65",
         "@authup/server-core": "^1.0.0-beta.65",
         "citty": "^0.2.2",
         "dotenv": "^17.4.1",
@@ -69,7 +69,7 @@
         "access": "public"
     },
     "devDependencies": {
-        "@authup/client-auth-console": "^1.0.0-beta.65",
+        "@authup/client-auth-console": "^1.0.1-beta.65",
         "@routup/basic": "^3.0.0",
         "better-sqlite3": "^13.0.3",
         "cross-env": "^10.1.0",

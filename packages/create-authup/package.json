@@ -1,7 +1,7 @@
 {
     "name": "create-authup",
     "type": "module",
-    "version": "1.0.0-beta.65",
+    "version": "1.0.1-beta.65",
     "description": "Interactive wizard writing the deployment files for an authup installation: docker run, docker compose, helm values or a bare-metal project.",
     "license": "Apache-2.0",
     "bin": {
@@ -47,8 +47,8 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {},
     "devDependencies": {
-        "@authup/server-config": "^1.0.0-beta.65",
-        "@authup/server-config-kit": "^1.0.0-beta.65",
+        "@authup/server-config": "^1.0.1-beta.65",
+        "@authup/server-config-kit": "^1.0.1-beta.65",
         "@types/node": "^26.4.1",
         "ajv": "^8.20.0",
         "cross-env": "^10.1.0",
