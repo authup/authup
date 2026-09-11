@@ -5,14 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyEngine as BasePolicyEngine, BuiltInPolicyType, PolicyDefaultEvaluators } from '@authup/access';
+import {
+    PolicyEngine as BasePolicyEngine,
+    BuiltInPolicyType,
+    IdentityPermissionBindingPolicyEvaluator,
+    PolicyDefaultEvaluators,
+} from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
-import { PermissionBindingPolicyEvaluator } from './evaluator.ts';
 
 export class PolicyEngine extends BasePolicyEngine {
     constructor(identityPermissionProvider: IIdentityPermissionProvider) {
         super(PolicyDefaultEvaluators);
 
-        this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new PermissionBindingPolicyEvaluator(identityPermissionProvider));
+        this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new IdentityPermissionBindingPolicyEvaluator(identityPermissionProvider));
     }
 }

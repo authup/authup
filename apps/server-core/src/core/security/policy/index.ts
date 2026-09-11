@@ -6,4 +6,3 @@
  */
 
 export * from './engine.ts';
-export * from './evaluator.ts';

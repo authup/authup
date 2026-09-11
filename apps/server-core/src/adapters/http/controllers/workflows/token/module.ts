@@ -250,13 +250,14 @@ export class TokenController {
             });
 
             if (!active) {
-                return {
+                const response: OAuth2TokenIntrospectionResponse = {
                     ...payload,
                     ...subject.claims,
                     active,
-                    permissions: undefined,
-                    authorization: undefined,
                 };
+                delete response.permissions;
+                delete response.authorization;
+                return response;
             }
 
             return {

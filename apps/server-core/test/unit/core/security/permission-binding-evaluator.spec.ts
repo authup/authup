@@ -8,6 +8,7 @@
 import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import {
     BuiltInPolicyType,
+    IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
     PolicyDefaultEvaluators,
     RealmScope,
@@ -16,7 +17,6 @@ import {
 import type { IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
 import { describe, expect, it } from 'vitest';
-import { PermissionBindingPolicyEvaluator } from '../../../../src/core/security/policy/evaluator.ts';
 import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
 
 /**
@@ -31,7 +31,7 @@ import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
  *  - OVER-grant: an `own`-scoped grant's passing policy must not ride an `any`-scoped
  *    grant's wider reach when the `any` grant's own policy fails.
  */
-describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction (#3155)', () => {
+describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disjunction (#3155)', () => {
     const REALM_A = '11111111-1111-4111-8111-111111111111';
     const REALM_B = '22222222-2222-4222-8222-222222222222';
 
@@ -72,7 +72,7 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
             data[BuiltInPolicyType.REALM_MATCH] = resourceRealm ?? null;
         }
 
-        const evaluator = new PermissionBindingPolicyEvaluator(provider);
+        const evaluator = new IdentityPermissionBindingPolicyEvaluator(provider);
         return evaluator.evaluate(
             { type: BuiltInPolicyType.PERMISSION_BINDING },
             definePolicyEvaluationContext({

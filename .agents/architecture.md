@@ -3233,7 +3233,7 @@ comes from `toIdentityPolicyData`, not the token's client namespace.
 versioned snapshot, all required nullable fields and supported built-in policy
 configurations, then uses the generic definition evaluator plus
 `IdentityPermissionBindingPolicyEvaluator`. The latter is the old server binding
-evaluator moved into access; server-core re-exports it under its old name. There
+evaluator moved into access; server-core imports it directly. There
 is one implementation of grant reach, pending policy composition and condition
 lowering. Binding inversion is validated and applies to compiled conditions too.
 
