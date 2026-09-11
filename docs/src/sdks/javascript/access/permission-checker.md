@@ -1,5 +1,9 @@
 # PermissionEvaluator
 
+For complete Authup grant enforcement from an introspection response, use
+[createAuthorizationEvaluator](./authorization.md). The generic evaluator below
+does not enforce grant realm reach by itself.
+
 This package is shipped with a framework for evaluating and checking permissions.
 
 The PermissionEvaluator can be initialized with various providers.

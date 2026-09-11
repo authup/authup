@@ -9,3 +9,5 @@ Add the package as a dependency to the project.
 ```sh
 npm install @authup/access --save
 ```
+
+For resource-server enforcement, see [Authorize resources from introspection](./authorization.md).

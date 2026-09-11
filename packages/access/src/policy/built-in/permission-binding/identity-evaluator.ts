@@ -6,39 +6,35 @@
  */
 
 import type { ICondition } from '@rapiq/core';
-import { and, or } from '@rapiq/core';
+import { and, not, or } from '@rapiq/core';
 import type { Issue } from '@ebec/core';
-import type {
-    IPolicyEvaluator,
-    PermissionPolicyBindingAggregated,
-    PolicyEvaluationContext,
-    PolicyEvaluationResult,
-} from '@authup/access';
-import {
-    BuiltInPolicyType,
-    IdentityPolicyEvaluator,
-    PermissionBindingPolicyValidator,
-    PolicyEngine,
-    PolicyIssueCode,
-    RealmMatchPolicyEvaluator,
-    RealmScope,
-    aggregatePermissionPolicyBindings,
-    definePolicyIssueItem,
-    maybeInvertPolicyOutcome,
-    normalizeRealmScope,
-} from '@authup/access';
-import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
+import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../../../permission/types';
+import { aggregatePermissionPolicyBindings } from '../../../permission/helpers';
+import { RealmScope, normalizeRealmScope } from '../../../permission/realm-scope';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
+import { PolicyEngine } from '../../engine';
+import { maybeInvertPolicyOutcome } from '../../helpers';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
+import { BuiltInPolicyType } from '../constants';
+import type { IdentityPolicyData } from '../identity';
+import { IdentityPolicyEvaluator } from '../identity';
+import { RealmMatchPolicyEvaluator } from '../realm-match';
+import { PermissionBindingPolicyValidator } from './validator';
 
-export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
+type IdentityPermissionProvider = {
+    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>,
+};
+
+export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator : PermissionBindingPolicyValidator;
 
     protected identityEvaluator: IdentityPolicyEvaluator;
 
     protected realmMatchEvaluator : RealmMatchPolicyEvaluator;
 
-    protected identityPermissionProvider: IIdentityPermissionProvider;
+    protected identityPermissionProvider: IdentityPermissionProvider;
 
-    constructor(identityPermissionProvider: IIdentityPermissionProvider) {
+    constructor(identityPermissionProvider: IdentityPermissionProvider) {
         this.validator = new PermissionBindingPolicyValidator();
         this.identityEvaluator = new IdentityPolicyEvaluator();
         this.realmMatchEvaluator = new RealmMatchPolicyEvaluator();
@@ -245,9 +241,10 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             };
 
             if (lowerable && ctx.withConditions && conditions.length > 0) {
-                result.condition = conditions.length === 1 ?
+                const condition = conditions.length === 1 ?
                     conditions[0]! :
                     or(...conditions);
+                result.condition = policy.invert ? not(condition) : condition;
             }
 
             return result;

@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey } from '@authup/access';
-import type { OAuth2TokenPermission } from '@authup/specs';
+import type { BasePolicy } from '@authup/access';
+import { aggregatePermissionPolicyBindings, buildPermissionKey } from '@authup/access';
+import { DecisionStrategy } from '@authup/kit';
+import type { OAuth2Authorization, OAuth2AuthorizationPolicy, OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
+import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import type {
     OAuth2IntrospectionSubject,
@@ -54,9 +57,55 @@ export async function resolveIntrospectionSubject(
         realmId: input.realmId,
     });
 
+    const actor = toIdentityPolicyData(identity)!;
+    const authorizationBindings = (input.clientId ?? null) === (actor.clientId ?? null) ?
+        permissions : await ctx.identityPermissionProvider.getFor(actor);
+    const authorization: OAuth2Authorization = {
+        version: 1,
+        identity: {
+            id: actor.id,
+            type: identity.type,
+            realm_id: actor.realmId ?? null,
+            realm_name: actor.realmName ?? null,
+            client_id: actor.clientId ?? null,
+        },
+        permissions: [],
+    };
+    for (const binding of aggregatePermissionPolicyBindings(authorizationBindings)) {
+        const key = {
+            name: binding.permission.name,
+            clientId: binding.permission.clientId ?? null,
+            realmId: binding.permission.realmId ?? null,
+        };
+        const definition = await ctx.permissionProvider.findOne(key);
+        if (!definition || definition.grants.length === 0) {
+            continue;
+        }
+        const policies = definition.grants.map((grant) => serializePolicy(grant.policy));
+        let policy: OAuth2AuthorizationPolicy | null = null;
+        if (!policies.includes(null)) {
+            policy = policies.length === 1 ? policies[0]! : {
+                type: 'composite',
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                children: policies.filter((item): item is OAuth2AuthorizationPolicy => item !== null),
+            };
+        }
+        authorization.permissions.push({
+            name: key.name,
+            client_id: key.clientId,
+            realm_id: key.realmId,
+            policy,
+            grants: binding.grants.map((grant) => ({
+                realm_scope: grant.realmScope,
+                policy: serializePolicy(grant.policy),
+            })),
+        });
+    }
+
     return {
         identity,
         claims,
+        authorization,
         // todo: permissions property should be removed.
         permissions: Object.values(
             permissions.reduce((acc, binding) => {
@@ -72,4 +121,14 @@ export async function resolveIntrospectionSubject(
             }, {} as Record<string, OAuth2TokenPermission>),
         ),
     };
+}
+
+function serializePolicy(policy: BasePolicy | undefined): OAuth2AuthorizationPolicy | null {
+    if (!policy) {
+        return null;
+    }
+    if (!policy.type) {
+        throw new Error('An authorization policy must declare its type.');
+    }
+    return { ...policy, type: policy.type };
 }

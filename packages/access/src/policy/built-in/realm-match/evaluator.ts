@@ -98,7 +98,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 if (realmId !== null && scope !== RealmScope.NONE) {
                     terms.push(eq(field, realmId));
                 }
-                if (scope === RealmScope.OWN_OR_NULL) {
+                if (scope === RealmScope.OWN_OR_NULL && (realmId !== null || identity.realmName != null)) {
                     terms.push(eq(field, null));
                 }
 

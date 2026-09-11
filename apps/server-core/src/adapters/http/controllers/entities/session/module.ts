@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IPermissionProvider } from '@authup/access';
 import {
     DContext,
     DController,
@@ -50,6 +51,7 @@ export type SessionControllerContext = {
     baseURL?: string,
     identityResolver?: IIdentityResolver,
     identityPermissionProvider?: IIdentityPermissionProvider,
+    permissionProvider?: IPermissionProvider,
     sessionRepository?: ISessionRepository,
     service: ISessionService,
 };
@@ -65,6 +67,8 @@ export class SessionController {
 
     protected identityPermissionProvider?: IIdentityPermissionProvider;
 
+    protected permissionProvider?: IPermissionProvider;
+
     protected sessionRepository?: ISessionRepository;
 
     constructor(ctx: SessionControllerContext) {
@@ -72,6 +76,7 @@ export class SessionController {
         this.baseURL = ctx.baseURL;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.permissionProvider = ctx.permissionProvider;
         this.sessionRepository = ctx.sessionRepository;
     }
 
@@ -111,7 +116,8 @@ export class SessionController {
             !sessionId ||
             identity.type !== IdentityType.USER ||
             !this.identityResolver ||
-            !this.identityPermissionProvider
+            !this.identityPermissionProvider ||
+            !this.permissionProvider
         ) {
             return { active: false };
         }
@@ -125,6 +131,7 @@ export class SessionController {
         const subject = await resolveIntrospectionSubject({
             identityResolver: this.identityResolver,
             identityPermissionProvider: this.identityPermissionProvider,
+            permissionProvider: this.permissionProvider,
         }, {
             sub: identity.id,
             subKind: identity.type,
@@ -136,6 +143,7 @@ export class SessionController {
             active: true,
             // todo: permissions property should be removed.
             permissions: subject.permissions,
+            authorization: subject.authorization,
             sub: identity.id,
             sub_kind: OAuth2SubKind.USER,
             session_id: session.id,

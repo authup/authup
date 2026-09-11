@@ -359,6 +359,7 @@ export class HTTPControllerModule {
 
             identityResolver,
             identityPermissionProvider,
+            permissionProvider: new PermissionDatabaseProvider(dataSource),
 
             userAuthenticator,
 
@@ -841,6 +842,7 @@ export class HTTPControllerModule {
             baseURL: config.publicUrl,
             identityResolver: container.resolve(IdentityInjectionKey.Resolver),
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            permissionProvider: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
             sessionRepository: repository,
         });
     }
