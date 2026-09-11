@@ -82,7 +82,7 @@
         "@iconify/vue": "^5.0.0",
         "@ilingo/validup-vue": "^1.2.0",
         "@ilingo/vue": "^6.1.1",
-        "@types/node": "^26.4.1",
+        "@types/node": "^26.5.0",
         "@validup/vue": "^2.0.1",
         "@vitejs/plugin-vue": "^6.0.8",
         "@vue/test-utils": "^2.5.0",
