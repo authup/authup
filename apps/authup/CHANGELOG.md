@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.1-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.1-beta.65) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-account-console bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-admin-console bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-auth-console bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-config bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-config-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-console-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
