@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { IPermissionProvider } from '@authup/access';
 import type { User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
@@ -57,6 +58,7 @@ export type TokenControllerContext = {
 
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
+    permissionProvider: IPermissionProvider,
 
     userAuthenticator: ICredentialsAuthenticator<User>
 

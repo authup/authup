@@ -3220,6 +3220,35 @@ baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
+### Introspection authorization snapshots (#3581)
+
+`resolveIntrospectionSubject` exports `authorization.version: 1` for active tokens
+and console sessions alongside the legacy name-only `permissions`. Each held
+permission's exact namespace carries its effective definition policy tree and
+all paired `{ realm_scope, policy }` grants. Null policies are explicit; missing
+definitions are omitted, never interpreted as policy-free. The snapshot identity
+comes from `toIdentityPolicyData`, not the token's client namespace.
+
+`@authup/access.createAuthorizationEvaluator(response)` validates the active
+versioned snapshot, all required nullable fields and supported built-in policy
+configurations, then uses the generic definition evaluator plus
+`IdentityPermissionBindingPolicyEvaluator`. The latter is the old server binding
+evaluator moved into access; server-core re-exports it under its old name. There
+is one implementation of grant reach, pending policy composition and condition
+lowering. Binding inversion is validated and applies to compiled conditions too.
+
+The consumer requires an access token (or console session) with `global` scope;
+refresh/ID/MFA credentials cannot authorize resources. Nullable actor realm fields
+are restored to absent policy data, matching the HTTP `RequestIdentity` getters.
+Consumer `evaluate` requires explicit `realmMatch` data (null for a global row),
+fixes identity to the snapshot and does not accept policy bypass options.
+`compile` refuses row attributes/realm data so one known row cannot accidentally
+settle a collection's scope to allow. Conditional results belong in both row and
+count queries before pagination; `post` must be rejected or evaluated over all
+candidates before counting/paging. Unsupported/legacy snapshots never fall back
+to the name-only array. See `docs/src/sdks/javascript/access/authorization.md` for
+wire contract and server-first upgrade order.
+
 ### Policy engine evaluators are per engine
 
 `PolicyEngine`'s constructor **copies** the evaluator map it is handed

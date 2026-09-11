@@ -149,6 +149,34 @@ export type OAuth2TokenPermission = {
     realm_id?: string
 };
 
+export type OAuth2AuthorizationPolicy = {
+    type: string,
+    invert?: boolean,
+    children?: OAuth2AuthorizationPolicy[],
+    [key: string]: unknown,
+};
+
+export type OAuth2Authorization = {
+    version: 1,
+    identity: {
+        id: string,
+        type: 'user' | 'client',
+        realm_id: string | null,
+        realm_name: string | null,
+        client_id: string | null,
+    },
+    permissions: {
+        name: string,
+        realm_id: string | null,
+        client_id: string | null,
+        policy: OAuth2AuthorizationPolicy | null,
+        grants: {
+            realm_scope: 'none' | 'own' | 'ownOrNull' | 'any',
+            policy: OAuth2AuthorizationPolicy | null,
+        }[],
+    }[],
+};
+
 /**
  * The endpoint answers with the token's own payload plus the subject's OpenID
  * claims, so both are declared. Without the claim set they were reachable only
@@ -160,7 +188,8 @@ export type OAuth2TokenPermission = {
  */
 export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & OpenIDClaims & {
     active: boolean,
-    permissions?: OAuth2TokenPermission[]
+    permissions?: OAuth2TokenPermission[],
+    authorization?: OAuth2Authorization,
 };
 
 export type OAuth2JsonWebKey = {

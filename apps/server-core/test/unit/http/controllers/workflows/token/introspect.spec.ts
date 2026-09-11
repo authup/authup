@@ -5,6 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { randomUUID } from 'node:crypto';
+import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
+import { compileFilters } from '@rapiq/adapter-memory';
+import type { IFilter, IFilters } from '@rapiq/core';
+import {
+    PermissionEntity,
+    PermissionPolicyEntity,
+    PolicyEntity,
+    UserEntity,
+    UserPermissionEntity,
+} from '../../../../../../src';
 import {
     afterAll,
     beforeAll,
@@ -75,6 +85,8 @@ describe('token-introspect', () => {
             session_id: payload.session_id,
             iat: now - 7200,
             exp: now - 3600,
+            authorization: { version: 0, stale: true },
+            permissions: [{ name: 'stale_permission' }],
         });
 
         const introspection = await suite.client
@@ -92,6 +104,7 @@ describe('token-introspect', () => {
         // ...and nothing about what that account may do (RFC 7662 §2.2 / §4:
         // no more than needed about an inactive token).
         expect(introspection.permissions).toBeUndefined();
+        expect(introspection.authorization).toBeUndefined();
     });
 
     it('should still report permissions for a live token', async () => {
@@ -109,6 +122,103 @@ describe('token-introspect', () => {
         expect(introspection.active).toBe(true);
         expect(Array.isArray(introspection.permissions)).toBe(true);
         expect(introspection.permissions!.length).toBeGreaterThan(0);
+        expect(introspection.authorization?.version).toBe(1);
+        expect(introspection.authorization?.identity.id).toBe(introspection.sub);
+        expect(introspection.authorization?.permissions).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                name: PermissionName.USER_READ,
+                realm_id: null,
+                client_id: null,
+                policy: expect.objectContaining({ type: expect.any(String) }),
+                grants: expect.arrayContaining([{ realm_scope: 'any', policy: null }]),
+            }),
+        ]));
+    });
+
+    it('uses fresh authorization and rejects non-access or restricted-scope credentials at the consumer', async () => {
+        const token = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const payload = await suite.client.token.introspect({ token: token.access_token }, { authorizationHeaderInherit: true });
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const claims = {
+            jti: payload.jti,
+            sub: payload.sub,
+            sub_kind: payload.sub_kind,
+            realm_id: payload.realm_id,
+            client_id: payload.client_id,
+            session_id: payload.session_id,
+            iat: payload.iat,
+            exp: payload.exp,
+            scope: payload.scope,
+            kind: payload.kind,
+        };
+        for (const kind of [OAuth2TokenKind.ACCESS, OAuth2TokenKind.MFA, OAuth2TokenKind.REFRESH]) {
+            const signed = await signer.sign({
+                ...claims,
+                kind,
+                authorization: { version: 0, stale: true },
+            });
+            const response = await suite.client.token.introspect({ token: signed }, { authorizationHeaderInherit: true });
+            expect(response.active).toBe(true);
+            expect(response.authorization?.version).toBe(1);
+            if (kind === OAuth2TokenKind.ACCESS) {
+                await expect(createAuthorizationEvaluator(response)).resolves.toBeDefined();
+            } else {
+                await expect(createAuthorizationEvaluator(response)).rejects.toThrow();
+            }
+        }
+        const restricted = await signer.sign({ ...claims, scope: 'openid' });
+        const response = await suite.client.token.introspect({ token: restricted }, { authorizationHeaderInherit: true });
+        await expect(createAuthorizationEvaluator(response)).rejects.toThrow();
+    });
+
+    it('exports each realm reach through HTTP into identical row checks and query conditions', async () => {
+        const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
+        const policy = await suite.dataSource.getRepository(PolicyEntity).findOneByOrFail({ type: BuiltInPolicyType.PERMISSION_BINDING });
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+        const cases = [
+            ['none', [false, false, false]],
+            ['own', [true, false, false]],
+            ['ownOrNull', [true, false, true]],
+            ['any', [true, true, true]],
+        ] as const;
+        const names: string[] = [];
+        for (const [realmScope] of cases) {
+            const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+            names.push(permission.name);
+            await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: policy.id }));
+            await userPermissionRepository.save(userPermissionRepository.create({
+                userId: user.id,
+                userRealmId: user.realmId,
+                permissionId: permission.id,
+                permissionRealmId: null,
+                realmScope,
+            }));
+        }
+        await suite.dataSource.queryResultCache?.clear();
+        const token = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const response = await suite.client.token.introspect({ token: token.access_token }, { authorizationHeaderInherit: true });
+        const evaluator = await createAuthorizationEvaluator(JSON.parse(JSON.stringify(response)));
+        const rows = [user.realmId, randomUUID(), null].map((realmId) => ({ realmId }));
+        for (const [index, [, expected]] of cases.entries()) {
+            const name = names[index]!;
+            const decisions = await Promise.all(rows.map(async ({ realmId }) => {
+                try {
+                    await evaluator.evaluate({ name, data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }) });
+                    return true;
+                } catch {
+                    return false;
+                }
+            }));
+            expect(decisions).toEqual(expected);
+            const compiled = await evaluator.compile({ name });
+            expect(compiled.verdict).not.toBe('post');
+            const predicate = compiled.verdict === 'conditional' ?
+                compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true }) :
+                () => compiled.verdict === 'allow';
+            expect(rows.map((row) => !!predicate(row))).toEqual(expected);
+        }
     });
 
     // The kit's `store.user` is built from these claims and nothing else, so
