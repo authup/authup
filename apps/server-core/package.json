@@ -147,7 +147,7 @@
         "testcontainers": "^12.1.0",
         "ts-node": "^10.8.2",
         "unplugin-swc": "^1.5.11",
-        "vitest": "^4.0.14"
+        "vitest": "^5.0.0"
     },
     "publishConfig": {
         "access": "public"
