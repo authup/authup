@@ -286,6 +286,18 @@ describe('introspection authorization consumer', () => {
         expect(predicate({ realmId: realmA })).toBeTruthy();
     });
 
+    it.each([null, { type: 'permissionBinding' }])('rejects a permission entry without grants (%j)', async (policy) => {
+        await expect(createAuthorizationEvaluator(snapshot([], policy))).rejects.toThrow();
+    });
+
+    it('allows an empty permission catalog that denies every lookup', async () => {
+        const input = snapshot([]);
+        input.authorization.permissions = [];
+        const evaluator = await createAuthorizationEvaluator(input);
+        expect(await allowed(evaluator, resource(realmA))).toBe(false);
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
     it('rejects missing restrictions and duplicate namespace definitions', async () => {
         const input = snapshot([{ realm_scope: 'any', policy: null }]);
         const malformed = JSON.parse(JSON.stringify(input));

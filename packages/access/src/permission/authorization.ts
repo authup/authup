@@ -55,7 +55,7 @@ const responseSchema = z.object({
             grants: z.array(z.object({
                 realm_scope: z.enum(RealmScope),
                 policy: policySchema.nullable(),
-            })),
+            })).min(1),
         })),
     }),
 }).refine((value) => value.kind === 'access_token' || !!value.session_id);
