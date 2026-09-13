@@ -403,11 +403,12 @@ export function createStore(context: StoreCreateContext) {
      * committed with it. A `404` is a server predating `GET /authorization`:
      * the document only sharpens advisory UI gating, so the name-only view
      * stays the fallback there, where a resource server must fail closed.
-     * The document has to name the introspected subject; anything else is a
-     * failure, and takes the path a failed introspection takes.
+     * The document has to name the introspected subject, id and kind alike;
+     * anything else is a failure, and takes the path a failed introspection
+     * takes.
      */
     const fetchAuthorization = async (
-        subject: string | undefined,
+        introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
     ) : Promise<IPermissionEvaluator | null> => {
         let document : unknown;
@@ -424,8 +425,12 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const evaluator = await createAuthorizationEvaluator(document);
-        const identityId = (document as { identity?: { id?: unknown } }).identity?.id;
-        if (!subject || identityId !== subject) {
+        if (!introspection.sub) {
+            throw new OAuth2Error('The introspection names no subject.');
+        }
+
+        const { identity } = (document as { identity?: { id?: unknown, type?: unknown } });
+        if (identity?.id !== introspection.sub || identity?.type !== introspection.sub_kind) {
             throw new OAuth2Error('The authorization document names another subject.');
         }
 
@@ -690,7 +695,7 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
-        const authorization = await fetchAuthorization(introspection.sub, token);
+        const authorization = await fetchAuthorization(introspection, token);
 
         commitSession({
             generation,
@@ -743,7 +748,7 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
-        const authorization = await fetchAuthorization(introspection.sub);
+        const authorization = await fetchAuthorization(introspection);
 
         commitSession({
             generation,
@@ -832,7 +837,7 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
-            const authorization = await fetchAuthorization(introspection.sub, response.access_token);
+            const authorization = await fetchAuthorization(introspection, response.access_token);
 
             committed = commitSession({
                 generation,

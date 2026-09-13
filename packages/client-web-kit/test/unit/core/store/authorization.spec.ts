@@ -10,7 +10,12 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
-import { AUTHORIZATION_REALM, AUTHORIZATION_SUBJECT, buildAuthorizationDocument } from '../../../utils/authorization';
+import {
+    AUTHORIZATION_REALM,
+    AUTHORIZATION_SUBJECT,
+    buildAuthorizationDocument,
+    buildAuthorizationIdentity,
+} from '../../../utils/authorization';
 
 const INTROSPECTION = {
     active: true,
@@ -123,8 +128,15 @@ describe('core/store (authorization document)', () => {
             }),
         });
 
-        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
+        await expect(store.login({ name: 'admin', password: 'start123' }))
+            .rejects.toThrow('The authorization document names another subject.');
         expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+
+        const otherKind = buildStore({ 'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ type: 'client' }) }) });
+
+        await expect(otherKind.store.login({ name: 'admin', password: 'start123' }))
+            .rejects.toThrow('The authorization document names another subject.');
+        expect(otherKind.store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
     });
 
     it('fetches the document on a cookie session without a bearer', async () => {
