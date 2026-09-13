@@ -166,11 +166,15 @@ plus a second `Ingress` (no rewrite annotation) carrying the four `Exact`
 sign-in paths and the `/` catch-all, both backed by the API `Service` on port
 `3000`.
 
-`/authorize`, `/token`, `/logout`, `/sessions/@me`, `/userinfo`, the identity
-provider callbacks and the entity routes all land on the API set. The six
-hosted page GETs (`/authorize`, `/register`, `/activate`, `/password-forgot`,
-`/password-reset`, `/logout`) are answered there with a redirect to the auth
-console, which the browser then follows into the console set.
+`/authorize`, `/token`, `/logout`, `/device_authorization` and everything
+under it, `/sessions/@me`, `/userinfo`, the identity provider callbacks and the
+entity routes all land on the API set. The seven hosted page GETs
+(`/authorize`, `/register`, `/activate`, `/password-forgot`,
+`/password-reset`, `/logout`, `/device`) are answered there with a redirect to
+the auth console, which the browser then follows into the console set:
+`/device` becomes `/console/auth/device`, served by the console set like every
+other auth page, while the device's own calls (`/device_authorization`, the
+polls at `/token`) never leave the API set.
 
 ## Console options
 
