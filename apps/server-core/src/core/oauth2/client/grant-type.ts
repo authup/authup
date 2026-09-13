@@ -6,8 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import type { OAuth2TokenGrant } from '@authup/specs';
-import { OAuth2ClientUnauthorizedError } from '@authup/specs';
+import { OAuth2ClientUnauthorizedError, OAuth2TokenGrant } from '@authup/specs';
 
 /**
  * Grants a client must list explicitly: a null or empty `grant_types`
@@ -15,7 +14,9 @@ import { OAuth2ClientUnauthorizedError } from '@authup/specs';
  * below. A grant lands here when enabling it on every existing client at
  * upgrade would widen an attack surface the client never asked for.
  */
-export const OPT_IN_GRANT_TYPES : ReadonlySet<string> = new Set<`${OAuth2TokenGrant}`>([]);
+export const OPT_IN_GRANT_TYPES : ReadonlySet<string> = new Set<`${OAuth2TokenGrant}`>([
+    OAuth2TokenGrant.DEVICE_CODE,
+]);
 
 /**
  * Enforce the client's grant_types allowlist (RFC 6749 §5.2

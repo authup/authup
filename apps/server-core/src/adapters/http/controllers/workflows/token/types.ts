@@ -18,6 +18,7 @@ import type {
     ILoginThrottleService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
+    IOAuth2DeviceCodeVerifier,
     IOAuth2MfaLoginService,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
@@ -34,6 +35,7 @@ import type { CertificateSource } from '../../../request/index.ts';
 
 export type TokenControllerContext = {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
+    deviceCodeVerifier: IOAuth2DeviceCodeVerifier,
 
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,

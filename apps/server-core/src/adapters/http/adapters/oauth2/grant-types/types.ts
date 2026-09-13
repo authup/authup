@@ -15,6 +15,7 @@ import type {
     ILoginThrottleService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
+    IOAuth2DeviceCodeVerifier,
     IOAuth2MfaLoginService,
     IRealmRepository,
     IUserAuthenticatorService,
@@ -27,6 +28,14 @@ import type { CertificateSource } from '../../../request/index.ts';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
+    clientAuthenticator: OAuth2ClientAuthenticator,
+    realmRepository: IRealmRepository,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+    certificateSource: CertificateSource,
+};
+
+export type HTTPOAuth2DeviceCodeGrantContext = OAuth2AuthorizeGrantContext & {
+    deviceCodeVerifier: IOAuth2DeviceCodeVerifier,
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,

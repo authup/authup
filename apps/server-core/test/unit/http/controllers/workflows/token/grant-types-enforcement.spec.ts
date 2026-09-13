@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import { randomBytes } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -13,7 +14,7 @@ import {
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { OAuth2ErrorCode } from '@authup/specs';
+import { OAuth2ErrorCode, OAuth2TokenGrant } from '@authup/specs';
 import {
     createFakeClient, 
     createFakeUser, 
@@ -141,6 +142,68 @@ describe('token grantTypes enforcement', () => {
         const refreshBody = await refreshResponse.json();
         expect(refreshBody.code).toEqual(ErrorCode.OAUTH_CLIENT_UNAUTHORIZED);
         expect(refreshBody.error).toEqual(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
+    });
+
+    it('should grant password and refresh_token when grantTypes is null', async () => {
+        const entity = await createConfidentialClient(null);
+
+        const grantResponse = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: 'password',
+                username,
+                password,
+                client_id: entity.id,
+                client_secret: entity.secret!,
+            },
+        });
+        expect(grantResponse.status).toEqual(200);
+        const grantBody = await grantResponse.json();
+
+        const refreshResponse = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: 'refresh_token',
+                refresh_token: grantBody.refresh_token,
+                client_id: entity.id,
+                client_secret: entity.secret!,
+            },
+        });
+        expect(refreshResponse.status).toEqual(200);
+    });
+
+    it('should refuse the device grant when grantTypes is null', async () => {
+        const entity = await createConfidentialClient(null);
+
+        const response = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: OAuth2TokenGrant.DEVICE_CODE,
+                device_code: randomBytes(32).toString('hex'),
+                client_id: entity.id,
+                client_secret: entity.secret!,
+            },
+        });
+
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_CLIENT_UNAUTHORIZED);
+        expect(body.error).toEqual(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
+    });
+
+    it('should reach the device grant when the client lists it', async () => {
+        const entity = await createConfidentialClient(`${OAuth2TokenGrant.DEVICE_CODE} refresh_token`);
+
+        const response = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: OAuth2TokenGrant.DEVICE_CODE,
+                device_code: randomBytes(32).toString('hex'),
+                client_id: entity.id,
+                client_secret: entity.secret!,
+            },
+        });
+
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+        expect(body.error).toEqual(OAuth2ErrorCode.INVALID_GRANT);
     });
 
     it('should refresh when the bound client lists refresh_token', async () => {

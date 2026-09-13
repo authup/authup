@@ -40,6 +40,30 @@ describe('assertClientGrantAllowed', () => {
         }
     });
 
+    it('should keep the device grant opt-in', () => {
+        expect(OPT_IN_GRANT_TYPES.has(OAuth2TokenGrant.DEVICE_CODE)).toBe(true);
+        expect(OAuth2TokenGrant.DEVICE_CODE).toEqual('urn:ietf:params:oauth:grant-type:device_code');
+
+        for (const grantTypes of [null, '']) {
+            const client = buildClient(grantTypes);
+
+            expect(() => assertClientGrantAllowed(client, OAuth2TokenGrant.PASSWORD)).not.toThrow();
+            expect(() => assertClientGrantAllowed(client, OAuth2TokenGrant.REFRESH_TOKEN)).not.toThrow();
+            expect(() => assertClientGrantAllowed(client, OAuth2TokenGrant.DEVICE_CODE))
+                .toThrow(expect.objectContaining({
+                    code: ErrorCode.OAUTH_CLIENT_UNAUTHORIZED,
+                    message: expect.stringContaining(OAuth2TokenGrant.DEVICE_CODE),
+                    data: expect.objectContaining({ error: OAuth2ErrorCode.UNAUTHORIZED_CLIENT }),
+                }));
+        }
+
+        const listed = buildClient('urn:ietf:params:oauth:grant-type:device_code refresh_token');
+        expect(() => assertClientGrantAllowed(listed, OAuth2TokenGrant.DEVICE_CODE)).not.toThrow();
+        expect(() => assertClientGrantAllowed(listed, OAuth2TokenGrant.REFRESH_TOKEN)).not.toThrow();
+        expect(() => assertClientGrantAllowed(listed, OAuth2TokenGrant.PASSWORD))
+            .toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_CLIENT_UNAUTHORIZED }));
+    });
+
     it('should allow a listed grant', () => {
         const client = buildClient('authorization_code refresh_token');
         expect(() => assertClientGrantAllowed(client, OAuth2TokenGrant.AUTHORIZATION_CODE)).not.toThrow();

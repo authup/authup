@@ -10,6 +10,7 @@ export * from './authorization/index.ts';
 export * from './backchannel-logout/index.ts';
 export * from './client/index.ts';
 export * from './console-login/index.ts';
+export * from './device-authorization/index.ts';
 export * from './session-credential/index.ts';
 export * from './end-session/index.ts';
 export * from './federated-login/index.ts';

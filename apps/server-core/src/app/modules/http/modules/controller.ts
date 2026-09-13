@@ -133,6 +133,7 @@ import {
     LoginThrottleService,
     OAuth2AccessPolicyEvaluator,
     OAuth2ClientAuthenticator,
+    OAuth2DeviceCodeVerifier,
     OAuth2EndSessionService,
     OAuth2FederatedLoginService,
     OAuth2MfaLoginService,
@@ -295,6 +296,7 @@ export class HTTPControllerModule {
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
         const codeVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeVerifier);
+        const deviceCodeVerifier = new OAuth2DeviceCodeVerifier({ repository: container.resolve(OAuth2InjectionToken.DeviceCodeRepository) });
 
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
@@ -332,6 +334,7 @@ export class HTTPControllerModule {
 
         return new TokenController({
             codeVerifier,
+            deviceCodeVerifier,
 
             accessTokenIssuer,
             refreshTokenIssuer,
