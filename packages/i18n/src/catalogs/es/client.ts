@@ -15,7 +15,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Patrón de URI al que puede redirigir un cierre de sesión iniciado por el RP. Independiente de las URI de redirección de inicio de sesión. Sin entradas, el cierre de sesión termina siempre en la página de confirmación.',
     [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Dirección de la aplicación. Se muestra como enlace en la consola de cuenta. Sin entrada, solo aparece el nombre.',
     [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Punto final que recibe un token de cierre de sesión cuando termina una sesión (OIDC Back-Channel Logout). Una URL http(s), sin patrones. Sin entrada, no se envía nada.',
-    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restringe qué concesiones OAuth2 puede usar este cliente. Sin selección, se permiten todas.',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restringe qué concesiones OAuth2 puede usar este cliente. Sin selección, se permiten todas. La concesión para dispositivos debe indicarse explícitamente; una lista vacía no la habilita.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Método de autenticación',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Ninguno',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Secreto compartido',
@@ -118,6 +118,16 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Sin política, cualquier identidad del realm puede iniciar sesión.',
 
     [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Comprobando los permisos concedidos…',
+
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_TITLE]: 'Conectar un dispositivo',
+    [TranslatorTranslationClientKey.DEVICE_CODE_LABEL]: 'Código mostrado en tu dispositivo',
+    [TranslatorTranslationClientKey.DEVICE_CODE_HINT]: 'Introduce el código exactamente como se muestra. Los guiones y las mayúsculas no importan.',
+    [TranslatorTranslationClientKey.DEVICE_CODE_INVALID]: 'El código no es válido o ha caducado. Revisa tu dispositivo e inténtalo de nuevo.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_CONFIRM_TEXT]: '{{client}} en otro dispositivo solicita acceso a tu cuenta.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_SCOPES]: 'Podrá:',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_APPROVED]: 'Dispositivo conectado. Puedes cerrar esta página y volver a tu dispositivo.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_DENIED]: 'Acceso denegado. No se conectó nada; puedes cerrar esta página.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_THROTTLED]: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
 
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Cerrar sesión',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: '¿Quieres cerrar sesión?',
