@@ -41,6 +41,7 @@ import type { Router } from 'vue-router';
 import { resolveBasePath } from './base-path';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
+import Device from './pages/device.vue';
 import IdentityProviderCallback from './pages/identity-provider-callback.vue';
 import Logout from './pages/logout.vue';
 import PasswordForgot from './pages/password-forgot.vue';
@@ -105,6 +106,10 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
             {
                 component: Logout,
                 path: '/logout',
+            },
+            {
+                component: Device,
+                path: '/device',
             },
             {
                 // The federated callback renders this page when the verified
