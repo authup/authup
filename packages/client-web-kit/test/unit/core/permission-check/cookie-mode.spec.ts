@@ -14,6 +14,7 @@ import { defineComponent, h } from 'vue';
 import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
 import type { Store } from '../../../../src/core/store';
 import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { AUTHORIZATION_REALM, AUTHORIZATION_SUBJECT, buildAuthorizationDocument } from '../../../utils/authorization';
 
 /**
  * Plan 088 Stage 2. In cookie mode the store never holds an access token, so
@@ -28,15 +29,16 @@ describe('core/permission-check (cookie mode)', () => {
             handlers: {
                 'GET /sessions/@me/introspect': () => ({
                     active: true,
-                    sub: 'user-1',
+                    sub: AUTHORIZATION_SUBJECT,
                     sub_kind: 'user',
                     name: 'admin',
                     session_id: 'sess-1',
-                    realm_id: 'realm-1',
+                    realm_id: AUTHORIZATION_REALM,
                     realm_name: 'master',
                     scope: 'global openid',
                     permissions: [{ name: 'user_read' }],
                 }),
+                'GET /authorization': () => buildAuthorizationDocument(),
             },
         });
 

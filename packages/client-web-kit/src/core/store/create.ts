@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    PermissionEvaluator,
-    PermissionMemoryProvider,
-    PolicyEngine,
-} from '@authup/access';
+import type { IPermissionEvaluator } from '@authup/access';
+import { createAuthorizationEvaluator } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -22,6 +19,7 @@ import { Client } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
+import { StorePermissionEvaluator } from './permission-evaluator';
 import type {
     RealmMinimal,
     StoreCreateContext,
@@ -244,11 +242,7 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const permissionProvider = new PermissionMemoryProvider();
-    const permissionEvaluator = new PermissionEvaluator({
-        provider: permissionProvider,
-        policyEngine: new PolicyEngine(),
-    });
+    const permissionEvaluator = new StorePermissionEvaluator();
 
     // --------------------------------------------------------------------
 
@@ -340,7 +334,7 @@ export function createStore(context: StoreCreateContext) {
 
         lastAuthOrigin.value = null;
 
-        permissionProvider.setMany([]);
+        permissionEvaluator.reset();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -405,6 +399,40 @@ export function createStore(context: StoreCreateContext) {
     };
 
     /**
+     * The session's authorization document, staged like the introspection and
+     * committed with it. A `404` is a server predating `GET /authorization`:
+     * the document only sharpens advisory UI gating, so the name-only view
+     * stays the fallback there, where a resource server must fail closed.
+     * The document has to name the introspected subject; anything else is a
+     * failure, and takes the path a failed introspection takes.
+     */
+    const fetchAuthorization = async (
+        subject: string | undefined,
+        token?: string,
+    ) : Promise<IPermissionEvaluator | null> => {
+        let document : unknown;
+        try {
+            document = await client.authorization.get(token ?
+                { authorizationHeader: { type: 'Bearer', token } } :
+                undefined);
+        } catch (e) {
+            if (extractErrorContext(e).status === 404) {
+                return null;
+            }
+
+            throw e;
+        }
+
+        const evaluator = await createAuthorizationEvaluator(document);
+        const identityId = (document as { identity?: { id?: unknown } }).identity?.id;
+        if (!subject || identityId !== subject) {
+            throw new OAuth2Error('The authorization document names another subject.');
+        }
+
+        return evaluator;
+    };
+
+    /**
      * The introspected token's subject, built from the response itself: the
      * introspection endpoint resolves the identity server-side and answers
      * with its OpenID claims (`name`, `email`, and `displayName` under
@@ -448,6 +476,7 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
+        authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -535,14 +564,10 @@ export function createStore(context: StoreCreateContext) {
             setUser(subject);
         }
 
-        if (ctx.introspection.permissions) {
-            permissionProvider.setMany(ctx.introspection.permissions.map((permission) => ({
-                permission: {
-                    name: permission.name,
-                    realmId: permission.realm_id,
-                    clientId: permission.client_id,
-                },
-            })));
+        if (ctx.authorization) {
+            permissionEvaluator.setEvaluator(ctx.authorization);
+        } else {
+            permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);
         }
 
         validated.value = true;
@@ -665,11 +690,13 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
+        const authorization = await fetchAuthorization(introspection.sub, token);
 
         commitSession({
             generation,
             token,
             introspection,
+            authorization,
         });
     };
 
@@ -716,10 +743,13 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
+        const authorization = await fetchAuthorization(introspection.sub);
+
         commitSession({
             generation,
             tokenless: true,
             introspection,
+            authorization,
         });
     };
 
@@ -802,12 +832,14 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
+            const authorization = await fetchAuthorization(introspection.sub, response.access_token);
 
             committed = commitSession({
                 generation,
                 token: response.access_token,
                 grant: response,
                 introspection,
+                authorization,
                 origin,
             });
         } finally {

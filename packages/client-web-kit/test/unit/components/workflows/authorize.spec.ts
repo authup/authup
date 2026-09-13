@@ -38,6 +38,7 @@ import {
 import type { Store } from '../../../../src/core';
 import { install } from '../../../../src/module';
 import type { Options } from '../../../../src/types';
+import { buildAuthorizationDocument, buildAuthorizationIdentity } from '../../../utils/authorization';
 
 const noop = () => undefined;
 const REALM = { id: 'realm-x', name: 'master' };
@@ -184,10 +185,25 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             // the default fallback would otherwise fake a truthy "user".
             'GET /userinfo': userInfoHandler ??
                 (() => { throw new Error('userinfo unavailable'); }),
-            // The store refuses to commit a session reported as inactive.
-            // Subject-less on purpose: the unmatched-route fallback carried
-            // none either, so the user-less cases above keep their shape.
-            'POST /token/introspect': () => ({ active: true }),
+            // The store refuses to commit a session reported as inactive, and
+            // refuses an authorization document naming another subject than
+            // the introspected one. A user-less session introspects as a
+            // client subject, so the user-less cases above keep their shape.
+            'POST /token/introspect': () => ({
+                active: true,
+                ...(withUser ?
+                    { sub: 'user-1', sub_kind: 'user' } :
+                    { sub: 'client-1', sub_kind: 'client' }),
+            }),
+            'GET /authorization': () => buildAuthorizationDocument({
+                identity: buildAuthorizationIdentity(withUser ?
+                    { id: 'user-1', realm_id: REALM.id } :
+                    {
+                        id: 'client-1', 
+                        type: 'client', 
+                        realm_id: REALM.id, 
+                    }),
+            }),
             ...(loginCompleteHandler ?
                 { 'POST /identity-providers/provider-1/login-complete': loginCompleteHandler } :
                 {}),

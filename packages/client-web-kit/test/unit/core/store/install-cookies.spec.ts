@@ -17,6 +17,7 @@ import {
 import { createApp, h } from 'vue';
 import type { CookieOptions } from '../../../../src/types';
 import { injectStore, installStore } from '../../../../src/core/store';
+import { buildAuthorizationDocument, buildAuthorizationIdentity } from '../../../utils/authorization';
 
 const GRANT_RESPONSE = {
     access_token: 'at-1',
@@ -63,6 +64,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE }),
             'GET /userinfo': () => ({ ...USER_RESPONSE }),
+            'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ id: 'user-1', realm_id: 'realm-1' }) }),
             'POST /token/revoke': () => ({}),
         },
     });

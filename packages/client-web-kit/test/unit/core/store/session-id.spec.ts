@@ -8,6 +8,7 @@
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import { createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { buildAuthorizationDocument, buildAuthorizationIdentity } from '../../../utils/authorization';
 
 function buildStore(sessionId?: string) {
     const httpClient = createFakeClient({
@@ -24,6 +25,7 @@ function buildStore(sessionId?: string) {
                 permissions: [],
             }),
             'GET /userinfo': () => ({ id: 'user-1', name: 'admin' }),
+            'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ id: 'user-1', realm_id: 'realm-1' }) }),
             'POST /token/revoke': () => ({}),
         },
     });
