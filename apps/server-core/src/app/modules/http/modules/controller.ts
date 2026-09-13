@@ -105,6 +105,7 @@ import {
     ActivateController,
     AdminController,
     AuthenticatorChallengeController,
+    AuthorizationController,
     AuthorizeController,
     JwkController,
     LogoutController,
@@ -213,6 +214,7 @@ export class HTTPControllerModule {
                 this.createLogoutController(container),
                 this.createAuthenticatorChallengeController(container),
                 this.createUserInfoController(container),
+                this.createAuthorizationController(container),
                 this.createAccountController(container),
                 this.createAdminController(container),
 
@@ -1005,6 +1007,13 @@ export class HTTPControllerModule {
 
     createUserInfoController(container: IContainer) {
         return new UserInfoController({ service: this.createUserService(container) });
+    }
+
+    createAuthorizationController(container: IContainer) {
+        return new AuthorizationController({
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            permissionDefinitionProvider: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
+        });
     }
 
     createUserAttributeController(container: IContainer) {
