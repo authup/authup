@@ -11,23 +11,55 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Client } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
-import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType } from '@authup/access';
+import { Client as HTTPClient } from '@authup/core-http-kit';
+import type { Client, User } from '@authup/core-kit';
+import {
+    CLIENT_ACCOUNT_CONSOLE_NAME,
+    IdentityType,
+    ScopeName,
+    UserAuthenticatorKind,
+} from '@authup/core-kit';
+import { ErrorCode, isDeviceVerificationThrottledError } from '@authup/errors';
 import { buildCacheKey } from '@authup/server-kit';
-import { OAuth2ErrorCode, OAuth2TokenGrant } from '@authup/specs';
-import { OAUTH2_DEVICE_CODE_GRACE, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import type { OAuth2TokenPayload } from '@authup/specs';
+import { OAuth2AuthorizationResponseType, OAuth2ErrorCode, OAuth2TokenGrant } from '@authup/specs';
+import { Secret, TOTP } from 'otpauth';
+import { OAUTH2_DEVICE_CODE_GRACE, SESSION_COOKIE, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import type { OAuth2DeviceCodeRequest } from '../../../../../../src/core/index.ts';
 import { CacheInjectionKey, ConfigInjectionKey } from '../../../../../../src/app/index.ts';
 import { CacheOAuth2Prefix } from '../../../../../../src/app/modules/oauth2/repositories/constants.ts';
-import { createFakeClient, createFakeRealm, httpRequest } from '../../../../../utils/index.ts';
+import {
+    TestCookieJar,
+    createFakeClient,
+    createFakeRealm,
+    createFakeUser,
+    httpRequest,
+} from '../../../../../utils/index.ts';
 import { createTestApplication } from '../../../../../app/index.ts';
 
 const DEVICE_GRANT_TYPES = `${OAuth2TokenGrant.DEVICE_CODE} refresh_token`;
 const USER_CODE_PATTERN = /^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$/;
+const USER_CODE_INVALID_MESSAGE = 'The code is invalid or has expired.';
+const WRONG_USER_CODE = 'BCDF-GHJK';
+
+type UserBearer = {
+    user: User,
+    bearer: HTTPClient,
+    accessToken: string,
+};
+
+function decodeJwtPayload(token: string): OAuth2TokenPayload {
+    const [, payload] = token.split('.');
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+}
 
 describe('src/http/controllers/workflows/device-authorization', () => {
-    const suite = createTestApplication();
+    const suite = createTestApplication({
+        config: (config) => {
+            config.mfaEnabled = true;
+        },
+    });
 
     let publicUrl : string;
     let authConsoleUrl : string;
@@ -123,6 +155,59 @@ describe('src/http/controllers/workflows/device-authorization', () => {
 
     function basic(clientId: string, secret: string) : string {
         return `Basic ${Buffer.from(`${clientId}:${secret}`).toString('base64')}`;
+    }
+
+    async function issue(client: Client) : Promise<{ deviceCode: string, userCode: string }> {
+        const body = await (await request({ client_id: client.id })).json();
+
+        return { deviceCode: body.device_code, userCode: body.user_code };
+    }
+
+    async function createUserBearer(realmId?: string) : Promise<UserBearer> {
+        const password = generateOAuth2CodeVerifier();
+        const { data: user } = await suite.client.user.create(createFakeUser({
+            password,
+            ...(realmId ? { realmId } : {}),
+        }));
+        const login = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            ...(realmId ? { realm_id: realmId } : {}),
+        });
+
+        const bearer = new HTTPClient({ baseURL: suite.baseURL });
+        bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        return {
+            user, 
+            bearer, 
+            accessToken: login.access_token, 
+        };
+    }
+
+    function verify(
+        path: 'lookup' | 'approve' | 'deny',
+        token: string | null,
+        body: unknown,
+        headers: Record<string, string> = {},
+    ) : Promise<Response> {
+        return httpRequest(suite, 'POST', `/device_authorization/${path}`, {
+            headers: {
+                'content-type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...headers,
+            },
+            body: JSON.stringify(body),
+        });
+    }
+
+    async function expectInvalidGrant(response: Response) : Promise<Record<string, any>> {
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+        expect(body.error).toEqual(OAuth2ErrorCode.INVALID_GRANT);
+
+        return body;
     }
 
     it('should issue a device code to a public client', async () => {
@@ -319,5 +404,329 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         const body = await response.json();
         expect(body.code).toEqual(ErrorCode.OAUTH_REQUEST_INVALID);
         expect(body.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
+    });
+
+    it('should refuse an anonymous lookup', async () => {
+        const client = await createPublicClient();
+        const { userCode } = await issue(client);
+
+        const response = await verify('lookup', null, { user_code: userCode });
+        expect(response.status).toEqual(401);
+    });
+
+    it('should refuse a console session cookie on the approval', async () => {
+        const segment = 'console/account';
+        const jar = new TestCookieJar();
+        const publicOrigin = new URL(publicUrl).origin;
+
+        function cookieRequest(method: string, path: string, options: Record<string, any> = {}) : Promise<Response> {
+            const cookie = jar.header(path);
+
+            return httpRequest(suite, method, path, {
+                ...options,
+                headers: {
+                    ...(options.headers ?? {}),
+                    ...(cookie ? { cookie } : {}),
+                },
+            }).then((response) => {
+                jar.store(response);
+
+                return response;
+            });
+        }
+
+        const { data: realm } = await suite.client.realm.getOne('master');
+        const { user, bearer } = await createUserBearer();
+
+        const kick = await cookieRequest('GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+        expect(kick.status).toEqual(302);
+        const authorizeURL = new URL(kick.headers.get('location') as string);
+        const state = authorizeURL.searchParams.get('state') as string;
+
+        const authorized = await bearer.authorize.confirm({
+            response_type: OAuth2AuthorizationResponseType.CODE,
+            client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
+            realm_id: realm.id,
+            redirect_uri: authorizeURL.searchParams.get('redirect_uri') as string,
+            scope: authorizeURL.searchParams.get('scope') as string,
+            state,
+            code_challenge: authorizeURL.searchParams.get('code_challenge') as string,
+            code_challenge_method: authorizeURL.searchParams.get('code_challenge_method') as string,
+        });
+        const code = new URL(authorized.url).searchParams.get('code') as string;
+
+        const callback = await cookieRequest('GET', `/${segment}/callback?code=${code}&state=${state}`, {
+            redirect: 'manual',
+            headers: { 'sec-fetch-site': 'same-origin' },
+        });
+        expect(callback.status).toEqual(302);
+        expect(jar.get(SESSION_COOKIE)).toBeDefined();
+
+        // the control: the cookie authenticates an ordinary API route
+        const me = await cookieRequest('GET', '/users/@me', { headers: { 'sec-fetch-site': 'same-origin' } });
+        expect(me.status).toEqual(200);
+        expect((await me.json()).data.id).toEqual(user.id);
+
+        // but never the device approval, which sits on the issuance surface
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+
+        const approval = await cookieRequest('POST', '/device_authorization/approve', {
+            headers: {
+                'sec-fetch-site': 'same-origin',
+                origin: publicOrigin,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ user_code: userCode }),
+        });
+        expect(approval.status).toEqual(401);
+
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect(pending.status).toEqual(400);
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+    });
+
+    it('should answer the lookup with the client summary, the realm and the scope', async () => {
+        const client = await createPublicClient();
+        const { userCode } = await issue(client);
+        const { accessToken } = await createUserBearer();
+        const { data: realm } = await suite.client.realm.getOne('master');
+
+        const response = await verify('lookup', accessToken, { user_code: userCode });
+        expect(response.status).toEqual(200);
+        expect(response.headers.get('cache-control')).toEqual('no-store');
+
+        const body = await response.json();
+        expect(Object.keys(body).sort()).toEqual(['client', 'realm', 'scope']);
+        expect(Object.keys(body.client).sort()).toEqual(['builtIn', 'createdAt', 'displayName', 'id', 'name']);
+        expect(body.client.id).toEqual(client.id);
+        expect(body.client.name).toEqual(client.name);
+        expect(body.realm.id).toEqual(realm.id);
+        expect(body.realm.name).toEqual(realm.name);
+        expect(body.scope.split(' ').sort()).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
+    });
+
+    it('should redeem an approved code on the approver session', async () => {
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+        const { user, accessToken } = await createUserBearer();
+
+        const loginIntrospect = await suite.client.token.introspect(
+            { token: accessToken },
+            { authorizationHeaderInherit: true },
+        );
+        const loginSessionId = loginIntrospect.session_id as string;
+        expect(loginSessionId).toBeDefined();
+
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+
+        const approved = await verify('approve', accessToken, { user_code: userCode });
+        expect(approved.status).toEqual(200);
+        expect(approved.headers.get('cache-control')).toEqual('no-store');
+        expect(await approved.json()).toEqual({ status: 'approved' });
+
+        await dropPollWindow(deviceCode);
+
+        const redeemed = await poll(deviceCode, { client_id: client.id });
+        expect(redeemed.status).toEqual(200);
+        const token = await redeemed.json();
+        expect(token.access_token).toBeDefined();
+        expect(token.refresh_token).toBeDefined();
+        expect(token.id_token).toBeDefined();
+
+        const introspect = await suite.client.token.introspect(
+            { token: token.access_token },
+            { authorizationHeaderInherit: true },
+        );
+        expect(introspect.active).toEqual(true);
+        expect(introspect.sub).toEqual(user.id);
+        expect(introspect.session_id).toEqual(loginSessionId);
+        expect(introspect.client_id).toEqual(client.id);
+
+        const sessions = await suite.client.session.getMany({ filters: { sub: user.id } });
+        expect(sessions.data.filter((session) => session.sub === user.id)).toHaveLength(1);
+
+        const tokens = await suite.client.sessionToken.getMany({ filters: { sessionId: loginSessionId } });
+        const deviceRows = tokens.data.filter((row) => row.clientId === client.id);
+        expect(deviceRows.map((row) => row.kind).sort()).toEqual(['access', 'refresh']);
+
+        const idToken = decodeJwtPayload(token.id_token);
+        expect(idToken.sid).toEqual(loginSessionId);
+        expect(typeof idToken.auth_time).toEqual('number');
+
+        const rotated = await suite.client.token.createWithRefreshToken({
+            refresh_token: token.refresh_token,
+            client_id: client.id,
+        });
+        expect(rotated.access_token).toBeDefined();
+        expect(rotated.access_token).not.toEqual(token.access_token);
+        expect(rotated.refresh_token).not.toEqual(token.refresh_token);
+
+        await expectInvalidGrant(await poll(deviceCode, { client_id: client.id }));
+    });
+
+    it('should answer access_denied once for a denied code, then invalid_grant', async () => {
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+        const { accessToken } = await createUserBearer();
+
+        const denied = await verify('deny', accessToken, { user_code: userCode });
+        expect(denied.status).toEqual(200);
+        expect(await denied.json()).toEqual({ status: 'denied' });
+
+        const first = await poll(deviceCode, { client_id: client.id });
+        expect(first.status).toEqual(400);
+        const firstBody = await first.json();
+        expect(firstBody.code).toEqual(ErrorCode.OAUTH_ACCESS_DENIED);
+        expect(firstBody.error).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+
+        await expectInvalidGrant(await poll(deviceCode, { client_id: client.id }));
+    });
+
+    it('should refuse a foreign-realm user with login_required and no identity data', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const client = await createPublicClient({ realmId: realm.id });
+        const { userCode } = await issue(client);
+        const { user, accessToken } = await createUserBearer();
+        const { data: master } = await suite.client.realm.getOne('master');
+
+        for (const path of ['lookup', 'approve', 'deny'] as const) {
+            const response = await verify(path, accessToken, { user_code: userCode });
+            expect(response.status).toEqual(400);
+
+            const body = await response.json();
+            expect(body.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
+            expect(body.error).toEqual(OAuth2ErrorCode.LOGIN_REQUIRED);
+
+            const serialized = JSON.stringify(body);
+            expect(serialized).not.toContain(user.id);
+            expect(serialized).not.toContain(user.name);
+            expect(serialized).not.toContain(realm.id);
+            expect(serialized).not.toContain(master.id);
+        }
+
+        // the control: the code is valid for a user of the client's realm
+        const { accessToken: realmAccessToken } = await createUserBearer(realm.id);
+        const lookup = await verify('lookup', realmAccessToken, { user_code: userCode });
+        expect(lookup.status).toEqual(200);
+    });
+
+    it('should require the second factor before approving and accept the challenge', async () => {
+        const { bearer, accessToken } = await createUserBearer();
+
+        const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
+        const totp = new TOTP({
+            algorithm: 'SHA1',
+            digits: 6,
+            period: 30,
+            secret: Secret.fromBase32(enrolled.meta.secret as string),
+        });
+        const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate({ timestamp: Date.now() - 30_000 }) });
+        expect(confirmed.data.confirmed).toBeTruthy();
+
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+
+        const refused = await verify('approve', accessToken, { user_code: userCode });
+        expect(refused.status).toEqual(400);
+        const refusedBody = await refused.json();
+        expect(refusedBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
+        expect(refusedBody.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
+
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+
+        const verified = await bearer.userAuthenticator.verifyChallenge({
+            kind: UserAuthenticatorKind.TOTP,
+            response: totp.generate(),
+        });
+        expect(verified.verified).toBeTruthy();
+
+        const approved = await verify('approve', accessToken, { user_code: userCode });
+        expect(approved.status).toEqual(200);
+        expect(await approved.json()).toEqual({ status: 'approved' });
+    });
+
+    it('should refuse the approval under a denying access policy', async () => {
+        const { data: denyPolicy } = await suite.client.policy.createBuiltIn({
+            name: 'device-access-deny',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: false,
+            types: [IdentityType.CLIENT],
+            realmId: null,
+        });
+        const client = await createPublicClient({ accessPolicyId: denyPolicy.id });
+        const { deviceCode, userCode } = await issue(client);
+        const { accessToken } = await createUserBearer();
+
+        const refused = await verify('approve', accessToken, { user_code: userCode });
+        expect(refused.status).toEqual(400);
+        const body = await refused.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_ACCESS_DENIED);
+        expect(body.error).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+        expect(body).not.toHaveProperty('url');
+
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+    });
+
+    it('should refuse the redemption when a policy is attached after the approval', async () => {
+        const { data: denyPolicy } = await suite.client.policy.createBuiltIn({
+            name: 'device-access-deny-late',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: false,
+            types: [IdentityType.CLIENT],
+            realmId: null,
+        });
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+        const { accessToken } = await createUserBearer();
+
+        const approved = await verify('approve', accessToken, { user_code: userCode });
+        expect(approved.status).toEqual(200);
+
+        await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
+
+        await expectInvalidGrant(await poll(deviceCode, { client_id: client.id }));
+    });
+
+    it('should throttle the actor after ten misses while a valid lookup consumes none', async () => {
+        const client = await createPublicClient();
+        const { userCode } = await issue(client);
+        const { accessToken } = await createUserBearer();
+
+        for (let i = 0; i < 5; i++) {
+            const body = await expectInvalidGrant(await verify('lookup', accessToken, { user_code: WRONG_USER_CODE }));
+            expect(body.message).toEqual(USER_CODE_INVALID_MESSAGE);
+        }
+
+        const valid = await verify('lookup', accessToken, { user_code: userCode });
+        expect(valid.status).toEqual(200);
+
+        for (let i = 0; i < 5; i++) {
+            await expectInvalidGrant(await verify('lookup', accessToken, { user_code: WRONG_USER_CODE }));
+        }
+
+        const throttled = await verify('lookup', accessToken, { user_code: WRONG_USER_CODE });
+        expect(throttled.status).toEqual(429);
+        const body = await throttled.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED);
+        expect(body.retryAfter).toBeGreaterThan(0);
+        expect(isDeviceVerificationThrottledError(body)).toBe(true);
+
+        // the valid code is refused too while the actor is locked out
+        const locked = await verify('approve', accessToken, { user_code: userCode });
+        expect(locked.status).toEqual(429);
+    });
+
+    it('should answer the neutral invalid_grant for a non-string user_code', async () => {
+        const { accessToken } = await createUserBearer();
+
+        const malformed = await expectInvalidGrant(await verify('lookup', accessToken, { user_code: 42 }));
+        const wrong = await expectInvalidGrant(await verify('lookup', accessToken, { user_code: WRONG_USER_CODE }));
+
+        expect(malformed.message).toEqual(USER_CODE_INVALID_MESSAGE);
+        expect(malformed.message).toEqual(wrong.message);
     });
 });
