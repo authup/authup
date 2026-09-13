@@ -2464,15 +2464,18 @@ rather than trusted until `exp`.
   frustrate. A key would also have to be global, since the lookup resolves a
   session BY this value and the realm is unknown at that point. Hex SHA-256 is
   exactly the column's 64 characters.
-- **Stage 2 (plan 081, 2026-08-25) turned out to be one kit change.** Of
-  the three surfaces that read `accessToken`, only `usePermissionCheck`
-  mattered: its evaluator was already fed from `GET /sessions/@me/introspect`
-  (`commitSession` populates the memory provider tokenlessly), but its
-  recompute WATCH keyed on the token-derived `loggedIn`, which never flips
-  in cookie mode, so every verdict latched at its fail-closed `false`. It
-  now watches `status`, which flips in the same synchronous commit as the
-  permissions in both modes (pinned by
-  `test/unit/core/permission-check/cookie-mode.spec.ts`). `loggedIn` stays
+- **Cookie mode needs no bearer for permission checks.** Of the three
+  surfaces that read `accessToken`, only `usePermissionCheck` matters, and
+  its evaluator is not token-derived: the store commits the evaluator built
+  from the authorization document it fetches after the introspection
+  (`GET /authorization`, with the staged bearer in bearer mode and with the
+  session cookie in cookie mode), and the name-only memory provider is the
+  fallback for a server answering 404 there. The recompute WATCH keys on
+  `status`, which flips in the same synchronous commit as the evaluator in
+  both modes (pinned by
+  `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
+  token-derived `loggedIn`, which never flips in cookie mode, latched every
+  verdict at its fail-closed `false`. `loggedIn` stays
   `@deprecated` and unchanged (no admin-console consumer left since #3240;
   its remaining kit consumer is `Authorize.vue`, a bearer-mode page). The
   socket manager is dormant: `install()` gates it on `options.realtime`,

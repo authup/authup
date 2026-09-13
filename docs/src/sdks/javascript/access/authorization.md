@@ -10,9 +10,11 @@ for compatibility; that array is not enough for resource authorization.
 
 ## Read the document
 
-The endpoint requires an access credential with the `global` scope: a bearer,
-HTTP Basic, or the console session cookie. A resource server that verified a
-user's bearer forwards that bearer; a client acting for itself uses its own.
+The endpoint requires an access credential: a bearer, HTTP Basic, or the
+console session cookie. A resource server that verified a user's bearer
+forwards that bearer; a client acting for itself uses its own. A credential
+without the `global` scope receives an empty document: it holds no grants
+server-side either.
 
 ```typescript
 import { createAuthorizationEvaluator, BuiltInPolicyType, PolicyData } from '@authup/access';
@@ -25,6 +27,9 @@ const authorization = await createAuthorizationEvaluator(document);
 
 The response is `Cache-Control: no-store`. Cache it in your own process with the
 lifetime you give token validity: a revoked grant is visible on the next read.
+Cache one evaluator per SUBJECT (the document's `identity.id`), never per
+process or per client: the evaluator ignores a caller-supplied identity and
+always evaluates as the document's subject.
 
 ## Evaluate one resource
 
@@ -41,6 +46,16 @@ await authorization.evaluate({
 });
 // Resolves on allow; throws on denial or missing resource realm data.
 ```
+
+`options.decisionStrategy` is forwarded; the policy include, exclude and
+pending options are refused.
+
+Reach is enforced by the `permissionBinding` node in the permission's
+definition policies (`system.default` on every provisioned permission). A
+permission whose definition carries no binding check is unrestricted, grants
+included, so `allow` can also mean that the permission has no policy layer at
+all. Keep `core.permissionsDefaultPolicyAssignment` on for `realm_scope` to
+mean anything.
 
 Supply the resource realm explicitly: its id, or `null` for a global resource.
 `own` admits the actor's realm only; `ownOrNull` also admits global resources;
@@ -89,11 +104,11 @@ query.
 - Nullable fields are required. An empty `policies` list means no restriction at
   that layer. A held permission with no definition is omitted and denies.
 
-`createAuthorizationEvaluator` rejects an unknown version, missing fields, an
-unreferenced policy id, an unsupported policy type, a malformed configuration
-and a grant policy that contains a permission-binding check. It rebuilds the
-server's own binding model and runs the same aggregation and evaluators, which
-is what makes the decisions equal.
+`createAuthorizationEvaluator` rejects an unknown version, missing fields, a
+reference to an undeclared policy id, an unsupported policy type, a malformed
+configuration and a grant policy that contains a permission-binding check. It
+rebuilds the server's own binding model and runs the same aggregation and
+evaluators, which is what makes the decisions equal.
 
 ## Upgrade order
 

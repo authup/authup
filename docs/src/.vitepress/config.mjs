@@ -433,6 +433,10 @@ export default defineConfig({
                                     text: 'Policies',
                                     link: '/sdks/javascript/access/policies', 
                                 },
+                                {
+                                    text: 'Authorization Document',
+                                    link: '/sdks/javascript/access/authorization',
+                                },
                             ],
                         },
                         {
