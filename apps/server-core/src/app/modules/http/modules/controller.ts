@@ -316,11 +316,7 @@ export class HTTPControllerModule {
             new UserAuthenticator(identityResolver),
         ]);
 
-        const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator({
-            identityResolver,
-            certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
-            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
-        });
+        const oauth2ClientAuthenticator = this.createOAuth2ClientAuthenticator(container);
 
         const eventService = container.resolve(DatabaseInjectionKey.EventService);
         const metrics = container.resolve(MetricsInjectionKey);
@@ -872,6 +868,16 @@ export class HTTPControllerModule {
     }
 
     private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;
+
+    protected createOAuth2ClientAuthenticator(container: IContainer) : OAuth2ClientAuthenticator {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        return new OAuth2ClientAuthenticator({
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
+            certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
+        });
+    }
 
     protected resolveAccessPolicyEvaluator(container: IContainer) : OAuth2AccessPolicyEvaluator {
         if (this.accessPolicyEvaluator) {

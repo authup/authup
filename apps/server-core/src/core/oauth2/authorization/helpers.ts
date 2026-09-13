@@ -5,15 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasInstanceof } from '@authup/errors';
 import type { JWTAlgorithm, OAuth2TokenPayload } from '@authup/specs';
 import {
     JWTError,
+    OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
+    OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
+    OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
     OAuth2AuthenticationContextClass,
     OAuth2AuthenticationMethodReference,
 } from '@authup/specs';
 import type { Session } from '@authup/core-kit';
 import { SessionAuthMethod } from '@authup/core-kit';
 import { subtle } from 'uncrypto';
+import type { AuthFlowAuthorizeOutcome } from '../../metrics/index.ts';
+
+/**
+ * Map a refused authorization onto its `authup_authorize_total` outcome
+ * label, so every caller of the admission gate records the same labels.
+ */
+export function classifyAuthorizeFailure(e: unknown) : AuthFlowAuthorizeOutcome {
+    if (hasInstanceof(e, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
+        return 'denied';
+    }
+
+    if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
+        return 'login_required';
+    }
+
+    if (hasInstanceof(e, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
+        return 'mfa_required';
+    }
+
+    return 'error';
+}
 
 /**
  * Derive the OIDC `amr` / `acr` claims from the backing session's
