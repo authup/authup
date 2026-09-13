@@ -11,6 +11,7 @@ import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
     IAccountAPI,
+    IAuthorizationAPI,
     IClientAPI,
     IClientPermissionAPI,
     IClientRoleAPI,
@@ -59,6 +60,12 @@ export interface IClient extends IBaseClient {
      * hydrates from, `DELETE /sessions/@me` to end it.
      */
     readonly account : IAccountAPI;
+
+    /**
+     * The caller's own authorization document: the identity, every permission
+     * it holds with the grants behind it, and the policy trees those reference.
+     */
+    readonly authorization : IAuthorizationAPI;
 
     readonly authorize : IOAuth2AuthorizeAPI;
 
