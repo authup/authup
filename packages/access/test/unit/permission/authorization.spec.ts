@@ -302,6 +302,43 @@ describe('authorization document consumer', () => {
         expect(await allowed(await createAuthorizationEvaluator(affirmative), resource(realmB))).toBe(true);
     });
 
+    it('keeps invert true, drops invert null, and applies a nested invert through a composite', async () => {
+        const query = { visible: { $eq: true } };
+        const outcomes = async (visible: Policy) => {
+            const evaluator = await createAuthorizationEvaluator(document(
+                [{ realm_scope: 'any', policies: [] }],
+                { binding: { type: 'permissionBinding' }, visible },
+                ['binding', 'visible'],
+            ));
+
+            return [
+                await allowed(evaluator, resource(realmB, true)),
+                await allowed(evaluator, resource(realmB, false)),
+            ];
+        };
+
+        expect(await outcomes({
+            type: 'attributes',
+            query,
+            invert: null,
+        })).toEqual([true, false]);
+        expect(await outcomes({
+            type: 'attributes',
+            query,
+            invert: true,
+        })).toEqual([false, true]);
+        expect(await outcomes({
+            type: 'composite',
+            decisionStrategy: 'unanimous',
+            invert: null,
+            children: [{
+                type: 'attributes',
+                query,
+                invert: true,
+            }],
+        })).toEqual([false, true]);
+    });
+
     it.each([
         { ...document([]), identity: undefined },
         { ...document([]), permissions: [{ name: 'event_read' }] },
