@@ -287,6 +287,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
                 actorType: identity.type,
                 actorId: identity.data.id,
                 actorName: identity.data.name,
+                realmId: identity.data.realmId ?? null,
                 ...this.buildRequestAttribution(),
                 data: { reason: 'userCode', grantType: OAuth2TokenGrant.DEVICE_CODE },
             });

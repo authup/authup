@@ -454,6 +454,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
                     actorType: OAuth2SubKind.USER,
                     actorId: USER_ID,
                     actorName: 'user',
+                    realmId: REALM_ID,
                     sessionId: SESSION_ID,
                     requestPath: requestContext.requestPath,
                     requestMethod: requestContext.requestMethod,
