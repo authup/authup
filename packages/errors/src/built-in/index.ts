@@ -9,6 +9,7 @@ export * from './auth-header';
 export * from './bad-request';
 export * from './bearer-token';
 export * from './check';
+export * from './device-verification-throttled';
 export * from './entity-conflict';
 export * from './entity-credentials-invalid';
 export * from './entity-inactive';

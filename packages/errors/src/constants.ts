@@ -72,6 +72,10 @@ export enum ErrorCode {
     OAUTH_RESPONSE_TYPE_UNSUPPORTED = 'unsupported_response_type',
     OAUTH_SCOPE_INVALID = 'invalid_scope',
     OAUTH_SCOPE_INSUFFICIENT = 'insufficient_scope',
+    OAUTH_AUTHORIZATION_PENDING = 'authorization_pending',
+    OAUTH_SLOW_DOWN = 'slow_down',
+    OAUTH_DEVICE_CODE_EXPIRED = 'device_code_expired',
+    OAUTH_DEVICE_VERIFICATION_THROTTLED = 'device_verification_throttled',
 
     // Permission Codes
     PERMISSION_NOT_FOUND = 'permission_not_found',

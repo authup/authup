@@ -160,6 +160,7 @@ export class TokenController {
                 options: { gracePeriod: ctx.tokenRefreshGracePeriod },
                 certificateSource: ctx.certificateSource,
             }),
+            [OAuth2TokenGrant.DEVICE_CODE]: { runWithRequest: () => Promise.reject(OAuth2GrantTypeError.unsupported()) },
         };
     }
 

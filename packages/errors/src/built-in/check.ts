@@ -12,6 +12,7 @@ import { AUTH_HEADER_ERROR_INSTANCE, type AuthHeaderError } from './auth-header.
 import { BAD_REQUEST_ERROR_INSTANCE, type BadRequestError } from './bad-request.ts';
 import { VALIDATION_ERROR_INSTANCE, type ValidationError } from './validation.ts';
 import { BEARER_TOKEN_MALFORMED_ERROR_INSTANCE, type BearerTokenMalformedError } from './bearer-token.ts';
+import { DEVICE_VERIFICATION_THROTTLED_ERROR_INSTANCE, type DeviceVerificationThrottledError } from './device-verification-throttled.ts';
 import { ENTITY_CONFLICT_ERROR_INSTANCE, type EntityConflictError } from './entity-conflict.ts';
 import { ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE, type EntityCredentialsInvalidError } from './entity-credentials-invalid.ts';
 import { ENTITY_INACTIVE_ERROR_INSTANCE, type EntityInactiveError } from './entity-inactive.ts';
@@ -91,4 +92,10 @@ export function isMfaThrottledError(input: unknown): input is MfaThrottledError 
     if (matchesInstanceof(input, MFA_THROTTLED_ERROR_INSTANCE)) return true;
     if (!isAuthupError(input)) return false;
     return input.code === ErrorCode.MFA_ATTEMPT_THROTTLED;
+}
+
+export function isDeviceVerificationThrottledError(input: unknown): input is DeviceVerificationThrottledError {
+    if (matchesInstanceof(input, DEVICE_VERIFICATION_THROTTLED_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return input.code === ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED;
 }
