@@ -12,6 +12,7 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import type {
+    OAuth2TokenGrant,
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
@@ -54,7 +55,50 @@ export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters & 
 };
 export type OAuth2TokenAuthorizationCodeGrantParameters = TokenAuthorizationCodeGrantParameters;
 export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParameters;
-export type OAuth2TokenGrantParameters = TokenGrantParameters;
+/**
+ * The RFC 8628 device access token request (§3.4). hapic's grant union
+ * is closed, so it is declared here and widens `OAuth2TokenGrantParameters`.
+ */
+export type OAuth2TokenDeviceCodeGrantParameters = {
+    grant_type: `${OAuth2TokenGrant.DEVICE_CODE}`,
+    device_code: string,
+    client_id?: string,
+    client_secret?: string,
+    realm_id?: string,
+    realm_name?: string,
+};
+export type OAuth2TokenGrantParameters = TokenGrantParameters | OAuth2TokenDeviceCodeGrantParameters;
+
+export type OAuth2DeviceAuthorizationParameters = {
+    client_id?: string,
+    client_secret?: string,
+    scope?: string | string[],
+    realm_id?: string,
+    realm_name?: string,
+};
+
+export type OAuth2DeviceAuthorizationResponse = {
+    device_code: string,
+    user_code: string,
+    verification_uri: string,
+    verification_uri_complete: string,
+    expires_in: number,
+    interval: number,
+};
+
+export type DeviceAuthorizationVerifyPayload = {
+    user_code: string,
+};
+
+export type DeviceAuthorizationInfo = {
+    client: ClientSummary,
+    realm: RealmSummary,
+    scope: string,
+};
+
+export type DeviceAuthorizationDecisionResponse = {
+    status: 'approved' | 'denied',
+};
 
 export type OAuth2TokenRevokeParameters = TokenRevokeParameters;
 export type OAuth2TokenIntrospectParameters = TokenIntrospectParameters;
@@ -189,6 +233,11 @@ export interface IOAuth2TokenAPI {
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2TokenGrantResponse>;
 
+    createWithDeviceCode(
+        parameters: Omit<OAuth2TokenDeviceCodeGrantParameters, 'grant_type'>,
+        options?: OAuth2TokenRequestOptions,
+    ) : Promise<OAuth2TokenGrantResponse>;
+
     create(
         parameters: OAuth2TokenGrantParameters,
         options?: OAuth2TokenRequestOptions,
@@ -217,4 +266,22 @@ export interface IOAuth2UserInfoAPI {
     get<T extends Record<string, any> = Record<string, any>>(
         header?: string | AuthorizationHeader,
     ) : Promise<T>;
+}
+
+export interface IOAuth2DeviceAuthorizationAPI {
+    /**
+     * `POST /device_authorization` (RFC 8628 §3.1): the token-API header
+     * semantics apply, so the client's own Authorization header is
+     * dropped unless `authorizationHeaderInherit` is set.
+     */
+    create(
+        parameters: OAuth2DeviceAuthorizationParameters,
+        options?: OAuth2TokenRequestOptions,
+    ) : Promise<OAuth2DeviceAuthorizationResponse>;
+
+    lookup(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationInfo>;
+
+    approve(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse>;
+
+    deny(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse>;
 }

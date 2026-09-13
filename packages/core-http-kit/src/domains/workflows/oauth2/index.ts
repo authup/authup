@@ -6,6 +6,7 @@
  */
 
 export * from './authorize';
+export * from './device-authorization';
 export * from './token';
 export * from './user-info';
 export * from './types';
