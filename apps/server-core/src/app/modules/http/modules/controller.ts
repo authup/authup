@@ -106,6 +106,8 @@ import {
     AdminController,
     AuthenticatorChallengeController,
     AuthorizeController,
+    DeviceAuthorizationController,
+    DeviceController,
     JwkController,
     LogoutController,
     OpenIDController,
@@ -132,7 +134,9 @@ import {
     KeyService,
     LoginThrottleService,
     OAuth2AccessPolicyEvaluator,
+    OAuth2AuthorizationGate,
     OAuth2ClientAuthenticator,
+    OAuth2DeviceAuthorizationService,
     OAuth2DeviceCodeVerifier,
     OAuth2EndSessionService,
     OAuth2FederatedLoginService,
@@ -205,6 +209,8 @@ export class HTTPControllerModule {
             controllers: [
                 this.createAuthorize(container),
                 this.createToken(container),
+                this.createDeviceAuthorization(container),
+                this.createDeviceController(container),
                 this.createJwkController(container),
                 this.createOpenIDController(container),
                 this.createActivateController(container),
@@ -369,6 +375,42 @@ export class HTTPControllerModule {
 
             sessionManager,
         });
+    }
+
+    createDeviceAuthorization(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        const service = new OAuth2DeviceAuthorizationService({
+            repository: container.resolve(OAuth2InjectionToken.DeviceCodeRepository),
+            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
+            scopeRepository: container.resolve(OAuth2InjectionToken.ScopeRepository),
+            gate: new OAuth2AuthorizationGate({
+                sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+                mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
+                accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+                promptLoginMaxAge: config.promptLoginMaxAge,
+                mfaFreshnessMaxAge: config.mfaFreshnessMaxAge,
+            }),
+            consentService: this.createConsentService(container),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            metrics: container.resolve(MetricsInjectionKey),
+            logger: container.resolve(LoggerInjectionKey),
+            requestContext: useRequestEventContext,
+            options: { verificationUri: resolveURL(config.publicUrl, 'device') },
+        });
+
+        return new DeviceAuthorizationController({
+            service,
+            clientAuthenticator: this.createOAuth2ClientAuthenticator(container),
+            realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
+            certificateSource: config.certificateSource,
+        });
+    }
+
+    createDeviceController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new DeviceController({ options: { authConsoleUrl: config.authConsole.url } });
     }
 
     createOpenIDController(container: IContainer) {

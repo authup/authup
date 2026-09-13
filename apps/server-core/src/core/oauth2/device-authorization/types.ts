@@ -12,7 +12,13 @@ import type {
     SessionAuthMethod,
 } from '@authup/core-kit';
 import type { DeviceAuthorizationInfo, OAuth2DeviceAuthorizationResponse } from '@authup/core-http-kit';
+import type { Logger } from '@authup/server-kit';
 import type { OAuth2SubKind } from '@authup/specs';
+import type { IOAuth2AuthorizationGate } from '../authorization/types.ts';
+import type { IOAuth2ClientRepository } from '../client/types.ts';
+import type { IOAuth2ScopeRepository } from '../scope/types.ts';
+import type { EventRequestContext, IConsentService, IEventService } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 export enum OAuth2DeviceCodeStatus {
     PENDING = 'pending',
@@ -138,18 +144,42 @@ export interface IOAuth2DeviceCodeVerifier {
 }
 
 export type OAuth2DeviceAuthorizationIssueOptions = {
-    scope?: string,
+    scope?: string | null,
 };
 
 export type OAuth2DeviceAuthorizationApproveOptions = {
-    sessionId?: string | null,
+    /**
+     * The approver's bearer session (useRequestSessionId), stamped onto the
+     * decision so the redemption reuses it.
+     */
+    sessionId: string | null,
+};
+
+export type OAuth2DeviceAuthorizationServiceOptions = {
+    /**
+     * The absolute `<publicUrl>/device` the response advertises.
+     */
+    verificationUri: string,
+};
+
+export type OAuth2DeviceAuthorizationServiceContext = {
+    repository: IOAuth2DeviceCodeRepository,
+    clientRepository: IOAuth2ClientRepository,
+    scopeRepository: IOAuth2ScopeRepository,
+    gate: IOAuth2AuthorizationGate,
+    consentService?: IConsentService,
+    eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
+    logger?: Logger,
+    requestContext?: () => EventRequestContext | undefined,
+    options: OAuth2DeviceAuthorizationServiceOptions,
 };
 
 export interface IOAuth2DeviceAuthorizationService {
     issue(
         client: Client,
         realm: Realm,
-        options?: OAuth2DeviceAuthorizationIssueOptions,
+        options: OAuth2DeviceAuthorizationIssueOptions,
     ): Promise<OAuth2DeviceAuthorizationResponse>;
 
     lookup(userCode: unknown, identity: Identity): Promise<DeviceAuthorizationInfo>;
@@ -157,7 +187,7 @@ export interface IOAuth2DeviceAuthorizationService {
     approve(
         userCode: unknown,
         identity: Identity,
-        options?: OAuth2DeviceAuthorizationApproveOptions,
+        options: OAuth2DeviceAuthorizationApproveOptions,
     ): Promise<void>;
 
     deny(userCode: unknown, identity: Identity): Promise<void>;

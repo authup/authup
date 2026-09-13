@@ -11,7 +11,7 @@ import type {
     OAuth2DeviceCodeDecision,
     OAuth2DeviceCodeRequest,
 } from '../../../../src/core/index.ts';
-import { OAuth2DeviceCodeStatus } from '../../../../src/core/index.ts';
+import { OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW, OAuth2DeviceCodeStatus } from '../../../../src/core/index.ts';
 
 export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
     public saveCalls: OAuth2DeviceCodeRequest[] = [];
@@ -195,7 +195,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.attempts.set(key, count);
 
         if (count >= limit) {
-            this.locks.set(key, Math.floor(Date.now() / 1000) + 600);
+            this.locks.set(key, Math.floor(Date.now() / 1000) + OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW);
         }
     }
 

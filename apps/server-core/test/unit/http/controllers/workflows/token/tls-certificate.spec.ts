@@ -99,6 +99,8 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
         expect(discovery.tls_client_certificate_bound_access_tokens).toBe(true);
         expect(discovery.mtls_endpoint_aliases.token_endpoint)
             .toBe('https://mtls.example.com/token');
+        expect(discovery.mtls_endpoint_aliases.device_authorization_endpoint)
+            .toBe('https://mtls.example.com/device_authorization');
     });
 
     it('authenticates a client through its trusted chain and binds the issued access token', async () => {

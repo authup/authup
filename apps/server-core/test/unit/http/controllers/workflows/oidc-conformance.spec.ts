@@ -99,6 +99,16 @@ describe('OIDC conformance smoke', () => {
         expect(discovery.tls_client_certificate_bound_access_tokens).toBeUndefined();
         expect(discovery.mtls_endpoint_aliases).toBeUndefined();
 
+        // RFC 8628 §4: the device authorization grant and its endpoint
+        expect(discovery.device_authorization_endpoint.endsWith('/device_authorization')).toBe(true);
+        expect(discovery.grant_types_supported).toEqual([
+            'authorization_code',
+            'client_credentials',
+            'urn:ietf:params:oauth:grant-type:device_code',
+            'password',
+            'refresh_token',
+        ]);
+
         // endpoints share the issuer origin
         const issuerOrigin = new URL(discovery.issuer).origin;
         expect(new URL(discovery.authorization_endpoint).origin).toEqual(issuerOrigin);
