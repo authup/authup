@@ -8,7 +8,6 @@
 import { z } from 'zod';
 import type { BasePolicy } from '../../policy';
 import {
-    AttributesPolicyEvaluator,
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
@@ -25,19 +24,11 @@ import { PermissionEvaluator } from '../evaluator';
 import { buildPermissionKey } from '../helpers';
 import { PermissionMemoryProvider } from '../provider';
 import type { PermissionPolicyBinding } from '../types';
-import { projectAuthorizationPolicy } from './policy';
+import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
 import { authorizationDocumentSchema } from './schema';
 import type { AuthorizationPolicy } from './types';
 
 const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
-
-function containsBindingCheck(policy: AuthorizationPolicy) : boolean {
-    if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {
-        return true;
-    }
-
-    return (policy.children ?? []).some((child) => containsBindingCheck(child));
-}
 
 function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
     const {
@@ -62,29 +53,23 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * enforce reach only when that key is present. `compile` returns the
  * allow/deny/conditional/post contract; a `post` collection query must be
  * rejected or evaluated over every candidate before paging. The document's
- * identity is authoritative and caller policy bypass options are ignored.
+ * identity is authoritative; `options.decisionStrategy` is forwarded and the
+ * policy include, exclude and pending options are refused.
  */
 export async function createAuthorizationEvaluator(input: unknown) : Promise<IPermissionEvaluator> {
     // Detach: a later mutation of a cached HTTP response cannot widen grants
     // after validation (attribute queries carry arbitrary nested data).
     const document = authorizationDocumentSchema.parse(structuredClone(input));
 
-    const trees : Record<string, AuthorizationPolicy> = {};
+    const trees = new Map<string, AuthorizationPolicy>();
     for (const [id, raw] of Object.entries(document.policies)) {
-        const tree = await projectAuthorizationPolicy(raw);
-        if (
-            tree.type === BuiltInPolicyType.ATTRIBUTES &&
-            !await new AttributesPolicyEvaluator().toCondition(tree)
-        ) {
-            throw new Error(`Unsupported authorization attribute query in policy ${id}.`);
-        }
-        trees[id] = tree;
+        trees.set(id, await projectAuthorizationPolicy(raw));
     }
 
     const resolve = (ids: string[], withinGrant: boolean) : BasePolicy[] | undefined => {
         const policies : BasePolicy[] = [];
         for (const id of ids) {
-            const tree = trees[id];
+            const tree = trees.get(id);
             if (!tree) {
                 throw new Error(`Unknown authorization policy: ${id}`);
             }
@@ -146,12 +131,25 @@ export async function createAuthorizationEvaluator(input: unknown) : Promise<IPe
         return data;
     };
 
-    const forGate = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => ({
-        name: ctx.name,
-        realmId: ctx.realmId,
-        clientId: ctx.clientId,
-        data: withIdentity(ctx.data),
-    });
+    const forGate = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
+        if (
+            ctx.options?.policiesIncluded ||
+            ctx.options?.policiesExcluded ||
+            ctx.options?.pendingPolicies
+        ) {
+            throw new Error('The authorization evaluator does not accept policy bypass options.');
+        }
+
+        return {
+            name: ctx.name,
+            realmId: ctx.realmId,
+            clientId: ctx.clientId,
+            data: withIdentity(ctx.data),
+            ...(ctx.options?.decisionStrategy ?
+                { options: { decisionStrategy: ctx.options.decisionStrategy } } :
+                {}),
+        };
+    };
 
     const forResource = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
         const next = forGate(ctx);

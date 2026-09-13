@@ -57,7 +57,7 @@ export async function projectAuthorizationPolicy(input: unknown) : Promise<Autho
         }
 
         if (head.type === BuiltInPolicyType.COMPOSITE) {
-            const children = z.array(z.unknown()).min(1).parse(head.children);
+            const children = z.array(z.unknown()).parse(head.children ?? []);
             output.children = await Promise.all(children.map((child) => project(child)));
         } else {
             delete output.children;
@@ -67,4 +67,17 @@ export async function projectAuthorizationPolicy(input: unknown) : Promise<Autho
     };
 
     return project(input);
+}
+
+/**
+ * Whether a projected tree evaluates the permission binding at any depth. A
+ * grant policy carrying one would re-enter its own permission's grants, so the
+ * producer drops such a grant and the consumer refuses such a document.
+ */
+export function containsBindingCheck(policy: AuthorizationPolicy) : boolean {
+    if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {
+        return true;
+    }
+
+    return (policy.children ?? []).some((child) => containsBindingCheck(child));
 }

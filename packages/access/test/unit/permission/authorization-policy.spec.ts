@@ -69,10 +69,14 @@ describe('permission/authorization/policy', () => {
         expect(projected).toEqual({ type: 'attributes', query: { visible: { $eq: true } } });
     });
 
-    it('refuses an unknown type, a missing type and a childless composite', async () => {
+    it('refuses an unknown type and a missing type', async () => {
         await expect(projectAuthorizationPolicy({ type: 'custom' })).rejects.toThrow();
         await expect(projectAuthorizationPolicy({ names: ['a'] })).rejects.toThrow();
-        await expect(projectAuthorizationPolicy({ type: 'composite', children: [] })).rejects.toThrow();
+    });
+
+    it('round-trips a childless composite', async () => {
+        expect(await projectAuthorizationPolicy({ type: 'composite', children: [] }))
+            .toEqual({ type: 'composite', children: [] });
     });
 
     it('refuses a malformed configuration', async () => {

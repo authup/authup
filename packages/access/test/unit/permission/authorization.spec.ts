@@ -351,13 +351,7 @@ describe('authorization document consumer', () => {
             },
         ),
         document([{ realm_scope: 'any', policies: [] }], { custom: { type: 'custom', invert: true } }, ['custom']),
-        document([{ realm_scope: 'any', policies: [] }], { empty: { type: 'composite', children: [] } }, ['empty']),
         document([{ realm_scope: 'any', policies: [] }], { broken: { type: 'attributes', query: 'broken' } }, ['broken']),
-        document(
-            [{ realm_scope: 'any', policies: [] }],
-            { unsupported: { type: 'attributes', query: { visible: { $unsupported: true } } } },
-            ['unsupported'],
-        ),
         document(
             [{ realm_scope: 'any', policies: [] }],
             { custom: { type: 'composite', children: [{ type: 'custom' }] } },
@@ -403,5 +397,73 @@ describe('authorization document consumer', () => {
         await expect(createAuthorizationEvaluator(malformed)).rejects.toThrow();
         input.permissions.push(input.permissions[0]!);
         await expect(createAuthorizationEvaluator(input)).rejects.toThrow();
+    });
+
+    it('denies through a childless composite definition, at the gate and on the row', async () => {
+        const evaluator = await createAuthorizationEvaluator(document(
+            [{ realm_scope: 'any', policies: [] }],
+            {
+                empty: {
+                    type: 'composite', 
+                    decisionStrategy: 'unanimous', 
+                    children: [], 
+                }, 
+            },
+            ['empty'],
+        ));
+        expect(await allowed(evaluator, resource(realmA))).toBe(false);
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+    });
+
+    it('reports post for a top-level attributes policy whose query cannot be lowered', async () => {
+        const evaluator = await createAuthorizationEvaluator(document(
+            [{ realm_scope: 'any', policies: [] }],
+            {
+                binding: { type: 'permissionBinding' },
+                unsupported: { type: 'attributes', query: { visible: { $unsupported: true } } },
+            },
+            ['binding', 'unsupported'],
+        ));
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'post' });
+        expect(await allowed(evaluator, resource(realmA, true))).toBe(false);
+    });
+
+    it('forwards the decision strategy and refuses the policy bypass options', async () => {
+        const input = document([{ realm_scope: 'any', policies: [] }]);
+        input.permissions[0]!.name = 'ok';
+        input.permissions.push({
+            name: 'no',
+            realm_id: null,
+            client_id: null,
+            decision_strategy: null,
+            policies: ['binding'],
+            grants: [{ realm_scope: 'none', policies: [] }],
+        });
+        const evaluator = await createAuthorizationEvaluator(input);
+        const data = resource(realmB);
+
+        await expect(evaluator.evaluate({
+            name: ['ok', 'no'],
+            options: { decisionStrategy: 'affirmative' },
+            data,
+        })).resolves.toBeUndefined();
+        await expect(evaluator.evaluate({ name: ['ok', 'no'], data })).rejects.toThrow();
+        await expect(evaluator.evaluate({
+            name: 'ok',
+            options: { policiesExcluded: ['x'] },
+            data,
+        })).rejects.toThrow('The authorization evaluator does not accept policy bypass options.');
+        await expect(evaluator.preEvaluate({
+            name: 'ok',
+            options: { pendingPolicies: 'permit' },
+        })).rejects.toThrow('The authorization evaluator does not accept policy bypass options.');
+    });
+
+    it('is unrestricted when the definition carries no binding check', async () => {
+        const evaluator = await createAuthorizationEvaluator(document([{ realm_scope: 'none', policies: [] }], {}, []));
+        for (const realmId of [realmA, realmB, null]) {
+            await expect(evaluator.evaluate({ name: 'event_read', data: resource(realmId) })).resolves.toBeUndefined();
+        }
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'allow' });
     });
 });
