@@ -21,13 +21,13 @@ import {
     PolicyEngine,
     RealmMatchPolicyValidator,
     TimePolicyValidator,
-} from '../policy';
-import type { PermissionCompileContext, PermissionEvaluationContext } from './evaluator';
-import { PermissionEvaluator } from './evaluator';
-import { buildPermissionKey } from './helpers';
-import { PermissionMemoryProvider } from './provider';
-import { RealmScope } from './realm-scope';
-import type { PermissionPolicyBinding } from './types';
+} from '../../policy';
+import type { PermissionCompileContext, PermissionEvaluationContext } from '../evaluator';
+import { PermissionEvaluator } from '../evaluator';
+import { buildPermissionKey } from '../helpers';
+import { PermissionMemoryProvider } from '../provider';
+import { RealmScope } from '../realm-scope';
+import type { PermissionPolicyBinding } from '../types';
 
 const policySchema = z.looseObject({ type: z.enum(BuiltInPolicyType) });
 const namespaceId = z.uuid().nullable();
