@@ -3220,34 +3220,46 @@ baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
-### Introspection authorization snapshots (#3581)
+### The authorization document (`GET /authorization`, #3581)
 
-`resolveIntrospectionSubject` exports `authorization.version: 1` for active tokens
-and console sessions alongside the legacy name-only `permissions`. Each held
-permission's exact namespace carries its effective definition policy tree and
-all paired `{ realm_scope, policy }` grants. Null policies are explicit; missing
-definitions are omitted, never interpreted as policy-free. The snapshot identity
-comes from `toIdentityPolicyData`, not the token's client namespace.
+`GET /authorization` (`adapters/http/controllers/workflows/authorization/`, `ForceLoggedIn`,
+a 403 `PermissionError` for a credential without the `global` scope, `no-store` plus
+`Vary: cookie`) answers the CALLER's own `AuthorizationDocument` (version 1, declared in
+`@authup/access` next to its zod schema and its consumer `createAuthorizationEvaluator`):
+every permission definition the identity holds with the definition's junction policies and
+the permission's `decisionStrategy`, every raw grant with its realm reach and the junction
+policy it carries, and each policy tree ONCE under `policies`, keyed by the tree's id. The
+shape is the server's own raw binding model rather than an evaluated one: a consumer
+rebuilds the same `PermissionPolicyBinding` structures `PermissionDatabaseProvider` and
+`IIdentityPermissionProvider.getFor` produce and runs the same aggregation and the same
+evaluators (`IdentityPermissionBindingPolicyEvaluator` in access is the one implementation
+of grant reach, pending composition and condition lowering), so decision parity holds by
+construction. A held permission with no definition row is omitted, which denies on both
+sides. A tree node is the OUTPUT of its type's access validator
+(`projectAuthorizationPolicy`), so entity columns never travel and the server-side
+projection and the consumer-side validation are one function. `buildAuthorizationDocument`
+(`core/authorization/`) reads the bindings once and the definitions in one pass
+(`IPermissionDefinitionProvider.findDefinitions`, implemented by
+`PermissionDatabaseProvider` next to the evaluator's `findOne`) and sorts the permissions
+by key, so the output is stable.
 
-`@authup/access.createAuthorizationEvaluator(response)` validates the active
-versioned snapshot, all required nullable fields and supported built-in policy
-configurations, then uses the generic definition evaluator plus
-`IdentityPermissionBindingPolicyEvaluator`. The latter is the old server binding
-evaluator moved into access; server-core imports it directly. There
-is one implementation of grant reach, pending policy composition and condition
-lowering. Binding inversion is validated and applies to compiled conditions too.
+It is its own route rather than an introspection extension: introspection is the hottest
+read path (the kit on every store instantiation, the cookie-mode consoles on every page
+load, remote verifiers on every cache miss), RFC 7662 describes a token, and authorization
+is a property of the identity with its own clock. Introspection keeps the deprecated
+name-only `permissions` array until the kit and the server adapters stop reading it. There
+is no foreign-subject form: a resource server holding a user's bearer forwards it, and an
+admin lens over another identity's effective authorization needs a gate of its own.
 
-The consumer requires an access token (or console session) with `global` scope;
-refresh/ID/MFA credentials cannot authorize resources. Nullable actor realm fields
-are restored to absent policy data, matching the HTTP `RequestIdentity` getters.
-Consumer `evaluate` requires explicit `realmMatch` data (null for a global row),
-fixes identity to the snapshot and does not accept policy bypass options.
-`compile` refuses row attributes/realm data so one known row cannot accidentally
-settle a collection's scope to allow. Conditional results belong in both row and
-count queries before pagination; `post` must be rejected or evaluated over all
-candidates before counting/paging. Unsupported/legacy snapshots never fall back
-to the name-only array. See `docs/src/sdks/javascript/access/authorization.md` for
-wire contract and server-first upgrade order.
+The kit store fetches the document during session staging, after the introspection and
+before `commitSession`, for bearer and cookie sessions alike, and commits an evaluator built
+from it into ONE stable `StorePermissionEvaluator` (consumers hold on to
+`store.permissionEvaluator`, so a commit swaps what it delegates to). A `404` alone falls
+back to the name-only view, since a console's gating is advisory; any other failure, and a
+document naming another subject, takes the path a failed introspection takes.
+`usePermissionCheck` and the routing guards call `preEvaluateOneOf`; a check carrying
+`realmMatch` settles reach per row, one without keeps the neutral pass. The server stays
+the enforcement point.
 
 ### Policy engine evaluators are per engine
 
