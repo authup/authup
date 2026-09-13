@@ -232,7 +232,11 @@ describe.each(CONSOLES)('$name console session', ({
         expect(sessionBody.sub).toEqual(user.id);
         expect(sessionBody.session_id).toBeDefined();
         expect(sessionBody.realm_id).toEqual(realm.id);
-        expect(sessionBody.authorization).toEqual({
+        const authorizationResponse = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
+        expect(authorizationResponse.status).toEqual(200);
+        expect(authorizationResponse.headers.get('cache-control')).toEqual('no-store');
+        const authorization = await authorizationResponse.json();
+        expect(authorization).toMatchObject({
             version: 1,
             identity: {
                 id: user.id,
@@ -241,8 +245,8 @@ describe.each(CONSOLES)('$name console session', ({
                 realm_name: realm.name,
                 client_id: null,
             },
-            permissions: expect.any(Array),
         });
+        expect(Array.isArray(authorization.permissions)).toBe(true);
         // the claim a console keys an avatar on (issue #3506). Cookie mode is
         // the surface the account console runs on, and it reaches the claims
         // through this endpoint's own `...subject.claims` spread rather than

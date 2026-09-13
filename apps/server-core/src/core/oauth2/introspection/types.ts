@@ -5,16 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionProvider } from '@authup/access';
 import type { Identity, IdentityType } from '@authup/core-kit';
-import type { OAuth2Authorization, OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
+import type { OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 
 export type OAuth2IntrospectionSubjectContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
-    permissionProvider: IPermissionProvider,
 };
 
 export type OAuth2IntrospectionSubjectInput = {
@@ -53,5 +51,4 @@ export type OAuth2IntrospectionSubject = {
      * Present only for an `active` input.
      */
     permissions?: OAuth2TokenPermission[],
-    authorization?: OAuth2Authorization,
 };
