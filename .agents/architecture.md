@@ -1036,8 +1036,9 @@ endpoints, the issuer and every POST that mints or ends something stay on the
 API. The six page GETs became a stateless hop:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
-  `/password-reset` and `/logout`. `POST` on each of those paths is still the
-  JSON API on server-core; `GET` answers a redirect to
+  `/password-reset`, `/logout` and `/device`. `POST` on each of the first six
+  is still the JSON API on server-core (`/device` has no POST twin: its JSON
+  calls live under `/device_authorization/*`); `GET` answers a redirect to
   `<authConsoleUrl><page>` carrying the request's own query verbatim
   (`redirectToAuthConsole` in
   `adapters/http/controllers/workflows/auth-console.ts`, which sets
@@ -2334,8 +2335,10 @@ rather than trusted until `exp`.
   branch changed. So bearer mode is untouched for every other consumer, and
   a bearer request pays no extra query.
 - **INVARIANT: cookie authentication must never reach the OAuth2 issuance
-  surface** (`/authorize`, `/token` and its sub-paths, `/logout`, i.e.
-  `isOAuth2IssuancePath`). Without it, one script execution anywhere on the
+  surface** (`/authorize`, `/token` and its sub-paths, `/logout`,
+  `/device_authorization` and its sub-paths, i.e. `isOAuth2IssuancePath`; the
+  last keeps origin script from minting a device token or approving a device
+  flow with the cookie). Without it, one script execution anywhere on the
   IdP origin POSTs `/authorize` with its own PKCE challenge against
   `account-console` (public, `builtIn` so auto-consenting, `global openid`),
   carries the code to `/token`, and holds a full token pair: the cookie
@@ -5000,6 +5003,196 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
+## Device Authorization Grant (RFC 8628)
+
+A device with no browser POSTs `/device_authorization` and receives a `device_code` /
+`user_code` pair; the person opens `<publicUrl>/device`, logs in through the ordinary kit
+login ladder, enters the code and approves or denies; the device polls `/token` with
+`grant_type=urn:ietf:params:oauth:grant-type:device_code`. Everything is a cache blob under
+`CacheOAuth2Prefix`, like the authorization code, the console login and the federated login:
+no table, no migration, no config key, no new `EventName`, no new metric.
+
+- **The grant is OPT-IN per client.** `assertClientGrantAllowed` carries `OPT_IN_GRANT_TYPES`
+  (`core/oauth2/client/grant-type.ts`, today `DEVICE_CODE` alone): a grant in that set is
+  refused with `unauthorized_client` on a null or empty `grantTypes` column, the one exception
+  to null-allows-all. Enabling it on every existing client at upgrade would put the RFC 8628
+  §5.4 remote-phishing surface on clients that never asked for it, and a deployment listing
+  the URN on no client has the grant off, so no feature flag exists. Keycloak's per-client
+  toggle is the same posture. The `AClientForm` grant-types hint says so in every locale.
+- **Scope is rejected on excess, never clipped.** `resolveGrantedScope(scopeNames, requested)`
+  (`core/oauth2/scope/helpers.ts`) is the one rule for the code-request verifier and the
+  device request alike: a requested scope must be covered by the client's bound scopes or
+  carry `global`, else `insufficient_scope`; an absent request grants every bound scope.
+  Clipping was rejected because one issuer answering the same `scope=` two ways by grant is
+  a documentation problem forever.
+- **No PKCE, and the artifact is tightened past the RFC floor instead.** There is no redirect
+  for PKCE to protect. The controls: a 256-bit `device_code` (`randomBytes(32).hex`), a
+  34.6-bit `user_code` (8 symbols over `BCDFGHJKLMNPQRSTVWXZ`, 600 s), bearer-gated and
+  per-actor throttled lookups, single-use redemption by `cache.pop`, client binding at every
+  poll, per-client opt-in. `normalizeDeviceUserCode` uppercases, strips every
+  non-alphanumeric character and answers `null` unless the result matches
+  `^[BCDFGHJKLMNPQRSTVWXZ]{8}$`, so a malformed guess never reaches the cache; the code is
+  rendered `XXXX-XXXX` and typed however the person likes.
+- **No auto-consent, `builtIn` included.** The person on the page has no context for WHICH
+  device is asking, so an explicit Approve is the only defence the page can offer.
+  `AuthorizeForm.autoConsent` is not reused. Consent rows ARE recorded after approval for a
+  non-`builtIn` client (the account console's Applications page lists the device app), but a
+  covering row never skips the screen.
+
+**Threats and controls (RFC 8628 §5).**
+
+| Threat | Control | Where |
+|---|---|---|
+| §5.1 user code brute forcing | 34.6 bits, 600 s, lookups for an authenticated user only, misses counted per ACTOR (10 per 600 s, the MFA throttle shape), fail closed on a cache outage (a thrown throttle read answers 429 with the whole window), one neutral `invalid_grant` for unknown / expired / decided / malformed / non-string codes, one bounded `AUTHORIZE_FAILED { reason: 'userCode' }` row per miss | `user-code.ts`, `OAuth2DeviceAuthorizationService.resolve`, `ForceUserLoggedInMiddleware` on the three page routes |
+| §5.2 device code brute forcing | 256 bits, keyed by itself, never derivable from `user_code`, bound to `client_id` + `realm_id`, popped at redemption | the repository, `OAuth2DeviceCodeVerifier` |
+| §5.3 / §5.6 device trustworthiness | a confidential client authenticates at BOTH endpoints; a public client identifies by `client_id` and a supplied secret is refused; opt-in per client | `DeviceAuthorizationController.request`, `HTTPOAuth2DeviceCodeGrant`, `assertClientGrantAllowed` |
+| §5.4 remote phishing | the page shows client, realm and scopes and requires an explicit Approve; the approval runs the `/authorize` admission gates (realm binding, MFA backstop, access policy); with `verification_uri_complete` the code is still displayed and confirmed | `ADeviceVerifyForm`, `OAuth2DeviceAuthorizationService.approve`, `OAuth2AuthorizationGate` |
+| §5.5 session spying | `device_code` never enters a browser; the page handles `user_code` only, in JSON POST bodies; `/device_authorization` is in `OAUTH2_ISSUANCE_PATHS` (prefix match), so the console session cookie cannot become a device token | `issuance.ts` |
+| §3.5 polling abuse | `slow_down` enforced with a per-`device_code` set-if-absent key over a FIXED 5 s window; a refused poll leaves the standing window | `touchPoll` |
+| confused deputy across realms | approver `identity.data.realmId === blob.realm_id` at lookup, approve and deny (`login_required`, no identity data); at redemption `blob.client_id === client.id` and `blob.realm_id === client.realmId` (`invalid_grant`, byte-identical to "unknown") | `resolve`, verifier step 2 |
+
+**Accepted residual oracle.** A foreign-realm user holding a VALID code receives
+`login_required` (the realm-mismatch card) while an invalid code receives the neutral error,
+so an authenticated attacker in any realm can tell the two apart for up to 10 guesses per 10
+minutes. Accepted for 34.6-bit codes behind the per-actor throttle; the card is deliberate UX.
+
+**Artifacts.** `core/oauth2/device-authorization/` holds the constants (600 s lifetime, 5 s
+interval, 300 s grace, 5 mint attempts, 10 misses per 600 s), the blob types (a discriminated
+union: `status` narrows, so `OAuth2DeviceCodeApproved` reads `sub` / `auth_time` without a
+guard and a deny writes `{ status: 'denied' }` and nothing else), the `IOAuth2DeviceCodeRepository`
+port, `IOAuth2DeviceCodeVerifier` / `IOAuth2DeviceAuthorizationService` and their classes, and the
+user-code helpers. The adapter `OAuth2DeviceCodeRepository` (`app/modules/oauth2/repositories/device-code/`,
+DI `OAuth2InjectionToken.DeviceCodeRepository`) writes five key families, every `ttl` handed to
+`ICache` in MILLISECONDS (the constants are seconds like the wire's `expires_in`):
+
+| Prefix | Key | Value | TTL |
+|---|---|---|---|
+| `oauth2_device_code` | `<device_code>` | the immutable request | 900 s (lifetime + grace) |
+| `oauth2_device_user_code` | canonical `user_code` | `<device_code>` | 600 s, written with `add` so a collision is refused and the caller regenerates |
+| `oauth2_device_decision` | `<device_code>` | the decision | remaining lifetime + grace, written ONCE with `add` |
+| `oauth2_device_poll` | `<device_code>` | `1` | 5 s, fixed |
+| `oauth2_device_lookup_attempt` | `actor:<sub>` / `lock:actor:<sub>` | counter / deadline | 600 s |
+
+The blob is never rewritten: the decision is its own write-once key and reads return the merged
+view, which is what makes the concurrency trivial with the primitives `ICache` has (`add` is
+`SET NX`, `pop` is `GETDEL`, there is no compare-and-set). The 300 s grace is what makes
+`expired_token` reachable at all; without it the swept blob collapses into `invalid_grant`.
+Every TTL derived from `expires_at - now` is guarded, so no key is written with `ttl <= 0`
+(redis refuses a non-positive `PX`, the memory adapter would store forever). Two deliberate
+ceilings carry `ponytail:` markers in the adapter: the poll window is FIXED rather than
+escalating (the RFC makes the +5 s the client's duty; the server only refuses; an abusive
+client costs one cache `add` per poll, which the IP rate limiter bounds), and misses are
+throttled per ACTOR only (a bearer-gated guess is bounded by accounts held, not by codes; a
+per-code counter is the upgrade if a distributed guess across many accounts ever matters).
+
+**The admission gate is shared with `/authorize`.** `OAuth2AuthorizationGate`
+(`core/oauth2/authorization/gate.ts`, `IOAuth2AuthorizationGate`) is the body of
+`authorizeInner` from the identity check through the access-policy throw: realm binding,
+`authTime` / session, the MFA backstop with the `ext` exemption, the `acr_values` step-up,
+`prompt=login` / `max_age`, the access policy. `OAuth2Authorization` builds it from the ctx it
+already receives and calls `gate.evaluate(data, identity, options)` between its request checks
+and the code issue. A device approval hands the gate `{ realm_id: code.realm_id }` and
+`{ sessionId, client }`: the prompt and step-up gates are inert (a device request carries no
+`prompt`, `max_age` or `acr_values`) and the access-policy error carries no redirect
+(`redirectUriVerified` is never set). `classifyAuthorizeFailure` (`authorization/helpers.ts`)
+maps a refusal onto its `authup_authorize_total` outcome label so both callers record the
+same labels; the approval additionally records `login_required` when the shared `resolve`
+refuses a foreign-realm user, since that refusal runs before the gate.
+
+**The service** (`OAuth2DeviceAuthorizationService`). `issue` freezes the granted scope and
+mints up to five `(device_code, user_code)` pairs against an index collision, then answers the
+RFC response (`verification_uri = <publicUrl>/device`, `verification_uri_complete` with the
+formatted code, 600 / 5); no event, since the request is anonymous and unbounded. The shared
+`resolve(userCode: unknown, identity)` reads the actor throttle first, normalizes, looks the
+index up, treats a non-pending or expired blob and a missing or inactive client as a miss too,
+counts the miss and records the row, and runs the realm binding LAST, so the neutral refusal
+never says whether a code exists. `lookup` projects `ClientSummary` + `RealmSummary` + `scope`
+(never `redirectUri`, `grantTypes`, `accessPolicyId` or the secret flags). `approve` runs the
+gate, writes the approved decision (`sub`, `sub_kind: user`, the approver's bearer
+`session_id`, the gate's `auth_time`, the session's `auth_method`), drops the user-code index,
+records consent for a non-`builtIn` client (a consent failure is a warn line, never a failed
+approval) and an `AUTHORIZE { reason: 'device', grantType, scope }` row, and
+`recordAuthorize('issued')`; a second decision of any kind answers the neutral `invalid_grant`.
+`deny` writes `{ status: 'denied' }`, drops the index, records
+`AUTHORIZE_FAILED { reason: 'denied' }` and `recordAuthorize('denied')`. Request attribution
+is not automatic: the ctx carries `requestContext` (wired to `useRequestEventContext`), and
+every `record()` spreads `sessionId` plus the four `request*` fields from it. Neither code
+ever lands in `data` (`sanitizeEventData` is an allow-list).
+
+**The verifier** (`OAuth2DeviceCodeVerifier.verify(deviceCode, { clientId, realmId })`), in
+order: unknown → `invalid_grant`; `client_id` or `realm_id` mismatch → the IDENTICAL
+`invalid_grant`, blob untouched and poll key NOT armed (a leaked code presented by another
+client must not burn or slow the legitimate flow); past `expires_at` → `removeById`, then
+`expired_token`; `touchPoll` refused → `slow_down`, leaving the standing window; no decision →
+`authorization_pending`; denied → pop, `access_denied` once, then `invalid_grant`; approved →
+pop, or `invalid_grant` when the pop lost a race. `HTTPOAuth2DeviceCodeGrant` extends
+`OAuth2AuthorizeGrant` over a field-compatible blob (`toAuthorizationCode`): after the `/token`
+client authentication, token binding, the opt-in check and the verify, it runs the
+access-policy backstop over the blob scalars (deny → `invalid_grant`) and hands the result to
+`runWith`, so session reuse, id_token, `at_hash`, `auth_session_tokens` rows and refresh
+rotation are inherited rather than written. There is deliberately no core grant class.
+
+**Session semantics.** The approval binds the hosted page's bearer session, so a lingering
+hosted login approves under its existing session and the redemption reuses that row
+(`resolveSession`: `session_id` present and `sub` / `subKind` / `realmId` equal); otherwise a
+session is created from the DEVICE's request with the blob's `auth_method`.
+`auth_sessions.client_id` is never written (subject FK); each token row carries the device
+client under `auth_session_tokens.client_id`, so back-channel logout reaches the device's RP.
+One consequence: the device's tokens share the approver's browser session, so ending that
+session (an `id_token_hint` logout, `DELETE /sessions/:id`) ends the device's access too.
+
+**Wire.** `POST /device_authorization` (form-encoded; `client_id` via body or Basic,
+`client_secret` for a confidential client, `scope` up to 512 characters, `realm_id` /
+`realm_name` with the `/token` semantic; `Cache-Control: no-store`; no `prompt`, `max_age` or
+`acr_values`) → `{ device_code, user_code, verification_uri, verification_uri_complete,
+expires_in: 600, interval: 5 }`. The realm hint is resolved before the client, and a
+UUID-identified client may sit outside the hinted realm, so the blob's `realm_name` comes from
+an explicit second resolve, never from the authenticated client's unloaded relation.
+`GET /device` is a stateless hop to `<authConsoleUrl>/device` carrying `?user_code=` verbatim,
+and is NOT an issuance path. The three page calls are `POST /device_authorization/lookup |
+approve | deny` with `{ user_code }` (forwarded untyped; the service refuses a non-string as
+one more miss), users only. The `/token` answers, in evaluation order: `invalid_client` 401,
+`unauthorized_client`, `invalid_grant` (unknown, redeemed, flushed, mismatch),
+`device_code_expired` (`data.error: expired_token`, its own authup code because
+`expired_token` is the 401 JWT code), `slow_down`, `authorization_pending`, `access_denied`,
+`invalid_grant` (lost race or backstop), all 400. `OAuth2DeviceAuthorizationError` (`@authup/specs`,
+`pending()` / `slowDown()` / `expired()`, no `interval` field: the RFC defines none) and
+`DeviceVerificationThrottledError` (`@authup/errors`, 429 `device_verification_throttled`,
+`data.retryAfter` = the window's remainder; the kit guards on its marker, never on the status)
+carry them. Discovery gains `device_authorization_endpoint`, `grant_types_supported` (all
+five) and, under `mtls_endpoint_aliases`, the device endpoint (a `tls` client authenticates
+there exactly as at `/token`). `GET /` and the realm record's `meta.endpoints` stay unchanged:
+they enumerate discovery documents, not grant endpoints.
+
+**The hosted page.** server-core's `GET /device` hands over to `@authup/server-auth-console`,
+whose `/device` handler renders the bundle with `{ features, userCode }` (`readDeviceUserCode`:
+uppercased, `[^A-Z0-9]` stripped, capped at 16 characters, else undefined; no API call beyond
+the memoized `GET /`), render contract **4**. `apps/client-auth-console`'s `pages/device.vue`
+renders the kit's `ADeviceVerifyForm` (`components/workflows/device/`), a ladder keyed on its
+own `step` rather than on `AAuthorize`'s `codeRequest`: code (prefilled from the prop and still
+rendered, §3.3.1) → login (`ALoginForm`, password only: a federated login needs a code request
+and none exists here) → lookup (`invalid_grant` → back to the code with `DEVICE_CODE_INVALID`,
+the throttle marker → `DEVICE_VERIFY_THROTTLED`, `login_required` → the realm-mismatch card) →
+the MFA challenge or enrollment when `GET /authenticators/challenge` requires it → confirm
+(client name, scope chips, the "Not you?" chip, Approve / Deny; `client.builtIn` is never read)
+→ done. Register and password-forgot links carry `redirect=/device?user_code=<code>`.
+
+**Typed client.** `client.deviceAuthorization.create` posts the RFC request with hapic's
+token-API header semantics (the client-level `Authorization` header is DROPPED unless
+`authorizationHeaderInherit` is set, so an authenticated client never sends the mixed
+credentials `extractClientCredentialsFromRequest` refuses); `lookup` / `approve` / `deny` ride
+the caller's own bearer; `client.token.createWithDeviceCode` sends the URN.
+
+**Deliberately absent.** `prompt`, `max_age`, `acr_values` on the device request (the RFC
+defines none); federated login on the `/device` page (a device-flow authorize state is a named
+follow-up); config keys for lifetime and interval (600 / 5 are the RFC's examples and
+Keycloak's defaults; the upgrade is one `core.deviceCodeMaxAge` registry entry); a CLI login
+command (one loop over the typed client, nothing server-side); CIBA; QR rendering. A table for
+the artifact was rejected because a ten-minute blob would cost a migration and a sweeper; a
+cache flush therefore kills in-flight flows (the poll answers `invalid_grant`, the device
+restarts) and a multi-replica deployment needs Redis, the statements the console login and
+the federated login already make.
+
 ## Federated Login Completion (`authorize-in`)
 
 The external-IdP callback completes the EXTERNAL leg of the RP's **original**
@@ -5550,8 +5743,11 @@ Independent of client authentication, every client-resolving grant enforces
 comma-delimited values), the requested grant must be listed — otherwise the
 request fails with `unauthorized_client` (RFC 6749 §5.2,
 `ErrorCode.OAUTH_CLIENT_UNAUTHORIZED`, HTTP 400). `null` = allow-all, so
-enforcement is opt-in per client and upgrades are backward compatible. Enforced
-at both chokepoints:
+enforcement is opt-in per client and upgrades are backward compatible. The one
+exception is `OPT_IN_GRANT_TYPES` inside the same helper (today the device grant
+alone): a grant listed there needs an explicit entry, and a null or empty column
+refuses it, because enabling it on every existing client at upgrade would widen
+an attack surface the client never asked for. Enforced at both chokepoints:
 
 1. **`/token`** — after client resolution in `authorization_code`,
    `refresh_token` (including the bound-client-from-token path, so public-client
