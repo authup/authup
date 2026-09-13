@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationDocument, IdentityPolicyData } from '@authup/access';
-import { PermissionError } from '@authup/access';
+import type { AuthorizationDocument } from '@authup/access';
+import { AUTHORIZATION_DOCUMENT_VERSION } from '@authup/access';
 import { ScopeName } from '@authup/core-kit';
 import {
     DContext,
@@ -16,7 +16,11 @@ import {
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { AuthorizationDocumentBuilderContext } from '../../../../../core/index.ts';
-import { buildAuthorizationDocument } from '../../../../../core/index.ts';
+import {
+    buildAuthorizationDocument,
+    buildAuthorizationIdentity,
+    toIdentityPolicyData,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { useRequestIdentityOrFail, useRequestScopes } from '../../../request/index.ts';
 
@@ -26,7 +30,8 @@ export type AuthorizationControllerContext = AuthorizationDocumentBuilderContext
  * The caller's own authorization document: held permission definitions with
  * their policies and every grant's realm reach, for a console or a resource
  * server to evaluate outside this process. A per-identity document, never
- * served from a shared cache.
+ * served from a shared cache. A credential without the `global` scope holds
+ * no grants server-side, so it receives an empty document.
  */
 @DTags('auth')
 @DController('/authorization')
@@ -44,19 +49,16 @@ export class AuthorizationController {
         event.response.headers.set('cache-control', 'no-store');
         event.response.headers.append('vary', 'cookie');
 
-        const identity = useRequestIdentityOrFail(event);
+        const identity = toIdentityPolicyData(useRequestIdentityOrFail(event).raw)!;
         if (!useRequestScopes(event).includes(ScopeName.GLOBAL)) {
-            throw new PermissionError({ message: 'The credential does not carry the global scope.' });
+            return {
+                version: AUTHORIZATION_DOCUMENT_VERSION,
+                identity: buildAuthorizationIdentity(identity),
+                policies: {},
+                permissions: [],
+            };
         }
 
-        const data : IdentityPolicyData = {
-            type: identity.type,
-            id: identity.id,
-            clientId: identity.clientId ?? null,
-            realmId: identity.realmId ?? null,
-            realmName: identity.realmName ?? null,
-        };
-
-        return buildAuthorizationDocument(this.ctx, data);
+        return buildAuthorizationDocument(this.ctx, identity);
     }
 }

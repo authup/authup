@@ -1011,6 +1011,7 @@ export class HTTPControllerModule {
         return new AuthorizationController({
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             permissionDefinitionProvider: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 

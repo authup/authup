@@ -6,6 +6,7 @@
  */
 
 import type { BasePermission, BasePolicy, PermissionGetOptions } from '@authup/access';
+import type { Logger } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../identity/permission/types.ts';
 
 export type PermissionDefinition = {
@@ -20,4 +21,5 @@ export interface IPermissionDefinitionProvider {
 export type AuthorizationDocumentBuilderContext = {
     identityPermissionProvider: IIdentityPermissionProvider,
     permissionDefinitionProvider: IPermissionDefinitionProvider,
+    logger?: Logger,
 };

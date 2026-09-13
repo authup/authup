@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import { 
+    describe, 
+    expect, 
+    it, 
+    vi, 
+} from 'vitest';
+import { InternalError } from '@authup/errors';
+import { createNoopLogger } from '@authup/server-kit';
 import { buildAuthorizationDocument } from '../../../../src/core/authorization/module.ts';
 import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permission-provider.ts';
 import { FakePermissionDefinitionProvider } from '../helpers/fake-permission-definition-provider.ts';
@@ -42,11 +49,35 @@ const visible = {
 };
 
 function setup() {
+    const logger = createNoopLogger();
+
     return {
         identityPermissionProvider: new FakeIdentityPermissionProvider(),
         permissionDefinitionProvider: new FakePermissionDefinitionProvider(),
+        logger,
+        warn: vi.spyOn(logger, 'warn'),
     };
 }
+
+const globalPermission = (name: string) => ({
+    name,
+    realmId: null,
+    clientId: null,
+});
+
+const bindingDefinition = (name: string) => ({
+    permission: globalPermission(name),
+    policies: [systemDefault],
+});
+
+const custom = { id: 'policy-custom', type: 'myType' };
+const bindingGrant = {
+    id: 'p-bind',
+    type: 'composite',
+    decisionStrategy: 'unanimous',
+    children: [{ id: 'c1', type: 'permissionBinding' }],
+};
+const prototypeNamed = { id: 'constructor', type: 'identity' };
 
 const identity = {
     type: 'user',
@@ -189,30 +220,125 @@ describe('core/authorization/module', () => {
         expect(document.policies).toEqual({});
     });
 
-    it('refuses a policy tree that carries no id and an identity that is neither user nor client', async () => {
+    it('refuses an identity that is neither user nor client', async () => {
+        await expect(buildAuthorizationDocument(setup(), { ...identity, type: 'role' }))
+            .rejects.toBeInstanceOf(InternalError);
+    });
+
+    it('drops a permission whose definition tree carries no id and warns once', async () => {
         const ctx = setup();
         ctx.permissionDefinitionProvider.setDefinitions([
-            {
-                permission: {
-                    name: 'read',
-                    realmId: null,
-                    clientId: null,
-                },
-                policies: [{ type: 'identity' }],
-            },
+            { permission: globalPermission('read'), policies: [{ type: 'identity' }] },
+            bindingDefinition('write'),
         ]);
         ctx.identityPermissionProvider.setBindings([
+            { permission: globalPermission('read'), realmScope: 'any' },
+            { permission: globalPermission('write'), realmScope: 'any' },
+        ]);
+
+        const document = await buildAuthorizationDocument(ctx, identity);
+
+        expect(document.permissions.map((permission) => permission.name)).toEqual(['write']);
+        expect(ctx.warn).toHaveBeenCalledTimes(1);
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('read');
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('must carry its id');
+    });
+
+    it('drops a permission whose definition policy is not a built-in type and keeps its sibling', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([
+            { permission: globalPermission('read'), policies: [custom] },
+            bindingDefinition('write'),
+        ]);
+        ctx.identityPermissionProvider.setBindings([
+            { permission: globalPermission('read'), realmScope: 'any' },
+            { permission: globalPermission('write'), realmScope: 'any' },
+        ]);
+
+        const document = await buildAuthorizationDocument(ctx, identity);
+
+        expect(document.permissions.map((permission) => permission.name)).toEqual(['write']);
+        expect(document.policies).not.toHaveProperty('policy-custom');
+        expect(ctx.warn).toHaveBeenCalledTimes(1);
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('read');
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('policy-custom');
+    });
+
+    it('drops an unprojectable grant alone, and the permission once no grant is left', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([
+            bindingDefinition('read'),
+            bindingDefinition('write'),
+        ]);
+        ctx.identityPermissionProvider.setBindings([
+            { permission: globalPermission('read'), realmScope: 'own' },
             {
-                permission: {
-                    name: 'read',
-                    realmId: null,
-                    clientId: null,
-                },
+                permission: globalPermission('read'),
                 realmScope: 'any',
+                policies: [custom],
+            },
+            {
+                permission: globalPermission('write'),
+                realmScope: 'any',
+                policies: [custom],
             },
         ]);
-        await expect(buildAuthorizationDocument(ctx, identity)).rejects.toThrow();
 
-        await expect(buildAuthorizationDocument(setup(), { ...identity, type: 'role' })).rejects.toThrow();
+        const document = await buildAuthorizationDocument(ctx, identity);
+
+        expect(document.permissions).toEqual([
+            {
+                name: 'read',
+                realm_id: null,
+                client_id: null,
+                decision_strategy: null,
+                policies: ['policy-default'],
+                grants: [{ realm_scope: 'own', policies: [] }],
+            },
+        ]);
+        expect(document.policies).not.toHaveProperty('policy-custom');
+        expect(ctx.warn).toHaveBeenCalledTimes(2);
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('read');
+        expect(String(ctx.warn.mock.calls[1]![0])).toContain('write');
+    });
+
+    it('drops a grant whose policy carries a permission binding node while the definition keeps it', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([bindingDefinition('read')]);
+        ctx.identityPermissionProvider.setBindings([
+            { permission: globalPermission('read'), realmScope: 'own' },
+            {
+                permission: globalPermission('read'),
+                realmScope: 'any',
+                policies: [bindingGrant],
+            },
+        ]);
+
+        const document = await buildAuthorizationDocument(ctx, identity);
+
+        expect(document.permissions).toHaveLength(1);
+        expect(document.permissions[0]!.policies).toEqual(['policy-default']);
+        expect(document.permissions[0]!.grants).toEqual([{ realm_scope: 'own', policies: [] }]);
+        expect(document.policies).toHaveProperty('policy-default');
+        expect(document.policies).not.toHaveProperty('p-bind');
+        expect(ctx.warn).toHaveBeenCalledTimes(1);
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('p-bind');
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('carries a permissionBinding node');
+    });
+
+    it('projects a policy whose id is named constructor', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([
+            { permission: globalPermission('read'), policies: [prototypeNamed] },
+        ]);
+        ctx.identityPermissionProvider.setBindings([
+            { permission: globalPermission('read'), realmScope: 'any' },
+        ]);
+
+        const document = await buildAuthorizationDocument(ctx, identity);
+
+        expect(document.permissions[0]!.policies).toEqual(['constructor']);
+        expect(Object.entries(document.policies)).toEqual([['constructor', { type: 'identity' }]]);
+        expect(ctx.warn).not.toHaveBeenCalled();
     });
 });

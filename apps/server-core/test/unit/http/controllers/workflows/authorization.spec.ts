@@ -18,7 +18,6 @@ import {
 import type { AuthorizationDocument } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
-import { ErrorCode } from '@authup/errors';
 import { OAuth2TokenKind } from '@authup/specs';
 import {
     PermissionEntity,
@@ -97,7 +96,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect(response.headers.get('vary')).toContain('cookie');
     });
 
-    it('refuses an anonymous caller, a refresh token and a bearer without the global scope', async () => {
+    it('refuses an anonymous caller and a refresh token, and answers an empty document without the global scope', async () => {
         const anonymous = await httpRequest(suite, 'GET', '/authorization');
         expect(anonymous.status).toBe(401);
 
@@ -120,8 +119,13 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             kind: OAuth2TokenKind.ACCESS,
         });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${restricted}` } });
-        expect(response.status).toBe(403);
-        expect((await response.json()).code).toEqual(ErrorCode.PERMISSION_DENIED);
+        expect(response.status).toBe(200);
+        const document : AuthorizationDocument = await response.json();
+        expect(document.version).toBe(1);
+        expect(document.identity.id).toEqual(payload.sub);
+        expect(document.identity.type).toEqual('user');
+        expect(document.permissions).toEqual([]);
+        expect(document.policies).toEqual({});
     });
 
     it('exports each realm reach into identical row checks and query conditions', async () => {
