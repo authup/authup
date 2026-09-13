@@ -6,6 +6,7 @@
  */
 
 import type { BasePermission, BasePolicy, PermissionGetOptions } from '@authup/access';
+import type { IIdentityPermissionProvider } from '../identity/permission/types.ts';
 
 export type PermissionDefinition = {
     permission: BasePermission,
@@ -15,3 +16,8 @@ export type PermissionDefinition = {
 export interface IPermissionDefinitionProvider {
     findDefinitions(keys: PermissionGetOptions[]): Promise<PermissionDefinition[]>;
 }
+
+export type AuthorizationDocumentBuilderContext = {
+    identityPermissionProvider: IIdentityPermissionProvider,
+    permissionDefinitionProvider: IPermissionDefinitionProvider,
+};
