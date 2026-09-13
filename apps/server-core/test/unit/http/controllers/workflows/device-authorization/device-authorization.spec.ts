@@ -16,7 +16,8 @@ import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { buildCacheKey } from '@authup/server-kit';
 import { OAuth2ErrorCode, OAuth2TokenGrant } from '@authup/specs';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { OAUTH2_DEVICE_CODE_GRACE, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import type { OAuth2DeviceCodeRequest } from '../../../../../../src/core/index.ts';
 import { CacheInjectionKey, ConfigInjectionKey } from '../../../../../../src/app/index.ts';
 import { CacheOAuth2Prefix } from '../../../../../../src/app/modules/oauth2/repositories/constants.ts';
 import { createFakeClient, createFakeRealm, httpRequest } from '../../../../../utils/index.ts';
@@ -99,6 +100,25 @@ describe('src/http/controllers/workflows/device-authorization', () => {
     async function dropPollWindow(deviceCode: string) {
         const cache = suite.container.resolve(CacheInjectionKey);
         await cache.drop(buildCacheKey({ prefix: CacheOAuth2Prefix.DEVICE_POLL, key: deviceCode }));
+    }
+
+    function buildDeviceCodeKey(deviceCode: string) : string {
+        return buildCacheKey({ prefix: CacheOAuth2Prefix.DEVICE_CODE, key: deviceCode });
+    }
+
+    async function expireDeviceCode(deviceCode: string) {
+        const cache = suite.container.resolve(CacheInjectionKey);
+        const key = buildDeviceCodeKey(deviceCode);
+        const entity = await cache.get<OAuth2DeviceCodeRequest>(key);
+        if (!entity) {
+            throw new Error(`device code ${deviceCode} is not stored`);
+        }
+
+        await cache.set(
+            key,
+            { ...entity, expires_at: Math.floor(Date.now() / 1000) - 1 },
+            { ttl: OAUTH2_DEVICE_CODE_GRACE * 1000 },
+        );
     }
 
     function basic(clientId: string, secret: string) : string {
@@ -251,6 +271,28 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         expect(own.status).toEqual(400);
         const ownBody = await own.json();
         expect(ownBody.code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+    });
+
+    it('should answer expired_token once and invalid_grant after the blob is gone', async () => {
+        const client = await createPublicClient();
+        const { device_code: deviceCode } = await (await request({ client_id: client.id })).json();
+
+        await expireDeviceCode(deviceCode);
+
+        const expired = await poll(deviceCode, { client_id: client.id });
+        expect(expired.status).toEqual(400);
+        const expiredBody = await expired.json();
+        expect(expiredBody.code).toEqual(ErrorCode.OAUTH_DEVICE_CODE_EXPIRED);
+        expect(expiredBody.error).toEqual(OAuth2ErrorCode.EXPIRED_TOKEN);
+
+        const cache = suite.container.resolve(CacheInjectionKey);
+        expect(await cache.get(buildDeviceCodeKey(deviceCode))).toBeNull();
+
+        const gone = await poll(deviceCode, { client_id: client.id });
+        expect(gone.status).toEqual(400);
+        const goneBody = await gone.json();
+        expect(goneBody.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+        expect(goneBody.error).toEqual(OAuth2ErrorCode.INVALID_GRANT);
     });
 
     it('should hand the verification page over to the auth console', async () => {
