@@ -438,11 +438,14 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             'console/auth/password-forgot',
             'window.__AUTHUP__',
         );
-        await assertConsoleServed(
+        const deviceShell = await assertConsoleServed(
             `${name}/client-auth-console`,
             'console/auth/device?user_code=BCDF-GHJK',
             'window.__AUTHUP__',
         );
+        if (!deviceShell.includes('BCDFGHJK')) {
+            throw fail(`${name}/client-auth-console: the device page did not carry the normalized user code in its payload.`);
+        }
         // window.__AUTHUP__ rather than the shell markup: it only appears if
         // the `<!--account-config-->` marker was found and replaced, which is
         // that console's entire runtime contract. Without it the SPA silently

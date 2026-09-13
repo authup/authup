@@ -428,8 +428,8 @@ a `backchannelLogoutUri` are never contacted and leave no row.
 The device grant ([RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628))
 signs a person in on a device that has no browser or no keyboard: a TV, a
 CLI, a printer. The device asks Authup for a pair of codes and shows the short
-one. The person opens `<publicUrl>/device` on a phone or a laptop, signs in,
-enters the code and approves. Meanwhile the device polls `/token` until the
+one. The person opens `<publicUrl>/device` on a phone or a laptop, enters the
+code, signs in and approves. Meanwhile the device polls `/token` until the
 approval lands.
 
 #### Enabling the grant
@@ -508,9 +508,11 @@ listed) and `insufficient_scope`.
 
 #### Verification
 
-The person opens the verification URI, signs in through the ordinary login
-(password, then the second factor when one is enrolled) and sees the client's
-name, its realm and the scopes it asked for. Approving or denying is always an
+The person opens the verification URI, enters the code, signs in with a
+username and password (then the second factor when one is enrolled) and sees
+the client's name, its realm and the scopes it asked for. The page offers no
+identity-provider buttons, so a person who authenticates only through an
+external provider must already hold a hosted-login session in that browser. Approving or denying is always an
 explicit click, for a `builtIn` client as well: the page cannot know which
 device is asking, so nothing is auto-consented. The approval runs the gates
 `/authorize` runs. The person's realm must match the client's, a user holding a
@@ -566,16 +568,15 @@ exists, and its poll neither consumes nor slows the legitimate device's flow.
 #### The session behind the token
 
 Approving binds the browser session the person approved from. The device's
-tokens are issued under that session: `amr` and `acr` report how the person
-signed in (`pwd` or `ext`, plus `otp` and `urn:authup:mfa` after a second
-factor), the `id_token` carries that session's `sid` and, as `auth_time`, the
+tokens are issued under that session: `amr` and `acr` report how that session
+was established (`pwd`, or `ext` for a federated login made earlier at
+`/authorize`, plus `otp` and `urn:authup:mfa` after a second factor), the `id_token` carries that session's `sid` and, as `auth_time`, the
 instant that session was created (the login, not the approval), and the
 refresh token rotates like any other. A session that ended between the
 approval and the poll is not revived: the tokens are then issued under a new
 session created from the device's own request. Ending the approver's
-session ends the device's access too, whether through `DELETE /sessions/:id`,
-an RP-initiated logout with an `id_token_hint` of that session, or the
-sessions page of the account console. Consent is recorded for a non-`builtIn`
+session ends the device's access too, whether through `DELETE /sessions/:id`
+or an RP-initiated logout with an `id_token_hint` of that session. Consent is recorded for a non-`builtIn`
 client, so the device application is listed on the account console's
 Applications page and can be revoked there.
 

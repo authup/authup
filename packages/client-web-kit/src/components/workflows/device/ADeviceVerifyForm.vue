@@ -42,6 +42,8 @@ type CodeError = 'invalid' | 'throttled';
 
 const normalizeUserCode = (input: string) : string => input.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
+const USER_CODE_PATTERN = /^[BCDFGHJKLMNPQRSTVWXZ]{8}$/;
+
 const formatUserCode = (input: string) : string => {
     const canonical = normalizeUserCode(input);
 
@@ -205,6 +207,11 @@ export default defineComponent({
             codeError.value = null;
 
             if (!canonical.value) {
+                return;
+            }
+
+            if (!USER_CODE_PATTERN.test(canonical.value)) {
+                codeError.value = 'invalid';
                 return;
             }
 

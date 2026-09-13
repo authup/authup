@@ -21,8 +21,9 @@ approving a device on the hosted `/device` page (the
 The last two run the same session-bound check: the proof is the verified factor
 on the browser session the person acts from, so a device approval carries a
 second factor once that session has completed a challenge, at login or on the
-`/device` page itself, and the device's tokens report it in `amr` and `acr`. `mfaRequired` additionally routes a user without
-a confirmed authenticator through inline enrollment on both hosted pages.
+`/device` page itself, and the device's tokens report it in `amr` and `acr`.
+`mfaRequired` additionally routes a user without a confirmed authenticator
+through inline enrollment on both hosted pages.
 
 The following boundaries are intentional:
 
