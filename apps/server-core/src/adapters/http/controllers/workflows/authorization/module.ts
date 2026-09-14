@@ -6,6 +6,7 @@
  */
 
 import type { AuthorizationCatalog } from '@authup/access';
+import { PermissionName } from '@authup/core-kit';
 import {
     DContext,
     DController,
@@ -16,6 +17,7 @@ import type { IAppEvent } from 'routup';
 import type { AuthorizationCatalogBuilderContext } from '../../../../../core/index.ts';
 import { buildAuthorizationCatalog } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
 
@@ -27,17 +29,17 @@ export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
  * process and caches it; `private, no-cache` keeps a shared cache from storing
  * it while a private one may revalidate through the ETag.
  *
- * The gate is `ForceLoggedIn` alone, which is WIDER than the entity reads:
- * `GET /permissions` and `GET /policies` both require one of the
- * `PERMISSION_READ` / `PERMISSION_UPDATE` / `PERMISSION_DELETE` grants, so a
- * principal holding none of them can read every namespace (with the realm and
- * client ids of foreign realms) and every policy configuration (attribute
- * predicates included) here and nowhere else. The width is structural rather
- * than incidental: a console evaluates the catalog for whichever identity
- * signed in, most of which hold no permission-family grant, and a resource
- * server evaluates it for every subject whose token it verifies; a per-caller
- * narrowing would be the per-identity document again and could not be
- * cached. The catalog is an upper bound on what may be asked, never an
+ * The gate is exactly the one of the entity reads it aggregates: after
+ * `ForceLoggedIn`, the pre-gate `GET /permissions` and `GET /policies` run,
+ * one of `PERMISSION_READ` / `PERMISSION_UPDATE` / `PERMISSION_DELETE`
+ * (reach is neutral there, so a `realm_admin` passes). Every namespace, with
+ * the realm and client ids of foreign realms, and every policy configuration,
+ * attribute predicates included, is therefore readable here by exactly the
+ * principals that may read them one by one. A resource server reads the
+ * catalog with its OWN client credential holding `PERMISSION_READ`: the
+ * document is identity-free, so the end user's bearer is the wrong credential
+ * for it. A console whose user lacks the family falls back to the name-only
+ * view. The catalog is an upper bound on what may be asked, never an
  * entitlement (the same posture as `GET /schemas`); every decision it feeds
  * still runs over the caller's own grants.
  */
@@ -54,6 +56,14 @@ export class AuthorizationController {
     async get(
         @DContext() event: IAppEvent,
     ): Promise<AuthorizationCatalog> {
+        await buildActorContext(event).permissionEvaluator.preEvaluateOneOf({
+            name: [
+                PermissionName.PERMISSION_READ,
+                PermissionName.PERMISSION_UPDATE,
+                PermissionName.PERMISSION_DELETE,
+            ],
+        });
+
         event.response.headers.set('cache-control', 'private, no-cache');
 
         return buildAuthorizationCatalog(this.ctx);

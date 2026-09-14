@@ -6,7 +6,8 @@
  */
 
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import { CLIENT_ACCOUNT_CONSOLE_NAME, CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
+import { CLIENT_ACCOUNT_CONSOLE_NAME, CLIENT_ADMIN_CONSOLE_NAME, PermissionName } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import {
     afterAll,
@@ -238,6 +239,16 @@ describe.each(CONSOLES)('$name console session', ({
             expect(['none', 'own', 'ownOrNull', 'any']).toContain(entry.realm_scope);
             expect(Array.isArray(entry.policies)).toBe(true);
         }
+        // the catalog is gated like the permission reads: a user holding no
+        // grant of the family is refused through the cookie exactly as
+        // through a bearer, and the console falls back to the name-only view
+        const refused = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
+        expect(refused.status).toEqual(403);
+        expect((await refused.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
+
+        const { data: permissionRead } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+        await suite.client.userPermission.create({ userId: user.id, permissionId: permissionRead.id });
+
         const authorizationResponse = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
         expect(authorizationResponse.status).toEqual(200);
         expect(authorizationResponse.headers.get('cache-control')).toEqual('private, no-cache');

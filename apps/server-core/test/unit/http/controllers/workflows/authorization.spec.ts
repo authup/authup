@@ -18,6 +18,7 @@ import {
 import type { AuthorizationCatalog } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import {
@@ -29,7 +30,7 @@ import {
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../app';
-import { httpRequest } from '../../../../utils';
+import { createFakeUser, httpRequest } from '../../../../utils';
 
 describe('src/http/controllers/workflows/authorization/*.ts', () => {
     const suite = createTestApplication();
@@ -97,7 +98,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect(response.headers.get('vary') ?? '').not.toContain('cookie');
     });
 
-    it('refuses an anonymous caller and a refresh token, and answers any authenticated scope', async () => {
+    it('refuses an anonymous caller, a refresh token and a bearer without the global scope', async () => {
         const anonymous = await httpRequest(suite, 'GET', '/authorization');
         expect(anonymous.status).toBe(401);
 
@@ -120,6 +121,32 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             kind: OAuth2TokenKind.ACCESS,
         });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${restricted}` } });
+        expect(response.status).toBe(403);
+        expect((await response.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
+    });
+
+    it('gates the catalog like the permission reads: no grant answers 403, PERMISSION_READ alone answers the catalog', async () => {
+        const password = 'start123-authorization';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+        const ungranted = await suite.client.token.createWithPassword({ username: user.name, password });
+        const headers = { Authorization: `Bearer ${ungranted.access_token}` };
+        const denied = await httpRequest(suite, 'GET', '/authorization', { headers });
+        expect(denied.status).toBe(403);
+        const { code } = await denied.json();
+        expect(code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
+
+        // the same bearer is refused by the entity read the catalog aggregates,
+        // with the same status and code: the two gates are one call
+        const entities = await httpRequest(suite, 'GET', '/permissions', { headers });
+        expect(entities.status).toBe(denied.status);
+        expect((await entities.json()).code).toEqual(code);
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+        await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
+
+        const granted = await suite.client.token.createWithPassword({ username: user.name, password });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
         expect(response.status).toBe(200);
         const catalog : AuthorizationCatalog = await response.json();
         expect(catalog.version).toBe(1);
