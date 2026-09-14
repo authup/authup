@@ -53,10 +53,10 @@
         "@authup/kit": "^1.0.0-beta.65",
         "@authup/server-config-kit": "^1.0.0-beta.65",
         "envix": "^1.5.0",
-        "zod": "^4.5.4"
+        "zod": "^4.6.2"
     },
     "devDependencies": {
-        "@types/node": "^26.4.1",
+        "@types/node": "^26.5.1",
         "cross-env": "^10.1.0",
         "vitest": "^4.0.14"
     },
