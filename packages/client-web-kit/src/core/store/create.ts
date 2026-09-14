@@ -6,7 +6,7 @@
  */
 
 import type { AuthorizationCatalog, IPermissionEvaluator, IdentityPolicyData } from '@authup/access';
-import { AuthorizationCatalogStaleError, createAuthorizationEvaluator } from '@authup/access';
+import { createAuthorizationEvaluator, isAuthorizationCatalogStaleError } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -27,6 +27,27 @@ import type {
     StoreLogoutOptions,
     UserMinimal,
 } from './types';
+
+/**
+ * The staged evaluator a commit installs: one built from the catalog, `null`
+ * for the name-only fallback, or this, a deny-all. It is a SENTINEL rather
+ * than an absent value because the three are different states and only the
+ * name-only one may read the grant names.
+ */
+const AUTHORIZATION_DENIED = Symbol('authorizationDenied');
+
+type StagedAuthorization = IPermissionEvaluator | null | typeof AUTHORIZATION_DENIED;
+
+function denyAllAuthorization(e: unknown) : typeof AUTHORIZATION_DENIED {
+    // eslint-disable-next-line no-console
+    console.warn(
+        '[authup] The authorization catalog could not be evaluated. ' +
+        'Every permission check denies for this session.',
+        e,
+    );
+
+    return AUTHORIZATION_DENIED;
+}
 
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
@@ -475,17 +496,26 @@ export function createStore(context: StoreCreateContext) {
      * with it: the cached catalog plus the identity and the grants the
      * introspection itself carries. A grant naming a definition or a policy
      * the cached catalog lacks means the catalog predates the definition or
-     * the junction row, so it is refetched once and the build retried; a
-     * second stale answer fails the way any other failure does. A definition
-     * the server could not project travels with `policies: null` and the
-     * consumer denies it without a refetch. Only the copy just found stale
-     * is discarded: a concurrent build may have stored a fresh one in the
-     * meantime.
+     * the junction row, so it is refetched once and the build retried. Only
+     * the copy just found stale is discarded: a concurrent build may have
+     * stored a fresh one in the meantime. A definition the server could not
+     * project travels with `policies: null` and the consumer denies it
+     * without a refetch.
+     *
+     * A build that still fails commits a DENY-ALL evaluator and never
+     * rejects: the credential is valid, only the authorization data is not,
+     * and a rejection here reverts the staged session, revokes its grant and
+     * reaches the console guards as a logout. That covers a second stale
+     * answer (the grant list has a query cache in front of it while the
+     * catalog does not, so a deleted or renamed permission makes the two
+     * disagree for as long as that cache lives) and a catalog this copy
+     * cannot build from at all. A failure to FETCH the catalog still
+     * rejects: nothing is known about it, and the next resolve retries.
      */
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
-    ) : Promise<IPermissionEvaluator | null> => {
+    ) : Promise<StagedAuthorization> => {
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
@@ -502,8 +532,8 @@ export function createStore(context: StoreCreateContext) {
                 identity,
             });
         } catch (e) {
-            if (!(e instanceof AuthorizationCatalogStaleError)) {
-                throw e;
+            if (!isAuthorizationCatalogStaleError(e)) {
+                return denyAllAuthorization(e);
             }
         }
 
@@ -524,11 +554,11 @@ export function createStore(context: StoreCreateContext) {
                 identity,
             });
         } catch (e) {
-            if (catalogPromise === reloadedPromise && e instanceof AuthorizationCatalogStaleError) {
+            if (catalogPromise === reloadedPromise && isAuthorizationCatalogStaleError(e)) {
                 reloadCatalog();
             }
 
-            throw e;
+            return denyAllAuthorization(e);
         }
     };
 
@@ -576,7 +606,7 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        authorization: IPermissionEvaluator | null,
+        authorization: StagedAuthorization,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -664,7 +694,9 @@ export function createStore(context: StoreCreateContext) {
             setUser(subject);
         }
 
-        if (ctx.authorization) {
+        if (ctx.authorization === AUTHORIZATION_DENIED) {
+            permissionEvaluator.reset();
+        } else if (ctx.authorization) {
             permissionEvaluator.setEvaluator(ctx.authorization);
         } else {
             permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);

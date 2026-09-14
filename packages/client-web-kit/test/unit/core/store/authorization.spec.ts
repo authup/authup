@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthorizationCatalogStaleError, BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
@@ -182,24 +182,52 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).rejects.toThrow();
     });
 
-    it('fails the login and revokes the staged grant when the refetched catalog is stale too', async () => {
+    it('denies every permission but keeps the session when the refetched catalog is stale too', async () => {
+        // the credential is valid; only the authorization data is not, and a
+        // rejection here reaches the console guards as a logout
         const { store, httpClient } = buildStore({
             'POST /token/introspect': () => ({ ...INTROSPECTION, permissions: LATER_GRANTS }),
             'GET /authorization': () => buildAuthorizationCatalog(),
         });
 
-        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow(AuthorizationCatalogStaleError);
+        await store.login({ name: 'admin', password: 'start123' });
 
         expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
-        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
-        expect(store.accessToken.value).toBeNull();
-        expect(findRequests(httpClient, '/token/revoke')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(store.accessToken.value).toEqual('xyz');
+        expect(findRequests(httpClient, '/token/revoke')).toHaveLength(0);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({
+            name: 'user_read',
+            data: realm(AUTHORIZATION_REALM),
+        })).rejects.toThrow();
 
-        // a catalog known to be stale is not served again: the next login
-        // fetches anew
-        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow(AuthorizationCatalogStaleError);
+        // a catalog known to be stale is not served again: the next
+        // revalidation fetches anew
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
         expect(findRequests(httpClient, '/authorization')).toHaveLength(4);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+    });
+
+    it('denies every permission but keeps the session when the catalog cannot be built at all', async () => {
+        // a duplicate namespace is a malformed catalog rather than a stale
+        // one, so there is nothing to refetch for
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => {
+                const catalog = buildAuthorizationCatalog();
+
+                return { ...catalog, permissions: [...catalog.permissions, ...catalog.permissions] };
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(findRequests(httpClient, '/token/revoke')).toHaveLength(0);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
     });
 
     it('falls back to the name-only view when the server has no authorization route', async () => {
