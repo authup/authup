@@ -58,9 +58,18 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * Build a resource-server (or console) evaluator from the catalog
  * `GET /authorization` serves, the identity's grants as the introspection
  * endpoints report them, and the identity itself. Rejects legacy, incomplete
- * and unsupported input; a grant referencing a definition or a policy the
- * catalog lacks throws `AuthorizationCatalogStaleError`, the signal to
- * refetch the catalog.
+ * and unsupported input. A grant referencing a policy the catalog lacks
+ * throws `AuthorizationCatalogStaleError`, the signal to refetch the
+ * catalog: a junction row created after the catalog was cached. A grant
+ * naming a definition the catalog lacks is dropped instead: the server
+ * carries no such definition, or dropped it because its policy could not be
+ * projected, and denies the grant as well, so no refetch can change that.
+ *
+ * Both the identity and the grants are optional. Without an identity the
+ * caller's data is passed through untouched and no grant is bound, so the
+ * binding evaluator answers with missing data exactly as the server does for
+ * an anonymous request, and only a definition whose policies need no
+ * identity can pass. Grants without the identity they belong to are refused.
  *
  * The REALM_MATCH data key follows the server's own three-way rule: a
  * resource that carries a realm passes it (null for a global row, which
@@ -76,8 +85,13 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     // Detach: a later mutation of a cached HTTP response cannot widen grants
     // after validation (attribute queries carry arbitrary nested data).
     const catalog = authorizationCatalogSchema.parse(structuredClone(input.catalog));
-    const grants = authorizationGrantsSchema.parse(structuredClone(input.grants));
-    const identity = identitySchema.parse(input.identity);
+    const identity = identitySchema.optional().parse(input.identity);
+    if (!identity && typeof input.grants !== 'undefined') {
+        throw new Error('Grants require the identity they belong to.');
+    }
+    const grants = authorizationGrantsSchema.parse(
+        typeof input.grants === 'undefined' ? [] : structuredClone(input.grants),
+    );
 
     const trees = new Map<string, AuthorizationPolicy>();
     for (const [id, raw] of Object.entries(catalog.policies)) {
@@ -120,7 +134,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         });
         const permission = permissions.get(key);
         if (!permission) {
-            throw new AuthorizationCatalogStaleError(`The catalog does not define the permission ${key}.`);
+            continue;
         }
 
         const policies : BasePolicy[] = [];
@@ -159,6 +173,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
 
     const withIdentity = (input?: PolicyData) : PolicyData => {
         const data = input?.clone() ?? new PolicyData();
+        if (!identity) {
+            return data;
+        }
+
         data.set(BuiltInPolicyType.IDENTITY, {
             id: identity.id,
             type: identity.type,

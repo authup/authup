@@ -73,8 +73,14 @@ export type AuthorizationEvaluatorInput = {
      */
     catalog: unknown,
     /**
-     * `AuthorizationGrant[]`, validated by the schema.
+     * `AuthorizationGrant[]`, validated by the schema. Defaults to none, and
+     * may only be supplied together with the identity holding them.
      */
-    grants: unknown,
-    identity: IdentityPolicyData,
+    grants?: unknown,
+    /**
+     * The identity the grants belong to. Omitted for an anonymous caller:
+     * no identity data is injected and no grant is bound, so only a
+     * definition whose policies need no identity can pass.
+     */
+    identity?: IdentityPolicyData,
 };

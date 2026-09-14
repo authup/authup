@@ -312,13 +312,79 @@ describe('authorization catalog consumer', () => {
         await expect(evaluator.preEvaluate({ name: 'unknown_permission' })).rejects.toThrow();
     });
 
-    it('reports the catalog stale for a grant naming a definition it lacks', async () => {
-        await expect(build({ grants: grants({ name: 'event_delete', realm_scope: 'any' }) }))
-            .rejects.toThrow(AuthorizationCatalogStaleError);
-        await expect(build({ grants: grants({ realm_id: realmA, realm_scope: 'any' }) }))
-            .rejects.toThrow(AuthorizationCatalogStaleError);
-        await expect(build({ catalog: { ...catalog(), permissions: [] } }))
-            .rejects.toThrow(AuthorizationCatalogStaleError);
+    it('drops a grant naming a definition the catalog lacks and denies it while a sibling still authorizes', async () => {
+        const evaluator = await build({
+            grants: grants(
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+                {
+                    realm_id: realmA,
+                    realm_scope: 'any',
+                    policies: [],
+                },
+                { realm_scope: 'any', policies: [] },
+            ),
+        });
+        await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
+        expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
+        await expect(evaluator.preEvaluate({ name: 'event_read', realmId: realmA })).rejects.toThrow();
+        await expect(evaluator.evaluate({
+            name: 'event_read',
+            realmId: realmA,
+            data: resource(realmA),
+        })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).resolves.toBeUndefined();
+        expect(await allowed(evaluator, resource(realmB))).toBe(true);
+
+        const empty = await build({ catalog: { ...catalog(), permissions: [] } });
+        await expect(empty.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(empty, resource(realmA))).toBe(false);
+        expect(await empty.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
+    it('evaluates without an identity: only a definition whose policies need none can pass', async () => {
+        const document = catalog([
+            definition(['open'], { name: 'open' }),
+            definition(['closed'], { name: 'closed' }),
+            definition(['binding'], { name: 'guarded' }),
+        ], {
+            binding: { type: 'permissionBinding' },
+            open: { type: 'date', start: '2000-01-01' },
+            closed: { type: 'date', start: '2999-01-01' },
+        });
+        const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+
+        const anonymous = await createAuthorizationEvaluator({ catalog: document });
+        await expect(anonymous.preEvaluate({ name: 'open' })).resolves.toBeUndefined();
+        await expect(anonymous.evaluate({ name: 'open', data: row })).resolves.toBeUndefined();
+        expect(await anonymous.compile({ name: 'open' })).toEqual({ verdict: 'allow' });
+        await expect(anonymous.preEvaluate({ name: 'closed' })).rejects.toThrow();
+        await expect(anonymous.evaluate({ name: 'closed', data: row })).rejects.toThrow();
+        await expect(anonymous.preEvaluate({ name: 'guarded' })).rejects.toThrow();
+        await expect(anonymous.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
+        expect(await anonymous.compile({ name: 'guarded' })).toEqual({ verdict: 'deny' });
+
+        const identified = await createAuthorizationEvaluator({
+            catalog: document,
+            grants: grants({
+                name: 'guarded',
+                realm_scope: 'any',
+                policies: [],
+            }),
+            identity,
+        });
+        await expect(identified.preEvaluate({ name: 'guarded' })).resolves.toBeUndefined();
+        await expect(identified.evaluate({ name: 'guarded', data: row })).resolves.toBeUndefined();
+        expect(await identified.compile({ name: 'guarded' })).toEqual({ verdict: 'allow' });
+
+        await expect(createAuthorizationEvaluator({
+            catalog: document,
+            grants: grants({ name: 'guarded', realm_scope: 'any' }),
+        })).rejects.toThrow('Grants require the identity they belong to.');
     });
 
     it('reports the catalog stale for a grant naming a policy it lacks', async () => {
@@ -368,14 +434,13 @@ describe('authorization catalog consumer', () => {
     it('refuses an identity that is neither a user nor a client, or carries no id', async () => {
         await expect(build({ identity: { ...identity, type: 'role' } })).rejects.toThrow();
         await expect(build({ identity: { ...identity, id: '' } })).rejects.toThrow();
-        await expect(build({ identity: undefined as unknown as IdentityPolicyData })).rejects.toThrow();
     });
 
     it('refuses legacy, inactive-shaped and unknown-version inputs', async () => {
         await expect(build({ catalog: { active: true, permissions: [{ name: 'event_read' }] } })).rejects.toThrow();
         await expect(build({ catalog: { ...catalog(), version: 2 } })).rejects.toThrow();
         await expect(build({ catalog: undefined })).rejects.toThrow();
-        await expect(build({ grants: undefined })).rejects.toThrow();
+        await expect(build({ grants: null })).rejects.toThrow();
         await expect(build({ grants: { name: 'event_read' } })).rejects.toThrow();
     });
 
