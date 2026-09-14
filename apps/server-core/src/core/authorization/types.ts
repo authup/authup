@@ -8,10 +8,10 @@
 import type { BasePermission, BasePolicy } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
 
-export type PermissionDefinition = {
-    permission: BasePermission,
-    policies: BasePolicy[],
-};
+/**
+ * One permission definition: the permission and the policy trees bound to it.
+ */
+export type PermissionPolicies = [BasePermission, BasePolicy[]];
 
 /**
  * Everything the authorization catalog is built from. Both halves are read
@@ -22,7 +22,7 @@ export interface IAuthorizationCatalogSource {
     /**
      * Every permission definition with the policy trees bound to it.
      */
-    findDefinitions(): Promise<PermissionDefinition[]>;
+    findDefinitions(): Promise<PermissionPolicies[]>;
 
     /**
      * Every policy tree a grant can name: the distinct policies the role, user

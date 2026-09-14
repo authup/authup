@@ -24,7 +24,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { IsNull } from 'typeorm';
-import type { IAuthorizationCatalogSource, PermissionDefinition } from '../../../../../core/authorization/types.ts';
+import type { IAuthorizationCatalogSource, PermissionPolicies } from '../../../../../core/authorization/types.ts';
 import {
     CachePrefix,
     ClientPermissionEntity,
@@ -107,7 +107,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
         return null;
     }
 
-    async findDefinitions() : Promise<PermissionDefinition[]> {
+    async findDefinitions() : Promise<PermissionPolicies[]> {
         const entities = await this.repository.find();
         if (entities.length === 0) {
             return [];
@@ -119,18 +119,18 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
             [...new Set(junctions.map((junction) => junction.policyId))],
         );
 
-        return entities.map((entity) => ({
-            permission: {
+        return entities.map((entity) => [
+            {
                 name: entity.name,
                 realmId: entity.realmId ?? null,
                 clientId: entity.clientId ?? null,
                 decisionStrategy: entity.decisionStrategy ?? null,
             },
-            policies: junctions
+            junctions
                 .filter((junction) => junction.permissionId === entity.id)
                 .map((junction) => trees[junction.policyId])
                 .filter((tree) : tree is BasePolicy => !!tree),
-        }));
+        ]);
     }
 
     async findGrantPolicies() : Promise<BasePolicy[]> {
