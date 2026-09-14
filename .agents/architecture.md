@@ -2964,9 +2964,14 @@ behalf.
 <E>_UPDATE, <E>_DELETE] })`, `appendQueryConditions` on `conditional`, a
 constant-false `inArray('id', [])` on `deny`, the per-row drop loop on `post`)
 and `getOne` runs `evaluateOneOf` with `resourceRealmMatch(entity)` after the
-fetch. So an `ownOrNull` reader lists and reads its own realm's rows plus the
-global ones and nothing else, with exact totals and pagination; `policy` inherits
-the gate on `/policies/:id/expanded`, which delegates to the same `getOne`.
+fetch. So on these four endpoints an `ownOrNull` reader sees its own realm's rows
+plus the global ones and nothing else, with exact totals and pagination; `policy`
+inherits the gate on `/policies/:id/expanded`, which delegates to the same
+`getOne`. The JUNCTION reads are a separate family and still carry no realm
+predicate, so a row of these four types remains reachable cross-realm as an
+include target there (`GET /role-permissions?include=permission` and its
+siblings) — tracked as #3594, since the fix is the same compiled-WHERE shape
+over each junction's owner-realm key rather than anything here.
 
 The two halves ship together on purpose. Gating only the list would hide a row
 that `GET /<entity>/<uuid>` still returns, and that is the more dangerous
