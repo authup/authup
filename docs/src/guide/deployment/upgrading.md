@@ -9,12 +9,19 @@ either requires operator action or deliberately changes behavior.
 
 ### Role, scope, permission and policy reads are realm-gated
 
-Both read paths of the four global-capable entities now apply the realm reach of
-the grant the caller holds. `GET /roles`, `/scopes`, `/permissions` and
-`/policies` return the caller's own realm plus the global (`realmId: null`) rows
-and nothing else, with exact totals and pagination, and the matching
-`GET /<entity>/<id>` refuses a row outside that reach with `403`. Previously both
-returned every realm's rows to any caller holding the read permission. The
+Both read paths of the four global-capable entities now apply the `realmScope` of
+the grant the caller holds. On `GET /roles`, `/scopes`, `/permissions` and
+`/policies` that means:
+
+- `own` (the junction default): the caller's own realm only, and **not** the
+  global (`realmId: null`) rows, since `own` excludes null by construction
+- `ownOrNull` (the reach the built-in `realm_admin` holds): the caller's own
+  realm plus the global rows
+- `any` (the built-in `admin`): every realm, unchanged
+
+Totals and pagination stay exact, and the matching `GET /<entity>/<id>` refuses a
+row outside the grant's reach with `403`. Previously both paths returned every
+realm's rows to any caller holding the read permission, whatever its reach. The
 `/policies/:id/expanded` read follows `getOne`.
 
 The change matters most for `policies`: that list carries each policy's
@@ -23,15 +30,14 @@ exposing one tenant's access-control rules to another tenant's administrator.
 
 Two consequences to check before upgrading:
 
-- **A grant at the default `own` reach no longer sees the global rows.** Every
-  built-in permission, both built-in roles, the `global` and `openid` scopes and
-  the system policies carry `realmId: null`, and `own` means own realm only. An
-  operator role you created through the API took `own` by default, so its
-  Permissions, Roles, Scopes and Policies pages will now render empty. Set those
-  grants to `ownOrNull` (the reach the built-in `realm_admin` role holds) to
-  restore the global catalogue: `POST /role-permissions` / `/user-permissions` /
-  `/client-permissions` with `realmScope: "ownOrNull"`. The built-in `admin`
-  (`any`) and `realm_admin` (`ownOrNull`) roles are unaffected.
+- **The `own` case above is the one that bites.** Every built-in permission, both
+  built-in roles, the `global` and `openid` scopes and the system policies carry
+  `realmId: null`, so an operator role you created through the API, which took
+  the `own` default, now sees none of them and its Permissions, Roles, Scopes and
+  Policies pages render empty. Set those grants to `ownOrNull` to restore the
+  global catalogue: `POST /role-permissions` / `/user-permissions` /
+  `/client-permissions` with `realmScope: "ownOrNull"`. The built-in `admin` and
+  `realm_admin` roles are unaffected.
 - **An integration that enumerated other realms' rows through these endpoints
   stops seeing them.** Give it a grant at `any` reach, or query each realm with
   a credential issued in it.
