@@ -21,6 +21,7 @@ import {
     IdentityProviderRoleMappingAPI,
     KeyAPI,
     OAuth2AuthorizeAPI,
+    OAuth2DeviceAuthorizationAPI,
     OAuth2TokenAPI,
     OAuth2UserInfoAPI,
     PermissionAPI,
@@ -61,6 +62,8 @@ export class Client extends BaseClient implements IClient {
     public readonly clientScope : ClientScopeAPI;
 
     public readonly consent : ConsentAPI;
+
+    public readonly deviceAuthorization : OAuth2DeviceAuthorizationAPI;
 
     public readonly event : EventAPI;
 
@@ -149,6 +152,8 @@ export class Client extends BaseClient implements IClient {
         this.clientScope = new ClientScopeAPI({ client: this });
 
         this.consent = new ConsentAPI({ client: this });
+
+        this.deviceAuthorization = new OAuth2DeviceAuthorizationAPI({ client: this });
 
         this.event = new EventAPI({ client: this });
 

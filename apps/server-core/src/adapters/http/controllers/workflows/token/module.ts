@@ -52,6 +52,7 @@ import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
     HTTPOAuth2AuthorizeGrant,
+    HTTPOAuth2DeviceCodeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
     extractClientCredentialsFromRequest,
@@ -158,6 +159,18 @@ export class TokenController {
                 metrics: ctx.metrics,
                 logger: ctx.logger,
                 options: { gracePeriod: ctx.tokenRefreshGracePeriod },
+                certificateSource: ctx.certificateSource,
+            }),
+            [OAuth2TokenGrant.DEVICE_CODE]: new HTTPOAuth2DeviceCodeGrant({
+                deviceCodeVerifier: ctx.deviceCodeVerifier,
+                clientAuthenticator: ctx.oauth2ClientAuthenticator,
+                accessTokenIssuer: ctx.accessTokenIssuer,
+                refreshTokenIssuer: ctx.refreshTokenIssuer,
+                openIdTokenIssuer: ctx.openIdTokenIssuer,
+                keyStore: ctx.keyStore,
+                sessionManager: ctx.sessionManager,
+                realmRepository: ctx.realmRepository,
+                accessPolicyEvaluator: ctx.accessPolicyEvaluator,
                 certificateSource: ctx.certificateSource,
             }),
         };

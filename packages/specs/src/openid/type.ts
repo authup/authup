@@ -25,9 +25,19 @@ export type OpenIDProviderMetadata = {
     jwks_uri: string,
 
     /**
+     * RFC 8628 §4: the device authorization endpoint.
+     */
+    device_authorization_endpoint?: string,
+
+    /**
      * List of the supported OAuth 2.0 response_type values.
      */
     response_types_supported: `${OAuth2AuthorizationResponseType}`[],
+
+    /**
+     * RFC 8414 §2: the OAuth 2.0 grant_type values this server supports.
+     */
+    grant_types_supported?: string[],
 
     /**
      * List of the supported subject (end-user) identifier types.
@@ -59,6 +69,7 @@ export type OpenIDProviderMetadata = {
      */
     mtls_endpoint_aliases?: {
         token_endpoint?: string,
+        device_authorization_endpoint?: string,
         introspection_endpoint?: string,
         revocation_endpoint?: string,
         userinfo_endpoint?: string,

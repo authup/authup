@@ -11,13 +11,17 @@ import { describe, expect, it } from 'vitest';
 import {
     AuthHeaderError,
     BadRequestError,
+    DeviceVerificationThrottledError,
     ErrorCode,
     INSTANCEOF_PROPERTY,
+    MfaThrottledError,
     UnauthorizedError,
     ValidationError,
     isAuthHeaderError,
     isAuthupError,
     isBadRequestError,
+    isDeviceVerificationThrottledError,
+    isMfaThrottledError,
     isUnauthorizedError,
     isValidationError,
     serializeError,
@@ -161,6 +165,29 @@ describe('duck-type guards (JSON-rehydrated)', () => {
         expect(isBaseError(foreign)).toBe(true);
         expect(isAuthupError(foreign)).toBe(false);
         expect(isAuthupError(roundtrip(foreign))).toBe(false);
+    });
+});
+
+describe('isDeviceVerificationThrottledError', () => {
+    it('matches the instance', () => {
+        const error = new DeviceVerificationThrottledError({ retryAfter: 42 });
+
+        expect(isDeviceVerificationThrottledError(error)).toBe(true);
+        expect(error.code).toEqual(ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED);
+        expect(error.data).toMatchObject({ retryAfter: 42 });
+    });
+
+    it('matches its JSON round-trip', () => {
+        const rehydrated = roundtrip(new DeviceVerificationThrottledError({ retryAfter: 42 }));
+
+        expect(isDeviceVerificationThrottledError(rehydrated)).toBe(true);
+        expect(isAuthupError(rehydrated)).toBe(true);
+        expect(rehydrated.retryAfter).toEqual(42);
+    });
+
+    it('rejects the MFA throttle it is modelled on, in both directions', () => {
+        expect(isDeviceVerificationThrottledError(new MfaThrottledError())).toBe(false);
+        expect(isMfaThrottledError(new DeviceVerificationThrottledError())).toBe(false);
     });
 });
 

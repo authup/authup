@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-kit';
+import type {
+    Client,
+    Identity,
+    OAuth2AuthorizationCodeRequest,
+    Session,
+} from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
@@ -71,3 +76,26 @@ export type OAuth2AuthorizationOptions = {
      */
     redirectUriVerified?: boolean,
 };
+
+export type OAuth2AuthorizationGateContext = Pick<
+    OAuth2AuthorizationManagerContext,
+'sessionManager' | 'mfaChallengeProvider' | 'accessPolicyEvaluator' | 'promptLoginMaxAge' | 'mfaFreshnessMaxAge'
+>;
+
+export type OAuth2AuthorizationGateInput = Pick<
+    OAuth2AuthorizationCodeRequest,
+'realm_id' | 'acr_values' | 'prompt' | 'max_age' | 'redirect_uri' | 'state'
+>;
+
+export type OAuth2AuthorizationGateResult = {
+    authTime: number,
+    session: Session | null,
+};
+
+export interface IOAuth2AuthorizationGate {
+    evaluate(
+        data: OAuth2AuthorizationGateInput,
+        identity: Identity,
+        options?: OAuth2AuthorizationOptions,
+    ) : Promise<OAuth2AuthorizationGateResult>;
+}

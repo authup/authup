@@ -58,6 +58,10 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'The response type is not supported.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'The requested scope is invalid.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'The granted scope is insufficient for this action.',
+    [ErrorCode.OAUTH_AUTHORIZATION_PENDING]: 'The device has not been approved yet.',
+    [ErrorCode.OAUTH_SLOW_DOWN]: 'The device is polling too frequently.',
+    [ErrorCode.OAUTH_DEVICE_CODE_EXPIRED]: 'The device code has expired. Start again on your device.',
+    [ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED]: 'Too many verification attempts. Please try again later.',
 
     [ErrorCode.PERMISSION_NOT_FOUND]: 'The permission could not be found.',
     [ErrorCode.PERMISSION_DENIED]: 'You do not have permission to perform this action.',

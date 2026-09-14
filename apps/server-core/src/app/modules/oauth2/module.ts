@@ -19,6 +19,7 @@ import {
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
+    OAuth2DeviceCodeRepository,
     OAuth2FederatedLoginStore,
     OAuth2ScopeRepository,
     OAuth2TokenRepository,
@@ -197,6 +198,14 @@ export class OAuth2Module implements IModule {
                 const cache = c.resolve(CacheInjectionKey);
 
                 return new OAuth2FederatedLoginStore(cache);
+            },
+        });
+
+        container.register(OAuth2InjectionToken.DeviceCodeRepository, {
+            useFactory: (c) => {
+                const cache = c.resolve(CacheInjectionKey);
+
+                return new OAuth2DeviceCodeRepository(cache);
             },
         });
 

@@ -15,7 +15,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein RP-initiierter Logout zurückleiten darf. Getrennt von den Login-Weiterleitungs-URIs. Ohne Eintrag endet der Logout immer auf der Bestätigungsseite.',
     [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Adresse der Anwendung. Wird in der Kontokonsole als Link angezeigt. Ohne Eintrag erscheint nur der Name.',
     [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Endpunkt, der beim Ende einer Sitzung ein Logout-Token erhält (OIDC Back-Channel Logout). Eine http(s)-URL, keine Muster. Ohne Eintrag wird nichts gesendet.',
-    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Schränkt ein, welche OAuth2-Grants dieser Client verwenden darf. Ohne Auswahl sind alle Grants erlaubt.',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Schränkt ein, welche OAuth2-Grants dieser Client verwenden darf. Ohne Auswahl sind alle Grants erlaubt. Der Device-Grant muss ausdrücklich aufgeführt sein; eine leere Liste aktiviert ihn nicht.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentifizierungsmethode',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Keine',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Gemeinsames Geheimnis',
@@ -118,6 +118,16 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Ohne Richtlinie darf sich jede Identität des Realms anmelden.',
 
     [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Gewährte Berechtigungen werden geprüft…',
+
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_TITLE]: 'Gerät verbinden',
+    [TranslatorTranslationClientKey.DEVICE_CODE_LABEL]: 'Auf deinem Gerät angezeigter Code',
+    [TranslatorTranslationClientKey.DEVICE_CODE_HINT]: 'Gib den Code genau so ein, wie er angezeigt wird. Bindestriche und Groß- oder Kleinschreibung spielen keine Rolle.',
+    [TranslatorTranslationClientKey.DEVICE_CODE_INVALID]: 'Der Code ist ungültig oder abgelaufen. Prüfe dein Gerät und versuche es erneut.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_CONFIRM_TEXT]: '{{client}} auf einem anderen Gerät bittet um Zugriff auf dein Konto.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_SCOPES]: 'Es erhält folgende Berechtigungen:',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_APPROVED]: 'Gerät verbunden. Du kannst diese Seite schließen und zu deinem Gerät zurückkehren.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_DENIED]: 'Zugriff verweigert. Es wurde nichts verbunden; du kannst diese Seite schließen.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_THROTTLED]: 'Zu viele Versuche. Warte ein paar Minuten und versuche es erneut.',
 
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Abmelden',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Möchten Sie sich abmelden?',

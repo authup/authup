@@ -58,6 +58,10 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'Le type de réponse n\'est pas pris en charge.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'La portée demandée est invalide.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'La portée accordée est insuffisante pour cette action.',
+    [ErrorCode.OAUTH_AUTHORIZATION_PENDING]: 'L\'appareil n\'a pas encore été approuvé.',
+    [ErrorCode.OAUTH_SLOW_DOWN]: 'L\'appareil interroge le serveur trop fréquemment.',
+    [ErrorCode.OAUTH_DEVICE_CODE_EXPIRED]: 'Le code de l\'appareil a expiré. Recommencez sur votre appareil.',
+    [ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED]: 'Trop de tentatives de vérification. Veuillez réessayer plus tard.',
 
     [ErrorCode.PERMISSION_NOT_FOUND]: 'La permission est introuvable.',
     [ErrorCode.PERMISSION_DENIED]: 'Vous n\'avez pas la permission d\'effectuer cette action.',

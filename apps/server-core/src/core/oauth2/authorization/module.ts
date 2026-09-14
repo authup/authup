@@ -6,78 +6,46 @@
  */
 
 import type {
-    Identity, 
-    OAuth2AuthorizationCode, 
-    OAuth2AuthorizationCodeRequest, 
-    Session,
+    Identity,
+    OAuth2AuthorizationCode,
+    OAuth2AuthorizationCodeRequest,
 } from '@authup/core-kit';
 import {
-    EventName, 
-    EventRefType, 
-    EventScope, 
-    IdentityType,
-    SessionAuthMethod,
+    EventName,
+    EventRefType,
+    EventScope,
 } from '@authup/core-kit';
-import { hasInstanceof } from '@authup/errors';
 import {
-    OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
-    OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
-    OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
-    OAuth2AccessDeniedError,
-    OAuth2AuthenticationContextClass,
-    OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
-    OAuth2LoginRequiredError,
-    OAuth2MfaRequiredError,
-    OAuth2RequestError,
     OAuth2ResponseTypeError,
 } from '@authup/specs';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
-import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
-import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
+import { OAuth2AuthorizationGate } from './gate.ts';
+import { classifyAuthorizeFailure } from './helpers.ts';
 import type {
+    IOAuth2AuthorizationGate,
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationOptions,
     OAuth2AuthorizationResult,
 } from './types.ts';
-import type { ISessionManager } from '../../authentication/index.ts';
-import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
-
-const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
-
-// Deliberately 60 (not 0, deviating from the plan-050 sketch): the hosted
-// challenge round-trip (stamp mfa_at → retry POST /authorize) takes seconds,
-// so a 0-window step-up could never be satisfied and would loop the ladder.
-const DEFAULT_MFA_FRESHNESS_MAX_AGE = 60;
 
 export class OAuth2Authorization {
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
-    protected sessionManager : ISessionManager;
+    protected gate : IOAuth2AuthorizationGate;
 
     protected eventService? : IEventService;
 
     protected metrics? : IAuthFlowMetrics;
 
-    protected promptLoginMaxAge : number;
-
-    protected mfaFreshnessMaxAge : number;
-
-    protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
-
-    protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
-
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.codeIssuer = ctx.codeIssuer;
-        this.sessionManager = ctx.sessionManager;
+        this.gate = new OAuth2AuthorizationGate(ctx);
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
-        this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
-        this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
-        this.mfaFreshnessMaxAge = ctx.mfaFreshnessMaxAge ?? DEFAULT_MFA_FRESHNESS_MAX_AGE;
-        this.mfaChallengeProvider = ctx.mfaChallengeProvider;
     }
 
     /**
@@ -115,7 +83,8 @@ export class OAuth2Authorization {
 
             return result;
         } catch (e) {
-            if (hasInstanceof(e, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
+            const outcome = classifyAuthorizeFailure(e);
+            if (outcome === 'denied') {
                 await this.eventService?.record({
                     scope: EventScope.OAUTH2,
                     name: EventName.AUTHORIZE_FAILED,
@@ -129,14 +98,8 @@ export class OAuth2Authorization {
                     realmId: data.realm_id ?? null,
                     data: { reason: 'accessPolicy' },
                 });
-                this.metrics?.recordAuthorize('denied');
-            } else if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
-                this.metrics?.recordAuthorize('login_required');
-            } else if (hasInstanceof(e, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
-                this.metrics?.recordAuthorize('mfa_required');
-            } else {
-                this.metrics?.recordAuthorize('error');
             }
+            this.metrics?.recordAuthorize(outcome);
 
             throw e;
         }
@@ -176,149 +139,7 @@ export class OAuth2Authorization {
             ...(data.state ? { state: data.state } : {}),
         };
 
-        if (!identity) {
-            throw OAuth2RequestError.identityInvalid();
-        }
-
-        // Realm binding: the code-request verifier stamped data.realm_id with the
-        // resolved client's realm. The authenticated identity must belong to that
-        // same realm — otherwise a lingering session for realm A could silently
-        // mint a code/token for realm B's client (confused deputy). The error body
-        // deliberately carries no identity data (no realm-enumeration oracle).
-        // The comparison reads the scalar realmId column, NOT the realm
-        // relation — the relation may simply not be loaded on the resolved
-        // identity. An identity without a realmId fails closed the same way —
-        // clean login_required, never a TypeError.
-        if (
-            data.realm_id &&
-            identity.data.realmId !== data.realm_id
-        ) {
-            throw OAuth2LoginRequiredError.realmMismatch();
-        }
-
-        // Authentication time = the backing session's creation instant (NOT
-        // refreshed_at — a token refresh must not reset it). Session-less flows
-        // (e.g. HTTP Basic authorize) present live credentials on this request,
-        // so the authentication time is "now".
-        const nowSeconds = Math.floor(Date.now() / 1000);
-        let authTime = nowSeconds;
-        let session : Session | null = null;
-        if (options.sessionId) {
-            session = await this.sessionManager.findOneById(options.sessionId);
-            if (session && session.createdAt) {
-                authTime = Math.floor(new Date(session.createdAt).getTime() / 1000);
-            }
-        }
-
-        // MFA backstop (plan 049) — the authoritative server-side gate; the
-        // hosted UI's challenge step is convenience. The proof is session-bound
-        // (mfa_at — stamped by the challenge endpoint or the password grant's
-        // otp param), so a session-less flow (HTTP Basic) cannot carry one and
-        // fails closed while the user holds a confirmed device. A user without
-        // a device under mfaRequired is routed to inline enrollment.
-        if (this.mfaChallengeProvider && identity.type === IdentityType.USER) {
-            // requirement flags only — the interactive challenge material (the
-            // webauthn nonce) is issued by the status endpoint, not this backstop.
-            const challenge = await this.mfaChallengeProvider.challenge(
-                identity.data.id,
-                { issueMaterial: false },
-            );
-            // The local second factor belongs to a local credential. A
-            // session established by an external identity provider was
-            // authenticated THERE, which is where MFA is configured and
-            // enforced for it, so authup does not stack a factor of its own
-            // on top and `mfaRequired` does not force local enrollment on
-            // those users. The route is opt-in either way: an external
-            // identity reaches an existing account only through the
-            // bearer-authenticated link flow, since a first login provisions
-            // a NEW user (plan 091). A session-less authorize (HTTP Basic) is
-            // not external and keeps the gate.
-            const externallyAuthenticated = session?.authMethod === SessionAuthMethod.EXTERNAL;
-
-            if (!externallyAuthenticated) {
-                if (challenge.required && !session?.mfaAt) {
-                    throw OAuth2MfaRequiredError.challengeRequired();
-                }
-
-                if (challenge.enrollmentRequired) {
-                    throw OAuth2MfaRequiredError.enrollmentRequired();
-                }
-            }
-
-            // Step-up (plan 050 stage 3): a requested `acr_values` containing
-            // urn:authup:mfa is a TRIGGER (Auth0/Keycloak stance) — the proof
-            // must additionally be FRESH (mfaFreshnessMaxAge window, mirroring
-            // promptLoginMaxAge's absorb-the-round-trip semantics). Enforced
-            // only while the user actually holds a factor — per OIDC Core
-            // §5.5.1.1 acr is voluntary, so an unsatisfiable request degrades
-            // to the achieved acr instead of bricking the RP.
-            //
-            // This one DOES apply to an externally authenticated session: the
-            // application asked for MFA explicitly, and a local factor the
-            // user holds is the only way authup can answer that. Trusting the
-            // upstream is the default, not a refusal to prove anything.
-            if (challenge.required && data.acr_values) {
-                const acrValues = data.acr_values.split(' ');
-                if (acrValues.includes(OAuth2AuthenticationContextClass.MFA)) {
-                    const mfaAtSeconds = session?.mfaAt ?
-                        Math.floor(new Date(session.mfaAt).getTime() / 1000) :
-                        null;
-                    if (mfaAtSeconds === null || nowSeconds - mfaAtSeconds > this.mfaFreshnessMaxAge) {
-                        throw OAuth2MfaRequiredError.stepUpRequired();
-                    }
-                }
-            }
-        }
-
-        // OIDC §3.1.2.1 prompt=login / max_age freshness (enforced only when
-        // requested — a plain authorize never throws here). The hosted page
-        // renders the login form for prompt=login; this is the server backstop.
-        const prompts = data.prompt ? data.prompt.split(' ') : [];
-        if (
-            prompts.includes(OAuth2AuthorizationPrompt.LOGIN) &&
-            nowSeconds - authTime > this.promptLoginMaxAge
-        ) {
-            throw OAuth2LoginRequiredError.reauthenticationRequired();
-        }
-
-        if (
-            typeof data.max_age !== 'undefined' &&
-            data.max_age !== null
-        ) {
-            const maxAge = Number(data.max_age);
-            if (
-                Number.isFinite(maxAge) &&
-                nowSeconds - authTime > maxAge
-            ) {
-                throw OAuth2LoginRequiredError.reauthenticationRequired();
-            }
-        }
-
-        // Application access policy (plan 052) — the last gate before
-        // issuance: a denial is only revealed to a fully-authenticated
-        // (incl. second-factor) identity. A client carrying a policy id with
-        // no wired evaluator denies too (never silently allow a configured
-        // gate). The redirect target rides the error only when the
-        // redirect_uri was pattern-verified (RFC 6749 §4.1.2.1).
-        if (options.client?.accessPolicyId) {
-            let allowed = false;
-
-            const subject = toIdentityPolicyData(identity);
-            if (subject && this.accessPolicyEvaluator) {
-                allowed = await this.accessPolicyEvaluator.evaluate(
-                    options.client.accessPolicyId,
-                    subject,
-                );
-            }
-
-            if (!allowed) {
-                throw OAuth2AccessDeniedError.forClient(
-                    options.redirectUriVerified && data.redirect_uri ?
-                        { redirectUri: data.redirect_uri, state: data.state ?? null } :
-                        undefined,
-                );
-            }
-        }
+        const { authTime, session } = await this.gate.evaluate(data, identity, options);
 
         // The id_token is NOT minted here — the /token exchange mints it after
         // resolving the real backing session, so its `sid` is authoritative

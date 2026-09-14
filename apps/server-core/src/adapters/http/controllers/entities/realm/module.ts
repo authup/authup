@@ -17,7 +17,12 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import { OAuth2AuthenticationContextClass, OAuth2AuthorizationPrompt, OAuth2AuthorizationResponseType } from '@authup/specs';
+import {
+    OAuth2AuthenticationContextClass,
+    OAuth2AuthorizationPrompt,
+    OAuth2AuthorizationResponseType,
+    OAuth2TokenGrant,
+} from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
@@ -186,6 +191,12 @@ export class RealmController {
 
             token_endpoint: resolveURL(baseURL, 'token'),
 
+            // RFC 8628 §4: the device grant is advertised next to its
+            // endpoint. RFC 8414 §2 reads an absent grant_types_supported as
+            // `authorization_code, implicit`, wrong on both counts here.
+            device_authorization_endpoint: resolveURL(baseURL, 'device_authorization'),
+            grant_types_supported: Object.values(OAuth2TokenGrant),
+
             token_endpoint_auth_methods_supported: [
                 'none',
                 'client_secret_basic',
@@ -198,6 +209,7 @@ export class RealmController {
             ...(mtlsBaseURL ? {
                 mtls_endpoint_aliases: {
                     token_endpoint: resolveURL(mtlsBaseURL, 'token'),
+                    device_authorization_endpoint: resolveURL(mtlsBaseURL, 'device_authorization'),
                     introspection_endpoint: resolveURL(mtlsBaseURL, 'token/introspect'),
                     revocation_endpoint: resolveURL(mtlsBaseURL, 'token/revoke'),
                     userinfo_endpoint: resolveURL(mtlsBaseURL, 'userinfo'),

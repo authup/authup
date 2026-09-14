@@ -26,6 +26,8 @@ const SENSITIVE_QUERY_PARAMS = [
     'refresh_token',
     'token',
     'code',
+    'device_code',
+    'user_code',
     'client_secret',
 ];
 

@@ -11,6 +11,7 @@ import {
     OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
     OAUTH2_CLIENT_ERROR_INSTANCE,
     OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE,
+    OAUTH2_DEVICE_AUTHORIZATION_ERROR_INSTANCE,
     OAUTH2_ERROR_INSTANCE,
     OAUTH2_GRANT_ERROR_INSTANCE,
     OAUTH2_GRANT_TYPE_ERROR_INSTANCE,
@@ -22,6 +23,7 @@ import {
     type OAuth2AccessDeniedError,
     type OAuth2ClientError,
     type OAuth2ClientUnauthorizedError,
+    type OAuth2DeviceAuthorizationError,
     type OAuth2Error,
     type OAuth2GrantError,
     type OAuth2GrantTypeError,
@@ -116,6 +118,20 @@ export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {
 
     return input.code === ErrorCode.OAUTH_GRANT_INVALID ||
         input.code === ErrorCode.OAUTH_REDIRECT_URI_MISMATCH;
+}
+
+export function isOAuth2DeviceAuthorizationError(input: unknown): input is OAuth2DeviceAuthorizationError {
+    if (matchesInstanceof(input, OAUTH2_DEVICE_AUTHORIZATION_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isOAuth2Error(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.OAUTH_AUTHORIZATION_PENDING ||
+        input.code === ErrorCode.OAUTH_SLOW_DOWN ||
+        input.code === ErrorCode.OAUTH_DEVICE_CODE_EXPIRED;
 }
 
 export function isOAuth2ScopeError(input: unknown): input is OAuth2ScopeError {

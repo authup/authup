@@ -5,9 +5,10 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
 The service behind authup's hosted auth pages: `/authorize` (login and
-consent), `/register`, `/activate`, `/password-forgot`, `/password-reset` and
-`/logout`. A server-core page GET redirects here carrying the request's own
-query, so the authorization request is what identifies the flow.
+consent), `/register`, `/activate`, `/password-forgot`, `/password-reset`,
+`/device` (device verification, RFC 8628) and `/logout`. A server-core page GET
+redirects here carrying the request's own query, so the authorization request
+is what identifies the flow.
 
 It renders `@authup/client-auth-console` through that package's own render
 contract, resolved out of `node_modules`: the SSR bundle per request with the
@@ -16,9 +17,10 @@ its own `/assets`, plus the operator theme and the security headers a login
 page needs.
 
 It hydrates ANONYMOUSLY over HTTP and holds no credential, no database and no
-loopback: `/authorize` from `GET /authorize/info`, the four workflow pages from
-`GET /` plus their own query, and `/logout` from nothing at all, since that page
-drives the end-session call itself. Substituting a package that fulfills the
+loopback: `/authorize` from `GET /authorize/info`, the four workflow pages and
+`/device` from `GET /` plus their own query (`/device` pre-fills the `user_code`
+it was called with), and `/logout` from nothing at all, since that page drives
+the end-session call itself. Substituting a package that fulfills the
 render contract is the supported way to replace the hosted auth UI.
 
 ## Usage

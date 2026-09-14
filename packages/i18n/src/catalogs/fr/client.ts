@@ -15,7 +15,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Modèle d’URI vers lequel une déconnexion initiée par le RP peut rediriger. Distinct des URI de redirection de connexion. Sans entrée, la déconnexion se termine toujours sur la page de confirmation.',
     [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Adresse de l\'application. Affichée comme lien dans la console de compte. Sans entrée, seul le nom apparaît.',
     [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Point de terminaison qui reçoit un jeton de déconnexion à la fin d\'une session (OIDC Back-Channel Logout). Une URL http(s), sans modèle. Sans entrée, rien n\'est envoyé.',
-    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restreint les types d’autorisation OAuth2 que ce client peut utiliser. Sans sélection, tous sont autorisés.',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restreint les types d’autorisation OAuth2 que ce client peut utiliser. Sans sélection, tous sont autorisés. Le type d’autorisation pour appareils doit être listé explicitement ; une liste vide ne l’active pas.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Méthode d’authentification',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Aucune',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Secret partagé',
@@ -118,6 +118,16 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Sans politique, toute identité du domaine peut se connecter.',
 
     [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Vérification des permissions accordées…',
+
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_TITLE]: 'Connecter un appareil',
+    [TranslatorTranslationClientKey.DEVICE_CODE_LABEL]: 'Code affiché sur votre appareil',
+    [TranslatorTranslationClientKey.DEVICE_CODE_HINT]: 'Saisissez le code exactement tel qu\'il est affiché. Les tirets et la casse n\'ont pas d\'importance.',
+    [TranslatorTranslationClientKey.DEVICE_CODE_INVALID]: 'Le code est invalide ou a expiré. Vérifiez votre appareil et réessayez.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_CONFIRM_TEXT]: '{{client}} sur un autre appareil demande l\'accès à votre compte.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_SCOPES]: 'Il pourra :',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_APPROVED]: 'Appareil connecté. Vous pouvez fermer cette page et retourner à votre appareil.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_DENIED]: 'Accès refusé. Rien n\'a été connecté ; vous pouvez fermer cette page.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_THROTTLED]: 'Trop de tentatives. Attendez quelques minutes et réessayez.',
 
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Se déconnecter',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Voulez-vous vous déconnecter ?',

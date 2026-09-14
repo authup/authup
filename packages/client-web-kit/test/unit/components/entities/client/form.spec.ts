@@ -408,6 +408,7 @@ describe('AClientForm grant types', () => {
         expect(values).toEqual([
             'authorization_code',
             'client_credentials',
+            'urn:ietf:params:oauth:grant-type:device_code',
             'password',
             'refresh_token',
         ]);
@@ -428,19 +429,17 @@ describe('AClientForm grant types', () => {
 
     it('keeps an unknown grant type as a checked option instead of stripping it', async () => {
         const entity = createEntity();
-        entity.grantTypes = 'authorization_code,urn:ietf:params:oauth:grant-type:device_code';
+        entity.grantTypes = 'authorization_code,urn:example:grant';
 
         const { wrapper } = mountForm(entity);
         await flushPromises();
 
-        expect(findGroup(wrapper).props('modelValue')).toContain(
-            'urn:ietf:params:oauth:grant-type:device_code',
-        );
+        expect(findGroup(wrapper).props('modelValue')).toContain('urn:example:grant');
         expect(
             wrapper
                 .findAllComponents({ name: 'VCFormCheckbox' })
                 .map((checkbox) => checkbox.props('value')),
-        ).toContain('urn:ietf:params:oauth:grant-type:device_code');
+        ).toContain('urn:example:grant');
     });
 
     it('submits the selection as a space-delimited allowlist', async () => {

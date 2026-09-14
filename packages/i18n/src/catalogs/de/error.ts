@@ -58,6 +58,10 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'Der Response-Typ wird nicht unterstützt.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'Der angeforderte Bereich ist ungültig.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'Der gewährte Bereich reicht für diese Aktion nicht aus.',
+    [ErrorCode.OAUTH_AUTHORIZATION_PENDING]: 'Das Gerät wurde noch nicht freigegeben.',
+    [ErrorCode.OAUTH_SLOW_DOWN]: 'Das Gerät fragt zu häufig an.',
+    [ErrorCode.OAUTH_DEVICE_CODE_EXPIRED]: 'Der Gerätecode ist abgelaufen. Starte den Vorgang auf deinem Gerät erneut.',
+    [ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED]: 'Zu viele Bestätigungsversuche. Bitte versuche es später erneut.',
 
     [ErrorCode.PERMISSION_NOT_FOUND]: 'Die Berechtigung konnte nicht gefunden werden.',
     [ErrorCode.PERMISSION_DENIED]: 'Du hast keine Berechtigung, diese Aktion auszuführen.',

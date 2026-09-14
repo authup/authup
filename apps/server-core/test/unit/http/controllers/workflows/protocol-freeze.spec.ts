@@ -84,10 +84,20 @@ describe('protocol-surface freeze (plan 073)', () => {
         expect(typeof discovery.authorization_endpoint).toEqual('string');
         expect(typeof discovery.token_endpoint).toEqual('string');
         expect(typeof discovery.end_session_endpoint).toEqual('string');
+        expect(typeof discovery.device_authorization_endpoint).toEqual('string');
+        expect(discovery.grant_types_supported).toEqual([
+            'authorization_code',
+            'client_credentials',
+            'urn:ietf:params:oauth:grant-type:device_code',
+            'password',
+            'refresh_token',
+        ]);
 
         expect(discovery).not.toHaveProperty('authorizationEndpoint');
         expect(discovery).not.toHaveProperty('tokenEndpoint');
         expect(discovery).not.toHaveProperty('endSessionEndpoint');
+        expect(discovery).not.toHaveProperty('deviceAuthorizationEndpoint');
+        expect(discovery).not.toHaveProperty('grantTypesSupported');
     });
 
     it('keeps the /token/introspect response snake_case', async () => {

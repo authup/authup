@@ -283,6 +283,18 @@ describe.each(CONSOLES)('$name console session', ({
         });
         expect(issuance.status).toEqual(401);
 
+        // ... the device approval included (plan 065): an approval would
+        // carry this cookie's session onto a device token.
+        const deviceApproval = await request('POST', '/device_authorization/approve', {
+            headers: {
+                'sec-fetch-site': 'same-origin',
+                origin: publicOrigin,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ user_code: 'BCDF-GHJK' }),
+        });
+        expect(deviceApproval.status).toEqual(401);
+
         // 7) revoking ANOTHER device is not a sign-out: the cookie is cleared
         //    for the caller's OWN session only, or the account console's
         //    Sessions page would log the visitor out of the browser it is

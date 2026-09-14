@@ -279,7 +279,9 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 #### Discovery
 
-Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, `prompt_values_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#7-back-channel-logout)).
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
+
+`grant_types_supported` lists the five grants Authup implements: `authorization_code`, `client_credentials`, `password`, `refresh_token` and `urn:ietf:params:oauth:grant-type:device_code`. It describes the server, not a client: each client's own `grantTypes` allowlist decides what that client may use. With `mtlsPublicUrl` set, `mtls_endpoint_aliases` carries `device_authorization_endpoint` next to the token endpoint alias, because a `tls` client authenticates at the device endpoint exactly as it does at `/token`.
 
 The management read of a realm, `GET /realms/:id`, carries the three values an integrator copies out of that document under `meta.endpoints`: `issuer`, `openidConfiguration` and `jwks`. They are derived from the deployment's public url and the realm name, so a renamed realm answers with a new issuer. The realm collection, `GET /realms`, does not carry them: derive them from `<publicUrl>/realms/<name>` (the issuer; the discovery document and the JWKS sit under it) or read the record. The admin console shows them on the realm's page.
 
@@ -420,3 +422,170 @@ rows are attributed to the user who was signed out, not to your client, so
 your own client credentials list none of them: reading another subject's
 rows takes the `EVENT_READ` permission, an administrator's. Clients without
 a `backchannelLogoutUri` are never contacted and leave no row.
+
+### 8. Device Authorization Grant (RFC 8628)
+
+The device grant ([RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628))
+signs a person in on a device that has no browser or no keyboard: a TV, a
+CLI, a printer. The device asks Authup for a pair of codes and shows the short
+one. The person opens `<publicUrl>/device` on a phone or a laptop, enters the
+code, signs in and approves. Meanwhile the device polls `/token` until the
+approval lands.
+
+#### Enabling the grant
+
+The grant is opt-in per client. List
+`urn:ietf:params:oauth:grant-type:device_code` in the client's `grantTypes`
+allowlist (the admin console's client form, `POST /clients/:id`, or a
+[provisioning file](../deployment/provisioning.md#client)). An empty
+`grantTypes` allows every other grant but not this one, and a client that does
+not list the URN is refused with `unauthorized_client` at both endpoints. The
+exception exists because the flow has no redirect URI to bind its result to:
+whoever gets a person to type a code approves that device (RFC 8628 §5.4), so
+no client carries that surface unless an administrator asked for it. A
+deployment that lists the URN on no client has the grant off.
+
+#### Request
+
+`POST /device_authorization` is form-encoded and takes the client credentials
+the token endpoint takes. A public client (`authMethod: none`) identifies
+itself with `client_id` alone; a secret sent for a public client is refused.
+
+```shell
+curl -X POST 'http://localhost:3000/device_authorization' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'client_id=YOUR_CLIENT_ID' \
+  -d 'scope=global openid'
+```
+
+A confidential client (`authMethod: secret`) authenticates with
+`client_secret` in the body or as a Basic `Authorization` header, never both
+at once. It authenticates at both endpoints: here, and again on every poll at
+`/token`.
+
+```shell
+curl -X POST 'http://localhost:3000/device_authorization' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'client_id=YOUR_CLIENT_ID' \
+  -d 'client_secret=YOUR_CLIENT_SECRET' \
+  -d 'scope=global openid'
+```
+
+`scope` is optional. Without it the code carries every scope bound to the
+client. A requested scope must be covered by the client's bound scopes or carry
+`global`; anything beyond that answers `insufficient_scope` rather than being
+trimmed, the same rule `/authorize` applies.
+
+A client identified by name takes the same `realm_id` / `realm_name` hint as
+on `/token`: the name resolves within the hinted realm, and within the master
+realm when no hint is given, so pass the hint or the client's UUID for a client
+outside the master realm. A UUID resolves globally. The request accepts no
+`prompt`, `max_age` or `acr_values`; RFC 8628 defines none.
+
+#### Response
+
+```json
+{
+    "device_code": "DEVICE_CODE",
+    "user_code": "BCDF-GHJK",
+    "verification_uri": "http://localhost:3000/device",
+    "verification_uri_complete": "http://localhost:3000/device?user_code=BCDF-GHJK",
+    "expires_in": 600,
+    "interval": 5
+}
+```
+
+`device_code` is a 64-character secret the device keeps to itself; it never
+reaches a browser. `user_code` is eight consonants shown to the person; case
+and dashes do not matter when it is typed. Both expire after `expires_in`
+seconds (10 minutes). `verification_uri_complete` pre-fills the code, for a QR
+code or a clickable link; the page still displays the code for confirmation.
+Failures: `invalid_request` (mixed credentials, a secret without a
+`client_id`, an over-long `scope`),
+`invalid_client` (`401`: an unknown or inactive client, a wrong or missing
+secret, a secret on a public client), `unauthorized_client` (the grant is not
+listed) and `insufficient_scope`.
+
+#### Verification
+
+The person opens the verification URI, enters the code, signs in with a
+username and password (then the second factor when one is enrolled) and sees
+the client's name, its realm and the scopes it asked for. The page offers no
+identity-provider buttons, so a person who authenticates only through an
+external provider must already hold a hosted-login session in that browser. Approving or denying is always an
+explicit click, for a `builtIn` client as well: the page cannot know which
+device is asking, so nothing is auto-consented. The approval runs the gates
+`/authorize` runs. The person's realm must match the client's, a user holding a
+confirmed authenticator completes the second factor first, `mfaRequired`
+routes a user without one through enrollment, and the client's access policy
+is evaluated. A wrong or expired code answers one neutral error whatever the
+reason. After ten misses within ten minutes the page refuses further attempts
+by that user with `429` (`device_verification_throttled`, `retryAfter` in
+seconds).
+
+`GET /device` is one of the hosted auth pages: like `/authorize` it hands over
+to the auth console, carrying the `user_code` it was called with.
+
+#### Polling
+
+The device polls `/token` every `interval` seconds:
+
+```shell
+curl -X POST 'http://localhost:3000/token' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=urn:ietf:params:oauth:grant-type:device_code' \
+  -d 'device_code=DEVICE_CODE' \
+  -d 'client_id=YOUR_CLIENT_ID'
+```
+
+A confidential client adds its `client_secret` or the Basic header. Success is
+the ordinary token response, with an `id_token` when `openid` was granted.
+Until then every poll answers an error body carrying Authup's `code` and the
+RFC 8628 `error`, both top-level fields:
+
+| Condition (evaluation order) | `code` | `error` | status |
+|---|---|---|---|
+| client auth failed | `invalid_client` | `invalid_client` | 401 |
+| not opted in | `unauthorized_client` | `unauthorized_client` | 400 |
+| unknown / redeemed / flushed / client or realm mismatch | `invalid_grant` | `invalid_grant` | 400 |
+| past `expires_at` (blob still within retention) | `device_code_expired` | `expired_token` | 400 |
+| polled inside the window | `slow_down` | `slow_down` | 400 |
+| no decision yet | `authorization_pending` | `authorization_pending` | 400 |
+| denied (popped, so once) | `access_denied` | `access_denied` | 400 |
+| approved but the pop lost a race, or the access-policy backstop denies | `invalid_grant` | `invalid_grant` | 400 |
+
+An expired code answers `expired_token` once, on the first poll within five
+minutes of its expiry. That poll removes the code, so every later poll answers
+`invalid_grant`; a code nobody polls in those five minutes is gone and answers
+`invalid_grant` as well. A denial is reported once; the next poll finds
+nothing. `slow_down` means the device polled within five seconds of its last
+accepted poll. RFC 8628 asks the device to add five seconds to its interval,
+and the server refuses polls inside the window rather than widening it.
+`invalid_grant` is one answer for every code the client cannot redeem: a device
+presenting another client's code learns nothing about whether that code
+exists, and its poll neither consumes nor slows the legitimate device's flow.
+
+#### The session behind the token
+
+Approving binds the browser session the person approved from. The device's
+tokens are issued under that session: `amr` and `acr` report how that session
+was established (`pwd`, or `ext` for a federated login made earlier at
+`/authorize`, plus `otp` and `urn:authup:mfa` after a second factor), the `id_token` carries that session's `sid` and, as `auth_time`, the
+instant that session was created (the login, not the approval), and the
+refresh token rotates like any other. A session that ended between the
+approval and the poll is not revived: the tokens are then issued under a new
+session created from the device's own request. Ending the approver's
+session ends the device's access too, whether through `DELETE /sessions/:id`
+or an RP-initiated logout with an `id_token_hint` of that session. Consent is recorded for a non-`builtIn`
+client, so the device application is listed on the account console's
+Applications page and can be revoked there.
+
+#### Deployment notes
+
+The codes are cache entries with a ten minute lifetime, never database rows.
+A multi-replica deployment needs Redis for the flow: the request, the approval
+and the polls can land on different replicas. A cache flush ends every flow in
+flight; the poll then answers `invalid_grant` and the device starts over.
+Every approval and denial is recorded in the security event log (`authorize`
+with `data.reason: device`, `authorizeFailed` with `reason: denied`); the codes
+themselves never appear in an event.
