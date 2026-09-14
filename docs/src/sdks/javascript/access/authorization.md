@@ -11,16 +11,20 @@ Reading the `name` of each entry alone is not enough for resource authorization.
 
 ## Read the catalog and the grants
 
-The catalog endpoint requires an access credential: a bearer, HTTP Basic, or the
-console session cookie. The answer is the same for every caller, so cache it per
-process rather than per subject. A credential without the `global` scope reads
-the catalog like any other, but its introspection carries no grants: it holds
-none server-side either.
+The catalog endpoint is gated exactly like `GET /permissions`: the credential
+must hold `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, and
+any other authenticated credential is answered 403. A resource server therefore
+fetches it with its own client credential, never with the end user's bearer:
+the catalog is identity-free, so the user's grants say nothing about reading
+it, and one `client-permission` row binding `permission_read` to the resource
+server's client is all it needs. The answer is the same for every permitted
+caller, so cache it per process rather than per subject.
 
 The grants and the identity come from the introspection you already run:
 `POST /token/introspect` for a bearer, `GET /sessions/@me/introspect` for a
 console session. `permissions` is the grant list; `sub`, `sub_kind`, `realm_id`
-and `realm_name` are the identity.
+and `realm_name` are the identity. A bearer without the `global` scope holds no
+grants server-side, so its introspection carries none.
 
 ```typescript
 import {
@@ -30,9 +34,9 @@ import {
     createAuthorizationEvaluator,
 } from '@authup/access';
 
-const catalog = await client.authorization.get({
-    authorizationHeader: { type: 'Bearer', token: accessToken },
-});
+// `client` authenticates with the resource server's own client credential,
+// which holds permission_read; only the introspection speaks for the user.
+const catalog = await client.authorization.get();
 const introspection = await client.token.introspect({ token: accessToken }, {
     authorizationHeader: { type: 'Bearer', token: accessToken },
 });
@@ -51,10 +55,10 @@ const authorization = await createAuthorizationEvaluator({
 
 The response is `Cache-Control: private, no-cache`: keep it in your own process
 and refetch it when `createAuthorizationEvaluator` throws
-`AuthorizationCatalogStaleError`, which means a grant names a definition or a
-policy the cached copy does not carry. An evaluator is per subject, because its
-grants and its identity are; the catalog behind it is shared. A revoked grant is
-visible on the next introspection.
+`AuthorizationCatalogStaleError`, which means a grant names a policy the cached
+copy does not carry. An evaluator is per subject, because its grants and its
+identity are; the catalog behind it is shared. A revoked grant is visible on
+the next introspection.
 
 ## Evaluate one resource
 
@@ -71,6 +75,12 @@ await authorization.evaluate({
 });
 // Resolves on allow; throws on denial.
 ```
+
+For an anonymous caller omit `identity` and `grants`. No identity data is
+injected and no grant is bound, so only a definition whose policies need no
+identity can pass (a `date` or `time` policy alone, or an empty definition
+layer), exactly as on the Authup server; a definition bound to `system.default`
+denies. Grants supplied without an identity are refused.
 
 `options.decisionStrategy` is forwarded; the policy include, exclude and
 pending options are refused.
@@ -136,7 +146,7 @@ The catalog (`GET /authorization`):
   permission key.
 - Nullable fields are required. An empty `policies` list means no restriction
   at that layer. A definition whose policy tree cannot be projected is left out,
-  so a grant of it reads as stale until the policy is fixed.
+  so a grant of it is dropped and denies until the policy is fixed.
 
 The grants (the introspection response's `permissions`):
 
@@ -145,23 +155,28 @@ The grants (the introspection response's `permissions`):
 - `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
   grant's own reach, `own` when absent. `policies` are the ids of the junction
   policy trees, resolved against the catalog; empty means no junction policy.
-- A grant naming a definition or a policy the catalog lacks throws
-  `AuthorizationCatalogStaleError`: refetch the catalog and build again. A grant
-  whose junction policy contains a permission-binding check is left out.
+- A grant naming a definition the catalog lacks is left out: the server carries
+  no such definition and denies the grant as well. A grant naming a policy the
+  catalog lacks throws `AuthorizationCatalogStaleError`: refetch the catalog
+  and build again. A grant whose junction policy contains a permission-binding
+  check is left out.
 
 `createAuthorizationEvaluator` rejects an unknown version, missing fields, a
 definition referencing an undeclared policy id, an unsupported policy type, a
-malformed configuration and an identity that is not a `user` or a `client`. It
-rebuilds the server's own binding model and runs the same aggregation and
-evaluators, which is what makes the decisions equal.
+malformed configuration, an identity that is not a `user` or a `client`, and
+grants supplied without an identity. It rebuilds the server's own binding model
+and runs the same aggregation and evaluators, which is what makes the decisions
+equal.
 
 ## Upgrade order
 
 1. Upgrade the Authup server to a release serving `GET /authorization` and
    reporting grants on introspection.
 2. Upgrade `@authup/access` and, for typed access, `@authup/core-http-kit`.
-3. Replace name-only checks with
+3. Bind `permission_read` to the resource server's own client (one
+   `client-permission` row) and fetch the catalog with that credential.
+4. Replace name-only checks with
    `createAuthorizationEvaluator({ catalog, grants: introspection.permissions, identity })`.
-4. A resource server must fail closed on a missing or malformed catalog and on
+5. A resource server must fail closed on a missing or malformed catalog and on
    an introspection without a grant list. Do not read the entries' names alone
    there.
