@@ -27,18 +27,10 @@ import { normalizeRealmScope } from '../realm-scope';
 import type { BasePermission, PermissionPolicyBinding } from '../types';
 import { AuthorizationCatalogStaleError } from './error';
 import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
-import { authorizationCatalogSchema, authorizationGrantsSchema } from './schema';
+import { parseAuthorizationEvaluatorInput } from './schema';
 import type { AuthorizationEvaluatorInput, AuthorizationPolicy } from './types';
 
 const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
-
-const identitySchema = z.object({
-    id: z.string().min(1),
-    type: z.enum(['user', 'client']),
-    realmId: z.string().nullish(),
-    realmName: z.string().nullish(),
-    clientId: z.string().nullish(),
-});
 
 function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
     const {
@@ -94,24 +86,11 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * policy include, exclude and pending options are refused.
  */
 export async function createAuthorizationEvaluator(input: AuthorizationEvaluatorInput) : Promise<IPermissionEvaluator> {
-    // Detach: a later mutation of a cached HTTP response cannot widen grants
-    // after validation (attribute queries carry arbitrary nested data).
-    const catalog = authorizationCatalogSchema.parse(structuredClone(input.catalog));
-    const identity = identitySchema.optional().parse(input.identity);
-    if (!identity && typeof input.grants !== 'undefined') {
-        throw new Error('Grants require the identity they belong to.');
-    }
-    // An identity with no grant list is the shape an INACTIVE introspection
-    // produces (`permissions` is absent unless the credential is active), and
-    // reading it as "this identity holds nothing" would authorize every
-    // definition that carries no binding check. An identity with no grants is
-    // spelled explicitly.
-    if (identity && typeof input.grants === 'undefined') {
-        throw new Error('An identity requires its grant list; pass an empty array for an identity holding none.');
-    }
-    const grants = authorizationGrantsSchema.parse(
-        typeof input.grants === 'undefined' ? [] : structuredClone(input.grants),
-    );
+    const {
+        catalog, 
+        grants, 
+        identity, 
+    } = await parseAuthorizationEvaluatorInput(input);
 
     const trees = new Map<string, AuthorizationPolicy>();
     const unevaluable = new Set<string>();

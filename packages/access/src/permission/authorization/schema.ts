@@ -5,68 +5,155 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { defineIssueItem } from '@ebec/core';
 import { DecisionStrategy } from '@authup/kit';
+import { createValidator } from '@validup/zod';
+import { Container, ValidupError } from 'validup';
 import { z } from 'zod';
 import { RealmScope } from '../realm-scope';
+import type { AuthorizationCatalog, AuthorizationEvaluatorInput, AuthorizationGrant } from './types';
 import { AUTHORIZATION_CATALOG_VERSION } from './types';
 
 const id = z.string().min(1);
 const namespaceId = id.nullable();
 
 /**
- * Structural validation only. The trees under `policies` are validated by
- * `projectAuthorizationPolicy`, which runs each type's own validator.
+ * A policy node as it travels. Deliberately LOOSE: every key beyond `type` is
+ * that type's own configuration, and `projectAuthorizationPolicy` is what
+ * validates it, by running the type's own validator. Mounting a node in a
+ * validup container would strip every key the container does not mount, and
+ * the whole configuration would go with it.
  */
 export const authorizationPolicySchema = z.looseObject({ type: z.string().min(1) });
 
 /**
- * Structural validation plus one referential rule: every id a definition
- * names must be a key of `policies`. A dangling id resolves to `undefined`,
- * which reads as "this layer carries no policy", so a catalog that merely
- * omitted a tree would grant unrestricted access rather than fail. The lookup
- * is own-property only, so an id such as `constructor` cannot be answered by
- * a member of `Object.prototype`. A definition carrying `null` names no tree
- * and is the server's own statement that it could not project one.
+ * One permission definition. `policies` carries the ids of its
+ * definition-layer trees, or `null` when the server could not project one.
  */
+export const authorizationDefinitionSchema = z.object({
+    name: z.string().min(1),
+    realm_id: namespaceId,
+    client_id: namespaceId,
+    decision_strategy: z.enum(DecisionStrategy).nullable(),
+    policies: z.array(id).nullable(),
+});
+
 export const authorizationCatalogSchema = z.object({
     version: z.literal(AUTHORIZATION_CATALOG_VERSION),
     policies: z.record(id, authorizationPolicySchema),
-    permissions: z.array(z.object({
-        name: z.string().min(1),
-        realm_id: namespaceId,
-        client_id: namespaceId,
-        decision_strategy: z.enum(DecisionStrategy).nullable(),
-        policies: z.array(id).nullable(),
-    })),
-}).check((ctx) => {
-    const declared = new Set(Object.keys(ctx.value.policies));
-
-    for (let i = 0; i < ctx.value.permissions.length; i++) {
-        const { policies } = ctx.value.permissions[i];
-        for (const [j, policyId] of (policies ?? []).entries()) {
-            if (declared.has(policyId)) {
-                continue;
-            }
-
-            ctx.issues.push({
-                input: policyId,
-                code: 'custom',
-                path: ['permissions', i, 'policies', j],
-                message: `The policy ${policyId} is not declared by the catalog.`,
-            });
-        }
-    }
+    permissions: z.array(authorizationDefinitionSchema),
 });
 
 /**
- * The identity's grant list as the introspection endpoints report it. Whether
- * a grant's policy ids are declared is the consumer's check against the
- * catalog it holds, since the two travel separately.
+ * One grant of the identity, as the introspection endpoints report it.
+ * Whether a grant's policy ids are declared is checked against the catalog
+ * the consumer holds, since the two travel separately.
  */
-export const authorizationGrantsSchema = z.array(z.object({
+export const authorizationGrantSchema = z.object({
     name: z.string().min(1),
     realm_id: namespaceId.optional(),
     client_id: namespaceId.optional(),
     realm_scope: z.enum(RealmScope).nullish(),
     policies: z.array(id).nullish(),
-}));
+});
+
+export const authorizationIdentitySchema = z.object({
+    id: z.string().min(1),
+    type: z.enum(['user', 'client']),
+    realmId: z.string().nullish(),
+    realmName: z.string().nullish(),
+    clientId: z.string().nullish(),
+});
+
+/**
+ * The whole input `createAuthorizationEvaluator` takes: the catalog
+ * `GET /authorization` serves, the grants an introspection reports and the
+ * identity it names. A validup container over zod mounts, the shape every
+ * validator in this package uses, so a consumer can reuse or override one
+ * member's rules instead of restating the document.
+ */
+export class AuthorizationEvaluatorInputValidator extends Container<AuthorizationEvaluatorInput> {
+    override initialize() {
+        super.initialize();
+
+        this.mount('catalog', createValidator(authorizationCatalogSchema));
+        this.mount('grants', createValidator(z.array(authorizationGrantSchema).optional()));
+        this.mount('identity', createValidator(authorizationIdentitySchema.optional()));
+    }
+}
+
+const validator = new AuthorizationEvaluatorInputValidator();
+
+export type AuthorizationEvaluatorInputParsed = {
+    catalog: AuthorizationCatalog,
+    grants: AuthorizationGrant[],
+    identity: AuthorizationEvaluatorInput['identity'],
+};
+
+/**
+ * Validate the evaluator's input, plus the two rules per-key validators
+ * cannot express.
+ *
+ * Every id a definition names must be a key of `policies`: a dangling id
+ * resolves to `undefined`, which reads as "this layer carries no policy", so
+ * a catalog that merely omitted a tree would grant unrestricted access rather
+ * than fail. The lookup is own-property only, so an id such as `constructor`
+ * cannot be answered by a member of `Object.prototype`.
+ *
+ * And the identity and its grants travel together: grants without an identity
+ * belong to nobody, while an identity without a grant list is the shape an
+ * INACTIVE introspection produces (`permissions` is absent unless the
+ * credential is active), which read as "holds nothing" would authorize every
+ * definition that carries no binding check. An identity holding no grant says
+ * so with an empty array.
+ */
+export async function parseAuthorizationEvaluatorInput(
+    input: AuthorizationEvaluatorInput,
+) : Promise<AuthorizationEvaluatorInputParsed> {
+    const identityGiven = typeof input.identity !== 'undefined';
+    const grantsGiven = typeof input.grants !== 'undefined';
+    if (!identityGiven && grantsGiven) {
+        throw new Error('Grants require the identity they belong to.');
+    }
+
+    if (identityGiven && !grantsGiven) {
+        throw new Error('An identity requires its grant list; pass an empty array for an identity holding none.');
+    }
+
+    // Detach: a later mutation of a cached HTTP response cannot widen grants
+    // after validation (attribute queries carry arbitrary nested data).
+    //
+    // The cast is the container's boundary: its generic describes the INPUT,
+    // whose wire members are `unknown` by design, while what a run returns is
+    // what the mounted schemas accepted (the `parseThemeManifest` idiom).
+    const {
+        catalog, 
+        grants, 
+        identity, 
+    } = await validator.run(
+        structuredClone(input) as Record<string, any>,
+    ) as {
+        catalog: AuthorizationCatalog,
+        grants?: AuthorizationGrant[],
+        identity?: AuthorizationEvaluatorInput['identity'],
+    };
+
+    for (const [i, definition] of catalog.permissions.entries()) {
+        for (const [j, policyId] of (definition.policies ?? []).entries()) {
+            if (Object.hasOwn(catalog.policies, policyId)) {
+                continue;
+            }
+
+            throw new ValidupError([defineIssueItem({
+                message: `The policy ${policyId} is not declared by the catalog.`,
+                path: ['catalog', 'permissions', i, 'policies', j],
+            })]);
+        }
+    }
+
+    return {
+        catalog,
+        grants: grants ?? [],
+        identity,
+    };
+}
