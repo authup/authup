@@ -20,18 +20,32 @@ it, and one `client-permission` row binding `permission_read` to the resource
 server's client is all it needs. The answer is the same for every permitted
 caller, so cache it per process rather than per subject.
 
+**A 403 is not a catalog, and what to do with it depends on who you are.** A
+console falls back to gating on the entry names alone, which is coarser than
+the catalog-backed evaluator: it ignores realm reach and junction policies, so
+a check a catalog-backed session denies passes there. That is deliberate for a
+console, whose gating is advisory (the server enforces every decision, and the
+user who lacks the permission family is the one whose custom roles a deny-all
+would blank the UI for), and it is the gating every console user had before the
+catalog existed. A resource server must never do it: it fails closed on a
+missing catalog, which is why it reads one with its own client credential
+rather than with the user's.
+
 The grants and the identity come from the introspection you already run:
 `POST /token/introspect` for a bearer, `GET /sessions/@me/introspect` for a
 console session. `permissions` is the grant list; `sub`, `sub_kind`, `realm_id`
-and `realm_name` are the identity. A bearer without the `global` scope holds no
-grants server-side, so its introspection carries none.
+and `realm_name` are the identity. The grant list is NOT narrowed by the
+token's `scope`: an active token reports the identity's full grant set, while
+the server withholds the identity policy data from a bearer that holds no
+`global` scope and denies it every `system.default`-bound permission. A
+resource server that honours scopes applies that check itself.
 
 ```typescript
 import {
-    AuthorizationCatalogStaleError,
     BuiltInPolicyType,
     PolicyData,
     createAuthorizationEvaluator,
+    isAuthorizationCatalogStaleError,
 } from '@authup/access';
 
 // `client` authenticates with the resource server's own client credential,
@@ -54,9 +68,12 @@ const authorization = await createAuthorizationEvaluator({
 ```
 
 The response is `Cache-Control: private, no-cache`: keep it in your own process
-and refetch it when `createAuthorizationEvaluator` throws
-`AuthorizationCatalogStaleError`, which means a grant names a definition or a
-policy the cached copy does not carry. The grants come from a fresh
+and refetch it when `createAuthorizationEvaluator` throws an error
+`isAuthorizationCatalogStaleError` recognizes, which means a grant names a
+definition or a policy the cached copy does not carry. Use that guard rather
+than `instanceof`: a tree resolving two copies of `@authup/access` breaks the
+class identity and turns the one recoverable state into an unrecoverable one.
+The grants come from a fresh
 introspection, so a definition created after the catalog was cached (an Authup
 upgrade adding permissions, a `POST /permissions`) or a junction row created
 since reaches you through that error and nothing else. An evaluator is per
@@ -154,6 +171,12 @@ The catalog (`GET /authorization`):
   denies it and drops every grant of it until the policy is fixed. Such a
   definition is carried rather than left out, so that a definition absent from
   the catalog can only mean a copy older than the definition.
+- A tree YOUR copy of `@authup/access` cannot project is read the same way: a
+  policy type newer than that copy, or a configuration its validator refuses,
+  denies the definitions that reference it and drops the grants that name it,
+  and never takes the other permissions down with it. Upgrade `@authup/access`
+  after the server, and expect the permissions using a newly added policy type
+  to deny until you do.
 
 The grants (the introspection response's `permissions`):
 
@@ -162,18 +185,18 @@ The grants (the introspection response's `permissions`):
 - `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
   grant's own reach, `own` when absent. `policies` are the ids of the junction
   policy trees, resolved against the catalog; empty means no junction policy.
-- A grant naming a definition or a policy the catalog lacks throws
-  `AuthorizationCatalogStaleError`: the copy you hold predates the definition
-  or the junction row, so refetch the catalog and build again. A grant naming
-  a definition carried with `policies: null` is left out and denies. A grant
-  whose junction policy contains a permission-binding check is left out.
+- A grant naming a definition or a policy the catalog lacks throws a stale
+  error: the copy you hold predates the definition or the junction row, so
+  refetch the catalog and build again. A grant naming a definition carried
+  with `policies: null` is left out and denies. A grant whose junction policy
+  contains a permission-binding check, or one your copy cannot project, is
+  left out.
 
 `createAuthorizationEvaluator` rejects an unknown version, missing fields, a
-definition referencing an undeclared policy id, an unsupported policy type, a
-malformed configuration, an identity that is not a `user` or a `client`, and
-grants supplied without an identity. It rebuilds the server's own binding model
-and runs the same aggregation and evaluators, which is what makes the decisions
-equal.
+definition referencing an undeclared policy id, a duplicate permission
+namespace, an identity that is not a `user` or a `client`, and grants supplied
+without an identity. It rebuilds the server's own binding model and runs the
+same aggregation and evaluators, which is what makes the decisions equal.
 
 ## Upgrade order
 

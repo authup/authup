@@ -3248,9 +3248,15 @@ principals that may read them one by one; `ForceLoggedIn` alone was wider than t
 let any bearer read the whole policy configuration. Two rules follow. A resource server
 reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
 `client-permission` row: the document is identity-free, so the end user's bearer is the
-wrong credential for it, and a bearer without the `global` scope holds no grants at all
-and is refused. A console whose signed-in user lacks the family is answered 403 and falls
-back to the name-only view, the same fallback a server predating the route produces. A
+wrong credential for it, and a resource server must fail closed when it has no catalog.
+A console whose signed-in user lacks the family is answered 403 and falls back to the
+name-only view, the same fallback a server predating the route produces. **That fallback
+is COARSER than the catalog-backed evaluator, not equivalent to it**: it gates on the
+entry names alone, ignoring realm reach and junction policies, so a check the catalog
+path denies passes there. It is kept because a console's gating is advisory (the server
+enforces every decision), it is the gating every console user had before the catalog
+existed, and the population it applies to is the one whose custom roles a deny-all would
+blank the UI for. A resource server never takes it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
@@ -3268,9 +3274,17 @@ with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
 `realm_scope` and the ids of its junction policy trees (`resolveIntrospectionSubject`,
 `core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
 cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
-warning, since the server fails such a grant closed itself. A credential without the
-`global` scope holds no grants server-side, so its introspection carries none. The
-IDENTITY is the same response's `sub`, `sub_kind`, `realm_id` and `realm_name`.
+warning, since the server fails such a grant closed itself. The projection runs over the
+RESOLVED identity, exactly as a request does (`toIdentityPolicyData`), never over the
+client a token was issued to: the provider narrows a user's grants to the identity's own
+`clientId`, and every provisioned permission is global, so scoping it to the token's
+client dropped every direct `auth_user_permissions` grant from any token carrying one,
+which is every authorization-code token and therefore every console and RP login. **The
+list is NOT narrowed by the token's `scope`**, so a bearer holding no `global` scope
+reports its full grant set while the server denies it every `system.default`-bound
+permission (the request path withholds the IDENTITY policy data from it); a resource
+server that honours scopes applies that check itself. The IDENTITY is the same
+response's `sub`, `sub_kind`, `realm_id` and `realm_name`.
 
 `createAuthorizationEvaluator({ catalog, grants?, identity? })` takes that triple and
 rebuilds the server's own raw binding model, the `PermissionPolicyBinding` structures
@@ -3284,12 +3298,22 @@ predates the definition (an upgrade adding `PermissionName` members, a `POST /pe
 or the junction row, and the signal is to refetch and build again. A per-process
 resource-server cache recovers through exactly that signal, which is why an absent
 definition must never be read as a deny. **A definition carried with `policies: null` is
-the one case that is not stale**: the server could not project its policy layer and says
-so on the wire instead of omitting it, so the consumer denies the permission and drops
-every grant of it, since a refetch cannot change what the server cannot project.
+not stale**: the server could not project its policy layer and says so on the wire instead
+of omitting it, so the consumer denies the permission and drops every grant of it, since a
+refetch cannot change what the server cannot project. **A tree
+the CONSUMER cannot project is the same condition read from the other side, and it is per
+tree**: the built-in policy type enum is closed while `auth_policies.type` is a free
+string, so a type newer than that copy of `@authup/access` (the documented upgrade order,
+server first, produces exactly that skew) or a configuration its validator refuses
+tombstones the definitions referencing it and drops the grants naming it, and takes no
+other permission down with it. One unknown type used to throw out of the whole build, for
+every caller, over a tree the caller may not even reference. A malformed catalog still
+throws: a duplicate permission namespace is not a data condition.
 **Both the identity and the grants are optional**, because server-core attaches IDENTITY
-data only when a request carries an identity: without one the consumer injects nothing and
-binds no grant, so the binding evaluator answers DATA_MISSING as it does for an anonymous
+data only when a request carries an identity: without one the consumer binds no grant and
+REMOVES any IDENTITY key the caller supplied (symmetrical with the identity branch, which
+overwrites it, so a caller can never inject an identity the document did not prove), so the
+binding evaluator answers DATA_MISSING as it does for an anonymous
 request on the server, and only a definition whose policies need no identity (a `time` or
 `date` policy alone, an empty definition layer) can pass while a `system.default`-bound
 one denies. Grants without the identity they belong to are refused. The split exists
@@ -3309,11 +3333,19 @@ other fetch failure rejects and clears the memo so the next resolve retries. Dur
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject
-fails like a failed introspection), refetching the catalog once on
-`AuthorizationCatalogStaleError` (discarding only the copy just found stale, compared by
-promise identity, so a concurrent build that stored a fresh one is not thrown away) and
-failing the way any other failure does when the refetched copy is stale too. The result
-is committed into ONE stable
+fails like a failed introspection), refetching the catalog once on a stale error
+(`isAuthorizationCatalogStaleError`, never `instanceof`, since a consumer tree may resolve
+two copies of the package; only the copy just found stale is discarded, compared by
+promise identity, so a concurrent build that stored a fresh one is not thrown away).
+**A build that still fails commits a DENY-ALL evaluator and never rejects**: the
+credential is valid and only the authorization data is not, while a rejection here
+reverts the staged session, revokes its grant and reaches the console guards as a logout.
+That covers a second stale answer, which a routine permission delete or rename makes
+reachable for as long as the junction query cache lives (the grant list rides that 60 s
+cache, the catalog rides none, so the two disagree in the direction "the grants name a
+permission the fresh catalog lacks"), and a catalog the consumer cannot build from at
+all. A failure to FETCH the catalog still rejects, since nothing is known about it, and
+the next resolve retries. The result is committed into ONE stable
 `StorePermissionEvaluator` (consumers hold on to `store.permissionEvaluator`, so a commit
 swaps what it delegates to). `usePermissionCheck` and the routing guards call
 `preEvaluateOneOf`; a check carrying `realmMatch` settles reach per row, one without keeps
