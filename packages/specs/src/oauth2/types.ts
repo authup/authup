@@ -139,14 +139,20 @@ export type OAuth2AccessGrantClaim = {
 };
 
 // todo: this should be removed.
+/**
+ * One entry of the identity's GRANT list, as the introspection endpoints
+ * report it under `permissions`: one entry per grant, so a namespace may
+ * repeat when the identity holds it through several junction rows.
+ * `realm_scope` and `policies` pair with the catalog `GET /authorization`
+ * serves: the reach is the grant's own, the ids name policy trees of that
+ * catalog.
+ */
 export type OAuth2TokenPermission = {
     name: string,
-    policy?: {
-        type: string,
-        [key: string]: any,
-    },
+    realm_id?: string | null,
     client_id?: string | null,
-    realm_id?: string
+    realm_scope?: 'none' | 'own' | 'ownOrNull' | 'any',
+    policies?: string[],
 };
 
 /**
