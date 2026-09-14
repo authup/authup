@@ -107,7 +107,8 @@ export async function buildAuthorizationCatalog(
         permissions.push([key, entry]);
     }
 
-    for (const tree of await ctx.permissionDefinitionProvider.findGrantPolicies()) {
+    const grantPolicies = await ctx.permissionDefinitionProvider.findGrantPolicies();
+    for (const tree of grantPolicies) {
         const ids = await project([tree]);
         if (!Array.isArray(ids)) {
             ctx.logger?.warn(
