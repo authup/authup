@@ -68,6 +68,7 @@ const bindingDefinition = (name: string) => ({
 
 const custom = { id: 'policy-custom', type: 'myType' };
 const prototypeNamed = { id: 'constructor', type: 'identity' };
+const prototypePolluting = { id: '__proto__', type: 'identity' };
 
 describe('core/authorization/module', () => {
     it('emits every definition with its trees deduped and sorted by namespace', async () => {
@@ -213,6 +214,24 @@ describe('core/authorization/module', () => {
 
         expect(catalog.permissions[0]!.policies).toEqual(['constructor']);
         expect(Object.entries(catalog.policies)).toEqual([['constructor', { type: 'identity' }]]);
+        expect(ctx.warn).not.toHaveBeenCalled();
+    });
+
+    // A plain object would take `__proto__` as a prototype assignment rather
+    // than an own entry, so the definition would name a policy the catalog
+    // does not carry and every consumer would read it as stale.
+    it('projects a policy whose id is named __proto__', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([
+            { permission: globalPermission('read'), policies: [prototypePolluting] },
+        ]);
+
+        const catalog = await buildAuthorizationCatalog(ctx);
+
+        expect(catalog.permissions[0]!.policies).toEqual(['__proto__']);
+        expect(Object.hasOwn(catalog.policies, '__proto__')).toBe(true);
+        expect(Object.entries(catalog.policies)).toEqual([['__proto__', { type: 'identity' }]]);
+        expect(Object.getPrototypeOf({})).toEqual(Object.prototype);
         expect(ctx.warn).not.toHaveBeenCalled();
     });
 

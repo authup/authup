@@ -504,6 +504,29 @@ describe('authorization catalog consumer', () => {
         })).rejects.toThrow('Grants require the identity they belong to.');
     });
 
+    // An inactive introspection names its subject and omits `permissions`, so
+    // an identity with no grant list is exactly that response. Reading it as
+    // "holds nothing" would authorize every definition carrying no binding
+    // check, which is what `identified` is.
+    it('refuses an identity with no grant list, and accepts an explicit empty one', async () => {
+        const document = catalog(
+            [definition(['binding'], { name: 'guarded' }), definition([], { name: 'identified' })],
+            { binding: { type: 'permissionBinding' } },
+        );
+
+        await expect(createAuthorizationEvaluator({ catalog: document, identity }))
+            .rejects.toThrow('An identity requires its grant list');
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog: document, 
+            identity, 
+            grants: [], 
+        });
+        const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+        await expect(evaluator.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
+    });
+
     it('reports the catalog stale for a grant naming a policy it lacks', async () => {
         await expect(build({ grants: grants({ realm_scope: 'any', policies: ['missing'] }) }))
             .rejects.toThrow(AuthorizationCatalogStaleError);

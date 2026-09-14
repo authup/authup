@@ -487,7 +487,13 @@ export function createStore(context: StoreCreateContext) {
             type: introspection.sub_kind,
             realmId: introspection.realm_id ?? undefined,
             realmName: introspection.realm_name ?? undefined,
-            clientId: null,
+            // A client subject IS its own client, the way `toIdentityPolicyData`
+            // resolves it server-side. A user's own `clientId` column is not an
+            // introspection claim, so it stays null here, which is what it is
+            // for every user the provisioner creates.
+            clientId: introspection.sub_kind === OAuth2SubKind.CLIENT ?
+                introspection.sub :
+                null,
         };
     };
 

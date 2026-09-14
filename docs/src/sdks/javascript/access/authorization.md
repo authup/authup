@@ -55,17 +55,30 @@ const introspection = await client.token.introspect({ token: accessToken }, {
     authorizationHeader: { type: 'Bearer', token: accessToken },
 });
 
+// An inactive token still names its subject, and it reports no grants at all.
+// Building an evaluator from it would authorize every definition that carries
+// no binding check, so refuse the credential before you build one.
+if (!introspection.active) {
+    throw new Error('The access token is not active.');
+}
+
 const authorization = await createAuthorizationEvaluator({
     catalog,
-    grants: introspection.permissions,
+    grants: introspection.permissions ?? [],
     identity: {
         id: introspection.sub,
         type: introspection.sub_kind,
         realmId: introspection.realm_id,
         realmName: introspection.realm_name,
+        // a client subject is its own client; a user's own clientId is not a claim
+        clientId: introspection.sub_kind === 'client' ? introspection.sub : null,
     },
 });
 ```
+
+`createAuthorizationEvaluator` refuses an identity with no grant list, so the
+inactive case above cannot reach it by omission: an identity holding no grant
+passes an explicit empty array.
 
 The response is `Cache-Control: private, no-cache`: keep it in your own process
 and refetch it when `createAuthorizationEvaluator` throws an error
@@ -185,12 +198,13 @@ The grants (the introspection response's `permissions`):
 - `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
   grant's own reach, `own` when absent. `policies` are the ids of the junction
   policy trees, resolved against the catalog; empty means no junction policy.
-- A grant naming a definition or a policy the catalog lacks throws a stale
-  error: the copy you hold predates the definition or the junction row, so
-  refetch the catalog and build again. A grant naming a definition carried
-  with `policies: null` is left out and denies. A grant whose junction policy
-  contains a permission-binding check, or one your copy cannot project, is
-  left out.
+- A grant naming a definition the catalog lacks, or naming a policy the
+  catalog lacks for a definition it carries, throws a stale error: the copy
+  you hold predates the definition or the junction row, so refetch the catalog
+  and build again. A grant naming a definition carried with `policies: null`
+  is left out and denies, and its own policy ids are never resolved, so that
+  case never reports stale. A grant whose junction policy contains a
+  permission-binding check, or one your copy cannot project, is left out.
 
 `createAuthorizationEvaluator` rejects an unknown version, missing fields, a
 definition referencing an undeclared policy id, a duplicate permission

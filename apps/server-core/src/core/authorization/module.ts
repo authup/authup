@@ -52,7 +52,11 @@ function definitionKey(definition: AuthorizationDefinition) : string {
 export async function buildAuthorizationCatalog(
     ctx: AuthorizationCatalogBuilderContext,
 ) : Promise<AuthorizationCatalog> {
-    const policies : Record<string, AuthorizationPolicy> = {};
+    // Prototype-free: the keys are policy ids, and an id of `__proto__` would
+    // set the prototype of a plain object instead of becoming an own entry,
+    // so the definition referencing it would name a policy the catalog does
+    // not carry. Unreachable while ids are uuid primary keys, and one word.
+    const policies : Record<string, AuthorizationPolicy> = Object.create(null);
     const project = async (trees: BasePolicy[]) : Promise<string[] | PolicyDrop> => {
         const projected : [string, AuthorizationPolicy][] = [];
         for (const tree of trees) {

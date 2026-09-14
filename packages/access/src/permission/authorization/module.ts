@@ -101,6 +101,14 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     if (!identity && typeof input.grants !== 'undefined') {
         throw new Error('Grants require the identity they belong to.');
     }
+    // An identity with no grant list is the shape an INACTIVE introspection
+    // produces (`permissions` is absent unless the credential is active), and
+    // reading it as "this identity holds nothing" would authorize every
+    // definition that carries no binding check. An identity with no grants is
+    // spelled explicitly.
+    if (identity && typeof input.grants === 'undefined') {
+        throw new Error('An identity requires its grant list; pass an empty array for an identity holding none.');
+    }
     const grants = authorizationGrantsSchema.parse(
         typeof input.grants === 'undefined' ? [] : structuredClone(input.grants),
     );

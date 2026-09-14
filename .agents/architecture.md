@@ -2442,7 +2442,8 @@ rather than trusted until `exp`.
   (`GET /authorization`, with the staged bearer in bearer mode and with the
   session cookie in cookie mode), and the name-only memory provider is the
   fallback for a server answering 404 there, or 403 for a user holding none
-  of the `PERMISSION_*` family the catalog is gated on. The recompute WATCH keys on
+  of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the three
+  the catalog is gated on. The recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
