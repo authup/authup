@@ -72,11 +72,22 @@ function findRequests(httpClient: FakeClient, pathname: string) : FakeRequest[] 
 }
 
 /**
- * A catalog that answers stale for the fixture's grants: it defines nothing,
- * so the `user_read` grant references a definition it lacks.
+ * The fixture's grants with a junction policy the default catalog lacks: a
+ * junction row created after the catalog was cached, the one stale case.
+ * `buildLaterCatalog` is the catalog fetched after that row exists.
  */
-function buildStaleCatalog() {
-    return buildAuthorizationCatalog({ permissions: [] });
+const LATER_GRANTS = buildAuthorizationGrants().map((grant) => ({ ...grant, policies: ['later'] }));
+
+function buildLaterCatalog() {
+    const catalog = buildAuthorizationCatalog();
+
+    return {
+        ...catalog,
+        policies: {
+            ...catalog.policies,
+            later: { type: 'date', start: '2000-01-01' },
+        },
+    };
 }
 
 describe('core/store (authorization catalog)', () => {
@@ -115,10 +126,11 @@ describe('core/store (authorization catalog)', () => {
     it('refetches a catalog the grants outrun once and builds from the second answer', async () => {
         let calls = 0;
         const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({ ...INTROSPECTION, permissions: LATER_GRANTS }),
             'GET /authorization': () => {
                 calls += 1;
 
-                return calls === 1 ? buildStaleCatalog() : buildAuthorizationCatalog();
+                return calls === 1 ? buildAuthorizationCatalog() : buildLaterCatalog();
             },
         });
 
@@ -130,7 +142,10 @@ describe('core/store (authorization catalog)', () => {
     });
 
     it('fails the login and revokes the staged grant when the refetched catalog is stale too', async () => {
-        const { store, httpClient } = buildStore({ 'GET /authorization': () => buildStaleCatalog() });
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({ ...INTROSPECTION, permissions: LATER_GRANTS }),
+            'GET /authorization': () => buildAuthorizationCatalog(),
+        });
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow(AuthorizationCatalogStaleError);
 
@@ -169,6 +184,27 @@ describe('core/store (authorization catalog)', () => {
 
         expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
+    });
+
+    it('falls back to the name-only view on a 403 and asks again for the next signed-in session', async () => {
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).resolves.toBeUndefined();
+
+        // a 403 is per credential: the memo does not outlive the session
+        await store.logout();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
     });
 
     it('treats any other failure like a failed introspection: nothing committed, the grant revoked, the next login retries', async () => {
@@ -225,7 +261,7 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).rejects.toThrow();
     });
 
-    it('resets the evaluator on logout and reuses the cached catalog on the next login', async () => {
+    it('resets the evaluator on logout and fetches the catalog anew for the next login', async () => {
         const { store, httpClient } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -235,7 +271,7 @@ describe('core/store (authorization catalog)', () => {
 
         await store.login({ name: 'admin', password: 'start123' });
 
-        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
     });
 });

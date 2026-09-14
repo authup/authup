@@ -310,6 +310,15 @@ export function createStore(context: StoreCreateContext) {
     // (failure keeps routing into the navigation guards' catch).
     const resolutionStale = ref(false);
 
+    // The memoized catalog `GET /authorization` serves. Identity-free, but
+    // gated per credential (a 403 memoizes as the name-only fallback), so
+    // cleanup() clears it and each signed-in session fetches it once.
+    let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
+
+    const reloadCatalog = () => {
+        catalogPromise = undefined;
+    };
+
     // --------------------------------------------------------------------
 
     // Returns the generation it bumped to: a caller staging a session MUST use
@@ -335,6 +344,7 @@ export function createStore(context: StoreCreateContext) {
         lastAuthOrigin.value = null;
 
         permissionEvaluator.reset();
+        reloadCatalog();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -398,21 +408,14 @@ export function createStore(context: StoreCreateContext) {
         return response;
     };
 
-    // One catalog per store instance. It is identity-free, so it outlives
-    // cleanup() and a later login builds from the same copy.
-    let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
-
-    const reloadCatalog = () => {
-        catalogPromise = undefined;
-    };
-
     const fetchCatalog = async (token?: string) : Promise<AuthorizationCatalog | null> => {
         try {
             return await client.authorization.get(token ?
                 { authorizationHeader: { type: 'Bearer', token } } :
                 undefined);
         } catch (e) {
-            if (extractErrorContext(e).status === 404) {
+            const { status } = extractErrorContext(e);
+            if (status === 403 || status === 404) {
                 return null;
             }
 
@@ -421,11 +424,13 @@ export function createStore(context: StoreCreateContext) {
     };
 
     /**
-     * The catalog `GET /authorization` serves, memoized. A `404` is a server
-     * predating the route and memoizes as null: the catalog only sharpens
-     * advisory UI gating, so the name-only view stays the fallback there,
-     * where a resource server must fail closed. Any other failure rejects
-     * and clears the memo, so the next resolve retries.
+     * The catalog `GET /authorization` serves, memoized per signed-in
+     * session. A `404` (a server predating the route) and a `403` (a
+     * credential holding none of the permission family the catalog is gated
+     * on) memoize as null: the catalog only sharpens advisory UI gating, so
+     * the name-only view stays the fallback there, where a resource server
+     * must fail closed. Any other failure rejects and clears the memo, so
+     * the next resolve retries.
      */
     const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
         if (!catalogPromise) {
@@ -468,16 +473,20 @@ export function createStore(context: StoreCreateContext) {
     /**
      * The session's evaluator, staged like the introspection and committed
      * with it: the cached catalog plus the identity and the grants the
-     * introspection itself carries. A grant naming a definition or a policy
-     * the cached catalog lacks means the catalog predates it, so it is
+     * introspection itself carries. A grant naming a policy the cached
+     * catalog lacks means the catalog predates the junction row, so it is
      * refetched once and the build retried; a second stale answer fails the
-     * way any other failure does.
+     * way any other failure does. A grant naming a definition the catalog
+     * lacks is dropped by the consumer, since the server denies it as well.
+     * Only the copy just found stale is discarded: a concurrent build may
+     * have stored a fresh one in the meantime.
      */
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
     ) : Promise<IPermissionEvaluator | null> => {
-        const catalog = await loadCatalog(token);
+        const promise = loadCatalog(token);
+        const catalog = await promise;
         if (!catalog) {
             return null;
         }
@@ -487,9 +496,9 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             return await createAuthorizationEvaluator({
-                catalog, 
-                grants, 
-                identity, 
+                catalog,
+                grants,
+                identity,
             });
         } catch (e) {
             if (!(e instanceof AuthorizationCatalogStaleError)) {
@@ -497,21 +506,24 @@ export function createStore(context: StoreCreateContext) {
             }
         }
 
-        reloadCatalog();
+        if (catalogPromise === promise) {
+            reloadCatalog();
+        }
 
-        const reloaded = await loadCatalog(token);
+        const reloadedPromise = loadCatalog(token);
+        const reloaded = await reloadedPromise;
         if (!reloaded) {
             return null;
         }
 
         try {
             return await createAuthorizationEvaluator({
-                catalog: reloaded, 
-                grants, 
-                identity, 
+                catalog: reloaded,
+                grants,
+                identity,
             });
         } catch (e) {
-            if (e instanceof AuthorizationCatalogStaleError) {
+            if (catalogPromise === reloadedPromise && e instanceof AuthorizationCatalogStaleError) {
                 reloadCatalog();
             }
 
