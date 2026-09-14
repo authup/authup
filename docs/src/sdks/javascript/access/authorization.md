@@ -1,35 +1,60 @@
-# Authorize resources with the authorization document
+# Authorize resources with the authorization catalog
 
-`GET /authorization` answers the caller's own authorization document
-(`AuthorizationDocument`, `version: 1`, exported by `@authup/access`): every
-permission definition the identity holds, the policies bound to that definition,
-and each grant's realm reach paired with its own policy. It is the data a
-console or a resource server needs to evaluate Authup's decisions outside the
-Authup process. Token introspection carries the name-only `permissions` array
-for compatibility; that array is not enough for resource authorization.
+`GET /authorization` answers the identity-free authorization catalog
+(`AuthorizationCatalog`, `version: 1`, exported by `@authup/access`): every
+permission definition with the policies bound to it, and each policy tree once.
+The grants an identity holds ride the introspection response as `permissions`,
+one entry per grant with its realm reach and its junction policy ids. Together
+with the identity that introspection names, that is the data a console or a
+resource server needs to evaluate Authup's decisions outside the Authup process.
+Reading the `name` of each entry alone is not enough for resource authorization.
 
-## Read the document
+## Read the catalog and the grants
 
-The endpoint requires an access credential: a bearer, HTTP Basic, or the
-console session cookie. A resource server that verified a user's bearer
-forwards that bearer; a client acting for itself uses its own. A credential
-without the `global` scope receives an empty document: it holds no grants
-server-side either.
+The catalog endpoint requires an access credential: a bearer, HTTP Basic, or the
+console session cookie. The answer is the same for every caller, so cache it per
+process rather than per subject. A credential without the `global` scope reads
+the catalog like any other, but its introspection carries no grants: it holds
+none server-side either.
+
+The grants and the identity come from the introspection you already run:
+`POST /token/introspect` for a bearer, `GET /sessions/@me/introspect` for a
+console session. `permissions` is the grant list; `sub`, `sub_kind`, `realm_id`
+and `realm_name` are the identity.
 
 ```typescript
-import { createAuthorizationEvaluator, BuiltInPolicyType, PolicyData } from '@authup/access';
+import {
+    AuthorizationCatalogStaleError,
+    BuiltInPolicyType,
+    PolicyData,
+    createAuthorizationEvaluator,
+} from '@authup/access';
 
-const document = await client.authorization.get({
+const catalog = await client.authorization.get({
     authorizationHeader: { type: 'Bearer', token: accessToken },
 });
-const authorization = await createAuthorizationEvaluator(document);
+const introspection = await client.token.introspect({ token: accessToken }, {
+    authorizationHeader: { type: 'Bearer', token: accessToken },
+});
+
+const authorization = await createAuthorizationEvaluator({
+    catalog,
+    grants: introspection.permissions,
+    identity: {
+        id: introspection.sub,
+        type: introspection.sub_kind,
+        realmId: introspection.realm_id,
+        realmName: introspection.realm_name,
+    },
+});
 ```
 
-The response is `Cache-Control: no-store`. Cache it in your own process with the
-lifetime you give token validity: a revoked grant is visible on the next read.
-Cache one evaluator per SUBJECT (the document's `identity.id`), never per
-process or per client: the evaluator ignores a caller-supplied identity and
-always evaluates as the document's subject.
+The response is `Cache-Control: private, no-cache`: keep it in your own process
+and refetch it when `createAuthorizationEvaluator` throws
+`AuthorizationCatalogStaleError`, which means a grant names a definition or a
+policy the cached copy does not carry. An evaluator is per subject, because its
+grants and its identity are; the catalog behind it is shared. A revoked grant is
+visible on the next introspection.
 
 ## Evaluate one resource
 
@@ -97,29 +122,46 @@ switch (compiled.verdict) {
 pending policy that cannot be lowered produces `post`, never an unrestricted
 query.
 
-## Document contract
+## Catalog and grant contract
 
-- `identity`: `id`, `type` (`user` or `client`), `realm_id`, `realm_name`, `client_id`.
-- `policies`: every policy tree the document references, keyed by the tree's id
-  and present once. A node carries its `type`, its configuration keys, `invert`
-  and, for a composite, its `children` inline. It is the output of that type's
-  validator: no entity columns.
-- `permissions`: one entry per held definition with `name`, `realm_id`,
-  `client_id`, `decision_strategy`, the definition's `policies` (ids) and its
-  `grants`, each with `realm_scope` and the grant's `policies` (ids).
-- Nullable fields are required. An empty `policies` list means no restriction at
-  that layer. A held permission with no definition is omitted and denies.
+The catalog (`GET /authorization`):
+
+- `version`: `1`.
+- `policies`: every policy tree a definition or a grant can name, keyed by the
+  tree's id and present once. A node carries its `type`, its configuration
+  keys, `invert` and, for a composite, its `children` inline. It is the output
+  of that type's validator: no entity columns.
+- `permissions`: one entry per definition with `name`, `realm_id`, `client_id`,
+  `decision_strategy` and the definition's `policies` (ids), sorted by
+  permission key.
+- Nullable fields are required. An empty `policies` list means no restriction
+  at that layer. A definition whose policy tree cannot be projected is left out,
+  so a grant of it reads as stale until the policy is fixed.
+
+The grants (the introspection response's `permissions`):
+
+- One entry per grant, so a name may repeat when the identity holds it through
+  several junction rows.
+- `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
+  grant's own reach, `own` when absent. `policies` are the ids of the junction
+  policy trees, resolved against the catalog; empty means no junction policy.
+- A grant naming a definition or a policy the catalog lacks throws
+  `AuthorizationCatalogStaleError`: refetch the catalog and build again. A grant
+  whose junction policy contains a permission-binding check is left out.
 
 `createAuthorizationEvaluator` rejects an unknown version, missing fields, a
-reference to an undeclared policy id, an unsupported policy type, a malformed
-configuration and a grant policy that contains a permission-binding check. It
+definition referencing an undeclared policy id, an unsupported policy type, a
+malformed configuration and an identity that is not a `user` or a `client`. It
 rebuilds the server's own binding model and runs the same aggregation and
 evaluators, which is what makes the decisions equal.
 
 ## Upgrade order
 
-1. Upgrade the Authup server to a release serving `GET /authorization`.
+1. Upgrade the Authup server to a release serving `GET /authorization` and
+   reporting grants on introspection.
 2. Upgrade `@authup/access` and, for typed access, `@authup/core-http-kit`.
-3. Replace name-only checks with `createAuthorizationEvaluator(document)`.
-4. A resource server must fail closed on a missing or malformed document. Do
-   not fall back to introspection's `permissions` array there.
+3. Replace name-only checks with
+   `createAuthorizationEvaluator({ catalog, grants: introspection.permissions, identity })`.
+4. A resource server must fail closed on a missing or malformed catalog and on
+   an introspection without a grant list. Do not read the entries' names alone
+   there.

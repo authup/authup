@@ -3223,46 +3223,69 @@ baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
-### The authorization document (`GET /authorization`, #3581)
+### The authorization catalog (`GET /authorization`) and the introspected grants
 
-`GET /authorization` (`adapters/http/controllers/workflows/authorization/`, `ForceLoggedIn`,
-a 403 `PermissionError` for a credential without the `global` scope, `no-store` plus
-`Vary: cookie`) answers the CALLER's own `AuthorizationDocument` (version 1, declared in
-`@authup/access` next to its zod schema and its consumer `createAuthorizationEvaluator`):
-every permission definition the identity holds with the definition's junction policies and
-the permission's `decisionStrategy`, every raw grant with its realm reach and the junction
-policy it carries, and each policy tree ONCE under `policies`, keyed by the tree's id. The
-shape is the server's own raw binding model rather than an evaluated one: a consumer
-rebuilds the same `PermissionPolicyBinding` structures `PermissionDatabaseProvider` and
-`IIdentityPermissionProvider.getFor` produce and runs the same aggregation and the same
-evaluators (`IdentityPermissionBindingPolicyEvaluator` in access is the one implementation
-of grant reach, pending composition and condition lowering), so decision parity holds by
-construction. A held permission with no definition row is omitted, which denies on both
-sides. A tree node is the OUTPUT of its type's access validator
-(`projectAuthorizationPolicy`), so entity columns never travel and the server-side
-projection and the consumer-side validation are one function. `buildAuthorizationDocument`
-(`core/authorization/`) reads the bindings once and the definitions in one pass
-(`IPermissionDefinitionProvider.findDefinitions`, implemented by
-`PermissionDatabaseProvider` next to the evaluator's `findOne`) and sorts the permissions
-by key, so the output is stable.
+Authorization travels to a console or a resource server as three inputs, and only one of
+them is a route of its own. `GET /authorization`
+(`adapters/http/controllers/workflows/authorization/`, `ForceLoggedIn` alone,
+`Cache-Control: private, no-cache`) answers the IDENTITY-FREE `AuthorizationCatalog`
+(version 1, declared in `@authup/access` next to its zod schema and its consumer
+`createAuthorizationEvaluator`): every permission definition with its junction policy ids
+and its `decisionStrategy`, and each policy tree ONCE under `policies`, keyed by the tree's
+id, whether a definition or a grant names it. It is the same document for every caller,
+which is what makes it cacheable, and it is an upper bound on what may be asked rather than
+an entitlement (the `GET /schemas` posture): every decision it feeds runs over the caller's
+own grants. That is also why its gate is wider than `GET /permissions` and `GET /policies`,
+which require a `PERMISSION_*` grant; a console evaluates the catalog for whichever identity
+signed in, and a per-caller narrowing would be an uncacheable per-identity document. A tree
+node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so entity
+columns never travel and the server-side projection and the consumer-side validation are
+one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the definitions in
+one pass (`IPermissionDefinitionProvider.findAll`) plus every tree a junction row references
+(`findGrantPolicies`, so a grant can never name a tree the catalog lacks), sorts the
+definitions by key and drops, with a warning, a definition or a grant tree whose projection
+fails: a grant of it then reads as stale to every consumer until the policy is fixed.
 
-It is its own route rather than an introspection extension: introspection is the hottest
-read path (the kit on every store instantiation, the cookie-mode consoles on every page
-load, remote verifiers on every cache miss), RFC 7662 describes a token, and authorization
-is a property of the identity with its own clock. Introspection keeps the deprecated
-name-only `permissions` array until the kit and the server adapters stop reading it. There
-is no foreign-subject form: a resource server holding a user's bearer forwards it, and an
-admin lens over another identity's effective authorization needs a gate of its own.
+The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on
+`GET /sessions/@me/introspect` is the identity's grant list, one entry per junction row
+with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
+`realm_scope` and the ids of its junction policy trees (`resolveIntrospectionSubject`,
+`core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
+cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
+warning, since the server fails such a grant closed itself. A credential without the
+`global` scope reads the catalog like any other, but its introspection carries no grants:
+it holds none server-side either. The IDENTITY is the same response's `sub`, `sub_kind`,
+`realm_id` and `realm_name`.
 
-The kit store fetches the document during session staging, after the introspection and
-before `commitSession`, for bearer and cookie sessions alike, and commits an evaluator built
-from it into ONE stable `StorePermissionEvaluator` (consumers hold on to
-`store.permissionEvaluator`, so a commit swaps what it delegates to). A `404` alone falls
-back to the name-only view, since a console's gating is advisory; any other failure, and a
-document naming another subject, takes the path a failed introspection takes.
-`usePermissionCheck` and the routing guards call `preEvaluateOneOf`; a check carrying
-`realmMatch` settles reach per row, one without keeps the neutral pass. The server stays
-the enforcement point.
+`createAuthorizationEvaluator({ catalog, grants, identity })` takes that triple and rebuilds
+the server's own raw binding model, the `PermissionPolicyBinding` structures
+`PermissionDatabaseProvider` and `IIdentityPermissionProvider.getFor` produce, and runs the
+same aggregation and the same evaluators (`IdentityPermissionBindingPolicyEvaluator` in
+access is the one implementation of grant reach, pending composition and condition
+lowering), so decision parity holds by construction. A grant naming a definition or a
+policy the catalog lacks throws `AuthorizationCatalogStaleError`: the consumer's cached
+catalog predates the grant, and the signal is to refetch and build again. The split exists
+because introspection is the hottest read path (the kit on every store instantiation, the
+cookie-mode consoles on every page load, remote verifiers on every cache miss) and the
+catalog is the part with its own, slower clock; a grant list is small and per identity, a
+catalog is large and shared. There is no foreign-subject form: a resource server holding a
+user's bearer introspects it, and an admin lens over another identity's effective
+authorization needs a gate of its own.
+
+The kit store holds ONE catalog per store instance, memoized on first use and kept across
+`cleanup()` because it is identity-free, so a logout and a later login build from the same
+copy; a `404` memoizes as the name-only fallback, since a console's gating is advisory,
+and any other fetch failure rejects and clears the memo so the next resolve retries. During
+session staging, after the introspection and before `commitSession`, for bearer and cookie
+sessions alike, it builds the evaluator from that catalog plus the identity and the grants
+of the introspection it already ran (an introspection naming no `user` or `client` subject
+fails like a failed introspection), refetching the catalog once on
+`AuthorizationCatalogStaleError` and failing the way any other failure does when the
+refetched copy is stale too. The result is committed into ONE stable
+`StorePermissionEvaluator` (consumers hold on to `store.permissionEvaluator`, so a commit
+swaps what it delegates to). `usePermissionCheck` and the routing guards call
+`preEvaluateOneOf`; a check carrying `realmMatch` settles reach per row, one without keeps
+the neutral pass. The server stays the enforcement point.
 
 ### Policy engine evaluators are per engine
 
