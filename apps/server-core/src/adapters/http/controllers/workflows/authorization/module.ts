@@ -27,7 +27,7 @@ export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
  * to evaluate outside this process together with the grants an introspection
  * reports. It is the same for every caller, so a consumer fetches it once per
  * process and caches it; `private, no-cache` keeps a shared cache from storing
- * it while a private one may revalidate through the ETag.
+ * it, since the gate is per credential.
  *
  * The gate is exactly the one of the entity reads it aggregates: after
  * `ForceLoggedIn`, the pre-gate `GET /permissions` and `GET /policies` run,
@@ -39,7 +39,11 @@ export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
  * catalog with its OWN client credential holding `PERMISSION_READ`: the
  * document is identity-free, so the end user's bearer is the wrong credential
  * for it. A console whose user lacks the family falls back to the name-only
- * view. The catalog is an upper bound on what may be asked, never an
+ * view, which is COARSER than this catalog rather than equivalent to it: it
+ * ignores realm reach and junction policies. That is deliberate for a console,
+ * whose gating is advisory, and is what every console user had before this
+ * route; a resource server fails closed instead.
+ * The catalog is an upper bound on what may be asked, never an
  * entitlement (the same posture as `GET /schemas`); every decision it feeds
  * still runs over the caller's own grants.
  */

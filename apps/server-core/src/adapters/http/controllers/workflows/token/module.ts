@@ -240,8 +240,6 @@ export class TokenController {
             }, {
                 sub: payload.sub,
                 subKind: payload.sub_kind,
-                clientId: payload.client_id,
-                realmId: payload.realm_id,
                 active,
             });
 

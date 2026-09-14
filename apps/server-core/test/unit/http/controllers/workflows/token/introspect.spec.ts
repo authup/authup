@@ -165,6 +165,53 @@ describe('token-introspect', () => {
         }
     });
 
+    // The grant list is the IDENTITY's own, whatever client the token was
+    // minted for. Scoping it to the token's client dropped every DIRECT
+    // auth_user_permissions grant, since a provisioned permission is global
+    // and no global permission equals a client id - so an authorization-code
+    // token, which is how the consoles and every RP authenticate, reported a
+    // near-empty list while the server allowed the action.
+    it('should report a direct grant of a token minted for a client', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const password = 'start123-introspect';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
+
+        const secret = 'introspect-client-secret-1';
+        const { data: client } = await suite.client.client.create({
+            ...createFakeClient(),
+            active: true,
+            secret,
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+
+        const grant = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            client_id: client.id,
+            client_secret: secret,
+        });
+
+        const httpClient = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await httpClient.token.introspect(
+            { token: grant.access_token },
+            { authorizationHeader: { type: 'Bearer', token: grant.access_token } },
+        );
+
+        expect(introspection.active).toBe(true);
+        // the precondition: without a client on the token the filter never ran
+        expect(introspection.client_id).toEqual(client.id);
+        const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+        expect(entries).toEqual([{
+            name: PermissionName.USER_READ,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'own',
+            policies: [],
+        }]);
+    });
+
     it('should carry the junction policy id of a grant', async () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());

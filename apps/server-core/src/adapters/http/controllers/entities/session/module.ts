@@ -134,7 +134,6 @@ export class SessionController {
         }, {
             sub: identity.id,
             subKind: identity.type,
-            realmId: identity.realmId,
             active: true,
         });
 

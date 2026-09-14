@@ -9,6 +9,7 @@ import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } f
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
+import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import type {
     OAuth2IntrospectionSubject,
@@ -33,6 +34,14 @@ import type {
  * the server itself fails such a grant closed, and naming it would read as a
  * stale catalog to every consumer.
  *
+ * The projection runs over the RESOLVED identity, exactly as a request does
+ * (`toIdentityPolicyData`), never over the client a token was issued to: the
+ * provider narrows a user's grants to the identity's own `clientId`, and a
+ * provisioned permission is global, so scoping it to the token's client
+ * dropped every direct `auth_user_permissions` grant from any token carrying
+ * one. Both endpoints therefore report what the server's own evaluator
+ * resolves for that subject.
+ *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
 export async function resolveIntrospectionSubject(
@@ -55,13 +64,7 @@ export async function resolveIntrospectionSubject(
         };
     }
 
-    // todo: only receive client specific permissions
-    const bindings = await ctx.identityPermissionProvider.getFor({
-        id: input.sub,
-        type: input.subKind,
-        clientId: input.clientId,
-        realmId: input.realmId,
-    });
+    const bindings = await ctx.identityPermissionProvider.getFor(toIdentityPolicyData(identity)!);
 
     const permissions : OAuth2TokenPermission[] = [];
     for (const binding of bindings) {
