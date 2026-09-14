@@ -54,7 +54,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         await junctions.save(junctions.create({ permissionId: global.id, policyId: binding.id }));
         await junctions.save(junctions.create({ permissionId: global.id, policyId: identity.id }));
 
-        const definitions = await provider.findAll();
+        const definitions = await provider.findDefinitions();
 
         expect(definitions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length + 2);
         const keys = definitions.map((item) => buildPermissionKey(item.permission));

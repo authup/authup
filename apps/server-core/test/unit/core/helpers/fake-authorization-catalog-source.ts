@@ -7,11 +7,11 @@
 
 import type { BasePolicy } from '@authup/access';
 import type {
-    IPermissionDefinitionProvider,
+    IAuthorizationCatalogSource,
     PermissionDefinition,
 } from '../../../../src/core/authorization/types.ts';
 
-export class FakePermissionDefinitionProvider implements IPermissionDefinitionProvider {
+export class FakeAuthorizationCatalogSource implements IAuthorizationCatalogSource {
     private definitions: PermissionDefinition[] = [];
 
     private grantPolicies: BasePolicy[] = [];
@@ -24,7 +24,7 @@ export class FakePermissionDefinitionProvider implements IPermissionDefinitionPr
         this.grantPolicies = policies;
     }
 
-    async findAll(): Promise<PermissionDefinition[]> {
+    async findDefinitions(): Promise<PermissionDefinition[]> {
         return this.definitions;
     }
 

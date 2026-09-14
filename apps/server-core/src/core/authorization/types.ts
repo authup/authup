@@ -13,20 +13,27 @@ export type PermissionDefinition = {
     policies: BasePolicy[],
 };
 
-export interface IPermissionDefinitionProvider {
+/**
+ * Everything the authorization catalog is built from. Both halves are read
+ * whole, once per build: the catalog is identity-free, so there is nothing to
+ * scope either of them by.
+ */
+export interface IAuthorizationCatalogSource {
     /**
-     * Every permission definition with its junction policy trees.
+     * Every permission definition with the policy trees bound to it.
      */
-    findAll(): Promise<PermissionDefinition[]>;
+    findDefinitions(): Promise<PermissionDefinition[]>;
 
     /**
      * Every policy tree a grant can name: the distinct policies the role, user
-     * and client permission junction rows reference.
+     * and client permission junction rows reference. They travel in the same
+     * catalog, since a grant reaches the consumer through an introspection
+     * that carries policy ids alone.
      */
     findGrantPolicies(): Promise<BasePolicy[]>;
 }
 
 export type AuthorizationCatalogBuilderContext = {
-    permissionDefinitionProvider: IPermissionDefinitionProvider,
+    catalogSource: IAuthorizationCatalogSource,
     logger?: Logger,
 };

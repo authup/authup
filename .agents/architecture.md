@@ -3218,7 +3218,7 @@ blank the UI for. A resource server never takes it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
-definitions in one pass (`IPermissionDefinitionProvider.findAll`) plus every tree a
+definitions in one pass (`IAuthorizationCatalogSource.findDefinitions`) plus every tree a
 junction row references (`findGrantPolicies`, so a grant can never name a tree the catalog
 lacks) and sorts the definitions by key. A projection failure is warned about and never
 drops a definition: one whose tree fails projection is carried with `policies: null`,

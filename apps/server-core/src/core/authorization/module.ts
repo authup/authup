@@ -83,7 +83,7 @@ export async function buildAuthorizationCatalog(
     };
 
     const permissions : [string, AuthorizationDefinition][] = [];
-    const definitions = await ctx.permissionDefinitionProvider.findAll();
+    const definitions = await ctx.catalogSource.findDefinitions();
     for (const definition of definitions) {
         const entry : AuthorizationDefinition = {
             name: definition.permission.name,
@@ -107,7 +107,7 @@ export async function buildAuthorizationCatalog(
         permissions.push([key, entry]);
     }
 
-    const grantPolicies = await ctx.permissionDefinitionProvider.findGrantPolicies();
+    const grantPolicies = await ctx.catalogSource.findGrantPolicies();
     for (const tree of grantPolicies) {
         const ids = await project([tree]);
         if (!Array.isArray(ids)) {

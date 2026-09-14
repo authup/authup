@@ -24,7 +24,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { IsNull } from 'typeorm';
-import type { IPermissionDefinitionProvider, PermissionDefinition } from '../../../../../core/authorization/types.ts';
+import type { IAuthorizationCatalogSource, PermissionDefinition } from '../../../../../core/authorization/types.ts';
 import {
     CachePrefix,
     ClientPermissionEntity,
@@ -36,7 +36,7 @@ import {
 } from '../../../../../adapters/database/domains/index.ts';
 import { loadPolicyTrees } from '../bindings.ts';
 
-export class PermissionDatabaseProvider implements IPermissionProvider, IPermissionDefinitionProvider {
+export class PermissionDatabaseProvider implements IPermissionProvider, IAuthorizationCatalogSource {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
@@ -107,7 +107,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IPermiss
         return null;
     }
 
-    async findAll() : Promise<PermissionDefinition[]> {
+    async findDefinitions() : Promise<PermissionDefinition[]> {
         const entities = await this.repository.find();
         if (entities.length === 0) {
             return [];
