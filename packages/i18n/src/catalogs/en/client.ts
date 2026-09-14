@@ -15,7 +15,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI pattern an RP-initiated logout may redirect back to. Kept separate from the login redirect URIs. Leave empty to always end on the sign-out confirmation page.',
     [TranslatorTranslationClientKey.BASE_URL_HINT]: 'Where the application lives. Shown as a link on the account console. Leave empty to show the name only.',
     [TranslatorTranslationClientKey.BACKCHANNEL_LOGOUT_URI_HINT]: 'Endpoint that receives a logout token when a session ends (OIDC Back-Channel Logout). One http(s) URL, no patterns. Leave empty to send nothing.',
-    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restrict which OAuth2 grants this client may use. Select none to allow every grant.',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restrict which OAuth2 grants this client may use. Select none to allow every grant. The device grant must be listed explicitly; an empty list does not enable it.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentication method',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'None',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Shared secret',
@@ -118,6 +118,16 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Without a policy, every identity in the realm may sign in.',
 
     [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Checking granted permissions…',
+
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_TITLE]: 'Connect a device',
+    [TranslatorTranslationClientKey.DEVICE_CODE_LABEL]: 'Code shown on your device',
+    [TranslatorTranslationClientKey.DEVICE_CODE_HINT]: 'Enter the code exactly as displayed. Dashes and case do not matter.',
+    [TranslatorTranslationClientKey.DEVICE_CODE_INVALID]: 'The code is invalid or has expired. Check your device and try again.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_CONFIRM_TEXT]: '{{client}} on another device is asking for access to your account.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_SCOPES]: 'It will be able to:',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_APPROVED]: 'Device connected. You can close this page and return to your device.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_DENIED]: 'Access denied. Nothing was connected; you can close this page.',
+    [TranslatorTranslationClientKey.DEVICE_VERIFY_THROTTLED]: 'Too many attempts. Wait a few minutes and try again.',
 
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Sign out',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Do you want to sign out?',

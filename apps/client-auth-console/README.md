@@ -1,8 +1,9 @@
 # @authup/client-auth-console
 
 The auth console: authup's SSR auth workflow UI. It renders the hosted pages
-on the IdP origin — `/authorize` (login + consent), `/register`, `/activate`,
-`/password-forgot`, `/password-reset` and `/logout`.
+on the IdP origin: `/authorize` (login + consent), `/register`, `/activate`,
+`/password-forgot`, `/password-reset`, `/device` (device verification,
+RFC 8628) and `/logout`.
 
 This package is not a standalone application. `@authup/server-auth-console`
 depends on it, renders each request through the built server bundle

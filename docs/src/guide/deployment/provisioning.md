@@ -510,7 +510,7 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `authMethod`, `tokenBindingMethod`, `secret`, `secretHashed`, `secretEncrypted`, `displayName`, `redirectUri` |
+| `attributes` | object             | `name` (required), `authMethod`, `tokenBindingMethod`, `secret`, `secretHashed`, `secretEncrypted`, `displayName`, `redirectUri`, `grantTypes` |
 | `relations`  | object             | See below                            |
 
 A client with `authMethod: secret` declares its `secret` in the file. With
@@ -523,6 +523,38 @@ encrypted under the realm's encryption key before it is stored, or a value
 that already is such a cipher blob (`v1.<key id>.<payload>`), which is kept as
 it is; the secret stays readable through the API for a permitted reader.
 Declaring both flags fails the startup.
+
+`grantTypes` restricts the OAuth2 grants the client may use, as a space- or
+comma-separated list. Omitted or `null` allows every grant except the device
+grant:
+
+| Value | Grant |
+|---|---|
+| `authorization_code` | Authorization code flow (`/authorize` + `/token`) |
+| `refresh_token` | Refresh token rotation |
+| `client_credentials` | Machine-to-machine |
+| `password` | Resource owner password credentials |
+| `urn:ietf:params:oauth:grant-type:device_code` | [Device authorization grant](../development/api-oauth2.md#_8-device-authorization-grant-rfc-8628) |
+
+The device grant is opt-in: a client uses it only while the URN is listed, and
+an omitted `grantTypes` does not enable it. A CLI or a TV application is
+declared with the URN and the scopes it may be granted:
+
+```yaml
+realms:
+  - attributes:
+      name: acme
+    relations:
+      clients:
+        - attributes:
+            name: acme-cli
+            authMethod: none
+            grantTypes: urn:ietf:params:oauth:grant-type:device_code refresh_token
+          relations:
+            globalScopes:
+              - global
+              - openid
+```
 
 **Client relations:**
 

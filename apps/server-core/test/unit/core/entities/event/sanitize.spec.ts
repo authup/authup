@@ -46,6 +46,8 @@ describe('sanitizeEventData', () => {
         ['refresh_token'],
         ['id_token_hint'],
         ['authorization'],
+        ['user_code'],
+        ['device_code'],
     ])('drops the credential/secret key %s', (key) => {
         expect(sanitizeEventData({ [key]: 'super-secret-value' })).toBeNull();
 

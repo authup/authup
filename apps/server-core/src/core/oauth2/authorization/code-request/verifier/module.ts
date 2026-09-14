@@ -6,19 +6,18 @@
  */
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { ScopeName, isClientPublic } from '@authup/core-kit';
+import { isClientPublic } from '@authup/core-kit';
 import { isSafeRedirectURLScheme, isSimpleURLMatch, isUUID } from '@authup/kit';
 import {
     OAuth2ClientError,
     OAuth2GrantError,
     OAuth2RequestError,
-    OAuth2ScopeError,
     OAuth2TokenGrant,
-    hasOAuth2Scopes,
 } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client/index.ts';
 import { assertClientGrantAllowed } from '../../../client/index.ts';
 import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
+import { resolveGrantedScope } from '../../../scope/index.ts';
 import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestVerificationResult,
@@ -98,16 +97,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
 
         const scopes = await this.scopeRepository.findByClientId(client.id);
         const scopeNames = scopes.map((scope) => scope.name);
-        if (data.scope) {
-            if (
-                !hasOAuth2Scopes(scopeNames, data.scope) &&
-                !hasOAuth2Scopes(data.scope, ScopeName.GLOBAL)
-            ) {
-                throw OAuth2ScopeError.insufficient();
-            }
-        } else {
-            data.scope = scopeNames.join(' ');
-        }
+        data.scope = resolveGrantedScope(scopeNames, data.scope);
 
         // Verified only when the request's redirect_uri matched a registered
         // pattern (pattern-less clients were rejected above). A request without

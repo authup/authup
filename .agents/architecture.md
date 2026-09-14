@@ -8,7 +8,7 @@ The project follows hexagonal architecture (ports & adapters), separating core b
 - **Dependency Inversion Principle (DIP)**: Adapters in server-core use DIP to inject implementations from core and app (infrastructure). No injection tokens or service locator — use DIP via constructor arguments directly.
 - **TypeScript & ESM**: All packages use TypeScript with strict typing and modern ES module syntax.
 
-### Naming split (plan 073)
+### Naming split
 
 Entity/domain properties and the management API (request payloads, responses, and
 the rapiq filter/sort/field vocabulary) are **camelCase**. The physical **DB column
@@ -60,7 +60,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 | Folder                       | Responsibility                                                                                             |
 |------------------------------|------------------------------------------------------------------------------------------------------------|
-| app/modules/config           | Reads environment variables and configuration files. `constants.ts` SELECTS this service's keys out of `@authup/server-config` (which declares every key of the document once) and `@authup/server-config-kit` is the generic mechanism over such a registry; the env reader, the file reader, the validator and the static defaults all derive from the selection (plan 101 C-1) |
+| app/modules/config           | Reads environment variables and configuration files. `constants.ts` SELECTS this service's keys out of `@authup/server-config` (which declares every key of the document once) and `@authup/server-config-kit` is the generic mechanism over such a registry; the env reader, the file reader, the validator and the static defaults all derive from the selection |
 | app/modules/database         | Implement repositories based on adapters/database typeorm (entities & repositories), bootstrap connections |
 | app/modules/http             | Configure and initialize controllers with concrete implementations                                         |
 | app/modules/authentication   | Authentication feature wiring                                                                              |
@@ -225,7 +225,7 @@ usable at the service level and nothing in core depends on TypeORM:
   visible to any pre-gated reader, foreign realms included): a bcrypt
   hash of an admin-chosen secret is offline-crackable and no reader
   needs another realm's, so it is gated like a plaintext, and
-  `ClientService.getOne` denies a foreign hashed row the same way. `secretEncrypted` is deliberately NOT a leg (plan 105): the
+  `ClientService.getOne` denies a foreign hashed row the same way. `secretEncrypted` is deliberately NOT a leg: the
   flag encrypted nothing before the mode existed (#3351), and now that
   it does, the stored value is a realm cipher blob that
   `ClientService.revealSecret` decrypts AFTER the redaction has run, so
@@ -233,15 +233,14 @@ usable at the service level and nothing in core depends on TypeORM:
   serves ciphertext (see *Client secret storage and rotation*). SYSTEM
   decodes (no actor)
   pass ungated; a gate failure
-  strips the field. `ClientService.getMany`'s former WHERE-narrowing +
-  per-row loop are gone — rows are no longer dropped when `secret` is
-  selected, and a `post` verdict now strips plaintext values instead
-  of per-row evaluation (fail-closed). `getOne` keeps its isMe bypass
-  and post-fetch per-row check as the authoritative single-read path —
-  healed by the operand projection: a bare `fields=id,secret`
-  replace-projection used to strip `realmId`/flags so the check's
-  `resourceRealmMatch` neutral-passed and shipped a foreign plaintext
-  secret. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
+  strips the field. `ClientService.getMany` composes no secret WHERE and no
+  per-row loop: rows are not dropped when `secret` is selected, and a `post`
+  verdict strips plaintext values rather than evaluating per row
+  (fail-closed). `getOne` keeps its isMe bypass and post-fetch per-row check
+  as the authoritative single-read path, and depends on the operand
+  projection: without it a bare `fields=id,secret` replace-projection strips
+  `realmId`/flags, the check's `resourceRealmMatch` neutral-passes and a
+  foreign plaintext secret ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
   included relation is NARROWED to its per-relation fieldset (bare
   `include=` → the target schema's `fields.default`/allowed
   projection), so the explicit-include and auto-join forms behave
@@ -284,11 +283,9 @@ usable at the service level and nothing in core depends on TypeORM:
   `mergeQueries` retain every conjunct of both sides (empty group =
   identity) instead of replacing same-field conditions, and no later
   composition step can drop an injected scope. Nothing needs a marker,
-  and `and()` no longer wraps the injection in a distinguishable
-  subtree, so the encoded filter is the plain AND it reads as. The
-  displaceability machinery this replaced is gone with it: the beta.15
-  `FILTERS_NOT_FLAT` throw, the beta.16 seal marker, and the beta.18
-  `ICondition.seal()` contract member. The surviving marker is
+  and `and()` does not wrap the injection in a distinguishable
+  subtree, so the encoded filter is the plain AND it reads as. The one
+  marker is
   `preserve()` (a standalone helper, NOT part of the contract), whose
   only job is keeping a group atomic for **relation pruning**: rapiq
   throws `SCHEMA_PRESERVED_CONDITION_PRUNED` rather than silently
@@ -371,11 +368,9 @@ usable at the service level and nothing in core depends on TypeORM:
   behaviour it guarantees is still pinned locally, in
   `schema-validation.spec.ts`.
   Note the invariant's own spec reads the schema DESCRIPTION, so it
-  fails open: `indexed-invariant.spec.ts` reported green for the whole
-  2.1.0 bump while checking nothing, because the description key it
-  read (`sort`) had been renamed to `sorts` and the loop simply never
-  ran. It now carries a *should have sort allow-lists to check* guard;
-  keep that guard, and prefer it whenever a spec derives its subject
+  fails open: a renamed description key silently empties its loop and
+  the spec reports green while checking nothing. It therefore carries a
+  *should have sort allow-lists to check* guard; keep that guard, and prefer it whenever a spec derives its subject
   from an upstream shape.
   **A missing `sorts` block is not fail-soft, it is a 500.** With no
   sort allow-list rapiq falls back to a syntactic name check, so an
@@ -482,14 +477,14 @@ usable at the service level and nothing in core depends on TypeORM:
   already-registered schemas take precedence). Nothing is wired today — the
   explicit allow-lists stay the sole query surface.
 
-### Query vocabulary discovery (plan 077)
+### Query vocabulary discovery
 
 **One registry, three projections, and the parity is provable rather than
 asserted.** `schemaRegistry` is what the decoder enforces; every surface that
 PUBLISHES the vocabulary is a projection of it, serving the same
 `SchemaDescription` objects `describeQuerySchema` memoizes:
 
-- `meta.schema` on every query-capable response (issue #1649, plan 076): the
+- `meta.schema` on every query-capable response (issue #1649): the
   full description on a collection read, the `RECORD_QUERY_PARAMETERS` subset
   on a record read;
 - `GET /schemas` and `GET /schemas/:name`;
@@ -600,8 +595,7 @@ artifact between it and `dist/swagger.json`:
 Stable operation ids come from `operationIdStrategy: 'path'` (#897), and every
 path-template variable is declared by trapi itself (#896).
 
-**The one thing lost when the rewriting pass went away** is the description on
-the `realmId` path variable, on 61 operations. A contributed parameter is
+**The `realmId` path variable carries no description**, on 61 operations. A contributed parameter is
 appended after the derived ones, so it cannot describe a variable trapi
 synthesizes without emitting a duplicate, and the description is wanted on the
 write verbs too, which carry no marker for a handler to fire on. It was the
@@ -629,7 +623,7 @@ carries the upper-bound caveat, and `fields` states the UNION of `default` and
 
 **Three coverage guards**, because a projection nothing checks is a convention
 rather than an invariant. They fail the SUITE rather than the build, since they
-moved into `openapi-coverage.spec.ts` when the post-generation pass went away:
+live in `openapi-coverage.spec.ts`:
 
 | Guard | Fails on | Needs a built document |
 |---|---|---|
@@ -637,24 +631,14 @@ moved into `openapi-coverage.spec.ts` when the post-generation pass went away:
 | registry → operations | a registered schema no collection read is marked with (the direction a per-operation map cannot see). The exclusion list is empty, which is the strongest state it can be in, and an entry that stops being needed fails the way an unused `SCHEMA_FIELD_EXCLUSIONS` entry does | yes |
 | marker → source | a `describeQuerySchema` call in an UNMARKED method, and a marked method that describes nothing unless it is a reviewed `MARKERS_WITHOUT_DESCRIBE` entry. Four delegate legitimately: the expanded policy read, `GET /userinfo`, and the two bulk revokes, which answer a count rather than rows | no |
 
-**The document's type content used to depend on 21 build artifacts, silently.**
-`@trapi/metadata`'s `loadTSConfig` read the config as plain JSON and ran
-`convertCompilerOptionsFromJson`, which neither follows `extends` nor sets
-`pathsBasePath`, so the root config's `baseUrl` never reached trapi and every
-`paths` entry was looked up under `apps/server-core/` instead of the repository
-root. Missed, they fell through node_modules onto the workspace symlink, i.e.
-onto `packages/*/dist/*.d.ts`: the whole typed payload surface became a function
-of those dists existing, collapsing to `additionalProperties: true` (204
-component schemas to 30, 29 of them routup and DOM internals) when they did not,
-while trapi still exited 0 and reported success. A CI run on a warm nx cache
-that skipped the package builds would have published a fully untyped
-specification behind a green check.
-
-trapi resolves `extends` since 2.1.0 (tada5hi/trapi#893), so the explicit
-`baseUrl` this workspace carried as a workaround is gone. The property is worth
-keeping in mind rather than the line: nothing about a document generated from
-stale dists LOOKS wrong, so if the payload types ever thin out, suspect
-resolution before suspecting the annotations.
+**The document's type content depends on how trapi resolves `paths`.** If that
+resolution breaks, every `paths` entry falls through node_modules onto the
+workspace symlink (`packages/*/dist/*.d.ts`), so the typed payload surface
+becomes a function of those dists existing and collapses to
+`additionalProperties: true` — while trapi still exits 0 and reports success.
+Nothing about a document generated from stale dists LOOKS wrong, so if the
+payload types ever thin out, suspect resolution before suspecting the
+annotations.
 
 **`GET /schemas` + `GET /schemas/:name`** (`controllers/workflows/schema/`,
 `core/query/discovery.ts`; typed as `client.schema.getMany()/getOne(name)` in
@@ -730,8 +714,8 @@ properties of that middleware:
 - **a missing document disables the surface instead of aborting the boot.**
   `swaggerUI()` reads the file synchronously inside its own `install` and
   nothing catches that, while the gate defaults on and `build:server:js`
-  carries `clean: true` and wipes the directory the document lives in. So an
-  interrupted build used to leave a server that would not start, over
+  carries `clean: true` and wipes the directory the document lives in, so an
+  interrupted build would otherwise leave a server that will not start, over
   documentation.
 - **it warns when the document's `x-authup-schema-hash` disagrees with the
   running process's own.** Under `authup dev` server-core runs from source
@@ -959,8 +943,7 @@ path: `UserValidator`'s `password` mount takes it as a ctor option
 `RegistrationServiceOptions` / `PasswordRecoveryServiceOptions` in the
 controller factories. Un-threaded `UserValidator` sites (IdP account
 provisioning, file provisioning, the kit's client-side form) keep the
-default 10. No composition rules — length only (NIST 800-63B; plan 066
-Stage 1).
+default 10. No composition rules — length only (NIST 800-63B).
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
 
@@ -1026,9 +1009,9 @@ into the URL (the reset form asks for email/name).
 #### Auth Workflow UI (the auth console service) + Status Endpoint
 
 Every auth workflow page renders in its own SSR service,
-`@authup/server-auth-console` (`apps/server-auth-console`, plan 101 D2-2),
+`@authup/server-auth-console` (`apps/server-auth-console`),
 which renders the `apps/client-auth-console` bundle through that package's
-render contract (plan 083). Never the admin console, which is an ordinary
+render contract. Never the admin console, which is an ordinary
 OAuth2 client of the IdP with no privileged channel into it.
 
 **server-core keeps the protocol; what moved is where a page RENDERS.** The
@@ -1036,15 +1019,16 @@ endpoints, the issuer and every POST that mints or ends something stay on the
 API. The six page GETs became a stateless hop:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
-  `/password-reset` and `/logout`. `POST` on each of those paths is still the
-  JSON API on server-core; `GET` answers a redirect to
+  `/password-reset`, `/logout` and `/device`. `POST` on each of the first six
+  is still the JSON API on server-core (`/device` has no POST twin: its JSON
+  calls live under `/device_authorization/*`); `GET` answers a redirect to
   `<authConsoleUrl><page>` carrying the request's own query verbatim
   (`redirectToAuthConsole` in
   `adapters/http/controllers/workflows/auth-console.ts`, which sets
   `Cache-Control: no-store` because those parameters routinely carry an
   `id_token_hint`, a token or a redirect). The federated callback's
   interstitial at `/identity-providers/:id/authorize-in` still exists in the
-  console package but nothing renders it since plan 094 (see *Federated
+  console package but nothing renders it any more (see *Federated
   Login Completion*).
 - **Stateless is the point.** There is no server-side handle for the pending
   request, because the request IS the application's own public URL: a cookie
@@ -1063,9 +1047,8 @@ API. The six page GETs became a stateless hop:
   console is its own document, so the shapes never coexist, and the two
   static consoles inject their runtime config under the same name).
 - **`GET /authorize/info` answers that page's render input as JSON**
-  (`AuthorizeInfo` in `@authup/core-http-kit`, `client.authorize.getInfo()`;
-  plan 101 D2-1). `AuthorizeController.buildAuthorizeInfo(event)` is the ONE
-  producer, and since D2-2 it is the ONLY one: `serve()` is the hop to the
+  (`AuthorizeInfo` in `@authup/core-http-kit`, `client.authorize.getInfo()`). `AuthorizeController.buildAuthorizeInfo(event)` is the ONE
+  producer, and it is now the ONLY one: `serve()` is the hop to the
   console service, so the endpoint IS the page's render input rather than a
   second rendering of it. It is anonymous and
   `Cache-Control: no-store` like the page GET, takes the page's own query
@@ -1097,10 +1080,10 @@ API. The six page GETs became a stateless hop:
   replacement expands `$&`, `` $` ``, `$'` and `$$` **in the replacement
   value**, and the value spliced into `<!--app-html-->` carries the SSR
   hydration payload, which reflects raw query parameters. `?token=$'`
-  therefore used to splice the template's own tail into the payload,
-  leaving an inline script that was no longer valid JavaScript, so
-  `window.__AUTHUP__` was never assigned and the page died with "No
-  hydration data set." (not XSS: the injected span is template-derived).
+  therefore splices the template's own tail into the payload, leaving an
+  inline script that is not valid JavaScript, so `window.__AUTHUP__` is never
+  assigned and the page dies with "No hydration data set." (not XSS: the
+  injected span is template-derived).
   No escaping helper can defend against this, because the expansion
   happens after the value has been built: the auth console payload is
   serialized inside the bundle (`serializePayload` in
@@ -1110,7 +1093,7 @@ API. The six page GETs became a stateless hop:
   `<!--account-config-->` and `<!--admin-config-->` splices, and the helper
   lives in `@authup/server-console-kit` precisely so it exists once rather
   than once per service.
-- **Serving seam (plan 083)**: the Vue app ships as
+- **Serving seam**: the Vue app ships as
   `@authup/client-auth-console`, a runtime dependency of the auth console
   SERVICE, resolved via `resolvePackagePath`/`resolveDistPath`
   (`apps/server-auth-console/src/resolve.ts`, the locter `locateUpSync`
@@ -1122,7 +1105,7 @@ API. The six page GETs became a stateless hop:
   `dist/server/server.js` for `render()`), memoizing all three inside the
   closure `createRenderPage(distPath)` returns, one per handler rather than
   per process, so two handlers in one process never render each other's
-  template (the 098 C4 rule the static consoles already followed). It mounts
+  template, the rule the static consoles follow too. It mounts
   `dist/client/assets` at its own `/assets` (`immutable`, one year: every
   name carries a content hash, so a new build means new names); neither
   `index.html` nor `.vite/` is reachable over HTTP. There is no
@@ -1140,9 +1123,7 @@ API. The six page GETs became a stateless hop:
   whole of what these pages render: `/authorize` from `GET /authorize/info`,
   the four workflow pages from `GET /` plus their own query, and `/logout`
   from nothing at all, since that page drives the end-session call itself.
-  No loopback, no database, no session. That is what retired the SSR
-  self-call machinery server-core used to carry (see *The internal HTTP
-  client* below).
+  No loopback, no database, no session.
 - **It is the ONE console that fetches server-side, so its API address is
   two values, not one** (issue #3550). `Config.apiUrl` is the BROWSER's: it
   becomes the hydration payload's `baseURL`, from which the console derives
@@ -1204,7 +1185,7 @@ API. The six page GETs became a stateless hop:
   `{ version, date, publicUrl, features, endpoints, consoles }`, typed
   `StatusResponse` in `@authup/core-http-kit`, consumed via
   `client.status.get()`), which is where the auth console service reads
-  them from. Since plan 107 the same body says where the deployment IS:
+  them from. The same body also says where the deployment IS:
   `publicUrl`, `endpoints: { openidConfiguration, realms, docs, openapi }`
   and `consoles: { admin, account, auth }`, all built ONCE at boot in
   `createStatusController` from `config` (two inline literals, one caller;
@@ -1251,8 +1232,7 @@ API. The six page GETs became a stateless hop:
   All pure: `injectHTTPClient()` + `done`/`failed` emits, inline permissive
   validup/zod validators (server is authoritative). `AAuthShell` (utility)
   provides the shared aurora backdrop + theme-token card + compact logo mark
-  used by all SSR auth pages (it replaced the legacy hardcoded `#E8E8E8`
-  card in `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link,
+  used by all SSR auth pages. The auth-chrome CSS (shell, gadgets, back-link,
   realm grid) lives in `@authup/client-web-kit-theme`
   (`assets/css/styles/{auth,realm}.css`, behind `--authup-auth-*` /
   `--authup-realm-*` tokens); kit components ship no `<style>` blocks.
@@ -1285,8 +1265,8 @@ setting that symbol. locter now also consults the module-loading options
 in `process.execArgv` (values of `--require`/`-r`, `--import`, `--loader`,
 `--experimental-loader` only, so a custom export condition like
 `--conditions=ts-node` does not count). A dark gate is indistinguishable
-from a working one, which is how the branch it used to guard stayed broken
-through #3380; boot is ~12s type-checked (transpile-only is blocked by TS
+from a working one, so a branch it guards can stay broken unnoticed (#3380);
+boot is ~12s type-checked (transpile-only is blocked by TS
 6's `baseUrl` deprecation until the root tsconfig carries
 `ignoreDeprecations`), and the `--loader` flag prints an
 `ExperimentalWarning` the `--import` + `module.register` form avoids while
@@ -1311,10 +1291,9 @@ server-core keeps one client for calls to its own API, registered under
 `HTTPInjectionKey.InternalHttpClient` (`createInternalHttpClient` in
 `adapters/http/internal-client/`, handed to routes per request by
 `registerInternalHttpClientMiddleware` under
-`INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`). It lost its UI name with the UI:
-it used to be `UIHttpClient` / `createInternalUIHttpClient`, feeding the SSR
-render's own API calls, and **its one consumer now is the console login's
-token exchange** (`ConsoleLogin.callback` redeeming the authorization code).
+`INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`). **Its one consumer is the console
+login's token exchange** (`ConsoleLogin.callback` redeeming the authorization
+code).
 
 Its hapic `FetchTransport` rewrites every request targeting `publicUrl`
 (origin plus sub-path prefix, wildcard listen hosts normalized to loopback)
@@ -1478,8 +1457,8 @@ now forwards it and the controller sets it on the UPDATE branch only (create has
 no rows to keep). A caller CLEARS an attribute by sending it as `null`, which
 survives validation (`null` is not "optional" under validup's default
 `optionalValue: 'undefined'`) and is what the console submits for a blank field.
-A protocol switch is the one exception and still replaces: the old protocol's
-rows are dead configuration no code reads any more, and one of them is a secret
+A protocol switch is the one exception and replaces: the previous protocol's
+rows are dead configuration no code reads, and one of them is a secret
 (the LDAP bind password). `PolicyService.save` has the identical defect and is
 deliberately untouched - its per-type validators mount their config as
 REQUIRED, so a partial update fails validation instead of silently disabling a
@@ -1524,8 +1503,7 @@ runs the PROVISIONING group); `user.email` is optional under PROVISIONING
 (the user synchronizer backfills a placeholder) while staying required at
 CREATE. Consequences for file configs: invalid entities now fail startup
 (fail-closed — the load throws before anything synchronizes), unmounted
-attribute keys are stripped, and top-level `policies` (previously silently
-dropped from the validator output) are validated via
+attribute keys are stripped, and top-level `policies` are validated via
 `PolicyProvisioningValidator` (attributes + `extraAttributes` + recursive
 `children`) and provisioned.
 
@@ -1636,14 +1614,14 @@ reconciles it. And `RealmService.save` itself runs no `checkUniqueness`, so
 two concurrent `POST /realms` with one name give the loser an unmapped 500
 rather than a 409.
 
-### Wildcard Realm Entry (`realms[].attributes.name: "*"`, plan 082)
+### Wildcard Realm Entry (`realms[].attributes.name: "*"`)
 
 A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
 `core/provisioning/constants.ts`) is a SELECTOR over realms, not a realm
 declaration: its relations (clients / roles / scopes / permissions / users)
 are ensured in **every** realm — existing at boot, new at creation. This is
-the operator surface that replaced the removed `web` system client (declare
-a downstream login client once, get it in every realm), and the mechanism
+the operator surface for declaring a downstream login client once and getting
+it in every realm, and the mechanism
 behind the realm-admin-in-every-realm recipe (a wildcard user with
 `globalRoles: [realm_admin]`, issue #2927). YAML note: a bare `*` is an
 alias token, so it must be quoted (`name: "*"`).
@@ -1691,36 +1669,33 @@ alias token, so it must be quoted (`name: "*"`).
 
 ### Per-Realm System Clients (`admin-console`, `account-console`)
 
-Every realm auto-provisions two public OAuth2 clients (plan 079;
-`SYSTEM_CLIENT_DEFINITIONS` in `core/entities/client/system-clients.ts`,
+Every realm auto-provisions two public OAuth2 clients (`SYSTEM_CLIENT_DEFINITIONS` in `core/entities/client/system-clients.ts`,
 name constants in `@authup/core-kit`):
 
 - **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
   console (`apps/client-admin-console`, served at `<publicUrl>/console/admin`
-  since plan 081, under `/console` since plan 099, and by
-  `@authup/server-admin-console` since plan 101 D2-3; its server-side login
+  by `@authup/server-admin-console`; its server-side login
   kick sends `client_id=admin-console`, and a standalone-hosted dist can
   inject another client name through `window.__AUTHUP__.clientId`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
   self-service surface served at `<publicUrl>/console/account` by
-  `@authup/server-account-console` (plan 080; see *Account Console* below).
+  `@authup/server-account-console` (see *Account Console* below).
 
-The former third definition — `web`, a shared auto-consenting client for
-downstream RPs — was REMOVED (plan 082): it was default-on attack surface
-stamped into every realm for apps that may not exist. Downstream RPs
-register their own clients (per realm, or in every realm via a wildcard
-realm entry — see above). Legacy `web` rows survive as ordinary clients:
-still functional, no longer MERGE-refreshed (`TRUSTED_ORIGINS` changes no
-longer propagate to them), absent from new realms; deletable via the API or
-a wildcard `absent` child entry. `CLIENT_WEB_NAME` is gone and `web` is a
-plain, creatable client name again.
+There is deliberately no third, shared auto-consenting client for downstream
+RPs: that would be default-on attack surface stamped into every realm for apps
+that may not exist. Downstream RPs register their own clients (per realm, or
+in every realm via a wildcard realm entry — see above). A legacy `web` row
+from an older deployment survives as an ordinary client: functional, not
+MERGE-refreshed (`TRUSTED_ORIGINS` changes do not propagate to it), absent
+from new realms, deletable via the API or a wildcard `absent` child entry.
+`web` is a plain, creatable client name.
 
 The split exists for admission control (`accessPolicyId` per app — restrict
-the admin console without touching downstream logins; with the account
-surface shipped, regular users no longer need the console's settings pages,
-so restricting `admin-console` to administrators is the documented posture),
+the admin console without touching downstream logins; the account console
+covers self-service, so regular users need no page of the admin console and
+restricting `admin-console` to administrators is the documented posture),
 per-app session/audit attribution by `auth_session_tokens.client_id`
-(per token since plan 086, because one browser session serves several
+(per token, because one browser session serves several
 applications), and per-app
 grant/redirect/logout allowlists. Each client powers the realm-selection
 login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
@@ -1734,7 +1709,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   `redirectUri` = one `<origin>/**` wildcard per trusted app origin (matched
   by `isSimpleMatch`) — deliberately the SHARED app-origin set for every
   definition, since `redirectUri` is MERGE-owned: a separately-hosted surface
-  (plan 078 "relocatable by choice") registers its origin via
+  ("relocatable by choice") registers its origin via
   `TRUSTED_ORIGINS`, never by editing the client row. `displayName` is seeded
   at CREATE only (never re-asserted), so admins can relabel.
 - **Pattern semantics** (`isSimpleMatch`, `@authup/kit`): `*` matches a run
@@ -1763,12 +1738,8 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   definition) are bound as
   `auth_client_scopes` rows. That junction is the only source `/authorize`
   reads scopes from (`OAuth2ScopeRepository.findByClientId`), and since #3355
-  it is the only place a client's scopes exist at all. The `Client.scope`
-  column that carried the same list as text is gone: nothing had read it
-  since #3354, and writing it alone left the client with an empty granted
-  set, so a standard OIDC `scope=openid` request failed with
-  `insufficient_scope` while only requests carrying `global` passed via the
-  verifier's bypass (#3347). The junction rows are additive: a scope an admin
+  it is the only place a client's scopes exist at all — there is no
+  `Client.scope` column. The junction rows are additive: a scope an admin
   bound by hand survives the next boot.
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
   `config.trustedOrigins` merged verbatim. A `trustedOrigins` entry may carry
@@ -1840,7 +1811,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
 
-### Client secret storage and rotation (plan 105)
+### Client secret storage and rotation
 
 A confidential client's secret is stored in one of three modes,
 `ClientSecretMode` in `@authup/core-kit` (`plain | hashed | encrypted`),
@@ -1912,7 +1883,7 @@ combination answers 400.
   `authMethod` away from `secret` still clears the secret
   and both flags, on the fresh row inside the #3526 transaction, which is
   why there is no `DELETE /clients/:id/secret`.
-- **`protect()` no longer sniffs its input, and `verify()` decrypts.**
+- **`protect()` does not sniff its input, and `verify()` decrypts.**
   `ClientCredentialsService.protect(plain, { secretHashed, secretEncrypted, realmId })`
   hashes in hashed mode, encrypts in encrypted mode
   (`cipher.encrypt(plain, realmId)`; the service takes
@@ -1934,7 +1905,7 @@ combination answers 400.
   so the two discriminators never both match. Both compares run over
   SHA-256 digests rather than the values: `timingSafeEqual` needs
   equal-length inputs, and a length check in front of it would leak the
-  secret's length to a wrong-length guess; the `===` it replaced was a
+  secret's length to a wrong-length guess, and a `===` here would be a
   timing oracle on a credential path. Encrypted mode costs one key-row read
   plus one AES-GCM decrypt per confidential-client authentication, at
   `/token` and on Basic auth alike (`RealmCipher` caches the imported cipher
@@ -1946,12 +1917,12 @@ combination answers 400.
   encrypted before the save and an already protected one is kept verbatim.
   The synchronizer saves attributes straight to the repository, the one client
   write path that bypasses the credential service, which is how a raw
-  secret used to land under a flag the read gate trusts. The default source
+  secret can land under a flag the read gate trusts. The default source
   emits the `system` client as `secret: config.clientSystemSecret,
-  secretHashed: false` and no longer routes it through an identity
-  `protect` call: it is plain by design, and that call passed no `realmId`,
-  so deleting it is what keeps a realm-scoped cipher out of a path that
-  runs before any realm row exists.
+  secretHashed: false` and does not route it through an identity `protect`
+  call: it is plain by design, and such a call would pass no `realmId`,
+  putting a realm-scoped cipher in a path that runs before any realm row
+  exists.
 - **Audit.** One `EventName.CLIENT_SECRET_ROTATED` (`clientSecretRotated`)
   row per rotation: `EventScope.IDENTITY`, `refType: client`, `refId` the
   client, `data: { kind: <mode> }` (`kind` is already in the sanitizer
@@ -1961,8 +1932,8 @@ combination answers 400.
   rule.** `secretReadGate` lost its `eq('secretEncrypted', true)` leg, so a
   row carrying the flag is gated like plaintext, and `ClientService.getOne`
   evaluates reach for every non-hashed value
-  (`entity.secret && !entity.secretHashed`) where it used to skip the
-  evaluate for a flagged row. A hashed value discloses nothing; every other
+  (`entity.secret && !entity.secretHashed`), a flagged row included. A hashed
+  value discloses nothing; every other
   stored form is the secret itself. `revealSecret(entity)` then runs on
   every read surface (the single read after its evaluate, the list after
   the schema gate's redaction, a client's own record read): a value that is
@@ -2059,7 +2030,7 @@ raw value re-hashed on merge, a plain value verbatim, a raw value under
 `secretEncrypted: true` encrypted, a cipher blob kept verbatim, both flags
 at once refused).
 
-### Account Console (`/console/account`, plan 080)
+### Account Console (`/console/account`)
 
 End-user self-service, split across two workspaces: the BUNDLE
 `apps/client-account-console` (`@authup/client-account-console`), a
@@ -2068,7 +2039,7 @@ cannot server-render under header-only auth, and the SSR pages would render
 a spinner until mounted anyway), and the SERVICE
 `apps/server-account-console` (`@authup/server-account-console`), which
 depends on the bundle at RUNTIME and serves its built `dist/` ("embedded by
-default, relocatable by choice"). Since plan 101 D2-3 server-core serves
+default, relocatable by choice"). Since the console split, server-core serves
 neither: it keeps the two cookie-mode routes under the same segment and
 nothing else.
 
@@ -2159,11 +2130,9 @@ nothing else.
   renders `AWorkflowDisabledNotice` client-side. server-core reads it to
   gate the two cookie-mode routes: `GET /console/account/login/start` and
   `/callback` answer **404** rather than minting a pending login and a
-  session secret for a console nothing is serving. The 404 is the D2-3
-  change (they used to answer the shell with the notice, which server-core
-  no longer has to answer with), and it is right in its own terms: on a
-  deployment that turned the console off, the route genuinely does not
-  exist. server-core still publishes the flag on `GET /`
+  session secret for a console nothing is serving. The 404 is right in its own
+  terms: on a deployment that turned the console off, the route genuinely does
+  not exist. server-core still publishes the flag on `GET /`
   (`buildUIFeatures` → `StatusResponseFeatures.accountConsole`), so a
   reader can tell what the deployment intends. The flag is one declaration
   in `@authup/server-config`, read by the console service and by server-core
@@ -2172,7 +2141,7 @@ nothing else.
   client** (Keycloak model — per-app attribution + access-policy
   enforceability), NOT bare reuse of the lingering kit-store session.
   **Everything in this bullet and the sign-out bullet below describes the
-  BROWSER-side flow, which a server-served console no longer takes**. See
+  BROWSER-side flow, which a server-served console does not take**. See
   *Console session credential* after this list. It is what a standalone
   cross-origin host still runs, and the code stays behind the resolved
   `cookieSession` decision for exactly that reason. The
@@ -2188,7 +2157,7 @@ nothing else.
   machinery makes the exchange REUSE the session row created by the hosted
   login (pinned by `account-console-session.spec.ts`: one row; holds
   cross-origin too, since the session id rides the code blob server-side).
-  Attribution rides the TOKEN, not the session (plan 086):
+  Attribution rides the TOKEN, not the session:
   `auth_session_tokens.client_id` names the client each token was issued
   for. `auth_sessions.client_id` is NOT touched by the authorize flow: it is
   the client-SUBJECT foreign key (see *Session subject foreign keys*).
@@ -2227,12 +2196,11 @@ nothing else.
   already given up, rejecting the replay's own 401 and, on its JWK and
   failed-refresh branches, unsetting the header, which logs the store out.
   A 401 arriving at `capture()` is therefore one renewal could not
-  answer. **A refresh token in the store says nothing about that**, which
-  is what the branch used to test: a SUCCESSFUL refresh whose replay still
-  401s leaves a freshly ROTATED refresh token behind, so the page read a
-  request that had already failed twice as renewable and offered Retry,
-  and every press bought another refresh, another replay and another
-  rotation (issue #3487 finding 5). Note the 401 only reaches here at all
+  answer. **A refresh token in the store says nothing about that**: a
+  SUCCESSFUL refresh whose replay still 401s leaves a freshly ROTATED refresh
+  token behind, so testing for one reads a request that has already failed
+  twice as renewable and offers Retry, and every press buys another refresh,
+  another replay and another rotation (#3487). Note the 401 only reaches here at all
   because the `JWT_*` codes map to 401 (conventions.md ->
   *A dead bearer is 401 on a resource route*); they took the 400 fallback
   before, so this branch could never see the case it is written for.
@@ -2274,12 +2242,12 @@ nothing else.
 - **Link surface:** `<publicUrl>/console/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 
-#### Console session credential (cookie mode, plan 088 Stage 1)
+#### Console session credential (cookie mode)
 
 A console served on the API's own ORIGIN holds **no OAuth2 token in
 JavaScript at all**. It presents an opaque, `HttpOnly` credential naming its
 `auth_sessions` row, and every token the login produced dies inside the
-request that redeemed it. Origin, not process: since plan 101 D2-3 the
+request that redeemed it. Origin, not process: the
 console's pages come from their own service, and cookie mode is unaffected
 because `isSameOriginRequest` compares against `publicUrl` and the cookie's
 path is the deployment base path. Both are identical across processes behind
@@ -2334,8 +2302,10 @@ rather than trusted until `exp`.
   branch changed. So bearer mode is untouched for every other consumer, and
   a bearer request pays no extra query.
 - **INVARIANT: cookie authentication must never reach the OAuth2 issuance
-  surface** (`/authorize`, `/token` and its sub-paths, `/logout`, i.e.
-  `isOAuth2IssuancePath`). Without it, one script execution anywhere on the
+  surface** (`/authorize`, `/token` and its sub-paths, `/logout`,
+  `/device_authorization` and its sub-paths, i.e. `isOAuth2IssuancePath`; the
+  last keeps origin script from minting a device token or approving a device
+  flow with the cookie). Without it, one script execution anywhere on the
   IdP origin POSTs `/authorize` with its own PKCE challenge against
   `account-console` (public, `builtIn` so auto-consenting, `global openid`),
   carries the code to `/token`, and holds a full token pair: the cookie
@@ -2368,17 +2338,14 @@ rather than trusted until `exp`.
   a 5-minute `SameSite=Lax` login cookie (Lax, not Strict: the return leg may
   traverse an external IdP chain) and 302s to `/authorize`;
   `GET /console/account/callback` redeems the code and hands back the session
-  cookie. **They stay on the API deliberately** (plan 101 invariant 3): they
+  cookie. **They stay on the API deliberately**: they
   are sessions, keys and cache, and the pending-login cookie has to be issued
   on the origin that reads it back. So a split deployment routes those two
   exact paths to the API set and the rest of the console's segment to the
-  console set. The kick has a path of its own since 098 C1: one URL used to
-  mean two things, discriminated by whether a `realmId` was present (with one
-  the server-side kick, without one the console's own login PAGE), and the
-  page is served by the console service now, so the kick can no longer fall
-  back to it. `buildConsoleLoginURL` in `@authup/client-web-kit` builds it,
-  so a console dist older than its server keeps hitting the retired path:
-  rebuild the consoles, which the same release ships anyway. The remaining
+  console set. The kick has a path of its own, built by
+  `buildConsoleLoginURL` in `@authup/client-web-kit`, so a console dist older
+  than its server hits a path that does not exist: rebuild the consoles, which
+  the same release ships anyway. The remaining
   two are ordinary API routes:
   `GET /sessions/@me/introspect` is what the console hydrates from and
   `DELETE /sessions/@me` is what it signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
@@ -2494,11 +2461,11 @@ rather than trusted until `exp`.
   JS-token path (cross-origin, so applicability fails there), so the two modes
   coexist behind one resolved condition.
 
-### Admin Console (`/console/admin`, plan 081)
+### Admin Console (`/console/admin`)
 
 The admin console (`apps/client-admin-console`, `@authup/client-admin-console`)
-left Nuxt on 2026-08-25 and is the second static console, served since plan
-101 D2-3 by `@authup/server-admin-console` in the account-console shape: a
+left Nuxt on 2026-08-25 and is the second static console, served
+by `@authup/server-admin-console` in the account-console shape: a
 dist-only Vite/Vue SPA, `src/config.ts` resolving `window.__AUTHUP__`
 (`apiUrl`, `basePath` default `/console/admin`, `clientId` default
 `admin-console`, `cookieSession`, `features`) with the same
@@ -2513,15 +2480,14 @@ bootstrap. What differs from the account console, and why:
   module-level slots, and a second console sharing them would serve one
   bundle's shell for the other. That is also why the substituted package
   path and the resolution anchor are definition FIELDS rather than a
-  `setPackagePath` mutator (098 C4): two handlers in one process must never
-  share a resolution. `serve(event, { basePath, assetBasePath, theme,
+  `setPackagePath` mutator: two handlers in one process must never share a
+  resolution. `serve(event, { basePath, assetBasePath, theme,
   config })` takes the already-built config object, so what a console
   injects stays its own business (the account console's request-reflected
   `ref`), and takes the theme provider rather than reaching into a request
   store for one, so the kit knows nothing about where a caller keeps its
   theme. The shell is read per request: a few kilobytes per full document
-  load, which is what the retired just-in-time re-read bought at the price
-  of a typeorm-extension dependency inside a page-serving package.
+  load.
 - **The login is one class for both.** `ConsoleLogin`
   (`adapters/http/controllers/workflows/console-login/` in server-core, which
   is where the two cookie-mode routes stayed) is the plan-088 kick +
@@ -2552,7 +2518,7 @@ bootstrap. What differs from the account console, and why:
   cookie-mode mounts and the auth console's own base path,
   `AUTH_CONSOLE_BASE_PATH` in `@authup/server-config` plus `BASE_PATH` /
   `VITE_BASE` in `@authup/server-auth-console`, share the `/console` prefix by
-  spelling, there is deliberately no prefix constant, plan 099): the
+  spelling, there is deliberately no prefix constant): the
   controller mount, the login cookie scope and the callback URL all derive
   from it, and the console service's own base path plus vite base are the
   same literal on its side. Assets are served `immutable` for a year (every
@@ -2595,8 +2561,7 @@ bootstrap. What differs from the account console, and why:
   one-shot per target and document: a `sessionStorage` marker
   (`authup:admin:chunk-recovery`) names the url a recovery was issued for
   and survives the load, so an asset that keeps 404ing is loaded once
-  rather than in the loop the initial navigation used to re-enter with no
-  click in it; `main.ts` drops the marker right after the app mounted on a
+  rather than in a loop the initial navigation re-enters with no click in it; `main.ts` drops the marker right after the app mounted on a
   resolved initial navigation, which is what proves the shell is fresh. The post-login destination
   (`/login?redirect=`) rides a single-use `sessionStorage` stash
   (`src/redirect.ts`, `authup:admin:redirect`) written before the server
@@ -2618,18 +2583,15 @@ bootstrap. What differs from the account console, and why:
   `<RouterView :entity>` forwards attrs and listeners exactly as
   `<NuxtPage>` did. There is no SSR and no hydration handoff any more: the
   console renders like Keycloak's and Authentik's (spinner, then rows).
-- **What is gone with the Nuxt process.** The nitro `.output`,
-  `postbuild.mjs`, `@vuecs/nuxt` (color mode is the kit's `createColorMode()`,
-  locale `installLocale` over `createCookieRef`), and every `NUXT_PUBLIC_*` /
-  `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable (no successor: runtime
-  config is injected by the serving side). A `client.admin-console` selector
-  is refused and a `client.admin-console` config section is not read; a
-  container command `client/admin-console` reaches the CLI as an unknown
-  command (usage, exit 1). The
-  `authup-admin-console` NAME came back in plan 101 D2-3, but as the bin of
-  the SERVICE (`apps/server-admin-console`), which serves the dist rather
-  than being a Nuxt server; `authup start console admin` is the supported
-  route to it. `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration
+- **No Nuxt process, and nothing that implies one.** Color mode is the kit's
+  `createColorMode()` and locale `installLocale` over `createCookieRef`; there
+  are no `NUXT_PUBLIC_*` / `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID`
+  variables, because runtime config is injected by the serving side. A
+  `client.admin-console` selector is refused and a `client.admin-console`
+  config section is not read; a container command `client/admin-console`
+  reaches the CLI as an unknown command (usage, exit 1). `authup-admin-console`
+  is the bin of the SERVICE (`apps/server-admin-console`), which serves the
+  dist; `authup start console admin` is the supported route to it. `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration
   for downstream apps (hub), which keep their own origin and the JS-token
   store.
 
@@ -2744,13 +2706,13 @@ adapters/http/controllers/workflows/
   account/module.ts                 — AccountController: the account console's two cookie-mode routes,
                                       GET /console/account/login/start (kick) + /callback (redemption). It serves
                                       no page: @authup/server-account-console does
-  admin/module.ts                   — AdminController: the same two routes for /console/admin (plan 081)
+  admin/module.ts                   — AdminController: the same two routes for /console/admin
   console-login/module.ts           — ConsoleLogin: the plan-088 kick + redemption both controllers delegate
                                       to, parameterized by client name, path segment, console url and refusal path
 
 adapters/http/constants.ts          — ADMIN_CONSOLE_SEGMENT (console/admin) and ACCOUNT_CONSOLE_SEGMENT (console/account):
                                       the controller mounts, the login cookie scopes and the callback URLs read these
-                                      (plan 099). server-core mounts no console assets any more, so nothing here serves
+                                     . server-core mounts no console assets any more, so nothing here serves
                                       a file, and it spells no auth-console segment: that console is reached through
                                       config.authConsoleUrl alone
 
@@ -2763,7 +2725,7 @@ adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
   realm-id.ts                       — getRequestRealmID / applyRouteRealmIDToBody / setRequestRealmID
   same-origin.ts                    — isSameOriginRequest(event, baseURL): the three-condition gate every
-                                      cookie-authenticated surface rides on (plan 088)
+                                      cookie-authenticated surface rides on
 
 adapters/http/middleware/built-in/
   realm-resolver/module.ts          — RealmResolverMiddleware resolves :realmId (UUID or name) → UUID
@@ -2805,15 +2767,13 @@ packages).
 Operator rebranding of EVERY served console from one mounted directory, with
 no image build and no rebuild. The mechanism lives in
 `@authup/server-console-kit` (`src/theme/`) and each console SERVICE creates
-its own provider at boot; server-core carries no theme at all since plan 101
-D2-3, and the request-scoped provider handoff it used went with the serving.
+its own provider at boot; server-core carries no theme at all, and the request-scoped provider handoff it used went with the serving.
 Config `theme.directoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off) is
 declared by all three console registries and resolved against server-core's
 `rootPath` when the CLI hands it over, so one document means one directory to
 every service; a missing directory creates no provider, mounts no route, and
-leaves every page byte-identical. The auth console applies it too since
-D2-3, which closes the one release window (D2-2) in which the hosted auth
-pages rendered unthemed.
+leaves every page byte-identical. The auth console applies it too, which closes the one release window in
+which the hosted auth pages rendered unthemed.
 
 - **Layout.** `theme.json` (manifest) + `assets/` + `fragments/`. The HTTP
   mount root is `<root>/assets`, never the theme root, so the manifest and
@@ -2837,7 +2797,7 @@ pages rendered unthemed.
   form, same `$'`-expansion trap as `replaceTemplateMarker`).
 - **`theme/contract/` is portable on purpose.** It imports nothing from
   node or routup, so the manifest validator, the token grammar and the head
-  builder can be lifted into `@authup/theme-kit` (plan 085) as a directory
+  builder can be lifted into `@authup/theme-kit` as a directory
   move, and can already be reused by a browser-side theme editor. Anything
   touching the filesystem or a response stays one level up. Keep it that
   way: `themeAssetExtension` exists only because `node:path`'s extname
@@ -2922,8 +2882,7 @@ pages rendered unthemed.
   `defineStaticConsole` takes it as a `serve()` argument rather than reaching
   into a request store for one. So two applications in one process never
   share a theme, and the kit knows nothing about where a caller keeps its
-  provider. That replaced the `event.store` handoff server-core used while
-  it served the consoles itself.
+  provider.
 
 ### Console substitution (`<name>Console.path`)
 
@@ -2933,8 +2892,7 @@ Theming cannot change markup. `authConsole.path`
 (`ADMIN_CONSOLE_PATH`) point at package directories consulted BEFORE the
 locter `node_modules` walk, so replacing a console never means mounting over
 a workspace symlink. Each key is declared by the SERVICE that reads it and
-by nobody else: they moved out of server-core's registry with the serving
-(plan 101 D2-3), and they reach the serving code as a definition field
+by nobody else: they moved out of server-core's registry with the serving, and they reach the serving code as a definition field
 (`defineStaticConsole`'s `distPath`) or a factory argument (the auth
 console's `createRenderPage(distPath)`) rather than through a mutator, so
 two handlers in one process cannot share a substitution.
@@ -2953,8 +2911,7 @@ their checkout.
 different ones.** `@authup/client-auth-console` exports `CONTRACT_VERSION`
 as a runtime value alongside `render()` (missing = version 1; version 2
 added the federated callback's interstitial route and payload, version 3 the
-`federatedLogin` payload the page must redeem. Plan 094 stopped anything
-rendering the interstitial route, but the floor only rises. The history
+`federatedLogin` payload the page must redeem. Nothing renders the interstitial route any more, but the floor only rises. The history
 lives in `src/contract.ts`). A static console's contract is its config
 MARKER (`<!--account-config-->`, `<!--admin-config-->`) plus the vite base
 its asset hrefs carry, both spelled as constants in the serving service;
@@ -2969,9 +2926,8 @@ derivation, and a vite base that does not match serves the shell and then
 `CONTRACT_VERSION` (missing = 1) equals the service's own
 `CONTRACT_VERSION` (`src/constants.ts`, typed `typeof` the bundle's
 constant so a bump that moves only the bundle fails this service's build),
-naming the entry, the version found and the version required. Unlike the
-server-core predecessor (`bindConsolePackages`, which checked a substituted
-package only) it runs for the default node_modules resolution too: the two
+naming the entry, the version found and the version required. It runs for the
+default node_modules resolution as well as a substituted one: the two
 packages sit on caret ranges and can skew, and the service holds its own
 constant, so nothing compares a constant against itself. Two cases skip
 it: an unresolved dist (a missing or half-built bundle stays a per-request
@@ -2979,8 +2935,7 @@ actionable error, never a failed boot; `resolveDistPath` requires
 `dist/server/server.js` as well as `dist/client/index.html`) and a
 substituted `render` (`authup dev` reads through vite and may sit on a
 stale `dist/`). The smoke runner still follows the first script the served
-shell references and expects JavaScript back; it is no longer the only
-guard.
+shell references and expects JavaScript back; it is not the only guard.
 
 ## Realm Scoping Model
 
@@ -3098,8 +3053,7 @@ fail-open drop can never touch realm reach. A **realm-less / anonymous** actor c
 satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
 key is present (`preEvaluate` / gate checks / realm-less resources).
 
-**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155,
-plan 036).** An actor can hold several grants for the *same* permission with different
+**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155).** An actor can hold several grants for the *same* permission with different
 `(realmScope, policyId)`. `aggregatePermissionPolicyBindings` groups the raw bindings into a
 `PermissionPolicyBindingAggregated` = `{ permission, grants: { realmScope, policy }[] }` — the
 actor's **disjunction** of grants, with **no lossy collapse**. Every consumer evaluates that
@@ -3108,9 +3062,8 @@ resource)` ∧ (grant's `policy` passes)**, so each grant's reach stays paired w
 policy. This is needed in both directions: a policy-free `own` grant must not MASK a
 policy-bound `any` grant's wider reach (the under-grant the issue reported), and an `own`
 grant's passing policy must not RIDE an `any` grant's wider reach when that `any` grant's own
-policy fails (the symmetric over-grant). There is no collapsed `realmScope` anymore — the
-predecessor `mergePermissionPolicyBindings`, which folded a single lossy `(realmScope,
-policies)` per key, was removed in favour of the disjunction.
+policy fails (the symmetric over-grant). There is no collapsed `realmScope`: each grant
+keeps its own, and folding them would be lossy in both directions.
 
 **Resources present their realm under the `realmMatch` PolicyData key — entities AND
 junctions.** Entity services derive it from the ATTRIBUTES `realmId` via
@@ -3129,11 +3082,11 @@ global. (The *member* side — the permission/role being attached — is gated s
 superset `preEvaluate`.) Setting a `null` owner (a global entity) under `own` correctly
 denies, consistent with a `realm_admin` not being able to write a global base entity.
 
-> **One evaluator, no ATTRIBUTES pollution (plan 035):** the resource realm rides the dedicated
+> **One evaluator, no ATTRIBUTES pollution:** the resource realm rides the dedicated
 > `realmMatch` PolicyData key — a legit policy-type slot read only by `RealmMatchPolicyEvaluator`
 > — instead of being stamped into the ATTRIBUTES bag. So `realmScope` reach and user-authored
 > realm-match policies share **one** evaluator (SCOPE MODE vs attribute-name mode), and an
-> `ATTRIBUTE_NAMES` allowlist on a junction permission no longer mis-sees a synthetic `realmId`
+> `ATTRIBUTE_NAMES` allowlist on a junction permission cannot mis-see a synthetic `realmId`
 > (junction ATTRIBUTES carry only genuine columns). The realm-match evaluator reads the realm
 > ONLY from `realmMatch` (single-source — an ATTRIBUTES `realmId` is not a realm source for the
 > scope factor).
@@ -3198,7 +3151,7 @@ let `GET /realms/<unknown-uuid>/users/<name>` match a cross-realm row.
 
 **`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
-**The realm RECORD read carries the realm's OpenID surface as `meta.endpoints` (plan 107).** `GET /realms/:id` answers `RealmRecordResponse` (`EntityRecordResponse<Realm, RealmRecordMeta>` in `@authup/core-http-kit`): `data` stays the pure `Realm` row and `meta.endpoints` is `{ issuer, openidConfiguration, jwks }`, built by `buildRealmEndpoints(baseURL, realmName)` next to `resolveURL` in `apps/server-core/src/utils/url.ts`. That helper is the ONE derivation: the discovery document's `issuer` and `jwks_uri` read the same object, so the record's issuer equals the discovery issuer by construction (the token side is pinned by `oidc-conformance.spec.ts`, `id_token.iss === discovery.issuer`). The block is built in the controller's `get` only, because URL shaping from `options.baseURL` already lives there and the service stays transport-agnostic; `add` / `edit` / `put` / `drop` keep `meta: {}` and the collection keeps `meta: { ...pagination, schema }`. A consumer wanting every realm's issuer reads each record or derives it from the documented `<publicUrl>/realms/<name>` convention. `IRealmAPI` overrides only `getOne`, so the covariant return keeps the cast-free `ClientEntityAPIRegistry` proof green and nothing advertises `endpoints.*` as filterable; `Realm`, `EntityTypeMap` and `RealmSummary` are untouched. Pinned by `realm-openid.spec.ts` (the sub-path base, all three values) and `realm.spec.ts` (the record read against `config.publicUrl`, and a re-read after a rename answering the new issuer, which is the premise the admin page's re-read rests on).
+**The realm RECORD read carries the realm's OpenID surface as `meta.endpoints`.** `GET /realms/:id` answers `RealmRecordResponse` (`EntityRecordResponse<Realm, RealmRecordMeta>` in `@authup/core-http-kit`): `data` stays the pure `Realm` row and `meta.endpoints` is `{ issuer, openidConfiguration, jwks }`, built by `buildRealmEndpoints(baseURL, realmName)` next to `resolveURL` in `apps/server-core/src/utils/url.ts`. That helper is the ONE derivation: the discovery document's `issuer` and `jwks_uri` read the same object, so the record's issuer equals the discovery issuer by construction (the token side is pinned by `oidc-conformance.spec.ts`, `id_token.iss === discovery.issuer`). The block is built in the controller's `get` only, because URL shaping from `options.baseURL` already lives there and the service stays transport-agnostic; `add` / `edit` / `put` / `drop` keep `meta: {}` and the collection keeps `meta: { ...pagination, schema }`. A consumer wanting every realm's issuer reads each record or derives it from the documented `<publicUrl>/realms/<name>` convention. `IRealmAPI` overrides only `getOne`, so the covariant return keeps the cast-free `ClientEntityAPIRegistry` proof green and nothing advertises `endpoints.*` as filterable; `Realm`, `EntityTypeMap` and `RealmSummary` are untouched. Pinned by `realm-openid.spec.ts` (the sub-path base, all three values) and `realm.spec.ts` (the record read against `config.publicUrl`, and a re-read after a rename answering the new issuer, which is the premise the admin page's re-read rests on).
 
 ## Policy-Permission Model (n:m)
 
@@ -3389,7 +3342,7 @@ export type PermissionPolicyBinding = {
 };
 
 // aggregatePermissionPolicyBindings(raw[]) groups by permission key into the actor's
-// disjunction of grants — the lossless replacement for the old collapsed binding.
+// disjunction of grants — each keeps its own realmScope and policy.
 export type PermissionGrant = {
     realmScope: 'none' | 'own' | 'ownOrNull' | 'any',   // normalized, fail-closed default own
     policy?: PolicyWithType,                             // single junction policy (id kept) or a composite
@@ -3423,7 +3376,7 @@ expressed via a `policyId` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (the old `mergePermissionBindings` AFFIRMATIVE fold was removed in #3158):
+When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
 
 1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
 2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
@@ -3432,7 +3385,7 @@ When assigning a role to an identity or identity-provider (user-role, client-rol
 **`grantDominates(parent, child)`** (`@authup/access`, `permission/helpers/grant.ts`) — a parent grant covers a child grant iff:
 
 - **Reach:** `compareRealmScope(parent.realmScope, child.realmScope) >= 0` (ordered `none < own < ownOrNull < any`), AND
-- **Policy** (`policyDominates`): an unrestricted parent covers any child; a restricted parent never covers an *unrestricted* child (it cannot confer the wider policy-free reach it lacks); two restricted grants cover one another **only when their policies are provably the same** (`isPolicyEquivalent`), never by evaluated effect. Provably-same means **either** the same persisted row (equal primary-key `id`) **or** structurally-identical configuration — a value-compare (`smob` `isEqual`) over the policy after `normalizePolicyForEquality` strips the non-evaluation-affecting columns (`id, builtIn, name, displayName, description, parentId, parent, realmId, realm, createdAt, updatedAt`) recursively through `children`. So two *distinct rows with identical config* (same predicate) dominate, but a genuinely **different** configuration does not. A shared `type` is **not** equivalence (two `attributes` policies are both `type: attributes`, but `{department:X}` ≠ `{department:Y}`). Deciding `child ⊆ parent` for *different* trees is undecidable (a policy is a predicate over `PolicyData`), so we accept only provable identity/equality and treat anything else as distinct (#3159 — the predecessor treated any two policy-bound grants as mutually dominating: a latent over-permit across disjoint policy scopes, e.g. a `department=X` actor conferring a `department=Y` grant). Fail-closed; may under-permit only when the two equal predicates are not provably equal (e.g. composite children in different order). **Security invariant:** every key in `NON_SEMANTIC_POLICY_KEYS` must stay non-evaluation-affecting — adding an evaluation-relevant field there would widen equivalence into an over-permit (new *config* fields need not be added; they are compared by default).
+- **Policy** (`policyDominates`): an unrestricted parent covers any child; a restricted parent never covers an *unrestricted* child (it cannot confer the wider policy-free reach it lacks); two restricted grants cover one another **only when their policies are provably the same** (`isPolicyEquivalent`), never by evaluated effect. Provably-same means **either** the same persisted row (equal primary-key `id`) **or** structurally-identical configuration — a value-compare (`smob` `isEqual`) over the policy after `normalizePolicyForEquality` strips the non-evaluation-affecting columns (`id, builtIn, name, displayName, description, parentId, parent, realmId, realm, createdAt, updatedAt`) recursively through `children`. So two *distinct rows with identical config* (same predicate) dominate, but a genuinely **different** configuration does not. A shared `type` is **not** equivalence (two `attributes` policies are both `type: attributes`, but `{department:X}` ≠ `{department:Y}`). Deciding `child ⊆ parent` for *different* trees is undecidable (a policy is a predicate over `PolicyData`), so we accept only provable identity/equality and treat anything else as distinct (#3159: treating any two policy-bound grants as mutually dominating is an over-permit across disjoint policy scopes — a `department=X` actor conferring a `department=Y` grant). Fail-closed; may under-permit only when the two equal predicates are not provably equal (e.g. composite children in different order). **Security invariant:** every key in `NON_SEMANTIC_POLICY_KEYS` must stay non-evaluation-affecting — adding an evaluation-relevant field there would widen equivalence into an over-permit (new *config* fields need not be added; they are compared by default).
 
 An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants for a permission gets the union: the unrestricted grant dominates anything, so the disjunction stays permissive without any "least-restrictive-wins" fold.
 
@@ -3471,7 +3424,7 @@ The client denylist additionally blocks `authMethod` (switching away from
 in plaintext). FK fields like `realmId` are usually validator-stripped on
 UPDATE already, but stay in the denylist as defense in depth. A
 self-managing client rotates its own secret through
-`POST /clients/@me/secret` (plan 105): the service hands the policy the two
+`POST /clients/@me/secret`: the service hands the policy the two
 flags only when the requested mode differs from the current one, so this
 denylist is what refuses its mode change, while a rotation under the current
 mode passes with no rule of its own (see *Client secret storage and
@@ -3567,12 +3520,11 @@ concurrent saves, reachable by any user with ten concurrent `POST /users/@me`.
 The concurrency spec carries a pool-exhaustion pin for exactly this (twelve
 concurrent updates on twelve different users, and twelve concurrent creates,
 all resolving inside the default timeout). The pin runs with the entity
-audit mirror ON, its default, and that is deliberate: the mirror used to be
-the same hazard on its own. Every `EntitySubscriber.afterInsert` /
-`afterUpdate` awaited the audit row's save from INSIDE TypeORM's persist
-transaction, through the DataSource, on a second pooled connection (issue
-#3539). The row rides the write's own `event.manager` now (see *Entity-CRUD
-bridge* under *Security Event Log*), so the one pin covers both sites.
+audit mirror ON, its default, and that is deliberate: the mirror is the same
+hazard on its own unless its row rides the write's own `event.manager`,
+rather than taking a second pooled connection from inside TypeORM's persist
+transaction (#3539, see *Entity-CRUD bridge* under *Security Event Log*), so
+the one pin covers both sites.
 
 On sqlite the seam is an unlocked passthrough that hands the callback the
 adapter itself, for the reason
@@ -3634,9 +3586,8 @@ each child's `parentId`, so an empty composite is a valid intermediate there.
 
 `preEvaluate` passes `pendingPolicies: 'permit'` (a `PermissionEvaluationOptions` flag,
 default `'deny'`): a grant whose policy tree is pending passes the gate; only a tree that
-settles false with the current bag denies. This replaced the hand-maintained
-`policiesExcluded: [ATTRIBUTES, ATTRIBUTE_NAMES, REALM_MATCH]` list — new policy types
-place themselves via `requires` with zero engine edits. Binding ATTRIBUTE_NAMES policies to
+settles false with the current bag denies. New policy types place themselves via
+`requires` with zero engine edits, so there is no hand-maintained exclusion list. Binding ATTRIBUTE_NAMES policies to
 a permission still does **not** break gate checks (pending → permitted); the full check
 happens in the second `evaluate()` call where `validated` data is supplied (pending ⇒
 `success: false` ⇒ deny, preserving the historical missing-data deny).
@@ -3679,8 +3630,8 @@ term is `and(reachCondition, junctionPolicyCondition)`, OR-composed all-or-nothi
 `getMany` consumers run `compile({ name: ... })` and: `deny` → append a constant-false
 condition (`inArray('id', [])`, keeps meta shape); `conditional` →
 `appendQueryConditions` — the authorization runs as WHERE, so **pagination and totals
-stay exact**; `post` → the old per-row `evaluate` + `total -= 1` drop loop remains as
-the sound fallback (and the plan-039 force-select discipline still serves exactly that
+stay exact**; `post` → a per-row `evaluate` + `total -= 1` drop loop is the sound
+fallback (and the plan-039 force-select discipline still serves exactly that
 path). Converted: `KeyService`/`TrustAnchorService` (pure realm gate);
 `SessionService`/`EventService`/`ConsentService` compose their **ownership
 alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition)`
@@ -3688,9 +3639,9 @@ alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition
 `EventService`'s probe-based `resolveReadVisibility` (random-foreign-realm
 `canReadRealm` probing) survives only as the `post` fallback — the compiled WHERE also
 covers junction ATTRIBUTES policies the probe's `policiesIncluded` deliberately
-excluded. `ClientService`'s former projection-dependent secret gate moved OFF the
-service onto the client SCHEMA (#3322, see *Query IR flow → Field authorization*):
-`getMany` no longer composes a secret WHERE or per-row loop — the schema's
+excluded. The client secret gate lives on the client SCHEMA rather than the
+service (#3322, see *Query IR flow → Field authorization*), so it cannot depend
+on the projection: `getMany` composes no secret WHERE and no per-row loop — the schema's
 `fields.validateMany` hook compiles the same permission disjunction into a per-row
 visibility condition on the `secret` field, and the repository layer redacts.
 The self-short-circuit / parent-permission gates (#3294) follow the same shape:
@@ -3712,18 +3663,17 @@ Include authorization*.
 
 `AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.
 
-## Deployment Topology & UI Boundary (plan 078)
+## Deployment Topology & UI Boundary
 
 **server-core is the IdP ORIGIN**: the OAuth2/OIDC protocol surface, plus the
 hosted auth pages (`/authorize`, `/register`, `/activate`,
 `/password-forgot`, `/password-reset` and `/logout`) served on that same
 origin. Those pages are **architectural, not incidental**, and the reasons
-below are why. What changed in plan 101 D2 is the PROCESS, never the origin:
-the pages render in `@authup/server-auth-console` and server-core's page GETs
-hand over to it, which is a packaging split (the origin is one whether the
+below are why. The pages render in `@authup/server-auth-console` and
+server-core's page GETs hand over to it; the origin is one whether that
 service rides server-core's listener under `authup start` or its own port
-behind a proxy rule). The standalone-hosting question, meaning the auth pages
-on a DIFFERENT origin than the IdP, stays rejected:
+behind a proxy rule. Serving the auth pages on a DIFFERENT origin than the
+IdP is rejected:
 
 - **WebAuthn origin binding** — the rpId/origin derives from `publicUrl`;
   hosted login means every RP's second factor runs on the one IdP origin with
@@ -3731,14 +3681,13 @@ on a DIFFERENT origin than the IdP, stays rejected:
 - **The `prompt=none` / `select_account` ladder rides first-party kit-store
   cookies on the `/authorize` origin**. The server cannot take the decision
   itself, so silent-auth / account-choice decisions can only be taken
-  client-side where the session cookie lives: on the IdP origin itself. That
-  still holds now that a console session cookie exists (plan 088): the
-  OAuth2 issuance surface, `/authorize` included, is exactly what that
-  credential is denied on.
+  client-side where the session cookie lives: on the IdP origin itself. The
+  console session cookie does not change this: the OAuth2 issuance surface,
+  `/authorize` included, is exactly what that credential is denied on.
 - **Same-path GET-page / POST-JSON workflow routes**: each workflow path
   answers a page on GET while POST on the same path is the JSON API; the
-  pages are the render half of the API surface, which is why the GET became
-  a hop to the render rather than moving the path.
+  pages are the render half of the API surface, which is why the GET is a hop
+  to the render rather than a moved path.
 - **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
   these pages.
 - **Headless deployments** (`ADMIN_CONSOLE_ENABLED=false`) still need every
@@ -3748,12 +3697,10 @@ This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
 all serve login/consent from the IdP origin.
 
 **client-admin-console is an ordinary OAuth2 client of the IdP** — it
-authenticates against the per-realm public `admin-console` client (plan 079;
-downstream kit apps register their own clients — plan 082 removed the shared
-`web` client) with no privileged channel into server-core, and since plan 081
+authenticates against the per-realm public `admin-console` client (downstream
+kit apps register their own) with no privileged channel into server-core, and
 it is SERVED at `<publicUrl>/console/admin` (by
-`@authup/server-admin-console` since plan 101 D2-3, see *Admin Console*), the
-endpoint plan 078 recorded. Same-ORIGIN is what let plan 088 Stage 2 apply
+`@authup/server-admin-console`, see *Admin Console*). Same-ORIGIN is what lets cookie mode apply
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
 
@@ -3761,8 +3708,7 @@ property of the URL rather than of which process answers it.
 batteries-included container runs `start`, which is `authup start`:
 server-core plus every enabled console on ONE listener, with the worker
 sweeps in process while `core.worker.enabled` is true. `authup`
-(`apps/authup`) is an **in-process** CLI over the service packages (plan 101
-D1): it imports them and runs their factories inside the process the operator
+(`apps/authup`) is an **in-process** CLI over the service packages: it imports them and runs their factories inside the process the operator
 started. `start` is the CLI's own command over server-core's
 `createApplication` / `createWorkerApplication` / `HTTPModule({ mount })`,
 `healthcheck` its own probe over `@authup/server-config`, and `migration`
@@ -3786,11 +3732,8 @@ listener, no migrations, refused while `core.worker.enabled` is false) and
 enabled one, each on its own port). A role rather than a subcommand per
 shape, because they are one thing started differently: every role reads the
 same document, the role is what an operator types, `--help` lists them under
-the one command an operator already knows, and a boolean flag (the retired
-`--worker`) says nothing about which role it selects once there are more
-than two. No release of the `authup` CLI ever carried the `core`, `worker`
-and `console` subcommands or the `--worker` flag: all four landed after
-v1.0.0-beta.63 and were renamed inside the same release window.
+the one command an operator already knows, and a boolean flag says nothing
+about which role it selects once there are more than two.
 
 Five citty (0.2.2) facts shape the implementation, each verified against
 `node_modules/citty/dist/index.mjs` and each load-bearing:
@@ -3799,13 +3742,12 @@ Five citty (0.2.2) facts shape the implementation, each verified against
    `type: 'enum'` only, so `start server.core` parses as the role
    `server.core`. Role, console name and arity are refused BY HAND in
    `start`'s `setup`, before anything boots. The `migration` operation is
-   refused the same way (#3542): an unknown word used to fall through to
-   `runMigrations`, so a typo applied every pending migration and exited 0.
+   refused the same way (#3542: unrefused, a typo applies every pending
+   migration and exits 0).
 2. citty parses with `strict: false`, so an undeclared flag becomes a
-   boolean nobody reads. After the rename a stale `start --worker` would
-   have booted the FULL API in a worker pod and stayed up as a healthy-looking process. `start` therefore
-   declares a tombstone `worker` boolean arg and throws when it is set, with
-   a message naming `start worker`.
+   boolean nobody reads. A stale `start --worker` would boot the FULL API in
+   a worker pod and stay up looking healthy, so `start` declares a tombstone
+   `worker` boolean arg and throws when it is set, naming `start worker`.
 3. A subcommand is re-parsed with ONLY its own arg defs on the argv after
    its name, so a space-separated root flag placed AFTER the subcommand
    (`start worker --configDirectory /x`) reads `/x` into the next
@@ -3826,23 +3768,20 @@ Five citty (0.2.2) facts shape the implementation, each verified against
    validates its own.
 
 The container command is the CLI's own argument list: `entrypoint.sh` strips
-an OPTIONAL leading `server/core` (a binary selector from when the image
-carried several) with a one-line deprecation notice on stderr, changes into
+an OPTIONAL leading `server/core` with a one-line deprecation notice on
+stderr, changes into
 `apps/server-core` (typeorm's cwd-relative driver fallback) and `exec`s the
 CLI with `--configDirectory /etc/authup` plus the arguments as given. The
 prefix stays accepted for the rest of the 1.0.0-beta line and is removed in
 v1.0.0. The image follows the FHS (issue #3543): the built tree is
 `/opt/authup` (`WORKDIR`) and the configuration file is
-`/etc/authup/authup.yml`, with no fallback read at the former
-`/usr/src/app/authup.yml`, which no release ever read. It keeps **no state
+`/etc/authup/authup.yml`. It keeps **no state
 directory at all**, because nothing durable is on disk: the database is
 postgres or mysql, the signing and encryption keys are `auth_keys` rows, the
 cache is redis. The two path keys it does set are named for what they hold:
 `PROVISIONING_DIRECTORY_PATH` is `/etc/authup/provisioning` (operator input,
 read next to the configuration file it belongs with) and `LOG_DIRECTORY_PATH`
-is `/var/log/authup` (the one directory written to). The retired
-`/var/lib/authup` volume held `http.log` and `error.log` and nothing else, so
-an operator drops that mount rather than repointing it.
+is `/var/log/authup` (the one directory written to).
 `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
 unconditional exports, so `-e PORT=4000` reaches the server, and the
 `HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
@@ -3851,8 +3790,7 @@ worker` container opens no port and a `start console` container binds the
 console ports, so those roles disable or override it in their own deployment
 (the compose snippets in `worker.md` and `console-replicas.md`; the console
 one probes the auth console, which cannot be disabled). An empty or unknown
-command (the retired `client/admin-console`) is the CLI's to refuse, with its
-usage and exit 1.
+command is the CLI's to refuse, with its usage and exit 1.
 
 Each console IS its own service, so a shared listener would be the one place
 pretending otherwise; behind one origin the proxy routes each console's path
@@ -3883,16 +3821,14 @@ after both, but on an ALREADY-LISTENING server. That is why `mount` is a
 callback `HTTPModule` runs internally rather than a seam it hands back.
 `buildConsoleApplications` (`console/applications.ts`) derives each mount path
 through `assertConsolePath(name, url, publicUrl)`, which is the console
-url's path MINUS publicUrl's own. Both subtractions matter and each was a
-shipped defect: a console url carries the origin a BROWSER reaches it at,
-which the listener never sees, and under a sub-path deployment it carries
-publicUrl's path prefix, which the listener never sees either, because the
-proxy strips it before the request arrives exactly as it does for every
-server-core route (all of which are mounted root-relative). Mounting the
-full path put every console where nothing could reach it: `/console/admin`
-arrived and `/auth/console/admin` was mounted, so console pages answered 404
-while the API worked (issue #3531, a regression from D2-3, where server-core
-mounted at a constant prefix-free segment). Two urls are refused by name
+url's path MINUS publicUrl's own. Both subtractions matter: a console url
+carries the origin a BROWSER reaches it at, which the listener never sees,
+and under a sub-path deployment it carries publicUrl's path prefix, which the
+listener never sees either, because the proxy strips it before the request
+arrives exactly as it does for every server-core route (all of which are
+mounted root-relative). Mounting the full path puts every console where
+nothing can reach it — console pages 404 while the API works (#3531). Two
+urls are refused by name
 rather than mounted: one with no path of its own, which would have to own the
 API's own root, where it shadows the protocol routes and the page GETs
 redirect to themselves; and one outside publicUrl's prefix, which the proxy
@@ -3913,24 +3849,21 @@ role closes its listeners with active connections (`server.close(true)`): a
 console serves documents over keep-alive sockets, and waiting for them to go
 idle means waiting out the client's own timeout on every container stop.
 
-Three properties follow from there being no child, and the last two were live
-defects of the supervisor it replaced. **Signals and the exit code are the
-runtime's**, not a forwarding contract: `registerShutdownHandlers` tears the
-application down on SIGINT/SIGTERM, exits `1` on a second signal, and forces
-the exit after a 10s teardown timeout. **Configuration takes the ordinary
-precedence** (environment beats the configuration file, invariant 8): the
-supervisor used to force `PORT`/`HOST` from the `server.core` section onto the
-child, so an ambient `PORT` could not reach the server at all. **Nothing is
-resolved at
-runtime**: the migrations glob is anchored on server-core's package path, so
-`authup migration run` works from any cwd, and no `node_modules` walk decides
-what gets LAUNCHED (a console service still walks node_modules to find the
-BUNDLE it serves, anchored on its own package root for the same reason).
-Package selectors are gone with the supervisor (`authup start server.core` is
-refused as an unknown role, and a `client.admin-console` config section is
-simply not read).
+Three properties follow from there being no child process. **Signals and the
+exit code are the runtime's**, not a forwarding contract:
+`registerShutdownHandlers` tears the application down on SIGINT/SIGTERM,
+exits `1` on a second signal, and forces the exit after a 10s teardown
+timeout. **Configuration takes the ordinary precedence**: environment beats
+the configuration file, and nothing forces `PORT`/`HOST` onto the server.
+**Nothing is resolved at runtime**: the migrations glob is anchored on
+server-core's package path, so `authup migration run` works from any cwd, and
+no `node_modules` walk decides what gets LAUNCHED (a console service still
+walks node_modules to find the BUNDLE it serves, anchored on its own package
+root for the same reason). There are no package selectors: `authup start
+server.core` is refused as an unknown role, and a `client.admin-console`
+config section is not read.
 
-**Worker mode (plans 095/096/097)** is the same binary and the same image,
+**Worker mode** is the same binary and the same image,
 started as `authup start worker` (container command: `start worker`). It is
 `createWorkerApplication()` in `app/factory.ts`:
 config, logger, cache, database and components, and nothing else, so it opens
@@ -3942,8 +3875,7 @@ default mode runs the worker alongside the API while it is true (so a single
 `start` process needs nothing set), an API replica hands the sweeps over by
 setting it false, and worker mode REQUIRES it (`ComponentsModule({ required:
 true })` throws at boot, since a process started for nothing but the sweeps
-must not come up idle). That replaced a `componentsEnabled` key the worker
-role ignored. Worker mode **never** applies migrations regardless of the second key: its
+must not come up idle). Worker mode **never** applies migrations regardless of the second key: its
 `DatabaseModule` migrate override is `verifySchemaOrSynchronize` (shared with
 the flag-off boot, `app/modules/database/migration.ts`), which runs
 `assertNoPendingMigrations` and fails the boot when the chain is behind. That
@@ -3956,15 +3888,14 @@ one info line naming what it registered, which on a worker is the only line a
 healthy boot writes (the sweeps log nothing per tick and the schema-verify
 lines are debug).
 
-**Console replica sets (plan 099 PR 1, made structural by plan 101 D2-3).**
+**Console replica sets.**
 Every served console lives under the one `/console` prefix
 (`adapters/http/constants.ts` on the API side, the same literal as each
 service's base path), so the consoles are served from their own processes on
 the ONE origin: `authup start core` for the API set, `authup start console`
 for the console set, and the proxy routing `/console/**` to the latter. **The two
 cookie-mode paths per console are the exception and stay on the API set**
-(`/console/<name>/login/start` and `/console/<name>/callback`, plan 101
-invariant 3), because the pending-login cookie has to be issued on the
+(`/console/<name>/login/start` and `/console/<name>/callback`), because the pending-login cookie has to be issued on the
 origin that reads it back, so the proxy needs a rule for those two exact
 paths. Cookie mode otherwise holds unchanged, since `isSameOriginRequest`
 compares against `publicUrl` and the session cookie path is the deployment
@@ -3988,20 +3919,19 @@ exists, because the hosted login, consent and workflow pages are the
 issuance surface. `GET /` reports `features` per replica. The operator
 recipe is `docs/src/guide/deployment/console-replicas.md`.
 
-**Configuration is layered:** every service reads ONE file, `authup.yml`
-(plan 101 C-2, replacing the retired `authup.conf` family), on every CLI
-command; lookup defaults to the process cwd, overridable via
+**Configuration is layered:** every service reads ONE file, `authup.yml`, on
+every CLI command; lookup defaults to the process cwd, overridable via
 `--configDirectory` / `--configFile`, and environment variables always beat
 file values. Discovery is narrowed to the root file name via a custom
 confinity `INamingScheme` (`read/fs.ts`): confinity's own convention also
 matches `authup.<name>.<ext>` and nests such a file under the name its
 filename carries, which with the whole document read as one tree would let
 a second file place keys at the document root. `.conf` is off the extension
-list, and a retired file left in the discovery directory is reported once
-on startup, because the failure is otherwise silent (the server simply
+list, and an `authup.conf` file left in the discovery directory is reported
+once on startup, because the failure is otherwise silent (the server simply
 boots on its defaults).
 
-**The config schema is one registry (plan 101 C-1).**
+**The config schema is one registry.**
 `@authup/server-config` declares every key of the document once as a
 `SchemaEntry`, and `app/modules/config/constants.ts` selects the ones
 this service reads: the zod `type`, the `default` (a static value, or a
@@ -4028,7 +3958,8 @@ as `authup config validate` refuses it. The file read is what makes that
 necessary: the env readers coerce and skip a bad value, but
 `readSchemaFromFileTree` hands values over verbatim, and server-core's own
 read never mounts the theme section or a console's port, so a `theme:
-fragmentsEnabled: no` used to boot every console with fragments enabled.
+fragmentsEnabled: no` would otherwise boot every console with fragments
+enabled.
 
 **A registry is shaped like the config it describes, and a SECTION is a
 nested registry.** So server-core reads its own two sections flat, in its
@@ -4052,10 +3983,9 @@ deployment-wide `host` at the document root (env `HOST`, declared exactly
 once there) unless it names its own. So one line binds server-core and all
 three console services. Inheritance settles in `resolveSchemaData`, over
 merged data, because seeing what the other key RESOLVED to is the whole
-point: the predecessor `alt` was a source-address chain applied during the
-file and environment reads, so it could only borrow another key's path and
-variable, never its computed value, and it needed its own recursion in three
-passes to do it. `port` deliberately has no counterpart: three listeners
+point: a source-address chain applied during the file and environment reads
+could only borrow another key's path and variable, never its computed value.
+`port` deliberately has no counterpart: three listeners
 cannot share one.
 
 **Where a key sits in `authup.yml` follows from the section it is declared
@@ -4065,7 +3995,7 @@ location onto every entry that does not spell one, so `core.port` and
 name, rather than repeated per key. An entry spells a `path` of its own only
 to sit outside its section, which today is the deployment-wide `host`. A
 section is per CONSOLE, never per implementation package, and no environment
-variable name ever changed, so env-driven deployments feel nothing. **Config follows the code** (plan 101 D2-3): the theme
+variable name ever changed, so env-driven deployments feel nothing. **Config follows the code**: the theme
 pair (`theme.directoryPath` / `theme.fragmentsEnabled`) and the three
 `<name>Console.path` keys LEFT server-core's registry for the
 packages that read them, while `adminConsole.url` and
@@ -4107,34 +4037,25 @@ the root section plus core plus the five console-reference keys it needs to
 redirect and to land a login; a console takes `publicUrl`, the theme pair
 and its own section.
 
-**Every section sits at the document ROOT, with no `server.` wrapper.** The
-four service sections carried one until the prefix was dropped, and it never
-discriminated: there is no `client.` sibling and cannot be (plan 081 retired
-`client.admin-console`, and the CLI refuses `client/admin-console` as an
-unknown command), so a
-namespace with one member is not one. It was also only half applied, since
-`theme` and the seven deployment keys always sat at the root, and it made the
-document the odd surface out: `SECTION_KEY` and `AuthupConfig` were already
-`core` / `adminConsole`, and no environment variable ever carried a `SERVER_`
-qualifier. The docker entrypoint's `server/core` was a service SELECTOR and
-never followed the section anyway; it is deprecated on its own schedule (see
-*Process topology*). The `server.` prefix was never
-released (it arrived with `authup.yml` in plan 101 C-2 and left in the same
-beta), so there is no migration path and none is offered: the file read is
-permissive, so a document still carrying `server:` has its whole subtree
-skipped in silence.
+**Every section sits at the document ROOT, with no `server.` wrapper.** A
+namespace with one member is not one: there is no `client.` sibling and cannot
+be (the CLI refuses `client/admin-console` as an unknown command), `theme` and
+the seven deployment keys sit at the root, `SECTION_KEY` and `AuthupConfig`
+are `core` / `adminConsole`, and no environment variable carries a `SERVER_`
+qualifier. The docker entrypoint's `server/core` is a service SELECTOR rather
+than a section, deprecated on its own schedule (see *Process topology*). The
+file read is permissive, so a document carrying `server:` has its whole
+subtree skipped in silence.
 
 That is the whole point of the shape: a service that names key names cannot
 mis-spell a path, an environment variable or a reader, because it spells
-none of them. The predecessor had each package declare what it read and
-`composeSchemas` assert that overlapping declarations agreed. That held for
-path, environment variable, default and reader, and not for the zod type or
-the description (the account console's `trustedOrigins` accepted values
-server-core refused), and it could not see an OMISSION at all: a package
-that simply never declared a shared key read its default in silence.
-`composeSchemas` is gone with the problem it solved.
+none of them. The alternative — each package declaring what it reads, with a
+composition step asserting that overlapping declarations agree — holds for
+path, environment variable, default and reader, but not for the zod type or
+the description, and it cannot see an OMISSION at all: a package that never
+declares a shared key reads its default in silence.
 
-**The document's types are authup's own.** Eleven keys used to be typed
+**The document's types are authup's own.** Eleven keys would otherwise be typed
 against the library that eventually consumes them: `db` against typeorm,
 `redis` against `@authup/server-kit`, `smtp` against server-core's mail
 adapter, the seven `middleware*` against six `@routup/*` packages. A leaf
@@ -4238,7 +4159,7 @@ Session cookies are scoped to the deployment base path*); the residual
 corner is a console visit finding no own cookies while the host app's
 root-path records exist, which the console still hydrates.
 
-### Development mode (`authup dev`, plan 102)
+### Development mode (`authup dev`)
 
 **EXPERIMENTAL**, on the console-theming precedent above: shipped
 deliberately unstable, because the two parts most likely to be reshaped are
@@ -4267,7 +4188,7 @@ it. Vite runs with `appType: 'custom'` for exactly that reason: with
 `spa` it would answer the shell itself, bypassing the console service and
 silently dropping the theme, the account console's `ref` validation and the
 console security headers (`cache-control: no-store`, `x-frame-options:
-DENY`). All of that was confirmed against a live server (plan 102 task 9).
+DENY`). All of that was confirmed against a live server.
 
 **Three seams, one per console kind**, all optional and all defaulting to
 today's behaviour:
@@ -4301,8 +4222,8 @@ today's behaviour:
   onto a `src/` the tarball does not ship (`files: ["dist"]`, 0 `src/`
   entries) and died with `ERR_MODULE_NOT_FOUND`. The map also carries a
   `default` alongside `import`, so a non-`import` resolver still reaches the
-  ESM entry rather than falling off the end of an exports map that used to
-  list only three conditions.
+  ESM entry rather than falling off the end of an exports map listing only
+  three conditions.
 
 **Because everything lands on one origin, dev exercises the COOKIE-SESSION
 path**, not the cross-origin browser-PKCE fallback the standalone
@@ -4329,9 +4250,8 @@ happens immediately before each server binds and never for all three consoles
 at once, since nothing reserves a port between the probe and the bind, so
 resolving them together would hand the same number to every console. The
 residual risk is a race in that window, which is far rarer than the collision
-it replaces; the predecessor `assertHmrPortFree` refused instead, which is why
-vite reporting `EADDRINUSE` through `config.logger.error` and then carrying on
-mattered so much.
+it replaces. Refusing to start instead would be worse: vite reports
+`EADDRINUSE` through `config.logger.error` and then carries on.
 
 **Two guards make the dev servers safe to put on this listener, and both are
 load-bearing rather than belt-and-braces.** A vite dev server ordinarily
@@ -4437,7 +4357,7 @@ easy to regress:**
   it from. It is a packaging defect worth its own fix, filed separately
   rather than papered over here.
 
-## Authorize Realm Binding (plan 041)
+## Authorize Realm Binding
 
 The authenticated identity's realm MUST equal the client's realm — an identity
 cannot authorize (or redeem a code / refresh a token) against a client in
@@ -4456,7 +4376,7 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
    (the client realm the code-request verifier stamped). The gate reads the
    scalar `realmId` column, not the `realm` relation — the relation may not
    be loaded on the resolved identity. An identity carrying no `realmId`
-   fails closed the same way (plan 047.6 — a clean `login_required`, never a
+   fails closed the same way (a clean `login_required`, never a
    raw TypeError/500); the code issuer keeps its own null-guard on the loaded
    relation (it stamps `realm_name`) and fails closed with `invalid_request`.
 2. **`/token` code redemption** — the code verifier's `realmId` option (fed
@@ -4469,8 +4389,7 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
    exempt — the secret proves identity, and the documented cross-realm password
    grant (UUID user + master client) relies on that exemption.
 
-Deliberate breaking change: master-realm admins can no longer ride one
-built-in client into other realms' apps. A name-identified client at
+Master-realm admins cannot ride one built-in client into other realms' apps. A name-identified client at
 `/authorize` now also requires a realm hint (`invalid_request` otherwise —
 client names are only unique per realm, and every realm carries the
 same-named system clients, so a bare name is ambiguous). All SSR auth pages emit
@@ -4480,12 +4399,12 @@ gating is only a defense when framing is denied).
 
 Ending a lingering authup session on a downstream app's logout is **not** part
 of this gate — it belongs to standard OIDC RP-Initiated Logout
-(`end_session_endpoint`, plan 041 PR C), so kit and non-kit RPs share one
+(`end_session_endpoint`), so kit and non-kit RPs share one
 mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
 call `DELETE /sessions/@me` (that endpoint remains the session-management API for
 revoking a specific session from the sessions UI).
 
-### Response types — code only (plan 042 item 3)
+### Response types — code only
 
 `response_type=code` is the **only** supported response type (OAuth 2.1
 posture). The implicit/hybrid response types (`token`, `id_token`, `none`) are
@@ -4496,13 +4415,12 @@ defense in depth, by `OAuth2Authorization.authorize()`
 the `/token` exchange mints and returns the id_token. Discovery
 `response_types_supported` advertises only
 `code`. Consequently the code-request verifier requires PKCE + `state` for
-public clients **unconditionally** (the former `willIssueCode` gate is gone —
-every verified request issues a code). The verifier also rejects a
-**pattern-less client** outright (plan 047.1, OAuth 2.1 posture): a client with
-no registered `redirectUri` patterns cannot use `/authorize` at all —
-previously its `data.redirect_uri` went unchecked (any value passed, merely
-flagged `redirectUriVerified=false`), letting a misconfigured client issue
-codes to arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
+public clients **unconditionally** (every verified request issues a code). The verifier also rejects a
+**pattern-less client** outright (OAuth 2.1 posture): a client with
+no registered `redirectUri` patterns cannot use `/authorize` at all, because
+an unchecked `data.redirect_uri` (any value passing, merely flagged
+`redirectUriVerified=false`) would let a misconfigured client issue codes to
+arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
 only when the request itself carries no `redirect_uri`. A `redirect_uri` that
 parses as a URL carrying userinfo (`https://u:p@app/cb`) is refused with
 `invalid_request` BEFORE the pattern match (#3455): `isSimpleURLMatch`
@@ -4511,8 +4429,8 @@ sites (`AuthorizeController.confirm`, the federated callback, and the
 end-session `post_logout_redirect_uri` behind `LogoutController`, whose
 `OAuth2EndSessionService.isValidPostLogoutRedirect` now drops such a
 candidate too) build the
-`Location` from the raw string, so the credential blob used to ride along.
-The matched value is now the navigated value. `ClientValidator` refuses to
+`Location` from the raw string, so the credential blob would otherwise ride
+along. The matched value is the navigated value. `ClientValidator` refuses to
 register a `redirectUri` / `postLogoutRedirectUri` pattern carrying userinfo
 for a different reason: `canonicalizePattern` drops a PATTERN's userinfo as
 well, so `https://u:p@app/**` would silently accept the bare origin while
@@ -4520,7 +4438,7 @@ reading as if it required credentials; refusing it makes the registration say
 what it matches. Custom-scheme and unparsable values keep their previous
 handling (verbatim match, and mismatch).
 
-### OIDC prompt surface & id_token claims (plan 041 PR B)
+### OIDC prompt surface & id_token claims
 
 `/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`
 (space-delimited `none|login|consent|select_account`; unknown tokens
@@ -4534,8 +4452,7 @@ continuing; `login_hint` pre-fills the identifier; `prompt=consent` suppresses
 the `builtIn` auto-consent. `buildAuthorizeURL` (kit) **defaults
 `prompt=select_account`** (overridable) so kit apps inherit account-switching.
 The chooser targets a **lingering** session only: `Authorize.vue` watches the
-kit store's `lastAuthOrigin` for a change to `login` during its mount (plan 045
-— the store stamps it at the END of a settled `login()`, so the signal is
+kit store's `lastAuthOrigin` for a change to `login` during its mount (the store stamps it at the END of a settled `login()`, so the signal is
 race-free against LoginForm unmounting; the store additionally exposes a
 presence-derived `status` ref: `unauthenticated | authenticating | restoring |
 authenticated`), so a just-completed credential entry (which IS the account
@@ -4544,22 +4461,20 @@ for the account just authenticated; the branch also waits for the store's `user`
 to resolve to avoid a "Continue as \<empty\>" flash — but only while resolution
 is genuinely in flight: once it settles without a user (a non-user client
 lingering session, or a failed `userInfo` lookup), the chooser renders a
-"use another account" escape hatch instead of spinning forever (plan 047.2 —
-`Authorize.vue` tracks this with a local `userSettled` ref over the store's
+"use another account" escape hatch instead of spinning forever (`Authorize.vue` tracks this with a local `userSettled` ref over the store's
 `resolve()` settling, since the #3215 store rewrite; a failure settles the
 chooser rather than latching it closed). The manual consent screen
 (`AuthorizeForm`) additionally renders a **"Signed in as X — Not you?"** chip
 (emits `switch` → local `store.logout()` → login form), so a wrong-account user
 can switch even when the RP sent no `prompt=select_account`. Prompt/error string
 comparisons use the `@authup/specs` `OAuth2AuthorizationPrompt` /
-`OAuth2ErrorCode` enums, not bare literals. **Dead-bearer resilience (plan 042
-item 13):** `AuthorizeForm`'s consent POST catch emits `loginRequired` on **both**
+`OAuth2ErrorCode` enums, not bare literals. **Dead-bearer resilience:** `AuthorizeForm`'s consent POST catch emits `loginRequired` on **both**
 a `login_required` body error **and an HTTP 401** — a bearer that died mid-flow
-(a session sweep, a sibling-tab logout, an account switch) previously fell into
-`autoConsentFailed`, rendering the manual consent screen whose retry re-POSTed
-the same dead bearer forever; now it falls back to re-authentication.
+(a session sweep, a sibling-tab logout, an account switch) falls back to
+re-authentication rather than to `autoConsentFailed`, whose retry would
+re-POST the same dead bearer forever.
 `AuthorizeForm`'s **deny/abort** path is gated on `redirectUriVerified` like
-every other redirect in the ladder (plan 047.1): with an unverified
+every other redirect in the ladder: with an unverified
 `redirect_uri` the form renders a stay-on-page notice instead of navigating
 with `error=access_denied` (a user-click open redirect otherwise).
 
@@ -4572,43 +4487,38 @@ Basic-auth authorize counts as "now"), and a violation throws
 (`PROMPT_LOGIN_MAX_AGE`, default 60s) — a documented stateless
 approximation, wired via the `AuthorizeController` → `HTTPOAuth2Authorizer` ctx
 alongside the injected `ISessionManager`. The window is the **deliberate
-contract**, pinned by tests (plan 047.A): a sub-window session satisfies
+contract**, pinned by tests: a sub-window session satisfies
 `prompt=login` without re-auth (it absorbs the hosted login→consent
 round-trip), an over-window session throws, and `max_age=0` is *stricter* than
 `prompt=login` (the documented inversion). Strict step-up =
 `PROMPT_LOGIN_MAX_AGE=0`.
 
-**id_token claims (bug fix + addition):** `auth_time` is now the session's
-creation instant (previously — wrongly — the token issuance time == `iat`), and a
-`sid` claim (= `session_id`) is added, consumed by RP-initiated logout (the
+**id_token claims:** `auth_time` is the session's creation instant, never the
+token issuance time, and a `sid` claim (= `session_id`) is present, consumed by RP-initiated logout (the
 `id_token_hint` names the session to revoke) and by back-channel logout
 (the `logout_token` names the session that ended; see *Back-channel logout*
 below). Both are `OAuth2TokenPayload` fields.
 
-**Minting site — the `/token` exchange, not `/authorize` (plan 042 item 6):**
+**Minting site — the `/token` exchange, not `/authorize`:**
 the id_token is minted inside the `authorization_code` grant
 (`OAuth2AuthorizeGrant.runWith`) **after** `resolveSession`, so its `sid` is
 **authoritative** — it references the real backing session in the reuse branch,
-the fallback-create branch, and the **federated IdP** flow alike (the last
-previously produced **no** id_token at all, since only
-`OAuth2Authorization.authorize()` minted one and the IdP callback bypassed it;
-since plan 094 that flow reaches `authorize()` through the hosted page, so it
-also carries a real `session_id` rather than falling back).
-`OAuth2Authorization.authorize()` no longer mints the id_token or holds an
-`openIdTokenIssuer` / `identityResolver`; instead it stamps the authentication
-instant onto the auth-code blob (`OAuth2AuthorizationCode.auth_time`, replacing
+the fallback-create branch, and the **federated IdP** flow alike (that flow
+reaches `authorize()` through the hosted page, so it carries a real
+`session_id` too). `OAuth2Authorization.authorize()` does not mint the
+id_token and holds no `openIdTokenIssuer` / `identityResolver`; it stamps the
+authentication instant onto the auth-code blob (`OAuth2AuthorizationCode.auth_time`, replacing
 the removed `id_token` field — cache blob, no migration) as the `auth_time`
 source, and the grant reads it back. `at_hash` (over the freshly-issued access
 token) is computed at the exchange, with the digest **derived from the
-id_token's signing `alg`** (plan 047.7 — `*256`→SHA-256, `*384`→SHA-384,
+id_token's signing `alg`** (`*256`→SHA-256, `*384`→SHA-384,
 `*512`→SHA-512, left half per OIDC Core §3.1.3.6; today all keys are RS256, so
 behavior is unchanged — the derivation exists so a future multi-alg key can't
 silently mint wrong hashes). No `c_hash` is minted — it only exists for the
 hybrid response types authup dropped (code-only). `nonce` rides from the code.
-The `openIdTokenIssuer` is wired into the `TokenController` authorize grant, and
-`codeIssuer.updateIdToken` is gone. This resolves the plan-041 residual where a
-sub/realm-mismatch fallback (or session-deleted-in-flight) left the id_token's
-`sid` pointing at a stale session.
+The `openIdTokenIssuer` is wired into the `TokenController` authorize grant, so
+a sub/realm-mismatch fallback (or a session deleted in flight) cannot leave the
+id_token's `sid` pointing at a stale session.
 
 **Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
 `prompt_values_supported` (`none`, `login`, `consent`, `select_account`) and
@@ -4618,7 +4528,7 @@ an RFC 7009 POST to `/token` never worked). An empty `max_age=` is treated as
 === 0` would otherwise silently force re-authentication).
 
 **`prompt=none` (silent auth) + `prompt=login` (re-auth) are handled in the
-hosted SSR kit `Authorize.vue`, NOT server-side (plan 042 item 10).** The
+hosted SSR kit `Authorize.vue`, NOT server-side.** The
 server GET cannot silently authenticate: a top-level `GET /authorize` browser
 navigation carries no bearer, and the one cookie credential that exists (plan
 088's console session) is denied on the OAuth2 issuance surface by design, so
@@ -4628,7 +4538,7 @@ not) is redirected to — owns the decision. The kit ladder, evaluated after the
 SSR app's router guard `await store.resolve()` settles the session:
 - **`prompt=none`**: not-logged-in / realm-mismatch → redirect
   `redirect_uri?error=login_required&state`; non-`builtIn` client →
-  the kit probes the persisted consent first (plan 055, see *OAuth2 Consent*)
+  the kit probes the persisted consent first (see *OAuth2 Consent*)
   and only redirects `consent_required` when no covering consent exists —
   a covering grant falls through to the auto-consent path and issues the
   code silently; `builtIn`
@@ -4641,16 +4551,15 @@ SSR app's router guard `await store.resolve()` settles the session:
 - **`prompt=login`**: forces the login form (with a re-auth banner,
   `authupClient.reauthText`) even for a logged-in user, until a fresh login on
   this page fires `LOGGED_IN`; the same banner path is reused when the POST
-  surfaces `login_required` mid-flow (replacing the old silent
-  `switchAccount`).
+  surfaces `login_required` mid-flow.
 
-**Known limitation (plan 047.C, accepted):** because the ladder is client-side,
+**Known limitation (accepted):** because the ladder is client-side,
 a JS-less or scripted `prompt=none` GET receives `200` HTML instead of an
 immediate error redirect — an interop/ergonomics gap only (every security
 backstop runs on POST `/authorize` + `/token` regardless of client JS). A
 server-side silent answer would require cookie-based session recognition on
 `/authorize`, deliberately avoided by the header-only auth/cors model; scoped
-separately as plan 063.
+separately.
 
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
 DTO** (`ClientSummary` = `id`/`name`/`displayName`/`builtIn`/`createdAt`) plus
@@ -4660,7 +4569,7 @@ to a signed-in user), `backchannelLogoutUri`, or the
 secret storage flags. `ClientEntity.secret` is additionally `select:false`, but
 the DTO must not rely on that alone.
 
-### RP-Initiated Logout — `end_session_endpoint` (plan 041 PR C)
+### RP-Initiated Logout — `end_session_endpoint`
 
 `GET`/`POST /logout` (discovery `end_session_endpoint`, **no feature flag**) is
 the RP-agnostic session-termination mechanism — the intended way a downstream
@@ -4669,7 +4578,7 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
 `OAuth2EndSessionService` (`core/oauth2/end-session/`), wired via
 `createLogoutController`. Security posture (all enforced, unit-tested matrix):
 
-- **Request validation (plan 042 item 4):** `OAuth2EndSessionRequestValidator`
+- **Request validation:** `OAuth2EndSessionRequestValidator`
   (`core/oauth2/end-session/validator.ts`) runs over the merged body+query
   before anything else — length caps on every param (`id_token_hint` ≤ 4096,
   `post_logout_redirect_uri` ≤ 2000 + URL check, `state` ≤ 2048), blank params
@@ -4700,7 +4609,7 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   exp-bypass stays scoped to the single end-session call. A hint whose `kind
   !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
   so accepting them would let a leaked access token force a logout). `aud` vs
-  request `client_id` cross-check (plan 047.4/047.B): when a **verified** hint
+  request `client_id` cross-check: when a **verified** hint
   is paired with a request `client_id`, the `client_id` MUST match the hint's
   `aud` — a name-form `client_id` is first **resolved to its client UUID**
   (realm scope: the request's `realm_id`/`realm_name` hint, else the *verified*
@@ -4713,7 +4622,7 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   with no realm key anywhere fails closed as well (ambiguous — client names
   are only unique per realm; same rule as the /authorize verifier). A UUID `client_id` —
   including the sole-`aud`-derived one — resolves globally as before.
-- **Bounded expired-hint window (plan 042 item 2):** with config
+- **Bounded expired-hint window:** with config
   `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
   `END_SESSION_HINT_GRACE_PERIOD`), a hint expired beyond the window counts as
   **unverified** (`isWithinHintGraceWindow`; exp-less payloads fail closed) —
@@ -4730,8 +4639,8 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   `isSimpleMatch`es a registered pattern in the client's dedicated
   `post_logout_redirect_uri` column (open-redirect guard); otherwise dropped,
   and `state` rides only alongside a validated redirect. **The column is
-  separate from `redirectUri` (plan 042 item 9)** — login and logout redirect
-  surfaces are no longer conflated: a URI that matches the login `redirectUri`
+  separate from `redirectUri`** — login and logout redirect
+  surfaces are not conflated: a URI that matches the login `redirectUri`
   but not the post-logout allow-list is rejected. It is a nullable
   `text` column on `ClientEntity` + core-kit `Client` + `ClientValidator`
   (the 2000-char cap is on the inbound `post_logout_redirect_uri` **request
@@ -4762,7 +4671,7 @@ The SSR page is `apps/client-auth-console/src/pages/logout.vue` → kit
 `AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
 `client-web-kit`. **`AEndSessionForm` auto-clears local state on mount ONLY when
 `serverRevoked && hintSub === store.user.id && hintSubKind === 'user'`** — the
-revoked subject must be the browser's own user, kind included (plan 047.5; a
+revoked subject must be the browser's own user, kind included (a
 missing `hintSubKind` fails closed — no auto-clear). Without that gate, a
 cross-site `GET
 /logout?id_token_hint=<attacker's own id_token>` (which revokes the attacker's
@@ -4774,8 +4683,7 @@ forwards `hintSub` + `hintSubKind` (only for a verified hint) and the validated
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
 
-**Kit store retains the id_token; client-admin-console round-trips through `/logout`
-(plan 042 items 8a + 8).** The `@authup/client-web-kit` store now keeps the
+**Kit store retains the id_token; client-admin-console round-trips through `/logout`.** The `@authup/client-web-kit` store now keeps the
 grant response's `id_token` as an `idToken` ref (setter emits
 `StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
 `CookieName.ID_TOKEN`, cleared in `cleanup()`). `applyTokenGrantResponse`
@@ -4783,7 +4691,7 @@ grant response's `id_token` as an `idToken` ref (setter emits
 returns no id_token) rather than clearing it; to keep that retain safe,
 `store.login()` runs `cleanup()` before applying the password-grant response —
 mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
-onto a newly-authenticated user (plan 047.3). This gives every kit RP an
+onto a newly-authenticated user. This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
 degrade to the click-gated confirm page. `apps/client-admin-console/src/pages/logout.vue`
 uses it on the standalone (JS-token) path; served on the IdP origin the
@@ -4797,7 +4705,7 @@ local-only `store.logout()`, then hard-redirects to
 postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
 bounces straight back; without it the server's confirm page returns to
 `/login`. **It passes NO `client_id`**: omitting it lets the service resolve
-the client from the hint's sole `aud` (the client **UUID**). Since plan 047.B a
+the client from the hint's sole `aud` (the client **UUID**). A
 name-form `client_id` (`admin-console`) would also work — the service resolves it to the
 UUID before the `aud` cross-check — but omission stays the simplest correct
 call (no name→realm ambiguity to think about). `store.logout()` remains
@@ -4805,7 +4713,7 @@ local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
 
-### Back-channel logout (OIDC Back-Channel Logout 1.0, plan 064)
+### Back-channel logout (OIDC Back-Channel Logout 1.0)
 
 `Client.backchannelLogoutUri` (`auth_clients.backchannel_logout_uri`, nullable
 `varchar(2000)`; one absolute http(s) URL of at most 2000 characters, no
@@ -4823,7 +4731,7 @@ other RP on that session that it ended.
   the notifier for the audience (`resolve`), removes the row, and only then
   delivers (`notify`). The order is load-bearing: the audience is every
   distinct non-null `auth_session_tokens.client_id` the session issued tokens
-  for (plan 086's per-token attribution) that carries a
+  for (the per-token attribution) that carries a
   `backchannelLogoutUri`, and those rows cascade-delete with the session, so
   a read after the remove finds nothing. `SessionService.delete`,
   `deleteManyForSelf` and `deleteManyByQuery` called `repository.remove`
@@ -4901,7 +4809,7 @@ other RP on that session that it ended.
   The URI is an `AClientForm` field, absent from `buildSystemClientAttributes`
   (a system client has no RP behind it) and from the anonymous
   `ClientSummary`.
-- **Every delivery leaves an `auth_events` row (plan 064 Stage 3).** The
+- **Every delivery leaves an `auth_events` row.** The
   notifier records `backchannelLogout` for a `2xx` and
   `backchannelLogoutFailed` for anything else, one row per client, so an
   operator can list which RPs actually received the push
@@ -4930,7 +4838,7 @@ other RP on that session that it ended.
   handed to the notifier by the `AuthenticationModule`, so a `record()`
   failure is swallowed there and never reaches the revoke.
 
-## Application Access Policy (plan 052)
+## Application Access Policy
 
 `Client.accessPolicyId` is an optional FK onto `auth_policies`
 (`ON DELETE SET NULL`) gating **who may obtain a token for that client** via
@@ -5005,13 +4913,13 @@ neutral message: no identity/policy detail, no enumeration oracle).
   same model as any other access change. A future continuous-enforcement
   option would gate refresh too.
 
-## OAuth2 Consent (plan 055)
+## OAuth2 Consent
 
 `auth_consents` persists "remember my consent" as **per-scope rows**: one row
 per `(client_id, sub, sub_kind, scope)` (4-column unique index; single
 lowercase scope token per row, `varchar(128)` = `ScopeEntity.name` bound;
 CASCADE FKs to client + realm; polymorphic subject like sessions). A dormant
-`expires_at` (`varchar(28)`, always null in Stage 1) is honored by the
+`expires_at` (`varchar(28)`, always null today) is honored by the
 covering check so expiring consent is a data change, not a schema change.
 Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 `ConsentEntitySubscriber` under `adapters/database/domains/consent/`.
@@ -5034,7 +4942,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   rows, parity with auto-consent) and wrapped try/catch (a consent-write
   failure never fails an issued code). Deliberately NOT recorded at
   `/token`: no synthetic consent for a flow that never showed a screen. A
-  federated login stopped being such a flow with plan 094. Its code is issued
+  federated login stopped being such a flow. Its code is issued
   by this very site now, so it writes its rows here like any other.
 - **Covering read is cached:** `findAllBySubjectClient` rides a 60s query
   cache keyed `CachePrefix.CONSENT_COVERING` `<client_id>:<sub_kind>:<sub>`,
@@ -5097,7 +5005,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `subKind = user`, so deleting a user cascade-drops its consent rows. A
   non-user subject (client) leaves `userId` null and its rows are
   cleaned up when the client/realm is deleted (both CASCADE). No expiry sweep
-  yet (`expires_at` is always null in Stage 1) — a Stage-2 addition.
+  yet (`expires_at` is always null today) — a later addition.
 - **Over-long scope token** (>128 chars, only reachable via a non-standard
   scope riding the `global` verifier bypass) is dropped at normalization
   rather than overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`,
@@ -5106,13 +5014,203 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
+## Device Authorization Grant (RFC 8628)
+
+A device with no browser POSTs `/device_authorization` and receives a `device_code` /
+`user_code` pair; the person opens `<publicUrl>/device`, logs in through the ordinary kit
+login ladder, enters the code and approves or denies; the device polls `/token` with
+`grant_type=urn:ietf:params:oauth:grant-type:device_code`. Everything is a cache blob under
+`CacheOAuth2Prefix`, like the authorization code, the console login and the federated login:
+no table, no migration, no config key, no new `EventName`, no new metric.
+
+- **The grant is OPT-IN per client.** `assertClientGrantAllowed` carries `OPT_IN_GRANT_TYPES`
+  (`core/oauth2/client/grant-type.ts`, today `DEVICE_CODE` alone): a grant in that set is
+  refused with `unauthorized_client` on a null or empty `grantTypes` column, the one exception
+  to null-allows-all. Enabling it on every existing client at upgrade would put the RFC 8628
+  §5.4 remote-phishing surface on clients that never asked for it, and a deployment listing
+  the URN on no client has the grant off, so no feature flag exists. Keycloak's per-client
+  toggle is the same posture. The `AClientForm` grant-types hint says so in every locale.
+- **Scope is rejected on excess, never clipped.** `resolveGrantedScope(scopeNames, requested)`
+  (`core/oauth2/scope/helpers.ts`) is the one rule for the code-request verifier and the
+  device request alike: a requested scope must be covered by the client's bound scopes or
+  carry `global`, else `insufficient_scope`; an absent request grants every bound scope.
+  Clipping was rejected because one issuer answering the same `scope=` two ways by grant is
+  a documentation problem forever.
+- **No PKCE, and the artifact is tightened past the RFC floor instead.** There is no redirect
+  for PKCE to protect. The controls: a 256-bit `device_code` (`randomBytes(32).hex`), a
+  34.6-bit `user_code` (8 symbols over `BCDFGHJKLMNPQRSTVWXZ`, 600 s), bearer-gated and
+  per-actor throttled lookups, single-use redemption by `cache.pop`, client binding at every
+  poll, per-client opt-in. `normalizeDeviceUserCode` uppercases, strips every
+  non-alphanumeric character and answers `null` unless the result matches
+  `^[BCDFGHJKLMNPQRSTVWXZ]{8}$`, so a malformed guess never reaches the cache; the code is
+  rendered `XXXX-XXXX` and typed however the person likes.
+- **No auto-consent, `builtIn` included.** The person on the page has no context for WHICH
+  device is asking, so an explicit Approve is the only defence the page can offer.
+  `AuthorizeForm.autoConsent` is not reused. Consent rows ARE recorded after approval for a
+  non-`builtIn` client (the account console's Applications page lists the device app), but a
+  covering row never skips the screen.
+
+**Threats and controls (RFC 8628 §5).**
+
+| Threat | Control | Where |
+|---|---|---|
+| §5.1 user code brute forcing | 34.6 bits, 600 s, lookups for an authenticated user only, misses counted per ACTOR (10 per 600 s, the MFA throttle shape), fail closed on a cache outage (a thrown throttle read answers 429 with the whole window), one neutral `invalid_grant` for unknown / expired / decided / malformed / non-string codes, one bounded `AUTHORIZE_FAILED { reason: 'userCode' }` row per miss | `user-code.ts`, `OAuth2DeviceAuthorizationService.resolve`, `ForceUserLoggedInMiddleware` on the three page routes |
+| §5.2 device code brute forcing | 256 bits, keyed by itself, never derivable from `user_code`, bound to `client_id` + `realm_id`, popped at redemption | the repository, `OAuth2DeviceCodeVerifier` |
+| §5.3 / §5.6 device trustworthiness | a confidential client authenticates at BOTH endpoints; a public client identifies by `client_id` and a supplied secret is refused; opt-in per client | `DeviceAuthorizationController.request`, `HTTPOAuth2DeviceCodeGrant`, `assertClientGrantAllowed` |
+| §5.4 remote phishing | the page shows client, realm and scopes and requires an explicit Approve; the approval runs the `/authorize` admission gates (realm binding, MFA backstop, access policy); with `verification_uri_complete` the code is still displayed and confirmed | `ADeviceVerifyForm`, `OAuth2DeviceAuthorizationService.approve`, `OAuth2AuthorizationGate` |
+| §5.5 session spying | `device_code` never enters a browser; the page handles `user_code` only, in JSON POST bodies; `/device_authorization` is in `OAUTH2_ISSUANCE_PATHS` (prefix match), so the console session cookie cannot become a device token | `issuance.ts` |
+| §3.5 polling abuse | `slow_down` enforced with a per-`device_code` set-if-absent key over a FIXED 5 s window; a refused poll leaves the standing window | `touchPoll` |
+| confused deputy across realms | approver `identity.data.realmId === blob.realm_id` at lookup, approve and deny (`login_required`, no identity data); at redemption `blob.client_id === client.id` and `blob.realm_id === client.realmId` (`invalid_grant`, byte-identical to "unknown") | `resolve`, verifier step 2 |
+
+**Accepted residual oracle.** A foreign-realm user holding a VALID code receives
+`login_required` (the realm-mismatch card) while an invalid code receives the neutral error,
+so an authenticated attacker in any realm can tell the two apart for up to 10 guesses per 10
+minutes. Accepted for 34.6-bit codes behind the per-actor throttle; the card is deliberate UX.
+
+**Artifacts.** `core/oauth2/device-authorization/` holds the constants (600 s lifetime, 5 s
+interval, 300 s grace, 5 mint attempts, 10 misses per 600 s), the blob types (a discriminated
+union: `status` narrows, so `OAuth2DeviceCodeApproved` reads `sub` / `auth_time` without a
+guard and a deny writes `{ status: 'denied' }` and nothing else), the `IOAuth2DeviceCodeRepository`
+port, `IOAuth2DeviceCodeVerifier` / `IOAuth2DeviceAuthorizationService` and their classes, and the
+user-code helpers. The adapter `OAuth2DeviceCodeRepository` (`app/modules/oauth2/repositories/device-code/`,
+DI `OAuth2InjectionToken.DeviceCodeRepository`) writes five key families, every `ttl` handed to
+`ICache` in MILLISECONDS (the constants are seconds like the wire's `expires_in`):
+
+| Prefix | Key | Value | TTL |
+|---|---|---|---|
+| `oauth2_device_code` | `<device_code>` | the immutable request | 900 s (lifetime + grace) |
+| `oauth2_device_user_code` | canonical `user_code` | `<device_code>` | 600 s, written with `add` so a collision is refused and the caller regenerates |
+| `oauth2_device_decision` | `<device_code>` | the decision | remaining lifetime + grace, written ONCE with `add` |
+| `oauth2_device_poll` | `<device_code>` | `1` | 5 s, fixed |
+| `oauth2_device_lookup_attempt` | `actor:<sub>` / `lock:actor:<sub>` | counter / deadline | 600 s |
+
+The blob is never rewritten: the decision is its own write-once key and reads return the merged
+view, which is what makes the concurrency trivial with the primitives `ICache` has (`add` is
+`SET NX`, `pop` is `GETDEL`, there is no compare-and-set). The 300 s grace is what makes
+`expired_token` reachable at all; without it the swept blob collapses into `invalid_grant`.
+Every TTL derived from `expires_at - now` is guarded, so no key is written with `ttl <= 0`
+(redis refuses a non-positive `PX`, the memory adapter would store forever). Two deliberate
+ceilings carry `ponytail:` markers in the adapter: the poll window is FIXED rather than
+escalating (the RFC makes the +5 s the client's duty; the server only refuses; an abusive
+client costs one cache `add` per poll, which the IP rate limiter bounds), and misses are
+throttled per ACTOR only (a bearer-gated guess is bounded by accounts held, not by codes; a
+per-code counter is the upgrade if a distributed guess across many accounts ever matters).
+
+**The admission gate is shared with `/authorize`.** `OAuth2AuthorizationGate`
+(`core/oauth2/authorization/gate.ts`, `IOAuth2AuthorizationGate`) is the body of
+`authorizeInner` from the identity check through the access-policy throw: realm binding,
+`authTime` / session, the MFA backstop with the `ext` exemption, the `acr_values` step-up,
+`prompt=login` / `max_age`, the access policy. `OAuth2Authorization` builds it from the ctx it
+already receives and calls `gate.evaluate(data, identity, options)` between its request checks
+and the code issue. A device approval hands the gate `{ realm_id: code.realm_id }` and
+`{ sessionId, client }`: the prompt and step-up gates are inert (a device request carries no
+`prompt`, `max_age` or `acr_values`) and the access-policy error carries no redirect
+(`redirectUriVerified` is never set). `classifyAuthorizeFailure` (`authorization/helpers.ts`)
+maps a refusal onto its `authup_authorize_total` outcome label so both callers record the
+same labels; the approval additionally records `login_required` when the shared `resolve`
+refuses a foreign-realm user, since that refusal runs before the gate.
+
+**The service** (`OAuth2DeviceAuthorizationService`). `issue` freezes the granted scope and
+mints up to five `(device_code, user_code)` pairs against an index collision, then answers the
+RFC response (`verification_uri = <publicUrl>/device`, `verification_uri_complete` with the
+formatted code, 600 / 5); no event, since the request is anonymous and unbounded. The shared
+`resolve(userCode: unknown, identity)` reads the actor throttle first, normalizes, looks the
+index up, treats a non-pending or expired blob and a missing or inactive client as a miss too,
+counts the miss and records the row, and runs the realm binding LAST, so the neutral refusal
+never says whether a code exists. `lookup` projects `ClientSummary` + `RealmSummary` + `scope`
+(never `redirectUri`, `grantTypes`, `accessPolicyId` or the secret flags). `approve` runs the
+gate, writes the approved decision (`sub`, `sub_kind: user`, the approver's bearer
+`session_id`, the gate's `auth_time`, the session's `auth_method`), drops the user-code index,
+records consent for a non-`builtIn` client (a consent failure is a warn line, never a failed
+approval) and an `AUTHORIZE { reason: 'device', grantType, scope }` row, and
+`recordAuthorize('issued')`; a second decision of any kind answers the neutral `invalid_grant`.
+`deny` writes `{ status: 'denied' }`, drops the index, records
+`AUTHORIZE_FAILED { reason: 'denied' }` and `recordAuthorize('denied')`. Request attribution
+is not automatic: the ctx carries `requestContext` (wired to `useRequestEventContext`), and
+every `record()` spreads `sessionId` plus the four `request*` fields from it. Neither code
+ever lands in `data` (`sanitizeEventData` is an allow-list).
+
+**The verifier** (`OAuth2DeviceCodeVerifier.verify(deviceCode, { clientId, realmId })`), in
+order: unknown → `invalid_grant`; `client_id` or `realm_id` mismatch → the IDENTICAL
+`invalid_grant`, blob untouched and poll key NOT armed (a leaked code presented by another
+client must not burn or slow the legitimate flow); past `expires_at` → `removeById`, then
+`expired_token`; `touchPoll` refused → `slow_down`, leaving the standing window; no decision →
+`authorization_pending`; denied → pop, `access_denied` once, then `invalid_grant`; approved →
+pop, or `invalid_grant` when the pop lost a race. `HTTPOAuth2DeviceCodeGrant` extends
+`OAuth2AuthorizeGrant` over a field-compatible blob (`toAuthorizationCode`): after the `/token`
+client authentication, token binding, the opt-in check and the verify, it runs the
+access-policy backstop over the blob scalars (deny → `invalid_grant`) and hands the result to
+`runWith`, so session reuse, id_token, `at_hash`, `auth_session_tokens` rows and refresh
+rotation are inherited rather than written. There is deliberately no core grant class.
+
+**Session semantics.** The approval binds the hosted page's bearer session, so a lingering
+hosted login approves under its existing session and the redemption reuses that row
+(`resolveSession`: `session_id` present and `sub` / `subKind` / `realmId` equal); otherwise a
+session is created from the DEVICE's request with the blob's `auth_method`.
+`auth_sessions.client_id` is never written (subject FK); each token row carries the device
+client under `auth_session_tokens.client_id`, so back-channel logout reaches the device's RP.
+One consequence: the device's tokens share the approver's browser session, so ending that
+session (an `id_token_hint` logout, `DELETE /sessions/:id`) ends the device's access too.
+
+**Wire.** `POST /device_authorization` (form-encoded; `client_id` via body or Basic,
+`client_secret` for a confidential client, `scope` up to 512 characters, `realm_id` /
+`realm_name` with the `/token` semantic; `Cache-Control: no-store`; no `prompt`, `max_age` or
+`acr_values`) → `{ device_code, user_code, verification_uri, verification_uri_complete,
+expires_in: 600, interval: 5 }`. The realm hint is resolved before the client, and a
+UUID-identified client may sit outside the hinted realm, so the blob's `realm_name` comes from
+an explicit second resolve, never from the authenticated client's unloaded relation.
+`GET /device` is a stateless hop to `<authConsoleUrl>/device` carrying `?user_code=` verbatim,
+and is NOT an issuance path. The three page calls are `POST /device_authorization/lookup |
+approve | deny` with `{ user_code }` (forwarded untyped; the service refuses a non-string as
+one more miss), users only. The `/token` answers, in evaluation order: `invalid_client` 401,
+`unauthorized_client`, `invalid_grant` (unknown, redeemed, flushed, mismatch),
+`device_code_expired` (`data.error: expired_token`, its own authup code because
+`expired_token` is the 401 JWT code), `slow_down`, `authorization_pending`, `access_denied`,
+`invalid_grant` (lost race or backstop), all 400. `OAuth2DeviceAuthorizationError` (`@authup/specs`,
+`pending()` / `slowDown()` / `expired()`, no `interval` field: the RFC defines none) and
+`DeviceVerificationThrottledError` (`@authup/errors`, 429 `device_verification_throttled`,
+`data.retryAfter` = the window's remainder; the kit guards on its marker, never on the status)
+carry them. Discovery gains `device_authorization_endpoint`, `grant_types_supported` (all
+five) and, under `mtls_endpoint_aliases`, the device endpoint (a `tls` client authenticates
+there exactly as at `/token`). `GET /` and the realm record's `meta.endpoints` stay unchanged:
+they enumerate discovery documents, not grant endpoints.
+
+**The hosted page.** server-core's `GET /device` hands over to `@authup/server-auth-console`,
+whose `/device` handler renders the bundle with `{ features, userCode }` (`readDeviceUserCode`:
+uppercased, `[^A-Z0-9]` stripped, capped at 16 characters, else undefined; no API call beyond
+the memoized `GET /`), render contract **4**. `apps/client-auth-console`'s `pages/device.vue`
+renders the kit's `ADeviceVerifyForm` (`components/workflows/device/`), a ladder keyed on its
+own `step` rather than on `AAuthorize`'s `codeRequest`: code (prefilled from the prop and still
+rendered, §3.3.1) → login (`ALoginForm`, password only: a federated login needs a code request
+and none exists here) → lookup (`invalid_grant` → back to the code with `DEVICE_CODE_INVALID`,
+the throttle marker → `DEVICE_VERIFY_THROTTLED`, `login_required` → the realm-mismatch card) →
+the MFA challenge or enrollment when `GET /authenticators/challenge` requires it → confirm
+(client name, scope chips, the "Not you?" chip, Approve / Deny; `client.builtIn` is never read)
+→ done. Register and password-forgot links carry `redirect=/device?user_code=<code>`.
+
+**Typed client.** `client.deviceAuthorization.create` posts the RFC request with hapic's
+token-API header semantics (the client-level `Authorization` header is DROPPED unless
+`authorizationHeaderInherit` is set, so an authenticated client never sends the mixed
+credentials `extractClientCredentialsFromRequest` refuses); `lookup` / `approve` / `deny` ride
+the caller's own bearer; `client.token.createWithDeviceCode` sends the URN.
+
+**Deliberately absent.** `prompt`, `max_age`, `acr_values` on the device request (the RFC
+defines none); federated login on the `/device` page (a device-flow authorize state is a named
+follow-up); config keys for lifetime and interval (600 / 5 are the RFC's examples and
+Keycloak's defaults; the upgrade is one `core.deviceCodeMaxAge` registry entry); a CLI login
+command (one loop over the typed client, nothing server-side); CIBA; QR rendering. A table for
+the artifact was rejected because a ten-minute blob would cost a migration and a sweeper; a
+cache flush therefore kills in-flight flows (the poll answers `invalid_grant`, the device
+restarts) and a multi-replica deployment needs Redis, the statements the console login and
+the federated login already make.
+
 ## Federated Login Completion (`authorize-in`)
 
 The external-IdP callback completes the EXTERNAL leg of the RP's **original**
 authorization request. It re-verifies the code request that `authorize-out`
 stored on the state blob, establishes the authup session, and returns the
 browser to the hosted `/authorize` page carrying a one-time **login handle**
-for that session (plan 094). The RP's code is issued at the end of the hosted
+for that session. The RP's code is issued at the end of the hosted
 ladder, by the same `POST /authorize` an interactive login posts, so a
 federated login passes the gates that belong to it: `prompt=login` /
 `max_age` freshness, `select_account`, the `acr_values` step-up, consent and
@@ -5142,16 +5240,13 @@ the same rule the query schemas follow.
 
 - **The code goes to the RP, never to the hosted `/authorize` page.** It is
   bound to the RP's `client_id` and `redirect_uri`, so the RP is the only party
-  that can redeem it. Since plan 094 the callback mints no code at all, so the
+  that can redeem it. The callback mints no code at all, so the
   property is now carried by `AuthorizeController.confirm`, which every
-  interactive login shares. The callback used to hand a code to the hosted page instead,
-  where the router guard's `store.exchangeAuthorizationCode(code)` answered 401
-  `invalid_client` (`/token` authenticates a client unconditionally, and the
-  auth console deliberately holds no client row). The guard swallowed that
-  error, so a federated login died silently on a re-rendered login form. No
-  producer sends a `code` to a hosted page anymore, so that guard branch is
-  gone (#3459): the auth console's `router.beforeEach` only resolves the
-  session.
+  interactive login shares. No producer sends a `code` to a hosted page, and
+  the auth console's `router.beforeEach` only resolves the session (#3459):
+  `/token` authenticates a client unconditionally and the auth console
+  deliberately holds no client row, so a code delivered there could only
+  answer 401 `invalid_client`.
 - **The WHOLE verified request reaches the code issuer,** never a
   hand-picked subset. The callback re-renders it on the hosted page (every
   defined key, `buildHostedAuthorizeURL`) and the consent post issues from it. `code_challenge` / `code_challenge_method`, `nonce` and
@@ -5161,7 +5256,7 @@ the same rule the query schemas follow.
   too.
 - **The re-verification IS the redirect gate.** `redirectUriVerified` is the
   only thing on this path that knows the `redirect_uri` matched a registered
-  pattern. The callback itself no longer navigates it (its target is the
+  pattern. The callback itself does not navigate it (its target is the
   server-derived hosted page), but it still refuses a completion without it, so
   a login that could never end in a legal redirect fails before a user is
   provisioned; `serve()` and `confirm` re-derive the flag from the code request
@@ -5241,11 +5336,10 @@ an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
 same primitive the authorization-code repository uses), so of two callbacks
 carrying one state only the first obtains the payload; the ip / user-agent
 checks run on the popped payload, and a state failing them is gone as well
-(#3456). The entries live under `CacheOAuth2Prefix.AUTHORIZATION_STATE`; they
-used to share the authorization-code namespace, which let either repository
-pop the other's entries.
+(#3456). The entries live under `CacheOAuth2Prefix.AUTHORIZATION_STATE`, their
+own namespace, so neither repository can pop the other's entries.
 
-**The pending login (plan 094).** Server auth is header-only and the hosted
+**The pending login.** Server auth is header-only and the hosted
 page's session lives in the browser, so the callback has to hand the browser
 something it can turn into a bearer. It is a cache entry
 (`OAuth2FederatedLoginStore`, `createNanoID` id under
@@ -5267,7 +5361,7 @@ login for their own account has the cookie in THEIR browser, and a crafted
 `/authorize?...&provider=` URL handed to someone else completes nothing. The
 `SameSite=Lax` attribute is what keeps it off cross-site requests, which
 mattered doubly while the CORS default answered every reflected origin with
-credentials (narrowed to publicUrl's own origin by plan 088).
+credentials (narrowed to publicUrl's own origin).
 
 Verified against both cohort products (2026-08-19): Keycloak keeps the pending
 login in an auth session identified by `AUTH_SESSION_ID` and its
@@ -5297,7 +5391,7 @@ browser sends on every POST, must be publicUrl's own. An Origin-less POST used
 to pass on the premise that it was not a browser; a non-browser client holding
 the cookie is exactly what the gate exists to refuse.
 
-That premise is now gone: plan 088 made every `ForceLoggedIn` route reachable
+That premise is now gone: every `ForceLoggedIn` route is reachable
 with the console session cookie, and in the same change `cors.ts` narrowed
 `Allow-Credentials` to publicUrl's own origin (`Allow-Origin` keeps
 reflecting). **The per-endpoint check stays mandatory regardless**, and a
@@ -5348,9 +5442,8 @@ ladder's `AUTHORIZE_FAILED` event and `denied` metric.
 
 **A custom-scheme `redirect_uri` needs no interstitial on this leg any more.**
 `isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim, and
-routup's `sendRedirect` allows http(s) only, which is why the callback used to
-render the target from an interstitial page (#3459). Since plan 094 the
-callback's own target is always the hosted page, and the custom-scheme target
+routup's `sendRedirect` allows http(s) only, which is why an interstitial page
+exists at all (#3459). The callback's own target is always the hosted page, and the custom-scheme target
 is navigated at the end of the ladder by `AuthorizeForm`, exactly as it is for
 an interactive login. The interstitial route and payload stay in
 `@authup/client-auth-console` (render contract version 2) but nothing renders
@@ -5429,8 +5522,8 @@ plus a `<uuid>@example.com` placeholder (#3434).
 - **`identity.data` is deliberately still the access-token payload alone.**
   Mappers (`IIdentityProviderMapper`) pattern-match over it, so merging the
   richer claims in would change every existing mapper's input.
-- The `IdentityProviderOpenIDAuthenticator` override is gone: the base
-  ladder now covers what it did. The five presets (github, facebook,
+- There is no `IdentityProviderOpenIDAuthenticator` override: the base
+  ladder covers it. The five presets (github, facebook,
   instagram, paypal, google) still override the builder and are untouched.
 - **Forward-only for the name, verification-aware for the email.** The
   account manager's UPDATE branch never rewrites `user.name` (it is
@@ -5444,7 +5537,7 @@ plus a `<uuid>@example.com` placeholder (#3434).
   default projection and carries no email; comparing against it would clear
   the flag on every login for every user with a static email mapping.
 
-## Identity-Provider Account Linking (plan 091)
+## Identity-Provider Account Linking
 
 `auth_identity_provider_accounts` (external identity → `userId`) is
 surfaced as a read+delete entity API and an explicit self-service link
@@ -5541,8 +5634,6 @@ user); the uniqueness flip above ships one, on both dialects.
   nothing on its own. Keeping `userId` in the stash is what allows that
   check: dropping it (as the issue sketched) would make a leaked handle
   redeemable by anyone, which is the same pre-hijacking in a new shape.
-  The predecessor's stopgap — refusing a state carrying no browser binding
-  at all — is gone with the hole it patched.
   **Stash contents.** Deliberately four scalars, never the
   `IdentityProviderIdentity`: that object carries the full provider entity
   (including the EA-loaded `clientSecret`) and the raw external token
@@ -5656,8 +5747,11 @@ Independent of client authentication, every client-resolving grant enforces
 comma-delimited values), the requested grant must be listed — otherwise the
 request fails with `unauthorized_client` (RFC 6749 §5.2,
 `ErrorCode.OAUTH_CLIENT_UNAUTHORIZED`, HTTP 400). `null` = allow-all, so
-enforcement is opt-in per client and upgrades are backward compatible. Enforced
-at both chokepoints:
+enforcement is opt-in per client and upgrades are backward compatible. The one
+exception is `OPT_IN_GRANT_TYPES` inside the same helper (today the device grant
+alone): a grant listed there needs an explicit entry, and a null or empty column
+refuses it, because enabling it on every existing client at upgrade would widen
+an attack surface the client never asked for. Enforced at both chokepoints:
 
 1. **`/token`** — after client resolution in `authorization_code`,
    `refresh_token` (including the bound-client-from-token path, so public-client
@@ -5734,8 +5828,7 @@ The three realm-resolving grants (`password`, `authorization_code`,
   Basic-auth-by-name resolution is unchanged (and never carries a realm
   hint). The same raw, fallback-less `realm_id` handling remains on
   `client_credentials` (client names are unique per `(name, realm_id)`) and on
-  the `/authorize` code-request verifier's `data.realm_id` — see plan 037/038
-  non-goals.
+  the `/authorize` code-request verifier's `data.realm_id`.
 
 ### Credential transport
 
@@ -5766,7 +5859,7 @@ client-resolving grants. It resolves the client by id/name and dispatches on
 `ClientAuthenticator` (`core/authentication/entities/client/module.ts`) remains
 the HTTP Basic management-API authenticator and only accepts `secret` clients.
 
-### Client-certificate boundary and token binding (plan 072)
+### Client-certificate boundary and token binding
 
 `certificateSource` is a global, explicit trusted-proxy contract:
 `disabled` (default), `standard` (RFC 9440 `Client-Cert` plus optional
@@ -5834,7 +5927,7 @@ method changed mid-flow.
 
 `code_challenge_method` defaults to `plain` per RFC 7636 §4.3 — only `S256` triggers SHA-256 verification.
 
-## Refresh Token Rotation & Replay Detection (plan 016)
+## Refresh Token Rotation & Replay Detection
 
 Every `/token` `refresh_token` call rotates: the presented refresh token (RT) is
 retired and a fresh AT+RT pair minted. Rotation is backed by a durable
@@ -5850,7 +5943,7 @@ domain type `SessionToken` in `@authup/core-kit`. Columns: `id` (= jti,
 app-provided `@PrimaryColumn('uuid')`), `session_id` (FK → `auth_sessions`
 **ON DELETE CASCADE**), `kind` (`access`|`refresh`), `parent_id` /
 `client_id` (nullable FK → `auth_clients` **ON DELETE CASCADE**; the
-per-application attribution added by plan 086, null when the minting path
+per-application attribution, null when the minting path
 has no client, e.g. an MFA-login completion, and on rows predating the
 column), `refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
 `ip_address(45)` / `user_agent(512)`, `consumed_at` / `revoked_at` /
@@ -6012,7 +6105,7 @@ the extra queries entirely (strict: any consumed-RT replay → family revoke).
 `expiresAt < now` (every minute, alongside the existing session sweep). AT rows
 dominate volume; a deleted session cascade-drops its remaining rows.
 
-## Session Management API (plan 016, PR G)
+## Session Management API
 
 A REST surface over `auth_sessions` for "see all my sessions / force logout":
 `SessionController` (`adapters/http/controllers/entities/session/`), dual-mounted
@@ -6031,7 +6124,7 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   session (`useRequestSessionId`).
 - `DELETE /sessions/:id` — revoke one. Own → no permission; else `SESSION_DELETE`
   + realm-match. Delete routes through `SessionManager.revoke`, the one
-  chokepoint (plan 064): it removes the row through the cache-aware session
+  chokepoint: it removes the row through the cache-aware session
   repository (the id cache key is dropped; the DB delete cascade-drops the
   session's `auth_session_tokens` rows, so a force-logout also kills the
   subject's refresh tokens) and then pushes a back-channel `logout_token` to
@@ -6077,8 +6170,7 @@ which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
 grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
 list read path bypasses the session cache (id-keyed only, no list index) and goes
 straight to TypeORM. **Every realm-gated `findMany` adapter force-selects the
-columns its per-row gate reads, regardless of the client `fields` projection**
-(plan 039) — the gate reads `entity.realmId` via `resourceRealmMatch`, and rapiq
+columns its per-row gate reads, regardless of the client `fields` projection** — the gate reads `entity.realmId` via `resourceRealmMatch`, and rapiq
 honors a `fields` projection over `default`, so without the force-select a scoped
 reader could strip `realmId` and neutralize the realmScope reach factor
 (cross-realm leak; for an `ownOrNull` reader the stripped realm reads as a
@@ -6144,15 +6236,15 @@ logout).
 
 ### Session continuity: one session per interactive login
 
-An interactive client-admin-console login used to create **two** `auth_sessions` rows: the
-SSR `/authorize` page password-grants a (client-less) bearer session purely to
-authenticate `POST /authorize`, then `/login/callback` exchanges the auth code —
-whose `authorization_code` grant `create()`d a *second* session. The bearer
-session was then abandoned but lingered until expiry (and showed up in the
-sessions list).
+An interactive client-admin-console login must leave **one** `auth_sessions`
+row, and two are reachable: the SSR `/authorize` page password-grants a
+(client-less) bearer session purely to authenticate `POST /authorize`, and
+`/login/callback` then exchanges the auth code, whose `authorization_code`
+grant would `create()` a second session — abandoning the bearer session to
+linger until expiry and show up in the sessions list.
 
-The authorization_code grant now **reuses** that bearer session instead of
-minting a second one. The mechanism threads the bearer's session id through the
+The authorization_code grant therefore **reuses** that bearer session instead
+of minting a second one. The mechanism threads the bearer's session id through the
 auth-code blob:
 
 - `OAuth2AuthorizationCode` carries an optional `session_id` (cache-backed blob —
@@ -6186,18 +6278,18 @@ fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
 `test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
 (login → authorize → exchange asserts a single session survives).
 
-## MFA — Authenticator Devices (plan 049)
+## MFA — Authenticator Devices
 
 Polymorphic second-factor device model: `auth_user_authenticators` holds one row
 per enrolled device, discriminated by `kind` (`totp` | `recovery` | `email` |
 `webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`).
 
-**WebAuthn / passkeys as a SECOND factor (plan 049 Stage 2):** `kind: 'webauthn'`
+**WebAuthn / passkeys as a SECOND factor:** `kind: 'webauthn'`
 rows store the registered credential (base64url id + public key, signature
 `counter`, transports) as JSON in `parameters`. The ceremony rides
 `@simplewebauthn/server` (`core/entities/user-authenticator/webauthn.ts`); the
 relying-party context (`rpId`/`rpName`/`origin`) is derived from `publicUrl` —
-because plan 041 made `/authorize` a HOSTED login page, every RP's login runs on
+because `/authorize` is a HOSTED login page, every RP's login runs on
 that one origin, so RP-ID/origin binding is authup's own origin with no per-RP
 plumbing (absent publicUrl → WebAuthn refused, `MFA_NOT_CONFIGURABLE`).
 Registration: `enroll({ kind:'webauthn' })` returns creation options (a cached
@@ -6216,7 +6308,7 @@ priority order) and the enroll picker a passkey option (`startRegistration` →
 confirm). Deps: `@simplewebauthn/server` (server-core), `@simplewebauthn/browser`
 (client-web-kit) — both stateless-leaf `dependencies`.
 
-**Email OTP (`kind: 'email'`, plan 049 Stage 1.5):** the row marks the mailbox
+**Email OTP (`kind: 'email'`):** the row marks the mailbox
 as an enrolled factor (confirmed on create — the email is presumed verified via
 activation; enrollment force-loads the `select:false` email column via
 `findOneByWithEmail`). The code itself is **transient**: `sendChallenge(userId,
@@ -6241,16 +6333,15 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
 
 - The TOTP seed must be *recoverable* (verification recomputes codes), so it is
   **AES-256-GCM-encrypted at rest** under the user's realm enc key from the
-  **realm key store** (plan 069 — see *Realm Key Store* below): the service's
+  **realm key store** (see *Realm Key Store* below): the service's
   `cipher` ctx is an `IRealmCipher` (`core/key/`), enroll encrypts via
   `cipher.encrypt(user.realmId, seed)` into a self-describing
   `v1.<key_id>.<blob>` and verify decrypts by the blob's key id with a
   `device.realmId` binding assert. Keys are auto-generated per realm on first
-  use — **zero key configuration** (`MFA_ENABLED=true` suffices; the former
-  `MFA_ENCRYPTION_KEY` was removed unreleased). A blob referencing an
-  unknown/foreign key fails closed as a plain verification failure (never a
-  500); the TOTP `MFA_NOT_CONFIGURABLE` path is gone (it remains for
-  WebAuthn-without-`publicUrl` and email-without-mail-transport).
+  use — **zero key configuration** (`MFA_ENABLED=true` suffices). A blob
+  referencing an unknown/foreign key fails closed as a plain verification
+  failure (never a 500); TOTP has no `MFA_NOT_CONFIGURABLE` path (it remains
+  for WebAuthn-without-`publicUrl` and email-without-mail-transport).
 - Recovery codes are **bcrypt-hashed** (`hash`/`compare` from server-kit),
   stored as a JSON `{hash, usedAt}[]` blob on a single `kind:'recovery'` row
   (regenerate semantics — re-enrolling replaces the set); single-use (`usedAt`
@@ -6304,8 +6395,8 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    backing session carries no `mfaAt`. A session-less flow (HTTP Basic) fails
    closed the same way. `GET /authenticators/challenge` reports
    `{ required, enrollmentRequired, kinds, challenge? }` — the kind-generic wire
-   shape (the optional `challenge` payload carries WebAuthn request options in
-   Stage 2) that drives the kit ladder.
+   shape (the optional `challenge` payload carries WebAuthn request options)
+   that drives the kit ladder.
 2. **Direct password grant**: `HTTPPasswordGrant.verifySecondFactor` — a user
    with a confirmed device must send a valid `otp` form parameter (TOTP or
    recovery code, classified by shape via
@@ -6322,7 +6413,7 @@ mirrors this — when `userId !== '@me'` it offers only the email button
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
 the upstream provider as the authentication authority, and that trust is
 UNCHECKED unless the provider declares `requiredAmr` / `requiredAcr`
-(issue #3477, both null by default). Since plan 094 it runs the hosted
+(issue #3477, both null by default). It runs the hosted
 ladder for consent and the prompt gates, but `authorizeInner` skips
 the local factor and inline enrollment for a session whose `authMethod` is
 `ext`, and the redemption consults no authenticator at all (settled #3454: the
@@ -6546,7 +6637,7 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfaAt` → authorize passes; recovery replay rejected).
 
-## Realm Key Store (plans 069 + 071 Stages A-C)
+## Realm Key Store
 
 `auth_keys` is the general **per-realm key store**, discriminated by the JWK
 `use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
@@ -6606,7 +6697,7 @@ immutable, status is not), so disabling an enc key is an immediate,
 **reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
 closed, never a 500).
 
-**Management API (plan 071 Stage A):** `KeyService`
+**Management API:** `KeyService`
 (`core/entities/key/`) + `KeyController` dual-mounted
 `/keys` + `/realms/:realmId/keys`, gated by the auto-provisioned `KEY_*`
 permission family (`admin` = `any`; `realm_admin` = `ownOrNull` read, `own`
@@ -6635,7 +6726,7 @@ forced crypto-shred — never `decryptionKey`/`encryptionKey`/`certificate`.
 The emits ride the default (long) event retention, not the short
 entity-churn TTL, and are not gated by `eventLogEntityEnabled`.
 
-**Imported certificates (plan 071 Stage B):** create may attach an immutable
+**Imported certificates:** create may attach an immutable
 PEM certificate chain only to an **imported signature key** (never generated
 material or an enc key). `node:crypto.X509Certificate` parses every
 leaf-first PEM block; both the leaf and imported DER SPKI are canonicalized
@@ -6647,10 +6738,11 @@ deliberately out of scope. All four JWKS surfaces publish RFC 7517 `x5c` as
 leaf-first standard-base64 DER plus `x5t#S256` as the base64url SHA-256 digest
 of the leaf DER, computed with Web Crypto `subtle.digest` and the shared
 base64url helper. A malformed stored certificate never takes down JWKS: the
-usable public JWK is still published without certificate fields. Stage B
-reuses the dormant nullable column from Stage A and needs no migration.
+usable public JWK is still published without certificate fields. Certificate
+support reuses the dormant nullable column the key store added and needs no
+migration.
 
-**Trusted CAs (plan 071 Stage C):** `auth_trust_anchors` is a separate,
+**Trusted CAs:** `auth_trust_anchors` is a separate,
 realm-bound store for public CA certificates; it is deliberately independent
 of `auth_keys` because trust anchors have no operational signing/encryption
 key material and must never enter signer, verifier, cipher, provisioner, or
@@ -6663,8 +6755,8 @@ reuse `KEY_*` administration permissions and the same realm-scope discipline
 as keys. The web UI presents the collection as **Trusted CAs** on its own
 top-level `/trust-anchors` page group (overview + add + detail) with a
 dedicated sidebar entry, gated on the `KEY_*` family like `/keys`.
-Stage C intentionally provides only schema, CRUD API, typed client, and UI:
-the `enabled` anchors are consumed later by plan 072 when proxy-forwarded
+Trust anchors intentionally provide only schema, CRUD API, typed client, and UI:
+the `enabled` anchors are consumed when proxy-forwarded
 client certificates are authenticated for RFC 8705. Like keys, trust anchors
 have no entity subscriber; `TrustAnchorService` records the same explicit
 ENTITY-scope lifecycle events as `KeyService` (`refType: trustAnchor`,
@@ -6689,9 +6781,9 @@ must be visible in `auth_events`). The table was folded into migration
   both methods — shape-aligned with `ISymmetricCipher.encrypt(plain)` plus a
   scope argument; every consumer knows its entity's realm, so a skippable
   assert would only invite forgetting it). Two consumers today: the MFA
-  seed cipher (`UserAuthenticatorService` ctx), since plan 105 client
+  seed cipher (`UserAuthenticatorService` ctx), client
   secrets in encrypted mode (`secretEncrypted`, see *Client secret storage
-  and rotation*), and since plan 070 Stage 2 the identity-provider secrets:
+  and rotation*), and the identity-provider secrets:
   `IdentityProviderRepositoryAdapter` encrypts exactly the attribute names
   in `IDENTITY_PROVIDER_SECRET_ATTRIBUTES` (the OAuth2/OIDC `clientSecret`,
   the LDAP bind `password`) inside `saveWithEA` and decrypts them after
@@ -6732,9 +6824,8 @@ must be visible in `auth_events`). The table was folded into migration
   CASCADE, so deleting a realm drops its enc keys and every seed and client
   secret encrypted under them becomes unrecoverable noise.
 
-**Client secrets needed no redesign of the key entity (plan 105,
-2026-09-07).** The premise that `auth_keys` serves the JWK mechanism alone
-is outdated since plan 069: the enc store, the per-realm auto-mint, the KEK
+**Client secrets needed no redesign of the key entity (2026-09-07).** The premise that `auth_keys` serves the JWK mechanism alone
+is outdated: the enc store, the per-realm auto-mint, the KEK
 wrap, the lifecycle API and `IRealmCipher`'s self-describing blobs are all in
 place, so client secrets become the cipher's second consumer with nothing
 added on the key side. Six key-side candidates were evaluated against the
@@ -6745,10 +6836,10 @@ and the released MFA blobs would have to migrate), a re-encrypt sweep on
 rotation (`decrypt` resolves the blob's own key id, so a passive key keeps
 decrypting), renaming `decryptionKey` / `encryptionKey` (cosmetic, and a wire
 break on `/keys`), and moving the KEK wrap out of the repository adapter (it
-sits on the hexagonal boundary on purpose). What plan 105 added is a DI token
+sits on the hexagonal boundary on purpose). What the rotation endpoint added is a DI token
 for the realm cipher (`OAuth2InjectionToken.RealmCipher`, registered in
-`app/modules/oauth2/module.ts`; the MFA controller factory used to `new` one
-inline and resolves the token now, like every client-secret consumer) and
+`app/modules/oauth2/module.ts`; the MFA controller factory resolves the token
+like every client-secret consumer) and
 one more `LIKE 'v1.<id>.%'` over `auth_clients.secret` in
 `countBlobReferences`, so the enc-key 409 guard and the force crypto-shred
 cover clients. The blast radius grew with it: disabling a realm's enc key
@@ -6815,16 +6906,16 @@ Authenticators tab
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 
-## Auth-Method Claims — amr / acr / step-up (plan 050)
+## Auth-Method Claims — amr / acr / step-up
 
 **HOW the subject authenticated is recorded on the session**
 (`auth_sessions.auth_method`, `SessionAuthMethod` enum in core-kit:
 `pwd | ldap | ext | client`; `ldap` is reserved — the password grant
-currently stamps `pwd` for both, the LDAP distinction is the deferred Stage 1b).
+currently stamps `pwd` for both, the LDAP distinction is deferred).
 Every session-creation site stamps it: password grant (`pwd`), identity grant
 (`ext`, threaded through the code blob's `auth_method`, which the
 authorization_code grant's fallback-create inherits; the reuse branch inherits
-from the bearer session row) + the federated IdP callback, which since plan 094
+from the bearer session row) + the federated IdP callback, which
 creates the session itself with `ext` and the exchange reuses it, client
 credentials (`client`, session-inventory only). Pre-column sessions
 carry `NULL` → **no amr/acr claims** (authup cannot retroactively know).
@@ -6863,7 +6954,7 @@ assertions in the per-grant specs, end-to-end id_token/access-token claim
 decoding in
 `test/unit/http/controllers/workflows/token/id-token-claims.spec.ts`.
 
-## Security Event Log (plans 057 + 053 + 058)
+## Security Event Log
 
 `auth_events` is the persisted, PII-stripped security audit trail — the single
 login-event surface. The record shape is derived from PrivateAIM/hub's
@@ -6890,7 +6981,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   smuggle a secret; `password`/`client_secret`/`code`/`*token*` are simply never
   allowlisted). A structured logger line fires per event even when persistence
   is disabled (`eventLogEnabled=false`) — the free SIEM/Loki complement.
-- **Session attribution (plan 093):** a row carries the acting or affected
+- **Session attribution:** a row carries the acting or affected
   `auth_sessions` row in a nullable, indexed `sessionId`
   (`auth_events.session_id`), deliberately **FK-less**: the log is append-only
   and must outlive everything it references, so a CASCADE would erase audit
@@ -6904,7 +6995,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   sites stamp the session they created or acted on explicitly (password
   grant, MFA-ticket completion, `/authorize`, refresh-replay, end-session
   revoke, authenticator challenge), because those run before or outside a
-  bearer context. `LOGIN` and `LOGOUT` therefore no longer duplicate the id
+  bearer context. `LOGIN` and `LOGOUT` therefore do not duplicate the id
   into `data`, and `sessionId` is a queryable filter
   (`GET /events?filter[sessionId]=…`, the session detail page's event lens).
 - **Emit sites** (explicit `record()` calls via optional `eventService?`
@@ -6915,7 +7006,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   key), a federated `LOGIN` (`OAuth2FederatedLoginService.redeem`, when the
   hosted page exchanges the login handle: `data.reason: 'federated'` plus the
   provider id, `refType: session`, `sessionId` = the session the callback
-  established. Plan 094 moved it here from the callback's own `AUTHORIZE`
+  established. It moved here from the callback's own `AUTHORIZE`
   emit, which is now the ladder's like every other one; `reason` is reused
   rather than a new key because `sanitizeEventData`'s allow-list is closed),
   `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
@@ -6932,9 +7023,9 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (`name`/`use`/`status`/`enabled`, update `diff`, `force` on crypto-shred),
   actor from the `ActorContext`, request attribution via the injected
   `useRequestEventContext` getter, default (long) retention. Token issuance
-  emits **no rows** (plan 016's `auth_session_tokens` already inventories every
+  emits **no rows** (`auth_session_tokens` already inventories every
   token; volume control).
-- **Entity-CRUD bridge (plan 057 Stage 2, hub's EntityEventHandler):**
+- **Entity-CRUD bridge (hub's EntityEventHandler):**
   `EntityEventHandler` (`core/entities/event/entity-event-handler.ts`, an
   `IDomainEventHandler` registered on the `DomainEventPublisher` in
   `DatabaseModule.registerEventPublisher` when `eventLogEnabled &&
@@ -7083,7 +7174,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   written with `ttl = expiresAt - now` on every save, so it has lapsed by the
   time its row matches the predicate. `ComponentsModule` therefore declares
   a CACHE dependency (it constructs that repository).
-- **Failed-login throttle (plan 053, default off):** `LoginThrottleService`
+- **Failed-login throttle (default off):** `LoginThrottleService`
   (`core/authentication/login-throttle/`) counts recent `LOGIN_FAILED` rows via
   the indexed `countRecent` — keyed on the **(identifier, ip) pair** (never
   identifier alone: account-lockout-DoS mitigation; no derivable IP → fail
@@ -7097,12 +7188,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `loginAttemptThrottleEnabled/Threshold/Window`;
   enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).
-- **Metrics (plan 058 Part 2):** `IAuthFlowMetrics` port (`core/metrics/`,
+- **Metrics:** `IAuthFlowMetrics` port (`core/metrics/`,
   noop default) with the prom-client adapter (`app/modules/metrics/`,
   registered by `HTTPModule` — `Noop` when `middlewarePrometheus` is off) on
   the default registry: `authup_login_total{result}`,
   `authup_token_grant_total{grant_type}` (successes only),
-  `authup_authorize_total{outcome}` (`denied` live since plan 052),
+  `authup_authorize_total{outcome}` (`denied` live),
   `authup_refresh_replay_total`. Bounded label sets only — subject-level
   attribution belongs in the security event log, never in metric labels.
   The `@routup/prometheus` `http_request_duration` `path` label follows the
@@ -7159,7 +7250,7 @@ Canonical form is enforced at four boundaries (defense-in-depth):
 1. **Validator transform** — every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex** — the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
 3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
-4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw (see plan 038).
+4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
 
 ### Adding a new identifier column
 
@@ -7179,8 +7270,7 @@ integration are worth knowing before editing UI code:
 ### What the kit store persists (and what it deliberately does not)
 
 The store's cookies are the SSR transport, not a storage preference: a Nuxt
-consumer on `@authup/client-web-nuxt` (hub; the admin console was one until
-plan 081) reads them server-side (the kit plugin wires `cookieGet` to Nuxt's
+consumer on `@authup/client-web-nuxt` (hub) reads them server-side (the kit plugin wires `cookieGet` to Nuxt's
 `useCookie`, which parses the request header), so its routing interceptor can
 await `store.resolve()` during the render. The auth console passes no cookie
 functions, so its server-side `useCookies()` fallback finds no `document` and
@@ -7210,9 +7300,9 @@ session from them (RFC 7662 §2.2 recommends - SHOULD NOT, not MUST NOT -
 trimming an inactive response, and trimming would cost the store its realm,
 subject, permissions, session_id and acr on every restore). This is coupled to
 the introspection endpoint's own change (conventions.md -> *`POST
-/token/introspect` READS an expired token*): that made an EXPIRED token answer
-200 `{active: false}` where it used to throw, and the throw was what reached
-the refresh fallback. The two must not be separated.
+/token/introspect` READS an expired token*): an EXPIRED token answers 200
+`{active: false}` rather than throwing, so a store relying on a throw to reach
+its refresh fallback would never reach it. The two must not be separated.
 
 **The user is derived from the introspection, not fetched.** `postIntrospect`
 resolves the token's subject server-side and spreads its OpenID claims into the
@@ -7297,13 +7387,11 @@ through it, so nothing else in the payload was constrained.
 
 A commit does not overwrite a held user whose id already matches: the account
 console re-seeds the store from its own profile-form response, and a commit
-staged before that save would otherwise revert the name it just wrote. The
-predecessor had the same property for a different reason (`isTokenSubject`
-skipped the fetch on an id match).
+staged before that save would otherwise revert the name it just wrote.
 
 Two things fall out of that. The subject identity cannot drift from the token,
-because it IS the token's subject on every commit, so the `isTokenSubject`
-re-fetch this replaced is gone. And a **client** subject now yields `null`
+because it IS the token's subject on every commit, so there is no re-fetch.
+And a **client** subject yields `null`
 instead of a failed lookup: `/userinfo` resolves `@me` through the user service,
 which throws for a client actor, and the guards catch a rejected `resolve()`
 into a logout. That rejection was load-bearing, though, because `status`
@@ -7381,9 +7469,9 @@ Three properties make this work, and all three are load-bearing:
 
 Nothing here is authup-specific, which is the point: any RP in any framework
 gets the behaviour by putting the destination in its own callback URI. There is
-deliberately no kit field for it — an `AuthorizationRequest.target` existed and
-was removed, because it made the round-trip a convention each app had to
-remember rather than a mechanism the protocol already carries.
+deliberately no kit field for it: a field would make the round-trip a
+convention each app has to remember rather than a mechanism the protocol
+already carries.
 
 `apps/client-account-console` is the one caller that does not participate: its
 `redirect_uri` is `origin + pathname` (the current path *is* the destination)
@@ -7396,9 +7484,8 @@ dropped their pre-1.x render-function builder APIs (`buildFormGroup` /
 `buildList` / `buildPagination` and friends) in favour of compound
 `<VC*>` SFCs. Authup's entity forms, collection views, and pagination
 chrome were migrated onto the SFCs; the transitional `buildForm*`
-render-function shims (`core/form/builders.ts`) were **retired in #3139**
-— there is no `core/form/builders.ts` anymore. The current
-integration:
+there is no `core/form/builders.ts` and no `buildForm*` render-function shims
+(#3139). The current integration:
 
 - **Forms** — entity form SFCs (`components/entities/**/A*Form.vue`)
   render `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` /
@@ -7449,7 +7536,7 @@ integration:
   only keys **declared in the form state** — the form owns its shape, and
   copying every entity key leaks foreign properties into the state and
   from there into submit payloads (a stale sibling-sub-form copy of
-  `name` used to clobber the edited value on the identity-provider
+  `name` otherwise clobbers the edited value on the identity-provider
   form's spread, #3222). With the validup `fields` accessor supplied,
   hydration is **edit-preserving**: a `$dirty` field whose current value
   differs from the incoming one is skipped (unsaved edit survives an
@@ -7499,15 +7586,11 @@ integration:
   either check runs. Pinned by *a load carrying %s replaces the retained
   sorts* (parameterized over the two spellings) and *a load carrying only
   undefined sort spellings keeps the retained sorts* in
-  `entity-collection.spec.ts`. Filters used to be carved out
-  of that call and AND-injected by hand, because the old `Filters.merge`
-  did per-field replace and would have let a search input displace an
-  injected `realmId`/`clientId` scope. Since rapiq **beta.19**
-  (tada5hi/rapiq#890) filter merging is conjunctive, so the carve-out
-  (`stripFilters` + `combineScopedFilters`) was removed and the plain
-  `mergeQueries` result carries the same guarantee: a scope cannot be
-  displaced by a search or sort load, and compound trees (`or(...)`)
-  survive as conjuncts. Pinned by *search input cannot displace the
+  `entity-collection.spec.ts`. Since rapiq **beta.19** (tada5hi/rapiq#890)
+  filter merging is conjunctive, so the plain `mergeQueries` result guarantees
+  that a scope cannot be displaced by a search or sort load and that compound
+  trees (`or(...)`) survive as conjuncts. Filters therefore need no carve-out
+  and no hand-rolled AND injection. Pinned by *search input cannot displace the
   injected scope* and *composes context query and props query, both
   non-displaceable* in `entity-collection.spec.ts`. The latter still
   asserts the pre-refactor filter string; the former's search term is now
@@ -7556,10 +7639,9 @@ integration:
   non-zero total (issue #3443). The first load is exempt (nothing changed
   yet), a load repeating the same filters keeps its page, and an input
   carrying its own pagination still wins by merge precedence. This is a
-  property of the manager rather than caller discipline: every narrowing
-  control used to reset by hand, and the second one to need it (the
-  sessions subject-kind select) forgot. Neither `ASearch` nor a page
-  passes `pagination: { offset: 0 }` anymore.
+  property of the manager rather than caller discipline, because a per-caller
+  reset is the thing that gets forgotten. Neither `ASearch` nor a page passes
+  `pagination: { offset: 0 }`.
   Pinned by
   `test/unit/components/utility/entity-collection.spec.ts`.
   **Initial load & the SSR handoff (issue #2773):** see
@@ -7568,7 +7650,7 @@ integration:
   (`components/utility/pagination/APagination.ts`) is a thin **adapter**
   that bridges the entity-collection footer contract (`ListMeta` =
   `{ total, pagination: { limit, offset }, busy }` — pagination UI
-  state only, query state no longer round-trips through it — plus a
+  state only, query state does not round-trip through it — plus a
   `load(input)` callback) onto `<VCPagination>`'s flat
   `:total` / `:limit` / `:offset` props and `@load({ offset })` event;
   page changes send only `{ pagination: { limit, offset } }`.
@@ -7590,8 +7672,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   loads at all**, because the response could not reach the client and firing it would
   only waste a round trip (the pre-#2773 behaviour: every collection fired a
   request during SSR whose result was discarded when the render flushed).
-- **Hosts.** A Nuxt consumer on `@authup/client-web-nuxt` (hub; the admin
-  console was one until plan 081) gets it from the `authup:kit` Nuxt plugin
+- **Hosts.** A Nuxt consumer on `@authup/client-web-nuxt` (hub) gets it from the `authup:kit` Nuxt plugin
   over `nuxtApp.payload.data` (the same bucket `useAsyncData` transports
   through); `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
   works because `createWindowPayloadHTML(ctx.payload)` runs *after*
@@ -7615,12 +7696,11 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   (`userId`/`realmId`) so an account switch cannot adopt the previous actor's
   verdict; checks carrying a `PolicyData` bag are not keyed at all and keep
   evaluating from their fail-closed default.
-- **`useTranslation` records only what the sync read could not answer.** It
-  used to record every string, because ilingo had no synchronous read path and
-  a fresh ref carried the `authupField.name` placeholder where the markup said
-  `Name`. That path landed in **ilingo 6.1.0** (tada5hi/ilingo#988):
-  `@ilingo/vue` **seeds** the ref from `IIlingo.getSync()`, then resolves the
-  async `get()` as before. Authup's catalogs are a `MemoryStore`, so the seed
+- **`useTranslation` records only what the sync read could not answer.** Since
+  **ilingo 6.1.0** (tada5hi/ilingo#988) `@ilingo/vue` **seeds** the ref from
+  `IIlingo.getSync()`, then resolves the async `get()`. Without a synchronous
+  read a fresh ref carries the `authupField.name` placeholder where the markup
+  says `Name`. Authup's catalogs are a `MemoryStore`, so the seed
   is the translation and nothing rides the payload for any authup key. The
   recording survives as the fallback for the case the seed cannot cover: a
   store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
@@ -7651,13 +7731,13 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
   as sensitive as the HTML it travels in, so an authenticated page must never
   be served from a shared cache (no `swr` / `isr` route rules).
-- **The admin console no longer participates.** Since plan 081 it is a
+- **The admin console does not participate.** It is a
   client-only SPA: no server render, so the kit performs no server-side
   loads for it and nothing is handed over. Its detail pages
   (`apps/client-admin-console/src/pages/<entity>/[id].vue`) fetch their
   record with a plain `ref(await ...)` in an `async setup()` under the
-  app-level `<Suspense>`; the `useAsyncData` dedupe this section used to
-  describe is moot without a server pass.
+  app-level `<Suspense>`; there is no `useAsyncData` dedupe to think about
+  without a server pass.
 
 Verified end to end in a browser (CDP) while the admin console was still
 server-rendered: `/users` rendered its rows server-side, the client issued
@@ -7711,9 +7791,7 @@ Pre-vuecs-1.x, authup used `bootstrap-vue-next` for tables
 (`BDropdown` / `BDropdownItem`). All three are now served by vuecs
 equivalents:
 
-- `<BTable>` → `<VCTable>` (the transitional `<ATable>` wrapper was
-  retired once `@vuecs/table` 1.1.1 added template-literal slot
-  typing for `cell-<key>` / `header-<key>`)
+- `<BTable>` → `<VCTable>`
 - `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
   via the thin wrapper in
   `apps/client-admin-console/src/composables/toast.ts` that preserves the
@@ -7743,17 +7821,13 @@ new `@authup/client-web-theme` package.
   `vite.config.ts` (`apps/client-admin-console`, `apps/client-account-console`,
   `apps/client-auth-console`). v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
-- **Bootstrap-compat layer — fully retired.** The `@layer components`
-  block in `packages/client-web-theme/assets/css/index.css` used to
-  `@apply` Tailwind utilities under legacy Bootstrap class names
-  (`.btn`, `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
-  `.dropdown*`, `.modal-*`, `.fade`) so authup's pre-Tailwind templates
-  kept rendering. Every call site has since migrated to a `<VC*>`
-  component (`.dropdown*` → `<VCDropdownMenu>`, `.modal-*` →
-  `<VCModal>` from `@vuecs/overlays`, the rest in #3139), so the block
-  now holds only a thin `.vc-pagination` override of theme-tailwind's
-  baked button rounding. Don't reintroduce Bootstrap-shaped class
-  names; reach for the matching `<VC*>` component.
+- **No Bootstrap-compat layer.** The `@layer components` block in
+  `packages/client-web-theme/assets/css/index.css` holds only a thin
+  `.vc-pagination` override of theme-tailwind's baked button rounding. Every
+  call site renders a `<VC*>` component instead (`.dropdown*` →
+  `<VCDropdownMenu>`, `.modal-*` → `<VCModal>` from `@vuecs/overlays`). Don't
+  reintroduce Bootstrap-shaped class names; reach for the matching `<VC*>`
+  component.
 - **Mechanical sweep** — Bootstrap utility classes with a 1:1
   Tailwind equivalent (e.g. `d-flex` → `flex`, `flex-column` →
   `flex-col`, `w-100` → `w-full`, `fw-bold` → `font-bold`,
@@ -7791,8 +7865,8 @@ new `@authup/client-web-theme` package.
     surface flips propagate automatically (it beats `@vuecs/design`'s
     vuecs-layer defaults via the kit-theme layer order). Surfaces stay
     genuinely dark in dark mode so the light `--vc-color-fg` keeps
-    contrast — the predecessor `var(--vc-color-neutral-400/500)` was a
-    light-mid grey (light-on-light, ~1.7:1, unreadable).
+    contrast — a light-mid grey such as `var(--vc-color-neutral-400/500)`
+    would be light-on-light at ~1.7:1, unreadable.
   - **Chrome tokens** (`--authup-chrome-*` — what header / sidebar /
     footer / navbar-dropdown CSS reads) — **flip with the mode** (mirrors
     hub's chrome model, PrivateAIM/hub#1668). Light-mode `:root` defaults
@@ -7816,10 +7890,7 @@ new `@authup/client-web-theme` package.
     (sub-titles, `.foot-print`s, secondary accent), `--authup-salmon
     #ff5b5b` (dropdown hover text — its only live use), `--authup-green
     #4f9d6b` (brand green — the 💚 in the footer "Made with 💚" credit).
-    Constant across modes. The former
-    `--authup-brand-{gold,coral,indigo,tan}` names are gone — gold/tan
-    usages (title bars, sidebar header, logo wordmark, nav active) folded
-    into periwinkle; coral → salmon.
+    Constant across modes.
 - **Tailwind v4 breaking changes** — UI work needs to follow the v4
   syntax, not v3:
   - Important modifier is a **suffix**: `text-3xl!`, not `!text-3xl`.
@@ -7843,9 +7914,8 @@ new `@authup/client-web-theme` package.
   (unstyled Tailwind class strings instead of unstyled
   Bootstrap class strings).
 
-`bootstrap` and `@vuecs/theme-bootstrap` are no longer dependencies
-of authup. The
-`bootstrap/dist/css/bootstrap.css` CSS import is gone.
+`bootstrap` and `@vuecs/theme-bootstrap` are not dependencies of authup, and
+nothing imports `bootstrap/dist/css/bootstrap.css`.
 
 ### `SlotName` enum local re-introduction
 

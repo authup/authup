@@ -6,6 +6,7 @@
  */
 
 export * from './authorize';
+export * from './device';
 export * from './end-session';
 export * from './login';
 export * from './mfa';

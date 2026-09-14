@@ -107,6 +107,8 @@ import {
     AuthenticatorChallengeController,
     AuthorizationController,
     AuthorizeController,
+    DeviceAuthorizationController,
+    DeviceController,
     JwkController,
     LogoutController,
     OpenIDController,
@@ -133,7 +135,10 @@ import {
     KeyService,
     LoginThrottleService,
     OAuth2AccessPolicyEvaluator,
+    OAuth2AuthorizationGate,
     OAuth2ClientAuthenticator,
+    OAuth2DeviceAuthorizationService,
+    OAuth2DeviceCodeVerifier,
     OAuth2EndSessionService,
     OAuth2FederatedLoginService,
     OAuth2MfaLoginService,
@@ -205,6 +210,8 @@ export class HTTPControllerModule {
             controllers: [
                 this.createAuthorize(container),
                 this.createToken(container),
+                this.createDeviceAuthorization(container),
+                this.createDeviceController(container),
                 this.createJwkController(container),
                 this.createOpenIDController(container),
                 this.createActivateController(container),
@@ -292,11 +299,11 @@ export class HTTPControllerModule {
     createToken(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
-        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
         const codeVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeVerifier);
+        const deviceCodeVerifier = new OAuth2DeviceCodeVerifier({ repository: container.resolve(OAuth2InjectionToken.DeviceCodeRepository) });
 
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
@@ -318,11 +325,7 @@ export class HTTPControllerModule {
             new UserAuthenticator(identityResolver),
         ]);
 
-        const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator({
-            identityResolver,
-            certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
-            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
-        });
+        const oauth2ClientAuthenticator = this.createOAuth2ClientAuthenticator(container);
 
         const eventService = container.resolve(DatabaseInjectionKey.EventService);
         const metrics = container.resolve(MetricsInjectionKey);
@@ -338,6 +341,7 @@ export class HTTPControllerModule {
 
         return new TokenController({
             codeVerifier,
+            deviceCodeVerifier,
 
             accessTokenIssuer,
             refreshTokenIssuer,
@@ -371,6 +375,42 @@ export class HTTPControllerModule {
 
             sessionManager,
         });
+    }
+
+    createDeviceAuthorization(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        const service = new OAuth2DeviceAuthorizationService({
+            repository: container.resolve(OAuth2InjectionToken.DeviceCodeRepository),
+            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
+            scopeRepository: container.resolve(OAuth2InjectionToken.ScopeRepository),
+            gate: new OAuth2AuthorizationGate({
+                sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+                mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
+                accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+                promptLoginMaxAge: config.promptLoginMaxAge,
+                mfaFreshnessMaxAge: config.mfaFreshnessMaxAge,
+            }),
+            consentService: this.createConsentService(container),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            metrics: container.resolve(MetricsInjectionKey),
+            logger: container.resolve(LoggerInjectionKey),
+            requestContext: useRequestEventContext,
+            options: { verificationUri: resolveURL(config.publicUrl, 'device') },
+        });
+
+        return new DeviceAuthorizationController({
+            service,
+            clientAuthenticator: this.createOAuth2ClientAuthenticator(container),
+            realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
+            certificateSource: config.certificateSource,
+        });
+    }
+
+    createDeviceController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new DeviceController({ options: { authConsoleUrl: config.authConsole.url } });
     }
 
     createOpenIDController(container: IContainer) {
@@ -873,6 +913,16 @@ export class HTTPControllerModule {
     }
 
     private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;
+
+    protected createOAuth2ClientAuthenticator(container: IContainer) : OAuth2ClientAuthenticator {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        return new OAuth2ClientAuthenticator({
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
+            certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
+            cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
+        });
+    }
 
     protected resolveAccessPolicyEvaluator(container: IContainer) : OAuth2AccessPolicyEvaluator {
         if (this.accessPolicyEvaluator) {

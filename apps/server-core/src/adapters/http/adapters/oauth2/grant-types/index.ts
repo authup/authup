@@ -9,6 +9,7 @@ export * from './utils/index.ts';
 
 export * from './authorize.ts';
 export * from './client-credentials.ts';
+export * from './device-code.ts';
 export * from './identity.ts';
 export * from './password.ts';
 export * from './refresh_token.ts';

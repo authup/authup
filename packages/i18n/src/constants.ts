@@ -151,6 +151,16 @@ export enum TranslatorTranslationClientKey {
 
     CONSENT_STATUS_LOADING = 'consentStatusLoading',
 
+    DEVICE_VERIFY_TITLE = 'deviceVerifyTitle',
+    DEVICE_CODE_LABEL = 'deviceCodeLabel',
+    DEVICE_CODE_HINT = 'deviceCodeHint',
+    DEVICE_CODE_INVALID = 'deviceCodeInvalid',
+    DEVICE_VERIFY_CONFIRM_TEXT = 'deviceVerifyConfirmText',
+    DEVICE_VERIFY_SCOPES = 'deviceVerifyScopes',
+    DEVICE_VERIFY_APPROVED = 'deviceVerifyApproved',
+    DEVICE_VERIFY_DENIED = 'deviceVerifyDenied',
+    DEVICE_VERIFY_THROTTLED = 'deviceVerifyThrottled',
+
     LOGOUT_CONFIRM_TITLE = 'logoutConfirmTitle',
     LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
     LOGOUT_DONE = 'logoutDone',

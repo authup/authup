@@ -155,3 +155,23 @@ export function buildWorkflowPageData(
 
     return data;
 }
+
+/**
+ * The `user_code` the device page prefills (RFC 8628 section 3.3.1): the
+ * query value uppercased and stripped of everything outside `A-Z0-9`, or
+ * `undefined` when nothing bounded remains. The page renders it back, so what
+ * reaches the payload is at most 16 alphanumeric characters.
+ */
+export function readDeviceUserCode(event: IAppEvent) : string | undefined {
+    const query = useRequestQuery(event);
+    if (typeof query.user_code !== 'string') {
+        return undefined;
+    }
+
+    const canonical = query.user_code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (canonical.length === 0 || canonical.length > 16) {
+        return undefined;
+    }
+
+    return canonical;
+}

@@ -24,11 +24,16 @@
  * `HTTPOAuth2IdentityGrantType` is unregistered today but mints a grant
  * straight from the request identity, so it would become live the day it is
  * wired. Do not narrow this list without re-reading plan 088, finding 2.
+ *
+ * `/device_authorization` covers the RFC 8628 endpoint and, as a prefix, the
+ * three page endpoints below it (plan 065 §5.5): an approval carries the
+ * cookie's session onto a device token, so origin script must not reach it.
  */
 export const OAUTH2_ISSUANCE_PATHS : string[] = [
     '/authorize',
     '/token',
     '/logout',
+    '/device_authorization',
 ];
 
 /**

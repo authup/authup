@@ -24,6 +24,15 @@ describe('redactSensitiveURLParams', () => {
         expect(redacted).toContain('state=s');
     });
 
+    it('should redact a device code and a user code', () => {
+        const redacted = redactSensitiveURLParams('/token?grant_type=device_code&device_code=abc123&user_code=BCDF-GHJK');
+
+        expect(redacted).toContain('device_code=***');
+        expect(redacted).toContain('user_code=***');
+        expect(redacted).not.toContain('abc123');
+        expect(redacted).not.toContain('BCDF-GHJK');
+    });
+
     it('should redact every occurrence of a repeated sensitive param', () => {
         const redacted = redactSensitiveURLParams('/logout?id_token_hint=a&id_token_hint=b');
 

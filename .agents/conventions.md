@@ -7,7 +7,7 @@
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
 | Vite             | every console BUNDLE: the auth console's SSR build (`apps/client-auth-console/`) and the two SPA builds (`apps/client-account-console/`, `apps/client-admin-console/`). The console SERVICES that serve them are tsdown like every other server package |
-| Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app has been a Nuxt app since plan 081 |
+| Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app is a Nuxt app |
 | trapi            | OpenAPI document generation off the routup decorators (`build:swagger` in `apps/server-core`). The query surface is contributed by a preset handler during the generate, so nothing rewrites the document afterwards: see architecture.md → *Query vocabulary discovery* |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
@@ -19,7 +19,7 @@
 - **Validation**: `validup` framework with `@validup/adapter-zod` for Zod schema integration
 - **Errors**: `@authup/errors` provides `AuthupError` (extends `BaseError` from `@ebec/core`) plus dedicated subclasses (`ValidationError`, `EntityNotFoundError`, `EntityConflictError`, `EntityCredentialsInvalidError`, `EntityInactiveError`, `InternalError`, `BadRequestError`, `UnauthorizedError`, etc.) with `Symbol.for(...)`-keyed duck-type guards in sibling `check.ts` files (`isError`, `isAuthupError`, `isValidationError`, `isOAuth2Error`, `isJWTError`, etc.). HTTP-status concern is decoupled — `ERROR_CODE_TO_STATUS` / `httpStatusFromCode(code)` map semantic codes to HTTP statuses in the adapter. **`core/**` must NOT throw HTTP-status-named error classes (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, …) — those names belong to the HTTP layer.** Core throws transport-agnostic domain errors: the generic `ValidationError` (business-rule / bad-input violation, maps to 400), the semantic `Entity*Error` family, or a purpose-built domain error (e.g. `KeyCertificateError`); the HTTP error middleware maps their `code` to a status via `httpStatusFromCode`. `@ebec/http` classes stay in the HTTP middleware for foreign-error translation. Domain-specific identity workflow errors (e.g. `RegistrationDisabledError`, `PasswordRecoveryDisabledError`) live in their respective `core/identity/<workflow>/` folders and extend `ValidationError`.
 - **A dead bearer is 401 on a resource route, `invalid_grant` (400) on the token endpoint.** The three `JWT_*` codes (`expired_token`, `inactive_token`, `invalid_token`) map to **401** in `ERROR_CODE_TO_STATUS`, per RFC 6750 §3.1. They were unlisted and therefore took the 400 fallback, so a dead bearer answered 400 while a MISSING one answered 401 (`identity_unauthorized`), and no client could tell "your credential died" from "your request was malformed" by status alone. The token endpoint is the exception RFC 6749 §5.2 carves out, and it is honoured at the call site rather than in the map: `HTTPOAuth2RefreshTokenGrant` catches a verification failure (`isJWTError`) and re-throws `OAuth2GrantError.invalid()`, so every unacceptable refresh token answers one shape (400 `invalid_grant`) instead of splitting by what was wrong with it. **A new token-endpoint path that verifies a JWT must do the same** — the global map cannot know which surface it is on. The account console reads the 401 (`usePageError`), and the kit's auth hook already keyed on both the status and the JWT codes, which is why this had gone unnoticed.
-- **`POST /token/introspect` REPORTS, it does not raise.** RFC 7662 §2.2: a token that "is not active, does not exist on this server, or the protected resource is not allowed to introspect" MUST be answered with `active: false`. That covers a token authup cannot read at all (malformed, bad signature, a `kid` naming no key), which used to answer `401` (`404` for the last); reporting them uniformly also stops the endpoint telling a caller whether a string was signed by a key we hold. Those reports are BARE (`{active: false}` and nothing else), per the §2.2 / §4 SHOULD NOT. **The expired token is the deliberate exception**: the verify passes `ignoreExpiry`, so it still yields its payload and the subject's claims, and the answer is `200 {active: false, ...payload, ...claims}`: a relying party can say "your session ended, \<name\>" instead of only "no". That is a knowing departure from the same SHOULD NOT, taken only for a token this server did issue and can still read. **`permissions` is withheld from any inactive report**, expired included (RFC 7662 §2.2 / §4): naming the subject is the point of reading an expired token, handing over their authorization set is not. `active` is therefore derived BEFORE the permission read, so a dead token never pays to resolve one either. Two cases still raise and are NOT reports about a token: a verifying token with no `sub`, and a subject that no longer resolves (`identity_invalid`). **`active` is derived in the CONTROLLER, never from the verify**: `OAuth2TokenVerifier`'s signature-keyed cache returns a hit without re-checking `exp`, so under `ignoreExpiry` the verify alone would report an expired token as live. It is `jti` not blocklisted AND `exp` in the future, fail-closed on either claim missing. The verifier's own rule (never `saveWithSignature` on an `ignoreExpiry` path) is what keeps an expired payload out of that cache in the first place; do not relax it. Note the coupling with `@authup/client-web-kit`: the store's `revalidate()` relied on introspection *throwing* to reach its refresh fallback, so the store now checks `active` on the response (see architecture.md → *What the kit store persists*); the two must not be separated.
+- **`POST /token/introspect` REPORTS, it does not raise.** RFC 7662 §2.2: a token that "is not active, does not exist on this server, or the protected resource is not allowed to introspect" MUST be answered with `active: false`. That covers a token authup cannot read at all (malformed, bad signature, a `kid` naming no key), which must not answer `401` or `404`; reporting them uniformly also stops the endpoint telling a caller whether a string was signed by a key we hold. Those reports are BARE (`{active: false}` and nothing else), per the §2.2 / §4 SHOULD NOT. **The expired token is the deliberate exception**: the verify passes `ignoreExpiry`, so it still yields its payload and the subject's claims, and the answer is `200 {active: false, ...payload, ...claims}`: a relying party can say "your session ended, \<name\>" instead of only "no". That is a knowing departure from the same SHOULD NOT, taken only for a token this server did issue and can still read. **`permissions` is withheld from any inactive report**, expired included (RFC 7662 §2.2 / §4): naming the subject is the point of reading an expired token, handing over their authorization set is not. `active` is therefore derived BEFORE the permission read, so a dead token never pays to resolve one either. Two cases still raise and are NOT reports about a token: a verifying token with no `sub`, and a subject that no longer resolves (`identity_invalid`). **`active` is derived in the CONTROLLER, never from the verify**: `OAuth2TokenVerifier`'s signature-keyed cache returns a hit without re-checking `exp`, so under `ignoreExpiry` the verify alone would report an expired token as live. It is `jti` not blocklisted AND `exp` in the future, fail-closed on either claim missing. The verifier's own rule (never `saveWithSignature` on an `ignoreExpiry` path) is what keeps an expired payload out of that cache in the first place; do not relax it. Note the coupling with `@authup/client-web-kit`: the store's `revalidate()` relied on introspection *throwing* to reach its refresh fallback, so the store now checks `active` on the response (see architecture.md → *What the kit store persists*); the two must not be separated.
 - **`POST /token/revoke` answers `200` for a token it cannot read**, which is the one place an RFC names invalid tokens outright: RFC 7009 §2.2, "invalid tokens do not cause an error response since the client cannot handle such an error in a reasonable way". Expiry was already bypassed via `ignoreExpiry`; the `if (isJWTError(e))` branch covers malformed and unverifiable, the `HTTPOAuth2RefreshTokenGrant` call-site shape. The status is `200` because §2.2 names it; it was `202` until then, which sat in the same 2xx class but was not the spec's answer. What the RFC actually asks for is that an invalid token be indistinguishable from a revoked one, so both paths must keep returning the SAME status — changing one without the other reintroduces the oracle. A missing `token` **parameter** is a malformed request and stays `400 invalid_request` here and on introspection alike.
 - **`POST /token/introspect` (and its `GET` form, which delegates to the same handler) requires an INDEPENDENT credential; `POST /token/revoke` deliberately does not (#3489).** RFC 7662 §2.1 makes authorization a MUST ("To prevent token scanning attacks, the endpoint MUST also require some form of authorization"), and `TokenController.assertIntrospectionAuthorized` accepts exactly two forms: a request identity the global authorization middleware already resolved (a LIVE bearer, or Basic), or confidential client credentials read the way the grants read them (`extractClientCredentialsFromRequest` + `OAuth2ClientAuthenticator`, `secret`/`tls`; a resolved `authMethod: none` client is refused with `invalid_client`, as the client-credentials grant refuses it, because a bare public `client_id` identifies and proves nothing). Nothing at all answers `401 identity_unauthorized` with the bare `WWW-Authenticate: Bearer` challenge. The credential has to be independent of the token being introspected: possession of that string is exactly what a finder of it has, so the issue's "self-introspection exemption for an expired bearer" would have been anonymous introspection under another name (and could not exist anyway, since the middleware answers 401 to an expired bearer before any route runs). That is also why the gate is what makes the expired report above safe to give: it now reaches only a caller that proved who it is. **Authentication is layer one; WHOSE tokens the caller may introspect is layer two** (`TokenController.isIntrospectionAllowed`): the token's own subject, the client the token was issued for (`payload.client_id`), or an actor granted `TOKEN_INTROSPECT`, whose realm reach is matched against the token's `realm_id` (`admin` reaches everything at `any`; a default grant's `own` covers same-realm tokens). A caller failing all three is answered with the bare `{active: false}` RFC 7662 §2.2 prescribes for a resource "not allowed to introspect" (indistinguishable from a dead token, no oracle), plus a server-side log line, since the caller gets nothing to diagnose with. Consequence for integrators: a resource server verifying FOREIGN tokens through the server adapters' remote mode needs the `TOKEN_INTROSPECT` grant on its client (one client-permission row); a downstream RP introspecting tokens issued to its own client needs nothing. The gate's credential-authenticated client is promoted to the request identity (`setRequestIdentity`, the `clientAuthBasic` shape) so the permission layer sees its grants. Every caller in the repo already had one: the kit introspects its own LIVE access token as the bearer and throws on `active: false`, so it never read the expired report, and its expired call already 401'd into `refreshSession()`; the server adapters' remote mode introspects with the resource server's own client-credentials bearer, minted lazily by `ClientAuthenticationHook` on the first 401 and replayed under `authorizationHeaderInherit` (pinned in `introspect.spec.ts` in that exact shape); the test suite's `suite.client` carries admin Basic, but hapic STRIPS the client-level header on every token-API call, so a spec must pass `{ authorizationHeaderInherit: true }` (or an explicit `authorizationHeader`) on `client.token.introspect` or it goes out anonymous. Cohort (from memory, see the introspection rows in `.agents/references/{keycloak,authentik}.md`): Keycloak is client-auth only and refuses public clients outright, Authentik is `client_id` + secret only and answers a bare `active: false` otherwise; neither accepts a bearer, which authup does because RFC 7662 names it and the secret-less consoles have nothing else. **Revocation stays open as a deliberate authup choice, not an RFC 7009 requirement:** §2.1 asks the client to send its credentials (a bare `client_id` for a public client) and the server to verify the token was issued to that client; authup knowingly skips both, because a public `client_id` proves nothing (an ownership check built on it would be advisory), the consoles are public clients whose kit revokes anonymously during logout teardown (the header is unset before the six best-effort revokes go out, and a refresh token cannot be its own bearer), possession of a token makes revoking it the benign action, and the uniform `200` leaves a scanner nothing to learn. Do not add an anonymous read to introspection, and do not gate revocation without changing the kit's teardown order.
 - **A `kid` that resolves to no usable verification key is a `JWTError`, not a `JWKError`.** `JWK_NOT_FOUND` maps to 404, which is right at `GET /jwks/:id` and wrong for a token whose header names an unknown, `enc`-use or disabled key: that made a dead bearer 404 on every resource route, escape the refresh grant's `isJWTError` catch as a 404 from `/token`, and drive the kit's http hook into its terminal branch instead of a refresh — so a key rotation ended every live browser session instead of renewing it. `OAuth2TokenVerifier` raises `JWTError.headerPropertyInvalid('kid')` for all three, which also stops echoing the supplied `kid` back. `JWKError.decryptionKeyMissing()` stays: a key row with no material is a server misconfiguration, not a property of the token.
@@ -30,7 +30,7 @@
 - **`check` / `safeCheck` pair on services**: When a service exposes a single verification that has two equally-valid call sites — one that wants exceptions (composition, business logic) and one that wants a value (HTTP boundary embedding denial in a response body) — split into two methods: `check(...)` throws on any failure, `safeCheck(...)` wraps `check` and returns `Result<null>` from `@authup/kit`. The HTTP controller calls `safeCheck` and maps `Result` → wire shape via `serializeError`. See `apps/server-core/src/core/identity/{permission,policy}/checker/` for the canonical example.
 - **Validation location**: Validators from `@authup/core-kit` (e.g., `RoleValidator`, `UserValidator`) run inside core services, not in controllers. Services receive raw `Record<string, any>` data and call `validator.run(data, { group: ValidatorGroup.CREATE })` internally. Controllers use `useRequestBody(req)` to pass the raw body to the service.
 - **Canonical identifier form**: `name` (every entity) and `user.email` are stored as `LOWER(TRIM(value))`. New `name`-style columns must chain `.trim().toLowerCase()` in their validator before the format check, and use `=` (not `LIKE`) in repository lookups. See `.agents/architecture.md#canonical-identifier-form` for the full rationale.
-- **Property naming (plan 073)**: new entity/domain properties and management-API payload/response fields must be **camelCase**. On the TypeORM entity, pin the snake_case column explicitly — `@Column({ name: 'snake_col' })` on every camelCase property, `@JoinColumn({ name })` on every relation (there is no naming strategy; a forgotten `name` yields a camelCase column that diverges from the frozen migration, so always add it). The OAuth2/OIDC protocol surface and JWT claims stay snake_case. See `.agents/architecture.md#naming-split-plan-073`.
+- **Property naming**: new entity/domain properties and management-API payload/response fields must be **camelCase**. On the TypeORM entity, pin the snake_case column explicitly — `@Column({ name: 'snake_col' })` on every camelCase property, `@JoinColumn({ name })` on every relation (there is no naming strategy; a forgotten `name` yields a camelCase column that diverges from the frozen migration, so always add it). The OAuth2/OIDC protocol surface and JWT claims stay snake_case. See `.agents/architecture.md#naming-split-plan-073`.
 - **Relation targets**: when copying a `@ManyToOne` + `@JoinColumn` block (the usual way a new relation is written), re-check the target class against the join column — `@ManyToOne(() => RealmEntity)` left on a `client_id` column emits an FK to `auth_realms`, so the column can never hold a real client id. This has slipped through twice (`auth_permissions.client_id`, fixed in migration `1766830857009`; `auth_roles.client_id`, fixed in `1784970000000`) because TypeORM derives the FK name from the table + column only, so the name looks right either way and nothing fails until a row is written. Verify a migrated schema against the entity metadata with `dataSource.driver.createSchemaBuilder().log()` — an FK drop/add pair for the table means the two disagree.
 
 ## Workflow
@@ -156,7 +156,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   `client-admin-console` / `client-account-console` / `client-auth-console`
   (the three console BUNDLES), `server-admin-console` /
   `server-account-console` / `server-auth-console` (the three console
-  SERVICES that serve them, plan 101 D2), and the planned
+  SERVICES that serve them), and the planned
   `server-core-worker` (optional background processor). The `authup`
   operator CLI is the eponymous exception. The admin app carries the full
   `admin-console` role (not bare `console`) because the UI surfaces are
@@ -166,7 +166,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   deliberate exception**. The auth pages ARE the IdP surface (they issue
   tokens rather than obtain them), so no client row exists for them. The
   name keeps the console-family symmetry anyway (settled 2026-08-02 with
-  the maintainer, plan 083).
+  the maintainer).
 - **A console's bundle and its service share a role and differ only in the
   prefix**, which is the grammar working as intended rather than a
   collision: the bundle is built FOR a browser (`client-`) and the service
@@ -219,9 +219,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   `ACCOUNT_CONSOLE_BASE_PATH` constants, because it declares all three sections
   and the console name is what tells them apart.
 
-History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
-`apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
-with no aliases kept. The `client-web-*` packages keep their names on purpose.
+The `client-web-*` packages keep their names on purpose.
 A `web-` platform-prefix grammar (`web-kit`, `web-admin-console`) was evaluated
 and rejected 2026-08-03: "web" already means Web-standard APIs in
 `server-adapter-web`, the kit's real constraint is Vue rather than "web", and
@@ -249,17 +247,12 @@ Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — de
 
 ## The root `package.json` carries NO `overrides`, and an exact pin there is what CAUSED the duplicate copies
 
-The root manifest carried an `overrides` block for years: exact pins on
-`vue`, `vue-router` and `typeorm`, caret pins on `validup`, `@vuecs/core`,
-`@ebec/core`, the `@validup/*` and `@ilingo/*` families, `ilingo` and
-`@trapi/core`. It was removed on 2026-09-08, after the dependabot bump
-#3573 broke `build:types` in server-core with 33 errors over two
-incompatible `DataSource` types: the workspace had moved to `typeorm@1.1.1`
-while the pin still said `1.1.0`, so the lock held a nested `1.1.0` under
-`apps/server-core` next to the hoisted `1.1.1`. The previous version of
-this section recorded four `vue` / `vue-router` recurrences of the same
-face and prescribed realigning the pin on every bump. That prescription
-was fighting the pin itself. Do not re-add one.
+**Do not re-add an `overrides` block.** An exact pin there is what CAUSES the
+nested copies it looks like it prevents, and realigning it on every bump is
+fighting the pin rather than fixing anything (#3573: a pin left at
+`typeorm@1.1.0` while the workspace moved to `1.1.1` nested the old copy under
+`apps/server-core` and broke `build:types` with 33 errors over two
+incompatible `DataSource` types).
 
 **Mechanism, so the treadmill is recognised if someone proposes it again.**
 An exact override rewrites every edge onto one literal, which npm dedupes
@@ -267,12 +260,12 @@ into one node, but that node can never be REPLACED: arborist hoists a newer
 version by replacing the root node when the new version satisfies every
 edge into it, and the pin forbids exactly that. So when the workspaces move
 past the pinned patch, npm nests a fresh copy under each workspace that
-asked, and the "downward" and "upward" duplication stories the old section
-told were both this one refusal. Measured on the same manifests: with no
-override at all, a resolution from scratch yields ONE copy of every package
-that used to be pinned, and the caret pins on `@ilingo/validup`,
-`@ilingo/validup-vue` and `@validup/vue` had not even been effective (the
-lock carried three nested copies of each under them; without them, one).
+asked — both the "downward" and the "upward" duplication stories are this one
+refusal. Measured: with no override at all, a resolution from scratch yields
+ONE copy of every package a pin would have covered, and caret pins on
+`@ilingo/validup`, `@ilingo/validup-vue` and `@validup/vue` are not even
+effective (with them the lock carries three nested copies of each; without
+them, one).
 
 **Two packages nest for a reason unrelated to overrides, and only lock
 inertia decides where they land.** `pinia@4` has a REQUIRED peer on
@@ -329,11 +322,11 @@ from the previous lock, never re-resolved.
 - **Every configuration key is declared once, in `@authup/server-config`**,
   in the document section it belongs to; a service SELECTS the sections and
   keys it reads rather than declaring them. A service that names key names
-  cannot mis-spell a path, an environment variable or a reader. The
-  predecessor had each package declare what it read: `composeSchemas`
-  asserted that overlapping declarations agreed on path, environment
-  variable, default and reader, but not on the zod type or the description,
-  and could not see a key a registry never declared at all.
+  cannot mis-spell a path, an environment variable or a reader. Having each
+  package declare what it reads, with a composition step asserting that
+  overlapping declarations agree, covers path, environment variable, default
+  and reader but not the zod type or the description, and cannot see a key a
+  registry never declared at all.
 - **The configuration document's types are authup's own**, never borrowed
   from the library that eventually consumes the value. `db`, `redis`, `smtp`
   and the seven `middleware*` keys would otherwise drag typeorm,
@@ -361,8 +354,8 @@ from the previous lock, never re-resolved.
   directory itself rather than a `provisioning` subdirectory of it. Same rule
   the theme directory already follows (architecture.md → *Console Theming*):
   a process-writable directory must not hold what the process serves or reads
-  as configuration. The predecessor key `writableDirectoryPath` conflated the
-  two. A configured provisioning directory that does not exist is reported
+  as configuration, so one key must never cover both. A configured provisioning
+  directory that does not exist is reported
   once at boot as an `info` line naming the resolved path and is never
   refused: provisioning is optional, and the Docker image sets
   `PROVISIONING_DIRECTORY_PATH` to `/etc/authup/provisioning` without
@@ -485,8 +478,7 @@ user-facing copy such as the `@authup/i18n` catalogs.
 ## Consolidating shallow modules
 
 A refactor that gathers several one-purpose modules behind one object relocates
-logic rather than deepening it. It was tried here once and reverted (plan 029,
-2026-07-04): `apps/server-core/src/adapters/http/request/helpers/`, eleven files
+logic rather than deepening it. It was tried here once and reverted (2026-07-04): `apps/server-core/src/adapters/http/request/helpers/`, eleven files
 answering "what do we know about this request", became a single `RequestContext`
 under one `event.store` symbol, and then went back.
 

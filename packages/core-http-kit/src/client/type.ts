@@ -24,6 +24,7 @@ import type {
     IIdentityProviderRoleMappingAPI,
     IKeyAPI,
     IOAuth2AuthorizeAPI,
+    IOAuth2DeviceAuthorizationAPI,
     IOAuth2TokenAPI,
     IOAuth2UserInfoAPI,
     IPermissionAPI,
@@ -78,6 +79,13 @@ export interface IClient extends IBaseClient {
     readonly clientScope : IClientScopeAPI;
 
     readonly consent : IConsentAPI;
+
+    /**
+     * The RFC 8628 device authorization flow: `create` is the device's own
+     * request, `lookup` / `approve` / `deny` are the bearer-gated calls of
+     * the hosted device page.
+     */
+    readonly deviceAuthorization : IOAuth2DeviceAuthorizationAPI;
 
     readonly event : IEventAPI;
 

@@ -29,10 +29,15 @@ import type { IClient } from '@authup/core-http-kit';
  * against an older contract would otherwise fail per request on
  * `/authorize` rather than at boot with an actionable message.
  */
-export const CONTRACT_VERSION = 3;
+export const CONTRACT_VERSION = 4;
 
 /*
  * History:
+ *
+ * 4 - the host renders `/device` (the RFC 8628 device verification page,
+ *     plan 065) with a payload of `{ features, userCode? }`; a bundle built
+ *     against 3 answers an empty `<div id="app">` for every device
+ *     verification with no error anywhere, the version-2 precedent.
  *
  * 3 - the `/authorize` payload carries `federatedLogin: { providerId }` and
  *     the page has to complete it with a payload-less, same-origin

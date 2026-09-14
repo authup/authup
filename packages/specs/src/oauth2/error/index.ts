@@ -8,6 +8,7 @@
 export * from './access-denied';
 export * from './client';
 export * from './client-unauthorized';
+export * from './device-authorization';
 export * from './grant';
 export * from './grant-type';
 export * from './login-required';

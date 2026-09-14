@@ -7,10 +7,19 @@
 
 import { createHash } from 'node:crypto';
 import { ErrorCode } from '@authup/errors';
-import { JWTAlgorithm } from '@authup/specs';
+import {
+    JWTAlgorithm,
+    OAuth2AccessDeniedError,
+    OAuth2LoginRequiredError,
+    OAuth2MfaRequiredError,
+} from '@authup/specs';
 import { describe, expect, it } from 'vitest';
 import { SessionAuthMethod } from '@authup/core-kit';
-import { buildOAuth2TokenHash, deriveAmrAcr } from '../../../../../src/core/oauth2/authorization/helpers.ts';
+import {
+    buildOAuth2TokenHash,
+    classifyAuthorizeFailure,
+    deriveAmrAcr,
+} from '../../../../../src/core/oauth2/authorization/helpers.ts';
 
 // OIDC Core §3.1.3.6 reference: base64url of the LEFT HALF of the digest
 // matching the JWS alg — computed independently of the implementation.
@@ -104,5 +113,18 @@ describe('deriveAmrAcr', () => {
     it('should yield no claims for a pre-column session (null auth_method)', () => {
         expect(deriveAmrAcr({ authMethod: null, mfaAt: at })).toEqual({});
         expect(deriveAmrAcr(null)).toEqual({});
+    });
+});
+
+describe('classifyAuthorizeFailure', () => {
+    it('should map the three gate refusals onto their metric outcomes', () => {
+        expect(classifyAuthorizeFailure(OAuth2AccessDeniedError.forClient())).toBe('denied');
+        expect(classifyAuthorizeFailure(OAuth2LoginRequiredError.realmMismatch())).toBe('login_required');
+        expect(classifyAuthorizeFailure(OAuth2MfaRequiredError.challengeRequired())).toBe('mfa_required');
+    });
+
+    it('should classify anything else as an error', () => {
+        expect(classifyAuthorizeFailure(new Error('boom'))).toBe('error');
+        expect(classifyAuthorizeFailure(undefined)).toBe('error');
     });
 });

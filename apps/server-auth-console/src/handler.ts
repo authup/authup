@@ -22,6 +22,7 @@ import {
     createAPIClient,
     createFeaturesReader,
     readAuthorizeInfo,
+    readDeviceUserCode,
 } from './payload';
 import { assertRenderContract, createRenderPage } from './render';
 import { resolveDistPath } from './resolve';
@@ -122,6 +123,19 @@ export async function createHandler(
         fn: async (event) => renderPage(event, config, {
             url: '/logout',
             data: {},
+            theme,
+        }),
+    }));
+
+    app.use(defineCoreHandler({
+        method: 'get',
+        path: '/device',
+        fn: async (event) => renderPage(event, config, {
+            url: '/device',
+            data: {
+                features: await readFeatures(),
+                userCode: readDeviceUserCode(event),
+            },
             theme,
         }),
     }));

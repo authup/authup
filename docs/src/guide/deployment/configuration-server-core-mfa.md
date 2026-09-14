@@ -14,9 +14,16 @@ deployments. Inline enrollment during login rides the hosted `/authorize` page
 ## Enforcement model
 
 With MFA enabled, a local user who has any confirmed authenticator must complete
-a second-factor challenge during password login and before authorization-code
-issuance. `mfaRequired` additionally routes a device-less user through inline
-enrollment on the hosted `/authorize` page.
+a second-factor challenge at three points: during password login, before
+authorization-code issuance on the hosted `/authorize` page, and before
+approving a device on the hosted `/device` page (the
+[device authorization grant](../development/api-oauth2.md#_8-device-authorization-grant-rfc-8628)).
+The last two run the same session-bound check: the proof is the verified factor
+on the browser session the person acts from, so a device approval carries a
+second factor once that session has completed a challenge, at login or on the
+`/device` page itself, and the device's tokens report it in `amr` and `acr`.
+`mfaRequired` additionally routes a user without a confirmed authenticator
+through inline enrollment on both hosted pages.
 
 The following boundaries are intentional:
 

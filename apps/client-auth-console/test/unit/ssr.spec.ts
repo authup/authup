@@ -42,6 +42,7 @@ describe('server render', () => {
         '/password-forgot',
         '/password-reset',
         '/logout',
+        '/device',
     ])('renders %s without a DOM', async (url) => {
         const html = await render(url);
 

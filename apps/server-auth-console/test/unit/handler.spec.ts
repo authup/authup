@@ -133,7 +133,7 @@ describe('createHandler', () => {
         const root = await writeBundle({
             'client/index.html': SHELL,
             'client/.vite/ssr-manifest.json': '{}',
-            'server/server.js': 'export const CONTRACT_VERSION = 3; export async function render() { return ["substituted-bundle", ""]; }',
+            'server/server.js': 'export const CONTRACT_VERSION = 4; export async function render() { return ["substituted-bundle", ""]; }',
         });
 
         const second = serve(
@@ -190,11 +190,11 @@ describe('createHandler bundle contract', () => {
     it('refuses a bundle built against another contract version', async () => {
         const root = await writeBundle({
             'client/index.html': SHELL,
-            'server/server.js': 'export const CONTRACT_VERSION = 2; export async function render() { return ["", ""]; }',
+            'server/server.js': 'export const CONTRACT_VERSION = 3; export async function render() { return ["", ""]; }',
         });
 
         await expect(createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })))
-            .rejects.toThrow(/render-contract version 2, but this service requires 3/);
+            .rejects.toThrow(/render-contract version 3, but this service requires 4/);
     });
 
     it('reads a bundle without the export as version 1', async () => {
@@ -356,11 +356,67 @@ describe('createHandler server-side fetch', () => {
                 const response = await fetch(`${url}${page}`);
                 expect(response.status).toEqual(500);
 
-                 
+
                 const body = await response.text();
                 expect(body).not.toContain(internal);
                 expect(body).not.toContain('127.0.0.1:1');
             }
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should render the device page with the normalized user code', async () => {
+        const config = {
+            ...await resolveConfig({ publicUrl: 'https://example.com' }),
+            apiInternalUrl: apiURL,
+        };
+
+        const local = serve(await createHandler(config), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/device?user_code=bcdf-ghjk`);
+
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('content-type')).toContain('text/html');
+            expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+            expect(response.headers.get('x-frame-options')).toEqual('DENY');
+            expect(response.headers.get('cache-control')).toEqual('no-store');
+
+            const body = await response.text();
+
+            expect(body).toContain('<div id="app">');
+            expect(body).not.toContain('<!--app-html-->');
+            expect(body).toContain('"userCode":"BCDFGHJK"');
+            expect(body).toContain('"baseURL":"https://example.com"');
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should render nothing for a user code that is not a bounded alphanumeric string', async () => {
+        const config = {
+            ...await resolveConfig({ publicUrl: 'https://example.com' }),
+            apiInternalUrl: apiURL,
+        };
+
+        const local = serve(await createHandler(config), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const injected = encodeURIComponent('</script><script>alert(1)</script>');
+            const response = await fetch(`${url}/device?user_code=${injected}`);
+
+            expect(response.status).toEqual(200);
+
+            const body = await response.text();
+
+            expect(body).toContain('<div id="app">');
+            expect(body).not.toContain('"userCode"');
+            expect(body).not.toContain('alert(1)');
         } finally {
             await local.close(true);
         }

@@ -29,5 +29,17 @@ describe('src/status', () => {
     ])('should serve %s as unauthorized', (code) => {
         expect(httpStatusFromCode(code)).toEqual(401);
     });
+
+    it('should serve a throttled device verification as too many requests', () => {
+        expect(httpStatusFromCode(ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED)).toEqual(429);
+    });
+
+    it.each([
+        ErrorCode.OAUTH_AUTHORIZATION_PENDING,
+        ErrorCode.OAUTH_SLOW_DOWN,
+        ErrorCode.OAUTH_DEVICE_CODE_EXPIRED,
+    ])('should serve %s as bad request, never as the 401 expired bearer', (code) => {
+        expect(httpStatusFromCode(code)).toEqual(400);
+    });
 });
 

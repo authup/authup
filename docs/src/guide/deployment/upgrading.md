@@ -7,6 +7,33 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### The device authorization grant is available, opt-in per client
+
+`POST /device_authorization` and `grant_type=urn:ietf:params:oauth:grant-type:device_code`
+at `/token` implement RFC 8628, with the verification page at
+`<publicUrl>/device` (see
+[Device Authorization Grant](../development/api-oauth2.md#_8-device-authorization-grant-rfc-8628)).
+Nothing is enabled by the upgrade: a client uses the grant only while the URN is
+listed in its `grantTypes`, and a `null` `grantTypes`, which allows every
+other grant, does not enable this one. Review which clients should list it.
+
+The realm discovery document carries `device_authorization_endpoint` and
+`grant_types_supported` (the five grants Authup implements), and
+`mtls_endpoint_aliases` carries the device endpoint when `mtlsPublicUrl` is
+set. Four codes join `ErrorCode`: `authorization_pending`, `slow_down` and
+`device_code_expired` on the poll (each with the matching RFC 8628 `error`,
+`expired_token` for the last) and `device_verification_throttled` (`429`) on
+the verification page. A consumer switching exhaustively over the enum, or a
+translation catalog keyed by it, needs the four entries.
+
+The render contract of `@authup/client-auth-console` is version `4`, which
+renders the `/device` page. A substituted auth console package
+(`AUTH_CONSOLE_PATH`) built against version 3 is refused at boot; rebuild it
+against the current contract. A split deployment needs no new proxy rule:
+`/device` and `/device_authorization` sit outside `/console` and land on the
+API set, and `/console/auth/device` follows the console rule (see
+[Console Replicas](./console-replicas.md#routing)).
+
 ### Identity-provider secrets are encrypted at rest
 
 The OAuth2/OIDC `clientSecret` and the LDAP bind `password` of an identity
@@ -145,7 +172,7 @@ stores the hash, while a bcrypt value in the file is kept verbatim.
 
 With a built bundle in place, `authup start` / `authup start console auth`
 refuse to start when the bundle's `CONTRACT_VERSION` (missing = 1) is not
-the version this release requires (3), naming the entry and both versions.
+the version this release requires (4), naming the entry and both versions.
 v1.0.0-beta.64 shipped without the check and rendered such a bundle. Rebuild
 the substituted package against the current `@authup/client-auth-console`
 contract. A missing bundle still answers the actionable per-request error

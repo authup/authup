@@ -8,6 +8,10 @@
 export enum OAuth2TokenGrant {
     AUTHORIZATION_CODE = 'authorization_code',
     CLIENT_CREDENTIALS = 'client_credentials',
+    /**
+     * RFC 8628 §3.4 device authorization grant.
+     */
+    DEVICE_CODE = 'urn:ietf:params:oauth:grant-type:device_code',
     PASSWORD = 'password',
     REFRESH_TOKEN = 'refresh_token',
 }
@@ -116,6 +120,21 @@ export enum OAuth2ErrorCode {
      * denied the request.
      */
     ACCESS_DENIED = 'access_denied',
+
+    /**
+     * RFC 8628 §3.5: the device code is still awaiting the user's decision.
+     */
+    AUTHORIZATION_PENDING = 'authorization_pending',
+
+    /**
+     * RFC 8628 §3.5: the device polled inside the interval.
+     */
+    SLOW_DOWN = 'slow_down',
+
+    /**
+     * RFC 8628 §3.5: the device code has expired.
+     */
+    EXPIRED_TOKEN = 'expired_token',
 }
 
 /**

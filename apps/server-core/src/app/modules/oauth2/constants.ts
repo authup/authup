@@ -18,6 +18,7 @@ import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2AuthorizeStateRepository,
     IOAuth2ClientRepository,
+    IOAuth2DeviceCodeRepository,
     IOAuth2FederatedLoginStore,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2ScopeRepository,
@@ -43,6 +44,7 @@ export const OAuth2InjectionToken = {
     AuthorizationStateRepository: new TypedToken<IOAuth2AuthorizeStateRepository>('AuthorizationStateRepository'),
 
     ConsoleLoginStore: new TypedToken<IConsoleLoginStore>('ConsoleLoginStore'),
+    DeviceCodeRepository: new TypedToken<IOAuth2DeviceCodeRepository>('DeviceCodeRepository'),
     FederatedLoginStore: new TypedToken<IOAuth2FederatedLoginStore>('FederatedLoginStore'),
 
     /**
