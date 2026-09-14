@@ -10,7 +10,7 @@ import type { FakeClient } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import type { User } from '@authup/core-kit';
 import { createStore, createStoreDispatcher } from '../../../../src/core/store';
-import { buildAuthorizationDocument, buildAuthorizationIdentity } from '../../../utils/authorization';
+import { buildAuthorizationCatalog } from '../../../utils/authorization';
 
 const TOKEN_SUBJECT = 'user-1';
 
@@ -34,7 +34,7 @@ function buildStore() {
                 name: 'admin',
                 realmId: 'realm-1',
             }),
-            'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ id: TOKEN_SUBJECT, realm_id: 'realm-1' }) }),
+            'GET /authorization': () => buildAuthorizationCatalog(),
         },
     });
 
@@ -58,13 +58,7 @@ function buildStoreWithSubjectKind(subKind: 'user' | 'client') {
                 realm_name: 'master',
                 permissions: [],
             }),
-            'GET /authorization': () => buildAuthorizationDocument({
-                identity: buildAuthorizationIdentity({
-                    id: TOKEN_SUBJECT, 
-                    type: subKind, 
-                    realm_id: 'realm-1', 
-                }), 
-            }),
+            'GET /authorization': () => buildAuthorizationCatalog(),
         },
     });
 
@@ -162,7 +156,7 @@ describe('core/store/revalidate', () => {
                     realm_name: 'master',
                     permissions: [],
                 }),
-                'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ id: TOKEN_SUBJECT, realm_id: 'realm-1' }) }),
+                'GET /authorization': () => buildAuthorizationCatalog(),
             },
         });
 
@@ -202,7 +196,7 @@ describe('core/store/revalidate', () => {
                         permissions: [],
                     };
                 },
-                'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ id: TOKEN_SUBJECT, realm_id: 'realm-1' }) }),
+                'GET /authorization': () => buildAuthorizationCatalog(),
             },
         });
 

@@ -18,8 +18,8 @@ import type { OAuth2TokenPermission } from '@authup/specs';
  * The store's one permission evaluator for its whole lifetime. Consumers hold
  * on to `store.permissionEvaluator`, so a session commit swaps what it
  * DELEGATES to rather than the object itself: the evaluator built from the
- * session's authorization document, or the name-only fallback for a server
- * predating `GET /authorization`. A reset denies everything.
+ * catalog and the introspection's grants, or the name-only fallback for a
+ * server predating `GET /authorization`. A reset denies everything.
  */
 export class StorePermissionEvaluator implements IPermissionEvaluator {
     protected inner : IPermissionEvaluator;

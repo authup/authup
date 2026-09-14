@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { AuthorizationCatalogStaleError, BuiltInPolicyType, PolicyData } from '@authup/access';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
@@ -13,8 +13,8 @@ import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../..
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
-    buildAuthorizationDocument,
-    buildAuthorizationIdentity,
+    buildAuthorizationCatalog,
+    buildAuthorizationGrants,
 } from '../../../utils/authorization';
 
 const INTROSPECTION = {
@@ -27,7 +27,14 @@ const INTROSPECTION = {
     realm_id: AUTHORIZATION_REALM,
     realm_name: 'master',
     scope: 'global openid',
-    permissions: [{ name: 'user_read' }, { name: 'legacy_only' }],
+    permissions: buildAuthorizationGrants(),
+};
+
+const GRANT_RESPONSE = {
+    access_token: 'xyz',
+    token_type: 'Bearer',
+    expires_in: 3600,
+    refresh_token: 'abc',
 };
 
 function createResponseError(status: number, message: string) {
@@ -37,23 +44,18 @@ function createResponseError(status: number, message: string) {
 function buildStore(handlers: FakeHandlerMap = {}, cookieSession = false) {
     const httpClient = createFakeClient({
         handlers: {
-            'POST /token': () => ({
-                access_token: 'xyz', 
-                token_type: 'Bearer', 
-                expires_in: 3600, 
-                refresh_token: 'abc',
-            }),
+            'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION }),
             'GET /sessions/@me/introspect': () => ({ ...INTROSPECTION }),
-            'GET /authorization': () => buildAuthorizationDocument(),
+            'GET /authorization': () => buildAuthorizationCatalog(),
             'POST /token/revoke': () => ({}),
             ...handlers,
         },
     });
     const store = createStore({
-        httpClient, 
-        dispatcher: createStoreDispatcher(), 
-        cookieSession, 
+        httpClient,
+        dispatcher: createStoreDispatcher(),
+        cookieSession,
     });
 
     return { store, httpClient };
@@ -63,31 +65,93 @@ function realm(realmId: string | null) {
     return new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId });
 }
 
-function findAuthorizationRequest(httpClient: FakeClient) : FakeRequest | undefined {
-    return httpClient.requests.find(
-        (request) => new URL(request.url, 'http://localhost').pathname === '/authorization',
+function findRequests(httpClient: FakeClient, pathname: string) : FakeRequest[] {
+    return httpClient.requests.filter(
+        (request) => new URL(request.url, 'http://localhost').pathname === pathname,
     );
 }
 
-describe('core/store (authorization document)', () => {
-    it('fetches the document with the staged bearer and gates by realm reach', async () => {
+/**
+ * A catalog that answers stale for the fixture's grants: it defines nothing,
+ * so the `user_read` grant references a definition it lacks.
+ */
+function buildStaleCatalog() {
+    return buildAuthorizationCatalog({ permissions: [] });
+}
+
+describe('core/store (authorization catalog)', () => {
+    it('fetches the catalog once with the staged bearer and gates by realm reach', async () => {
         const { store, httpClient } = buildStore();
         const evaluator = store.permissionEvaluator;
 
         await store.login({ name: 'admin', password: 'start123' });
 
-        const request = findAuthorizationRequest(httpClient);
-        expect(request?.headers.authorization).toEqual('Bearer xyz');
+        const requests = findRequests(httpClient, '/authorization');
+        expect(requests).toHaveLength(1);
+        expect(requests[0].headers.authorization).toEqual('Bearer xyz');
         expect(store.permissionEvaluator).toBe(evaluator);
 
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).rejects.toThrow();
-        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).rejects.toThrow();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_write' })).rejects.toThrow();
+    });
+
+    it('reads the catalog once per store instance across a login and a revalidation', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        // a refresh grant marks the resolution stale, so the next resolve()
+        // introspects again and rebuilds the evaluator
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/token/introspect')).toHaveLength(2);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
+    });
+
+    it('refetches a catalog the grants outrun once and builds from the second answer', async () => {
+        let calls = 0;
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => {
+                calls += 1;
+
+                return calls === 1 ? buildStaleCatalog() : buildAuthorizationCatalog();
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
+    });
+
+    it('fails the login and revokes the staged grant when the refetched catalog is stale too', async () => {
+        const { store, httpClient } = buildStore({ 'GET /authorization': () => buildStaleCatalog() });
+
+        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow(AuthorizationCatalogStaleError);
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+        expect(store.accessToken.value).toBeNull();
+        expect(findRequests(httpClient, '/token/revoke')).toHaveLength(2);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+
+        // a catalog known to be stale is not served again: the next login
+        // fetches anew
+        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow(AuthorizationCatalogStaleError);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(4);
     });
 
     it('falls back to the name-only view when the server has no authorization route', async () => {
-        const { store } = buildStore({
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({
+                ...INTROSPECTION,
+                permissions: [...buildAuthorizationGrants(), { name: 'legacy_only' }],
+            }),
             'GET /authorization': () => {
                 throw createResponseError(404, 'Not Found');
             },
@@ -98,12 +162,25 @@ describe('core/store (authorization document)', () => {
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).resolves.toBeUndefined();
+
+        // the 404 is memoized like a catalog: a revalidation does not probe again
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
     });
 
-    it('treats any other failure like a failed introspection: nothing committed, the grant revoked', async () => {
+    it('treats any other failure like a failed introspection: nothing committed, the grant revoked, the next login retries', async () => {
+        let calls = 0;
         const { store, httpClient } = buildStore({
             'GET /authorization': () => {
-                throw createResponseError(503, 'Service unavailable.');
+                calls += 1;
+                if (calls === 1) {
+                    throw createResponseError(503, 'Service unavailable.');
+                }
+
+                return buildAuthorizationCatalog();
             },
         });
 
@@ -111,51 +188,54 @@ describe('core/store (authorization document)', () => {
 
         expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.accessToken.value).toBeNull();
-        expect(httpClient.requests.filter((item) => item.url.endsWith('/token/revoke'))).toHaveLength(2);
+        expect(findRequests(httpClient, '/token/revoke')).toHaveLength(2);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
     });
 
-    it('refuses a document naming another subject', async () => {
-        const { store } = buildStore({
-            'GET /authorization': () => buildAuthorizationDocument({
-                identity: {
-                    id: 'someone-else', 
-                    type: 'user', 
-                    realm_id: AUTHORIZATION_REALM, 
-                    realm_name: 'master', 
-                    client_id: null,
-                },
-            }),
-        });
+    it('refuses an introspection naming no subject', async () => {
+        const { store } = buildStore({ 'POST /token/introspect': () => ({ ...INTROSPECTION, sub: undefined }) });
 
         await expect(store.login({ name: 'admin', password: 'start123' }))
-            .rejects.toThrow('The authorization document names another subject.');
+            .rejects.toThrow('The introspection names no subject.');
         expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 
-        const otherKind = buildStore({ 'GET /authorization': () => buildAuthorizationDocument({ identity: buildAuthorizationIdentity({ type: 'client' }) }) });
+        const otherKind = buildStore({ 'POST /token/introspect': () => ({ ...INTROSPECTION, sub_kind: 'robot' }) });
 
         await expect(otherKind.store.login({ name: 'admin', password: 'start123' }))
-            .rejects.toThrow('The authorization document names another subject.');
+            .rejects.toThrow('The introspection names no subject.');
         expect(otherKind.store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
     });
 
-    it('fetches the document on a cookie session without a bearer', async () => {
+    it('builds a cookie session from the session introspection grants and the catalog', async () => {
         const { store, httpClient } = buildStore({}, true);
 
         await store.resolve();
 
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
-        const request = findAuthorizationRequest(httpClient);
-        expect(request).toBeDefined();
-        expect(request?.headers.authorization).toBeUndefined();
+        const requests = findRequests(httpClient, '/authorization');
+        expect(requests).toHaveLength(1);
+        expect(requests[0].headers.authorization).toBeUndefined();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).rejects.toThrow();
     });
 
-    it('resets the evaluator on logout', async () => {
-        const { store } = buildStore();
+    it('resets the evaluator on logout and reuses the cached catalog on the next login', async () => {
+        const { store, httpClient } = buildStore();
+
         await store.login({ name: 'admin', password: 'start123' });
         await store.logout();
 
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
     });
 });

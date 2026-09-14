@@ -8,7 +8,7 @@
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import { createStore, createStoreDispatcher } from '../../../../src/core/store';
-import { AUTHORIZATION_SUBJECT, buildAuthorizationDocument } from '../../../utils/authorization';
+import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from '../../../utils/authorization';
 
 function buildStore() {
     const httpClient = createFakeClient({
@@ -25,7 +25,7 @@ function buildStore() {
                 sub: AUTHORIZATION_SUBJECT, 
                 sub_kind: 'user', 
             }),
-            'GET /authorization': () => buildAuthorizationDocument(),
+            'GET /authorization': () => buildAuthorizationCatalog(),
             'POST /token/revoke': () => ({}),
         },
     });
@@ -92,7 +92,7 @@ describe('core/store/id-token', () => {
                     sub: AUTHORIZATION_SUBJECT, 
                     sub_kind: 'user', 
                 }),
-                'GET /authorization': () => buildAuthorizationDocument(),
+                'GET /authorization': () => buildAuthorizationCatalog(),
                 'POST /token/revoke': () => ({}),
             },
         });

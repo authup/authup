@@ -5,41 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationDocument, AuthorizationIdentity } from '@authup/access';
+import type { AuthorizationCatalog } from '@authup/access';
+import type { OAuth2TokenPermission } from '@authup/specs';
 
+/**
+ * The identity policy's data validator requires uuid ids, so a spec that
+ * EVALUATES through the catalog must introspect these constants; one that
+ * merely commits a session may name any subject.
+ */
 export const AUTHORIZATION_SUBJECT = '245e3c5d-5747-4fbd-8554-c33d34780c58';
 export const AUTHORIZATION_REALM = '0f3f6d6e-1b2c-4d5e-8f90-a1b2c3d4e5f6';
 
 /**
- * The identity the document names. The identity policy's data validator
- * requires uuid ids, so a spec that EVALUATES through the document must
- * introspect these constants; one that merely commits it may name any
- * subject, as long as the introspection and the document agree.
+ * An identity-free catalog whose one definition is gated like the server
+ * gates every built-in permission (the `system.default` composite). Who
+ * holds it, and at which reach, is the introspection's business.
  */
-export function buildAuthorizationIdentity(
-    overrides: Partial<AuthorizationIdentity> = {},
-) : AuthorizationIdentity {
-    return {
-        id: AUTHORIZATION_SUBJECT,
-        type: 'user',
-        realm_id: AUTHORIZATION_REALM,
-        realm_name: 'master',
-        client_id: null,
-        ...overrides,
-    };
-}
-
-/**
- * A document whose one permission is gated like the server gates every
- * built-in permission (the `system.default` composite) and granted at `own`
- * reach, so a check carrying `realmMatch` settles per row.
- */
-export function buildAuthorizationDocument(
-    overrides: Partial<AuthorizationDocument> = {},
-) : AuthorizationDocument {
+export function buildAuthorizationCatalog(
+    overrides: Partial<AuthorizationCatalog> = {},
+) : AuthorizationCatalog {
     return {
         version: 1,
-        identity: buildAuthorizationIdentity(),
         policies: {
             default: {
                 type: 'composite',
@@ -53,8 +39,21 @@ export function buildAuthorizationDocument(
             client_id: null,
             decision_strategy: null,
             policies: ['default'],
-            grants: [{ realm_scope: 'own', policies: [] }],
         }],
         ...overrides,
     };
+}
+
+/**
+ * The grant list an introspection carries for the catalog's definition,
+ * held at `own` reach, so a check carrying `realmMatch` settles per row.
+ */
+export function buildAuthorizationGrants() : OAuth2TokenPermission[] {
+    return [{
+        name: 'user_read',
+        realm_id: null,
+        client_id: null,
+        realm_scope: 'own',
+        policies: [],
+    }];
 }

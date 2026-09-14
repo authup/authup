@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionEvaluator } from '@authup/access';
-import { createAuthorizationEvaluator } from '@authup/access';
+import type { AuthorizationCatalog, IPermissionEvaluator, IdentityPolicyData } from '@authup/access';
+import { AuthorizationCatalogStaleError, createAuthorizationEvaluator } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -398,22 +398,17 @@ export function createStore(context: StoreCreateContext) {
         return response;
     };
 
-    /**
-     * The session's authorization document, staged like the introspection and
-     * committed with it. A `404` is a server predating `GET /authorization`:
-     * the document only sharpens advisory UI gating, so the name-only view
-     * stays the fallback there, where a resource server must fail closed.
-     * The document has to name the introspected subject, id and kind alike;
-     * anything else is a failure, and takes the path a failed introspection
-     * takes.
-     */
-    const fetchAuthorization = async (
-        introspection: OAuth2TokenIntrospectionResponse,
-        token?: string,
-    ) : Promise<IPermissionEvaluator | null> => {
-        let document : unknown;
+    // One catalog per store instance. It is identity-free, so it outlives
+    // cleanup() and a later login builds from the same copy.
+    let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
+
+    const reloadCatalog = () => {
+        catalogPromise = undefined;
+    };
+
+    const fetchCatalog = async (token?: string) : Promise<AuthorizationCatalog | null> => {
         try {
-            document = await client.authorization.get(token ?
+            return await client.authorization.get(token ?
                 { authorizationHeader: { type: 'Bearer', token } } :
                 undefined);
         } catch (e) {
@@ -423,18 +418,105 @@ export function createStore(context: StoreCreateContext) {
 
             throw e;
         }
+    };
 
-        const evaluator = await createAuthorizationEvaluator(document);
-        if (!introspection.sub) {
+    /**
+     * The catalog `GET /authorization` serves, memoized. A `404` is a server
+     * predating the route and memoizes as null: the catalog only sharpens
+     * advisory UI gating, so the name-only view stays the fallback there,
+     * where a resource server must fail closed. Any other failure rejects
+     * and clears the memo, so the next resolve retries.
+     */
+    const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
+        if (!catalogPromise) {
+            const promise = fetchCatalog(token).catch((e) => {
+                if (catalogPromise === promise) {
+                    reloadCatalog();
+                }
+
+                throw e;
+            });
+
+            catalogPromise = promise;
+        }
+
+        return catalogPromise;
+    };
+
+    const buildIdentity = (
+        introspection: OAuth2TokenIntrospectionResponse,
+    ) : IdentityPolicyData => {
+        if (
+            !introspection.sub ||
+            (
+                introspection.sub_kind !== OAuth2SubKind.USER &&
+                introspection.sub_kind !== OAuth2SubKind.CLIENT
+            )
+        ) {
             throw new OAuth2Error('The introspection names no subject.');
         }
 
-        const { identity } = (document as { identity?: { id?: unknown, type?: unknown } });
-        if (identity?.id !== introspection.sub || identity?.type !== introspection.sub_kind) {
-            throw new OAuth2Error('The authorization document names another subject.');
+        return {
+            id: introspection.sub,
+            type: introspection.sub_kind,
+            realmId: introspection.realm_id ?? undefined,
+            realmName: introspection.realm_name ?? undefined,
+            clientId: null,
+        };
+    };
+
+    /**
+     * The session's evaluator, staged like the introspection and committed
+     * with it: the cached catalog plus the identity and the grants the
+     * introspection itself carries. A grant naming a definition or a policy
+     * the cached catalog lacks means the catalog predates it, so it is
+     * refetched once and the build retried; a second stale answer fails the
+     * way any other failure does.
+     */
+    const buildAuthorization = async (
+        introspection: OAuth2TokenIntrospectionResponse,
+        token?: string,
+    ) : Promise<IPermissionEvaluator | null> => {
+        const catalog = await loadCatalog(token);
+        if (!catalog) {
+            return null;
         }
 
-        return evaluator;
+        const identity = buildIdentity(introspection);
+        const grants = introspection.permissions ?? [];
+
+        try {
+            return await createAuthorizationEvaluator({
+                catalog, 
+                grants, 
+                identity, 
+            });
+        } catch (e) {
+            if (!(e instanceof AuthorizationCatalogStaleError)) {
+                throw e;
+            }
+        }
+
+        reloadCatalog();
+
+        const reloaded = await loadCatalog(token);
+        if (!reloaded) {
+            return null;
+        }
+
+        try {
+            return await createAuthorizationEvaluator({
+                catalog: reloaded, 
+                grants, 
+                identity, 
+            });
+        } catch (e) {
+            if (e instanceof AuthorizationCatalogStaleError) {
+                reloadCatalog();
+            }
+
+            throw e;
+        }
     };
 
     /**
@@ -695,7 +777,7 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
-        const authorization = await fetchAuthorization(introspection, token);
+        const authorization = await buildAuthorization(introspection, token);
 
         commitSession({
             generation,
@@ -748,7 +830,7 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
-        const authorization = await fetchAuthorization(introspection);
+        const authorization = await buildAuthorization(introspection);
 
         commitSession({
             generation,
@@ -837,7 +919,7 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
-            const authorization = await fetchAuthorization(introspection, response.access_token);
+            const authorization = await buildAuthorization(introspection, response.access_token);
 
             committed = commitSession({
                 generation,

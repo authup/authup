@@ -15,7 +15,7 @@ import { createPinia } from 'pinia';
 import { ALoginForm } from '../../src/components/workflows/login';
 import { install } from '../../src/module';
 import type { Options } from '../../src/types';
-import { AUTHORIZATION_SUBJECT, buildAuthorizationDocument } from './authorization';
+import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from './authorization';
 
 const noop = () => undefined;
 
@@ -36,16 +36,16 @@ export function mountKitComponent(
                 refresh_token: 'abc',
             }),
             // The store refuses to commit a session the endpoint reports as
-            // inactive, and refuses an authorization document naming another
-            // subject than the introspected one, so both have to be answered
-            // even where the spec cares about neither. The subject is the
-            // fixture's; specs that want a resolved realm say so themselves.
+            // inactive, and builds its evaluator from the catalog plus the
+            // introspected subject, so both have to be answered even where
+            // the spec cares about neither. The subject is the fixture's;
+            // specs that want a resolved realm say so themselves.
             'POST /token/introspect': () => ({
                 active: true,
                 sub: AUTHORIZATION_SUBJECT,
                 sub_kind: 'user',
             }),
-            'GET /authorization': () => buildAuthorizationDocument(),
+            'GET /authorization': () => buildAuthorizationCatalog(),
             ...handlers,
         },
     });
