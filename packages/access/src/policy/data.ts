@@ -9,6 +9,7 @@ export interface IPolicyData {
     set(key: string, value: unknown) : void;
     has(key: string): boolean;
     get<T = unknown>(key: string) : T;
+    delete(key: string) : void;
 
     isValidated(key: string): boolean;
     setValidated(key: string) : void;
@@ -44,6 +45,11 @@ export class PolicyData implements IPolicyData {
 
     has(key: string): boolean {
         return key in this.data;
+    }
+
+    delete(key: string) : void {
+        delete this.data[key];
+        this.validated.delete(key);
     }
 
     setValidated(key: string) : void {

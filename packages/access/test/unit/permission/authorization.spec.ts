@@ -385,15 +385,80 @@ describe('authorization catalog consumer', () => {
         await expect(build({ catalog: catalog([definition(), definition(null)]) })).rejects.toThrow();
     });
 
+    it('denies only the permissions whose catalog tree it cannot project, and never reports one stale', async () => {
+        // the built-in policy type enum is closed while `auth_policies.type`
+        // is a free string, so a type this copy does not know must deny the
+        // permissions that use it rather than take the evaluator down for
+        // every other one. A refetch cannot change it, so it is the
+        // `policies: null` tombstone, never a stale catalog.
+        const evaluator = await build({
+            catalog: catalog([
+                definition(['binding']),
+                definition(['future'], { name: 'event_delete' }),
+            ], {
+                binding: { type: 'permissionBinding' },
+                future: { type: 'plan109future' },
+            }),
+            grants: grants(
+                { realm_scope: 'any', policies: [] },
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+            ),
+        });
+        expect(await allowed(evaluator, resource(realmA))).toBe(true);
+        await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
+        expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
+
+        // a GRANT naming such a tree is dropped like one carrying a binding
+        // check: the permission itself stays evaluable for another grant
+        const junction = await build({
+            catalog: catalog(['binding'], {
+                binding: { type: 'permissionBinding' },
+                future: { type: 'plan109future' },
+            }),
+            grants: grants(
+                { realm_scope: 'any', policies: ['future'] },
+                { realm_scope: 'own', policies: [] },
+            ),
+        });
+        expect(await allowed(junction, resource(realmA))).toBe(true);
+        expect(await allowed(junction, resource(realmB))).toBe(false);
+
+        // the discrimination: a tree the catalog DECLARES but this copy
+        // cannot project is not stale, while an id it does not declare is,
+        // and only the second is the caller's to refetch for
+        await expect(build({
+            catalog: catalog(['binding'], { binding: { type: 'permissionBinding' } }),
+            grants: grants({ realm_scope: 'any', policies: ['future'] }),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+    });
+
+    it.each<Record<string, Policy>>([
+        { unprojectable: { type: 'plan109future' } },
+        { unprojectable: { type: 'attributes', query: 'broken' } },
+        { unprojectable: { type: 'composite', children: [{ type: 'plan109future' }] } },
+    ])('denies rather than throws for a catalog tree it cannot project %#', async (policies) => {
+        const evaluator = await build({ catalog: catalog(['unprojectable'], policies) });
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(evaluator, resource(realmA))).toBe(false);
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
     it('evaluates without an identity: only a definition whose policies need none can pass', async () => {
         const document = catalog([
             definition(['open'], { name: 'open' }),
             definition(['closed'], { name: 'closed' }),
             definition(['binding'], { name: 'guarded' }),
+            definition(['who'], { name: 'identified' }),
         ], {
             binding: { type: 'permissionBinding' },
             open: { type: 'date', start: '2000-01-01' },
             closed: { type: 'date', start: '2999-01-01' },
+            who: { type: 'identity' },
         });
         const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
 
@@ -407,6 +472,17 @@ describe('authorization catalog consumer', () => {
         await expect(anonymous.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
         expect(await anonymous.compile({ name: 'guarded' })).toEqual({ verdict: 'deny' });
 
+        // a caller cannot supply the identity the document did not prove:
+        // the key is stripped here exactly as it is overwritten when one was
+        const injected = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+        injected.set(BuiltInPolicyType.IDENTITY, {
+            id: identity.id,
+            type: 'user',
+            realmId: realmA,
+        });
+        injected.setValidated(BuiltInPolicyType.IDENTITY);
+        await expect(anonymous.evaluate({ name: 'identified', data: injected })).rejects.toThrow();
+
         const identified = await createAuthorizationEvaluator({
             catalog: document,
             grants: grants({
@@ -419,6 +495,8 @@ describe('authorization catalog consumer', () => {
         await expect(identified.preEvaluate({ name: 'guarded' })).resolves.toBeUndefined();
         await expect(identified.evaluate({ name: 'guarded', data: row })).resolves.toBeUndefined();
         expect(await identified.compile({ name: 'guarded' })).toEqual({ verdict: 'allow' });
+        // the same definition passes for the identity the document proved
+        await expect(identified.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
 
         await expect(createAuthorizationEvaluator({
             catalog: document,
@@ -531,9 +609,6 @@ describe('authorization catalog consumer', () => {
     it.each<Partial<AuthorizationEvaluatorInput>>([
         { catalog: { ...catalog(), permissions: [{ name: 'event_read' }] } },
         { grants: grants({ realm_scope: 'all', policies: [] }) },
-        { catalog: catalog(['custom'], { custom: { type: 'custom', invert: true } }) },
-        { catalog: catalog(['broken'], { broken: { type: 'attributes', query: 'broken' } }) },
-        { catalog: catalog(['custom'], { custom: { type: 'composite', children: [{ type: 'custom' }] } }) },
     ])('rejects incomplete or unsupported authorization %#', async (input) => {
         await expect(build(input)).rejects.toThrow();
     });

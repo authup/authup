@@ -67,11 +67,21 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * definition layer cannot be evaluated here, a refetch changes nothing, and
  * the permission denies until the policy is fixed.
  *
- * Both the identity and the grants are optional. Without an identity the
- * caller's data is passed through untouched and no grant is bound, so the
+ * A tree THIS copy cannot project is the same condition read from the other
+ * side, and it is per tree: a policy type newer than this package (the
+ * built-in type enum is closed while the column is a free string) or a
+ * configuration its validator refuses denies the definitions that reference
+ * it, exactly as `policies: null` does, and drops a grant that names it,
+ * exactly as a binding check does. One such tree never takes the evaluator
+ * down for the permissions that do not use it. A malformed catalog still
+ * throws: a duplicate permission namespace is not a data condition.
+ *
+ * Both the identity and the grants are optional. Without an identity no grant
+ * is bound and any IDENTITY key the caller supplied is REMOVED, so the
  * binding evaluator answers with missing data exactly as the server does for
- * an anonymous request, and only a definition whose policies need no
- * identity can pass. Grants without the identity they belong to are refused.
+ * an anonymous request, only a definition whose policies need no identity can
+ * pass, and a caller can never inject an identity the document did not prove.
+ * Grants without the identity they belong to are refused.
  *
  * The REALM_MATCH data key follows the server's own three-way rule: a
  * resource that carries a realm passes it (null for a global row, which
@@ -96,8 +106,13 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     );
 
     const trees = new Map<string, AuthorizationPolicy>();
+    const unevaluable = new Set<string>();
     for (const [id, raw] of Object.entries(catalog.policies)) {
-        trees.set(id, await projectAuthorizationPolicy(raw));
+        try {
+            trees.set(id, await projectAuthorizationPolicy(raw));
+        } catch {
+            unevaluable.add(id);
+        }
     }
 
     const definitions : PermissionPolicyBinding[] = [];
@@ -113,7 +128,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         if (permissions.has(key)) {
             throw new Error(`Duplicate authorization permission: ${key}`);
         }
-        if (entry.policies === null) {
+        if (entry.policies === null || entry.policies.some((id) => unevaluable.has(id))) {
             permissions.set(key, null);
             continue;
         }
@@ -149,6 +164,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         const policies : BasePolicy[] = [];
         let evaluable = true;
         for (const id of grant.policies ?? []) {
+            if (unevaluable.has(id)) {
+                evaluable = false;
+                break;
+            }
             const tree = trees.get(id);
             if (!tree) {
                 throw new AuthorizationCatalogStaleError(`The catalog does not declare the policy ${id}.`);
@@ -183,6 +202,11 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     const withIdentity = (input?: PolicyData) : PolicyData => {
         const data = input?.clone() ?? new PolicyData();
         if (!identity) {
+            // symmetrical with the branch below, which overwrites the key:
+            // the document proved no identity, so the caller may not supply
+            // one either
+            data.delete(BuiltInPolicyType.IDENTITY);
+
             return data;
         }
 
