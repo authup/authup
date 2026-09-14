@@ -51,6 +51,26 @@ The console BUNDLES (`apps/client-admin-console`, `apps/client-account-console`,
 - **[Testing](.agents/testing.md)** — Test runner, conventions, and Docker services
 - **[Conventions](.agents/conventions.md)** — Best practices, tooling, validation, and error handling
 
+These four files are loaded into every agent session, so their whole size is
+paid on every task. **They exist to tell a future task what it needs to know —
+they are not a changelog.** Before writing a paragraph, ask what task it would
+save, and if the answer is "none", leave it out. Three rules follow:
+
+- **Never cite a plan** (`plan 078`, `plan 101 D2-3`, or a bare sub-designator
+  like `D2-3` / `Stage B`). `.agents/plans/` is gitignored, so the pointer
+  resolves for one person on one machine; plans are frozen at design time while
+  these files are maintained, so the pointer leads from the current description
+  to a superseded one; and the plans themselves defer back here. Cite the issue
+  or PR number instead — it resolves on GitHub for everyone and links the diff
+  that actually shipped.
+- **Describe what the code does now, not what it did before.** No before/after
+  narration, no reproduction of a fixed defect. State the rule, and name the
+  issue where provenance helps. The one exception is a **rejected
+  alternative** — keep the verdict and its one-line reason, because that is
+  what stops the next agent re-proposing it.
+- **Rewrite, don't append.** When a change supersedes a paragraph, edit that
+  paragraph. Appending the new state next to the old is what turned these files
+  from 86 KB into 716 KB in four months.
 
 ## Commits, Issues & Pull Requests
 
@@ -61,4 +81,4 @@ The console BUNDLES (`apps/client-admin-console`, `apps/client-account-console`,
 
 ## Licensing
 
-Authup is dual-licensed (see [LICENSING.md](LICENSING.md)): the apps (`server-core`, `server-admin-console`, `server-account-console`, `server-auth-console`, `client-admin-console`, `client-account-console`, `client-auth-console`, `authup`) are `AGPL-3.0-only` (+ commercial); every package under `packages/` is `Apache-2.0`. The blanket rule has a consequence worth stating outright: `@authup/server-console-kit` holds the console-serving MECHANISM (the shell splice, the security headers, `defineStaticConsole`, the whole theme subsystem), so that mechanism is permissively licensed, while the three console SERVICES built on it stay AGPL. That was accepted deliberately in plan 101 D2-2 rather than stumbled into. When scaffolding a new workspace, copy the `LICENSE` file and `package.json` `license` field from an existing sibling in the same group: new packages default to Apache-2.0, new apps to AGPL-3.0-only. Releases up to and including `v1.0.0-beta.46` remain Apache-2.0 (the change is not retroactive).
+Authup is dual-licensed (see [LICENSING.md](LICENSING.md)): the apps (`server-core`, `server-admin-console`, `server-account-console`, `server-auth-console`, `client-admin-console`, `client-account-console`, `client-auth-console`, `authup`) are `AGPL-3.0-only` (+ commercial); every package under `packages/` is `Apache-2.0`. The blanket rule has a consequence worth stating outright: `@authup/server-console-kit` holds the console-serving MECHANISM (the shell splice, the security headers, `defineStaticConsole`, the whole theme subsystem), so that mechanism is permissively licensed, while the three console SERVICES built on it stay AGPL. That was accepted deliberately rather than stumbled into. When scaffolding a new workspace, copy the `LICENSE` file and `package.json` `license` field from an existing sibling in the same group: new packages default to Apache-2.0, new apps to AGPL-3.0-only. Releases up to and including `v1.0.0-beta.46` remain Apache-2.0 (the change is not retroactive).

@@ -97,9 +97,9 @@ therefore carries a pool-exhaustion pin: twelve concurrent updates on twelve
 different users and twelve concurrent creates must all resolve within the
 default test timeout, which a regression turns into a hang and vitest into a
 failure. The spec boots with the entity audit mirror on, its default: the
-mirror used to insert its row on a second pooled connection from inside the
-persist transaction (issue #3539), so the same pins are the regression test
-for that write too.
+mirror is the same hazard if its row goes to a second pooled connection from
+inside the persist transaction (#3539), so the same pins are the regression
+test for that write too.
 
 **Provisioning concurrency is gated the same way.**
 `test/unit/modules/provisioning-concurrency.spec.ts` boots two
@@ -250,7 +250,7 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 ### Testing the hosted pages (they render in another workspace now)
 
-Since plan 101 D2 the auth pages are NOT rendered by server-core, so its suite has no page assertions left: a hosted page GET is a redirect, and that is all server-core's specs check. The render itself belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port and asserts against the BUILT `@authup/client-auth-console` bundle. `/logout` is the honest smoke test there, because it is the one page the service can answer with no backend at all (it drives the end-session call from the browser, so the render is a pure shell); the other pages hydrate over HTTP from server-core and a spec that wants them needs a stub API, not a DI seam.
+The auth pages are NOT rendered by server-core, so its suite has no page assertions left: a hosted page GET is a redirect, and that is all server-core's specs check. The render itself belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port and asserts against the BUILT `@authup/client-auth-console` bundle. `/logout` is the honest smoke test there, because it is the one page the service can answer with no backend at all (it drives the end-session call from the browser, so the render is a pure shell); the other pages hydrate over HTTP from server-core and a spec that wants them needs a stub API, not a DI seam.
 
 That is the shape change worth internalizing: the service holds **no credential, no loopback and no database**, so there is nothing to inject a fake client into. It reads `GET /authorize/info` and `GET /` from whatever `apiUrl` names, and a spec stubs those by pointing `apiUrl` at a server it controls.
 
@@ -420,7 +420,7 @@ against, before the async lookup settles.
 
 ## CLI Tests (apps/authup)
 
-The `authup` CLI runs every service in process (plan 101 D1/D2), so almost
+The `authup` CLI runs every service in process, so almost
 nothing is left to unit-test: the wiring is the assertion, and the behaviour
 lives in the packages. The suite is split in two accordingly.
 
@@ -432,7 +432,7 @@ lives in the packages. The suite is split in two accordingly.
   refuses a stray positional on `dev` alone and leaves the commands whose
   positional is real alone (`migration run`, `start console admin`);
   `start`'s own `setup` refuses a bad role before anything boots: an unknown
-  role (the retired `authup start server.core` selector shape), a name after
+  role, a name after
   `core` or `worker`, an unknown console name and the tombstone `--worker`
   flag, whose message names `start worker`. `healthcheck` dials the host the
   listener inherits (root `host` / `HOST`, with `core.host` winning), never the
@@ -440,11 +440,10 @@ lives in the packages. The suite is split in two accordingly.
   to 127.0.0.1 (`test/unit/healthcheck.spec.ts`); it asserts on what the
   command hands `http.request`, since a socket-level probe cannot tell the two
   apart on a dev box, where every dialable host resolves to loopback. The
-  composed-schema spec that sat here
-  is gone with `composeSchemas`: every configuration key is declared once in
-  `@authup/server-config` now, so there is no pair of declarations left to
-  prove consistent. The supervisor-era specs are gone with the supervisor: there is no entrypoint to
-  resolve, no child environment to map and no routing table.
+  There is no composed-schema spec: every configuration key is declared once
+  in `@authup/server-config`, so there is no pair of declarations to prove
+  consistent. There is no supervisor either, so nothing resolves an
+  entrypoint, maps a child environment or holds a routing table.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.
   - The **composed** scenario boots the built CLI's `start` against sqlite on
@@ -474,7 +473,7 @@ lives in the packages. The suite is split in two accordingly.
     base looks identical either way.
 - `npm run test:smoke:packed` runs the composed scenario against `npm pack`ed
   tarballs installed into a temp project. **The packed variant is the one that
-  matters:** every CLI breakage found in plan 078 (the ESM `__dirname` crash,
+  matters:** every CLI breakage found so far (the ESM `__dirname` crash,
   the stale spawn path, and nitro's symlinked module store being dropped by
   `npm pack`) reproduced ONLY from a packed artifact, where a workspace-dist
   run passes straight through all three. Its workspace list carries the three
@@ -621,7 +620,7 @@ It needs a built `dist` and a scratch database (it drops the target). It runs in
 
 The value comparison exempts the columns the newest migration itself changed, in both directions. Columns it ADDED are keys present before and absent after the revert; columns it DROPPED are keys present after the revert and absent before, which the revert brings back as keys the before-snapshot never had. Only the first kind was exempt until #3355 dropped `auth_clients.scope` and `root_url`, at which point *column values unchanged after revert* failed by construction. The script now compares the after-revert values without the dropped columns against the before values without the added ones, and additionally checks that the re-run drops them again.
 
-The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is no longer part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
+The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is not part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
 
 Locally, run the same flow with a running compose stack:
 
