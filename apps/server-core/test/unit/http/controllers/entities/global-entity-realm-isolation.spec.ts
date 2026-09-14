@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, ROLE_REALM_ADMIN_NAME } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -22,6 +22,7 @@ import {
     createFakeRealm,
     createFakeRole,
     createFakeScope,
+    createFakeUser,
     expectClientError,
 } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
@@ -68,6 +69,11 @@ describe('global-capable entities (realm isolation)', () => {
 
     let postReader: HTTPClient;
     const postReaderSecret = 'global-entity-iso-post-reader-secret';
+
+    let realmAdmin: HTTPClient;
+    let assignableGlobalRoleId: string;
+    let realmBUserId: string;
+    let realmBRoleId: string;
 
     beforeAll(async () => {
         await suite.setup();
@@ -183,6 +189,43 @@ describe('global-capable entities (realm isolation)', () => {
         });
         postReader = new HTTPClient({ baseURL: suite.baseURL });
         postReader.setAuthorizationHeader({ type: 'Bearer', token: postToken.access_token });
+
+        // an ACTUAL realm_admin in realm B, the reach the gate must not over-restrict.
+        // The built-in role is global and holds every permission at ownOrNull, which is
+        // exactly the case the change has to keep working: a realm administrator must
+        // still discover and assign the GLOBAL building blocks from inside its realm.
+        const realmAdminPassword = 'global-entity-iso-realm-admin-pw';
+        const { data: realmAdminUser } = await suite.client.user.create(
+            createFakeUser({ realmId: realmB.id, password: realmAdminPassword }),
+        );
+        const { data: realmAdminRole } = await suite.client.role.getOne(ROLE_REALM_ADMIN_NAME);
+        await suite.client.userRole.create({
+            userId: realmAdminUser.id,
+            roleId: realmAdminRole.id,
+        });
+
+        const realmAdminToken = await suite.client.token.createWithPassword({
+            username: realmAdminUser.name,
+            password: realmAdminPassword,
+            realm_id: realmB.id,
+        });
+        realmAdmin = new HTTPClient({ baseURL: suite.baseURL });
+        realmAdmin.setAuthorizationHeader({ type: 'Bearer', token: realmAdminToken.access_token });
+
+        // a permission-less global role, so `isSuperset` can be satisfied, plus a
+        // subject and a role inside realm B to bind things onto
+        const { data: assignable } = await suite.client.role.create(
+            createFakeRole({ realmId: null }),
+        );
+        assignableGlobalRoleId = assignable.id;
+        const { data: realmBUser } = await suite.client.user.create(
+            createFakeUser({ realmId: realmB.id }),
+        );
+        realmBUserId = realmBUser.id;
+        const { data: realmBRole } = await suite.client.role.create(
+            createFakeRole({ realmId: realmB.id }),
+        );
+        realmBRoleId = realmBRole.id;
     });
 
     afterAll(async () => {
@@ -273,6 +316,50 @@ describe('global-capable entities (realm isolation)', () => {
             fields: ['id', 'name'],
         });
         expect(policy.data.some((entity) => entity.id === foreignPolicyId)).toBe(false);
+    });
+
+    it('lets a realm_admin discover the global building blocks', async () => {
+        // the gate must not cost a realm administrator the global catalogue it
+        // needs in order to bind anything: realm_admin holds every read at
+        // ownOrNull, and ownOrNull covers `realmId IS NULL`
+        const roles = await realmAdmin.role.getMany({ filters: { id: assignableGlobalRoleId } });
+        expect(roles.data.some((entity) => entity.id === assignableGlobalRoleId)).toBe(true);
+
+        const permissions = await realmAdmin.permission.getMany({ filters: { id: globalPermissionId } });
+        expect(permissions.data.some((entity) => entity.id === globalPermissionId)).toBe(true);
+
+        // and one at a time, since getOne is gated too
+        const { data: role } = await realmAdmin.role.getOne(assignableGlobalRoleId);
+        expect(role.id).toEqual(assignableGlobalRoleId);
+        expect(role.realmId).toBeNull();
+    });
+
+    it('lets a realm_admin assign a global role to a subject in its own realm', async () => {
+        const { data: binding } = await realmAdmin.userRole.create({
+            userId: realmBUserId,
+            roleId: assignableGlobalRoleId,
+        });
+        expect(binding.roleId).toEqual(assignableGlobalRoleId);
+        expect(binding.userId).toEqual(realmBUserId);
+    });
+
+    it('lets a realm_admin bind a global permission onto a role in its own realm', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+
+        const { data: binding } = await realmAdmin.rolePermission.create({
+            roleId: realmBRoleId,
+            permissionId: permission.id,
+        });
+        expect(binding.permissionId).toEqual(permission.id);
+        expect(binding.roleId).toEqual(realmBRoleId);
+    });
+
+    it('still keeps another realm out of reach for a realm_admin', async () => {
+        // the master-realm rows created above are foreign to realm B
+        const foreign = await realmAdmin.role.getMany({ filters: { id: ownRoleId } });
+        expect(foreign.data.some((entity) => entity.id === ownRoleId)).toBe(false);
+
+        await expectClientError(() => realmAdmin.role.getOne(ownRoleId), { status: 403 });
     });
 
     it('holds the gate on the post branch when realmId is projected away', async () => {
