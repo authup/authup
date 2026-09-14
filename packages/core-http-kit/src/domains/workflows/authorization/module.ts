@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationDocument } from '@authup/access';
+import type { AuthorizationCatalog } from '@authup/access';
 import { BaseAPI } from '../../base';
 import { buildAuthorizationHeaderRequestConfig } from '../../utils';
 import type { AuthorizationRequestOptions, IAuthorizationAPI } from './types';
 
 export class AuthorizationAPI extends BaseAPI implements IAuthorizationAPI {
-    async get(options?: AuthorizationRequestOptions) : Promise<AuthorizationDocument> {
+    async get(options?: AuthorizationRequestOptions) : Promise<AuthorizationCatalog> {
         const response = await this.client.get('authorization', buildAuthorizationHeaderRequestConfig(options));
 
         return response.data;
