@@ -230,9 +230,16 @@ describe('authorization document consumer', () => {
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
     });
 
-    it('requires resource realm data and prevents caller identity or policy-filter overrides', async () => {
+    it('neutral-passes reach for a realm-less resource and prevents caller identity or policy-filter overrides', async () => {
         const evaluator = await createAuthorizationEvaluator(document([{ realm_scope: 'own', policies: [] }]));
-        await expect(evaluator.evaluate({ name: 'event_read' })).rejects.toThrow();
+        // no REALM_MATCH key: the resource has no realm dimension, so reach
+        // neutral-passes exactly as server-core's resourceRealmMatch does
+        await expect(evaluator.evaluate({ name: 'event_read' })).resolves.toBeUndefined();
+        // a present key is still validated
+        await expect(evaluator.evaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 5 }),
+        })).rejects.toThrow();
         const data = resource(realmB);
         data.set(BuiltInPolicyType.IDENTITY, {
             id: clientA,

@@ -48,8 +48,10 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * Build a resource-server (or console) evaluator from an `AuthorizationDocument`
  * (`GET /authorization`). Rejects legacy, incomplete and unsupported input.
  *
- * `evaluate` / `evaluateOneOf` require an explicit REALM_MATCH data key (null
- * for a global row); `preEvaluate` / `preEvaluateOneOf` are the pre-gate and
+ * The REALM_MATCH data key follows the server's own three-way rule: a
+ * resource that carries a realm passes it (null for a global row, which
+ * `own` denies), a resource with no realm dimension passes nothing and reach
+ * neutral-passes. `preEvaluate` / `preEvaluateOneOf` are the pre-gate and
  * enforce reach only when that key is present. `compile` returns the
  * allow/deny/conditional/post contract; a `post` collection query must be
  * rejected or evaluated over every candidate before paging. The document's
@@ -153,10 +155,9 @@ export async function createAuthorizationEvaluator(input: unknown) : Promise<IPe
 
     const forResource = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
         const next = forGate(ctx);
-        if (!next.data!.has(BuiltInPolicyType.REALM_MATCH)) {
-            throw new Error('Resource authorization requires realmMatch data (null for a global resource).');
+        if (next.data!.has(BuiltInPolicyType.REALM_MATCH)) {
+            realmMatchSchema.parse(next.data!.get(BuiltInPolicyType.REALM_MATCH));
         }
-        realmMatchSchema.parse(next.data!.get(BuiltInPolicyType.REALM_MATCH));
 
         return next;
     };

@@ -44,7 +44,7 @@ await authorization.evaluate({
         [BuiltInPolicyType.ATTRIBUTES]: event,
     }),
 });
-// Resolves on allow; throws on denial or missing resource realm data.
+// Resolves on allow; throws on denial.
 ```
 
 `options.decisionStrategy` is forwarded; the policy include, exclude and
@@ -57,10 +57,16 @@ included, so `allow` can also mean that the permission has no policy layer at
 all. Keep `core.permissionsDefaultPolicyAssignment` on for `realm_scope` to
 mean anything.
 
-Supply the resource realm explicitly: its id, or `null` for a global resource.
-`own` admits the actor's realm only; `ownOrNull` also admits global resources;
-`any` admits every realm; `none` admits none. A realm-less actor cannot satisfy
-`own` or `ownOrNull`. Master-realm membership adds no bypass.
+The `REALM_MATCH` key follows the same three-way rule the Authup server applies
+to its own entities. A resource that carries a realm column passes its value:
+the realm id, or `null` for a global row. A resource with no realm dimension
+passes no key at all, and reach neutral-passes for it. The trap is a resource
+that has a realm column whose value you forget to pass: reach then
+neutral-passes as if the resource were realm-less, so pass the column whenever
+it exists, `null` included. `own` admits the actor's realm only; `ownOrNull`
+also admits global rows; `any` admits every realm; `none` admits none. A
+realm-less actor cannot satisfy `own` or `ownOrNull`. Master-realm membership
+adds no bypass.
 
 `preEvaluate` and `preEvaluateOneOf` are the pre-gate for a request whose row is
 not loaded yet: a pending policy passes, and reach settles only when `REALM_MATCH`
