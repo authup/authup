@@ -3256,9 +3256,11 @@ entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
 definitions in one pass (`IPermissionDefinitionProvider.findAll`) plus every tree a
 junction row references (`findGrantPolicies`, so a grant can never name a tree the catalog
-lacks), sorts the definitions by key and drops, with a warning, a definition or a grant
-tree whose projection fails: a grant of a dropped definition is dropped by every consumer
-as well and denies until the policy is fixed.
+lacks) and sorts the definitions by key. A projection failure is warned about and never
+drops a definition: one whose tree fails projection is carried with `policies: null`,
+because the definition is real and an absence in the catalog must mean exactly one thing,
+a copy older than the definition. A grant tree that fails projection is dropped with a
+warning, and the introspection drops every grant of it.
 
 The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on
 `GET /sessions/@me/introspect` is the identity's grant list, one entry per junction row
@@ -3275,12 +3277,16 @@ rebuilds the server's own raw binding model, the `PermissionPolicyBinding` struc
 `PermissionDatabaseProvider` and `IIdentityPermissionProvider.getFor` produce, and runs the
 same aggregation and the same evaluators (`IdentityPermissionBindingPolicyEvaluator` in
 access is the one implementation of grant reach, pending composition and condition
-lowering), so decision parity holds by construction. **A grant naming a POLICY the catalog
-lacks throws `AuthorizationCatalogStaleError`**: a junction row was created after the
-consumer's catalog was cached, and the signal is to refetch and build again. **A grant
-naming a DEFINITION the catalog lacks is dropped**, never reported stale: the server carries
-no such definition, or dropped it because its policy could not be projected, and denies
-the grant as well, so no refetch can change that and a stale signal would refetch forever.
+lowering), so decision parity holds by construction. **A grant naming a DEFINITION or a
+POLICY the catalog lacks throws `AuthorizationCatalogStaleError`**: the grants come from a
+fresh introspection while the catalog has a clock of its own, so the consumer's copy
+predates the definition (an upgrade adding `PermissionName` members, a `POST /permissions`)
+or the junction row, and the signal is to refetch and build again. A per-process
+resource-server cache recovers through exactly that signal, which is why an absent
+definition must never be read as a deny. **A definition carried with `policies: null` is
+the one case that is not stale**: the server could not project its policy layer and says
+so on the wire instead of omitting it, so the consumer denies the permission and drops
+every grant of it, since a refetch cannot change what the server cannot project.
 **Both the identity and the grants are optional**, because server-core attaches IDENTITY
 data only when a request carries an identity: without one the consumer injects nothing and
 binds no grant, so the binding evaluator answers DATA_MISSING as it does for an anonymous

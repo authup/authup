@@ -93,14 +93,13 @@ export async function buildAuthorizationCatalog(
         const ids = await project(definition.policies);
         if (!Array.isArray(ids)) {
             ctx.logger?.warn(
-                `Dropped the definition of permission ${key} from the authorization catalog` +
+                `Carried the definition of permission ${key} in the authorization catalog without its policies` +
                 `${ids.policyId ? ` (policy ${ids.policyId})` : ''}: ${ids.message}. ` +
-                'A grant of it reads as stale to every consumer until the policy is fixed.',
+                'Every consumer denies it and drops a grant of it until the policy is fixed.',
             );
-            continue;
         }
 
-        entry.policies = ids;
+        entry.policies = Array.isArray(ids) ? ids : null;
         permissions.push([key, entry]);
     }
 

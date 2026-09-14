@@ -52,12 +52,14 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         for (const permission of catalog.permissions) {
             expect(permission).not.toHaveProperty('grants');
         }
+        // every provisioned definition projects, so none is carried unevaluable
+        expect(catalog.permissions.filter((permission) => permission.policies === null)).toEqual([]);
 
         const userRead = catalog.permissions.find((permission) => permission.name === PermissionName.USER_READ);
         expect(userRead).toMatchObject({ realm_id: null, client_id: null });
         expect(userRead?.policies).toHaveLength(1);
 
-        const defaultPolicyId = userRead!.policies[0]!;
+        const defaultPolicyId = userRead!.policies![0]!;
         const defaultPolicy = catalog.policies[defaultPolicyId];
         expect(defaultPolicy).toEqual({
             type: 'composite',
@@ -80,12 +82,12 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             expect(tree).not.toHaveProperty('createdAt');
         }
 
-        const referenced = catalog.permissions.flatMap((permission) => permission.policies);
+        const referenced = catalog.permissions.flatMap((permission) => permission.policies ?? []);
         expect(new Set(referenced).size).toBeLessThanOrEqual(Object.keys(catalog.policies).length);
         for (const id of referenced) {
             expect(catalog.policies[id]).toBeDefined();
         }
-        expect(catalog.permissions.filter((permission) => permission.policies.includes(defaultPolicyId)).length)
+        expect(catalog.permissions.filter((permission) => (permission.policies ?? []).includes(defaultPolicyId)).length)
             .toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
 
@@ -258,7 +260,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             type: BuiltInPolicyType.ATTRIBUTES,
             query: { visible: { $eq: true } },
         });
-        expect(catalog.permissions.some((entry) => entry.policies.includes(restriction.id))).toBe(false);
+        expect(catalog.permissions.some((entry) => entry.policies?.includes(restriction.id))).toBe(false);
 
         const evaluator = await createAuthorizationEvaluator({
             catalog,

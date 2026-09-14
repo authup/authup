@@ -58,12 +58,14 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * Build a resource-server (or console) evaluator from the catalog
  * `GET /authorization` serves, the identity's grants as the introspection
  * endpoints report them, and the identity itself. Rejects legacy, incomplete
- * and unsupported input. A grant referencing a policy the catalog lacks
- * throws `AuthorizationCatalogStaleError`, the signal to refetch the
- * catalog: a junction row created after the catalog was cached. A grant
- * naming a definition the catalog lacks is dropped instead: the server
- * carries no such definition, or dropped it because its policy could not be
- * projected, and denies the grant as well, so no refetch can change that.
+ * and unsupported input. A grant referencing a definition or a policy the
+ * catalog lacks throws `AuthorizationCatalogStaleError`, the signal to
+ * refetch the catalog: the grants come from a fresh introspection while the
+ * catalog may predate the definition or the junction row. A definition the
+ * server could not project travels with `policies: null` instead of being
+ * left out, so a grant of it is dropped rather than reported stale: the
+ * definition layer cannot be evaluated here, a refetch changes nothing, and
+ * the permission denies until the policy is fixed.
  *
  * Both the identity and the grants are optional. Without an identity the
  * caller's data is passed through untouched and no grant is bound, so the
@@ -99,7 +101,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     }
 
     const definitions : PermissionPolicyBinding[] = [];
-    const permissions = new Map<string, BasePermission>();
+    const permissions = new Map<string, BasePermission | null>();
     for (const entry of catalog.permissions) {
         const permission : BasePermission = {
             name: entry.name,
@@ -110,6 +112,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         const key = buildPermissionKey(permission);
         if (permissions.has(key)) {
             throw new Error(`Duplicate authorization permission: ${key}`);
+        }
+        if (entry.policies === null) {
+            permissions.set(key, null);
+            continue;
         }
         permissions.set(key, permission);
 
@@ -133,7 +139,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
             clientId: grant.client_id ?? null,
         });
         const permission = permissions.get(key);
-        if (!permission) {
+        if (typeof permission === 'undefined') {
+            throw new AuthorizationCatalogStaleError(`The catalog does not define the permission ${key}.`);
+        }
+        if (permission === null) {
             continue;
         }
 

@@ -152,7 +152,7 @@ describe('core/authorization/module', () => {
         });
     });
 
-    it('drops a definition whose tree carries no id and warns once', async () => {
+    it('carries a definition whose tree carries no id without its policies and warns once', async () => {
         const ctx = setup();
         ctx.permissionDefinitionProvider.setDefinitions([
             { permission: globalPermission('read'), policies: [{ type: 'identity' }] },
@@ -161,13 +161,31 @@ describe('core/authorization/module', () => {
 
         const catalog = await buildAuthorizationCatalog(ctx);
 
-        expect(catalog.permissions.map((permission) => permission.name)).toEqual(['write']);
+        // the definition is real, so its absence would read as a stale copy
+        // to a consumer holding a grant of it; carried with policies: null
+        // the consumer denies it and drops the grant instead
+        expect(catalog.permissions).toEqual([
+            {
+                name: 'read',
+                realm_id: null,
+                client_id: null,
+                decision_strategy: null,
+                policies: null,
+            },
+            {
+                name: 'write',
+                realm_id: null,
+                client_id: null,
+                decision_strategy: null,
+                policies: ['policy-default'],
+            },
+        ]);
         expect(ctx.warn).toHaveBeenCalledTimes(1);
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('read');
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('must carry its id');
     });
 
-    it('drops a definition whose policy is not a built-in type and keeps its sibling', async () => {
+    it('carries a definition whose policy is not a built-in type without its policies and keeps its sibling', async () => {
         const ctx = setup();
         ctx.permissionDefinitionProvider.setDefinitions([
             { permission: globalPermission('read'), policies: [custom] },
@@ -176,7 +194,8 @@ describe('core/authorization/module', () => {
 
         const catalog = await buildAuthorizationCatalog(ctx);
 
-        expect(catalog.permissions.map((permission) => permission.name)).toEqual(['write']);
+        expect(catalog.permissions.map((permission) => [permission.name, permission.policies]))
+            .toEqual([['read', null], ['write', ['policy-default']]]);
         expect(catalog.policies).not.toHaveProperty('policy-custom');
         expect(catalog.policies).toHaveProperty('policy-default');
         expect(ctx.warn).toHaveBeenCalledTimes(1);

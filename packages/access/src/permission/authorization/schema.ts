@@ -25,7 +25,8 @@ export const authorizationPolicySchema = z.looseObject({ type: z.string().min(1)
  * which reads as "this layer carries no policy", so a catalog that merely
  * omitted a tree would grant unrestricted access rather than fail. The lookup
  * is own-property only, so an id such as `constructor` cannot be answered by
- * a member of `Object.prototype`.
+ * a member of `Object.prototype`. A definition carrying `null` names no tree
+ * and is the server's own statement that it could not project one.
  */
 export const authorizationCatalogSchema = z.object({
     version: z.literal(AUTHORIZATION_CATALOG_VERSION),
@@ -35,14 +36,14 @@ export const authorizationCatalogSchema = z.object({
         realm_id: namespaceId,
         client_id: namespaceId,
         decision_strategy: z.enum(DecisionStrategy).nullable(),
-        policies: z.array(id),
+        policies: z.array(id).nullable(),
     })),
 }).check((ctx) => {
     const declared = new Set(Object.keys(ctx.value.policies));
 
     for (let i = 0; i < ctx.value.permissions.length; i++) {
         const { policies } = ctx.value.permissions[i];
-        for (const [j, policyId] of policies.entries()) {
+        for (const [j, policyId] of (policies ?? []).entries()) {
             if (declared.has(policyId)) {
                 continue;
             }

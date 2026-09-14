@@ -473,13 +473,14 @@ export function createStore(context: StoreCreateContext) {
     /**
      * The session's evaluator, staged like the introspection and committed
      * with it: the cached catalog plus the identity and the grants the
-     * introspection itself carries. A grant naming a policy the cached
-     * catalog lacks means the catalog predates the junction row, so it is
-     * refetched once and the build retried; a second stale answer fails the
-     * way any other failure does. A grant naming a definition the catalog
-     * lacks is dropped by the consumer, since the server denies it as well.
-     * Only the copy just found stale is discarded: a concurrent build may
-     * have stored a fresh one in the meantime.
+     * introspection itself carries. A grant naming a definition or a policy
+     * the cached catalog lacks means the catalog predates the definition or
+     * the junction row, so it is refetched once and the build retried; a
+     * second stale answer fails the way any other failure does. A definition
+     * the server could not project travels with `policies: null` and the
+     * consumer denies it without a refetch. Only the copy just found stale
+     * is discarded: a concurrent build may have stored a fresh one in the
+     * meantime.
      */
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,

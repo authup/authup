@@ -26,7 +26,7 @@ type Definition = {
     realm_id: string | null,
     client_id: string | null,
     decision_strategy: string | null,
-    policies: string[],
+    policies: string[] | null,
 };
 type Grant = {
     name?: string,
@@ -44,7 +44,7 @@ const identity : IdentityPolicyData = {
     clientId: null,
 };
 
-function definition(policies: string[] = ['binding'], overrides: Partial<Definition> = {}) : Definition {
+function definition(policies: string[] | null = ['binding'], overrides: Partial<Definition> = {}) : Definition {
     return {
         name: 'event_read',
         realm_id: null,
@@ -312,8 +312,44 @@ describe('authorization catalog consumer', () => {
         await expect(evaluator.preEvaluate({ name: 'unknown_permission' })).rejects.toThrow();
     });
 
-    it('drops a grant naming a definition the catalog lacks and denies it while a sibling still authorizes', async () => {
+    it('reports the catalog stale for a grant naming a definition it lacks', async () => {
+        // the grants come from a fresh introspection: a definition the cached
+        // catalog does not carry was created after the catalog was fetched
+        await expect(build({
+            grants: grants(
+                { realm_scope: 'any', policies: [] },
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+            ),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+        await expect(build({
+            grants: grants({
+                realm_id: realmA,
+                realm_scope: 'any',
+                policies: [],
+            }),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+        await expect(build({ catalog: { ...catalog(), permissions: [] } }))
+            .rejects.toThrow(AuthorizationCatalogStaleError);
+
+        const empty = await build({ catalog: { ...catalog(), permissions: [] }, grants: [] });
+        await expect(empty.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(empty, resource(realmA))).toBe(false);
+        expect(await empty.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
+    it('drops a grant naming a definition the catalog carries unevaluable and denies it while a sibling still authorizes', async () => {
+        // the server could not project the definition's policy layer, so it
+        // carries the definition with policies: null; a refetch changes nothing
         const evaluator = await build({
+            catalog: catalog([
+                definition(),
+                definition(null, { name: 'event_delete' }),
+                definition(null, { realm_id: realmA }),
+            ]),
             grants: grants(
                 {
                     name: 'event_delete',
@@ -338,12 +374,15 @@ describe('authorization catalog consumer', () => {
             data: resource(realmA),
         })).rejects.toThrow();
         await expect(evaluator.preEvaluate({ name: 'event_read' })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluateOneOf({ name: ['event_delete', 'event_read'] })).resolves.toBeUndefined();
         expect(await allowed(evaluator, resource(realmB))).toBe(true);
 
-        const empty = await build({ catalog: { ...catalog(), permissions: [] } });
-        await expect(empty.preEvaluate({ name: 'event_read' })).rejects.toThrow();
-        expect(await allowed(empty, resource(realmA))).toBe(false);
-        expect(await empty.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+        // an unevaluable definition denies without a grant as well, and a
+        // duplicate is refused whichever form it takes
+        const ungranted = await build({ catalog: catalog([definition(null)]), grants: [] });
+        await expect(ungranted.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(ungranted, resource(realmA))).toBe(false);
+        await expect(build({ catalog: catalog([definition(), definition(null)]) })).rejects.toThrow();
     });
 
     it('evaluates without an identity: only a definition whose policies need none can pass', async () => {

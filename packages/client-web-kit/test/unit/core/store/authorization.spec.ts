@@ -141,6 +141,47 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
     });
 
+    it('refetches a catalog that predates the granted definition and builds from the second answer', async () => {
+        // the grants come from a fresh introspection: a definition created
+        // after the catalog was cached is a stale copy, never a deny
+        let calls = 0;
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => {
+                calls += 1;
+
+                return calls === 1 ? buildAuthorizationCatalog({ permissions: [] }) : buildAuthorizationCatalog();
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).rejects.toThrow();
+    });
+
+    it('denies a definition the catalog carries without its policies and does not refetch for it', async () => {
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => buildAuthorizationCatalog({
+                permissions: [{
+                    name: 'user_read',
+                    realm_id: null,
+                    client_id: null,
+                    decision_strategy: null,
+                    policies: null,
+                }],
+            }),
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).rejects.toThrow();
+    });
+
     it('fails the login and revokes the staged grant when the refetched catalog is stale too', async () => {
         const { store, httpClient } = buildStore({
             'POST /token/introspect': () => ({ ...INTROSPECTION, permissions: LATER_GRANTS }),

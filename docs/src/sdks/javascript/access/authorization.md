@@ -55,10 +55,13 @@ const authorization = await createAuthorizationEvaluator({
 
 The response is `Cache-Control: private, no-cache`: keep it in your own process
 and refetch it when `createAuthorizationEvaluator` throws
-`AuthorizationCatalogStaleError`, which means a grant names a policy the cached
-copy does not carry. An evaluator is per subject, because its grants and its
-identity are; the catalog behind it is shared. A revoked grant is visible on
-the next introspection.
+`AuthorizationCatalogStaleError`, which means a grant names a definition or a
+policy the cached copy does not carry. The grants come from a fresh
+introspection, so a definition created after the catalog was cached (an Authup
+upgrade adding permissions, a `POST /permissions`) or a junction row created
+since reaches you through that error and nothing else. An evaluator is per
+subject, because its grants and its identity are; the catalog behind it is
+shared. A revoked grant is visible on the next introspection.
 
 ## Evaluate one resource
 
@@ -145,8 +148,12 @@ The catalog (`GET /authorization`):
   `decision_strategy` and the definition's `policies` (ids), sorted by
   permission key.
 - Nullable fields are required. An empty `policies` list means no restriction
-  at that layer. A definition whose policy tree cannot be projected is left out,
-  so a grant of it is dropped and denies until the policy is fixed.
+  at that layer. `policies` is `null` when the server could not project one of
+  the definition's trees (a policy type the catalog does not carry, or a
+  configuration its validator refuses): the definition exists, the evaluator
+  denies it and drops every grant of it until the policy is fixed. Such a
+  definition is carried rather than left out, so that a definition absent from
+  the catalog can only mean a copy older than the definition.
 
 The grants (the introspection response's `permissions`):
 
@@ -155,11 +162,11 @@ The grants (the introspection response's `permissions`):
 - `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
   grant's own reach, `own` when absent. `policies` are the ids of the junction
   policy trees, resolved against the catalog; empty means no junction policy.
-- A grant naming a definition the catalog lacks is left out: the server carries
-  no such definition and denies the grant as well. A grant naming a policy the
-  catalog lacks throws `AuthorizationCatalogStaleError`: refetch the catalog
-  and build again. A grant whose junction policy contains a permission-binding
-  check is left out.
+- A grant naming a definition or a policy the catalog lacks throws
+  `AuthorizationCatalogStaleError`: the copy you hold predates the definition
+  or the junction row, so refetch the catalog and build again. A grant naming
+  a definition carried with `policies: null` is left out and denies. A grant
+  whose junction policy contains a permission-binding check is left out.
 
 `createAuthorizationEvaluator` rejects an unknown version, missing fields, a
 definition referencing an undeclared policy id, an unsupported policy type, a

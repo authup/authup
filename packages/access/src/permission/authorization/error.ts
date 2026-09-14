@@ -6,10 +6,10 @@
  */
 
 /**
- * A grant references a policy the supplied catalog does not carry: the
- * caller's cached catalog predates the junction row and must be refetched.
- * A grant naming a definition the catalog lacks is not stale but dropped,
- * since the server denies such a grant as well.
+ * A grant references a definition or a policy the supplied catalog does not
+ * carry: the caller's cached catalog predates the definition or the junction
+ * row and must be refetched. A definition the catalog carries with
+ * `policies: null` is not stale but unevaluable, and a grant of it is dropped.
  */
 export class AuthorizationCatalogStaleError extends Error {
     constructor(message: string) {

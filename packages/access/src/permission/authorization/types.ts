@@ -29,9 +29,13 @@ export type AuthorizationDefinition = {
     decision_strategy: `${DecisionStrategy}` | null,
     /**
      * The definition layer: the ids of the policy trees bound to the permission
-     * definition (`auth_permission_policies`). Empty means unrestricted at this layer.
+     * definition (`auth_permission_policies`). Empty means unrestricted at this
+     * layer. `null` means the server could not project one of those trees onto
+     * the wire (a policy type the catalog does not carry, or a configuration
+     * its validator refuses): the definition exists, a consumer cannot evaluate
+     * it and denies it, dropping every grant of it, until the policy is fixed.
      */
-    policies: string[],
+    policies: string[] | null,
 };
 
 /**
