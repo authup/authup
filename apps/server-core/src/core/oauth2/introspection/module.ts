@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey, normalizeRealmScope } from '@authup/access';
+import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } from '@authup/access';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
@@ -28,8 +28,10 @@ import type {
  * `permissions` is the identity's GRANT list, one entry per junction row in
  * the order the provider returns them: the namespace, the grant's own realm
  * reach and the ids of its junction policy trees, which pair with the catalog
- * `GET /authorization` serves. A grant whose junction tree carries no id
- * cannot be named there and is dropped with a warning.
+ * `GET /authorization` serves. A grant whose junction tree that catalog cannot
+ * carry (no id, or a tree its projection refuses) is dropped with a warning:
+ * the server itself fails such a grant closed, and naming it would read as a
+ * stale catalog to every consumer.
  *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
@@ -63,9 +65,12 @@ export async function resolveIntrospectionSubject(
 
     const permissions : OAuth2TokenPermission[] = [];
     for (const binding of bindings) {
-        let policies : string[];
+        const policies : string[] = [];
         try {
-            policies = (binding.policies ?? []).map((policy) => readPolicyId(policy));
+            for (const policy of binding.policies ?? []) {
+                policies.push(readPolicyId(policy));
+                await projectAuthorizationPolicy(policy);
+            }
         } catch (e) {
             ctx.logger?.warn(
                 `Dropped a grant of permission ${buildPermissionKey(binding.permission)} from the introspection: ` +

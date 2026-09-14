@@ -78,7 +78,7 @@ export async function buildAuthorizationCatalog(
         return projected.map(([id]) => id);
     };
 
-    const permissions : AuthorizationDefinition[] = [];
+    const permissions : [string, AuthorizationDefinition][] = [];
     const definitions = await ctx.permissionDefinitionProvider.findAll();
     for (const definition of definitions) {
         const entry : AuthorizationDefinition = {
@@ -88,25 +88,37 @@ export async function buildAuthorizationCatalog(
             decision_strategy: definition.permission.decisionStrategy ?? null,
             policies: [],
         };
+        const key = definitionKey(entry);
 
         const ids = await project(definition.policies);
         if (!Array.isArray(ids)) {
             ctx.logger?.warn(
-                `Dropped the definition of permission ${definitionKey(entry)} from the authorization catalog` +
-                `${ids.policyId ? ` (policy ${ids.policyId})` : ''}: ${ids.message}`,
+                `Dropped the definition of permission ${key} from the authorization catalog` +
+                `${ids.policyId ? ` (policy ${ids.policyId})` : ''}: ${ids.message}. ` +
+                'A grant of it reads as stale to every consumer until the policy is fixed.',
             );
             continue;
         }
 
         entry.policies = ids;
-        permissions.push(entry);
+        permissions.push([key, entry]);
     }
 
-    permissions.sort((a, b) => compareKeys(definitionKey(a), definitionKey(b)));
+    for (const tree of await ctx.permissionDefinitionProvider.findGrantPolicies()) {
+        const ids = await project([tree]);
+        if (!Array.isArray(ids)) {
+            ctx.logger?.warn(
+                `Dropped a grant policy${ids.policyId ? ` (${ids.policyId})` : ''} from the authorization catalog: ` +
+                `${ids.message}. The introspection drops every grant of it as well.`,
+            );
+        }
+    }
+
+    permissions.sort(([a], [b]) => compareKeys(a, b));
 
     return {
         version: AUTHORIZATION_CATALOG_VERSION,
         policies,
-        permissions,
+        permissions: permissions.map(([, entry]) => entry),
     };
 }

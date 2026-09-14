@@ -138,7 +138,6 @@ export type OAuth2AccessGrantClaim = {
     roles: string[]
 };
 
-// todo: this should be removed.
 /**
  * One entry of the identity's GRANT list, as the introspection endpoints
  * report it under `permissions`: one entry per grant, so a namespace may

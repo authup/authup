@@ -21,12 +21,25 @@ export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
 
 /**
  * The identity-free permission catalog: every definition with its policy
- * trees, for a console or a resource server to evaluate outside this process
- * together with the grants an introspection reports. It is the same for every
- * authenticated caller (what `GET /permissions` plus `GET /policies` already
- * answer to any principal), so a consumer fetches it once per process and
- * caches it; `private, no-cache` keeps a shared cache from storing it while a
- * private one may revalidate through the ETag.
+ * trees plus every tree a grant can name, for a console or a resource server
+ * to evaluate outside this process together with the grants an introspection
+ * reports. It is the same for every caller, so a consumer fetches it once per
+ * process and caches it; `private, no-cache` keeps a shared cache from storing
+ * it while a private one may revalidate through the ETag.
+ *
+ * The gate is `ForceLoggedIn` alone, which is WIDER than the entity reads:
+ * `GET /permissions` and `GET /policies` both require one of the
+ * `PERMISSION_READ` / `PERMISSION_UPDATE` / `PERMISSION_DELETE` grants, so a
+ * principal holding none of them can read every namespace (with the realm and
+ * client ids of foreign realms) and every policy configuration (attribute
+ * predicates included) here and nowhere else. The width is structural rather
+ * than incidental: a console evaluates the catalog for whichever identity
+ * signed in, most of which hold no permission-family grant, and a resource
+ * server evaluates it for every subject whose token it verifies; a per-caller
+ * narrowing would be the per-identity document again and could not be
+ * cached. The catalog is an upper bound on what may be asked, never an
+ * entitlement (the same posture as `GET /schemas`); every decision it feeds
+ * still runs over the caller's own grants.
  */
 @DTags('auth')
 @DController('/authorization')

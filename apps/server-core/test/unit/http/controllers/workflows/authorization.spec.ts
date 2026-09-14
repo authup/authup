@@ -18,6 +18,7 @@ import {
 import type { AuthorizationCatalog } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
+import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import {
     PermissionEntity,
@@ -188,5 +189,118 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
                 () => compiled.verdict === 'allow';
             expect(rows.map((row) => !!predicate(row))).toEqual(expected);
         }
+    });
+
+    it('carries the junction policy a grant names, so a restricted grant round-trips into the evaluator', async () => {
+        const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
+        const binding = await suite.dataSource.getRepository(PolicyEntity).findOneByOrFail({ type: BuiltInPolicyType.PERMISSION_BINDING });
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
+        const { data: restriction } = await suite.client.policy.create({
+            name: randomUUID(),
+            type: BuiltInPolicyType.ATTRIBUTES,
+            query: { visible: { $eq: true } },
+        });
+        const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: binding.id }));
+        await userPermissionRepository.save(userPermissionRepository.create({
+            userId: user.id,
+            userRealmId: user.realmId,
+            permissionId: permission.id,
+            permissionRealmId: null,
+            realmScope: 'any',
+            policyId: restriction.id,
+        }));
+        await suite.dataSource.queryResultCache?.clear();
+
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        const entries = (introspection.permissions ?? []).filter((entry: OAuth2TokenPermission) => entry.name === permission.name);
+        expect(entries).toEqual([{
+            name: permission.name,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'any',
+            policies: [restriction.id],
+        }]);
+
+        const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+        expect(catalog.policies[restriction.id]).toMatchObject({
+            type: BuiltInPolicyType.ATTRIBUTES,
+            query: { visible: { $eq: true } },
+        });
+        expect(catalog.permissions.some((entry) => entry.policies.includes(restriction.id))).toBe(false);
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog,
+            grants: introspection.permissions,
+            identity: {
+                id: user.id,
+                type: introspection.sub_kind,
+                realmId: introspection.realm_id,
+                realmName: introspection.realm_name,
+            },
+        });
+        const row = (visible: boolean) => new PolicyData({
+            [BuiltInPolicyType.REALM_MATCH]: user.realmId,
+            [BuiltInPolicyType.ATTRIBUTES]: { realmId: user.realmId, visible },
+        });
+        await expect(evaluator.evaluate({ name: permission.name, data: row(true) })).resolves.toBeUndefined();
+        await expect(evaluator.evaluate({ name: permission.name, data: row(false) })).rejects.toThrow();
+
+        const compiled = await evaluator.compile({ name: permission.name });
+        expect(compiled.verdict).toBe('conditional');
+        const predicate = compiled.verdict === 'conditional' ?
+            compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true }) :
+            () => false;
+        expect(!!predicate({ realmId: user.realmId, visible: true })).toBe(true);
+        expect(!!predicate({ realmId: user.realmId, visible: false })).toBe(false);
+    });
+
+    it('omits a grant whose junction policy the catalog cannot carry, so the evaluator denies rather than reads stale', async () => {
+        const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
+        const binding = await suite.dataSource.getRepository(PolicyEntity).findOneByOrFail({ type: BuiltInPolicyType.PERMISSION_BINDING });
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
+        const { data: unsupported } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
+        const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: binding.id }));
+        await userPermissionRepository.save(userPermissionRepository.create({
+            userId: user.id,
+            userRealmId: user.realmId,
+            permissionId: permission.id,
+            permissionRealmId: null,
+            realmScope: 'any',
+            policyId: unsupported.id,
+        }));
+        await suite.dataSource.queryResultCache?.clear();
+
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        expect((introspection.permissions ?? []).some((entry: OAuth2TokenPermission) => entry.name === permission.name)).toBe(false);
+
+        const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+        expect(catalog.policies).not.toHaveProperty(unsupported.id);
+        expect(catalog.permissions.some((entry) => entry.name === permission.name)).toBe(true);
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog,
+            grants: introspection.permissions,
+            identity: {
+                id: user.id,
+                type: introspection.sub_kind,
+                realmId: introspection.realm_id,
+                realmName: introspection.realm_name,
+            },
+        });
+        await expect(evaluator.evaluate({
+            name: permission.name,
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: user.realmId }),
+        })).rejects.toThrow();
+        expect(await evaluator.compile({ name: permission.name })).toEqual({ verdict: 'deny' });
     });
 });

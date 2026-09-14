@@ -18,6 +18,12 @@ export interface IPermissionDefinitionProvider {
      * Every permission definition with its junction policy trees.
      */
     findAll(): Promise<PermissionDefinition[]>;
+
+    /**
+     * Every policy tree a grant can name: the distinct policies the role, user
+     * and client permission junction rows reference.
+     */
+    findGrantPolicies(): Promise<BasePolicy[]>;
 }
 
 export type AuthorizationCatalogBuilderContext = {

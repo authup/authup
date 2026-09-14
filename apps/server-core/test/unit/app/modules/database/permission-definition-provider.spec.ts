@@ -16,11 +16,17 @@ import { BuiltInPolicyType, buildPermissionKey } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import {
+    ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyEntity,
+    RolePermissionEntity,
+    UserEntity,
+    UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { createTestApplication } from '../../../../app';
+import { createFakeClient, createFakeRole } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('app/modules/database/repositories/permission-provider (definitions)', () => {
     const suite = createTestApplication();
@@ -78,6 +84,57 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
             children: expect.arrayContaining([
                 expect.objectContaining({ type: BuiltInPolicyType.PERMISSION_BINDING }),
             ]),
+        });
+    });
+
+    it('answers every policy tree the role, user and client junction rows name, each once', async () => {
+        const provider = new PermissionDatabaseProvider(suite.dataSource);
+        const permissions = suite.dataSource.getRepository(PermissionEntity);
+
+        const admin = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        const { data: shared } = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: clientOnly } = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: unbound } = await suite.client.policy.create(createFakeTimePolicy());
+        const permission = await permissions.save(permissions.create({ name: 'plan109_grant' }));
+
+        const rolePermissions = suite.dataSource.getRepository(RolePermissionEntity);
+        await rolePermissions.save(rolePermissions.create({
+            roleId: role.id,
+            roleRealmId: role.realmId,
+            permissionId: permission.id,
+            policyId: shared.id,
+        }));
+        const userPermissions = suite.dataSource.getRepository(UserPermissionEntity);
+        await userPermissions.save(userPermissions.create({
+            userId: admin.id,
+            userRealmId: admin.realmId,
+            permissionId: permission.id,
+            policyId: shared.id,
+        }));
+        const clientPermissions = suite.dataSource.getRepository(ClientPermissionEntity);
+        await clientPermissions.save(clientPermissions.create({
+            clientId: client.id,
+            clientRealmId: client.realmId,
+            permissionId: permission.id,
+            policyId: clientOnly.id,
+        }));
+
+        const trees = await provider.findGrantPolicies();
+        const ids = trees.map((tree) => (tree as { id: string }).id);
+
+        expect(ids.filter((id) => id === shared.id)).toHaveLength(1);
+        expect(ids.filter((id) => id === clientOnly.id)).toHaveLength(1);
+        expect(ids).not.toContain(unbound.id);
+        expect(new Set(ids).size).toEqual(ids.length);
+        for (const tree of trees) {
+            expect(typeof tree.type).toBe('string');
+        }
+        expect(trees.find((tree) => (tree as { id: string }).id === shared.id)).toMatchObject({
+            type: BuiltInPolicyType.TIME,
+            start: '08:00:00',
+            end: '16:00:00',
         });
     });
 });

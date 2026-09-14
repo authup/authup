@@ -31,6 +31,7 @@ import {
     expectClientError,
     httpRequest,
 } from '../../../../../utils';
+import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
 
 /**
  * RFC 7662 §2.2: a token that is not active or does not exist on this server
@@ -162,6 +163,61 @@ describe('token-introspect', () => {
                 policies: [],
             });
         }
+    });
+
+    it('should carry the junction policy id of a grant', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        await suite.client.rolePermission.create({
+            roleId: role.id, 
+            permissionId: permission.id, 
+            policyId: policy.id, 
+        });
+        const password = 'start123-introspect';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userRole.create({ userId: user.id, roleId: role.id });
+
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await client.token.introspect(
+            { token: grant.access_token },
+            { authorizationHeader: { type: 'Bearer', token: grant.access_token } },
+        );
+
+        expect(introspection.active).toBe(true);
+        const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+        expect(entries).toEqual([{
+            name: PermissionName.USER_READ,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'own',
+            policies: [policy.id],
+        }]);
+    });
+
+    it('should omit a grant whose junction policy the catalog cannot carry', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: policy } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        await suite.client.rolePermission.create({
+            roleId: role.id, 
+            permissionId: permission.id, 
+            policyId: policy.id, 
+        });
+        const password = 'start123-introspect';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userRole.create({ userId: user.id, roleId: role.id });
+
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await client.token.introspect(
+            { token: grant.access_token },
+            { authorizationHeader: { type: 'Bearer', token: grant.access_token } },
+        );
+
+        expect(introspection.active).toBe(true);
+        expect(introspection.permissions).toEqual([]);
     });
 
     // The kit's `store.user` is built from these claims and nothing else, so

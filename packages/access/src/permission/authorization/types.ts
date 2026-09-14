@@ -40,8 +40,8 @@ export type AuthorizationDefinition = {
 export type AuthorizationCatalog = {
     version: typeof AUTHORIZATION_CATALOG_VERSION,
     /**
-     * Every policy tree the catalog references, keyed by the tree's own id and
-     * present exactly once however many definitions reference it.
+     * Every policy tree a definition or a grant can name, keyed by the tree's
+     * own id and present exactly once however many of them reference it.
      */
     policies: Record<string, AuthorizationPolicy>,
     permissions: AuthorizationDefinition[],

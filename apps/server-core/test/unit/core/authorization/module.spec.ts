@@ -196,4 +196,39 @@ describe('core/authorization/module', () => {
         expect(Object.entries(catalog.policies)).toEqual([['constructor', { type: 'identity' }]]);
         expect(ctx.warn).not.toHaveBeenCalled();
     });
+
+    it('carries every grant policy once, deduped against the definition trees', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([bindingDefinition('read')]);
+        ctx.permissionDefinitionProvider.setGrantPolicies([systemDefault, visible, prototypeNamed]);
+
+        const catalog = await buildAuthorizationCatalog(ctx);
+
+        expect(Object.keys(catalog.policies).sort()).toEqual(['constructor', 'policy-default', 'policy-visible']);
+        expect(catalog.policies['policy-visible']).toEqual({ type: 'attributes', query: { visible: { $eq: true } } });
+        expect(catalog.permissions).toEqual([
+            {
+                name: 'read',
+                realm_id: null,
+                client_id: null,
+                decision_strategy: null,
+                policies: ['policy-default'],
+            },
+        ]);
+        expect(ctx.warn).not.toHaveBeenCalled();
+    });
+
+    it('drops a grant policy the catalog cannot carry, warns per drop and keeps the rest', async () => {
+        const ctx = setup();
+        ctx.permissionDefinitionProvider.setDefinitions([bindingDefinition('read')]);
+        ctx.permissionDefinitionProvider.setGrantPolicies([custom, { type: 'identity' }, visible]);
+
+        const catalog = await buildAuthorizationCatalog(ctx);
+
+        expect(Object.keys(catalog.policies).sort()).toEqual(['policy-default', 'policy-visible']);
+        expect(catalog.permissions.map((permission) => permission.name)).toEqual(['read']);
+        expect(ctx.warn).toHaveBeenCalledTimes(2);
+        expect(String(ctx.warn.mock.calls[0]![0])).toContain('policy-custom');
+        expect(String(ctx.warn.mock.calls[1]![0])).toContain('must carry its id');
+    });
 });

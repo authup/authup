@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { BasePolicy } from '@authup/access';
 import type {
     IPermissionDefinitionProvider,
     PermissionDefinition,
@@ -13,11 +14,21 @@ import type {
 export class FakePermissionDefinitionProvider implements IPermissionDefinitionProvider {
     private definitions: PermissionDefinition[] = [];
 
+    private grantPolicies: BasePolicy[] = [];
+
     setDefinitions(definitions: PermissionDefinition[]) {
         this.definitions = definitions;
     }
 
+    setGrantPolicies(policies: BasePolicy[]) {
+        this.grantPolicies = policies;
+    }
+
     async findAll(): Promise<PermissionDefinition[]> {
         return this.definitions;
+    }
+
+    async findGrantPolicies(): Promise<BasePolicy[]> {
+        return this.grantPolicies;
     }
 }
