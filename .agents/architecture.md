@@ -2398,13 +2398,17 @@ rather than trusted until `exp`.
 - **`GET /sessions/@me/introspect` is the same projection `POST /token/introspect`
   answers with**, minus everything token-shaped, so the kit's `commitSession`
   needs no new shape. Both share one owner, `resolveIntrospectionSubject`
-  (`core/oauth2/introspection/`), so the two cannot drift. Its `clientId` is
-  the console's own client NAME constant and **never
-  `RequestIdentity.clientId`**, which for a user identity is the user row's
-  unrelated `clientId` column and would silently mis-scope the permission
-  projection. Both routes set `Cache-Control: no-store` and `Vary: Cookie`:
-  the GET is a per-user document whose only discriminator is an opaque
-  cookie, exactly what an intermediary would otherwise cross-serve.
+  (`core/oauth2/introspection/`), so the two cannot drift. **Neither route
+  passes a client id**: the input is the subject plus whether the credential
+  is usable, and the projection runs over the RESOLVED identity
+  (`toIdentityPolicyData`), the derivation every request path uses, so an
+  introspection cannot disagree with an in-process evaluation of the same
+  subject. Do not re-add one. `reduceBindingsByIdentityClient` narrows a
+  user's grants to the identity's own `clientId`, so any caller-chosen value
+  drops every global permission, which is nearly the whole catalogue. Both
+  routes set `Cache-Control: no-store` and `Vary: Cookie`: the GET is a
+  per-user document whose only discriminator is an opaque cookie, exactly
+  what an intermediary would otherwise cross-serve.
 - **Sign-out replaces the `id_token_hint` round-trip.** The browser-side
   flow captured `idToken`/`realmId` and bounced through `/logout`; in cookie
   mode there is no id_token in JavaScript to hint with, and none is needed.

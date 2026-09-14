@@ -91,12 +91,12 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * No client scope on the permission read, deliberately.
+     * No client scope on the permission read, deliberately, and there is no
+     * parameter left to supply one: `resolveIntrospectionSubject` projects the
+     * RESOLVED identity, the derivation the request path uses.
      * `reduceBindingsByIdentityClient` keeps only permissions whose own
-     * `clientId` matches the one passed, so naming a console's client would
-     * drop every global permission — nearly all of them. The bearer path passes
-     * the token's `client_id` because a token IS issued to one client; a
-     * session is not.
+     * `clientId` matches the identity's, so any caller-chosen value drops
+     * every global permission, which is nearly all of them.
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
