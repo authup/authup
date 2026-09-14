@@ -7,6 +7,38 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Role, scope, permission and policy reads are realm-gated
+
+Both read paths of the four global-capable entities now apply the realm reach of
+the grant the caller holds. `GET /roles`, `/scopes`, `/permissions` and
+`/policies` return the caller's own realm plus the global (`realmId: null`) rows
+and nothing else, with exact totals and pagination, and the matching
+`GET /<entity>/<id>` refuses a row outside that reach with `403`. Previously both
+returned every realm's rows to any caller holding the read permission. The
+`/policies/:id/expanded` read follows `getOne`.
+
+The change matters most for `policies`: that list carries each policy's
+configuration (an attribute query tree, an attribute-name denylist), so it was
+exposing one tenant's access-control rules to another tenant's administrator.
+
+Two consequences to check before upgrading:
+
+- **A grant at the default `own` reach no longer sees the global rows.** Every
+  built-in permission, both built-in roles, the `global` and `openid` scopes and
+  the system policies carry `realmId: null`, and `own` means own realm only. An
+  operator role you created through the API took `own` by default, so its
+  Permissions, Roles, Scopes and Policies pages will now render empty. Set those
+  grants to `ownOrNull` (the reach the built-in `realm_admin` role holds) to
+  restore the global catalogue: `POST /role-permissions` / `/user-permissions` /
+  `/client-permissions` with `realmScope: "ownOrNull"`. The built-in `admin`
+  (`any`) and `realm_admin` (`ownOrNull`) roles are unaffected.
+- **An integration that enumerated other realms' rows through these endpoints
+  stops seeing them.** Give it a grant at `any` reach, or query each realm with
+  a credential issued in it.
+
+The admin console needs no change: its four list pages already scope to the
+active realm plus the global rows.
+
 ### The device authorization grant is available, opt-in per client
 
 `POST /device_authorization` and `grant_type=urn:ietf:params:oauth:grant-type:device_code`

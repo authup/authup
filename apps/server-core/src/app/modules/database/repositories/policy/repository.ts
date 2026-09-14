@@ -16,7 +16,7 @@ import type { IPolicyRepository, IRealmRepository } from '../../../../../core/in
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PolicyRepositoryAdapterContext = {
@@ -39,6 +39,10 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         qb.groupBy('policy.id');
 
         const { pagination } = applyQuery(qb, query);
+        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
+        // PRESENCE-based — a `fields=` projection that strips the column would
+        // leave the realm-match key absent and neutral-pass (issue #3574)
+        applyRealmScopeSelect(qb, 'policy');
 
         const { data: entities, total } = await fetchMany(qb, query);
         await this.repository.extendManyWithEA(entities);
