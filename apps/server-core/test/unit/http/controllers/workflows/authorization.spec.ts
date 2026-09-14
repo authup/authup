@@ -9,13 +9,13 @@ import { randomUUID } from 'node:crypto';
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import type { AuthorizationDocument } from '@authup/access';
+import type { AuthorizationCatalog } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
@@ -41,23 +41,22 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         await suite.teardown();
     });
 
-    it('answers the caller its own document with every tree exactly once', async () => {
-        const document = await suite.client.authorization.get();
+    it('answers the identity-free catalog with every tree exactly once', async () => {
+        const catalog = await suite.client.authorization.get();
 
-        expect(document.version).toBe(1);
-        expect(document.identity.type).toBe('user');
-        expect(document.permissions.length).toBeGreaterThan(50);
+        expect(catalog.version).toBe(1);
+        expect(catalog).not.toHaveProperty('identity');
+        expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
+        for (const permission of catalog.permissions) {
+            expect(permission).not.toHaveProperty('grants');
+        }
 
-        const userRead = document.permissions.find((permission) => permission.name === PermissionName.USER_READ);
-        expect(userRead).toMatchObject({
-            realm_id: null, 
-            client_id: null, 
-            grants: [{ realm_scope: 'any', policies: [] }], 
-        });
+        const userRead = catalog.permissions.find((permission) => permission.name === PermissionName.USER_READ);
+        expect(userRead).toMatchObject({ realm_id: null, client_id: null });
         expect(userRead?.policies).toHaveLength(1);
 
         const defaultPolicyId = userRead!.policies[0]!;
-        const defaultPolicy = document.policies[defaultPolicyId];
+        const defaultPolicy = catalog.policies[defaultPolicyId];
         expect(defaultPolicy).toEqual({
             type: 'composite',
             decisionStrategy: 'unanimous',
@@ -68,35 +67,36 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             ]),
         });
         expect(defaultPolicy?.children).toHaveLength(2);
-        for (const tree of Object.values(document.policies)) {
+        const defaults = Object.values(catalog.policies)
+            .filter((tree) => tree.type === 'composite' &&
+                (tree.children ?? []).some((child) => child.type === 'permissionBinding'));
+        expect(defaults).toHaveLength(1);
+        for (const tree of Object.values(catalog.policies)) {
             expect(tree).not.toHaveProperty('id');
             expect(tree).not.toHaveProperty('name');
             expect(tree).not.toHaveProperty('builtIn');
             expect(tree).not.toHaveProperty('createdAt');
         }
 
-        const referenced = document.permissions.flatMap((permission) => [
-            ...permission.policies,
-            ...permission.grants.flatMap((grant) => grant.policies),
-        ]);
-        expect(new Set(referenced).size).toBeLessThanOrEqual(Object.keys(document.policies).length);
+        const referenced = catalog.permissions.flatMap((permission) => permission.policies);
+        expect(new Set(referenced).size).toBeLessThanOrEqual(Object.keys(catalog.policies).length);
         for (const id of referenced) {
-            expect(document.policies[id]).toBeDefined();
+            expect(catalog.policies[id]).toBeDefined();
         }
-        expect(document.permissions.filter((permission) => permission.policies.includes(defaultPolicyId)).length)
-            .toBeGreaterThan(50);
+        expect(catalog.permissions.filter((permission) => permission.policies.includes(defaultPolicyId)).length)
+            .toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
 
-    it('sends no-store and varies on the cookie', async () => {
+    it('is privately cacheable and does not vary on the cookie', async () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${grant.access_token}` } });
 
         expect(response.status).toBe(200);
-        expect(response.headers.get('cache-control')).toEqual('no-store');
-        expect(response.headers.get('vary')).toContain('cookie');
+        expect(response.headers.get('cache-control')).toEqual('private, no-cache');
+        expect(response.headers.get('vary') ?? '').not.toContain('cookie');
     });
 
-    it('refuses an anonymous caller and a refresh token, and answers an empty document without the global scope', async () => {
+    it('refuses an anonymous caller and a refresh token, and answers any authenticated scope', async () => {
         const anonymous = await httpRequest(suite, 'GET', '/authorization');
         expect(anonymous.status).toBe(401);
 
@@ -120,12 +120,10 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${restricted}` } });
         expect(response.status).toBe(200);
-        const document : AuthorizationDocument = await response.json();
-        expect(document.version).toBe(1);
-        expect(document.identity.id).toEqual(payload.sub);
-        expect(document.identity.type).toEqual('user');
-        expect(document.permissions).toEqual([]);
-        expect(document.policies).toEqual({});
+        const catalog : AuthorizationCatalog = await response.json();
+        expect(catalog.version).toBe(1);
+        expect(catalog).not.toHaveProperty('identity');
+        expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
 
     it('exports each realm reach into identical row checks and query conditions', async () => {
@@ -155,8 +153,21 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         }
         await suite.dataSource.queryResultCache?.clear();
 
-        const document : AuthorizationDocument = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
-        const evaluator = await createAuthorizationEvaluator(document);
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        expect(introspection.active).toBe(true);
+        expect(introspection.sub).toEqual(user.id);
+        const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+        const evaluator = await createAuthorizationEvaluator({
+            catalog,
+            grants: introspection.permissions,
+            identity: {
+                id: user.id,
+                type: introspection.sub_kind,
+                realmId: introspection.realm_id,
+                realmName: introspection.realm_name,
+            },
+        });
         const rows = [user.realmId, randomUUID(), null].map((realmId) => ({ realmId }));
         for (const [index, [, expected]] of cases.entries()) {
             const name = names[index]!;

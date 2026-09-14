@@ -236,6 +236,7 @@ export class TokenController {
             const subject = await resolveIntrospectionSubject({
                 identityResolver: this.identityResolver,
                 identityPermissionProvider: this.identityPermissionProvider,
+                logger: this.logger,
             }, {
                 sub: payload.sub,
                 subKind: payload.sub_kind,

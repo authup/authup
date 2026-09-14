@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePermission, BasePolicy, PermissionGetOptions } from '@authup/access';
+import type { BasePermission, BasePolicy } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
-import type { IIdentityPermissionProvider } from '../identity/permission/types.ts';
 
 export type PermissionDefinition = {
     permission: BasePermission,
@@ -15,11 +14,13 @@ export type PermissionDefinition = {
 };
 
 export interface IPermissionDefinitionProvider {
-    findDefinitions(keys: PermissionGetOptions[]): Promise<PermissionDefinition[]>;
+    /**
+     * Every permission definition with its junction policy trees.
+     */
+    findAll(): Promise<PermissionDefinition[]>;
 }
 
-export type AuthorizationDocumentBuilderContext = {
-    identityPermissionProvider: IIdentityPermissionProvider,
+export type AuthorizationCatalogBuilderContext = {
     permissionDefinitionProvider: IPermissionDefinitionProvider,
     logger?: Logger,
 };

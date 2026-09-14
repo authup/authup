@@ -17,7 +17,7 @@ import {
 } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { In, IsNull } from 'typeorm';
+import { IsNull } from 'typeorm';
 import type { IPermissionDefinitionProvider, PermissionDefinition } from '../../../../../core/authorization/types.ts';
 import {
     CachePrefix,
@@ -98,34 +98,19 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IPermiss
         return null;
     }
 
-    async findDefinitions(keys: PermissionGetOptions[]) : Promise<PermissionDefinition[]> {
-        if (keys.length === 0) {
+    async findAll() : Promise<PermissionDefinition[]> {
+        const entities = await this.repository.find();
+        if (entities.length === 0) {
             return [];
         }
 
-        const wanted = new Set(keys.map((key) => buildPermissionKey({
-            name: key.name,
-            realmId: key.realmId ?? null,
-            clientId: key.clientId ?? null,
-        })));
-
-        const entities = await this.repository.find({ where: { name: In([...new Set(keys.map((key) => key.name))]) } });
-        const matched = entities.filter((entity) => wanted.has(buildPermissionKey({
-            name: entity.name,
-            realmId: entity.realmId ?? null,
-            clientId: entity.clientId ?? null,
-        })));
-        if (matched.length === 0) {
-            return [];
-        }
-
-        const junctions = await this.permissionPolicyRepository.find({ where: { permissionId: In(matched.map((entity) => entity.id)) } });
+        const junctions = await this.permissionPolicyRepository.find();
         const trees = await loadPolicyTrees(
             this.dataSource.manager,
             [...new Set(junctions.map((junction) => junction.policyId))],
         );
 
-        return matched.map((entity) => ({
+        return entities.map((entity) => ({
             permission: {
                 name: entity.name,
                 realmId: entity.realmId ?? null,

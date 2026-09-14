@@ -6,36 +6,25 @@
  */
 
 import type {
-    AuthorizationDocument,
-    AuthorizationGrant,
-    AuthorizationIdentity,
-    AuthorizationPermission,
+    AuthorizationCatalog,
+    AuthorizationDefinition,
     AuthorizationPolicy,
-    BasePermission,
     BasePolicy,
-    IdentityPolicyData,
 } from '@authup/access';
 import {
-    AUTHORIZATION_DOCUMENT_VERSION,
+    AUTHORIZATION_CATALOG_VERSION,
     buildPermissionKey,
-    containsBindingCheck,
-    normalizeRealmScope,
     projectAuthorizationPolicy,
 } from '@authup/access';
 import { InternalError } from '@authup/errors';
-import type { AuthorizationDocumentBuilderContext } from './types.ts';
-
-type Group = {
-    permission: BasePermission,
-    grants: AuthorizationGrant[],
-};
+import type { AuthorizationCatalogBuilderContext } from './types.ts';
 
 type PolicyDrop = {
     policyId: string | undefined,
     message: string,
 };
 
-function readPolicyId(policy: BasePolicy) : string {
+export function readPolicyId(policy: BasePolicy) : string {
     const { id } = policy as { id?: unknown };
     if (typeof id !== 'string' || id.length === 0) {
         throw new InternalError('An authorization policy tree must carry its id.');
@@ -52,123 +41,71 @@ function compareKeys(a: string, b: string) : number {
     return a > b ? 1 : 0;
 }
 
-export function buildAuthorizationIdentity(identity: IdentityPolicyData) : AuthorizationIdentity {
-    if (identity.type !== 'user' && identity.type !== 'client') {
-        throw new InternalError(`An authorization document cannot be built for a ${identity.type} identity.`);
-    }
-
-    return {
-        id: identity.id,
-        type: identity.type,
-        realm_id: identity.realmId ?? null,
-        realm_name: identity.realmName ?? null,
-        client_id: identity.clientId ?? null,
-    };
+function definitionKey(definition: AuthorizationDefinition) : string {
+    return buildPermissionKey({
+        name: definition.name,
+        realmId: definition.realm_id,
+        clientId: definition.client_id,
+    });
 }
 
-export async function buildAuthorizationDocument(
-    ctx: AuthorizationDocumentBuilderContext,
-    identity: IdentityPolicyData,
-) : Promise<AuthorizationDocument> {
-    const authorizationIdentity = buildAuthorizationIdentity(identity);
-
+export async function buildAuthorizationCatalog(
+    ctx: AuthorizationCatalogBuilderContext,
+) : Promise<AuthorizationCatalog> {
     const policies : Record<string, AuthorizationPolicy> = {};
-    const collect = async (
-        trees: BasePolicy[] | undefined,
-        withinGrant: boolean,
-    ) : Promise<string[] | PolicyDrop> => {
-        const ids : string[] = [];
-        for (const tree of trees ?? []) {
+    const project = async (trees: BasePolicy[]) : Promise<string[] | PolicyDrop> => {
+        const projected : [string, AuthorizationPolicy][] = [];
+        for (const tree of trees) {
             let id : string | undefined;
             try {
                 id = readPolicyId(tree);
-                const projected = Object.hasOwn(policies, id) ?
-                    policies[id]! :
-                    await projectAuthorizationPolicy(tree);
-                if (withinGrant && containsBindingCheck(projected)) {
-                    throw new InternalError('The policy carries a permissionBinding node.');
-                }
-                policies[id] = projected;
+                projected.push([
+                    id,
+                    Object.hasOwn(policies, id) ? policies[id]! : await projectAuthorizationPolicy(tree),
+                ]);
             } catch (e) {
                 return {
                     policyId: id,
                     message: e instanceof Error ? e.message : String(e),
                 };
             }
-            ids.push(id);
         }
 
-        return ids;
+        for (const [id, tree] of projected) {
+            policies[id] = tree;
+        }
+
+        return projected.map(([id]) => id);
     };
 
-    const drop = (subject: string, key: string, failure: PolicyDrop) => {
-        ctx.logger?.warn(
-            `Dropped ${subject} of permission ${key} from the authorization document` +
-            `${failure.policyId ? ` (policy ${failure.policyId})` : ''}: ${failure.message}`,
-        );
-    };
-
-    const groups = new Map<string, Group>();
-    const bindings = await ctx.identityPermissionProvider.getFor(identity);
-    for (const binding of bindings) {
-        const permission : BasePermission = {
-            name: binding.permission.name,
-            realmId: binding.permission.realmId ?? null,
-            clientId: binding.permission.clientId ?? null,
-        };
-        const key = buildPermissionKey(permission);
-        let group = groups.get(key);
-        if (!group) {
-            group = { permission, grants: [] };
-            groups.set(key, group);
-        }
-
-        const grantPolicies = await collect(binding.policies, true);
-        if (!Array.isArray(grantPolicies)) {
-            drop('a grant', key, grantPolicies);
-            continue;
-        }
-
-        group.grants.push({
-            realm_scope: normalizeRealmScope(binding.realmScope),
-            policies: grantPolicies,
-        });
-    }
-
-    const definitions = await ctx.permissionDefinitionProvider.findDefinitions(
-        groups.values().toArray().map((group) => group.permission),
-    );
-    const definitionsByKey = new Map(definitions.map((definition) => [
-        buildPermissionKey(definition.permission),
-        definition,
-    ] as const));
-
-    const permissions : AuthorizationPermission[] = [];
-    for (const [key, group] of groups.entries().toArray().sort(([a], [b]) => compareKeys(a, b))) {
-        const definition = definitionsByKey.get(key);
-        if (!definition || group.grants.length === 0) {
-            continue;
-        }
-
-        const definitionPolicies = await collect(definition.policies, false);
-        if (!Array.isArray(definitionPolicies)) {
-            drop('the definition', key, definitionPolicies);
-            continue;
-        }
-
-        permissions.push({
-            name: group.permission.name,
-            realm_id: group.permission.realmId ?? null,
-            client_id: group.permission.clientId ?? null,
+    const permissions : AuthorizationDefinition[] = [];
+    const definitions = await ctx.permissionDefinitionProvider.findAll();
+    for (const definition of definitions) {
+        const entry : AuthorizationDefinition = {
+            name: definition.permission.name,
+            realm_id: definition.permission.realmId ?? null,
+            client_id: definition.permission.clientId ?? null,
             decision_strategy: definition.permission.decisionStrategy ?? null,
-            policies: definitionPolicies,
-            grants: group.grants,
-        });
+            policies: [],
+        };
+
+        const ids = await project(definition.policies);
+        if (!Array.isArray(ids)) {
+            ctx.logger?.warn(
+                `Dropped the definition of permission ${definitionKey(entry)} from the authorization catalog` +
+                `${ids.policyId ? ` (policy ${ids.policyId})` : ''}: ${ids.message}`,
+            );
+            continue;
+        }
+
+        entry.policies = ids;
+        permissions.push(entry);
     }
+
+    permissions.sort((a, b) => compareKeys(definitionKey(a), definitionKey(b)));
 
     return {
-        version: AUTHORIZATION_DOCUMENT_VERSION,
-        identity: authorizationIdentity,
+        version: AUTHORIZATION_CATALOG_VERSION,
         policies,
         permissions,
     };

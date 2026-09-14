@@ -844,6 +844,7 @@ export class HTTPControllerModule {
             identityResolver: container.resolve(IdentityInjectionKey.Resolver),
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             sessionRepository: repository,
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 
@@ -1009,7 +1010,6 @@ export class HTTPControllerModule {
 
     createAuthorizationController(container: IContainer) {
         return new AuthorizationController({
-            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             permissionDefinitionProvider: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
             logger: container.resolve(LoggerInjectionKey),
         });

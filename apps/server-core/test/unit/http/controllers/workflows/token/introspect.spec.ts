@@ -20,10 +20,17 @@ import {
 } from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../../app';
-import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
+import {
+    createFakeClient,
+    createFakeRole,
+    createFakeUser,
+    expectClientError,
+    httpRequest,
+} from '../../../../../utils';
 
 /**
  * RFC 7662 §2.2: a token that is not active or does not exist on this server
@@ -110,6 +117,51 @@ describe('token-introspect', () => {
         expect(introspection.active).toBe(true);
         expect(Array.isArray(introspection.permissions)).toBe(true);
         expect(introspection.permissions!.length).toBeGreaterThan(0);
+
+        // the grant list a consumer pairs with the catalog GET /authorization
+        // serves: every entry carries its reach and its junction policy ids
+        for (const entry of introspection.permissions!) {
+            expect(['none', 'own', 'ownOrNull', 'any']).toContain(entry.realm_scope);
+            expect(Array.isArray(entry.policies)).toBe(true);
+        }
+        const userRead = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+        expect(userRead).toEqual([{
+            name: PermissionName.USER_READ,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'any',
+            policies: [],
+        }]);
+    });
+
+    it('should report one grant per junction row, so a namespace may repeat', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        await suite.client.rolePermission.create({ roleId: role.id, permissionId: permission.id });
+        const password = 'start123-introspect';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userRole.create({ userId: user.id, roleId: role.id });
+        await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
+
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await client.token.introspect(
+            { token: grant.access_token },
+            { authorizationHeader: { type: 'Bearer', token: grant.access_token } },
+        );
+
+        expect(introspection.active).toBe(true);
+        const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+        expect(entries).toHaveLength(2);
+        for (const entry of entries) {
+            expect(entry).toEqual({
+                name: PermissionName.USER_READ,
+                realm_id: null,
+                client_id: null,
+                realm_scope: 'own',
+                policies: [],
+            });
+        }
     });
 
     // The kit's `store.user` is built from these claims and nothing else, so

@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey } from '@authup/access';
+import { buildPermissionKey, normalizeRealmScope } from '@authup/access';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
+import { readPolicyId } from '../../authorization/module.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import type {
     OAuth2IntrospectionSubject,
@@ -17,12 +18,18 @@ import type {
 
 /**
  * The subject half of an introspection answer: resolve the identity, build its
- * OpenID claims and, only for an active credential, project its permissions.
+ * OpenID claims and, only for an active credential, project its grants.
  *
  * One owner for that projection, so a second consumer (the console session
  * endpoint, plan 088) cannot drift from `POST /token/introspect`. The token
  * half (verification, the `active` derivation, the RFC 7662 reporting rules)
  * stays in the controller, which also owns the response spread order.
+ *
+ * `permissions` is the identity's GRANT list, one entry per junction row in
+ * the order the provider returns them: the namespace, the grant's own realm
+ * reach and the ids of its junction policy trees, which pair with the catalog
+ * `GET /authorization` serves. A grant whose junction tree carries no id
+ * cannot be named there and is dropped with a warning.
  *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
@@ -47,29 +54,38 @@ export async function resolveIntrospectionSubject(
     }
 
     // todo: only receive client specific permissions
-    const permissions = await ctx.identityPermissionProvider.getFor({
+    const bindings = await ctx.identityPermissionProvider.getFor({
         id: input.sub,
         type: input.subKind,
         clientId: input.clientId,
         realmId: input.realmId,
     });
 
+    const permissions : OAuth2TokenPermission[] = [];
+    for (const binding of bindings) {
+        let policies : string[];
+        try {
+            policies = (binding.policies ?? []).map((policy) => readPolicyId(policy));
+        } catch (e) {
+            ctx.logger?.warn(
+                `Dropped a grant of permission ${buildPermissionKey(binding.permission)} from the introspection: ` +
+                `${e instanceof Error ? e.message : String(e)}`,
+            );
+            continue;
+        }
+
+        permissions.push({
+            name: binding.permission.name,
+            realm_id: binding.permission.realmId ?? null,
+            client_id: binding.permission.clientId ?? null,
+            realm_scope: normalizeRealmScope(binding.realmScope),
+            policies,
+        });
+    }
+
     return {
         identity,
         claims,
-        // todo: permissions property should be removed.
-        permissions: Object.values(
-            permissions.reduce((acc, binding) => {
-                const key = buildPermissionKey(binding.permission);
-                if (!acc[key]) {
-                    acc[key] = {
-                        name: binding.permission.name,
-                        client_id: binding.permission.clientId,
-                        realm_id: binding.permission.realmId,
-                    } as OAuth2TokenPermission;
-                }
-                return acc;
-            }, {} as Record<string, OAuth2TokenPermission>),
-        ),
+        permissions,
     };
 }

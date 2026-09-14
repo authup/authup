@@ -14,6 +14,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { Session } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse, EntityRecordResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
@@ -51,6 +52,7 @@ export type SessionControllerContext = {
     identityResolver?: IIdentityResolver,
     identityPermissionProvider?: IIdentityPermissionProvider,
     sessionRepository?: ISessionRepository,
+    logger?: Logger,
     service: ISessionService,
 };
 
@@ -67,12 +69,15 @@ export class SessionController {
 
     protected sessionRepository?: ISessionRepository;
 
+    protected logger?: Logger;
+
     constructor(ctx: SessionControllerContext) {
         this.service = ctx.service;
         this.baseURL = ctx.baseURL;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.sessionRepository = ctx.sessionRepository;
+        this.logger = ctx.logger;
     }
 
     /**
@@ -125,6 +130,7 @@ export class SessionController {
         const subject = await resolveIntrospectionSubject({
             identityResolver: this.identityResolver,
             identityPermissionProvider: this.identityPermissionProvider,
+            logger: this.logger,
         }, {
             sub: identity.id,
             subKind: identity.type,
@@ -134,7 +140,7 @@ export class SessionController {
 
         return {
             active: true,
-            // todo: permissions property should be removed.
+            // the identity's grant list, paired with the catalog GET /authorization serves
             permissions: subject.permissions,
             sub: identity.id,
             sub_kind: OAuth2SubKind.USER,

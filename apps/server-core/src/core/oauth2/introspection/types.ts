@@ -6,6 +6,7 @@
  */
 
 import type { Identity, IdentityType } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
@@ -13,6 +14,7 @@ import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 export type OAuth2IntrospectionSubjectContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
+    logger?: Logger,
 };
 
 export type OAuth2IntrospectionSubjectInput = {

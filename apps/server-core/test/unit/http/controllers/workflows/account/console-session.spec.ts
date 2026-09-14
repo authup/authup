@@ -232,21 +232,21 @@ describe.each(CONSOLES)('$name console session', ({
         expect(sessionBody.sub).toEqual(user.id);
         expect(sessionBody.session_id).toBeDefined();
         expect(sessionBody.realm_id).toEqual(realm.id);
+        // the identity's grant list, paired with the catalog below
+        expect(Array.isArray(sessionBody.permissions)).toBe(true);
+        for (const entry of sessionBody.permissions) {
+            expect(['none', 'own', 'ownOrNull', 'any']).toContain(entry.realm_scope);
+            expect(Array.isArray(entry.policies)).toBe(true);
+        }
         const authorizationResponse = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
         expect(authorizationResponse.status).toEqual(200);
-        expect(authorizationResponse.headers.get('cache-control')).toEqual('no-store');
+        expect(authorizationResponse.headers.get('cache-control')).toEqual('private, no-cache');
         const authorization = await authorizationResponse.json();
-        expect(authorization).toMatchObject({
-            version: 1,
-            identity: {
-                id: user.id,
-                type: 'user',
-                realm_id: realm.id,
-                realm_name: realm.name,
-                client_id: null,
-            },
-        });
+        expect(authorization.version).toEqual(1);
+        expect(authorization).not.toHaveProperty('identity');
         expect(Array.isArray(authorization.permissions)).toBe(true);
+        expect(authorization.permissions.length).toBeGreaterThan(0);
+        expect(authorization.policies).toEqual(expect.any(Object));
         // the claim a console keys an avatar on (issue #3506). Cookie mode is
         // the surface the account console runs on, and it reaches the claims
         // through this endpoint's own `...subject.claims` spread rather than

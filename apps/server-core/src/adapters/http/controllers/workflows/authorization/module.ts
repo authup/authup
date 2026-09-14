@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationDocument } from '@authup/access';
-import { AUTHORIZATION_DOCUMENT_VERSION } from '@authup/access';
-import { ScopeName } from '@authup/core-kit';
+import type { AuthorizationCatalog } from '@authup/access';
 import {
     DContext,
     DController,
@@ -15,23 +13,20 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import type { AuthorizationDocumentBuilderContext } from '../../../../../core/index.ts';
-import {
-    buildAuthorizationDocument,
-    buildAuthorizationIdentity,
-    toIdentityPolicyData,
-} from '../../../../../core/index.ts';
+import type { AuthorizationCatalogBuilderContext } from '../../../../../core/index.ts';
+import { buildAuthorizationCatalog } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { useRequestIdentityOrFail, useRequestScopes } from '../../../request/index.ts';
 
-export type AuthorizationControllerContext = AuthorizationDocumentBuilderContext;
+export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
 
 /**
- * The caller's own authorization document: held permission definitions with
- * their policies and every grant's realm reach, for a console or a resource
- * server to evaluate outside this process. A per-identity document, never
- * served from a shared cache. A credential without the `global` scope holds
- * no grants server-side, so it receives an empty document.
+ * The identity-free permission catalog: every definition with its policy
+ * trees, for a console or a resource server to evaluate outside this process
+ * together with the grants an introspection reports. It is the same for every
+ * authenticated caller (what `GET /permissions` plus `GET /policies` already
+ * answer to any principal), so a consumer fetches it once per process and
+ * caches it; `private, no-cache` keeps a shared cache from storing it while a
+ * private one may revalidate through the ETag.
  */
 @DTags('auth')
 @DController('/authorization')
@@ -45,20 +40,9 @@ export class AuthorizationController {
     @DGet('', [ForceLoggedInMiddleware])
     async get(
         @DContext() event: IAppEvent,
-    ): Promise<AuthorizationDocument> {
-        event.response.headers.set('cache-control', 'no-store');
-        event.response.headers.append('vary', 'cookie');
+    ): Promise<AuthorizationCatalog> {
+        event.response.headers.set('cache-control', 'private, no-cache');
 
-        const identity = toIdentityPolicyData(useRequestIdentityOrFail(event).raw)!;
-        if (!useRequestScopes(event).includes(ScopeName.GLOBAL)) {
-            return {
-                version: AUTHORIZATION_DOCUMENT_VERSION,
-                identity: buildAuthorizationIdentity(identity),
-                policies: {},
-                permissions: [],
-            };
-        }
-
-        return buildAuthorizationDocument(this.ctx, identity);
+        return buildAuthorizationCatalog(this.ctx);
     }
 }

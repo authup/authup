@@ -6,13 +6,14 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, buildPermissionKey } from '@authup/access';
+import { PermissionName } from '@authup/core-kit';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import {
     PermissionEntity,
@@ -32,7 +33,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         await suite.teardown();
     });
 
-    it('loads the definition policies of every requested namespace in one pass', async () => {
+    it('answers every definition with its policy trees in one pass', async () => {
         const provider = new PermissionDatabaseProvider(suite.dataSource);
         const permissions = suite.dataSource.getRepository(PermissionEntity);
         const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
@@ -47,49 +48,36 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         await junctions.save(junctions.create({ permissionId: global.id, policyId: binding.id }));
         await junctions.save(junctions.create({ permissionId: global.id, policyId: identity.id }));
 
-        const definitions = await provider.findDefinitions([
-            {
-                name: 'plan109_read', 
-                realmId: null, 
-                clientId: null, 
-            },
-            {
-                name: 'plan109_read', 
-                realmId: realm.id, 
-                clientId: null, 
-            },
-            {
-                name: 'plan109_missing', 
-                realmId: null, 
-                clientId: null, 
-            },
-        ]);
+        const definitions = await provider.findAll();
 
-        expect(definitions).toHaveLength(2);
+        expect(definitions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length + 2);
+        const keys = definitions.map((item) => buildPermissionKey(item.permission));
+        expect(new Set(keys).size).toEqual(keys.length);
 
-        const globalDefinition = definitions.find((item) => item.permission.realmId === null);
+        const globalDefinition = definitions.find((item) => item.permission.name === global.name && item.permission.realmId === null);
+        expect(globalDefinition?.permission).toEqual({
+            name: 'plan109_read',
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
+        });
         expect(globalDefinition?.policies.map((policy) => (policy as { id: string }).id).sort())
             .toEqual([binding.id, identity.id].sort());
         expect(globalDefinition?.policies.every((policy) => typeof policy.type === 'string')).toBe(true);
 
-        const scopedDefinition = definitions.find((item) => item.permission.realmId === realm.id);
-        expect(scopedDefinition?.permission.name).toEqual(scoped.name);
+        const scopedDefinition = definitions.find((item) => item.permission.name === scoped.name && item.permission.realmId === realm.id);
+        expect(scopedDefinition?.permission.clientId).toBeNull();
         expect(scopedDefinition?.policies).toEqual([]);
 
-        // The name is what the query binds, so a same-named row in another
-        // namespace must be dropped by the key match rather than answered.
-        const globalOnly = await provider.findDefinitions([
-            {
-                name: 'plan109_read', 
-                realmId: null, 
-                clientId: null, 
-            },
-        ]);
-        expect(globalOnly.map((item) => item.permission.realmId)).toEqual([null]);
-    });
-
-    it('answers an empty list for no keys', async () => {
-        const provider = new PermissionDatabaseProvider(suite.dataSource);
-        expect(await provider.findDefinitions([])).toEqual([]);
+        // a provisioned permission carries the system default tree, loaded
+        // with its children rather than as the bare junction row
+        const userRead = definitions.find((item) => item.permission.name === PermissionName.USER_READ && item.permission.realmId === null);
+        expect(userRead?.policies).toHaveLength(1);
+        expect(userRead?.policies[0]).toMatchObject({
+            type: BuiltInPolicyType.COMPOSITE,
+            children: expect.arrayContaining([
+                expect.objectContaining({ type: BuiltInPolicyType.PERMISSION_BINDING }),
+            ]),
+        });
     });
 });

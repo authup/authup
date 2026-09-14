@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionGetOptions } from '@authup/access';
-import { buildPermissionKey } from '@authup/access';
 import type {
     IPermissionDefinitionProvider,
     PermissionDefinition,
@@ -19,9 +17,7 @@ export class FakePermissionDefinitionProvider implements IPermissionDefinitionPr
         this.definitions = definitions;
     }
 
-    async findDefinitions(keys: PermissionGetOptions[]): Promise<PermissionDefinition[]> {
-        const wanted = new Set(keys.map((key) => buildPermissionKey(key)));
-
-        return this.definitions.filter((definition) => wanted.has(buildPermissionKey(definition.permission)));
+    async findAll(): Promise<PermissionDefinition[]> {
+        return this.definitions;
     }
 }
