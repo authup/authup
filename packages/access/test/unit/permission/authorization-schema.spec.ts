@@ -7,35 +7,28 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    AUTHORIZATION_DOCUMENT_VERSION,
-    authorizationDocumentSchema,
+    AUTHORIZATION_CATALOG_VERSION,
+    authorizationCatalogSchema,
+    authorizationGrantsSchema,
 } from '../../../src';
 
-function createDocument(permissions: Record<string, any>[], policies: Record<string, any> = {}) {
+function createCatalog(permissions: Record<string, any>[], policies: Record<string, any> = {}) {
     return {
-        version: AUTHORIZATION_DOCUMENT_VERSION,
-        identity: {
-            id: 'u1',
-            type: 'user',
-            realm_id: 'r1',
-            realm_name: 'master',
-            client_id: null,
-        },
+        version: AUTHORIZATION_CATALOG_VERSION,
         policies,
         permissions,
     };
 }
 
 describe('permission/authorization/schema', () => {
-    it('accepts a document whose references are all declared', () => {
-        const parsed = authorizationDocumentSchema.parse(createDocument(
+    it('accepts a catalog whose references are all declared', () => {
+        const parsed = authorizationCatalogSchema.parse(createCatalog(
             [{
                 name: 'user_update',
                 realm_id: null,
                 client_id: null,
                 decision_strategy: 'unanimous',
                 policies: ['a'],
-                grants: [{ realm_scope: 'own', policies: ['b'] }],
             }],
             {
                 a: { type: 'identity', types: ['user'] },
@@ -44,28 +37,26 @@ describe('permission/authorization/schema', () => {
         ));
 
         expect(parsed.permissions[0].policies).toEqual(['a']);
-        expect(parsed.permissions[0].grants[0].policies).toEqual(['b']);
+        expect(parsed).not.toHaveProperty('identity');
     });
 
-    it('accepts a permission that names no policy at either layer', () => {
-        expect(() => authorizationDocumentSchema.parse(createDocument([{
+    it('accepts a definition that names no policy', () => {
+        expect(() => authorizationCatalogSchema.parse(createCatalog([{
             name: 'user_read',
             realm_id: null,
             client_id: null,
             decision_strategy: null,
             policies: [],
-            grants: [{ realm_scope: 'any', policies: [] }],
         }]))).not.toThrow();
     });
 
-    it('refuses a definition-layer id that no policy declares', () => {
-        const result = authorizationDocumentSchema.safeParse(createDocument([{
+    it('refuses a definition id that no policy declares', () => {
+        const result = authorizationCatalogSchema.safeParse(createCatalog([{
             name: 'user_update',
             realm_id: null,
             client_id: null,
             decision_strategy: 'unanimous',
             policies: ['missing'],
-            grants: [{ realm_scope: 'own', policies: [] }],
         }]));
 
         expect(result.success).toBeFalsy();
@@ -74,38 +65,61 @@ describe('permission/authorization/schema', () => {
         expect(result.error?.issues[0].message).toContain('missing');
     });
 
-    it('refuses a grant-layer id that no policy declares', () => {
-        const result = authorizationDocumentSchema.safeParse(createDocument(
-            [{
-                name: 'user_update',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
-                policies: ['a'],
-                grants: [
-                    { realm_scope: 'own', policies: ['a'] },
-                    { realm_scope: 'any', policies: ['gone'] },
-                ],
-            }],
-            { a: { type: 'identity' } },
-        ));
-
-        expect(result.success).toBeFalsy();
-        expect(result.error?.issues).toHaveLength(1);
-        expect(result.error?.issues[0].path).toEqual(['permissions', 0, 'grants', 1, 'policies', 0]);
-    });
-
     it('refuses an id that only a prototype member of the policy record answers', () => {
-        const result = authorizationDocumentSchema.safeParse(createDocument([{
+        const result = authorizationCatalogSchema.safeParse(createCatalog([{
             name: 'user_update',
             realm_id: null,
             client_id: null,
             decision_strategy: null,
-            policies: ['constructor'],
-            grants: [{ realm_scope: 'own', policies: ['toString'] }],
+            policies: ['constructor', 'toString'],
         }]));
 
         expect(result.success).toBeFalsy();
         expect(result.error?.issues).toHaveLength(2);
+    });
+
+    it('strips grants from a definition: they are no longer part of the catalog', () => {
+        const parsed = authorizationCatalogSchema.parse(createCatalog([{
+            name: 'user_read',
+            realm_id: null,
+            client_id: null,
+            decision_strategy: null,
+            policies: [],
+            grants: [{ realm_scope: 'any', policies: [] }],
+        }]));
+
+        expect(parsed.permissions[0]).not.toHaveProperty('grants');
+    });
+
+    it('accepts grants with an absent reach or policy list', () => {
+        const parsed = authorizationGrantsSchema.parse([
+            { name: 'user_read' },
+            {
+                name: 'user_read',
+                realm_id: null,
+                client_id: null,
+                realm_scope: null,
+                policies: null,
+            },
+            {
+                name: 'user_update',
+                realm_id: 'r1',
+                client_id: 'c1',
+                realm_scope: 'ownOrNull',
+                policies: ['a'],
+            },
+        ]);
+
+        expect(parsed).toHaveLength(3);
+        expect(parsed[2].realm_scope).toEqual('ownOrNull');
+        expect(parsed[2].policies).toEqual(['a']);
+    });
+
+    it('refuses a grant with an unknown reach, an empty name or a non-list', () => {
+        expect(authorizationGrantsSchema.safeParse([{ name: 'user_read', realm_scope: 'all' }]).success).toBeFalsy();
+        expect(authorizationGrantsSchema.safeParse([{ name: '' }]).success).toBeFalsy();
+        expect(authorizationGrantsSchema.safeParse([{ name: 'user_read', policies: 'a' }]).success).toBeFalsy();
+        expect(authorizationGrantsSchema.safeParse({ name: 'user_read' }).success).toBeFalsy();
+        expect(authorizationGrantsSchema.safeParse(undefined).success).toBeFalsy();
     });
 });

@@ -6,9 +6,10 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
+import type { IdentityPolicyData } from '../../policy';
 import type { RealmScope } from '../realm-scope';
 
-export const AUTHORIZATION_DOCUMENT_VERSION = 1;
+export const AUTHORIZATION_CATALOG_VERSION = 1;
 
 /**
  * One policy tree node as it travels: the type's configuration keys (the output
@@ -21,24 +22,7 @@ export type AuthorizationPolicy = {
     [key: string]: unknown,
 };
 
-export type AuthorizationIdentity = {
-    id: string,
-    type: 'user' | 'client',
-    realm_id: string | null,
-    realm_name: string | null,
-    client_id: string | null,
-};
-
-/**
- * One raw identity binding: the grant's realm reach paired with the ids of the
- * policy trees the junction row carries (none, or one).
- */
-export type AuthorizationGrant = {
-    realm_scope: `${RealmScope}`,
-    policies: string[],
-};
-
-export type AuthorizationPermission = {
+export type AuthorizationDefinition = {
     name: string,
     realm_id: string | null,
     client_id: string | null,
@@ -48,16 +32,49 @@ export type AuthorizationPermission = {
      * definition (`auth_permission_policies`). Empty means unrestricted at this layer.
      */
     policies: string[],
-    grants: AuthorizationGrant[],
 };
 
-export type AuthorizationDocument = {
-    version: typeof AUTHORIZATION_DOCUMENT_VERSION,
-    identity: AuthorizationIdentity,
+/**
+ * Identity-free and cacheable: every permission definition with its policy trees.
+ */
+export type AuthorizationCatalog = {
+    version: typeof AUTHORIZATION_CATALOG_VERSION,
     /**
-     * Every policy tree the document references, keyed by the tree's own id and
-     * present exactly once however many permissions or grants reference it.
+     * Every policy tree the catalog references, keyed by the tree's own id and
+     * present exactly once however many definitions reference it.
      */
     policies: Record<string, AuthorizationPolicy>,
-    permissions: AuthorizationPermission[],
+    permissions: AuthorizationDefinition[],
+};
+
+/**
+ * One raw grant of an identity as the introspection endpoints report it: the
+ * permission namespace it names, its realm reach and the junction policy ids.
+ * Structurally the extended `OAuth2TokenPermission` of `@authup/specs` (this
+ * package does not depend on specs).
+ */
+export type AuthorizationGrant = {
+    name: string,
+    realm_id?: string | null,
+    client_id?: string | null,
+    /**
+     * Absent or null coerces to `own`, fail-closed.
+     */
+    realm_scope?: `${RealmScope}` | null,
+    /**
+     * Absent or null means no junction policy.
+     */
+    policies?: string[] | null,
+};
+
+export type AuthorizationEvaluatorInput = {
+    /**
+     * An `AuthorizationCatalog`, validated by the schema.
+     */
+    catalog: unknown,
+    /**
+     * `AuthorizationGrant[]`, validated by the schema.
+     */
+    grants: unknown,
+    identity: IdentityPolicyData,
 };

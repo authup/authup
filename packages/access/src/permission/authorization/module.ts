@@ -23,12 +23,22 @@ import type {
 import { PermissionEvaluator } from '../evaluator';
 import { buildPermissionKey } from '../helpers';
 import { PermissionMemoryProvider } from '../provider';
-import type { PermissionPolicyBinding } from '../types';
+import { normalizeRealmScope } from '../realm-scope';
+import type { BasePermission, PermissionPolicyBinding } from '../types';
+import { AuthorizationCatalogStaleError } from './error';
 import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
-import { authorizationDocumentSchema } from './schema';
-import type { AuthorizationPolicy } from './types';
+import { authorizationCatalogSchema, authorizationGrantsSchema } from './schema';
+import type { AuthorizationEvaluatorInput, AuthorizationPolicy } from './types';
 
 const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
+
+const identitySchema = z.object({
+    id: z.string().min(1),
+    type: z.enum(['user', 'client']),
+    realmId: z.string().nullish(),
+    realmName: z.string().nullish(),
+    clientId: z.string().nullish(),
+});
 
 function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
     const {
@@ -45,8 +55,12 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
 }
 
 /**
- * Build a resource-server (or console) evaluator from an `AuthorizationDocument`
- * (`GET /authorization`). Rejects legacy, incomplete and unsupported input.
+ * Build a resource-server (or console) evaluator from the catalog
+ * `GET /authorization` serves, the identity's grants as the introspection
+ * endpoints report them, and the identity itself. Rejects legacy, incomplete
+ * and unsupported input; a grant referencing a definition or a policy the
+ * catalog lacks throws `AuthorizationCatalogStaleError`, the signal to
+ * refetch the catalog.
  *
  * The REALM_MATCH data key follows the server's own three-way rule: a
  * resource that carries a realm passes it (null for a global row, which
@@ -54,66 +68,89 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * neutral-passes. `preEvaluate` / `preEvaluateOneOf` are the pre-gate and
  * enforce reach only when that key is present. `compile` returns the
  * allow/deny/conditional/post contract; a `post` collection query must be
- * rejected or evaluated over every candidate before paging. The document's
+ * rejected or evaluated over every candidate before paging. The supplied
  * identity is authoritative; `options.decisionStrategy` is forwarded and the
  * policy include, exclude and pending options are refused.
  */
-export async function createAuthorizationEvaluator(input: unknown) : Promise<IPermissionEvaluator> {
+export async function createAuthorizationEvaluator(input: AuthorizationEvaluatorInput) : Promise<IPermissionEvaluator> {
     // Detach: a later mutation of a cached HTTP response cannot widen grants
     // after validation (attribute queries carry arbitrary nested data).
-    const document = authorizationDocumentSchema.parse(structuredClone(input));
+    const catalog = authorizationCatalogSchema.parse(structuredClone(input.catalog));
+    const grants = authorizationGrantsSchema.parse(structuredClone(input.grants));
+    const identity = identitySchema.parse(input.identity);
 
     const trees = new Map<string, AuthorizationPolicy>();
-    for (const [id, raw] of Object.entries(document.policies)) {
+    for (const [id, raw] of Object.entries(catalog.policies)) {
         trees.set(id, await projectAuthorizationPolicy(raw));
     }
 
-    const resolve = (ids: string[], withinGrant: boolean) : BasePolicy[] | undefined => {
-        const policies : BasePolicy[] = [];
-        for (const id of ids) {
-            const tree = trees.get(id);
-            if (!tree) {
-                throw new Error(`Unknown authorization policy: ${id}`);
-            }
-            if (withinGrant && containsBindingCheck(tree)) {
-                throw new Error('A grant policy cannot recursively evaluate its own permission binding.');
-            }
-            policies.push(toPolicy(tree));
-        }
-
-        return policies.length > 0 ? policies : undefined;
-    };
-
     const definitions : PermissionPolicyBinding[] = [];
-    const grants : PermissionPolicyBinding[] = [];
-    const keys = new Set<string>();
-    for (const entry of document.permissions) {
-        const permission = {
+    const permissions = new Map<string, BasePermission>();
+    for (const entry of catalog.permissions) {
+        const permission : BasePermission = {
             name: entry.name,
             realmId: entry.realm_id,
             clientId: entry.client_id,
             decisionStrategy: entry.decision_strategy ?? undefined,
         };
         const key = buildPermissionKey(permission);
-        if (keys.has(key)) {
+        if (permissions.has(key)) {
             throw new Error(`Duplicate authorization permission: ${key}`);
         }
-        keys.add(key);
+        permissions.set(key, permission);
 
-        definitions.push({ permission, policies: resolve(entry.policies, false) });
-        for (const grant of entry.grants) {
-            grants.push({
-                permission,
-                realmScope: grant.realm_scope,
-                policies: resolve(grant.policies, true),
-            });
+        const policies : BasePolicy[] = [];
+        for (const id of entry.policies) {
+            const tree = trees.get(id);
+            if (!tree) {
+                throw new Error(`Unknown authorization policy: ${id}`);
+            }
+            policies.push(toPolicy(tree));
         }
+
+        definitions.push({ permission, policies: policies.length > 0 ? policies : undefined });
+    }
+
+    const bindings : PermissionPolicyBinding[] = [];
+    for (const grant of grants) {
+        const key = buildPermissionKey({
+            name: grant.name,
+            realmId: grant.realm_id ?? null,
+            clientId: grant.client_id ?? null,
+        });
+        const permission = permissions.get(key);
+        if (!permission) {
+            throw new AuthorizationCatalogStaleError(`The catalog does not define the permission ${key}.`);
+        }
+
+        const policies : BasePolicy[] = [];
+        let evaluable = true;
+        for (const id of grant.policies ?? []) {
+            const tree = trees.get(id);
+            if (!tree) {
+                throw new AuthorizationCatalogStaleError(`The catalog does not declare the policy ${id}.`);
+            }
+            if (containsBindingCheck(tree)) {
+                evaluable = false;
+                break;
+            }
+            policies.push(toPolicy(tree));
+        }
+        if (!evaluable) {
+            continue;
+        }
+
+        bindings.push({
+            permission,
+            realmScope: normalizeRealmScope(grant.realm_scope),
+            policies: policies.length > 0 ? policies : undefined,
+        });
     }
 
     const engine = new PolicyEngine(PolicyDefaultEvaluators);
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
-        new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => grants }),
+        new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
     );
     const evaluator = new PermissionEvaluator({
         provider: new PermissionMemoryProvider(definitions),
@@ -123,11 +160,11 @@ export async function createAuthorizationEvaluator(input: unknown) : Promise<IPe
     const withIdentity = (input?: PolicyData) : PolicyData => {
         const data = input?.clone() ?? new PolicyData();
         data.set(BuiltInPolicyType.IDENTITY, {
-            id: document.identity.id,
-            type: document.identity.type,
-            realmId: document.identity.realm_id ?? undefined,
-            realmName: document.identity.realm_name ?? undefined,
-            clientId: document.identity.client_id,
+            id: identity.id,
+            type: identity.type,
+            realmId: identity.realmId ?? undefined,
+            realmName: identity.realmName ?? undefined,
+            clientId: identity.clientId ?? null,
         });
 
         return data;
