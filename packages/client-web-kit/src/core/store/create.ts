@@ -321,20 +321,29 @@ export function createStore(context: StoreCreateContext) {
     const resolutionStale = ref(false);
 
     // The memoized catalog `GET /authorization` serves. Identity-free, but
-    // gated per credential (a 403 memoizes as the name-only fallback), so
-    // cleanup() clears it and each signed-in session fetches it once.
+    // gated per credential (a 403 memoizes as null and sends the store to the
+    // check below), so cleanup() clears it and each session fetches it once.
     let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
 
     // The memoized answer `POST /authorization/check` serves, which is what a
     // PUBLIC client gets where the catalog is out of reach: it holds no secret,
     // so it can obtain no `client_credentials` token and has no credential of
-    // its own for the catalog's gate. Per identity rather than per credential,
-    // and cleared by the same cleanup() for the same reason.
+    // its own for the catalog's gate.
+    //
+    // Unlike the catalog it is per IDENTITY, so cleanup() alone is not enough
+    // to key it: a revalidation whose introspection names a different subject
+    // does not clean up (it is an active credential), and the two consoles
+    // share one cookie session on one origin, so signing in as someone else in
+    // another tab would otherwise gate this one on the previous subject's
+    // verdicts. The subject is therefore part of the memo, the way the
+    // permission-check hydration key carries the actor.
     let checkPromise : Promise<AuthorizationCheckResult | null> | undefined;
+    let checkSubject : string | undefined;
 
     const reloadCatalog = () => {
         catalogPromise = undefined;
         checkPromise = undefined;
+        checkSubject = undefined;
     };
 
     // --------------------------------------------------------------------
@@ -447,10 +456,9 @@ export function createStore(context: StoreCreateContext) {
      * credential's own realm reach covers. A `404` (a server predating the
      * route) and a `403` (a credential holding none of the permission family
      * the catalog is gated on, or whose reach covers no definition) memoize
-     * as null: the catalog only sharpens advisory UI gating, so the name-only
-     * view stays the fallback there, where a resource server must fail
-     * closed. Any other failure rejects and clears the memo, so the next
-     * resolve retries.
+     * as null, which sends the store to the check below, where a resource
+     * server must fail closed instead. Any other failure rejects and clears
+     * the memo, so the next resolve retries.
      */
     const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
         if (!catalogPromise) {
@@ -495,17 +503,19 @@ export function createStore(context: StoreCreateContext) {
         }
     };
 
-    const loadCheck = (token?: string) : Promise<AuthorizationCheckResult | null> => {
-        if (!checkPromise) {
+    const loadCheck = (subject: string, token?: string) : Promise<AuthorizationCheckResult | null> => {
+        if (!checkPromise || checkSubject !== subject) {
             const promise = fetchCheck(token).catch((e) => {
                 if (checkPromise === promise) {
                     checkPromise = undefined;
+                    checkSubject = undefined;
                 }
 
                 throw e;
             });
 
             checkPromise = promise;
+            checkSubject = subject;
         }
 
         return checkPromise;
@@ -572,7 +582,7 @@ export function createStore(context: StoreCreateContext) {
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
-            const result = await loadCheck(token);
+            const result = await loadCheck(identity.id, token);
             if (!result) {
                 return null;
             }
@@ -667,7 +677,7 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        // the catalog-backed evaluator, or null for the name-only fallback
+        // the catalog- or check-backed evaluator, or null for the name-only view
         authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,

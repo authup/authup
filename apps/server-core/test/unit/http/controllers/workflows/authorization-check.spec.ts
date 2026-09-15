@@ -111,7 +111,13 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {}, { Authorization: `Bearer ${restricted}` });
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual([]);
+        // named rather than asserted empty: spec files sharing a worker share
+        // one database copy, and a permission another spec created through the
+        // API carries no Layer-1 policy, so it passes for any authenticated
+        // caller and would make an empty-array assertion flake
+        const result : AuthorizationCheckResult = await response.json();
+        expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
+        expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
 
     it('needs no permission of its own: a caller holding nothing is answered an empty set', async () => {
@@ -122,7 +128,9 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {}, { Authorization: `Bearer ${grant.access_token}` });
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual([]);
+        const result : AuthorizationCheckResult = await response.json();
+        expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
+        expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
 
     it('answers a realm-scoped grant for its own realm and not for a foreign one', async () => {
@@ -180,7 +188,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const tooManyNames = await postCheck(suite, { names }, headers);
         expect(tooManyNames.status).toBe(400);
 
-        const realms = Array.from({ length: 9 }, () => randomUUID());
+        const realms = Array.from({ length: 5 }, () => randomUUID());
         const tooManyRealms = await postCheck(suite, { realms }, headers);
         expect(tooManyRealms.status).toBe(400);
 

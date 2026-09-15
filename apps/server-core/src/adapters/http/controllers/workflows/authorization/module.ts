@@ -72,10 +72,10 @@ AuthorizationCheckBuilderContext;
  * `PERMISSION_READ`: the document is identity-free, so the end user's bearer
  * is the wrong credential for it, and one serving several realms needs a
  * credential whose reach covers them. A console whose user lacks the family
- * falls back to the name-only view, which is COARSER than this catalog rather
- * than equivalent to it: it ignores realm reach and junction policies. That is
- * deliberate for a console, whose gating is advisory, and is what every
- * console user had before this route; a resource server fails closed instead.
+ * reads `check` below instead, which is authoritative; the name-only view it
+ * replaces is COARSER than either, ignoring realm reach and junction policies,
+ * and survives only for a server serving neither route. A resource server
+ * fails closed rather than taking either fallback.
  * The catalog is an upper bound on what may be asked, never an
  * entitlement (the same posture as `GET /schemas`); every decision it feeds
  * still runs over the caller's own grants.
@@ -132,8 +132,8 @@ export class AuthorizationController {
 
         // A caller that can evaluate NO definition is answered a refusal rather
         // than a document that denies everything, which reads as authoritative
-        // and would gate a console's whole UI closed where the name-only
-        // fallback gates it correctly. The rule is deliberately all or nothing:
+        // and would gate a console's whole UI closed where the batch check
+        // below answers it correctly. The rule is deliberately all or nothing:
         // any partial threshold would be a number nobody can justify.
         //
         // It is reached by the reach the API hands out by DEFAULT. A junction

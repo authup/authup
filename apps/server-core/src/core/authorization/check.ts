@@ -21,6 +21,7 @@ import {
     PolicyEngine,
     RealmScope,
     definePolicyData,
+    isPermissionError,
 } from '@authup/access';
 import type {
     AuthorizationCheckBuilderContext,
@@ -150,9 +151,18 @@ export async function buildAuthorizationCheck(
                 });
 
                 held.push(realm);
-            } catch {
-                // A denial is the answer, and so is anything else: a verdict
-                // this pass could not reach must never read as a grant.
+            } catch (e) {
+                // A denial is the answer. Anything else denies too, but says
+                // so: the grant load is memoized into one promise, so a single
+                // failed read denies every pair at once and the route would
+                // otherwise answer an authoritative empty set with nothing in
+                // the log, which a consumer then memoizes for its session.
+                if (!isPermissionError(e)) {
+                    ctx.logger?.warn(
+                        `Treated ${name} as denied in realm ${realm ?? 'global'} while building the authorization ` +
+                        `check: ${e instanceof Error ? e.message : String(e)}.`,
+                    );
+                }
             }
         }
 

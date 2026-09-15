@@ -2440,10 +2440,11 @@ rather than trusted until `exp`.
   its evaluator is not token-derived: the store commits the evaluator built
   from the authorization document it fetches after the introspection
   (`GET /authorization`, with the staged bearer in bearer mode and with the
-  session cookie in cookie mode), and the name-only memory provider is the
-  fallback for a server answering 404 there, or 403 for a user holding none
-  of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the three
-  the catalog is gated on. The recompute WATCH keys on
+  session cookie in cookie mode). A 404 there, or a 403 for a user holding
+  none of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the
+  three the catalog is gated on, sends it to `POST /authorization/check`
+  instead, and the name-only memory provider is the last rung, for a server
+  serving neither route. The recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
@@ -3271,7 +3272,7 @@ junction reach is `own`, which excludes the global rows every built-in definitio
 every permission is bound to the global `system.default`, so a grant held at the default
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
-read as authoritative where the refusal is what a console's name-only fallback answers. Two rules follow. A resource server
+read as authoritative where the refusal is what sends a console to the batch check below. Two rules follow. A resource server
 reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
 `client-permission` row: the document is identity-free, so the end user's bearer is the
 wrong credential for it, and a resource server must fail closed when it has no catalog.
@@ -3423,8 +3424,10 @@ The kit store memoizes ONE catalog per signed-in session: fetched on first use d
 staging and cleared by `cleanup()`, since the gate is per credential (a user without the
 permission family is refused where the next one is not), so a logout and a later login
 fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as the name-only fallback, since a console's gating is advisory, and any
-other fetch failure rejects and clears the memo so the next resolve retries. During
+alike memoize as null, which sends the store to `POST /authorization/check` (its own
+memo, keyed by SUBJECT rather than by credential, since that answer is per identity),
+and only a server answering 404 there too lands on the name-only view. Any other fetch
+failure rejects and clears the memo so the next resolve retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject

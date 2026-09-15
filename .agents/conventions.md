@@ -314,9 +314,11 @@ all-or-nothing decision taken once for the whole surface, as a path prefix
 the endpoint next door, and one that is always `1` is a promise nobody is
 keeping. If the API is ever versioned, every route moves together.
 
-`GET /schemas` is the one exception and is not a precedent: its `meta.version`
-is the rapiq version that produced the descriptions it serves, a property of
-the vocabulary rather than of the response shape.
+`GET /` and `GET /schemas` are not precedents. Both report the DEPLOYMENT's own
+release, read once from server-core's `package.json` by two byte-identical
+`resolveVersion` methods, so a cached document can be attributed to the
+software that produced it. That is a property of the answering process, not a
+contract version of the response shape.
 
 ## Interfaces & Types
 

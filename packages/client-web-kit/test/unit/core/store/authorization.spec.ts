@@ -297,6 +297,34 @@ describe('core/store (authorization catalog)', () => {
         expect(request?.body).toEqual({ realms: 'ownOrNull' });
     });
 
+    // Unlike the catalog it is per IDENTITY, and a revalidation naming a
+    // different subject does NOT clean up, so cleanup() alone cannot key it.
+    it('refetches the check when a revalidation names a different subject', async () => {
+        let subject = AUTHORIZATION_SUBJECT;
+        const other = '9fd1c9ba-7f1c-4a4e-9f7a-2d3b4c5d6e7f';
+
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({ ...INTROSPECTION, sub: subject }),
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+            'POST /authorization/check': () => (subject === AUTHORIZATION_SUBJECT ?
+                buildAuthorizationCheck() :
+                [{ name: 'other_only', realms: [AUTHORIZATION_REALM] }]),
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
+
+        subject = other;
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(2);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'other_only' })).resolves.toBeUndefined();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+    });
+
     it('memoizes the check per signed-in session, like the catalog', async () => {
         const { store, httpClient } = buildStore({
             'GET /authorization': () => {

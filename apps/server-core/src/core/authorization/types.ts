@@ -63,6 +63,7 @@ export type AuthorizationRealmReach = (realmId: string | null) => Promise<boolea
 export type AuthorizationCheckBuilderContext = {
     catalogRepository: IAuthorizationCatalogRepository,
     identityPermissionProvider: IIdentityPermissionProvider,
+    logger?: Logger,
 };
 
 export type AuthorizationCheckRequest = {
