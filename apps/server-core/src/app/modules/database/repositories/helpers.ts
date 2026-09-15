@@ -36,17 +36,20 @@ export function applyRealmScopeSelect<T extends ObjectLiteral>(
 }
 
 /**
- * The same force-load for a junction, whose rows carry no `realmId` at all — the
- * gate reads the OWNER entity's realm (`roleRealmId`, `clientRealmId`, …) through
- * `JunctionEntityService.junctionResourceRealm`, so that is the column a client
- * `fields` projection must not be able to strip (issue #3594).
+ * The same force-load for a row that carries no `realmId` at all — the gate
+ * reads the OWNER entity's realm (`roleRealmId`, `clientRealmId`, `userRealmId`,
+ * …), so that is the column a client `fields` projection must not be able to
+ * strip (issue #3594). `extraColumns` covers a gate that reads more than the
+ * realm, e.g. the ownership short-circuit on `identity-provider-account`
+ * (issue #3601).
  */
 export function applyJunctionRealmScopeSelect<T extends ObjectLiteral>(
     qb: SelectQueryBuilder<T>,
     alias: string,
     ownerRealmKey: string,
+    extraColumns: string[] = [],
 ): void {
-    applyForcedSelect(qb, alias, [ownerRealmKey]);
+    applyForcedSelect(qb, alias, [ownerRealmKey, ...extraColumns]);
 }
 
 function applyForcedSelect<T extends ObjectLiteral>(

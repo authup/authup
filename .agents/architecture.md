@@ -3075,7 +3075,10 @@ correct. And the adapters force-select that key through
 `applyJunctionRealmScopeSelect` (the sibling of `applyRealmScopeSelect`, which
 prepends a `realmId` no junction table has): a client `fields=` projection
 replaces the schema default, and a stripped owner realm coalesces to `null`,
-which an `ownOrNull` reader reaches.
+which an `ownOrNull` reader reaches. That helper serves any row with no
+`realmId`, junction or not — `identity-provider-account` calls it with
+`'userRealmId'` plus an `extraColumns` `['userId']` for its ownership
+short-circuit (#3601), which is why the parameter exists.
 
 Two consequences worth stating. `permission-policy` gates on
 `permissionRealmId`, and the built-in permission catalogue is global, so an
@@ -3807,8 +3810,12 @@ only for a user identity; `deny` → self term alone); `UserAttributeService` mi
 ATTRIBUTE_NAMES denylist policy is non-lowerable and the self leg IS the ownership
 term); `UserAuthenticatorService` composes `eq('userId', <actor id>)` the same way
 (the owner-scoped nested self read skips compile outright — every row is own) and
-still sanitizes secret/codes on the compiled path; `RoleAttributeService` is a pure
-gate (key/trust-anchor shape, no ownership term).
+still sanitizes secret/codes on the compiled path; `IdentityProviderAccountService`
+composes `or(eq('userId', <actor user id>), compiled.condition)` over a reach
+lowered onto `userRealmId` (#3601 — the entity carries no `realmId`, so it needs
+`realmAttributeName` like a junction while composing an ownership alternative like
+a user-owned one); `RoleAttributeService` is a pure gate (key/trust-anchor shape,
+no ownership term).
 `FakePermissionEvaluator.compile` defaults to `post` so service tests keep their
 per-row expectations; override via `setCompileResult`. The final #3286 piece —
 include gating via `relations.validate` — shipped as #3295: see *Query IR flow →
@@ -3824,7 +3831,7 @@ the accessible set — it still counts unauthorized rows on pages the caller has
 not fetched. And a page comes back **shorter than its `limit`**, empty in the
 worst case, while later pages still hold authorized rows. A consumer paginating
 a `post`-verdict read must therefore walk to the end rather than stop on a short
-page, and must not render `meta.total` as a count of what it may see. The six
+page, and must not render `meta.total` as a count of what it may see. The seven
 services that compose an ownership alternative widen the skew slightly further:
 `or(ownership, compiled.condition)` is built only on the non-`post` branch, so
 the `post` branch fetches over a strictly wider row set and relies on the
@@ -3847,15 +3854,14 @@ policy with no `toCondition`: under default provisioning every `admin` /
 `realm_admin` grant is policy-free, so the reach lowers and the verdict is
 `conditional`.
 
-The same two properties hold for the two per-row drop loops that reach this
-shape without calling `compile()` at all — `SessionTokenService.getMany` and
-`IdentityProviderAccountService.getMany`, which skips the compile because its rows
-carry no `realmId` column for a reach condition to bind — a reason #3594 has since
-made obsolete, since `compile({ realmAttributeName })` can name `userRealmId`; it
-is a candidate for conversion, not a place the fallback is required. The one
-`compile()` caller that is NOT a drop loop is `secretReadGate` in
-`client/schema.ts`, a field-visibility gate that fails CLOSED on `post` rather
-than falling back per row.
+The same two properties hold for the one per-row drop loop that reaches this
+shape without calling `compile()` at all, `SessionTokenService.getMany`. Its
+rows carry no realm column of their own: the realm is `session.realmId`, reached
+through the joined relation, so lowering it needs a dotted relation path rather
+than the flat owner key `realmAttributeName` takes today. The one `compile()`
+caller that is NOT a drop loop is `secretReadGate` in `client/schema.ts`, a
+field-visibility gate that fails CLOSED on `post` rather than falling back per
+row.
 
 ### EA loading on tree roots
 
@@ -5153,8 +5159,10 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `CONSENT_READ`/`CONSENT_DELETE` permissions auto-provision (`realm_admin`:
   delete at `own`, read at default `ownOrNull`); a reader without
   `CONSENT_READ` is force-scoped to its own rows, own-row get/delete needs no
-  permission, foreign rows take per-row `evaluate` + `resourceRealmMatch`.
-  The adapter force-selects `realmId`/`sub`/`subKind` (plan-039 discipline).
+  permission, and foreign rows are gated by the compiled WHERE (ownership OR
+  the compiled reach), falling back to a per-row `evaluate` +
+  `resourceRealmMatch` on `post`. The adapter force-selects
+  `realmId`/`sub`/`subKind` for that fallback (plan-039 discipline).
   Typed client: `client.consent.getMany/getOne/delete`.
 - **Kit skip (client-side, since GET /authorize is anonymous):**
   `Authorize.vue` probes `httpClient.consent.getMany` **filtered by the
@@ -5779,12 +5787,19 @@ user); the uniqueness flip above ships one, on both dialects.
   (rows are created only by federated login / the link flow). Session/
   consent shape: a caller without `IDENTITY_PROVIDER_ACCOUNT_READ` is
   force-scoped to `userId = own id` (user identities only); own-row
-  read/delete needs no permission; foreign rows take per-row `evaluate`
-  with `REALM_MATCH: userRealmId` (the owner realm; the entity has no
-  `realmId` column, which is also why the service deliberately skips the
-  `compile()` WHERE-pushdown — the compiled reach condition would bind a
-  nonexistent `realmId` column — and why the adapter force-selects
-  `userId`/`userRealmId` inline instead of `applyRealmScopeSelect`).
+  read/delete needs no permission; a foreign row is gated on the OWNER realm,
+  `userRealmId` (the entity has no `realmId` column). `getMany` runs the
+  compiled-WHERE shape (#3601): `compile({ name:
+  IDENTITY_PROVIDER_ACCOUNT_READ, realmAttributeName: 'userRealmId' })`, then
+  `or(eq('userId', <actor user id>), compiled.condition)` on `conditional`, the
+  ownership term alone on `deny`, and nothing on `allow` — so pagination and
+  totals are exact. The self term is composed only for a user identity, which
+  is the per-row `isOwnedBy` short-circuit expressed as SQL. `post` keeps the
+  per-row `evaluate` with `REALM_MATCH: entity.userRealmId ?? null`, and that
+  is the only branch where the adapter's force-select matters; it goes through
+  `applyJunctionRealmScopeSelect(qb, alias, 'userRealmId', ['userId'])`, the
+  shared helper for a row with no `realmId`. `getOne` is unchanged — it reads
+  one row by id and evaluates it directly, so it has nothing to push down.
   Permissions auto-provision; `realm_admin` = `ownOrNull` read + `own`
   delete (OWN-override list). The external token columns
   (`accessToken`/`refreshToken` + expiry metadata) are `select: false` on
@@ -6324,8 +6339,9 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   `SESSION_READ` is force-scoped to its own sessions (the service catches the
   `preEvaluate` denial and passes `findMany(query, { owner })`, a mandatory
   `andWhere` a rapiq filter cannot override). An actor **with** `SESSION_READ`
-  sees every session its realm reach permits (per-row `evaluate` + `resourceRealmMatch`,
-  same drop-unauthorized-rows shape as `ClientService.getMany`).
+  sees every session its realm reach permits, through the compiled WHERE
+  (ownership OR the compiled reach), with a per-row `evaluate` +
+  `resourceRealmMatch` drop loop as the `post` fallback.
 - `GET /sessions/:id` — read one. Own session → no permission; else
   `SESSION_READ` + realm-match. `@me`/`@self` resolve to the caller's current
   session (`useRequestSessionId`).
@@ -6399,8 +6415,11 @@ wrapper's `ORDER BY "<alias>_id"` as ambiguous (mysql: duplicate column name), s
 every `include=` list query on these adapters 500'd. Regression specs:
 `session-realm-isolation.spec.ts` and
 `realm-isolation-field-projection.spec.ts`, plus the `include=realm` collection
-cases in `user.spec.ts`. When adding a per-row gate to a new
-`getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
+cases in `user.spec.ts`. A row with no `realmId` column takes the sibling
+`applyJunctionRealmScopeSelect(qb, alias, ownerRealmKey, extraColumns?)`
+instead — the eight junctions, and `identity-provider-account`
+(`'userRealmId'` + `['userId']`). When adding a per-row gate to a new
+`getMany`, wire whichever of the two fits into its adapter with every column the
 gate reads.
 
 **UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/src/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
