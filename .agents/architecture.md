@@ -3458,9 +3458,12 @@ names nothing asks about every definition, so it never maintains a list in step 
 own UI, where a name missing from a request would fail silently as a control that
 quietly disappears. `realms` is `own`, `ownOrNull` (the default) or an explicit list,
 `null` for the global rows. A symbolic selector resolves against the caller's own
-identity; an explicit list is taken VERBATIM and echoed verbatim, so the server resolves
-no realm key, discloses no realm's existence, and the caller matches the answer against
-its own input with no resolution step. `any` is deliberately not offered: a caller that
+identity; an explicit list has no realm key RESOLVED, so the server discloses no realm's
+existence and the caller matches the answer against its own input with no resolution step.
+`resolveRealms` transforms it in exactly one way, a duplicate drop that keeps the first
+occurrence and the order (a repeated realm would cost an evaluation and be answered
+twice), so a caller comparing the answer to its own input by identity must expect its own
+duplicates to be absent. `any` is deliberately not offered: a caller that
 cares about another realm names it. Caps are 256 names and 4 realms: the route is ungated
 and each (name, realm) pair costs one synchronous policy-tree walk, and the realm count is
 the half a CALLER controls, since an unresolvable name is refused before any walk. Four

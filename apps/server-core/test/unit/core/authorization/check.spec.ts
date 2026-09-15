@@ -235,6 +235,46 @@ describe('core/authorization/check', () => {
         expect(denied).toEqual([]);
     });
 
+    // A definition whose policy layer needs data this pre-gate does not have is
+    // reported HELD, and that is the contract rather than a leak: `preEvaluate`
+    // permits a PENDING policy, so the answer is the upper bound on what may be
+    // ATTEMPTED, and it equals what the caller's own route gate answers for the
+    // same name. Verified against the route path: a bare `preEvaluate` of this
+    // definition with no identity passes there too, while `evaluate()` (the
+    // actual operation, which carries the resource row) denies.
+    //
+    // The scope case above denies only because `system.default` carries a
+    // permissionBinding child, which SETTLES false without an identity rather
+    // than pending. A definition bound to an identity policy alone has no such
+    // child, so nothing settles and the pre-gate passes on both paths. Asserting
+    // `[]` here would make the check stricter than the gate it reports on.
+    it('reports a pending definition as held, exactly as the route pre-gate does', async () => {
+        const identityOnlyPolicy = {
+            id: 'policy-identity-only',
+            name: 'only-users',
+            realmId: null,
+            type: 'identity',
+            types: ['user'],
+        };
+
+        const ctx = setup([[
+            {
+                name: 'user_read',
+                realmId: null,
+                clientId: null,
+            },
+            [identityOnlyPolicy],
+        ]], []);
+
+        const held = await buildAuthorizationCheck(ctx, {
+            identity,
+            realms: RealmScope.OWN,
+            decorate: decorateWith(undefined),
+        });
+
+        expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID] }]);
+    });
+
     it('answers nothing for a credential whose scopes withhold the identity', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.ANY)]);
 

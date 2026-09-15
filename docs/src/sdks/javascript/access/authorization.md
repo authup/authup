@@ -274,8 +274,11 @@ members are optional:
   silently as a control that quietly disappears.
 - `realms` is `own`, `ownOrNull` (the default) or an explicit list, with `null`
   for the global rows every realm shares. A symbolic selector resolves against
-  your own identity. An explicit list is taken and echoed verbatim, so the
-  server resolves no realm key and you match the answer against your own input.
+  your own identity. An explicit list has no realm key RESOLVED: each member is
+  evaluated and echoed as you sent it, so the answer discloses no realm's
+  existence and you match it against your own input. The one transformation is
+  a duplicate drop, keeping the first occurrence and the order, since a
+  repeated realm asks the same question twice.
   There is no `any`: name the realm you care about. At most 256 names and 4
   realms per call.
 
