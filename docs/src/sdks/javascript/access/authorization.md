@@ -177,9 +177,10 @@ switch (compiled.verdict) {
 ```
 
 `condition` is a rapiq condition over row attributes; grant reach targets the
-`realmId` column. Call `compile` without `realmMatch` or `attributes` data. A
-pending policy that cannot be lowered produces `post`, never an unrestricted
-query.
+`realmId` column, or another column named with
+`compile({ name, realmAttributeName })` when your rows carry their realm
+elsewhere. Call `compile` without `realmMatch` or `attributes` data. A pending
+policy that cannot be lowered produces `post`, never an unrestricted query.
 
 ## Catalog and grant contract
 
