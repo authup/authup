@@ -46,7 +46,6 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
     it('answers the identity-free catalog with every tree exactly once', async () => {
         const catalog = await suite.client.authorization.get();
 
-        expect(catalog.version).toBe(1);
         expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
         for (const permission of catalog.permissions) {
@@ -151,7 +150,6 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
         expect(response.status).toBe(200);
         const catalog : AuthorizationCatalog = await response.json();
-        expect(catalog.version).toBe(1);
         expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });

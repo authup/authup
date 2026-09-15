@@ -3188,7 +3188,7 @@ Authorization travels to a console or a resource server as three inputs, and onl
 them is a route of its own. `GET /authorization`
 (`adapters/http/controllers/workflows/authorization/`, `Cache-Control: private, no-cache`)
 answers the IDENTITY-FREE `AuthorizationCatalog`
-(version 1, declared in `@authup/access` next to its zod schema and its consumer
+(declared in `@authup/access` next to its zod schema and its consumer
 `createAuthorizationEvaluator`): every permission definition with its junction policy ids
 and its `decisionStrategy`, and each policy tree ONCE under `policies`, keyed by the tree's
 id, whether a definition or a grant names it. It is the same document for every caller,

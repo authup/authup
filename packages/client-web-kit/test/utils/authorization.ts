@@ -25,7 +25,6 @@ export function buildAuthorizationCatalog(
     overrides: Partial<AuthorizationCatalog> = {},
 ) : AuthorizationCatalog {
     return {
-        version: 1,
         policies: {
             default: {
                 type: 'composite',

@@ -19,7 +19,7 @@ import { Client } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
-import { StorePermissionEvaluator } from './permission-evaluator';
+import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator';
 import type {
     RealmMinimal,
     StoreCreateContext,
@@ -29,16 +29,12 @@ import type {
 } from './types';
 
 /**
- * The staged evaluator a commit installs: one built from the catalog, `null`
- * for the name-only fallback, or this, a deny-all. It is a SENTINEL rather
- * than an absent value because the three are different states and only the
- * name-only one may read the grant names.
+ * The evaluator a session commits when its authorization data could not be
+ * built at all. An ordinary evaluator rather than a marker, so the staged
+ * value has only ONE special state, `null`, the name-only fallback that reads
+ * the grant names off the introspection.
  */
-const AUTHORIZATION_DENIED = Symbol('authorizationDenied');
-
-type StagedAuthorization = IPermissionEvaluator | null | typeof AUTHORIZATION_DENIED;
-
-function denyAllAuthorization(e: unknown) : typeof AUTHORIZATION_DENIED {
+function denyAllAuthorization(e: unknown) : IPermissionEvaluator {
     // eslint-disable-next-line no-console
     console.warn(
         '[authup] The authorization catalog could not be evaluated. ' +
@@ -46,7 +42,7 @@ function denyAllAuthorization(e: unknown) : typeof AUTHORIZATION_DENIED {
         e,
     );
 
-    return AUTHORIZATION_DENIED;
+    return createDenyAllPermissionEvaluator();
 }
 
 type InputFn = (...args: any[]) => Promise<any>;
@@ -488,9 +484,12 @@ export function createStore(context: StoreCreateContext) {
             realmId: introspection.realm_id ?? undefined,
             realmName: introspection.realm_name ?? undefined,
             // A client subject IS its own client, the way `toIdentityPolicyData`
-            // resolves it server-side. A user's own `clientId` column is not an
-            // introspection claim, so it stays null here, which is what it is
-            // for every user the provisioner creates.
+            // resolves it server-side; a user is never one, since no user row
+            // carries a client. Deliberately NOT the response's `client_id`
+            // claim, which is the client the TOKEN was issued to: reading it
+            // would tell an identity policy that every console user is the
+            // console's own client, and on the server the same mistake made
+            // the grant narrowing drop every global permission.
             clientId: introspection.sub_kind === OAuth2SubKind.CLIENT ?
                 introspection.sub :
                 null,
@@ -521,7 +520,7 @@ export function createStore(context: StoreCreateContext) {
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
-    ) : Promise<StagedAuthorization> => {
+    ) : Promise<IPermissionEvaluator | null> => {
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
@@ -612,7 +611,8 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        authorization: StagedAuthorization,
+        // the catalog-backed evaluator, or null for the name-only fallback
+        authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -700,9 +700,7 @@ export function createStore(context: StoreCreateContext) {
             setUser(subject);
         }
 
-        if (ctx.authorization === AUTHORIZATION_DENIED) {
-            permissionEvaluator.reset();
-        } else if (ctx.authorization) {
+        if (ctx.authorization) {
             permissionEvaluator.setEvaluator(ctx.authorization);
         } else {
             permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);

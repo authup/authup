@@ -7,14 +7,10 @@
 
 import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
-import {
-    AUTHORIZATION_CATALOG_VERSION,
-    parseAuthorizationEvaluatorInput,
-} from '../../../src';
+import { parseAuthorizationEvaluatorInput } from '../../../src';
 
 function createCatalog(permissions: Record<string, any>[], policies: Record<string, any> = {}) {
     return {
-        version: AUTHORIZATION_CATALOG_VERSION,
         policies,
         permissions,
     };
@@ -152,10 +148,9 @@ describe('permission/authorization/schema', () => {
         expect(parsed.permissions[0]).not.toHaveProperty('grants');
     });
 
-    it('refuses a catalog that is not an object, and a version it does not know', async () => {
+    it('refuses a catalog that is not an object', async () => {
         await expect(parseCatalog([])).rejects.toThrow();
         await expect(parseCatalog(null)).rejects.toThrow();
-        await expect(parseCatalog({ ...createCatalog([]), version: 2 })).rejects.toThrow();
     });
 
     it('accepts grants with an absent reach or policy list', async () => {

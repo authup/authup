@@ -1,7 +1,7 @@
 # Authorize resources with the authorization catalog
 
 `GET /authorization` answers the identity-free authorization catalog
-(`AuthorizationCatalog`, `version: 1`, exported by `@authup/access`): every
+(`AuthorizationCatalog`, exported by `@authup/access`): every
 permission definition with the policies bound to it, and each policy tree once.
 The grants an identity holds ride the introspection response as `permissions`,
 one entry per grant with its realm reach and its junction policy ids. Together
@@ -169,7 +169,6 @@ query.
 
 The catalog (`GET /authorization`):
 
-- `version`: `1`.
 - `policies`: every policy tree a definition or a grant can name, keyed by the
   tree's id and present once. A node carries its `type`, its configuration
   keys, `invert` and, for a composite, its `children` inline. It is the output
@@ -206,10 +205,9 @@ The grants (the introspection response's `permissions`):
   case never reports stale. A grant whose junction policy contains a
   permission-binding check, or one your copy cannot project, is left out.
 
-`createAuthorizationEvaluator` rejects an unknown version, missing fields, a
-definition referencing an undeclared policy id, a duplicate permission
-namespace, an identity that is not a `user` or a `client`, and grants supplied
-without an identity. It rebuilds the server's own binding model and runs the
+`createAuthorizationEvaluator` rejects missing fields, a definition referencing
+an undeclared policy id, a duplicate permission namespace, an identity that is
+not a `user` or a `client`, and grants supplied without an identity. It rebuilds the server's own binding model and runs the
 same aggregation and evaluators, which is what makes the decisions equal.
 
 ## Upgrade order

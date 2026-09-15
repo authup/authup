@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
 import { projectAuthorizationPolicy } from '../../../src';
 
@@ -81,5 +82,28 @@ describe('permission/authorization/policy', () => {
 
     it('refuses a malformed configuration', async () => {
         await expect(projectAuthorizationPolicy({ type: 'attributeNames', names: 'not-a-list' })).rejects.toThrow();
+    });
+
+    it('refuses with a validup error, naming the node in the tree that is wrong', async () => {
+        const issuesOf = async (input: unknown) => {
+            try {
+                await projectAuthorizationPolicy(input);
+            } catch (e) {
+                if (isValidupError(e)) {
+                    return e.issues;
+                }
+
+                throw e;
+            }
+
+            throw new Error('Expected the tree to be refused.');
+        };
+
+        expect((await issuesOf({ type: 'custom' }))[0]!.path).toEqual(['type']);
+        expect((await issuesOf({ type: 'composite', children: 'not-a-list' }))[0]!.path).toEqual(['children']);
+        expect((await issuesOf({
+            type: 'composite',
+            children: [{ type: 'identity' }, { type: 'composite', children: [{ type: 'custom' }] }],
+        }))[0]!.path).toEqual(['children', 1, 'children', 0, 'type']);
     });
 });

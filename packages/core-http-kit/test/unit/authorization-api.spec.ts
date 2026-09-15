@@ -9,7 +9,6 @@ import { describe, expect, it } from 'vitest';
 import { createFakeClient } from '../../src/testing';
 
 const catalog = {
-    version: 1,
     policies: { binding: { type: 'permissionBinding' } },
     permissions: [{
         name: 'user_read',
@@ -26,7 +25,6 @@ describe('src/domains/workflows/authorization', () => {
 
         const document = await client.authorization.get();
 
-        expect(document.version).toBe(1);
         expect(document.permissions).toHaveLength(1);
         expect(document).not.toHaveProperty('identity');
         expect(client.requests).toHaveLength(1);

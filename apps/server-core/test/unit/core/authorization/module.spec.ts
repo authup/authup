@@ -104,7 +104,6 @@ describe('core/authorization/module', () => {
         const catalog = await buildAuthorizationCatalog(ctx);
 
         expect(JSON.parse(JSON.stringify(catalog))).toEqual({
-            version: 1,
             policies: {
                 'policy-default': {
                     type: 'composite',
@@ -145,7 +144,6 @@ describe('core/authorization/module', () => {
     it('answers an empty catalog when nothing is defined', async () => {
         const catalog = await buildAuthorizationCatalog(setup());
         expect(catalog).toEqual({
-            version: 1,
             policies: {},
             permissions: [],
         });

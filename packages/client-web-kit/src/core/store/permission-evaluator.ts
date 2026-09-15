@@ -61,6 +61,15 @@ export class StorePermissionEvaluator implements IPermissionEvaluator {
     }
 }
 
+/**
+ * An evaluator that denies every check, the state a session commits when its
+ * authorization data could not be built at all. It is the name-only fallback
+ * holding no grant, so nothing else has to know what denying looks like.
+ */
+export function createDenyAllPermissionEvaluator() : IPermissionEvaluator {
+    return buildFallback([]);
+}
+
 function buildFallback(permissions: OAuth2TokenPermission[]) : IPermissionEvaluator {
     return new PermissionEvaluator({
         provider: new PermissionMemoryProvider(permissions.map((permission) => ({

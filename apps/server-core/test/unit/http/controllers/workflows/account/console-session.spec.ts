@@ -253,7 +253,6 @@ describe.each(CONSOLES)('$name console session', ({
         expect(authorizationResponse.status).toEqual(200);
         expect(authorizationResponse.headers.get('cache-control')).toEqual('private, no-cache');
         const authorization = await authorizationResponse.json();
-        expect(authorization.version).toEqual(1);
         expect(authorization).not.toHaveProperty('identity');
         expect(Array.isArray(authorization.permissions)).toBe(true);
         expect(authorization.permissions.length).toBeGreaterThan(0);

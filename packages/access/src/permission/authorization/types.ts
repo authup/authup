@@ -9,8 +9,6 @@ import type { DecisionStrategy } from '@authup/kit';
 import type { IdentityPolicyData } from '../../policy';
 import type { RealmScope } from '../realm-scope';
 
-export const AUTHORIZATION_CATALOG_VERSION = 1;
-
 /**
  * One policy tree node as it travels: the type's configuration keys (the output
  * of that type's validator), `invert`, and for a composite its children inline.
@@ -42,7 +40,6 @@ export type AuthorizationDefinition = {
  * Identity-free and cacheable: every permission definition with its policy trees.
  */
 export type AuthorizationCatalog = {
-    version: typeof AUTHORIZATION_CATALOG_VERSION,
     /**
      * Every policy tree a definition or a grant can name, keyed by the tree's
      * own id and present exactly once however many of them reference it.

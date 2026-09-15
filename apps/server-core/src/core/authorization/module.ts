@@ -12,7 +12,6 @@ import type {
     BasePolicy,
 } from '@authup/access';
 import {
-    AUTHORIZATION_CATALOG_VERSION,
     buildPermissionKey,
     projectAuthorizationPolicy,
 } from '@authup/access';
@@ -121,7 +120,6 @@ export async function buildAuthorizationCatalog(
     permissions.sort(([a], [b]) => compareKeys(a, b));
 
     return {
-        version: AUTHORIZATION_CATALOG_VERSION,
         policies,
         permissions: permissions.map(([, entry]) => entry),
     };

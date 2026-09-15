@@ -64,7 +64,6 @@ function catalog(
         definitions as Definition[];
 
     return {
-        version: 1,
         policies,
         permissions,
     };
@@ -576,9 +575,8 @@ describe('authorization catalog consumer', () => {
         await expect(build({ identity: { ...identity, id: '' } })).rejects.toThrow();
     });
 
-    it('refuses legacy, inactive-shaped and unknown-version inputs', async () => {
+    it('refuses legacy and inactive-shaped inputs', async () => {
         await expect(build({ catalog: { active: true, permissions: [{ name: 'event_read' }] } })).rejects.toThrow();
-        await expect(build({ catalog: { ...catalog(), version: 2 } })).rejects.toThrow();
         await expect(build({ catalog: undefined })).rejects.toThrow();
         await expect(build({ grants: null })).rejects.toThrow();
         await expect(build({ grants: { name: 'event_read' } })).rejects.toThrow();

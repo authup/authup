@@ -12,7 +12,6 @@ import { Container, ValidupError } from 'validup';
 import { z } from 'zod';
 import { RealmScope } from '../realm-scope';
 import type { AuthorizationCatalog, AuthorizationEvaluatorInput, AuthorizationGrant } from './types';
-import { AUTHORIZATION_CATALOG_VERSION } from './types';
 
 const id = z.string().min(1);
 const namespaceId = id.nullable();
@@ -39,7 +38,6 @@ export const authorizationDefinitionSchema = z.object({
 });
 
 export const authorizationCatalogSchema = z.object({
-    version: z.literal(AUTHORIZATION_CATALOG_VERSION),
     policies: z.record(id, authorizationPolicySchema),
     permissions: z.array(authorizationDefinitionSchema),
 });
