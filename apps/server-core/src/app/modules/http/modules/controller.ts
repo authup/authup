@@ -1061,6 +1061,7 @@ export class HTTPControllerModule {
     createAuthorizationController(container: IContainer) {
         return new AuthorizationController({
             catalogRepository: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             logger: container.resolve(LoggerInjectionKey),
         });
     }

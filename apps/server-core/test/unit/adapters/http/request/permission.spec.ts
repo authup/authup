@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { Client, Identity } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
@@ -71,5 +71,48 @@ describe('RequestPermissionEvaluator', () => {
 
         const ctx = base.evaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBeFalsy();
+    });
+
+    // The wrapper is the ONE place the scope condition is spelled, so a caller
+    // that fills the bag itself (the batch authorization check passes every
+    // identity-reading policy in a tree its identity) can never outrank it: an
+    // attach alone would leave a scope-restricted bearer answered as a
+    // fully-scoped one wherever the key was pre-placed.
+    it('should remove a pre-placed identity without global scope', async () => {
+        const event = createEvent();
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await evaluator.preEvaluate({
+            name: 'test',
+            data: new PolicyData({
+                [BuiltInPolicyType.IDENTITY]: { type: 'client', id: 'c1' },
+                [BuiltInPolicyType.REALM_MATCH]: null,
+            }),
+        });
+
+        const ctx = base.preEvaluateCalls[0];
+        expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
+        // only the identity is withheld; the rest of the caller's bag rides on
+        expect(ctx.data?.has(BuiltInPolicyType.REALM_MATCH)).toBe(true);
+    });
+
+    it('should overwrite a pre-placed identity with the request\'s own', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await evaluator.preEvaluate({
+            name: 'test',
+            data: new PolicyData({ [BuiltInPolicyType.IDENTITY]: { type: 'user', id: 'someone-else' } }),
+        });
+
+        const ctx = base.preEvaluateCalls[0];
+        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
     });
 });

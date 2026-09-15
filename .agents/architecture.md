@@ -806,6 +806,10 @@ export type ActorContext = {
 
 The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
 
+**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`).
+
+Note two routes still assemble an identity bag around a BARE `PermissionEvaluator` and so reach none of this: `POST /permissions/:id/check` and `POST /policies/:id/check` (`PermissionCheckerService` / the policy checker), which is why they answer a scope-restricted bearer as a fully-scoped one (#3604). Routing them through this wrapper is the fix, and with the symmetry above it needs no rule of its own.
+
 ```typescript
 // adapters/http/request/helpers/actor.ts
 export function buildActorContext(req: Request): ActorContext {
@@ -1358,7 +1362,7 @@ export class RoleController {
 ```
 
 Controller conventions:
-- Return type is a literal annotation (`Promise<EntityRecordResponse<Role>>`, `Promise<EntityCollectionResponse<Role>>`). This lets `@trapi/swagger` extract the response schema from the method signature. Services still return bare domain entities — the controller owns the envelope. Excluded from the envelope (protocol/bespoke shapes, stay flat): the OAuth2/OIDC surface (`/token*`, `/authorize`, jwks + openid-configuration, `/userinfo`, `/logout`), the register/activate/password workflows, `/`, the authenticator-challenge surface, permission/policy `check`, and session `deleteMany` (`{ count }`).
+- Return type is a literal annotation (`Promise<EntityRecordResponse<Role>>`, `Promise<EntityCollectionResponse<Role>>`). This lets `@trapi/swagger` extract the response schema from the method signature. Services still return bare domain entities — the controller owns the envelope. Excluded from the envelope (protocol/bespoke shapes, stay flat): the OAuth2/OIDC surface (`/token*`, `/authorize`, jwks + openid-configuration, `/userinfo`, `/logout`), the register/activate/password workflows, `/`, the authenticator-challenge surface, permission/policy `check`, the batch `POST /authorization/check` (a bare array), and session `deleteMany` (`{ count }`).
 - Body parameter type is the concrete payload type (`@DBody() data: RoleCreatePayload`) — sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreatePayload` for POST, `<Entity>UpdatePayload` for POST `/:id`, `<Entity>SavePayload` for PUT `/:id`. Response shapes that genuinely diverge from the domain entity (e.g. `PolicyResponse`, `RegisterResponse`, `PasswordForgotResponse`) keep a named alias; trivial passthrough aliases are not introduced.
 - **No business logic** — no permission checks, no validation, no entity manipulation
 - Read the routup event via `@DContext() event: IAppEvent`
@@ -2440,10 +2444,11 @@ rather than trusted until `exp`.
   its evaluator is not token-derived: the store commits the evaluator built
   from the authorization document it fetches after the introspection
   (`GET /authorization`, with the staged bearer in bearer mode and with the
-  session cookie in cookie mode), and the name-only memory provider is the
-  fallback for a server answering 404 there, or 403 for a user holding none
-  of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the three
-  the catalog is gated on. The recompute WATCH keys on
+  session cookie in cookie mode). A 404 there, or a 403 for a user holding
+  none of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the
+  three the catalog is gated on, sends it to `POST /authorization/check`
+  instead, and the name-only memory provider is the last rung, for a server
+  serving neither route. The recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
@@ -3354,18 +3359,18 @@ junction reach is `own`, which excludes the global rows every built-in definitio
 every permission is bound to the global `system.default`, so a grant held at the default
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
-read as authoritative where the refusal is what a console's name-only fallback answers. Two rules follow. A resource server
+read as authoritative where the refusal is what sends a console to the batch check below. Two rules follow. A resource server
 reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
 `client-permission` row: the document is identity-free, so the end user's bearer is the
 wrong credential for it, and a resource server must fail closed when it has no catalog.
-A console whose signed-in user lacks the family is answered 403 and falls back to the
-name-only view, the same fallback a server predating the route produces. **That fallback
-is COARSER than the catalog-backed evaluator, not equivalent to it**: it gates on the
-entry names alone, ignoring realm reach and junction policies, so a check the catalog
-path denies passes there. It is kept because a console's gating is advisory (the server
-enforces every decision), it is the gating every console user had before the catalog
-existed, and the population it applies to is the one whose custom roles a deny-all would
-blank the UI for. A resource server never takes it. A
+A console whose signed-in user lacks the family is answered 403 and reads
+`POST /authorization/check` instead (below), which is authoritative where the name-only
+view it replaces is merely coarse. The name-only view survives as the last rung, for a
+server predating both routes. **It is COARSER than either, not equivalent to them**: it
+gates on the entry names alone, ignoring realm reach and junction policies, so a check
+the catalog path denies passes there. It is kept because a console's gating is advisory
+(the server enforces every decision) and it is the gating every console user had before
+the catalog existed. A resource server never takes it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
@@ -3434,12 +3439,107 @@ catalog is large and shared. There is no foreign-subject form: a resource server
 user's bearer introspects it, and an admin lens over another identity's effective
 authorization needs a gate of its own.
 
+### The batch check (`POST /authorization/check`)
+
+The catalog's gate is structurally unsatisfiable for a PUBLIC client: it holds no
+secret, so it can obtain no `client_credentials` token and has no credential of its own
+to be gated on. Serving that case by publishing every policy predicate to anyone who can
+reach the server is the wrong trade, so the route answers VERDICTS instead (#3600). It
+discloses strictly less than the already-ungated `POST /permissions/:id/check` discloses
+one name at a time: answers about the caller's own authorization, no definition, no
+policy configuration, and no realm key the caller did not itself supply. Hence
+`ForceLoggedIn` with no permission gate, next to the gated catalog on the same
+`:id`-free controller (`POST /permissions/check` would be shadowed by
+`POST /permissions/:id`, and `check` is a legal permission name: the `/roles/schema`
+collision).
+
+Body `{ names?, realms? }`, both optional, and an empty body is the point: a caller that
+names nothing asks about every definition, so it never maintains a list in step with its
+own UI, where a name missing from a request would fail silently as a control that
+quietly disappears. `realms` is `own`, `ownOrNull` (the default) or an explicit list,
+`null` for the global rows. A symbolic selector resolves against the caller's own
+identity; an explicit list has no realm key RESOLVED, so the server discloses no realm's
+existence and the caller matches the answer against its own input with no resolution step.
+`resolveRealms` transforms it in exactly one way, a duplicate drop that keeps the first
+occurrence and the order (a repeated realm would cost an evaluation and be answered
+twice), so a caller comparing the answer to its own input by identity must expect its own
+duplicates to be absent. `any` is deliberately not offered: a caller that
+cares about another realm names it. Caps are 256 names and 4 realms: the route is ungated
+and each (name, realm) pair costs one synchronous policy-tree walk, and the realm count is
+the half a CALLER controls, since an unresolvable name is refused before any walk. Four
+covers the own realm, the global rows and two named ones.
+
+The answer is the bare array `AuthorizationCheckPermissions`
+(`{ name, realms }[]`, `@authup/access`), with no envelope and no `version` field
+(conventions.md -> *Response Versioning*). Only a permission reaching at least one
+requested realm appears, so ABSENT means denied, and a `realmMatch` naming a realm the
+request never asked about is then fail-closed for free: it is in no entry's list, and a
+gate never needs "unknown" apart from "denied". It is an upper bound on what may be
+ATTEMPTED rather than an entitlement, the posture the catalog and `GET /schemas` take:
+it is a pre-gate, so a grant whose junction policy needs a resource row passes here and
+is still decided per row.
+
+`buildAuthorizationCheck` (`core/authorization/check.ts`) is what makes the shape
+affordable. `PermissionEvaluator` resolves a definition per name, and the database
+provider's `findOne` carries an uncached junction read plus a tree walk each, while the
+binding evaluator re-reads the grants on every evaluation, so a loop over the 73
+provisioned permissions is hundreds of statements on a route a UI calls at every login.
+The definitions are therefore read ONCE through the same `findDefinitions` the catalog
+uses and served from a `PermissionMemoryProvider`, and the grant load is hoisted into one
+memoized closure behind the structural `getFor` the binding evaluator takes: two bulk
+reads plus one grant load, and the rest is in memory. Only GLOBAL definitions are
+evaluated, because that is what every gate in this process evaluates.
+
+**The bag carries everything the route actually knows**, so a policy anywhere in the tree
+decides on the same data a request would give it, not only the `permissionBinding` child:
+`PERMISSION_BINDING` (set by `PermissionEvaluator` from its own provider), `REALM_MATCH`
+(the realm of the pair being asked about) and `IDENTITY`. An `identity` policy, or an
+attribute-mode `realmMatch` one, is bound to a definition often enough that leaving the
+identity to the wrapper alone would have made this route the one place such a tree
+evaluated against less than a request does. The composed evaluator is STILL wrapped in
+`RequestPermissionEvaluator`, which re-asserts the key from the request and REMOVES it
+when the caller's scopes withhold it, so the explicit placement can widen nothing: what
+reaches the engine is the identity the caller was resolved as, or none.
+
+`ATTRIBUTES` and `ATTRIBUTE_NAMES` are the deliberate omissions, and the only ones: a
+pre-gate has no resource row and no projection, so there is nothing to put there.
+Fabricating one would WIDEN rather than inform, since a made-up row can satisfy a policy
+the real row fails. Absent, such a policy pends and permits, which is exactly the upper
+bound this answer is documented to be.
+
+`createAuthorizationCheckEvaluator({ permissions, identity })` (`@authup/access`, next to
+`createAuthorizationEvaluator`) is the consumer. It picks the realm class from
+`data.realmMatch`: absent passes if any requested realm did, `null` is the global rows,
+a value equal to the identity's realm id OR NAME is its own realm (the server resolves a
+symbolic selector to the id, and the reach comparison it makes accepts either, so the
+consumer has to as well), an array needs every member, and anything else denies.
+`evaluate` answers the pre-gate verdict as the upper bound it is, the same bound the
+name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
+a name it does not hold.
+
+The kit reads it at `realms: 'ownOrNull'` when `loadCatalog` answers null, memoized by the
+subject, scope and grants of the introspection it was fetched for (below). One visible
+behaviour change: a bare name is the union of the requested realms, so a
+`realmScope: none` grant stops passing, where a realm-less pre-gate neutral-passes reach
+and lets it enable a control it can never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
+rests on the permission universe being enumerable, and policy names are operator-created
+and unbounded, so a no-subset form there would have no defensible default.
+
 The kit store memoizes ONE catalog per signed-in session: fetched on first use during
 staging and cleared by `cleanup()`, since the gate is per credential (a user without the
 permission family is refused where the next one is not), so a logout and a later login
 fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as the name-only fallback, since a console's gating is advisory, and any
-other fetch failure rejects and clears the memo so the next resolve retries. During
+alike memoize as null, which sends the store to `POST /authorization/check`, and only a
+server answering 404 there too lands on the name-only view. **That answer has a memo of
+its own, keyed by the introspection's own authorization inputs** rather than by the
+credential: the subject, the token's `scope` and the grant list, compared by value. The
+catalog path recomputes from the grants each introspection reports, so a memo cleared
+only by `cleanup()` would be staler than the path it substitutes for, and a role bound or
+removed mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
+revalidates on every navigation, so that window is the whole document's life). Keyed on
+the inputs, it refetches exactly when they move and asks once when they do not; the
+comparison can only over-refetch, never reuse an answer whose inputs changed. Any other
+fetch failure rejects and clears the memo so the next resolve retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject

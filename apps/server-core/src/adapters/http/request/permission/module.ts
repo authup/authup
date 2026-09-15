@@ -67,6 +67,19 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
         if (identity && scopes.includes(ScopeName.GLOBAL)) {
             ctx.data = ctx.data || new PolicyData();
             ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
+
+            return ctx;
+        }
+
+        // Symmetrical, so this is the ONE place the scope condition is spelled:
+        // a caller may place an identity in the bag itself (the batch
+        // authorization check does, so every identity-reading policy in a tree
+        // gets it), and what the request was NOT resolved as must never survive
+        // that. Without the removal the gate only held for a caller that
+        // happened to leave the key empty, so placing it anywhere else silently
+        // answered a scope-restricted bearer as a fully-scoped one.
+        if (ctx.data) {
+            ctx.data.delete(BuiltInPolicyType.IDENTITY);
         }
 
         return ctx;

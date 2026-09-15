@@ -5,8 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, IPermissionEvaluator, IdentityPolicyData } from '@authup/access';
-import { createAuthorizationEvaluator, isAuthorizationCatalogStaleError } from '@authup/access';
+import type {
+    AuthorizationCatalog,
+    AuthorizationCheckPermissions,
+    IPermissionEvaluator,
+    IdentityPolicyData,
+} from '@authup/access';
+import {
+    RealmScope,
+    createAuthorizationCheckEvaluator,
+    createAuthorizationEvaluator,
+    isAuthorizationCatalogStaleError,
+} from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -311,12 +321,33 @@ export function createStore(context: StoreCreateContext) {
     const resolutionStale = ref(false);
 
     // The memoized catalog `GET /authorization` serves. Identity-free, but
-    // gated per credential (a 403 memoizes as the name-only fallback), so
-    // cleanup() clears it and each signed-in session fetches it once.
+    // gated per credential (a 403 memoizes as null and sends the store to the
+    // check below), so cleanup() clears it and each session fetches it once.
     let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
+
+    // The memoized answer `POST /authorization/check` serves, which is what a
+    // PUBLIC client gets where the catalog is out of reach: it holds no secret,
+    // so it can obtain no `client_credentials` token and has no credential of
+    // its own for the catalog's gate.
+    //
+    // Unlike the catalog it is per IDENTITY and per GRANT SET, so cleanup()
+    // alone cannot key it. A revalidation never cleans up (the credential is
+    // active), and it carries a fresh introspection, so both halves of that
+    // key can move under a memo that only cleanup() clears: the subject, since
+    // the two consoles share one cookie session on one origin and signing in
+    // as someone else in another tab would gate this one on the previous
+    // subject's verdicts; and the grants, since the answer BAKES THEM IN
+    // server-side where the catalog path recomputes from the grants each
+    // introspection reports. Keyed on both, this memo is exactly as stale as
+    // that path: fresh whenever the introspection's own authorization inputs
+    // move, reused when they do not, so an unchanged session still asks once.
+    let checkPromise : Promise<AuthorizationCheckPermissions | null> | undefined;
+    let checkKey : string | undefined;
 
     const reloadCatalog = () => {
         catalogPromise = undefined;
+        checkPromise = undefined;
+        checkKey = undefined;
     };
 
     // --------------------------------------------------------------------
@@ -429,10 +460,9 @@ export function createStore(context: StoreCreateContext) {
      * credential's own realm reach covers. A `404` (a server predating the
      * route) and a `403` (a credential holding none of the permission family
      * the catalog is gated on, or whose reach covers no definition) memoize
-     * as null: the catalog only sharpens advisory UI gating, so the name-only
-     * view stays the fallback there, where a resource server must fail
-     * closed. Any other failure rejects and clears the memo, so the next
-     * resolve retries.
+     * as null, which sends the store to the check below, where a resource
+     * server must fail closed instead. Any other failure rejects and clears
+     * the memo, so the next resolve retries.
      */
     const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
         if (!catalogPromise) {
@@ -449,6 +479,73 @@ export function createStore(context: StoreCreateContext) {
 
         return catalogPromise;
     };
+
+    /**
+     * The verdicts, asked about the two realms this session knows at staging:
+     * its own and the global rows, which is the reach a realm administrator's
+     * reads are held at and what a console gates on. A realm the request never
+     * named is fail-closed in the evaluator, so a surface that later asks about
+     * a third realm needs its own call rather than a wider answer here.
+     *
+     * A `404` (a server predating the route) memoizes as null and lands on the
+     * name-only view, so a console newer than its server keeps working. Any
+     * other failure rejects and clears the memo, so the next resolve retries.
+     */
+    const fetchCheck = async (token?: string) : Promise<AuthorizationCheckPermissions | null> => {
+        try {
+            return await client.authorization.check(
+                { realms: RealmScope.OWN_OR_NULL },
+                token ? { authorizationHeader: { type: 'Bearer', token } } : undefined,
+            );
+        } catch (e) {
+            const { status } = extractErrorContext(e);
+            if (status === 404) {
+                return null;
+            }
+
+            throw e;
+        }
+    };
+
+    const loadCheck = (key: string, token?: string) : Promise<AuthorizationCheckPermissions | null> => {
+        if (!checkPromise || checkKey !== key) {
+            const promise = fetchCheck(token).catch((e) => {
+                if (checkPromise === promise) {
+                    checkPromise = undefined;
+                    checkKey = undefined;
+                }
+
+                throw e;
+            });
+
+            checkPromise = promise;
+            checkKey = key;
+        }
+
+        return checkPromise;
+    };
+
+    /**
+     * What the memoized answer depends on and the introspection can tell us
+     * about: the subject it is derived for, the token's scope (the server
+     * withholds the identity from a bearer holding no `global` scope, so a
+     * scope-restricted one is answered a denying set) and the grant list the
+     * answer was computed over. The grants are compared by value rather than
+     * by count or identity, so a changed `realmScope` or junction policy is a
+     * different key; the comparison can only ever over-refetch (a server
+     * reordering rows spends one request), never reuse an answer whose inputs
+     * moved.
+     */
+    const buildCheckKey = (
+        introspection: OAuth2TokenIntrospectionResponse,
+        identity: IdentityPolicyData,
+    ) : string => JSON.stringify([
+        identity.id,
+        identity.type,
+        identity.realmId ?? null,
+        introspection.scope ?? null,
+        introspection.permissions ?? [],
+    ]);
 
     const buildIdentity = (
         introspection: OAuth2TokenIntrospectionResponse,
@@ -506,13 +603,23 @@ export function createStore(context: StoreCreateContext) {
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
     ) : Promise<IPermissionEvaluator | null> => {
+        const identity = buildIdentity(introspection);
+
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
-            return null;
+            const permissions = await loadCheck(buildCheckKey(introspection, identity), token);
+            if (!permissions) {
+                return null;
+            }
+
+            try {
+                return await createAuthorizationCheckEvaluator({ permissions, identity });
+            } catch {
+                return createDenyAllPermissionEvaluator();
+            }
         }
 
-        const identity = buildIdentity(introspection);
         const grants = introspection.permissions ?? [];
 
         try {
@@ -596,7 +703,7 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        // the catalog-backed evaluator, or null for the name-only fallback
+        // the catalog- or check-backed evaluator, or null for the name-only view
         authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,

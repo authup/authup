@@ -85,3 +85,55 @@ export type AuthorizationEvaluatorInput = {
      */
     identity?: IdentityPolicyData,
 };
+
+/**
+ * Which resource realms a batch check evaluates against.
+ *
+ * A string is SYMBOLIC and resolved server-side against the caller's own
+ * identity: `own` is the realm the identity belongs to, `ownOrNull` is that
+ * realm plus `null`, the global rows every realm shares. An array is taken
+ * VERBATIM: the server resolves no realm key, so it discloses no realm's
+ * existence and the caller matches the answer against its own input with no
+ * resolution step of its own.
+ *
+ * String versus array is what discriminates the two forms, so `own` stays
+ * unambiguous even though it is a legal realm name.
+ */
+export type AuthorizationCheckRealms = `${RealmScope.OWN}` |
+`${RealmScope.OWN_OR_NULL}` |
+Array<string | null>;
+
+/**
+ * One permission the identity may attempt, and the requested realms it may
+ * attempt it in. Never empty: a permission reaching no requested realm is
+ * absent from the answer entirely, so absent means denied.
+ */
+export type AuthorizationCheckPermission = {
+    name: string,
+    realms: Array<string | null>,
+};
+
+/**
+ * The answer `POST /authorization/check` serves: the caller's own verdicts,
+ * paired with the realms they hold in.
+ *
+ * It is an upper bound on what may be ATTEMPTED rather than an entitlement,
+ * the same posture the catalog and `GET /schemas` take: it is a pre-gate, so a
+ * grant whose junction policy needs a resource row passes here and is still
+ * decided per row on the server, which stays the enforcement point.
+ */
+export type AuthorizationCheckPermissions = AuthorizationCheckPermission[];
+
+export type AuthorizationCheckEvaluatorInput = {
+    /**
+     * An `AuthorizationCheckPermissions`, validated by the schema.
+     */
+    permissions: unknown,
+    /**
+     * The identity the verdicts belong to, used to resolve a `realmMatch` of
+     * `own` shape: a resource realm equal to this identity's realm id or name
+     * is the identity's own realm. Omitted for an anonymous caller, which
+     * holds no verdict at all.
+     */
+    identity?: IdentityPolicyData,
+};

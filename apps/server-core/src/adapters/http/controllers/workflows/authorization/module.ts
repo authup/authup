@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog } from '@authup/access';
+import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
 import {
     BuiltInPolicyType,
     PermissionError,
@@ -14,16 +14,30 @@ import {
 } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import {
+    DBody,
     DContext,
     DController,
     DGet,
+    DPost,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import type { AuthorizationCatalogBuilderContext } from '../../../../../core/index.ts';
-import { buildAuthorizationCatalog } from '../../../../../core/index.ts';
+import type {
+    AuthorizationCatalogBuilderContext,
+    AuthorizationCheckBuilderContext,
+    AuthorizationCheckPayload,
+} from '../../../../../core/index.ts';
+import {
+    AuthorizationCheckValidator,
+    buildAuthorizationCatalog,
+    buildAuthorizationCheck,
+    toIdentityPolicyData,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import { RequestPermissionEvaluator, buildActorContext } from '../../../request/index.ts';
+
+export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext &
+AuthorizationCheckBuilderContext;
 
 /**
  * The identity-free permission catalog: every definition with its policy
@@ -58,10 +72,10 @@ import { buildActorContext } from '../../../request/index.ts';
  * `PERMISSION_READ`: the document is identity-free, so the end user's bearer
  * is the wrong credential for it, and one serving several realms needs a
  * credential whose reach covers them. A console whose user lacks the family
- * falls back to the name-only view, which is COARSER than this catalog rather
- * than equivalent to it: it ignores realm reach and junction policies. That is
- * deliberate for a console, whose gating is advisory, and is what every
- * console user had before this route; a resource server fails closed instead.
+ * reads `check` below instead, which is authoritative; the name-only view it
+ * replaces is COARSER than either, ignoring realm reach and junction policies,
+ * and survives only for a server serving neither route. A resource server
+ * fails closed rather than taking either fallback.
  * The catalog is an upper bound on what may be asked, never an
  * entitlement (the same posture as `GET /schemas`); every decision it feeds
  * still runs over the caller's own grants.
@@ -69,10 +83,13 @@ import { buildActorContext } from '../../../request/index.ts';
 @DTags('auth')
 @DController('/authorization')
 export class AuthorizationController {
-    protected ctx: AuthorizationCatalogBuilderContext;
+    protected ctx: AuthorizationControllerContext;
 
-    constructor(ctx: AuthorizationCatalogBuilderContext) {
+    protected checkValidator : AuthorizationCheckValidator;
+
+    constructor(ctx: AuthorizationControllerContext) {
         this.ctx = ctx;
+        this.checkValidator = new AuthorizationCheckValidator();
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -115,8 +132,8 @@ export class AuthorizationController {
 
         // A caller that can evaluate NO definition is answered a refusal rather
         // than a document that denies everything, which reads as authoritative
-        // and would gate a console's whole UI closed where the name-only
-        // fallback gates it correctly. The rule is deliberately all or nothing:
+        // and would gate a console's whole UI closed where the batch check
+        // below answers it correctly. The rule is deliberately all or nothing:
         // any partial threshold would be a number nobody can justify.
         //
         // It is reached by the reach the API hands out by DEFAULT. A junction
@@ -136,5 +153,54 @@ export class AuthorizationController {
         }
 
         return catalog;
+    }
+
+    /**
+     * The caller's OWN verdicts, paired with the realms they hold in: every
+     * global permission definition, or the subset the body names, evaluated
+     * against the realms the body asks about.
+     *
+     * Unlike the catalog above it carries NO permission gate, and that
+     * asymmetry is the point rather than an oversight. The catalog publishes
+     * definitions and policy trees, which is why it is gated; a verdict set
+     * publishes neither. What this discloses is strictly less than the already
+     * ungated `POST /permissions/:id/check` discloses one name at a time:
+     * answers about the caller's own authorization, no definition, no policy
+     * configuration, and no realm key the caller did not itself supply.
+     *
+     * That is what serves the client this route exists for. A public client
+     * holds no secret, so it can obtain no `client_credentials` token and has
+     * no credential of its own for the catalog's gate to be satisfied by,
+     * while serving it by making the catalog anonymous would publish every
+     * policy predicate to anyone who can reach the server.
+     *
+     * The answer is an upper bound on what may be ATTEMPTED rather than an
+     * entitlement, the posture the catalog and `GET /schemas` take: it is a
+     * pre-gate, so a grant whose junction policy needs a resource row passes
+     * here and is still decided per row. The server stays the enforcement
+     * point.
+     *
+     * There is deliberately no counterpart on `POST /policies/:id/check`. The
+     * shape rests on the permission universe being enumerable, and policy
+     * names are operator-created and unbounded, so a no-subset form there
+     * would have no defensible default.
+     */
+    @DPost('/check', [ForceLoggedInMiddleware])
+    async check(
+        @DBody() data: AuthorizationCheckPayload,
+        @DContext() event: IAppEvent,
+    ): Promise<AuthorizationCheckPermissions> {
+        const payload = await this.checkValidator.run(data) as AuthorizationCheckPayload;
+
+        const actor = buildActorContext(event);
+
+        event.response.headers.set('cache-control', 'private, no-cache');
+
+        return buildAuthorizationCheck(this.ctx, {
+            names: payload.names,
+            realms: payload.realms,
+            identity: toIdentityPolicyData(actor.identity),
+            decorate: (evaluator) => new RequestPermissionEvaluator(event, evaluator),
+        });
     }
 }
