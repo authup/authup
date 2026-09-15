@@ -143,7 +143,11 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             // neither pollutes the composed WHERE with constant terms.
             let reachCondition : ICondition | null = null;
             const realmOutcome = await this.realmMatchEvaluator.evaluate(
-                { scope: grant.realmScope },
+                // `attributeName` is read by scope mode only while LOWERING (it names the
+                // row column the reach binds); settled evaluation takes the resource realm
+                // from the `realmMatch` data key, so passing it cannot move an evaluate()
+                // outcome. It is what lets a junction gate on its owner-realm key.
+                { scope: grant.realmScope, attributeName: ctx.realmAttributeName },
                 ctx,
             );
             if (realmOutcome.pending) {

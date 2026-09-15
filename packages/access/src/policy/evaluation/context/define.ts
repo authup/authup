@@ -18,5 +18,6 @@ export function definePolicyEvaluationContext(
         include: input.include || [],
         exclude: input.exclude || [],
         withConditions: input.withConditions ?? false,
+        realmAttributeName: input.realmAttributeName,
     };
 }

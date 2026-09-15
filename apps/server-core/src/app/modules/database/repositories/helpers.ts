@@ -32,8 +32,30 @@ export function applyRealmScopeSelect<T extends ObjectLiteral>(
     alias: string,
     extraColumns: string[] = [],
 ): void {
+    applyForcedSelect(qb, alias, ['realmId', ...extraColumns]);
+}
+
+/**
+ * The same force-load for a junction, whose rows carry no `realmId` at all — the
+ * gate reads the OWNER entity's realm (`roleRealmId`, `clientRealmId`, …) through
+ * `JunctionEntityService.junctionResourceRealm`, so that is the column a client
+ * `fields` projection must not be able to strip (issue #3594).
+ */
+export function applyJunctionRealmScopeSelect<T extends ObjectLiteral>(
+    qb: SelectQueryBuilder<T>,
+    alias: string,
+    ownerRealmKey: string,
+): void {
+    applyForcedSelect(qb, alias, [ownerRealmKey]);
+}
+
+function applyForcedSelect<T extends ObjectLiteral>(
+    qb: SelectQueryBuilder<T>,
+    alias: string,
+    columns: string[],
+): void {
     const existing = new Set(qb.expressionMap.selects.map((select) => select.selection));
-    const selections = ['realmId', ...extraColumns]
+    const selections = columns
         .map((column) => `${alias}.${column}`)
         .filter((selection) => !existing.has(selection));
 

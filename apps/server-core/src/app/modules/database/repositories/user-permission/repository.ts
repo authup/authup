@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserPermissionRepository } from '../../../../../core/index.ts';
 import { UserPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 
 export class UserPermissionRepositoryAdapter implements IUserPermissionRepository {
     private readonly repository: Repository<UserPermission>;
@@ -27,6 +27,10 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         qb.groupBy('userPermission.id');
 
         const { pagination } = applyQuery(qb, query);
+        // the per-row realm gate reads the OWNER realm key, and
+        // `junctionResourceRealm` reads it off the row — a `fields=` projection
+        // that strips it would leave the reach unmatched (issue #3594)
+        applyJunctionRealmScopeSelect(qb, 'userPermission', 'userRealmId');
 
         const { data: entities, total } = await fetchMany(qb, query);
 

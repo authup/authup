@@ -67,6 +67,14 @@ export type PermissionCompileContext = {
      * compiled condition ranges over.
      */
     data?: PolicyData,
+    /**
+     * Row column the realm reach is lowered onto, when the rows this compilation
+     * ranges over carry their realm under another name — a junction's owner-realm
+     * key (`roleRealmId`, `clientRealmId`, …). Default `realmId`. Affects the
+     * `conditional` condition only; the per-row `post` fallback still reads the
+     * realm from the `realmMatch` data key its caller supplies.
+     */
+    realmAttributeName?: string,
 };
 
 /**

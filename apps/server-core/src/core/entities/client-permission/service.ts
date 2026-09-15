@@ -10,6 +10,7 @@ import {
     RealmScope,
     definePolicyData,
 } from '@authup/access';
+import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { ClientPermissionValidator, PermissionName } from '@authup/core-kit';
@@ -19,8 +20,13 @@ import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identit
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { clientPermissionSchema } from './schema.ts';
+
+const READ_PERMISSION_NAMES = [
+    PermissionName.CLIENT_PERMISSION_CREATE,
+    PermissionName.CLIENT_PERMISSION_DELETE,
+];
 
 export type ClientPermissionServiceContext = {
     repository: IClientPermissionRepository;
@@ -51,31 +57,67 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<ClientPermission>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_PERMISSION_CREATE,
-                PermissionName.CLIENT_PERMISSION_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
-        return this.repository.findMany(await decodeQuery(query, { schema: clientPermissionSchema, actor }));
+        let parsed = await decodeQuery(query, { schema: clientPermissionSchema, actor });
+
+        // The realm reach of the grant, compiled into a row condition and lowered onto
+        // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
+        const compiled = await actor.permissionEvaluator.compile({
+            name: READ_PERMISSION_NAMES,
+            realmAttributeName: this.ownerRealmKey,
+        });
+        if (compiled.verdict === 'deny') {
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: entities, meta };
+        }
+
+        const data: ClientPermission[] = [];
+        let { total } = meta;
+
+        for (const entity of entities) {
+            try {
+                await actor.permissionEvaluator.evaluateOneOf({
+                    name: READ_PERMISSION_NAMES,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                        [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+                    }),
+                });
+                data.push(entity);
+            } catch {
+                total -= 1;
+            }
+        }
+
+        return { data, meta: { ...meta, total } };
     }
 
     async getOne(
         id: string,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_PERMISSION_CREATE,
-                PermissionName.CLIENT_PERMISSION_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new EntityNotFoundError();
         }
+
+        await actor.permissionEvaluator.evaluateOneOf({
+            name: READ_PERMISSION_NAMES,
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
+        });
 
         return entity;
     }

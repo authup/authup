@@ -19,7 +19,16 @@ export type PolicyEvaluationContext = {
      * callers (evaluate / preEvaluate hot paths) must not pay the lowering cost;
      * query-build callers opt in.
      */
-    readonly withConditions: boolean
+    readonly withConditions: boolean,
+    /**
+     * Row column the realm reach is LOWERED onto, for a caller whose rows carry the
+     * realm under another name (a junction's `roleRealmId` / `clientRealmId` / …).
+     * Default `realmId`. It reaches `RealmMatchPolicyEvaluator` scope mode as
+     * `attributeName`, which that mode reads only while lowering — settled
+     * evaluation takes the resource realm from the `realmMatch` data key and never
+     * consults a column name, so this can never change an evaluate() outcome.
+     */
+    readonly realmAttributeName?: string
 };
 
 export type PolicyEvaluationContextInput = Partial<PolicyEvaluationContext>;

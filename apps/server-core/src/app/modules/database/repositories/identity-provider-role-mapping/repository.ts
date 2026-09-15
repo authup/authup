@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 
 export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityProviderRoleMappingRepository {
     private readonly repository: Repository<IdentityProviderRoleMapping>;
@@ -27,6 +27,10 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
         qb.groupBy('providerRole.id');
 
         const { pagination } = applyQuery(qb, query);
+        // the per-row realm gate reads the OWNER realm key, and
+        // `junctionResourceRealm` reads it off the row — a `fields=` projection
+        // that strips it would leave the reach unmatched (issue #3594)
+        applyJunctionRealmScopeSelect(qb, 'providerRole', 'providerRealmId');
 
         const { data: entities, total } = await fetchMany(qb, query);
 

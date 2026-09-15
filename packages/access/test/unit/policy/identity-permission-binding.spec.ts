@@ -109,4 +109,49 @@ describe('identity permission binding compilation', () => {
         expect(settled.success).toBe(false);
         expect(predicate({ realmId: null })).toBe(false);
     });
+
+    it('lowers the reach onto the column realmAttributeName names', async () => {
+        // a junction row carries no `realmId` at all — it carries the realm of the
+        // entities it links (`roleRealmId`, `clientRealmId`, …), so the reach has to
+        // bind that column or the emitted WHERE names a column the table does not
+        // have (issue #3594)
+        const bindings: PermissionPolicyBinding[] = [{ permission, realmScope: 'ownOrNull' }];
+        const engine = new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
+        });
+        const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
+        const data = definePolicyData({
+            [BuiltInPolicyType.IDENTITY]: identity,
+            [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+        });
+
+        const compiled = await engine.evaluate(policy, definePolicyEvaluationContext({
+            data,
+            withConditions: true,
+            realmAttributeName: 'roleRealmId',
+        }));
+        expect(compiled.condition).toBeDefined();
+
+        const foreignRealmId = '11111111-2222-4333-8444-555555555555';
+        const predicate = compileFilters(compiled.condition! as IFilter | IFilters, { caseSensitive: true });
+        expect(predicate({ roleRealmId: identity.realmId })).toBeTruthy();
+        expect(predicate({ roleRealmId: null })).toBeTruthy();
+        expect(predicate({ roleRealmId: foreignRealmId })).toBeFalsy();
+        // it binds the NAMED column, not `realmId` riding alongside it
+        expect(predicate({ roleRealmId: foreignRealmId, realmId: identity.realmId })).toBeFalsy();
+
+        // and the default is unchanged when no column is named
+        const fallback = await engine.evaluate(policy, definePolicyEvaluationContext({
+            data,
+            withConditions: true,
+        }));
+        const fallbackPredicate = compileFilters(fallback.condition! as IFilter | IFilters, { caseSensitive: true });
+        expect(fallbackPredicate({ realmId: identity.realmId })).toBeTruthy();
+        expect(fallbackPredicate({ realmId: foreignRealmId })).toBeFalsy();
+        // NOTE deliberately not asserted against a row CARRYING no `realmId` key:
+        // the memory adapter unifies a missing column with `null`, which an
+        // `ownOrNull` reach matches — the documented fail-open that the adapters'
+        // force-select of the gate column exists to prevent.
+    });
 });
