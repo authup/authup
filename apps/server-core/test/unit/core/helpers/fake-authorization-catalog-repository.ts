@@ -7,11 +7,11 @@
 
 import type { BasePolicy } from '@authup/access';
 import type {
-    IAuthorizationCatalogSource,
+    IAuthorizationCatalogRepository,
     PermissionPolicies,
 } from '../../../../src/core/authorization/types.ts';
 
-export class FakeAuthorizationCatalogSource implements IAuthorizationCatalogSource {
+export class FakeAuthorizationCatalogRepository implements IAuthorizationCatalogRepository {
     private definitions: PermissionPolicies[] = [];
 
     private grantPolicies: BasePolicy[] = [];

@@ -24,7 +24,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { IsNull } from 'typeorm';
-import type { IAuthorizationCatalogSource, PermissionPolicies } from '../../../../../core/authorization/types.ts';
+import type { IAuthorizationCatalogRepository, PermissionPolicies } from '../../../../../core/authorization/types.ts';
 import {
     CachePrefix,
     ClientPermissionEntity,
@@ -36,7 +36,7 @@ import {
 } from '../../../../../adapters/database/domains/index.ts';
 import { loadPolicyTrees } from '../bindings.ts';
 
-export class PermissionDatabaseProvider implements IPermissionProvider, IAuthorizationCatalogSource {
+export class PermissionDatabaseProvider implements IPermissionProvider, IAuthorizationCatalogRepository {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;

@@ -14,7 +14,7 @@ import {
 import { createNoopLogger } from '@authup/server-kit';
 import { buildAuthorizationCatalog } from '../../../../src/core/authorization/module.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
-import { FakeAuthorizationCatalogSource } from '../helpers/fake-authorization-catalog-source.ts';
+import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorization-catalog-repository.ts';
 
 const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const clientId = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
@@ -50,7 +50,7 @@ function setup() {
     const logger = createNoopLogger();
 
     return {
-        catalogSource: new FakeAuthorizationCatalogSource(),
+        catalogRepository: new FakeAuthorizationCatalogRepository(),
         logger,
         warn: vi.spyOn(logger, 'warn'),
     };
@@ -71,7 +71,7 @@ const prototypePolluting = { id: '__proto__', type: 'identity' };
 describe('core/authorization/module', () => {
     it('emits every definition with its trees deduped and sorted by namespace', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([
+        ctx.catalogRepository.setDefinitions([
             [
                 {
                     name: 'write',
@@ -151,7 +151,7 @@ describe('core/authorization/module', () => {
 
     it('carries a definition whose tree carries no id without its policies and warns once', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([
+        ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [{ type: 'identity' }]],
             bindingDefinition('write'),
         ]);
@@ -184,7 +184,7 @@ describe('core/authorization/module', () => {
 
     it('carries a definition whose policy is not a built-in type without its policies and keeps its sibling', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([
+        ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [custom]],
             bindingDefinition('write'),
         ]);
@@ -202,7 +202,7 @@ describe('core/authorization/module', () => {
 
     it('projects a policy whose id is named constructor', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([
+        ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [prototypeNamed]],
         ]);
 
@@ -218,7 +218,7 @@ describe('core/authorization/module', () => {
     // does not carry and every consumer would read it as stale.
     it('projects a policy whose id is named __proto__', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([
+        ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [prototypePolluting]],
         ]);
 
@@ -233,8 +233,8 @@ describe('core/authorization/module', () => {
 
     it('carries every grant policy once, deduped against the definition trees', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([bindingDefinition('read')]);
-        ctx.catalogSource.setGrantPolicies([systemDefault, visible, prototypeNamed]);
+        ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([systemDefault, visible, prototypeNamed]);
 
         const catalog = await buildAuthorizationCatalog(ctx);
 
@@ -254,8 +254,8 @@ describe('core/authorization/module', () => {
 
     it('drops a grant policy the catalog cannot carry, warns per drop and keeps the rest', async () => {
         const ctx = setup();
-        ctx.catalogSource.setDefinitions([bindingDefinition('read')]);
-        ctx.catalogSource.setGrantPolicies([custom, { type: 'identity' }, visible]);
+        ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([custom, { type: 'identity' }, visible]);
 
         const catalog = await buildAuthorizationCatalog(ctx);
 

@@ -18,7 +18,7 @@ export type PermissionPolicies = [BasePermission, BasePolicy[]];
  * whole, once per build: the catalog is identity-free, so there is nothing to
  * scope either of them by.
  */
-export interface IAuthorizationCatalogSource {
+export interface IAuthorizationCatalogRepository {
     /**
      * Every permission definition with the policy trees bound to it.
      */
@@ -34,6 +34,6 @@ export interface IAuthorizationCatalogSource {
 }
 
 export type AuthorizationCatalogBuilderContext = {
-    catalogSource: IAuthorizationCatalogSource,
+    catalogRepository: IAuthorizationCatalogRepository,
     logger?: Logger,
 };
