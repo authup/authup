@@ -11,41 +11,35 @@ Reading the `name` of each entry alone is not enough for resource authorization.
 
 ## Read the catalog and the grants
 
-The catalog endpoint is gated exactly like `GET /permissions`: the credential
-must hold `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, and
-any other authenticated credential is answered 403. A resource server therefore
-fetches it with its own client credential, never with the end user's bearer:
-the catalog is identity-free, so the user's grants say nothing about reading
-it, and one `client-permission` row binding `permission_read` to the resource
-server's client is all it needs.
+**The catalog endpoint is anonymous.** It takes no credential, neither a bearer
+nor a console session cookie, and answers every caller the same bytes. That is
+structural rather than a convenience: the consumer this document exists for is
+typically a public client, which holds no secret, can obtain no token of its
+own and therefore has no credential to be gated on. Gating on the end user's
+bearer instead would make the document depend on who asks, and the whole point
+is one document you fetch once and reuse to evaluate as many identities as you
+see.
 
-**Bind that grant at `ownOrNull` or wider.** The default realm scope of a
-junction is `own`, which does not reach a global row, and every permission is
-bound to the global `system.default` policy, so a credential granted the family
-and nothing else reaches no definition at all and is answered 403 rather than a
-document that denies everything.
+So cache it per process, not per credential or per user. One fetch serves every
+session your application handles; refetch only when the stale signal below tells
+you to.
 
-What you get back is narrowed to your own realm reach, the way those two reads
-are narrowed. Reach removes the policy configuration rather than the entry: a
-definition outside your reach arrives with `policies: null` and denies, and a
-policy tree outside it arrives as a node no consumer can project, which drops
-the grants naming it. A foreign realm's definitions therefore still appear,
-carrying their `name`, `realm_id`, `client_id` and `decision_strategy` with no
-policies, so that an absent definition keeps its one meaning: your copy is
-older than the server's. Cache the answer per credential rather than per
-process, and give a resource server serving several realms a credential whose
-reach covers them.
+What it publishes is the authorization RULES: every permission namespace, which
+is a closed enum published in `@authup/access` and in the OpenAPI document
+anyway, and every policy configuration, which is the deliberate part. Knowing a
+rule does not help you satisfy it (an attributes predicate reads the subject's
+own attributes, which a reader cannot set), and enforcement has never rested on
+the rules being secret. The catalog is an upper bound on what may be asked, not
+an entitlement: every decision it feeds runs over the grants of the identity
+being evaluated, and you only ever see the grants of identities that hand you a
+token.
 
-**A 403 is not a catalog, and what to do with it depends on who you are.** A
-console falls back to gating on the entry names alone, which is coarser than
-the catalog-backed evaluator: it ignores realm reach and junction policies, so
-a check a catalog-backed session denies passes there. That is deliberate for a
-console, whose gating is advisory (the server enforces every decision, and the
-user who lacks the permission family is the one whose custom roles a deny-all
-would blank the UI for), and it is the gating every console user had before the
-catalog existed. A resource server must never do it: it fails closed on a
-missing catalog, which is why it reads one with its own client credential
-rather than with the user's.
+A server that predates the route answers `404`. A console may fall back to
+gating on the entry names alone, which is coarser than the catalog-backed
+evaluator (it ignores realm reach and junction policies, so a check a
+catalog-backed session denies passes there) and is acceptable only because a
+console's gating is advisory and the server enforces every decision. A resource
+server must never do that: fail closed on a missing catalog.
 
 The grants and the identity come from the introspection you already run:
 `POST /token/introspect` for a bearer, `GET /sessions/@me/introspect` for a
@@ -64,8 +58,8 @@ import {
     isAuthorizationCatalogStaleError,
 } from '@authup/access';
 
-// `client` authenticates with the resource server's own client credential,
-// which holds permission_read; only the introspection speaks for the user.
+// The catalog needs no credential at all; only the introspection speaks for
+// the user. Fetch it once per process and reuse it for every identity.
 const catalog = await client.authorization.get();
 const introspection = await client.token.introspect({ token: accessToken }, {
     authorizationHeader: { type: 'Bearer', token: accessToken },
@@ -96,8 +90,10 @@ const authorization = await createAuthorizationEvaluator({
 inactive case above cannot reach it by omission: an identity holding no grant
 passes an explicit empty array.
 
-The response is `Cache-Control: private, no-cache`: keep it in your own process
-and refetch it when `createAuthorizationEvaluator` throws an error
+The response is `Cache-Control: public, no-cache`: it is a pure function of the
+permission and policy rows and of no caller, so an intermediary may store it and
+revalidate. Keep it in your own process too, and refetch it when
+`createAuthorizationEvaluator` throws an error
 `isAuthorizationCatalogStaleError` recognizes, which means a grant names a
 definition or a policy the cached copy does not carry. Use that guard rather
 than `instanceof`: a tree resolving two copies of `@authup/access` breaks the
@@ -231,8 +227,7 @@ same aggregation and evaluators, which is what makes the decisions equal.
 1. Upgrade the Authup server to a release serving `GET /authorization` and
    reporting grants on introspection.
 2. Upgrade `@authup/access` and, for typed access, `@authup/core-http-kit`.
-3. Bind `permission_read` to the resource server's own client (one
-   `client-permission` row) and fetch the catalog with that credential.
+3. Fetch the catalog. It needs no credential and no permission grant.
 4. Replace name-only checks with
    `createAuthorizationEvaluator({ catalog, grants: introspection.permissions, identity })`.
 5. A resource server must fail closed on a missing or malformed catalog and on

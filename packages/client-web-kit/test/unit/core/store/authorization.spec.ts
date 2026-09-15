@@ -91,7 +91,7 @@ function buildLaterCatalog() {
 }
 
 describe('core/store (authorization catalog)', () => {
-    it('fetches the catalog once with the staged bearer and gates by realm reach', async () => {
+    it('fetches the catalog once, anonymously, and gates by realm reach', async () => {
         const { store, httpClient } = buildStore();
         const evaluator = store.permissionEvaluator;
 
@@ -99,7 +99,9 @@ describe('core/store (authorization catalog)', () => {
 
         const requests = findRequests(httpClient, '/authorization');
         expect(requests).toHaveLength(1);
-        expect(requests[0].headers.authorization).toEqual('Bearer xyz');
+        // the route is anonymous and the document identity-free, so the staged
+        // bearer is neither needed nor sent: one catalog serves every session
+        expect(requests[0].headers.authorization).toBeUndefined();
         expect(store.permissionEvaluator).toBe(evaluator);
 
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
@@ -255,10 +257,12 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
     });
 
-    it('falls back to the name-only view on a 403 and asks again for the next signed-in session', async () => {
+    // A server predating the route is the one fallback left: the route is
+    // anonymous now, so there is no credential a 403 could be about.
+    it('falls back to the name-only view on a 404 and keeps that answer memoized', async () => {
         const { store, httpClient } = buildStore({
             'GET /authorization': () => {
-                throw createResponseError(403, 'Forbidden');
+                throw createResponseError(404, 'Not Found');
             },
         });
 
@@ -268,11 +272,10 @@ describe('core/store (authorization catalog)', () => {
         expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).resolves.toBeUndefined();
 
-        // a 403 is per credential: the memo does not outlive the session
         await store.logout();
         await store.login({ name: 'admin', password: 'start123' });
 
-        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
     });
 
@@ -330,7 +333,9 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).rejects.toThrow();
     });
 
-    it('resets the evaluator on logout and fetches the catalog anew for the next login', async () => {
+    // The evaluator is per session and resets with it; the CATALOG is not, so
+    // the memo outlives a logout and the next login reuses one fetch.
+    it('resets the evaluator on logout and reuses the catalog for the next login', async () => {
         const { store, httpClient } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -340,7 +345,7 @@ describe('core/store (authorization catalog)', () => {
 
         await store.login({ name: 'admin', password: 'start123' });
 
-        expect(findRequests(httpClient, '/authorization')).toHaveLength(2);
+        expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm(AUTHORIZATION_REALM) })).resolves.toBeUndefined();
     });
 });

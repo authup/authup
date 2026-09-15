@@ -2439,11 +2439,9 @@ rather than trusted until `exp`.
   surfaces that read `accessToken`, only `usePermissionCheck` matters, and
   its evaluator is not token-derived: the store commits the evaluator built
   from the authorization document it fetches after the introspection
-  (`GET /authorization`, with the staged bearer in bearer mode and with the
-  session cookie in cookie mode), and the name-only memory provider is the
-  fallback for a server answering 404 there, or 403 for a user holding none
-  of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the three
-  the catalog is gated on. The recompute WATCH keys on
+  (`GET /authorization`, anonymously in both modes: the route takes no
+  credential and the document is identity-free), and the name-only memory
+  provider is the fallback for a server answering 404 there. The recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
@@ -3186,57 +3184,52 @@ enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relativ
 
 Authorization travels to a console or a resource server as three inputs, and only one of
 them is a route of its own. `GET /authorization`
-(`adapters/http/controllers/workflows/authorization/`, `Cache-Control: private, no-cache`)
+(`adapters/http/controllers/workflows/authorization/`, anonymous, `Cache-Control: public, no-cache`)
 answers the IDENTITY-FREE `AuthorizationCatalog`
 (declared in `@authup/access` next to its zod schema and its consumer
 `createAuthorizationEvaluator`): every permission definition with its junction policy ids
 and its `decisionStrategy`, and each policy tree ONCE under `policies`, keyed by the tree's
-id, whether a definition or a grant names it. It is one document per CREDENTIAL, which is
-what a consumer caches it by, and it is an upper bound on what may be asked rather than
-an entitlement (the `GET /schemas` posture): every decision it feeds runs over the caller's
-own grants. **Its gate is the gate of the entity reads it aggregates, in both
-halves, and its narrowing is deliberately coarser than theirs.** After
-`ForceLoggedIn` the controller runs the same `preEvaluateOneOf` over `PERMISSION_READ` /
-`PERMISSION_UPDATE` / `PERMISSION_DELETE` that `PermissionService.getMany` runs for
-`GET /permissions` (reach is neutral at the pre-gate, so a `realm_admin` passes), and a
-refused caller gets the evaluator's own `PermissionError` (403,
-`permission_evaluation_failed`, the code `GET /permissions` answers the same bearer with).
-Then every row is checked against the caller's REALM REACH, because
-`GET /permissions` and `GET /policies` narrow the same rows the same way (#3593) and
-this route would otherwise be the way around both. **Reach withholds the
-CONFIGURATION, never an entry**: a definition out of reach travels with `policies: null`,
-the tombstone an unprojectable one already uses, and a tree out of reach travels as a
-node no consumer can project (`AUTHORIZATION_POLICY_WITHHELD_TYPE`, declared in
-`@authup/access` next to the projection that has to keep refusing it, and pinned by that
-package's own test), which is how a grant naming it is dropped rather than read as stale.
-An ABSENT definition has to keep meaning exactly one thing, that the consumer's copy is
-older than the definition, since that is the one signal a refetch answers. **So a foreign
-realm still discloses more here than through those reads**, which return the row to
-nobody: the identifier tuple of every definition (`name`, `realm_id`, `client_id`,
-`decision_strategy`) and the id of every policy key. That is the price of the key space
-staying whole, and it is the trade to re-open if the tuple ever carries something the
-identifiers do not. The reach test asks about the REALM alone, so a read grant restricted
-by an ATTRIBUTES junction policy has no row to evaluate against, denies every realm and
-lands on the refusal below; fail-closed, and feeding it a synthetic row instead would
-widen, since a missing key neutral-passes in the object bag. A caller whose reach covers
-NO definition is answered 403 (`permission_denied`, next to the pre-gate's
-`permission_evaluation_failed`) rather than a document that denies everything: the default
-junction reach is `own`, which excludes the global rows every built-in definition is, and
-every permission is bound to the global `system.default`, so a grant held at the default
-reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
-single-realm resource server as much as for a console, and an all-deny document would
-read as authoritative where the refusal is what a console's name-only fallback answers. Two rules follow. A resource server
-reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
-`client-permission` row: the document is identity-free, so the end user's bearer is the
-wrong credential for it, and a resource server must fail closed when it has no catalog.
-A console whose signed-in user lacks the family is answered 403 and falls back to the
-name-only view, the same fallback a server predating the route produces. **That fallback
-is COARSER than the catalog-backed evaluator, not equivalent to it**: it gates on the
-entry names alone, ignoring realm reach and junction policies, so a check the catalog
-path denies passes there. It is kept because a console's gating is advisory (the server
-enforces every decision), it is the gating every console user had before the catalog
-existed, and the population it applies to is the one whose custom roles a deny-all would
-blank the UI for. A resource server never takes it. A
+id, whether a definition or a grant names it. It is ONE document for everybody, which is
+what a consumer caches by, and it is an upper bound on what may be asked rather than an
+entitlement (the `GET /schemas` posture): every decision it feeds runs over the grants of
+the identity being evaluated. **The route is ANONYMOUS, and that is structural rather
+than a convenience.** The consumer it exists for is typically a PUBLIC client
+(`authMethod: none`): it holds no secret, so it can obtain no `client_credentials` token
+and has no credential of its own to gate on. The only credential ever in its reach is an
+end user's, and gating on that would make the document depend on who asks, which is
+exactly what it must not do. Requiring merely SOME identity (the former `ForceLoggedIn`)
+has the same defect, since such a client has none at boot either, so the choice is
+binary, anonymous or per-user, and it is anonymous. It therefore carries no
+`ForceLoggedIn`, no `preEvaluateOneOf` and no realm-reach narrowing; the authorization
+middleware still runs, so presenting a BAD credential is still a 401 while presenting
+none is a 200. `Cache-Control: public, no-cache`: the body is a pure function of the
+permission and policy rows, so an intermediary may store it and revalidate against
+routup's own content ETag. It is deliberately NOT memoized in process on a TTL, because a
+consumer meeting a grant whose definition the catalog lacks refetches ONCE and commits a
+deny-all evaluator if that answer is stale too, so a clock-based memo would turn a
+routine `POST /permissions` into denied sessions for the length of the window; a
+server-side cache needs invalidation off the permission, permission-policy, policy and
+grant-junction writes, which is filed rather than built.
+
+**What this publishes is the authorization RULES, and the trade is deliberate.** The
+permission namespaces were public already (a closed enum in `@authup/access`, and in
+`/docs/openapi.json`), as are realm ids (`GET /realms` is anonymous). The new part is the
+policy CONFIGURATION: an attributes predicate, a realm-match attribute name, a time
+window, and a foreign realm's definitions whole. Knowing a rule does not help satisfy it
+(an attributes predicate reads the SUBJECT's attributes, which a reader cannot set),
+enforcement has never rested on the rules being secret, and the alternative made every
+integrator hold `PERMISSION_READ` just to read them, which is the broader grant. The
+route joins the anonymous surfaces authup already serves: `GET /`, `GET /realms`,
+`GET /identity-providers`, the per-realm discovery documents and `/docs/openapi.json`.
+The grants stay private: a consumer only ever sees the grants of identities that hand it
+a token, and cannot enumerate who holds what. `GET /permissions` and `GET /policies` keep
+their own realm-reach narrowing (#3593) and are untouched: the ROWS are still gated, only
+the rules are not. A console whose user holds none of the permission family no longer
+falls back to anything, since it reads the same catalog as everyone; the name-only
+fallback survives for a server predating the route, which answers 404, and it is COARSER
+than the catalog-backed evaluator (it ignores realm reach and junction policies), which
+is acceptable only because a console's gating is advisory. A resource server never takes
+it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
@@ -3245,8 +3238,7 @@ junction row references (`findGrantPolicies`, so a grant can never name a tree t
 lacks) and sorts the definitions by key. A projection failure is warned about and never
 drops a definition: one whose tree fails projection is carried with `policies: null`,
 because the definition is real and an absence in the catalog must mean exactly one thing,
-a copy older than the definition. A tree the CALLER may not read is withheld the same
-way, so the two reasons a definition cannot be evaluated reach a consumer as one state. A grant tree that fails projection is dropped with a
+a copy older than the definition. A grant tree that fails projection is dropped with a
 warning, and the introspection drops every grant of it.
 
 The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on
@@ -3305,12 +3297,13 @@ catalog is large and shared. There is no foreign-subject form: a resource server
 user's bearer introspects it, and an admin lens over another identity's effective
 authorization needs a gate of its own.
 
-The kit store memoizes ONE catalog per signed-in session: fetched on first use during
-staging and cleared by `cleanup()`, since the gate is per credential (a user without the
-permission family is refused where the next one is not), so a logout and a later login
-fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as the name-only fallback, since a console's gating is advisory, and any
-other fetch failure rejects and clears the memo so the next resolve retries. During
+The kit store memoizes ONE catalog per APP INSTANCE, fetched anonymously on first use
+during staging and deliberately NOT cleared by `cleanup()`: the document is identity-free
+and credential-free, so one copy serves every session and a logout followed by another
+login reuses it, while the stale-grant path below is what refreshes it. A `404` (a server
+predating the route) memoizes as the name-only fallback, since a console's gating is
+advisory, and any other fetch failure rejects and clears the memo so the next resolve
+retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject

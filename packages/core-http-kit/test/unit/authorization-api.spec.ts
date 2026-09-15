@@ -20,7 +20,7 @@ const catalog = {
 };
 
 describe('src/domains/workflows/authorization', () => {
-    it('reads GET /authorization with the client credential', async () => {
+    it('reads GET /authorization anonymously', async () => {
         const client = createFakeClient({ handlers: { 'GET /authorization': () => catalog } });
 
         const document = await client.authorization.get();
@@ -31,13 +31,5 @@ describe('src/domains/workflows/authorization', () => {
         expect(client.requests[0].method).toEqual('GET');
         expect(client.requests[0].url).toEqual('authorization');
         expect(client.requests[0].headers.authorization).toBeUndefined();
-    });
-
-    it('sends a per-request bearer when asked to', async () => {
-        const client = createFakeClient({ handlers: { 'GET /authorization': () => catalog } });
-
-        await client.authorization.get({ authorizationHeader: { type: 'Bearer', token: 'xyz' } });
-
-        expect(client.requests[0].headers.authorization).toEqual('Bearer xyz');
     });
 });

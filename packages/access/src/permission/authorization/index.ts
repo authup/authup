@@ -6,7 +6,6 @@
  */
 
 export * from './check';
-export * from './constants';
 export * from './error';
 export * from './module';
 export * from './policy';

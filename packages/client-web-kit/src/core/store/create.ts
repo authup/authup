@@ -310,9 +310,11 @@ export function createStore(context: StoreCreateContext) {
     // (failure keeps routing into the navigation guards' catch).
     const resolutionStale = ref(false);
 
-    // The memoized catalog `GET /authorization` serves. Identity-free, but
-    // gated per credential (a 403 memoizes as the name-only fallback), so
-    // cleanup() clears it and each signed-in session fetches it once.
+    // The memoized catalog `GET /authorization` serves. Identity-free AND
+    // credential-free (the route is anonymous), so it is deliberately NOT
+    // cleared by cleanup(): one document serves every session this app
+    // instance sees, and a logout followed by another login reuses it. The
+    // stale-grant path below is what refreshes it, not a session change.
     let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
 
     const reloadCatalog = () => {
@@ -344,7 +346,6 @@ export function createStore(context: StoreCreateContext) {
         lastAuthOrigin.value = null;
 
         permissionEvaluator.reset();
-        reloadCatalog();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -408,14 +409,12 @@ export function createStore(context: StoreCreateContext) {
         return response;
     };
 
-    const fetchCatalog = async (token?: string) : Promise<AuthorizationCatalog | null> => {
+    const fetchCatalog = async () : Promise<AuthorizationCatalog | null> => {
         try {
-            return await client.authorization.get(token ?
-                { authorizationHeader: { type: 'Bearer', token } } :
-                undefined);
+            return await client.authorization.get();
         } catch (e) {
             const { status } = extractErrorContext(e);
-            if (status === 403 || status === 404) {
+            if (status === 404) {
                 return null;
             }
 
@@ -424,19 +423,19 @@ export function createStore(context: StoreCreateContext) {
     };
 
     /**
-     * The catalog `GET /authorization` serves, memoized per signed-in
-     * session, which is per credential: what it carries is what that
-     * credential's own realm reach covers. A `404` (a server predating the
-     * route) and a `403` (a credential holding none of the permission family
-     * the catalog is gated on, or whose reach covers no definition) memoize
-     * as null: the catalog only sharpens advisory UI gating, so the name-only
-     * view stays the fallback there, where a resource server must fail
-     * closed. Any other failure rejects and clears the memo, so the next
+     * The catalog `GET /authorization` serves, fetched once per app instance.
+     * The route is anonymous and the document is identity-free, so it needs no
+     * credential and depends on none: the same bytes serve every session.
+     *
+     * A `404` (a server predating the route) memoizes as null, and the
+     * name-only view stays the fallback there, since the catalog only sharpens
+     * advisory UI gating in a console; a resource server must fail closed
+     * instead. Any other failure rejects and clears the memo, so the next
      * resolve retries.
      */
-    const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
+    const loadCatalog = () : Promise<AuthorizationCatalog | null> => {
         if (!catalogPromise) {
-            const promise = fetchCatalog(token).catch((e) => {
+            const promise = fetchCatalog().catch((e) => {
                 if (catalogPromise === promise) {
                     reloadCatalog();
                 }
@@ -504,9 +503,8 @@ export function createStore(context: StoreCreateContext) {
      */
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
-        token?: string,
     ) : Promise<IPermissionEvaluator | null> => {
-        const promise = loadCatalog(token);
+        const promise = loadCatalog();
         const catalog = await promise;
         if (!catalog) {
             return null;
@@ -531,7 +529,7 @@ export function createStore(context: StoreCreateContext) {
             reloadCatalog();
         }
 
-        const reloadedPromise = loadCatalog(token);
+        const reloadedPromise = loadCatalog();
         const reloaded = await reloadedPromise;
         if (!reloaded) {
             return null;
@@ -811,7 +809,7 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
-        const authorization = await buildAuthorization(introspection, token);
+        const authorization = await buildAuthorization(introspection);
 
         commitSession({
             generation,
@@ -953,7 +951,7 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
-            const authorization = await buildAuthorization(introspection, response.access_token);
+            const authorization = await buildAuthorization(introspection);
 
             committed = commitSession({
                 generation,

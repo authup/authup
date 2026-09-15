@@ -11,7 +11,6 @@ import {
     it,
     vi,
 } from 'vitest';
-import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from '@authup/access';
 import { createNoopLogger } from '@authup/server-kit';
 import { buildAuthorizationCatalog } from '../../../../src/core/authorization/module.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
@@ -20,8 +19,6 @@ import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorizatio
 const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const clientId = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
 
-// every fixture carries `realmId`, the way a row a repository hands over does:
-// the builder treats a node without the column as one it cannot place
 const systemDefault = {
     id: 'policy-default',
     name: 'system.default',
@@ -63,13 +60,8 @@ function setup() {
     };
 }
 
-const reachAll = async () => true;
-
-function build(
-    ctx: ReturnType<typeof setup>,
-    canReachRealm: (realmId: string | null) => Promise<boolean> = reachAll,
-) {
-    return buildAuthorizationCatalog(ctx, canReachRealm);
+function build(ctx: ReturnType<typeof setup>) {
+    return buildAuthorizationCatalog(ctx);
 }
 
 const globalPermission = (name: string) => ({
@@ -85,22 +77,6 @@ const custom = {
     realmId: null, 
     type: 'myType', 
 };
-const scoped = {
-    id: 'policy-scoped', 
-    type: 'identity', 
-    realmId, 
-};
-const mixed = {
-    id: 'policy-mixed',
-    type: 'composite',
-    decisionStrategy: 'unanimous',
-    children: [{
-        id: 'policy-identity', 
-        realmId: null, 
-        type: 'identity', 
-    }, scoped],
-};
-const realmless = { id: 'policy-realmless', type: 'identity' };
 const prototypeNamed = {
     id: 'constructor', 
     realmId: null, 
@@ -308,99 +284,5 @@ describe('core/authorization/module', () => {
         expect(ctx.warn).toHaveBeenCalledTimes(2);
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('policy-custom');
         expect(String(ctx.warn.mock.calls[1]![0])).toContain('must carry its id');
-    });
-    // The realm reach of the caller's own read grant, the gate `GET /permissions`
-    // and `GET /policies` apply to the same rows. What it removes is the policy
-    // configuration, never an entry: an absent definition has to keep meaning
-    // that the consumer's copy is older than the definition.
-    it('carries a definition of a realm out of reach without its policies', async () => {
-        const ctx = setup();
-        ctx.catalogRepository.setDefinitions([
-            [{
-                name: 'read', 
-                realmId, 
-                clientId: null, 
-            }, [systemDefault]],
-            bindingDefinition('write'),
-        ]);
-
-        const catalog = await build(ctx, async (realm) => realm !== realmId);
-
-        expect(catalog.permissions).toEqual([
-            {
-                name: 'write',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
-                policies: ['policy-default'],
-            },
-            {
-                name: 'read',
-                realm_id: realmId,
-                client_id: null,
-                decision_strategy: null,
-                policies: null,
-            },
-        ]);
-        // the tree itself is global, so the reachable definition still carries it
-        expect(catalog.policies).toHaveProperty('policy-default');
-    });
-
-    it('withholds a policy tree out of reach and denies the definition naming it', async () => {
-        const ctx = setup();
-        ctx.catalogRepository.setDefinitions([
-            [globalPermission('read'), [scoped]],
-            bindingDefinition('write'),
-        ]);
-
-        const catalog = await build(ctx, async (realm) => realm !== realmId);
-
-        expect(catalog.permissions.map((permission) => [permission.name, permission.policies]))
-            .toEqual([['read', null], ['write', ['policy-default']]]);
-        expect(catalog.policies['policy-scoped']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
-        expect(catalog.policies['policy-default']).toHaveProperty('type', 'composite');
-    });
-
-    // A child row carries its own realm and nothing pins it to its parent's, so
-    // a reachable composite can hold one the caller may not read, and the
-    // child's configuration travels inside the parent's projection.
-    it('withholds a tree whose child sits in a realm out of reach', async () => {
-        const ctx = setup();
-        ctx.catalogRepository.setDefinitions([
-            [globalPermission('read'), [mixed]],
-        ]);
-
-        const catalog = await build(ctx, async (realm) => realm !== realmId);
-
-        expect(catalog.permissions[0]!.policies).toBeNull();
-        expect(catalog.policies['policy-mixed']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
-    });
-
-    // present but unevaluable, so a consumer drops the grant naming it. Absent
-    // it would read as a stale catalog and cost a refetch that changes nothing.
-    // a node the builder cannot place is not global: it is one this build has
-    // no realm for, so it is withheld rather than offered to every reader
-    it('withholds a tree whose node carries no realm at all', async () => {
-        const ctx = setup();
-        ctx.catalogRepository.setDefinitions([
-            [globalPermission('read'), [realmless]],
-        ]);
-
-        const catalog = await build(ctx);
-
-        expect(catalog.permissions[0]!.policies).toBeNull();
-        expect(catalog.policies['policy-realmless']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
-    });
-
-    it('withholds a grant policy out of reach', async () => {
-        const ctx = setup();
-        ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
-        ctx.catalogRepository.setGrantPolicies([scoped, visible]);
-
-        const catalog = await build(ctx, async (realm) => realm !== realmId);
-
-        expect(catalog.policies['policy-scoped']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
-        expect(catalog.policies['policy-visible']).toEqual({ type: 'attributes', query: { visible: { $eq: true } } });
-        expect(ctx.warn).not.toHaveBeenCalled();
     });
 });
