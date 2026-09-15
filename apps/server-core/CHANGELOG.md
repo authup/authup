@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.65) (2026-09-15)
+
+
+### Features
+
+* batch permission check at POST /authorization/check ([#3603](https://github.com/authup/authup/issues/3603)) ([57eb8d4](https://github.com/authup/authup/commit/57eb8d4dde731098ce76f88e794c0caead6618b3))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* expose complete authorization through introspection ([#3584](https://github.com/authup/authup/issues/3584)) ([3240951](https://github.com/authup/authup/commit/32409512c342f7e0cfd9a70eb638b5c9023da571))
+* serve the authorization catalog at GET /authorization and the identity's grants on introspection ([#3588](https://github.com/authup/authup/issues/3588)) ([bd9b7d0](https://github.com/authup/authup/commit/bd9b7d03cf16de5fb4fbb3b866970e53de0a2416))
+
+
+### Bug Fixes
+
+* **server-core:** gate the global-capable entity reads by realm reach ([#3593](https://github.com/authup/authup/issues/3593)) ([3dcd690](https://github.com/authup/authup/commit/3dcd69037e096a64d176cf8c255d6a636cdccabc))
+* **server-core:** gate the identity-provider-account read with the compiled WHERE ([#3602](https://github.com/authup/authup/issues/3602)) ([2f12476](https://github.com/authup/authup/commit/2f124762f69f7d75608a5ca08cc7539d9f6cd971))
+* **server-core:** realm-gate the junction reads, count the device deny, state the post contract ([#3598](https://github.com/authup/authup/issues/3598)) ([32a4fbf](https://github.com/authup/authup/commit/32a4fbfd99471be43d0e03df7205f13838f4aea0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-config bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-config-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-console-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/server-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
