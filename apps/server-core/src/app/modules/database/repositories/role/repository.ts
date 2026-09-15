@@ -15,7 +15,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -44,6 +44,10 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         qb.groupBy('role.id');
 
         const { pagination } = applyQuery(qb, query);
+        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
+        // PRESENCE-based — a `fields=` projection that strips the column would
+        // leave the realm-match key absent and neutral-pass (issue #3574)
+        applyRealmScopeSelect(qb, 'role');
 
         const { data: entities, total } = await fetchMany(qb, query);
 

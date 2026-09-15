@@ -14,7 +14,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -38,6 +38,10 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
         qb.groupBy('scope.id');
 
         const { pagination } = applyQuery(qb, query);
+        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
+        // PRESENCE-based — a `fields=` projection that strips the column would
+        // leave the realm-match key absent and neutral-pass (issue #3574)
+        applyRealmScopeSelect(qb, 'scope');
 
         const { data: entities, total } = await fetchMany(qb, query);
 

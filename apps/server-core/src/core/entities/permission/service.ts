@@ -11,6 +11,7 @@ import {
     SystemPolicyName, 
     definePolicyData, 
 } from '@authup/access';
+import { inArray } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { AuthupError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -28,7 +29,7 @@ import type { IRoleRepository } from '../role/types.ts';
 import type { IRolePermissionRepository } from '../role-permission/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { permissionSchema } from './schema.ts';
 
 const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
@@ -77,6 +78,12 @@ export type PermissionServiceContext = {
     permissionPolicyRepository: IPermissionPolicyRepository;
 };
 
+const PERMISSION_NAMES = [
+    PermissionName.PERMISSION_READ,
+    PermissionName.PERMISSION_UPDATE,
+    PermissionName.PERMISSION_DELETE,
+];
+
 export class PermissionService extends AbstractEntityService implements IPermissionService {
     protected repository: IPermissionRepository;
 
@@ -107,15 +114,53 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Permission>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        return this.repository.findMany(await decodeQuery(query, { schema: permissionSchema, actor }));
+        let parsed = await decodeQuery(query, { schema: permissionSchema, actor });
+
+        // Compile the read permissions against the knowns (actor identity) into a
+        // row condition (issue #3286 phase 3): the authorization runs as WHERE, so
+        // pagination and totals stay exact. Non-expressible policies fall back to
+        // the per-row post-evaluation below.
+        const compiled = await actor.permissionEvaluator.compile({ name: PERMISSION_NAMES });
+        if (compiled.verdict === 'deny') {
+            // no row can pass — a constant-false condition keeps the meta shape
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: entities, meta };
+        }
+
+        const data: Permission[] = [];
+        let { total } = meta;
+
+        for (const entity of entities) {
+            try {
+                await actor.permissionEvaluator.evaluateOneOf({
+                    name: PERMISSION_NAMES,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: entity,
+                        ...this.resourceRealmMatch(entity),
+                    }),
+                });
+                data.push(entity);
+            } catch {
+                total -= 1;
+            }
+        }
+
+        return {
+            data,
+            meta: {
+                ...meta,
+                total,
+            },
+        };
     }
 
     async getOne(
@@ -123,18 +168,20 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         actor: ActorContext,
         realm?: string,
     ): Promise<Permission> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
         if (!entity) {
             throw new EntityNotFoundError();
         }
+
+        await actor.permissionEvaluator.evaluateOneOf({
+            name: PERMISSION_NAMES,
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+                ...this.resourceRealmMatch(entity),
+            }),
+        });
 
         return entity;
     }

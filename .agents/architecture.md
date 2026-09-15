@@ -2957,6 +2957,52 @@ tables; merging is the operator's (upgrading.md), since the losers are
 referenced by junction rows a migration cannot re-point on the deployment's
 behalf.
 
+### Global-capable entity reads
+
+**Both read paths of the four global-capable entities are realm-gated** (issue
+#3574): `getMany` composes the compiled-WHERE shape (`compile({ name: [<E>_READ,
+<E>_UPDATE, <E>_DELETE] })`, `appendQueryConditions` on `conditional`, a
+constant-false `inArray('id', [])` on `deny`, the per-row drop loop on `post`)
+and `getOne` runs `evaluateOneOf` with `resourceRealmMatch(entity)` after the
+fetch. So on these four endpoints an `ownOrNull` reader sees its own realm's rows
+plus the global ones and nothing else, with exact totals and pagination; `policy`
+inherits the gate on `/policies/:id/expanded`, which delegates to the same
+`getOne`. The JUNCTION reads are a separate family and still carry no realm
+predicate, so a row of these four types remains reachable cross-realm as an
+include target there (`GET /role-permissions?include=permission` and its
+siblings) — tracked as #3594, since the fix is the same compiled-WHERE shape
+over each junction's owner-realm key rather than anything here.
+
+The two halves ship together on purpose. Gating only the list would hide a row
+that `GET /<entity>/<uuid>` still returns, and that is the more dangerous
+direction: a reader of the gated `getMany` reasonably concludes the entity is
+isolated. It also closes the UUID hole on the two dual-mounted reads, whose
+`findOneByIdOrName` consults the realm key on the by-NAME branch only, so
+`/realms/<mine>/policies/<foreign-uuid>` resolved globally.
+
+**`policy` is why this is a disclosure rather than a preference.**
+`PolicyRepositoryAdapter.findMany` calls `extendManyWithEA` AFTER the projection
+(the EA read-path rule), so an ungated list shipped every realm's policy
+CONFIGURATION — an `ATTRIBUTES` query tree, an `ATTRIBUTE_NAMES` denylist —
+outside any field gate, the same post-projection EA hazard that gated
+`GET /identity-providers/:id` in #3480. `role` and `scope` disclose tenant
+metadata (names, display names, descriptions); the `permission` catalogue is the
+`PermissionName` enum published in `@authup/core-kit`, so only operator-created
+realm- or client-scoped rows there are worth anything.
+
+**Reach follows the grant, which makes `own` narrower than it looks.** Every
+built-in permission, both built-in roles, the `global`/`openid` scopes and the
+system policies are `realmId: null`, and `own` excludes null by construction. An
+operator role granted `<E>_READ` through the API takes the junction default
+`own` and therefore sees no global rows at all — self-consistent, since that
+actor cannot bind a global row either, but it is why `realm_admin` holds these
+reads at `ownOrNull`.
+
+The shape is repeated per service rather than extracted: thirteen call sites now
+spell it out, five of them OR an ownership term in that no pure helper covers,
+and a core service cannot import the repository-layer helpers anyway
+(conventions.md → *Consolidating shallow modules*).
+
 ### Realm Defaulting
 
 All entity services default `realmId` to the actor's realm when not provided:
@@ -3525,7 +3571,9 @@ condition (`inArray('id', [])`, keeps meta shape); `conditional` →
 `appendQueryConditions` — the authorization runs as WHERE, so **pagination and totals
 stay exact**; `post` → a per-row `evaluate` + `total -= 1` drop loop is the sound
 fallback (and the plan-039 force-select discipline still serves exactly that
-path). Converted: `KeyService`/`TrustAnchorService` (pure realm gate);
+path). Converted: `KeyService`/`TrustAnchorService` and, since #3574, the four
+global-capable `RoleService`/`ScopeService`/`PermissionService`/`PolicyService`
+(pure realm gate — see *Realm Scoping Model → Global-capable entity reads*);
 `SessionService`/`EventService`/`ConsentService` compose their **ownership
 alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition)`
 (events: `actorId`/`actorType`); on `deny` the ownership condition alone applies.
@@ -6072,10 +6120,9 @@ extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
 `applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user`
 (`+ id` — self short-circuit), `role-attribute`,
 `user-attribute` (`+ userId` — isMe check; since #3295 the two attribute schemas
-declare `fields.default`, so the call dedupes against that projection). `role` / `scope` /
-`permission` / `policy` list paths carry no per-row realm gate (their
-`resourceRealmMatch` usages are write paths on server-loaded data), so they are
-deliberately not force-selected. `client` dropped out of the list with #3322 —
+declare `fields.default`, so the call dedupes against that projection), and
+`role` / `scope` / `permission` / `policy`, the four global-capable entities
+gated since #3574 (see *Global-capable entity reads* below). `client` dropped out of the list with #3322 —
 its per-row secret gate moved onto the schema, whose visibility CONDITION gets its
 operand columns force-selected by the rapiq SQL adapter itself (see *Query IR flow
 → Field authorization*). The helper **dedupes against the already-applied
