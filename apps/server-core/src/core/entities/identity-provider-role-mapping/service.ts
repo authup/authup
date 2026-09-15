@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
+import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderRoleMappingValidator, PermissionName } from '@authup/core-kit';
@@ -14,8 +15,15 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityProviderRoleMappingRepository, IIdentityProviderRoleMappingService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { identityProviderRoleMappingSchema } from './schema.ts';
+
+const READ_PERMISSION_NAMES = [
+    PermissionName.IDENTITY_PROVIDER_ROLE_READ,
+    PermissionName.IDENTITY_PROVIDER_READ,
+    PermissionName.IDENTITY_PROVIDER_UPDATE,
+    PermissionName.IDENTITY_PROVIDER_DELETE,
+];
 
 export type IdentityProviderRoleMappingServiceContext = {
     repository: IIdentityProviderRoleMappingRepository;
@@ -46,35 +54,67 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<IdentityProviderRoleMapping>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.IDENTITY_PROVIDER_ROLE_READ,
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
-        return this.repository.findMany(await decodeQuery(query, { schema: identityProviderRoleMappingSchema, actor }));
+        let parsed = await decodeQuery(query, { schema: identityProviderRoleMappingSchema, actor });
+
+        // The realm reach of the grant, compiled into a row condition and lowered onto
+        // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
+        const compiled = await actor.permissionEvaluator.compile({
+            name: READ_PERMISSION_NAMES,
+            realmAttributeName: this.ownerRealmKey,
+        });
+        if (compiled.verdict === 'deny') {
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: entities, meta };
+        }
+
+        const data: IdentityProviderRoleMapping[] = [];
+        let { total } = meta;
+
+        for (const entity of entities) {
+            try {
+                await actor.permissionEvaluator.evaluateOneOf({
+                    name: READ_PERMISSION_NAMES,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                        [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+                    }),
+                });
+                data.push(entity);
+            } catch {
+                total -= 1;
+            }
+        }
+
+        return { data, meta: { ...meta, total } };
     }
 
     async getOne(
         id: string,
         actor: ActorContext,
     ): Promise<IdentityProviderRoleMapping> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.IDENTITY_PROVIDER_ROLE_READ,
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new EntityNotFoundError();
         }
+
+        await actor.permissionEvaluator.evaluateOneOf({
+            name: READ_PERMISSION_NAMES,
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
+        });
 
         return entity;
     }

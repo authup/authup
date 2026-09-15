@@ -156,18 +156,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         identity: Identity,
         options: OAuth2DeviceAuthorizationApproveOptions,
     ) : Promise<void> {
-        let resolved : ResolvedDeviceCode;
-        try {
-            resolved = await this.resolve(userCode, identity);
-        } catch (e) {
-            if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
-                this.metrics?.recordAuthorize('login_required');
-            }
-
-            throw e;
-        }
-
-        const { code, client } = resolved;
+        const { code, client } = await this.resolveForDecision(userCode, identity);
 
         let result : OAuth2AuthorizationGateResult;
         try {
@@ -232,7 +221,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
     }
 
     async deny(userCode: unknown, identity: Identity) : Promise<void> {
-        const { code, client } = await this.resolve(userCode, identity);
+        const { code, client } = await this.resolveForDecision(userCode, identity);
 
         const claimed = await this.repository.decide(code.id, { status: OAuth2DeviceCodeStatus.DENIED }, code.expires_at);
         if (!claimed) {
@@ -250,6 +239,26 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
             },
         });
         this.metrics?.recordAuthorize('denied');
+    }
+
+    /**
+     * `resolve` for the two DECISION methods. A foreign-realm refusal is an authorize
+     * outcome and is counted here; `lookup` is a page render — the device analogue of
+     * the `/authorize` GET, which records nothing either — so it must not contribute to
+     * `authup_authorize_total`, whose other outcomes it can never produce. Shared rather
+     * than duplicated per method: the guard existing on `approve` and not on `deny` IS
+     * issue #3591.
+     */
+    protected async resolveForDecision(userCode: unknown, identity: Identity) : Promise<ResolvedDeviceCode> {
+        try {
+            return await this.resolve(userCode, identity);
+        } catch (e) {
+            if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
+                this.metrics?.recordAuthorize('login_required');
+            }
+
+            throw e;
+        }
     }
 
     protected async resolve(userCode: unknown, identity: Identity) : Promise<ResolvedDeviceCode> {

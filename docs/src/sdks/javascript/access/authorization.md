@@ -177,7 +177,14 @@ switch (compiled.verdict) {
 ```
 
 `condition` is a rapiq condition over row attributes; grant reach targets the
-`realmId` column. Call `compile` without `realmMatch` or `attributes` data. A
+`realmId` column, or another column named with
+`compile({ name, realmAttributeName })` when your rows carry their realm
+elsewhere. Naming one is conservative about the rest of the grant: a junction
+policy is then left to `post` instead of being lowered, because a caller whose
+rows carry their realm elsewhere may not carry that policy's other fields
+either, and Authup cannot tell the two apart. If your rows do carry them and you
+want the pushdown, leave the option unset and map the realm column in your query
+adapter instead. Call `compile` without `realmMatch` or `attributes` data. A
 pending policy that cannot be lowered produces `post`, never an unrestricted
 query.
 

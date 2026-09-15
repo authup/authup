@@ -143,7 +143,11 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             // neither pollutes the composed WHERE with constant terms.
             let reachCondition : ICondition | null = null;
             const realmOutcome = await this.realmMatchEvaluator.evaluate(
-                { scope: grant.realmScope },
+                // `attributeName` is read by scope mode only while LOWERING (it names the
+                // row column the reach binds); settled evaluation takes the resource realm
+                // from the `realmMatch` data key, so passing it cannot move an evaluate()
+                // outcome. It is what lets a junction gate on its owner-realm key.
+                { scope: grant.realmScope, attributeName: ctx.realmAttributeName },
                 ctx,
             );
             if (realmOutcome.pending) {
@@ -206,7 +210,18 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             if (outcome.pending) {
                 pending = true;
 
-                if (ctx.withConditions && outcome.condition) {
+                // A caller that names its realm column has told us the row shape is not the
+                // default one, and nothing rebases a GRANT policy's own condition onto it.
+                // Authup's own junction reads are the case that proves it: the policy is the
+                // operator's, written against the ENTITY the permission names, so lowering it
+                // emits SQL over columns `auth_role_permissions` and its siblings do not have.
+                // We cannot tell a row shape that does carry those fields from one that does
+                // not, so refuse the class: the caller falls back to the per-row `post` branch,
+                // which evaluates the same policy against the real attributes and reaches the
+                // identical verdict wherever the pushdown would not have crashed. The grant's
+                // REACH is unaffected — it is built above from the column the caller named, so
+                // the policy-free grants that dominate real deployments still push down.
+                if (ctx.withConditions && outcome.condition && !ctx.realmAttributeName) {
                     conditions.push(
                         reachCondition ?
                             and(reachCondition, outcome.condition) :
