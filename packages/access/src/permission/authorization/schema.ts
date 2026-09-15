@@ -111,11 +111,17 @@ export async function parseAuthorizationEvaluatorInput(
     const identityGiven = typeof input.identity !== 'undefined';
     const grantsGiven = typeof input.grants !== 'undefined';
     if (!identityGiven && grantsGiven) {
-        throw new Error('Grants require the identity they belong to.');
+        throw new ValidupError([defineIssueItem({
+            message: 'Grants require the identity they belong to.',
+            path: ['identity'],
+        })]);
     }
 
     if (identityGiven && !grantsGiven) {
-        throw new Error('An identity requires its grant list; pass an empty array for an identity holding none.');
+        throw new ValidupError([defineIssueItem({
+            message: 'An identity requires its grant list; pass an empty array for an identity holding none.',
+            path: ['grants'],
+        })]);
     }
 
     // Detach: a later mutation of a cached HTTP response cannot widen grants

@@ -7,6 +7,7 @@
 
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
+import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
 import type { AuthorizationEvaluatorInput, IdentityPolicyData } from '../../../src';
 import {
@@ -35,6 +36,20 @@ type Grant = {
     realm_scope?: string | null,
     policies?: string[] | null,
 };
+
+async function issuesOf(fn: () => Promise<unknown>) {
+    try {
+        await fn();
+    } catch (e) {
+        if (isValidupError(e)) {
+            return e.issues;
+        }
+
+        throw e;
+    }
+
+    throw new Error('Expected the input to be refused.');
+}
 
 const identity : IdentityPolicyData = {
     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -497,10 +512,13 @@ describe('authorization catalog consumer', () => {
         // the same definition passes for the identity the document proved
         await expect(identified.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
 
-        await expect(createAuthorizationEvaluator({
+        expect(await issuesOf(() => createAuthorizationEvaluator({
             catalog: document,
             grants: grants({ name: 'guarded', realm_scope: 'any' }),
-        })).rejects.toThrow('Grants require the identity they belong to.');
+        }))).toEqual([expect.objectContaining({
+            path: ['identity'],
+            message: 'Grants require the identity they belong to.',
+        })]);
     });
 
     // An inactive introspection names its subject and omits `permissions`, so
@@ -513,8 +531,8 @@ describe('authorization catalog consumer', () => {
             { binding: { type: 'permissionBinding' } },
         );
 
-        await expect(createAuthorizationEvaluator({ catalog: document, identity }))
-            .rejects.toThrow('An identity requires its grant list');
+        expect(await issuesOf(() => createAuthorizationEvaluator({ catalog: document, identity })))
+            .toEqual([expect.objectContaining({ path: ['grants'] })]);
 
         const evaluator = await createAuthorizationEvaluator({
             catalog: document, 
@@ -660,8 +678,19 @@ describe('authorization catalog consumer', () => {
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
     });
 
-    it('rejects duplicate namespace definitions', async () => {
-        await expect(build({ catalog: catalog([definition(), definition()]) })).rejects.toThrow();
+    it('rejects duplicate namespace definitions, naming the entry at fault', async () => {
+        expect(await issuesOf(() => build({ catalog: catalog([definition(), definition()]) })))
+            .toEqual([expect.objectContaining({ path: ['catalog', 'permissions', 1] })]);
+    });
+
+    it('refuses a realm match the resource cannot name, as a validup error', async () => {
+        const evaluator = await build({});
+        const issues = await issuesOf(() => evaluator.evaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 42 as any }),
+        }));
+
+        expect(issues[0]!.path).toEqual(['data', BuiltInPolicyType.REALM_MATCH]);
     });
 
     it('denies through a childless composite definition, at the gate and on the row', async () => {

@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { type Issue, defineIssueItem, prefixIssuePath } from '@ebec/core';
+import { InternalError } from '@authup/errors';
+import { buildIssuesForZodError } from '@validup/zod';
+import { ValidupError } from 'validup';
 import { z } from 'zod';
 import type { BasePolicy } from '../../policy';
 import {
@@ -31,6 +35,20 @@ import { parseAuthorizationEvaluatorInput } from './schema';
 import type { AuthorizationEvaluatorInput, AuthorizationPolicy } from './types';
 
 const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
+
+/**
+ * Every refusal of the DOCUMENT is a `ValidupError` carrying the path of the
+ * member at fault, the shape `parseAuthorizationEvaluatorInput` raises and the
+ * one a consumer can render. A bare `Error` carries neither a code nor a path,
+ * so nothing downstream can normalize it.
+ */
+function refuseDocument(message: string, path: PropertyKey[]) : never {
+    throw new ValidupError([defineIssueItem({ message, path })]);
+}
+
+function refuseDocumentWithIssues(issues: Issue[]) : never {
+    throw new ValidupError(issues);
+}
 
 function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
     const {
@@ -104,7 +122,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
 
     const definitions : PermissionPolicyBinding[] = [];
     const permissions = new Map<string, BasePermission | null>();
-    for (const entry of catalog.permissions) {
+    for (const [index, entry] of catalog.permissions.entries()) {
         const permission : BasePermission = {
             name: entry.name,
             realmId: entry.realm_id,
@@ -113,7 +131,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         };
         const key = buildPermissionKey(permission);
         if (permissions.has(key)) {
-            throw new Error(`Duplicate authorization permission: ${key}`);
+            refuseDocument(
+                `The catalog defines the permission ${key} more than once.`,
+                ['catalog', 'permissions', index],
+            );
         }
         if (entry.policies === null || entry.policies.some((id) => unevaluable.has(id))) {
             permissions.set(key, null);
@@ -122,10 +143,13 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         permissions.set(key, permission);
 
         const policies : BasePolicy[] = [];
-        for (const id of entry.policies) {
+        for (const [i, id] of entry.policies.entries()) {
             const tree = trees.get(id);
             if (!tree) {
-                throw new Error(`Unknown authorization policy: ${id}`);
+                refuseDocument(
+                    `The catalog does not declare the policy ${id}.`,
+                    ['catalog', 'permissions', index, 'policies', i],
+                );
             }
             policies.push(toPolicy(tree));
         }
@@ -214,7 +238,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
             ctx.options?.policiesExcluded ||
             ctx.options?.pendingPolicies
         ) {
-            throw new Error('The authorization evaluator does not accept policy bypass options.');
+            throw new InternalError('The authorization evaluator does not accept policy bypass options.');
         }
 
         return {
@@ -231,7 +255,14 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     const forResource = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
         const next = forGate(ctx);
         if (next.data!.has(BuiltInPolicyType.REALM_MATCH)) {
-            realmMatchSchema.parse(next.data!.get(BuiltInPolicyType.REALM_MATCH));
+            const value = next.data!.get(BuiltInPolicyType.REALM_MATCH);
+            const outcome = realmMatchSchema.safeParse(value);
+            if (!outcome.success) {
+                refuseDocumentWithIssues(
+                    buildIssuesForZodError(outcome.error, value)
+                        .map((issue) => prefixIssuePath(issue, ['data', BuiltInPolicyType.REALM_MATCH])),
+                );
+            }
         }
 
         return next;
@@ -252,7 +283,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         },
         async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
             if (ctx.data?.has(BuiltInPolicyType.REALM_MATCH) || ctx.data?.has(BuiltInPolicyType.ATTRIBUTES)) {
-                throw new Error('Compile authorization without resource realm or row attributes.');
+                throw new InternalError('Compile authorization without resource realm or row attributes.');
             }
 
             return evaluator.compile({
