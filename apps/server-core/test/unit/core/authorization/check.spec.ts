@@ -66,14 +66,18 @@ const identity : IdentityPolicyData = {
 };
 
 /**
- * What `RequestPermissionEvaluator` does for a request: attach the identity.
- * Spelled out here so a spec can also model the credential that carries no
- * `global` scope, where the production wrapper attaches nothing.
+ * What `RequestPermissionEvaluator` does for a request, both halves: it asserts
+ * the identity the REQUEST was resolved as, and REMOVES the key when the
+ * caller's scopes withhold it. The removal is what a spec passing `undefined`
+ * models, and modelling only the attach would let this spec pass while the
+ * production wrapper answered a scope-restricted bearer as a fully-scoped one.
  */
 function decorateWith(value?: IdentityPolicyData) {
     return (evaluator: IPermissionEvaluator) : IPermissionEvaluator => {
         const extend = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
             if (!value) {
+                ctx.data?.delete(BuiltInPolicyType.IDENTITY);
+
                 return ctx;
             }
 

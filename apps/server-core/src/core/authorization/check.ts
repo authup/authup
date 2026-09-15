@@ -147,7 +147,20 @@ export async function buildAuthorizationCheck(
             try {
                 await evaluator.preEvaluate({
                     name,
-                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realm }),
+                    data: definePolicyData({
+                        // Every policy in the tree that reads the identity gets
+                        // it, not only the permission-binding child: an
+                        // `identity` or attribute-mode `realmMatch` policy bound
+                        // to a definition is evaluated here exactly as a request
+                        // evaluates it. `decorate` re-asserts the key from the
+                        // REQUEST, and removes it when the caller's scopes
+                        // withhold it, so this can widen nothing: it is the
+                        // identity the caller was resolved as or none at all.
+                        ...(request.identity ?
+                            { [BuiltInPolicyType.IDENTITY]: request.identity } :
+                            {}),
+                        [BuiltInPolicyType.REALM_MATCH]: realm,
+                    }),
                 });
 
                 held.push(realm);

@@ -806,6 +806,10 @@ export type ActorContext = {
 
 The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
 
+**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`).
+
+Note two routes still assemble an identity bag around a BARE `PermissionEvaluator` and so reach none of this: `POST /permissions/:id/check` and `POST /policies/:id/check` (`PermissionCheckerService` / the policy checker), which is why they answer a scope-restricted bearer as a fully-scoped one (#3604). Routing them through this wrapper is the fix, and with the symmetry above it needs no rule of its own.
+
 ```typescript
 // adapters/http/request/helpers/actor.ts
 export function buildActorContext(req: Request): ActorContext {
@@ -3398,11 +3402,24 @@ The definitions are therefore read ONCE through the same `findDefinitions` the c
 uses and served from a `PermissionMemoryProvider`, and the grant load is hoisted into one
 memoized closure behind the structural `getFor` the binding evaluator takes: two bulk
 reads plus one grant load, and the rest is in memory. Only GLOBAL definitions are
-evaluated, because that is what every gate in this process evaluates. The composed
-evaluator is wrapped in `RequestPermissionEvaluator` rather than having its PolicyData
-bag assembled by hand, which is what keeps the `global`-scope condition from being
-restated in a second place: a scope-restricted bearer would otherwise be answered a
-passing set every real request denies.
+evaluated, because that is what every gate in this process evaluates.
+
+**The bag carries everything the route actually knows**, so a policy anywhere in the tree
+decides on the same data a request would give it, not only the `permissionBinding` child:
+`PERMISSION_BINDING` (set by `PermissionEvaluator` from its own provider), `REALM_MATCH`
+(the realm of the pair being asked about) and `IDENTITY`. An `identity` policy, or an
+attribute-mode `realmMatch` one, is bound to a definition often enough that leaving the
+identity to the wrapper alone would have made this route the one place such a tree
+evaluated against less than a request does. The composed evaluator is STILL wrapped in
+`RequestPermissionEvaluator`, which re-asserts the key from the request and REMOVES it
+when the caller's scopes withhold it, so the explicit placement can widen nothing: what
+reaches the engine is the identity the caller was resolved as, or none.
+
+`ATTRIBUTES` and `ATTRIBUTE_NAMES` are the deliberate omissions, and the only ones: a
+pre-gate has no resource row and no projection, so there is nothing to put there.
+Fabricating one would WIDEN rather than inform, since a made-up row can satisfy a policy
+the real row fails. Absent, such a policy pends and permits, which is exactly the upper
+bound this answer is documented to be.
 
 `createAuthorizationCheckEvaluator({ result, identity })` (`@authup/access`, next to
 `createAuthorizationEvaluator`) is the consumer. It picks the realm class from
