@@ -3374,8 +3374,10 @@ quietly disappears. `realms` is `own`, `ownOrNull` (the default) or an explicit 
 identity; an explicit list is taken VERBATIM and echoed verbatim, so the server resolves
 no realm key, discloses no realm's existence, and the caller matches the answer against
 its own input with no resolution step. `any` is deliberately not offered: a caller that
-cares about another realm names it. Caps are 256 names and 8 realms, since the route is
-ungated and costs one policy-tree walk per pair.
+cares about another realm names it. Caps are 256 names and 4 realms: the route is ungated
+and each (name, realm) pair costs one synchronous policy-tree walk, and the realm count is
+the half a CALLER controls, since an unresolvable name is refused before any walk. Four
+covers the own realm, the global rows and two named ones.
 
 The answer is the bare array `AuthorizationCheckResult`
 (`{ name, realms }[]`, `@authup/access`), with no envelope and no `version` field
@@ -3412,11 +3414,11 @@ consumer has to as well), an array needs every member, and anything else denies.
 name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
 a name it does not hold.
 
-The kit reads it at `realms: 'ownOrNull'` when `loadCatalog` answers null, memoized and
-cleared by `cleanup()` exactly like the catalog. One visible behaviour change: a bare
-name is the union of the requested realms, so a `realmScope: none` grant stops passing,
-where a realm-less pre-gate neutral-passes reach and lets it enable a control it can
-never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
+The kit reads it at `realms: 'ownOrNull'` when `loadCatalog` answers null, memoized by the
+subject, scope and grants of the introspection it was fetched for (below). One visible
+behaviour change: a bare name is the union of the requested realms, so a
+`realmScope: none` grant stops passing, where a realm-less pre-gate neutral-passes reach
+and lets it enable a control it can never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
 rests on the permission universe being enumerable, and policy names are operator-created
 and unbounded, so a no-subset form there would have no defensible default.
 
@@ -3424,10 +3426,17 @@ The kit store memoizes ONE catalog per signed-in session: fetched on first use d
 staging and cleared by `cleanup()`, since the gate is per credential (a user without the
 permission family is refused where the next one is not), so a logout and a later login
 fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as null, which sends the store to `POST /authorization/check` (its own
-memo, keyed by SUBJECT rather than by credential, since that answer is per identity),
-and only a server answering 404 there too lands on the name-only view. Any other fetch
-failure rejects and clears the memo so the next resolve retries. During
+alike memoize as null, which sends the store to `POST /authorization/check`, and only a
+server answering 404 there too lands on the name-only view. **That answer has a memo of
+its own, keyed by the introspection's own authorization inputs** rather than by the
+credential: the subject, the token's `scope` and the grant list, compared by value. The
+catalog path recomputes from the grants each introspection reports, so a memo cleared
+only by `cleanup()` would be staler than the path it substitutes for, and a role bound or
+removed mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
+revalidates on every navigation, so that window is the whole document's life). Keyed on
+the inputs, it refetches exactly when they move and asks once when they do not; the
+comparison can only over-refetch, never reuse an answer whose inputs changed. Any other
+fetch failure rejects and clears the memo so the next resolve retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject

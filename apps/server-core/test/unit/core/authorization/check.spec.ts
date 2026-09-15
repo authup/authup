@@ -53,7 +53,7 @@ function definition(name: string, overrides: Record<string, any> = {}) : Permiss
             clientId: null, 
             ...overrides,
         },
-        [systemDefault as any],
+        [systemDefault],
     ];
 }
 
@@ -181,6 +181,54 @@ describe('core/authorization/check', () => {
         });
 
         expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
+    });
+
+    // The identity reaches the WHOLE tree, not only the permission-binding
+    // child: `decorate` sets the key once on the bag the evaluator passes down.
+    // This definition is bound to an identity policy ALONE, so it can only pass
+    // if that policy received the identity data, and the caller holds no grant
+    // at all, which rules out the binding evaluator answering for it.
+    it('supplies the identity to a non-binding policy in the tree', async () => {
+        const identityOnlyPolicy = {
+            id: 'policy-identity-only',
+            name: 'only-users',
+            realmId: null,
+            type: 'identity',
+            types: ['user'],
+        };
+
+        const identityOnly : PermissionPolicies = [
+            {
+                name: 'user_read',
+                realmId: null,
+                clientId: null,
+            },
+            [identityOnlyPolicy],
+        ];
+
+        const ctx = setup([identityOnly], []);
+
+        const held = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+        expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
+
+        // the same tree denies an identity the policy does not admit, which is
+        // the proof the policy is evaluating the data rather than ignoring it
+        const clientIdentity : IdentityPolicyData = {
+            type: 'client',
+            id: 'c641912c-21e5-4cb4-84b6-169e2b2bb002',
+            realmId: REALM_ID,
+            realmName: 'tenant',
+            clientId: 'c641912c-21e5-4cb4-84b6-169e2b2bb002',
+        };
+
+        const denied = await buildAuthorizationCheck(ctx, {
+            identity: clientIdentity,
+            decorate: decorateWith(clientIdentity),
+        });
+        expect(denied).toEqual([]);
     });
 
     it('answers nothing for a credential whose scopes withhold the identity', async () => {

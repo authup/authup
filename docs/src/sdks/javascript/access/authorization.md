@@ -269,7 +269,7 @@ members are optional:
   for the global rows every realm shares. A symbolic selector resolves against
   your own identity. An explicit list is taken and echoed verbatim, so the
   server resolves no realm key and you match the answer against your own input.
-  There is no `any`: name the realm you care about. At most 256 names and 8
+  There is no `any`: name the realm you care about. At most 256 names and 4
   realms per call.
 
 A permission that reaches none of the requested realms is **absent** from the

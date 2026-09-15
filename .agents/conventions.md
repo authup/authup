@@ -308,12 +308,13 @@ from the previous lock, never re-resolved.
 
 ## Response Versioning
 
-**A response never carries its own `version` field.** Versioning the API is an
-all-or-nothing decision taken once for the whole surface, as a path prefix
-(`/v1/...`), never per endpoint: a version on one response says nothing about
-the endpoint next door, and one that is always `1` is a promise nobody is
+**A response never carries a CONTRACT version of its own shape.** Versioning the
+API is an all-or-nothing decision taken once for the whole surface, as a path
+prefix (`/v1/...`), never per endpoint: a version on one response says nothing
+about the endpoint next door, and one that is always `1` is a promise nobody is
 keeping. If the API is ever versioned, every route moves together.
 
+Deployment metadata is a different thing that happens to share the name, so
 `GET /` and `GET /schemas` are not precedents. Both report the DEPLOYMENT's own
 release, read once from server-core's `package.json` by two byte-identical
 `resolveVersion` methods, so a cached document can be attributed to the

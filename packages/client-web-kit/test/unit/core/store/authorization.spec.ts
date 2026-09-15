@@ -325,7 +325,7 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
     });
 
-    it('memoizes the check per signed-in session, like the catalog', async () => {
+    it('reuses the check while the introspection reports the same grants', async () => {
         const { store, httpClient } = buildStore({
             'GET /authorization': () => {
                 throw createResponseError(403, 'Forbidden');
@@ -342,6 +342,62 @@ describe('core/store (authorization catalog)', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         expect(findRequests(httpClient, '/authorization/check')).toHaveLength(2);
+    });
+
+    // The answer BAKES the grants in server-side, where the catalog path
+    // recomputes from the ones each introspection reports, so a memo keyed by
+    // the subject alone would be staler than the path it substitutes for: a
+    // role bound or removed mid-session would keep gating on the verdicts the
+    // first fetch answered.
+    it('refetches the check when a revalidation reports different grants', async () => {
+        let grants = buildAuthorizationGrants();
+
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({ ...INTROSPECTION, permissions: grants }),
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+            'POST /authorization/check': () => (grants.length > 0 ?
+                buildAuthorizationCheck() :
+                []),
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
+
+        grants = [];
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(2);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+    });
+
+    // The server withholds the identity from a bearer holding no `global`
+    // scope, so such a token is answered a denying set: the scope is part of
+    // what the answer was computed for, not only of who asked.
+    it('refetches the check when the token scope changes', async () => {
+        let scope = 'global openid';
+
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({ ...INTROSPECTION, scope }),
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+            'POST /authorization/check': () => (scope.includes('global') ?
+                buildAuthorizationCheck() :
+                []),
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
+
+        scope = 'openid';
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(2);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
     });
 
     it('asks for the catalog again for the next signed-in session after a 403', async () => {

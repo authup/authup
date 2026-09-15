@@ -330,20 +330,24 @@ export function createStore(context: StoreCreateContext) {
     // so it can obtain no `client_credentials` token and has no credential of
     // its own for the catalog's gate.
     //
-    // Unlike the catalog it is per IDENTITY, so cleanup() alone is not enough
-    // to key it: a revalidation whose introspection names a different subject
-    // does not clean up (it is an active credential), and the two consoles
-    // share one cookie session on one origin, so signing in as someone else in
-    // another tab would otherwise gate this one on the previous subject's
-    // verdicts. The subject is therefore part of the memo, the way the
-    // permission-check hydration key carries the actor.
+    // Unlike the catalog it is per IDENTITY and per GRANT SET, so cleanup()
+    // alone cannot key it. A revalidation never cleans up (the credential is
+    // active), and it carries a fresh introspection, so both halves of that
+    // key can move under a memo that only cleanup() clears: the subject, since
+    // the two consoles share one cookie session on one origin and signing in
+    // as someone else in another tab would gate this one on the previous
+    // subject's verdicts; and the grants, since the answer BAKES THEM IN
+    // server-side where the catalog path recomputes from the grants each
+    // introspection reports. Keyed on both, this memo is exactly as stale as
+    // that path: fresh whenever the introspection's own authorization inputs
+    // move, reused when they do not, so an unchanged session still asks once.
     let checkPromise : Promise<AuthorizationCheckResult | null> | undefined;
-    let checkSubject : string | undefined;
+    let checkKey : string | undefined;
 
     const reloadCatalog = () => {
         catalogPromise = undefined;
         checkPromise = undefined;
-        checkSubject = undefined;
+        checkKey = undefined;
     };
 
     // --------------------------------------------------------------------
@@ -503,23 +507,45 @@ export function createStore(context: StoreCreateContext) {
         }
     };
 
-    const loadCheck = (subject: string, token?: string) : Promise<AuthorizationCheckResult | null> => {
-        if (!checkPromise || checkSubject !== subject) {
+    const loadCheck = (key: string, token?: string) : Promise<AuthorizationCheckResult | null> => {
+        if (!checkPromise || checkKey !== key) {
             const promise = fetchCheck(token).catch((e) => {
                 if (checkPromise === promise) {
                     checkPromise = undefined;
-                    checkSubject = undefined;
+                    checkKey = undefined;
                 }
 
                 throw e;
             });
 
             checkPromise = promise;
-            checkSubject = subject;
+            checkKey = key;
         }
 
         return checkPromise;
     };
+
+    /**
+     * What the memoized answer depends on and the introspection can tell us
+     * about: the subject it is derived for, the token's scope (the server
+     * withholds the identity from a bearer holding no `global` scope, so a
+     * scope-restricted one is answered a denying set) and the grant list the
+     * answer was computed over. The grants are compared by value rather than
+     * by count or identity, so a changed `realmScope` or junction policy is a
+     * different key; the comparison can only ever over-refetch (a server
+     * reordering rows spends one request), never reuse an answer whose inputs
+     * moved.
+     */
+    const buildCheckKey = (
+        introspection: OAuth2TokenIntrospectionResponse,
+        identity: IdentityPolicyData,
+    ) : string => JSON.stringify([
+        identity.id,
+        identity.type,
+        identity.realmId ?? null,
+        introspection.scope ?? null,
+        introspection.permissions ?? [],
+    ]);
 
     const buildIdentity = (
         introspection: OAuth2TokenIntrospectionResponse,
@@ -582,7 +608,7 @@ export function createStore(context: StoreCreateContext) {
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
-            const result = await loadCheck(identity.id, token);
+            const result = await loadCheck(buildCheckKey(introspection, identity), token);
             if (!result) {
                 return null;
             }
