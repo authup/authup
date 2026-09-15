@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RequestBaseOptions } from 'hapic';
-import { stringifyAuthorizationHeader } from 'hapic';
 import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildAuthorizationHeaderRequestConfig } from '../../utils';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAuthenticatorAPI,
@@ -76,7 +75,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
 
         const response = await this.client.get(
             url,
-            buildUserAuthenticatorChallengeRequestConfig(options),
+            buildAuthorizationHeaderRequestConfig(options),
         );
         return response.data;
     }
@@ -88,7 +87,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge/send',
             data,
-            buildUserAuthenticatorChallengeRequestConfig(options),
+            buildAuthorizationHeaderRequestConfig(options),
         );
         return response.data;
     }
@@ -100,24 +99,8 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge',
             data,
-            buildUserAuthenticatorChallengeRequestConfig(options),
+            buildAuthorizationHeaderRequestConfig(options),
         );
         return response.data;
     }
-}
-
-function buildUserAuthenticatorChallengeRequestConfig(
-    options?: UserAuthenticatorChallengeRequestOptions,
-) : RequestBaseOptions | undefined {
-    if (!options || !options.authorizationHeader) {
-        return undefined;
-    }
-
-    return {
-        headers: {
-            Authorization: typeof options.authorizationHeader === 'string' ?
-                options.authorizationHeader :
-                stringifyAuthorizationHeader(options.authorizationHeader),
-        },
-    };
 }

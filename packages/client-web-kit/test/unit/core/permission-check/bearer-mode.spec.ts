@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionEvaluationContext } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, defineStore } from 'pinia';
@@ -14,6 +16,12 @@ import { defineComponent, h } from 'vue';
 import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
 import type { Store } from '../../../../src/core/store';
 import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import {
+    AUTHORIZATION_REALM,
+    AUTHORIZATION_SUBJECT,
+    buildAuthorizationCatalog,
+    buildAuthorizationGrants,
+} from '../../../utils/authorization';
 
 /**
  * The other half of the loggedIn -> status swap: a bearer-mode login must
@@ -33,13 +41,14 @@ describe('core/permission-check (bearer mode)', () => {
                 }),
                 'POST /token/introspect': () => ({
                     active: true,
-                    sub: 'user-1',
+                    sub: AUTHORIZATION_SUBJECT,
                     sub_kind: 'user',
                     name: 'admin',
-                    realm_id: 'realm-1',
+                    realm_id: AUTHORIZATION_REALM,
                     realm_name: 'master',
-                    permissions: [{ name: 'user_read' }],
+                    permissions: buildAuthorizationGrants(),
                 }),
+                'GET /authorization': () => buildAuthorizationCatalog(),
                 'POST /token/revoke': () => ({}),
             },
         });
@@ -50,6 +59,23 @@ describe('core/permission-check (bearer mode)', () => {
         }));
 
         return storeFactory(pinia);
+    }
+
+    async function runCheck(store: Store, ctx: PermissionEvaluationContext) : Promise<Ref<boolean>> {
+        let outcome!: Ref<boolean>;
+
+        mount(defineComponent({
+            setup() {
+                const checker = createPermissionCheckerReactiveFn({ store });
+                outcome = checker(ctx);
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+
+        return outcome;
     }
 
     it('should re-evaluate on login and fail closed again on logout', async () => {
@@ -79,5 +105,24 @@ describe('core/permission-check (bearer mode)', () => {
 
         expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(outcome.value).toBe(false);
+    });
+
+    it('settles reach per row when the check carries the row realm', async () => {
+        const store = buildStore();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        const own = await runCheck(store, {
+            name: 'user_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: AUTHORIZATION_REALM }),
+        });
+        const foreign = await runCheck(store, {
+            name: 'user_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 'realm-2' }),
+        });
+        const unknown = await runCheck(store, { name: 'user_read' });
+
+        expect(own.value).toBe(true);
+        expect(foreign.value).toBe(false);
+        expect(unknown.value).toBe(true);
     });
 });

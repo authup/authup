@@ -9,6 +9,7 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandler, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import { StoreDispatcherEventName, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { buildAuthorizationCatalog } from '../../../utils/authorization';
 
 const GRANT_RESPONSE = {
     access_token: 'at-1',
@@ -50,6 +51,7 @@ function buildStore(handlers: Record<string, FakeHandler> = {}) {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE }),
             'GET /userinfo': () => ({ ...USER_RESPONSE }),
+            'GET /authorization': () => buildAuthorizationCatalog(),
             'POST /token/revoke': () => ({}),
             ...handlers,
         },

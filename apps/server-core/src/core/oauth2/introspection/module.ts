@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePolicy } from '@authup/access';
-import { aggregatePermissionPolicyBindings, buildPermissionKey } from '@authup/access';
-import { DecisionStrategy } from '@authup/kit';
-import type { OAuth2Authorization, OAuth2AuthorizationPolicy, OAuth2TokenPermission } from '@authup/specs';
+import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } from '@authup/access';
+import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
+import { readPolicyId } from '../../authorization/module.ts';
 import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import type {
@@ -20,12 +19,28 @@ import type {
 
 /**
  * The subject half of an introspection answer: resolve the identity, build its
- * OpenID claims and, only for an active credential, project its permissions.
+ * OpenID claims and, only for an active credential, project its grants.
  *
  * One owner for that projection, so a second consumer (the console session
  * endpoint, plan 088) cannot drift from `POST /token/introspect`. The token
  * half (verification, the `active` derivation, the RFC 7662 reporting rules)
  * stays in the controller, which also owns the response spread order.
+ *
+ * `permissions` is the identity's GRANT list, one entry per junction row in
+ * the order the provider returns them: the namespace, the grant's own realm
+ * reach and the ids of its junction policy trees, which pair with the catalog
+ * `GET /authorization` serves. A grant whose junction tree that catalog cannot
+ * carry (no id, or a tree its projection refuses) is dropped with a warning:
+ * the server itself fails such a grant closed, and naming it would read as a
+ * stale catalog to every consumer.
+ *
+ * The projection runs over the RESOLVED identity, exactly as a request does
+ * (`toIdentityPolicyData`), never over the client a token was issued to: the
+ * provider narrows a user's grants to the identity's own `clientId`, and a
+ * provisioned permission is global, so scoping it to the token's client
+ * dropped every direct `auth_user_permissions` grant from any token carrying
+ * one. Both endpoints therefore report what the server's own evaluator
+ * resolves for that subject.
  *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
@@ -49,86 +64,36 @@ export async function resolveIntrospectionSubject(
         };
     }
 
-    // todo: only receive client specific permissions
-    const permissions = await ctx.identityPermissionProvider.getFor({
-        id: input.sub,
-        type: input.subKind,
-        clientId: input.clientId,
-        realmId: input.realmId,
-    });
+    const bindings = await ctx.identityPermissionProvider.getFor(toIdentityPolicyData(identity)!);
 
-    const actor = toIdentityPolicyData(identity)!;
-    const authorizationBindings = (input.clientId ?? null) === (actor.clientId ?? null) ?
-        permissions : await ctx.identityPermissionProvider.getFor(actor);
-    const authorization: OAuth2Authorization = {
-        version: 1,
-        identity: {
-            id: actor.id,
-            type: identity.type,
-            realm_id: actor.realmId ?? null,
-            realm_name: actor.realmName ?? null,
-            client_id: actor.clientId ?? null,
-        },
-        permissions: [],
-    };
-    for (const binding of aggregatePermissionPolicyBindings(authorizationBindings)) {
-        const key = {
-            name: binding.permission.name,
-            clientId: binding.permission.clientId ?? null,
-            realmId: binding.permission.realmId ?? null,
-        };
-        const definition = await ctx.permissionProvider.findOne(key);
-        if (!definition || definition.grants.length === 0) {
+    const permissions : OAuth2TokenPermission[] = [];
+    for (const binding of bindings) {
+        const policies : string[] = [];
+        try {
+            for (const policy of binding.policies ?? []) {
+                policies.push(readPolicyId(policy));
+                await projectAuthorizationPolicy(policy);
+            }
+        } catch (e) {
+            ctx.logger?.warn(
+                `Dropped a grant of permission ${buildPermissionKey(binding.permission)} from the introspection: ` +
+                `${e instanceof Error ? e.message : String(e)}`,
+            );
             continue;
         }
-        const policies = definition.grants.map((grant) => serializePolicy(grant.policy));
-        let policy: OAuth2AuthorizationPolicy | null = null;
-        if (!policies.includes(null)) {
-            policy = policies.length === 1 ? policies[0]! : {
-                type: 'composite',
-                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
-                children: policies.filter((item): item is OAuth2AuthorizationPolicy => item !== null),
-            };
-        }
-        authorization.permissions.push({
-            name: key.name,
-            client_id: key.clientId,
-            realm_id: key.realmId,
-            policy,
-            grants: binding.grants.map((grant) => ({
-                realm_scope: grant.realmScope,
-                policy: serializePolicy(grant.policy),
-            })),
+
+        permissions.push({
+            name: binding.permission.name,
+            realm_id: binding.permission.realmId ?? null,
+            client_id: binding.permission.clientId ?? null,
+            realm_scope: normalizeRealmScope(binding.realmScope),
+            policies,
         });
     }
 
     return {
         identity,
         claims,
-        authorization,
-        // todo: permissions property should be removed.
-        permissions: Object.values(
-            permissions.reduce((acc, binding) => {
-                const key = buildPermissionKey(binding.permission);
-                if (!acc[key]) {
-                    acc[key] = {
-                        name: binding.permission.name,
-                        client_id: binding.permission.clientId,
-                        realm_id: binding.permission.realmId,
-                    } as OAuth2TokenPermission;
-                }
-                return acc;
-            }, {} as Record<string, OAuth2TokenPermission>),
-        ),
+        permissions,
     };
-}
-
-function serializePolicy(policy: BasePolicy | undefined): OAuth2AuthorizationPolicy | null {
-    if (!policy) {
-        return null;
-    }
-    if (!policy.type) {
-        throw new Error('An authorization policy must declare its type.');
-    }
-    return { ...policy, type: policy.type };
 }

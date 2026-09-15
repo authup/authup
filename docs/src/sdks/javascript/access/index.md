@@ -10,4 +10,4 @@ Add the package as a dependency to the project.
 npm install @authup/access --save
 ```
 
-For resource-server enforcement, see [Authorize resources from introspection](./authorization.md).
+For resource-server enforcement, see [Authorize resources with the authorization catalog](./authorization.md).

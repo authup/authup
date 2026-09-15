@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionProvider } from '@authup/access';
 import type { Identity, IdentityType } from '@authup/core-kit';
-import type { OAuth2Authorization, OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
+import type { Logger } from '@authup/server-kit';
+import type { OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 
 export type OAuth2IntrospectionSubjectContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
-    permissionProvider: IPermissionProvider,
+    logger?: Logger,
 };
 
 export type OAuth2IntrospectionSubjectInput = {
@@ -26,17 +26,6 @@ export type OAuth2IntrospectionSubjectInput = {
      * Subject kind (user, client).
      */
     subKind: `${IdentityType}`,
-    /**
-     * The client the projection is scoped to. For a token this is the
-     * payload's `client_id`; for the console session endpoint it is the
-     * console's own client id, never `RequestIdentity.clientId` (which for a
-     * user identity is the user row's own unrelated column).
-     */
-    clientId?: string | null,
-    /**
-     * The realm the projection is scoped to.
-     */
-    realmId?: string | null,
     /**
      * Whether the credential the projection describes is usable. Permissions
      * are resolved ONLY when it is: an inactive credential reports who it
@@ -53,5 +42,4 @@ export type OAuth2IntrospectionSubject = {
      * Present only for an `active` input.
      */
     permissions?: OAuth2TokenPermission[],
-    authorization?: OAuth2Authorization,
 };

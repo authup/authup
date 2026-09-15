@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionProvider } from '@authup/access';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
@@ -85,8 +84,6 @@ export class TokenController {
 
     protected identityPermissionProvider : IIdentityPermissionProvider;
 
-    protected permissionProvider: IPermissionProvider;
-
     protected metrics? : IAuthFlowMetrics;
 
     protected clientAuthenticator : OAuth2ClientAuthenticator;
@@ -106,7 +103,6 @@ export class TokenController {
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
-        this.permissionProvider = ctx.permissionProvider;
         this.metrics = ctx.metrics;
         this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
         this.certificateSource = ctx.certificateSource;
@@ -253,12 +249,10 @@ export class TokenController {
             const subject = await resolveIntrospectionSubject({
                 identityResolver: this.identityResolver,
                 identityPermissionProvider: this.identityPermissionProvider,
-                permissionProvider: this.permissionProvider,
+                logger: this.logger,
             }, {
                 sub: payload.sub,
                 subKind: payload.sub_kind,
-                clientId: payload.client_id,
-                realmId: payload.realm_id,
                 active,
             });
 
@@ -269,7 +263,6 @@ export class TokenController {
                     active,
                 };
                 delete response.permissions;
-                delete response.authorization;
                 return response;
             }
 
@@ -278,7 +271,6 @@ export class TokenController {
                 ...subject.claims,
                 active,
                 permissions: subject.permissions,
-                authorization: subject.authorization,
             };
         } catch (e) {
             // RFC 7662 §2.2: a token that "is not active, does not exist on

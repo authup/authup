@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionProvider } from '@authup/access';
 import {
     DContext,
     DController,
@@ -15,6 +14,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { Session } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse, EntityRecordResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
@@ -51,8 +51,8 @@ export type SessionControllerContext = {
     baseURL?: string,
     identityResolver?: IIdentityResolver,
     identityPermissionProvider?: IIdentityPermissionProvider,
-    permissionProvider?: IPermissionProvider,
     sessionRepository?: ISessionRepository,
+    logger?: Logger,
     service: ISessionService,
 };
 
@@ -67,17 +67,17 @@ export class SessionController {
 
     protected identityPermissionProvider?: IIdentityPermissionProvider;
 
-    protected permissionProvider?: IPermissionProvider;
-
     protected sessionRepository?: ISessionRepository;
+
+    protected logger?: Logger;
 
     constructor(ctx: SessionControllerContext) {
         this.service = ctx.service;
         this.baseURL = ctx.baseURL;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
-        this.permissionProvider = ctx.permissionProvider;
         this.sessionRepository = ctx.sessionRepository;
+        this.logger = ctx.logger;
     }
 
     /**
@@ -91,12 +91,12 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * No client scope on the permission read, deliberately.
+     * No client scope on the permission read, deliberately, and there is no
+     * parameter left to supply one: `resolveIntrospectionSubject` projects the
+     * RESOLVED identity, the derivation the request path uses.
      * `reduceBindingsByIdentityClient` keeps only permissions whose own
-     * `clientId` matches the one passed, so naming a console's client would
-     * drop every global permission — nearly all of them. The bearer path passes
-     * the token's `client_id` because a token IS issued to one client; a
-     * session is not.
+     * `clientId` matches the identity's, so any caller-chosen value drops
+     * every global permission, which is nearly all of them.
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
@@ -116,8 +116,7 @@ export class SessionController {
             !sessionId ||
             identity.type !== IdentityType.USER ||
             !this.identityResolver ||
-            !this.identityPermissionProvider ||
-            !this.permissionProvider
+            !this.identityPermissionProvider
         ) {
             return { active: false };
         }
@@ -131,19 +130,17 @@ export class SessionController {
         const subject = await resolveIntrospectionSubject({
             identityResolver: this.identityResolver,
             identityPermissionProvider: this.identityPermissionProvider,
-            permissionProvider: this.permissionProvider,
+            logger: this.logger,
         }, {
             sub: identity.id,
             subKind: identity.type,
-            realmId: identity.realmId,
             active: true,
         });
 
         return {
             active: true,
-            // todo: permissions property should be removed.
+            // the identity's grant list, paired with the catalog GET /authorization serves
             permissions: subject.permissions,
-            authorization: subject.authorization,
             sub: identity.id,
             sub_kind: OAuth2SubKind.USER,
             session_id: session.id,

@@ -14,6 +14,7 @@ import { createApp, h } from 'vue';
 import { installHTTPClient, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client';
 import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store';
 import type { CookieOptions } from '../../../../src/types';
+import { buildAuthorizationCatalog } from '../../../utils/authorization';
 
 const SESSION_RESPONSE = {
     active: true,
@@ -52,6 +53,7 @@ function buildApp(options: {
     const httpClient = createFakeClient({
         handlers: {
             'GET /sessions/@me/introspect': () => ({ ...SESSION_RESPONSE }),
+            'GET /authorization': () => buildAuthorizationCatalog(),
             'DELETE /sessions/@me': () => null,
             'POST /token/revoke': () => ({}),
             ...options.handlers,

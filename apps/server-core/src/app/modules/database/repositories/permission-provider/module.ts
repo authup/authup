@@ -16,16 +16,27 @@ import {
     buildPermissionKey,
 } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
-import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import type {
+    DataSource,
+    EntityTarget,
+    FindOptionsWhere,
+    ObjectLiteral,
+    Repository,
+} from 'typeorm';
 import { IsNull } from 'typeorm';
+import type { IAuthorizationCatalogRepository, PermissionPolicies } from '../../../../../core/authorization/types.ts';
 import {
     CachePrefix,
+    ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyRepository,
+    RolePermissionEntity,
+    UserPermissionEntity,
 } from '../../../../../adapters/database/domains/index.ts';
+import { loadPolicyTrees } from '../bindings.ts';
 
-export class PermissionDatabaseProvider implements IPermissionProvider {
+export class PermissionDatabaseProvider implements IPermissionProvider, IAuthorizationCatalogRepository {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
@@ -94,5 +105,55 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
         }
 
         return null;
+    }
+
+    async findDefinitions() : Promise<PermissionPolicies[]> {
+        const entities = await this.repository.find();
+        if (entities.length === 0) {
+            return [];
+        }
+
+        const junctions = await this.permissionPolicyRepository.find();
+        const trees = await loadPolicyTrees(
+            this.dataSource.manager,
+            [...new Set(junctions.map((junction) => junction.policyId))],
+        );
+
+        return entities.map((entity) => [
+            {
+                name: entity.name,
+                realmId: entity.realmId ?? null,
+                clientId: entity.clientId ?? null,
+                decisionStrategy: entity.decisionStrategy ?? null,
+            },
+            junctions
+                .filter((junction) => junction.permissionId === entity.id)
+                .map((junction) => trees[junction.policyId])
+                .filter((tree) : tree is BasePolicy => !!tree),
+        ]);
+    }
+
+    async findGrantPolicies() : Promise<BasePolicy[]> {
+        const ids = new Set<string>();
+        for (const target of [RolePermissionEntity, UserPermissionEntity, ClientPermissionEntity]) {
+            for (const id of await this.readGrantPolicyIds(target)) {
+                ids.add(id);
+            }
+        }
+
+        const trees = await loadPolicyTrees(this.dataSource.manager, [...ids]);
+
+        return Object.values(trees);
+    }
+
+    protected async readGrantPolicyIds<E extends ObjectLiteral>(target: EntityTarget<E>) : Promise<string[]> {
+        const rows : { policyId: string }[] = await this.dataSource.getRepository(target)
+            .createQueryBuilder('junction')
+            .select('junction.policyId', 'policyId')
+            .distinct(true)
+            .where('junction.policyId IS NOT NULL')
+            .getRawMany();
+
+        return rows.map((row) => row.policyId);
     }
 }

@@ -10,6 +10,7 @@ import { buildURL } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     AccountAPI,
+    AuthorizationAPI,
     ClientAPI,
     ClientPermissionAPI,
     ClientRoleAPI,
@@ -48,6 +49,8 @@ import type { ClientOptions, IClient } from './type';
 
 export class Client extends BaseClient implements IClient {
     public readonly account : AccountAPI;
+
+    public readonly authorization : AuthorizationAPI;
 
     public readonly token : OAuth2TokenAPI;
 
@@ -145,6 +148,7 @@ export class Client extends BaseClient implements IClient {
         });
 
         this.account = new AccountAPI({ client: this });
+        this.authorization = new AuthorizationAPI({ client: this });
 
         this.client = new ClientAPI({ client: this });
         this.clientPermission = new ClientPermissionAPI({ client: this });

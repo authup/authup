@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    PermissionEvaluator,
-    PermissionMemoryProvider,
-    PolicyEngine,
-} from '@authup/access';
+import type { AuthorizationCatalog, IPermissionEvaluator, IdentityPolicyData } from '@authup/access';
+import { createAuthorizationEvaluator, isAuthorizationCatalogStaleError } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -22,6 +19,7 @@ import { Client } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
+import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator';
 import type {
     RealmMinimal,
     StoreCreateContext,
@@ -244,11 +242,7 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const permissionProvider = new PermissionMemoryProvider();
-    const permissionEvaluator = new PermissionEvaluator({
-        provider: permissionProvider,
-        policyEngine: new PolicyEngine(),
-    });
+    const permissionEvaluator = new StorePermissionEvaluator();
 
     // --------------------------------------------------------------------
 
@@ -316,6 +310,15 @@ export function createStore(context: StoreCreateContext) {
     // (failure keeps routing into the navigation guards' catch).
     const resolutionStale = ref(false);
 
+    // The memoized catalog `GET /authorization` serves. Identity-free, but
+    // gated per credential (a 403 memoizes as the name-only fallback), so
+    // cleanup() clears it and each signed-in session fetches it once.
+    let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
+
+    const reloadCatalog = () => {
+        catalogPromise = undefined;
+    };
+
     // --------------------------------------------------------------------
 
     // Returns the generation it bumped to: a caller staging a session MUST use
@@ -340,7 +343,8 @@ export function createStore(context: StoreCreateContext) {
 
         lastAuthOrigin.value = null;
 
-        permissionProvider.setMany([]);
+        permissionEvaluator.reset();
+        reloadCatalog();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -404,6 +408,150 @@ export function createStore(context: StoreCreateContext) {
         return response;
     };
 
+    const fetchCatalog = async (token?: string) : Promise<AuthorizationCatalog | null> => {
+        try {
+            return await client.authorization.get(token ?
+                { authorizationHeader: { type: 'Bearer', token } } :
+                undefined);
+        } catch (e) {
+            const { status } = extractErrorContext(e);
+            if (status === 403 || status === 404) {
+                return null;
+            }
+
+            throw e;
+        }
+    };
+
+    /**
+     * The catalog `GET /authorization` serves, memoized per signed-in
+     * session, which is per credential: what it carries is what that
+     * credential's own realm reach covers. A `404` (a server predating the
+     * route) and a `403` (a credential holding none of the permission family
+     * the catalog is gated on, or whose reach covers no definition) memoize
+     * as null: the catalog only sharpens advisory UI gating, so the name-only
+     * view stays the fallback there, where a resource server must fail
+     * closed. Any other failure rejects and clears the memo, so the next
+     * resolve retries.
+     */
+    const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
+        if (!catalogPromise) {
+            const promise = fetchCatalog(token).catch((e) => {
+                if (catalogPromise === promise) {
+                    reloadCatalog();
+                }
+
+                throw e;
+            });
+
+            catalogPromise = promise;
+        }
+
+        return catalogPromise;
+    };
+
+    const buildIdentity = (
+        introspection: OAuth2TokenIntrospectionResponse,
+    ) : IdentityPolicyData => {
+        if (
+            !introspection.sub ||
+            (
+                introspection.sub_kind !== OAuth2SubKind.USER &&
+                introspection.sub_kind !== OAuth2SubKind.CLIENT
+            )
+        ) {
+            throw new OAuth2Error('The introspection names no subject.');
+        }
+
+        return {
+            id: introspection.sub,
+            type: introspection.sub_kind,
+            realmId: introspection.realm_id ?? undefined,
+            realmName: introspection.realm_name ?? undefined,
+            // A client subject IS its own client, the way `toIdentityPolicyData`
+            // resolves it server-side; a user is never one, since no user row
+            // carries a client. Deliberately NOT the response's `client_id`
+            // claim, which is the client the TOKEN was issued to: reading it
+            // would tell an identity policy that every console user is the
+            // console's own client, and on the server the same mistake made
+            // the grant narrowing drop every global permission.
+            clientId: introspection.sub_kind === OAuth2SubKind.CLIENT ?
+                introspection.sub :
+                null,
+        };
+    };
+
+    /**
+     * The session's evaluator, staged like the introspection and committed
+     * with it: the cached catalog plus the identity and the grants the
+     * introspection itself carries. A grant naming a definition or a policy
+     * the cached catalog lacks means the catalog predates the definition or
+     * the junction row, so it is refetched once and the build retried. Only
+     * the copy just found stale is discarded: a concurrent build may have
+     * stored a fresh one in the meantime. A definition the server could not
+     * project travels with `policies: null` and the consumer denies it
+     * without a refetch.
+     *
+     * A build that still fails commits a DENY-ALL evaluator and never
+     * rejects: the credential is valid, only the authorization data is not,
+     * and a rejection here reverts the staged session, revokes its grant and
+     * reaches the console guards as a logout. That covers a second stale
+     * answer (the grant list has a query cache in front of it while the
+     * catalog does not, so a deleted or renamed permission makes the two
+     * disagree for as long as that cache lives) and a catalog this copy
+     * cannot build from at all. A failure to FETCH the catalog still
+     * rejects: nothing is known about it, and the next resolve retries.
+     */
+    const buildAuthorization = async (
+        introspection: OAuth2TokenIntrospectionResponse,
+        token?: string,
+    ) : Promise<IPermissionEvaluator | null> => {
+        const promise = loadCatalog(token);
+        const catalog = await promise;
+        if (!catalog) {
+            return null;
+        }
+
+        const identity = buildIdentity(introspection);
+        const grants = introspection.permissions ?? [];
+
+        try {
+            return await createAuthorizationEvaluator({
+                catalog,
+                grants,
+                identity,
+            });
+        } catch (e) {
+            if (!isAuthorizationCatalogStaleError(e)) {
+                return createDenyAllPermissionEvaluator();
+            }
+        }
+
+        if (catalogPromise === promise) {
+            reloadCatalog();
+        }
+
+        const reloadedPromise = loadCatalog(token);
+        const reloaded = await reloadedPromise;
+        if (!reloaded) {
+            return null;
+        }
+
+        try {
+            return await createAuthorizationEvaluator({
+                catalog: reloaded,
+                grants,
+                identity,
+            });
+        } catch (e) {
+            if (catalogPromise === reloadedPromise && isAuthorizationCatalogStaleError(e)) {
+                reloadCatalog();
+            }
+
+            return createDenyAllPermissionEvaluator();
+        }
+    };
+
     /**
      * The introspected token's subject, built from the response itself: the
      * introspection endpoint resolves the identity server-side and answers
@@ -448,6 +596,8 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
+        // the catalog-backed evaluator, or null for the name-only fallback
+        authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -535,14 +685,10 @@ export function createStore(context: StoreCreateContext) {
             setUser(subject);
         }
 
-        if (ctx.introspection.permissions) {
-            permissionProvider.setMany(ctx.introspection.permissions.map((permission) => ({
-                permission: {
-                    name: permission.name,
-                    realmId: permission.realm_id,
-                    clientId: permission.client_id,
-                },
-            })));
+        if (ctx.authorization) {
+            permissionEvaluator.setEvaluator(ctx.authorization);
+        } else {
+            permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);
         }
 
         validated.value = true;
@@ -665,11 +811,13 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
+        const authorization = await buildAuthorization(introspection, token);
 
         commitSession({
             generation,
             token,
             introspection,
+            authorization,
         });
     };
 
@@ -716,10 +864,13 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
+        const authorization = await buildAuthorization(introspection);
+
         commitSession({
             generation,
             tokenless: true,
             introspection,
+            authorization,
         });
     };
 
@@ -802,12 +953,14 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
+            const authorization = await buildAuthorization(introspection, response.access_token);
 
             committed = commitSession({
                 generation,
                 token: response.access_token,
                 grant: response,
                 introspection,
+                authorization,
                 origin,
             });
         } finally {

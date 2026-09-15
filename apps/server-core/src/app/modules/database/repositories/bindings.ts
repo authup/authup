@@ -72,7 +72,7 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
     });
 }
 
-async function loadPolicyTrees(
+export async function loadPolicyTrees(
     manager: EntityManager,
     policyIds: string[],
 ): Promise<Record<string, BasePolicy>> {

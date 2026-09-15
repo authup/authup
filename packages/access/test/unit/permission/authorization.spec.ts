@@ -7,8 +7,11 @@
 
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
+import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
+import type { AuthorizationEvaluatorInput, IdentityPolicyData } from '../../../src';
 import {
+    AuthorizationCatalogStaleError,
     BuiltInPolicyType,
     PolicyData,
     createAuthorizationEvaluator,
@@ -19,31 +22,84 @@ const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';
 const clientA = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
 const clientB = 'c641912c-21e5-4cb4-84b6-169e2b2bb026';
 type Policy = { type: string, [key: string]: unknown };
-type Grant = { realm_scope: string, policy: Policy | null };
+type Definition = {
+    name: string,
+    realm_id: string | null,
+    client_id: string | null,
+    decision_strategy: string | null,
+    policies: string[] | null,
+};
+type Grant = {
+    name?: string,
+    realm_id?: string | null,
+    client_id?: string | null,
+    realm_scope?: string | null,
+    policies?: string[] | null,
+};
 
-function snapshot(grants: Grant[], policy: Policy | null = { type: 'permissionBinding' }) {
+async function issuesOf(fn: () => Promise<unknown>) {
+    try {
+        await fn();
+    } catch (e) {
+        if (isValidupError(e)) {
+            return e.issues;
+        }
+
+        throw e;
+    }
+
+    throw new Error('Expected the input to be refused.');
+}
+
+const identity : IdentityPolicyData = {
+    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
+    type: 'user',
+    realmId: realmA,
+    realmName: 'master',
+    clientId: null,
+};
+
+function definition(policies: string[] | null = ['binding'], overrides: Partial<Definition> = {}) : Definition {
     return {
-        active: true,
-        kind: 'access_token',
-        scope: 'global',
-        authorization: {
-            version: 1,
-            identity: {
-                id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
-                type: 'user',
-                realm_id: realmA,
-                realm_name: 'master' as string | null,
-                client_id: null,
-            },
-            permissions: [{
-                name: 'event_read',
-                realm_id: null as string | null,
-                client_id: null as string | null,
-                policy,
-                grants,
-            }],
-        },
+        name: 'event_read',
+        realm_id: null,
+        client_id: null,
+        decision_strategy: null,
+        policies,
+        ...overrides,
     };
+}
+
+function catalog(
+    definitions: string[] | Definition[] = ['binding'],
+    policies: Record<string, Policy> = { binding: { type: 'permissionBinding' } },
+) {
+    const permissions : Definition[] = definitions.every((entry) => typeof entry === 'string') ?
+        [definition(definitions as string[])] :
+        definitions as Definition[];
+
+    return {
+        policies,
+        permissions,
+    };
+}
+
+function grants(...entries: Grant[]) {
+    return entries.map((entry) => ({
+        name: 'event_read',
+        realm_id: null,
+        client_id: null,
+        ...entry,
+    }));
+}
+
+function build(input: Partial<AuthorizationEvaluatorInput>) {
+    return createAuthorizationEvaluator({
+        catalog: catalog(),
+        grants: grants({ realm_scope: 'any', policies: [] }),
+        identity,
+        ...input,
+    });
 }
 
 function resource(realmId: string | null, visible = false) {
@@ -62,14 +118,14 @@ async function allowed(evaluator: Awaited<ReturnType<typeof createAuthorizationE
     }
 }
 
-describe('introspection authorization consumer', () => {
+describe('authorization catalog consumer', () => {
     it.each([
         ['none', [false, false, false]],
         ['own', [true, false, false]],
         ['ownOrNull', [true, false, true]],
         ['any', [true, true, true]],
     ] as const)('enforces %s for own, foreign and null realms, even in master', async (realmScope, expected) => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([{ realm_scope: realmScope, policy: null }]));
+        const evaluator = await build({ grants: grants({ realm_scope: realmScope, policies: [] }) });
         const rows = [realmA, realmB, null].map((realmId) => ({ realmId }));
         expect(await Promise.all(rows.map((row) => allowed(evaluator, resource(row.realmId))))).toEqual(expected);
         const compiled = await evaluator.compile({ name: 'event_read' });
@@ -81,10 +137,16 @@ describe('introspection authorization consumer', () => {
     });
 
     it('keeps each reach paired with its policy and filters before pagination and total', async () => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([
-            { realm_scope: 'own', policy: null },
-            { realm_scope: 'any', policy: { type: 'attributes', query: { visible: { $eq: true } } } },
-        ]));
+        const evaluator = await build({
+            catalog: catalog(['binding'], {
+                binding: { type: 'permissionBinding' },
+                visible: { type: 'attributes', query: { visible: { $eq: true } } },
+            }),
+            grants: grants(
+                { realm_scope: 'own', policies: [] },
+                { realm_scope: 'any', policies: ['visible'] },
+            ),
+        });
         const rows = [
             {
                 id: 1,
@@ -119,54 +181,69 @@ describe('introspection authorization consumer', () => {
     });
 
     it('does not lend a wider reach to a passing narrow policy', async () => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([
-            { realm_scope: 'own', policy: { type: 'attributes', query: { visible: { $eq: true } } } },
-            { realm_scope: 'any', policy: { type: 'attributes', query: { visible: { $eq: false } } } },
-        ]));
+        const evaluator = await build({
+            catalog: catalog(['binding'], {
+                binding: { type: 'permissionBinding' },
+                visible: { type: 'attributes', query: { visible: { $eq: true } } },
+                hidden: { type: 'attributes', query: { visible: { $eq: false } } },
+            }),
+            grants: grants(
+                { realm_scope: 'own', policies: ['visible'] },
+                { realm_scope: 'any', policies: ['hidden'] },
+            ),
+        });
         expect(await allowed(evaluator, resource(realmB, true))).toBe(false);
         expect(await allowed(evaluator, resource(realmB, false))).toBe(true);
     });
 
     it('preserves nested definition policies and their decision strategy', async () => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([{ realm_scope: 'any', policy: null }], {
-            type: 'composite',
-            decisionStrategy: 'unanimous',
-            children: [
-                {
+        const evaluator = await build({
+            catalog: catalog(['nested'], {
+                nested: {
                     type: 'composite',
-                    decisionStrategy: 'affirmative',
+                    decisionStrategy: 'unanimous',
                     children: [
-                        { type: 'permissionBinding' },
-                        { type: 'identity', types: ['client'] },
+                        {
+                            type: 'composite',
+                            decisionStrategy: 'affirmative',
+                            children: [
+                                { type: 'permissionBinding' },
+                                { type: 'identity', types: ['client'] },
+                            ],
+                        },
+                        { type: 'attributes', query: { visible: { $eq: true } } },
                     ],
                 },
-                { type: 'attributes', query: { visible: { $eq: true } } },
-            ],
-        }));
+            }),
+        });
         expect(await allowed(evaluator, resource(realmB, false))).toBe(false);
         expect(await allowed(evaluator, resource(realmB, true))).toBe(true);
         expect((await evaluator.compile({ name: 'event_read' })).verdict).toBe('conditional');
     });
 
     it('matches exact namespaces without collapsing same-name definitions', async () => {
-        const input = snapshot([{ realm_scope: 'own', policy: null }]);
-        input.authorization.permissions.push(
-            {
-                name: 'event_read',
-                realm_id: realmA,
-                client_id: clientA,
-                policy: { type: 'permissionBinding' },
-                grants: [{ realm_scope: 'any', policy: null }],
-            },
-            {
-                name: 'event_read',
-                realm_id: realmB,
-                client_id: clientA,
-                policy: { type: 'permissionBinding' },
-                grants: [{ realm_scope: 'none', policy: null }],
-            },
-        );
-        const evaluator = await createAuthorizationEvaluator(input);
+        const evaluator = await build({
+            catalog: catalog([
+                definition(),
+                definition(['binding'], { realm_id: realmA, client_id: clientA }),
+                definition(['binding'], { realm_id: realmB, client_id: clientA }),
+            ]),
+            grants: grants(
+                { realm_scope: 'own', policies: [] },
+                {
+                    realm_id: realmA,
+                    client_id: clientA,
+                    realm_scope: 'any',
+                    policies: [],
+                },
+                {
+                    realm_id: realmB,
+                    client_id: clientA,
+                    realm_scope: 'none',
+                    policies: [],
+                },
+            ),
+        });
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
         await expect(evaluator.evaluate({
             name: 'event_read',
@@ -194,17 +271,30 @@ describe('introspection authorization consumer', () => {
     });
 
     it('reports post when a pending restriction cannot be lowered', async () => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([
-            { realm_scope: 'own', policy: null },
-            { realm_scope: 'any', policy: { type: 'attributeNames', names: ['visible'] } },
-        ]));
+        const evaluator = await build({
+            catalog: catalog(['binding'], {
+                binding: { type: 'permissionBinding' },
+                names: { type: 'attributeNames', names: ['visible'] },
+            }),
+            grants: grants(
+                { realm_scope: 'own', policies: [] },
+                { realm_scope: 'any', policies: ['names'] },
+            ),
+        });
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'post' });
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
     });
 
-    it('requires resource realm data and prevents caller identity or policy-filter overrides', async () => {
-        const evaluator = await createAuthorizationEvaluator(snapshot([{ realm_scope: 'own', policy: null }]));
-        await expect(evaluator.evaluate({ name: 'event_read' })).rejects.toThrow();
+    it('neutral-passes reach for a realm-less resource and prevents caller identity or policy-filter overrides', async () => {
+        const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
+        // no REALM_MATCH key: the resource has no realm dimension, so reach
+        // neutral-passes exactly as server-core's resourceRealmMatch does
+        await expect(evaluator.evaluate({ name: 'event_read' })).resolves.toBeUndefined();
+        // a present key is still validated
+        await expect(evaluator.evaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 5 }),
+        })).rejects.toThrow();
         const data = resource(realmB);
         data.set(BuiltInPolicyType.IDENTITY, {
             id: clientA,
@@ -222,61 +312,351 @@ describe('introspection authorization consumer', () => {
         await expect(evaluator.compile({ name: 'event_read', data: resource(realmA) })).rejects.toThrow();
     });
 
-    it.each([
-        undefined,
-        { active: false },
-        { active: true, permissions: [{ name: 'event_read' }] },
-        { ...snapshot([]), active: false },
-        {
-            active: true,
-            kind: 'access_token',
-            scope: 'global',
-            authorization: { ...snapshot([]).authorization, version: 2 },
-        },
-        {
-            active: true,
-            kind: 'access_token',
-            scope: 'global',
-            authorization: { ...snapshot([]).authorization, identity: undefined },
-        },
-        {
-            active: true,
-            kind: 'access_token',
-            scope: 'global',
-            authorization: { ...snapshot([]).authorization, permissions: [{ name: 'event_read' }] },
-        },
-        snapshot([{ realm_scope: 'all', policy: null }]),
-        snapshot([{ realm_scope: 'any', policy: { type: 'composite', children: [{ type: 'permissionBinding' }] } }]),
-        snapshot([{ realm_scope: 'any', policy: null }], { type: 'custom', invert: true }),
-        snapshot([{ realm_scope: 'any', policy: null }], { type: 'composite', children: [] }),
-        snapshot([{ realm_scope: 'any', policy: null }], { type: 'attributes', query: 'broken' }),
-        snapshot([{ realm_scope: 'any', policy: null }], { type: 'attributes', query: { visible: { $unsupported: true } } }),
-        snapshot([{ realm_scope: 'any', policy: null }], { type: 'composite', children: [{ type: 'custom' }] }),
-    ])('rejects incomplete, inactive or unsupported authorization %#', async (input) => {
-        await expect(createAuthorizationEvaluator(input)).rejects.toThrow();
+    it('exposes the pre-gate: reach settles when the resource realm is known, passes when it is not', async () => {
+        const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
+        await expect(evaluator.preEvaluateOneOf({ name: 'event_read' })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluateOneOf({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmA }),
+        })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmB }),
+        })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'unknown_permission' })).rejects.toThrow();
     });
 
-    it.each(['mfa_token', 'refresh_token', 'id_token', 'logout_token', 'unknown'])('rejects %s as a resource credential', async (kind) => {
-        await expect(createAuthorizationEvaluator({ ...snapshot([{ realm_scope: 'any', policy: null }]), kind })).rejects.toThrow();
+    it('reports the catalog stale for a grant naming a definition it lacks', async () => {
+        // the grants come from a fresh introspection: a definition the cached
+        // catalog does not carry was created after the catalog was fetched
+        await expect(build({
+            grants: grants(
+                { realm_scope: 'any', policies: [] },
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+            ),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+        await expect(build({
+            grants: grants({
+                realm_id: realmA,
+                realm_scope: 'any',
+                policies: [],
+            }),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+        await expect(build({ catalog: { ...catalog(), permissions: [] } }))
+            .rejects.toThrow(AuthorizationCatalogStaleError);
+
+        const empty = await build({ catalog: { ...catalog(), permissions: [] }, grants: [] });
+        await expect(empty.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(empty, resource(realmA))).toBe(false);
+        expect(await empty.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
     });
 
-    it('requires global scope and an access token or a session context', async () => {
-        const input = snapshot([{ realm_scope: 'any', policy: null }]);
-        await expect(createAuthorizationEvaluator({ ...input, scope: 'openid' })).rejects.toThrow();
-        await expect(createAuthorizationEvaluator({ ...input, scope: undefined })).rejects.toThrow();
-        await expect(createAuthorizationEvaluator({ ...input, kind: undefined })).rejects.toThrow();
-        const session = await createAuthorizationEvaluator({
-            ...input,
-            kind: undefined,
-            session_id: clientA,
+    it('drops a grant naming a definition the catalog carries unevaluable and denies it while a sibling still authorizes', async () => {
+        // the server could not project the definition's policy layer, so it
+        // carries the definition with policies: null; a refetch changes nothing
+        const evaluator = await build({
+            catalog: catalog([
+                definition(),
+                definition(null, { name: 'event_delete' }),
+                definition(null, { realm_id: realmA }),
+            ]),
+            grants: grants(
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+                {
+                    realm_id: realmA,
+                    realm_scope: 'any',
+                    policies: [],
+                },
+                { realm_scope: 'any', policies: [] },
+            ),
         });
-        expect(await allowed(session, resource(realmB))).toBe(true);
+        await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
+        expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
+        await expect(evaluator.preEvaluate({ name: 'event_read', realmId: realmA })).rejects.toThrow();
+        await expect(evaluator.evaluate({
+            name: 'event_read',
+            realmId: realmA,
+            data: resource(realmA),
+        })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluateOneOf({ name: ['event_delete', 'event_read'] })).resolves.toBeUndefined();
+        expect(await allowed(evaluator, resource(realmB))).toBe(true);
+
+        // an unevaluable definition denies without a grant as well, and a
+        // duplicate is refused whichever form it takes
+        const ungranted = await build({ catalog: catalog([definition(null)]), grants: [] });
+        await expect(ungranted.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(ungranted, resource(realmA))).toBe(false);
+        await expect(build({ catalog: catalog([definition(), definition(null)]) })).rejects.toThrow();
+    });
+
+    it('denies only the permissions whose catalog tree it cannot project, and never reports one stale', async () => {
+        // the built-in policy type enum is closed while `auth_policies.type`
+        // is a free string, so a type this copy does not know must deny the
+        // permissions that use it rather than take the evaluator down for
+        // every other one. A refetch cannot change it, so it is the
+        // `policies: null` tombstone, never a stale catalog.
+        const evaluator = await build({
+            catalog: catalog([
+                definition(['binding']),
+                definition(['future'], { name: 'event_delete' }),
+            ], {
+                binding: { type: 'permissionBinding' },
+                future: { type: 'plan109future' },
+            }),
+            grants: grants(
+                { realm_scope: 'any', policies: [] },
+                {
+                    name: 'event_delete',
+                    realm_scope: 'any',
+                    policies: [],
+                },
+            ),
+        });
+        expect(await allowed(evaluator, resource(realmA))).toBe(true);
+        await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
+        expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
+
+        // a GRANT naming such a tree is dropped like one carrying a binding
+        // check: the permission itself stays evaluable for another grant
+        const junction = await build({
+            catalog: catalog(['binding'], {
+                binding: { type: 'permissionBinding' },
+                future: { type: 'plan109future' },
+            }),
+            grants: grants(
+                { realm_scope: 'any', policies: ['future'] },
+                { realm_scope: 'own', policies: [] },
+            ),
+        });
+        expect(await allowed(junction, resource(realmA))).toBe(true);
+        expect(await allowed(junction, resource(realmB))).toBe(false);
+
+        // the discrimination: a tree the catalog DECLARES but this copy
+        // cannot project is not stale, while an id it does not declare is,
+        // and only the second is the caller's to refetch for
+        await expect(build({
+            catalog: catalog(['binding'], { binding: { type: 'permissionBinding' } }),
+            grants: grants({ realm_scope: 'any', policies: ['future'] }),
+        })).rejects.toThrow(AuthorizationCatalogStaleError);
+    });
+
+    it.each<Record<string, Policy>>([
+        { unprojectable: { type: 'plan109future' } },
+        { unprojectable: { type: 'attributes', query: 'broken' } },
+        { unprojectable: { type: 'composite', children: [{ type: 'plan109future' }] } },
+    ])('denies rather than throws for a catalog tree it cannot project %#', async (policies) => {
+        const evaluator = await build({ catalog: catalog(['unprojectable'], policies) });
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+        expect(await allowed(evaluator, resource(realmA))).toBe(false);
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
+    it('evaluates without an identity: only a definition whose policies need none can pass', async () => {
+        const document = catalog([
+            definition(['open'], { name: 'open' }),
+            definition(['closed'], { name: 'closed' }),
+            definition(['binding'], { name: 'guarded' }),
+            definition(['who'], { name: 'identified' }),
+        ], {
+            binding: { type: 'permissionBinding' },
+            open: { type: 'date', start: '2000-01-01' },
+            closed: { type: 'date', start: '2999-01-01' },
+            who: { type: 'identity' },
+        });
+        const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+
+        const anonymous = await createAuthorizationEvaluator({ catalog: document });
+        await expect(anonymous.preEvaluate({ name: 'open' })).resolves.toBeUndefined();
+        await expect(anonymous.evaluate({ name: 'open', data: row })).resolves.toBeUndefined();
+        expect(await anonymous.compile({ name: 'open' })).toEqual({ verdict: 'allow' });
+        await expect(anonymous.preEvaluate({ name: 'closed' })).rejects.toThrow();
+        await expect(anonymous.evaluate({ name: 'closed', data: row })).rejects.toThrow();
+        await expect(anonymous.preEvaluate({ name: 'guarded' })).rejects.toThrow();
+        await expect(anonymous.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
+        expect(await anonymous.compile({ name: 'guarded' })).toEqual({ verdict: 'deny' });
+
+        // a caller cannot supply the identity the document did not prove:
+        // the key is stripped here exactly as it is overwritten when one was
+        const injected = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+        injected.set(BuiltInPolicyType.IDENTITY, {
+            id: identity.id,
+            type: 'user',
+            realmId: realmA,
+        });
+        injected.setValidated(BuiltInPolicyType.IDENTITY);
+        await expect(anonymous.evaluate({ name: 'identified', data: injected })).rejects.toThrow();
+
+        const identified = await createAuthorizationEvaluator({
+            catalog: document,
+            grants: grants({
+                name: 'guarded',
+                realm_scope: 'any',
+                policies: [],
+            }),
+            identity,
+        });
+        await expect(identified.preEvaluate({ name: 'guarded' })).resolves.toBeUndefined();
+        await expect(identified.evaluate({ name: 'guarded', data: row })).resolves.toBeUndefined();
+        expect(await identified.compile({ name: 'guarded' })).toEqual({ verdict: 'allow' });
+        // the same definition passes for the identity the document proved
+        await expect(identified.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
+
+        expect(await issuesOf(() => createAuthorizationEvaluator({
+            catalog: document,
+            grants: grants({ name: 'guarded', realm_scope: 'any' }),
+        }))).toEqual([expect.objectContaining({
+            path: ['identity'],
+            message: 'Grants require the identity they belong to.',
+        })]);
+    });
+
+    // An inactive introspection names its subject and omits `permissions`, so
+    // an identity with no grant list is exactly that response. Reading it as
+    // "holds nothing" would authorize every definition carrying no binding
+    // check, which is what `identified` is.
+    it('refuses an identity with no grant list, and accepts an explicit empty one', async () => {
+        const document = catalog(
+            [definition(['binding'], { name: 'guarded' }), definition([], { name: 'identified' })],
+            { binding: { type: 'permissionBinding' } },
+        );
+
+        expect(await issuesOf(() => createAuthorizationEvaluator({ catalog: document, identity })))
+            .toEqual([expect.objectContaining({ path: ['grants'] })]);
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog: document, 
+            identity, 
+            grants: [], 
+        });
+        const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+        await expect(evaluator.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
+        await expect(evaluator.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
+    });
+
+    it('reports the catalog stale for a grant naming a policy it lacks', async () => {
+        await expect(build({ grants: grants({ realm_scope: 'any', policies: ['missing'] }) }))
+            .rejects.toThrow(AuthorizationCatalogStaleError);
+        await expect(build({ grants: grants({ realm_scope: 'any', policies: ['constructor'] }) }))
+            .rejects.toThrow(AuthorizationCatalogStaleError);
+    });
+
+    it('drops a grant whose junction tree carries a binding node while a sibling grant still authorizes', async () => {
+        const policies = {
+            binding: { type: 'permissionBinding' },
+            nested: {
+                type: 'composite',
+                decisionStrategy: 'unanimous',
+                children: [{ type: 'permissionBinding' }],
+            },
+        };
+        const evaluator = await build({
+            catalog: catalog(['binding'], policies),
+            grants: grants(
+                { realm_scope: 'any', policies: ['binding'] },
+                { realm_scope: 'any', policies: ['nested'] },
+                { realm_scope: 'own', policies: [] },
+            ),
+        });
+        expect(await allowed(evaluator, resource(realmA))).toBe(true);
+        expect(await allowed(evaluator, resource(realmB))).toBe(false);
+        expect(await allowed(evaluator, resource(null))).toBe(false);
+
+        const alone = await build({
+            catalog: catalog(['binding'], policies),
+            grants: grants({ realm_scope: 'any', policies: ['nested'] }),
+        });
+        expect(await allowed(alone, resource(realmA))).toBe(false);
+        expect(await alone.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
+    });
+
+    it('treats an absent or null reach as own and an absent policy list as none', async () => {
+        for (const grant of [{}, { realm_scope: null }, { policies: null }, { realm_scope: null, policies: null }]) {
+            const evaluator = await build({ grants: grants(grant) });
+            expect(await Promise.all([realmA, realmB, null].map((realmId) => allowed(evaluator, resource(realmId)))))
+                .toEqual([true, false, false]);
+        }
+    });
+
+    it('refuses an identity that is neither a user nor a client, or carries no id', async () => {
+        await expect(build({ identity: { ...identity, type: 'role' } })).rejects.toThrow();
+        await expect(build({ identity: { ...identity, id: '' } })).rejects.toThrow();
+    });
+
+    it('refuses legacy and inactive-shaped inputs', async () => {
+        await expect(build({ catalog: { active: true, permissions: [{ name: 'event_read' }] } })).rejects.toThrow();
+        await expect(build({ catalog: undefined })).rejects.toThrow();
+        await expect(build({ grants: null })).rejects.toThrow();
+        await expect(build({ grants: { name: 'event_read' } })).rejects.toThrow();
+    });
+
+    it('composes several definition policies with the permission decision strategy', async () => {
+        const policies = {
+            binding: { type: 'permissionBinding' },
+            clients: { type: 'identity', types: ['client'] },
+        };
+        const unanimous = catalog([definition(['binding', 'clients'], { decision_strategy: 'unanimous' })], policies);
+        const affirmative = catalog([definition(['binding', 'clients'], { decision_strategy: 'affirmative' })], policies);
+
+        expect(await allowed(await build({ catalog: unanimous }), resource(realmB))).toBe(false);
+        expect(await allowed(await build({ catalog: affirmative }), resource(realmB))).toBe(true);
+    });
+
+    it('keeps invert true, drops invert null, and applies a nested invert through a composite', async () => {
+        const query = { visible: { $eq: true } };
+        const outcomes = async (visible: Policy) => {
+            const evaluator = await build({ catalog: catalog(['binding', 'visible'], { binding: { type: 'permissionBinding' }, visible }) });
+
+            return [
+                await allowed(evaluator, resource(realmB, true)),
+                await allowed(evaluator, resource(realmB, false)),
+            ];
+        };
+
+        expect(await outcomes({
+            type: 'attributes',
+            query,
+            invert: null,
+        })).toEqual([true, false]);
+        expect(await outcomes({
+            type: 'attributes',
+            query,
+            invert: true,
+        })).toEqual([false, true]);
+        expect(await outcomes({
+            type: 'composite',
+            decisionStrategy: 'unanimous',
+            invert: null,
+            children: [{
+                type: 'attributes',
+                query,
+                invert: true,
+            }],
+        })).toEqual([false, true]);
+    });
+
+    it.each<Partial<AuthorizationEvaluatorInput>>([
+        { catalog: { ...catalog(), permissions: [{ name: 'event_read' }] } },
+        { grants: grants({ realm_scope: 'all', policies: [] }) },
+    ])('rejects incomplete or unsupported authorization %#', async (input) => {
+        await expect(build(input)).rejects.toThrow();
     });
 
     it('does not interpret an absent actor realm name as a global resource match', async () => {
-        const input = snapshot([{ realm_scope: 'any', policy: null }], { type: 'realmMatch', attributeName: 'realmId' });
-        input.authorization.identity.realm_name = null;
-        const evaluator = await createAuthorizationEvaluator(input);
+        const evaluator = await build({
+            catalog: catalog(['match'], { match: { type: 'realmMatch', attributeName: 'realmId' } }),
+            identity: { ...identity, realmName: null },
+        });
         expect(await allowed(evaluator, resource(null))).toBe(false);
         const compiled = await evaluator.compile({ name: 'event_read' });
         expect(compiled.verdict).toBe('conditional');
@@ -286,24 +666,104 @@ describe('introspection authorization consumer', () => {
         expect(predicate({ realmId: realmA })).toBeTruthy();
     });
 
-    it.each([null, { type: 'permissionBinding' }])('rejects a permission entry without grants (%j)', async (policy) => {
-        await expect(createAuthorizationEvaluator(snapshot([], policy))).rejects.toThrow();
+    it.each<[string[]]>([[[]], [['binding']]])('denies a definition the identity holds no grant for (%j)', async (policies) => {
+        const evaluator = await build({ catalog: catalog(policies), grants: [] });
+        expect(await allowed(evaluator, resource(realmA))).toBe(policies.length === 0);
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: policies.length === 0 ? 'allow' : 'deny' });
     });
 
     it('allows an empty permission catalog that denies every lookup', async () => {
-        const input = snapshot([]);
-        input.authorization.permissions = [];
-        const evaluator = await createAuthorizationEvaluator(input);
+        const evaluator = await build({ catalog: { ...catalog(), permissions: [] }, grants: [] });
         expect(await allowed(evaluator, resource(realmA))).toBe(false);
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
     });
 
-    it('rejects missing restrictions and duplicate namespace definitions', async () => {
-        const input = snapshot([{ realm_scope: 'any', policy: null }]);
-        const malformed = JSON.parse(JSON.stringify(input));
-        delete malformed.authorization.permissions[0].grants[0].policy;
-        await expect(createAuthorizationEvaluator(malformed)).rejects.toThrow();
-        input.authorization.permissions.push(input.authorization.permissions[0]!);
-        await expect(createAuthorizationEvaluator(input)).rejects.toThrow();
+    it('rejects duplicate namespace definitions, naming the entry at fault', async () => {
+        expect(await issuesOf(() => build({ catalog: catalog([definition(), definition()]) })))
+            .toEqual([expect.objectContaining({ path: ['catalog', 'permissions', 1] })]);
+    });
+
+    it('refuses a realm match the resource cannot name, as a validup error', async () => {
+        const evaluator = await build({});
+        const issues = await issuesOf(() => evaluator.evaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 42 as any }),
+        }));
+
+        expect(issues[0]!.path).toEqual(['data', BuiltInPolicyType.REALM_MATCH]);
+    });
+
+    it('denies through a childless composite definition, at the gate and on the row', async () => {
+        const evaluator = await build({
+            catalog: catalog(['empty'], {
+                empty: {
+                    type: 'composite',
+                    decisionStrategy: 'unanimous',
+                    children: [],
+                },
+            }),
+        });
+        expect(await allowed(evaluator, resource(realmA))).toBe(false);
+        await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
+    });
+
+    it('reports post for a top-level attributes policy whose query cannot be lowered', async () => {
+        const evaluator = await build({
+            catalog: catalog(['binding', 'unsupported'], {
+                binding: { type: 'permissionBinding' },
+                unsupported: { type: 'attributes', query: { visible: { $unsupported: true } } },
+            }),
+        });
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'post' });
+        expect(await allowed(evaluator, resource(realmA, true))).toBe(false);
+    });
+
+    it('forwards the decision strategy and refuses the policy bypass options', async () => {
+        const evaluator = await build({
+            catalog: catalog([
+                definition(['binding'], { name: 'ok' }),
+                definition(['binding'], { name: 'no' }),
+            ]),
+            grants: grants(
+                {
+                    name: 'ok', 
+                    realm_scope: 'any', 
+                    policies: [], 
+                },
+                {
+                    name: 'no', 
+                    realm_scope: 'none', 
+                    policies: [], 
+                },
+            ),
+        });
+        const data = resource(realmB);
+
+        await expect(evaluator.evaluate({
+            name: ['ok', 'no'],
+            options: { decisionStrategy: 'affirmative' },
+            data,
+        })).resolves.toBeUndefined();
+        await expect(evaluator.evaluate({ name: ['ok', 'no'], data })).rejects.toThrow();
+        await expect(evaluator.evaluate({
+            name: 'ok',
+            options: { policiesExcluded: ['x'] },
+            data,
+        })).rejects.toThrow('The authorization evaluator does not accept policy bypass options.');
+        await expect(evaluator.preEvaluate({
+            name: 'ok',
+            options: { pendingPolicies: 'permit' },
+        })).rejects.toThrow('The authorization evaluator does not accept policy bypass options.');
+    });
+
+    it('is unrestricted when the definition carries no binding check', async () => {
+        const evaluator = await build({
+            catalog: catalog([], {}),
+            grants: grants({ realm_scope: 'none', policies: [] }),
+        });
+        for (const realmId of [realmA, realmB, null]) {
+            await expect(evaluator.evaluate({ name: 'event_read', data: resource(realmId) })).resolves.toBeUndefined();
+        }
+        expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'allow' });
     });
 });

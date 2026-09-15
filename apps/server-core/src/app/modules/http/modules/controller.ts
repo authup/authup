@@ -105,6 +105,7 @@ import {
     ActivateController,
     AdminController,
     AuthenticatorChallengeController,
+    AuthorizationController,
     AuthorizeController,
     DeviceAuthorizationController,
     DeviceController,
@@ -220,6 +221,7 @@ export class HTTPControllerModule {
                 this.createLogoutController(container),
                 this.createAuthenticatorChallengeController(container),
                 this.createUserInfoController(container),
+                this.createAuthorizationController(container),
                 this.createAccountController(container),
                 this.createAdminController(container),
 
@@ -297,7 +299,6 @@ export class HTTPControllerModule {
     createToken(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
-        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
@@ -364,7 +365,6 @@ export class HTTPControllerModule {
 
             identityResolver,
             identityPermissionProvider,
-            permissionProvider: new PermissionDatabaseProvider(dataSource),
 
             userAuthenticator,
 
@@ -883,8 +883,8 @@ export class HTTPControllerModule {
             baseURL: config.publicUrl,
             identityResolver: container.resolve(IdentityInjectionKey.Resolver),
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
-            permissionProvider: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
             sessionRepository: repository,
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 
@@ -1056,6 +1056,13 @@ export class HTTPControllerModule {
 
     createUserInfoController(container: IContainer) {
         return new UserInfoController({ service: this.createUserService(container) });
+    }
+
+    createAuthorizationController(container: IContainer) {
+        return new AuthorizationController({
+            catalogRepository: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
+            logger: container.resolve(LoggerInjectionKey),
+        });
     }
 
     createUserAttributeController(container: IContainer) {

@@ -18,5 +18,6 @@ export * from './fake-oauth2-token-issuer.ts';
 export * from './fake-oauth2-token-repository.ts';
 export * from './fake-oauth2-token-signer.ts';
 export * from './fake-oauth2-token-verifier.ts';
+export * from './fake-authorization-catalog-repository.ts';
 export * from './fake-session-manager.ts';
 export * from './fake-session-token-repository.ts';
