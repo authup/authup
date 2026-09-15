@@ -297,6 +297,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
                 realmId: ctx.realmId,
                 clientId: ctx.clientId,
                 data: withIdentity(ctx.data),
+                realmAttributeName: ctx.realmAttributeName,
             });
         },
     };

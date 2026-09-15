@@ -281,6 +281,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 definePolicyEvaluationContext({
                     data,
                     withConditions: true,
+                    realmAttributeName: ctx.realmAttributeName,
                 }),
             );
 

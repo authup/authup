@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { isBCryptHash } from '@authup/kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
@@ -150,16 +151,28 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const grantNames = [
-            PermissionName.CLIENT_READ,
+        const { data: clientRead } = await suite.client.permission.getOne(PermissionName.CLIENT_READ);
+        await suite.client.clientPermission.create({
+            clientId: restrictedClient.id,
+            permissionId: clientRead.id,
+        });
+
+        // The junction reads are realm-gated on the owner realm since #3594, so an
+        // `own` grant there would drop the foreign-client rows this spec reads and
+        // the secret gate below would never be exercised. The junction reach is
+        // widened to `any` deliberately: what is under test here is the CLIENT_READ
+        // reach the secret field gate compiles, which stays at the default `own`.
+        const junctionGrantNames = [
             PermissionName.CLIENT_PERMISSION_CREATE,
             PermissionName.CLIENT_ROLE_READ,
+            PermissionName.CLIENT_SCOPE_READ,
         ];
-        for (const name of grantNames) {
+        for (const name of junctionGrantNames) {
             const { data: grant } = await suite.client.permission.getOne(name);
             await suite.client.clientPermission.create({
                 clientId: restrictedClient.id,
                 permissionId: grant.id,
+                realmScope: RealmScope.ANY,
             });
         }
         const restrictedToken = await suite.client.token.createWithClientCredentials({

@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { ClientScopeValidator, PermissionName } from '@authup/core-kit';
@@ -13,8 +14,15 @@ import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { clientScopeSchema } from './schema.ts';
+
+const READ_PERMISSION_NAMES = [
+    PermissionName.CLIENT_SCOPE_READ,
+    PermissionName.CLIENT_READ,
+    PermissionName.CLIENT_UPDATE,
+    PermissionName.CLIENT_DELETE,
+];
 
 export type ClientScopeServiceContext = {
     repository: IClientScopeRepository;
@@ -37,35 +45,67 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<ClientScope>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_SCOPE_READ,
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
-        return this.repository.findMany(await decodeQuery(query, { schema: clientScopeSchema, actor }));
+        let parsed = await decodeQuery(query, { schema: clientScopeSchema, actor });
+
+        // The realm reach of the grant, compiled into a row condition and lowered onto
+        // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
+        const compiled = await actor.permissionEvaluator.compile({
+            name: READ_PERMISSION_NAMES,
+            realmAttributeName: this.ownerRealmKey,
+        });
+        if (compiled.verdict === 'deny') {
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: entities, meta };
+        }
+
+        const data: ClientScope[] = [];
+        let { total } = meta;
+
+        for (const entity of entities) {
+            try {
+                await actor.permissionEvaluator.evaluateOneOf({
+                    name: READ_PERMISSION_NAMES,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                        [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+                    }),
+                });
+                data.push(entity);
+            } catch {
+                total -= 1;
+            }
+        }
+
+        return { data, meta: { ...meta, total } };
     }
 
     async getOne(
         id: string,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_SCOPE_READ,
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new EntityNotFoundError();
         }
+
+        await actor.permissionEvaluator.evaluateOneOf({
+            name: READ_PERMISSION_NAMES,
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
+        });
 
         return entity;
     }
