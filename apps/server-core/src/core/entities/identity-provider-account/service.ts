@@ -17,7 +17,8 @@ import {
 } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { decodeQuery } from '../../query/index.ts';
+import { eq, inArray, or } from '@rapiq/core';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import type { IUserIdentityRepository } from '../../identity/entities/user/types.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { IdentityProviderAccountUnlinkBlockedError } from './error.ts';
@@ -77,18 +78,44 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             canReadAll = false;
         }
 
+        const repositoryOptions = options.realmId ? { realmId: options.realmId } : {};
+
         if (!canReadAll) {
             return this.repository.findMany(parsed, {
+                ...repositoryOptions,
                 userId: actor.identity!.data.id,
-                ...(options.realmId ? { realmId: options.realmId } : {}),
             });
         }
 
-        // No compile() WHERE-pushdown here: the compiled realm-reach
-        // condition binds the row's `realmId` column and this entity
-        // carries none (the owner realm is `userRealmId`), so the per-row
-        // evaluation below is the sound path.
-        const { data: entities, meta } = await this.repository.findMany(parsed, { ...(options.realmId ? { realmId: options.realmId } : {}) });
+        // The realm reach of the grant, compiled into a row condition and
+        // lowered onto `userRealmId` — this entity carries no `realmId`
+        // (issue #3601). Own rows stay readable whatever the reach says, the
+        // same short-circuit `isOwnedBy` applies per row below, so the
+        // ownership term is OR-ed onto it.
+        const compiled = await actor.permissionEvaluator.compile({
+            name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
+            realmAttributeName: 'userRealmId',
+        });
+
+        if (compiled.verdict !== 'post') {
+            const self = actor.identity && actor.identity.type === IdentityType.USER ?
+                eq('userId', actor.identity.data.id) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    self ? or(self, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped, repositoryOptions);
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed, repositoryOptions);
 
         const data: IdentityProviderAccount[] = [];
         let { total } = meta;

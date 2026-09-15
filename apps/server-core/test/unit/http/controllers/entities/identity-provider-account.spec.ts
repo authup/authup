@@ -13,12 +13,15 @@ import {
     expect,
     it,
 } from 'vitest';
+import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import type { IdentityProvider, Realm, User } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
 import { IdentityProviderAccountEntity, UserEntity } from '../../../../../src/adapters/database/domains';
 import {
+    createFakeClient,
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     createFakeUser,
@@ -33,6 +36,20 @@ describe('identity-provider-account', () => {
     let provider: IdentityProvider;
     let user: User;
     let userClient: HTTPClient;
+
+    // the realm-isolation pair (issue #3601). `reader` holds a policy-free
+    // grant, so `compile()` answers `conditional` and the reach runs as a SQL
+    // WHERE — that is the branch with exact totals, and a `fields=` projection
+    // there proves nothing. `postReader` carries a non-lowerable
+    // ATTRIBUTE_NAMES policy, which forces the per-row branch, and that is the
+    // only branch where the force-select matters.
+    let reader: HTTPClient;
+    const readerSecret = 'idp-account-iso-reader-secret';
+    let postReader: HTTPClient;
+    const postReaderSecret = 'idp-account-iso-post-reader-secret';
+
+    let ownAccountId: string;
+    let foreignAccountId: string;
 
     beforeAll(async () => {
         await suite.setup();
@@ -54,6 +71,70 @@ describe('identity-provider-account', () => {
 
         userClient = new HTTPClient({ baseURL: suite.baseURL });
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        // one own / foreign pair, told apart by `userRealmId` alone — the
+        // column the compiled reach binds
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+        const { data: providerB } = await suite.client.identityProvider.create(
+            createFakeOAuth2IdentityProvider({ realmId: realmB.id }),
+        );
+
+        const ownSubject = await createRealmUser(realm.id);
+        ({ id: ownAccountId } = await seedAccount({ userId: ownSubject.id, userRealmId: realm.id }));
+
+        const foreignSubject = await createRealmUser(realmB.id);
+        ({ id: foreignAccountId } = await seedAccount({
+            userId: foreignSubject.id,
+            userRealmId: realmB.id,
+            providerId: providerB.id,
+        }));
+
+        // the readers live in realm A, so `ownOrNull` reaches exactly the own
+        // row above. Both are CLIENT identities, so the ownership alternative
+        // is never composed for them and the reach is the only thing deciding
+        // a row.
+        const createReader = async (secret: string, policyId?: string) => {
+            const { data: client } = await suite.client.client.create({
+                ...createFakeClient({ realmId: realm.id }),
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                secret,
+                secretHashed: false,
+                secretEncrypted: false,
+            });
+
+            const { data: permission } = await suite.client.permission.getOne(
+                PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
+            );
+            await suite.client.clientPermission.create({
+                clientId: client.id,
+                permissionId: permission.id,
+                realmScope: RealmScope.OWN_OR_NULL,
+                ...(policyId ? { policyId } : {}),
+            });
+
+            const token = await suite.client.token.createWithClientCredentials({
+                client_id: client.id,
+                client_secret: secret,
+            });
+
+            const http = new HTTPClient({ baseURL: suite.baseURL });
+            http.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+            return http;
+        };
+
+        reader = await createReader(readerSecret);
+
+        // inverted over a name no entity carries, so it always passes and the
+        // realm reach stays the only thing deciding a row — it is there to be
+        // non-lowerable, not to deny
+        const { data: postPolicy } = await suite.client.policy.create({
+            name: 'idp-account-iso-non-lowerable',
+            type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+            invert: true,
+            names: ['aFieldNoEntityCarries'],
+        } as any);
+        postReader = await createReader(postReaderSecret, postPolicy.id);
     });
 
     afterAll(async () => {
@@ -230,5 +311,96 @@ describe('identity-provider-account', () => {
             () => suite.client.get(`realms/${realm.id}/identity-provider-accounts/${otherAccount.id}`),
             { status: 404 },
         );
+    });
+
+    it('pages an own-realm row exactly, never short and never over-counted', async () => {
+        // the conversion's point, and the one assertion the per-row drop loop
+        // cannot satisfy whatever the row order happens to be (issue #3601):
+        // over a two-row match taken one at a time, the reach as a WHERE always
+        // answers total 1 and the own row. The loop fetches from the UNSCOPED
+        // set instead, so it answers either total 1 with an EMPTY page (the
+        // foreign row sorted first and was dropped) or total 2 with the own row
+        // (it sorted first) — a short page, or an upper-bound total.
+        const response = await reader.identityProviderAccount.getMany({
+            filters: { id: [ownAccountId, foreignAccountId] },
+            pagination: { limit: 1 },
+        });
+
+        expect(response.data).toHaveLength(1);
+        expect(response.data[0]!.id).toEqual(ownAccountId);
+        expect(response.meta.total).toEqual(1);
+    });
+
+    it('never lists a foreign-realm row', async () => {
+        const response = await reader.identityProviderAccount.getMany({ filters: { id: foreignAccountId } });
+
+        expect(response.data).toHaveLength(0);
+        expect(response.meta.total).toEqual(0);
+    });
+
+    it('holds the gate on the post branch when the owner realm is projected away', async () => {
+        // the force-select is what keeps `userRealmId` on the row the per-row
+        // gate reads; without it the realm-match key is `null`, which an
+        // `ownOrNull` reader reaches — i.e. it fails OPEN
+        const own = await postReader.get(`identity-provider-accounts?filter[id]=${ownAccountId}&fields=id`);
+        expect(own.data.data.some((row: { id: string }) => row.id === ownAccountId)).toBe(true);
+
+        const foreign = await postReader.get(`identity-provider-accounts?filter[id]=${foreignAccountId}&fields=id`);
+        expect(foreign.data.data).toHaveLength(0);
+        expect(foreign.data.meta.total).toEqual(0);
+    });
+
+    it('still lists a user its own rows when the grant reaches no realm', async () => {
+        // the ownership alternative on the `deny` branch: a `none` grant passes
+        // the name-level pre-gate but compiles to a reach that matches nothing,
+        // so the self term is all that is left — the per-row `isOwnedBy`
+        // short-circuit expressed as SQL.
+        const password = generateOAuth2CodeVerifier();
+        const { data: subject } = await suite.client.user.create(createFakeUser({
+            realmId: realm.id,
+            password,
+        }));
+
+        const { data: permission } = await suite.client.permission.getOne(
+            PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
+        );
+        await suite.client.userPermission.create({
+            userId: subject.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.NONE,
+        });
+
+        const own = await seedAccount({ userId: subject.id, userRealmId: realm.id });
+
+        const login = await suite.client.token.createWithPassword({
+            username: subject.name,
+            password,
+            realm_id: realm.id,
+        });
+        const http = new HTTPClient({ baseURL: suite.baseURL });
+        http.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        const response = await http.get('identity-provider-accounts');
+        const rows = response.data.data;
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].id).toEqual(own.id);
+        expect(response.data.meta.total).toEqual(1);
+    });
+
+    it('still reaches a row whose owner realm is null', async () => {
+        // `user_realm_id` is nullable, and the per-row path this replaced read
+        // it as `entity.userRealmId ?? null`, which `ownOrNull` matches. The
+        // compiled form has to say the same thing in SQL — an `eq(col, null)`
+        // lowered to `= NULL` instead of `IS NULL` would silently drop every
+        // such row, which is the one divergence class the conversion can
+        // introduce. Runs LAST: it seeds a row the counts above would see.
+        const subject = await createRealmUser(realm.id);
+        const nullRealmAccount = await seedAccount({ userId: subject.id, userRealmId: null });
+
+        const response = await reader.identityProviderAccount.getMany({ filters: { id: nullRealmAccount.id } });
+
+        expect(response.data).toHaveLength(1);
+        expect(response.meta.total).toEqual(1);
     });
 });

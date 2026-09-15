@@ -15,6 +15,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { applyQuery, fetchMany } from '../query.ts';
+import { applyJunctionRealmScopeSelect } from '../helpers.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
@@ -42,17 +43,11 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
 
         const { pagination } = applyQuery(qb, query);
 
-        // plan-039 force-select: the per-row gate reads userId (ownership)
-        // and userRealmId (realm reach). The shared applyRealmScopeSelect
-        // pins a `realmId` column this entity does not have, so dedupe and
-        // add the two columns the same way it would.
-        const existing = new Set(qb.expressionMap.selects.map((select) => select.selection));
-        const selections = ['userId', 'userRealmId']
-            .map((column) => `identityProviderAccount.${column}`)
-            .filter((selection) => !existing.has(selection));
-        if (selections.length > 0) {
-            qb.addSelect(selections);
-        }
+        // plan-039 force-select: the residual per-row gate reads the owner
+        // realm (`userRealmId`, this entity carries no `realmId`) and the
+        // ownership short-circuit reads `userId`, so a `fields` projection
+        // must not be able to strip either.
+        applyJunctionRealmScopeSelect(qb, 'identityProviderAccount', 'userRealmId', ['userId']);
 
         if (options.userId) {
             // mandatory constraint — not overridable by a rapiq filter
