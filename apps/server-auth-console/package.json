@@ -64,10 +64,10 @@
         "orkos": "^1.1.1",
         "routup": "^6.1.0",
         "validup": "^2.0.1",
-        "zod": "^4.5.4"
+        "zod": "^4.6.2"
     },
     "devDependencies": {
-        "@types/node": "^26.4.1",
+        "@types/node": "^26.5.1",
         "cross-env": "^10.1.0",
         "vitest": "^4.0.18"
     },
