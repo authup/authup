@@ -7,11 +7,12 @@
 
 import type { AuthorizationCatalog } from '@authup/access';
 import { BaseAPI } from '../../base';
-import type { IAuthorizationAPI } from './types';
+import { buildAuthorizationHeaderRequestConfig } from '../../utils';
+import type { AuthorizationRequestOptions, IAuthorizationAPI } from './types';
 
 export class AuthorizationAPI extends BaseAPI implements IAuthorizationAPI {
-    async get() : Promise<AuthorizationCatalog> {
-        const response = await this.client.get('authorization');
+    async get(options?: AuthorizationRequestOptions) : Promise<AuthorizationCatalog> {
+        const response = await this.client.get('authorization', buildAuthorizationHeaderRequestConfig(options));
 
         return response.data;
     }

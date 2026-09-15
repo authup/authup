@@ -19,11 +19,13 @@ import type { AuthorizationCatalog } from '@authup/access';
 import {
     BuiltInPolicyType,
     PolicyData,
+    RealmScope,
     createAuthorizationEvaluator,
 } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenPermission } from '@authup/specs';
+import { OAuth2TokenKind } from '@authup/specs';
 import {
     PermissionEntity,
     PermissionPolicyEntity,
@@ -31,6 +33,7 @@ import {
     UserEntity,
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
+import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../app';
 import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
@@ -93,64 +96,93 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             .toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
 
-    it('is publicly cacheable and does not vary on the cookie', async () => {
-        const response = await httpRequest(suite, 'GET', '/authorization');
+    it('is privately cacheable and does not vary on the cookie', async () => {
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${grant.access_token}` } });
 
         expect(response.status).toBe(200);
-        // the body is a pure function of the permission and policy rows and of
-        // no caller, so an intermediary may store it and revalidate
-        expect(response.headers.get('cache-control')).toEqual('public, no-cache');
+        expect(response.headers.get('cache-control')).toEqual('private, no-cache');
         expect(response.headers.get('vary') ?? '').not.toContain('cookie');
     });
 
-    // The consumer this route exists for is typically a PUBLIC client: it holds
-    // no secret, so it can obtain no token of its own and has no credential to
-    // be gated on. Anonymous is therefore structural, not a convenience.
-    it('answers an anonymous caller the same document as an admin', async () => {
+    it('refuses an anonymous caller, a refresh token and a bearer without the global scope', async () => {
         const anonymous = await httpRequest(suite, 'GET', '/authorization');
-        expect(anonymous.status).toBe(200);
+        expect(anonymous.status).toBe(401);
 
-        const catalog : AuthorizationCatalog = await anonymous.json();
-        expect(catalog).not.toHaveProperty('identity');
-        expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
-        expect(catalog).toEqual(JSON.parse(JSON.stringify(await suite.client.authorization.get())));
-    });
-
-    // Presenting NO credential passes, presenting a BAD one does not: the
-    // authorization middleware still runs, and it refuses a bearer that is not
-    // a live access token before any route is reached.
-    it('still refuses a malformed credential', async () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const refresh = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${grant.refresh_token}` } });
-
         expect(refresh.status).toBe(401);
+
+        const payload = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const restricted = await signer.sign({
+            jti: randomUUID(),
+            sub: payload.sub,
+            sub_kind: payload.sub_kind,
+            realm_id: payload.realm_id,
+            client_id: payload.client_id,
+            session_id: payload.session_id,
+            iat: payload.iat,
+            exp: payload.exp,
+            scope: 'openid',
+            kind: OAuth2TokenKind.ACCESS,
+        });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${restricted}` } });
+        expect(response.status).toBe(403);
+        expect((await response.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
     });
 
-    // The gate used to be `GET /permissions`', which made the route unusable for
-    // every ordinary user and for every credential-less client. The catalog is
-    // an upper bound on what may be ASKED rather than an entitlement, so the two
-    // surfaces deliberately diverge: the rules travel, the ROWS still do not.
-    it('answers a user holding no permission at all, while the entity read still refuses them', async () => {
+    it('gates the catalog like the permission reads: no grant answers 403, PERMISSION_READ alone answers the catalog', async () => {
         const password = 'start123-authorization';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const ungranted = await suite.client.token.createWithPassword({ username: user.name, password });
         const headers = { Authorization: `Bearer ${ungranted.access_token}` };
+        const denied = await httpRequest(suite, 'GET', '/authorization', { headers });
+        expect(denied.status).toBe(403);
+        const { code } = await denied.json();
+        expect(code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
 
-        const response = await httpRequest(suite, 'GET', '/authorization', { headers });
+        // the same bearer is refused by the entity read the catalog aggregates,
+        // with the same status and code: the two gates are one call
+        const entities = await httpRequest(suite, 'GET', '/permissions', { headers });
+        expect(entities.status).toBe(denied.status);
+        expect((await entities.json()).code).toEqual(code);
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+        const { data: junction } = await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+        });
+
+        // the default junction reach is `own`, which excludes the global rows
+        // every built-in definition is, so the caller reaches none of them and
+        // is answered the refusal its console falls back to the name-only view on
+        const scoped = await suite.client.token.createWithPassword({ username: user.name, password });
+        const reachless = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${scoped.access_token}` } });
+        expect(reachless.status).toBe(403);
+        expect((await reachless.json()).code).toEqual(ErrorCode.PERMISSION_DENIED);
+
+        await suite.client.userPermission.delete(junction.id);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const granted = await suite.client.token.createWithPassword({ username: user.name, password });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
         expect(response.status).toBe(200);
         const catalog : AuthorizationCatalog = await response.json();
+        expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
-
-        const entities = await httpRequest(suite, 'GET', '/permissions', { headers });
-        expect(entities.status).toBe(403);
-        expect((await entities.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
     });
 
-    // The deliberate disclosure, stated as a test so it cannot change by
-    // accident: a foreign realm's definition and its policy configuration
-    // travel to every caller, because the document is one shared catalog.
-    it('carries another realm\'s definition whole, to an anonymous caller included', async () => {
+    // The catalog aggregates `GET /permissions` and `GET /policies`, which narrow
+    // their rows by the caller's realm reach (#3593), so this route narrows the
+    // same way. It withholds the CONFIGURATION rather than the entry: an absent
+    // definition has to keep meaning that the consumer's copy is out of date.
+    it('withholds another realm\'s definitions from a caller whose read grant does not reach it', async () => {
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const { data: foreign } = await suite.client.permission.create({
             name: `plan109_foreign_${realm.name}`,
@@ -159,15 +191,41 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy({ realmId: realm.id }));
         await suite.client.permissionPolicy.create({ permissionId: foreign.id, policyId: policy.id });
 
-        const response = await httpRequest(suite, 'GET', '/authorization');
+        const password = 'start123-authorization-reach';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+        // `ownOrNull` is the reach a realm_admin reads with: own realm plus the
+        // global building blocks, never another realm's rows
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const granted = await suite.client.token.createWithPassword({ username: user.name, password });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
         expect(response.status).toBe(200);
 
         const catalog : AuthorizationCatalog = await response.json();
         const entry = catalog.permissions.find((item) => item.name === foreign.name);
         expect(entry).toBeDefined();
         expect(entry!.realm_id).toEqual(realm.id);
-        expect(entry!.policies).toContain(policy.id);
-        expect(catalog.policies[policy.id]).toHaveProperty('type', BuiltInPolicyType.TIME);
+        expect(entry!.policies).toBeNull();
+        expect(catalog.policies).not.toHaveProperty(policy.id);
+
+        // its own global definitions stay whole, bodies included
+        const own = catalog.permissions.find((item) => item.name === PermissionName.USER_READ);
+        expect(own!.policies).not.toBeNull();
+        expect(own!.policies!.length).toBeGreaterThan(0);
+        for (const id of own!.policies!) {
+            expect(catalog.policies[id]).toHaveProperty('type');
+        }
+
+        // the control: a caller reaching every realm reads the same definition whole
+        const admin = await suite.client.authorization.get();
+        const adminEntry = admin.permissions.find((item) => item.name === foreign.name);
+        expect(adminEntry!.policies).toContain(policy.id);
+        expect(admin.policies[policy.id]).toHaveProperty('type', BuiltInPolicyType.TIME);
     });
 
     it('exports each realm reach into identical row checks and query conditions', async () => {

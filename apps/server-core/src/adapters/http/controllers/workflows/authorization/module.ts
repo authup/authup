@@ -7,6 +7,13 @@
 
 import type { AuthorizationCatalog } from '@authup/access';
 import {
+    BuiltInPolicyType,
+    PermissionError,
+    definePolicyData,
+    isPermissionError,
+} from '@authup/access';
+import { PermissionName } from '@authup/core-kit';
+import {
     DContext,
     DController,
     DGet,
@@ -15,50 +22,49 @@ import {
 import type { IAppEvent } from 'routup';
 import type { AuthorizationCatalogBuilderContext } from '../../../../../core/index.ts';
 import { buildAuthorizationCatalog } from '../../../../../core/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 /**
- * The identity-free permission catalog: every definition with its policy trees
- * plus every tree a grant can name, for a console or a resource server to
- * evaluate outside this process together with the grants an introspection
- * reports.
+ * The identity-free permission catalog: every definition with its policy
+ * trees plus every tree a grant can name, for a console or a resource server
+ * to evaluate outside this process together with the grants an introspection
+ * reports. It is one document per CREDENTIAL, since what a caller may read is
+ * what its own realm reach covers, so a consumer caches it per credential
+ * rather than per subject; `private, no-cache` keeps a shared cache out of it.
  *
- * **Anonymous, and that is structural rather than a convenience.** A consumer
- * of this document is typically a PUBLIC client (`authMethod: none`): it holds
- * no secret, so it can obtain no `client_credentials` token and has no
- * credential of its own to be gated on. The only credential ever in its reach
- * is an end user's, and gating on that would make the document depend on who
- * asks, which is exactly what it must not do: the point is ONE document,
- * fetched once and reused to evaluate as many identities' introspections as the
- * consumer sees. Requiring any identity at all (the former `ForceLoggedIn`) has
- * the same defect, since such a client has none at boot either. So the choice
- * is binary, anonymous or per-user, and it is anonymous. Do not re-add a gate
- * here.
+ * After `ForceLoggedIn` the pre-gate runs, one of `PERMISSION_READ` /
+ * `PERMISSION_UPDATE` / `PERMISSION_DELETE` (reach is neutral there, so a
+ * `realm_admin` passes), and then every row is checked against the caller's
+ * realm reach, the way `GET /permissions` and `GET /policies` check theirs
+ * (#3593), so this route is not the way around that gate.
  *
- * What that publishes is the authorization RULES: permission namespaces, which
- * is a closed enum published in `@authup/access` and in the OpenAPI document
- * already, and the policy CONFIGURATION, which is new and is the deliberate
- * trade. Knowing a rule does not help satisfy it (an attributes predicate reads
- * the SUBJECT's attributes, which a reader cannot set), enforcement has never
- * rested on the rules being secret, and the alternative made every integrator
- * hold `PERMISSION_READ` just to read them, which is the broader grant. It
- * joins the anonymous surfaces authup already serves: `GET /`, `GET /realms`,
- * `GET /identity-providers`, the per-realm discovery documents and
- * `/docs/openapi.json`.
+ * It is not row-for-row identical to those reads, deliberately. Reach removes
+ * the CONFIGURATION here rather than the row: a definition out of reach still
+ * travels, with `policies: null`, and a tree out of reach as a node no
+ * consumer can project. So what a foreign realm still discloses is the
+ * identifier tuple of a definition (`name`, `realm_id`, `client_id`,
+ * `decision_strategy`) and the id of a policy, where those reads disclose
+ * neither. That is the price of the key space staying whole: an ABSENT
+ * definition has to keep meaning exactly one thing, that the consumer's copy
+ * is older than the definition, which is the one signal a refetch answers.
  *
- * The catalog stays an upper bound on what may be ASKED, never an entitlement
- * (the `GET /schemas` posture): every decision it feeds runs over the grants of
- * the identity being evaluated, and a consumer only ever sees the grants of
- * identities that hand it a token. It cannot enumerate who holds what.
+ * The reach test asks about the realm alone, so a `PERMISSION_READ` grant
+ * restricted by an ATTRIBUTES junction policy has no row to evaluate against
+ * and denies every realm, which lands on the refusal below. Fail-closed, and
+ * the same answer that grant's holder gets from a console today.
  *
- * `public, no-cache` because the body is a pure function of the permission and
- * policy rows and depends on no caller: an intermediary may store it and
- * revalidate, which routup's content ETag answers. It is deliberately NOT
- * memoized in process on a TTL. The document is cheap to make wrong that way:
- * a consumer meeting a grant whose definition the catalog lacks refetches ONCE
- * and commits a deny-all evaluator if that answer is stale too, so a TTL memo
- * would turn a routine `POST /permissions` into denied sessions for the length
- * of the window. Bound the cost with the rate-limit middleware; a memo needs
- * invalidation off the permission and policy subscribers, not a clock.
+ * A resource server reads the catalog with its OWN client credential holding
+ * `PERMISSION_READ`: the document is identity-free, so the end user's bearer
+ * is the wrong credential for it, and one serving several realms needs a
+ * credential whose reach covers them. A console whose user lacks the family
+ * falls back to the name-only view, which is COARSER than this catalog rather
+ * than equivalent to it: it ignores realm reach and junction policies. That is
+ * deliberate for a console, whose gating is advisory, and is what every
+ * console user had before this route; a resource server fails closed instead.
+ * The catalog is an upper bound on what may be asked, never an
+ * entitlement (the same posture as `GET /schemas`); every decision it feeds
+ * still runs over the caller's own grants.
  */
 @DTags('auth')
 @DController('/authorization')
@@ -69,12 +75,66 @@ export class AuthorizationController {
         this.ctx = ctx;
     }
 
-    @DGet('')
+    @DGet('', [ForceLoggedInMiddleware])
     async get(
         @DContext() event: IAppEvent,
     ): Promise<AuthorizationCatalog> {
-        event.response.headers.set('cache-control', 'public, no-cache');
+        const names = [
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ];
 
-        return buildAuthorizationCatalog(this.ctx);
+        const actor = buildActorContext(event);
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: names });
+
+        event.response.headers.set('cache-control', 'private, no-cache');
+
+        const catalog = await buildAuthorizationCatalog(this.ctx, async (realmId) => {
+            try {
+                await actor.permissionEvaluator.evaluateOneOf({
+                    name: names,
+                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }),
+                });
+
+                return true;
+            } catch (e) {
+                // a denial is the answer; anything else denies too, but says so,
+                // since a cache or database fault is otherwise indistinguishable
+                // from a caller whose reach covers nothing
+                if (!isPermissionError(e)) {
+                    this.ctx.logger?.warn(
+                        `Treated realm ${realmId ?? 'global'} as out of reach while building the authorization ` +
+                        `catalog: ${e instanceof Error ? e.message : String(e)}.`,
+                    );
+                }
+
+                return false;
+            }
+        });
+
+        // A caller that can evaluate NO definition is answered a refusal rather
+        // than a document that denies everything, which reads as authoritative
+        // and would gate a console's whole UI closed where the name-only
+        // fallback gates it correctly. The rule is deliberately all or nothing:
+        // any partial threshold would be a number nobody can justify.
+        //
+        // It is reached by the reach the API hands out by DEFAULT. A junction
+        // is `own` unless the grant says otherwise, `own` does not reach a
+        // global row, and every permission is bound to the global
+        // `system.default`, so a credential granted the family and nothing else
+        // reaches no definition at all. `ownOrNull` is the floor for this
+        // route, for a single-realm resource server as much as for a console.
+        if (
+            catalog.permissions.length > 0 &&
+            catalog.permissions.every((permission) => permission.policies === null)
+        ) {
+            throw new PermissionError({
+                message: 'This credential reaches no authorization definition. ' +
+                    'Grant its permission with a realm scope of ownOrNull or wider.',
+            });
+        }
+
+        return catalog;
     }
 }
