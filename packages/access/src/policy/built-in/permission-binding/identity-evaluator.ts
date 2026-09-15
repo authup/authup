@@ -210,7 +210,17 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             if (outcome.pending) {
                 pending = true;
 
-                if (ctx.withConditions && outcome.condition) {
+                // `realmAttributeName` says the rows being compiled are NOT the entity this
+                // permission names — a junction, whose realm lives under another column — and
+                // nothing rebases a GRANT policy's own condition onto that row shape. An
+                // operator's policy is written against the entity (`realmId`, its columns), so
+                // lowering it here emits SQL over columns the junction table does not have.
+                // Refuse the whole class rather than rebasing one case: the caller falls back
+                // to the per-row `post` branch, which evaluates that same policy against the
+                // junction's real attributes and reaches the identical verdict. The grant's
+                // REACH is unaffected — it is built above from the column the caller named, so
+                // the policy-free grants that dominate real deployments still push down.
+                if (ctx.withConditions && outcome.condition && !ctx.realmAttributeName) {
                     conditions.push(
                         reachCondition ?
                             and(reachCondition, outcome.condition) :

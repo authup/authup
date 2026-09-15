@@ -154,4 +154,48 @@ describe('identity permission binding compilation', () => {
         // `ownOrNull` reach matches — the documented fail-open that the adapters'
         // force-select of the gate column exists to prevent.
     });
+
+    // A grant may carry its OWN policy, authored by an operator against the ENTITY the
+    // permission names. Nothing rebases such a policy onto a junction's row shape, so
+    // lowering it emits SQL over columns that table does not have. Under a declared
+    // `realmAttributeName` the whole class is refused: no condition, so the caller falls
+    // back to the per-row `post` branch, which evaluates the same policy against the
+    // junction's real attributes.
+    it.each([
+        ['scope-mode realm-match', definePolicyWithType(BuiltInPolicyType.REALM_MATCH, { scope: 'own' })],
+        ['attributes', definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { realmId: { $eq: identity.realmId } } })],
+    ])('refuses to lower a grant-borne %s policy onto a foreign row model', async (_label, grantPolicy) => {
+        const bindings: PermissionPolicyBinding[] = [{
+            permission,
+            realmScope: 'ownOrNull',
+            policies: [grantPolicy],
+        }];
+        const build = () => new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
+        });
+        const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
+        const data = () => definePolicyData({
+            [BuiltInPolicyType.IDENTITY]: identity,
+            [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+        });
+
+        const junction = await build().evaluate(policy, definePolicyEvaluationContext({
+            data: data(),
+            withConditions: true,
+            realmAttributeName: 'roleRealmId',
+        }));
+        expect(junction.pending).toBe(true);
+        // no condition => PermissionEvaluator.compile answers `post`, the sound fallback
+        expect(junction.condition).toBeUndefined();
+
+        // …while an ordinary entity read, which names no column, still pushes down
+        const entity = await build().evaluate(policy, definePolicyEvaluationContext({
+            data: data(),
+            withConditions: true,
+        }));
+        expect(entity.condition).toBeDefined();
+        const predicate = compileFilters(entity.condition! as IFilter | IFilters, { caseSensitive: true });
+        expect(predicate({ realmId: identity.realmId })).toBeTruthy();
+    });
 });

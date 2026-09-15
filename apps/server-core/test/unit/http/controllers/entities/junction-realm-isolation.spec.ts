@@ -65,6 +65,12 @@ describe('junction entities (realm isolation)', () => {
     let postReader: HTTPClient;
     const postReaderSecret = 'junction-iso-post-reader-secret';
 
+    let scopePolicyReader: HTTPClient;
+    const scopePolicyReaderSecret = 'junction-iso-scope-policy-reader-secret';
+
+    let attributesPolicyReader: HTTPClient;
+    const attributesPolicyReaderSecret = 'junction-iso-attributes-policy-reader-secret';
+
     // one own / foreign pair per junction
     let ownRolePermissionId: string;
     let foreignRolePermissionId: string;
@@ -279,6 +285,54 @@ describe('junction entities (realm isolation)', () => {
         });
         postReader = new HTTPClient({ baseURL: suite.baseURL });
         postReader.setAuthorizationHeader({ type: 'Bearer', token: postToken.access_token });
+
+        // a reader whose grants carry a user-authored policy that LOWERS — an operator
+        // narrowing a role's reach, which is a supported configuration. Such a policy is
+        // written against the ENTITY the permission names, so nothing rebases it onto a
+        // junction's row shape; lowering it would emit SQL over a column the junction
+        // table does not have. Both lowerable built-in shapes are covered: scope-mode
+        // realm-match (the framework's own column) and attributes (the operator's).
+        const { data: scopePolicy } = await suite.client.policy.create({
+            name: 'junction-iso-scope-reach',
+            type: BuiltInPolicyType.REALM_MATCH,
+            scope: RealmScope.OWN,
+        } as any);
+        const { data: attributesPolicy } = await suite.client.policy.create({
+            name: 'junction-iso-attributes-reach',
+            type: BuiltInPolicyType.ATTRIBUTES,
+            query: { realmId: { $eq: null } },
+        } as any);
+
+        const createPolicyBoundReader = async (secret: string, policyId: string) => {
+            const { data: client } = await suite.client.client.create({
+                ...createFakeClient(),
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                secret,
+                secretHashed: false,
+                secretEncrypted: false,
+            });
+            for (const name of READ_GRANTS) {
+                const { data: permission } = await suite.client.permission.getOne(name);
+                await suite.client.clientPermission.create({
+                    clientId: client.id,
+                    permissionId: permission.id,
+                    realmScope: RealmScope.OWN_OR_NULL,
+                    policyId,
+                });
+            }
+            const token = await suite.client.token.createWithClientCredentials({
+                client_id: client.id,
+                client_secret: secret,
+            });
+            const http = new HTTPClient({ baseURL: suite.baseURL });
+            http.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
+            return http;
+        };
+
+        scopePolicyReader = await createPolicyBoundReader(scopePolicyReaderSecret, scopePolicy.id);
+        attributesPolicyReader = await createPolicyBoundReader(attributesPolicyReaderSecret, attributesPolicy.id);
     });
 
     afterAll(async () => {
@@ -395,6 +449,43 @@ describe('junction entities (realm isolation)', () => {
         expect(response.data).toHaveLength(1);
         expect(response.data[0].permission).toBeDefined();
         expect(response.data[0].permission!.realmId).toBeNull();
+    });
+
+    // A grant policy that LOWERS is written against the entity the permission names, so
+    // pushing its condition onto a junction row emits SQL over a column that table lacks:
+    // a 500, not a denial. The control is therefore that the read answers at all, while
+    // the reach still gates the row.
+    it.each([
+        ['scope-mode realm-match', () => scopePolicyReader],
+        ['attributes', () => attributesPolicyReader],
+    ])('serves a reader whose grant carries a lowerable %s policy', async (_label, reader) => {
+        const api = reader();
+        const cases: [string, any, string, string][] = [
+            ['role-permission', api.rolePermission, ownRolePermissionId, foreignRolePermissionId],
+            ['user-role', api.userRole, ownUserRoleId, foreignUserRoleId],
+            ['client-role', api.clientRole, ownClientRoleId, foreignClientRoleId],
+            ['client-scope', api.clientScope, ownClientScopeId, foreignClientScopeId],
+            ['client-permission', api.clientPermission, ownClientPermissionId, foreignClientPermissionId],
+            ['user-permission', api.userPermission, ownUserPermissionId, foreignUserPermissionId],
+            ['permission-policy', api.permissionPolicy, ownPermissionPolicyId, foreignPermissionPolicyId],
+            ['identity-provider-role-mapping', api.identityProviderRoleMapping, ownProviderRoleId, foreignProviderRoleId],
+        ];
+
+        for (const [name, entityApi, ownId, foreignId] of cases) {
+            // answering at all is the assertion; whether the row passes the operator's
+            // own policy is that policy's business
+            await entityApi.getMany({ filters: { id: ownId } });
+
+            const foreign = await entityApi.getMany({ filters: { id: foreignId } });
+            expect(foreign.data, name).toHaveLength(0);
+        }
+    });
+
+    it('still lists an own-realm row for a reader whose grant carries a realm-match policy', async () => {
+        // the control for the pair above: the scope-mode policy admits the reader's own
+        // realm, so an empty result there would mean the gate denies everything
+        const own = await scopePolicyReader.rolePermission.getMany({ filters: { id: ownRolePermissionId } });
+        expect(own.data.some((entity: any) => entity.id === ownRolePermissionId)).toBe(true);
     });
 
     it('still refuses a foreign realm role to the reader directly', async () => {
