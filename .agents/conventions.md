@@ -306,6 +306,18 @@ reported nothing. An entry spliced by mistake is put back by hand, copied
 from the previous lock, never re-resolved.
 
 
+## Response Versioning
+
+**A response never carries its own `version` field.** Versioning the API is an
+all-or-nothing decision taken once for the whole surface, as a path prefix
+(`/v1/...`), never per endpoint: a version on one response says nothing about
+the endpoint next door, and one that is always `1` is a promise nobody is
+keeping. If the API is ever versioned, every route moves together.
+
+`GET /schemas` is the one exception and is not a precedent: its `meta.version`
+is the rapiq version that produced the descriptions it serves, a property of
+the vocabulary rather than of the response shape.
+
 ## Interfaces & Types
 
 - **Every interface is prefixed with `I`**: `IEntityAPI`, `IClient`, `IRealmAPI`, `IEntityRepository`, `IDomainEventHandler`.

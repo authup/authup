@@ -14,6 +14,7 @@ import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
     buildAuthorizationCatalog,
+    buildAuthorizationCheck,
     buildAuthorizationGrants,
 } from '../../../utils/authorization';
 
@@ -48,6 +49,7 @@ function buildStore(handlers: FakeHandlerMap = {}, cookieSession = false) {
             'POST /token/introspect': () => ({ ...INTROSPECTION }),
             'GET /sessions/@me/introspect': () => ({ ...INTROSPECTION }),
             'GET /authorization': () => buildAuthorizationCatalog(),
+            'POST /authorization/check': () => buildAuthorizationCheck(),
             'POST /token/revoke': () => ({}),
             ...handlers,
         },
@@ -230,13 +232,16 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
     });
 
-    it('falls back to the name-only view when the server has no authorization route', async () => {
+    it('falls back to the name-only view only when neither authorization route exists', async () => {
         const { store, httpClient } = buildStore({
             'POST /token/introspect': () => ({
                 ...INTROSPECTION,
                 permissions: [...buildAuthorizationGrants(), { name: 'legacy_only' }],
             }),
             'GET /authorization': () => {
+                throw createResponseError(404, 'Not Found');
+            },
+            'POST /authorization/check': () => {
                 throw createResponseError(404, 'Not Found');
             },
         });
@@ -247,15 +252,71 @@ describe('core/store (authorization catalog)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).resolves.toBeUndefined();
 
-        // the 404 is memoized like a catalog: a revalidation does not probe again
+        // both 404s are memoized like a catalog: a revalidation probes neither again
         store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
         await store.resolve();
 
         expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(1);
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).resolves.toBeUndefined();
     });
 
-    it('falls back to the name-only view on a 403 and asks again for the next signed-in session', async () => {
+    // The payoff: a PUBLIC client holds no secret, so it can obtain no
+    // `client_credentials` token and has no credential for the catalog's gate.
+    // The verdicts are authoritative where the name-only view is merely coarse.
+    it('builds the evaluator from the check when the catalog is out of reach', async () => {
+        const { store, httpClient } = buildStore({
+            'POST /token/introspect': () => ({
+                ...INTROSPECTION,
+                permissions: [...buildAuthorizationGrants(), { name: 'legacy_only' }],
+            }),
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({
+            name: 'user_read',
+            data: realm(AUTHORIZATION_REALM),
+        })).resolves.toBeUndefined();
+
+        // the answer is per realm: a realm the request never named denies, and
+        // so does a grant the name-only view would have passed on its name alone
+        await expect(store.permissionEvaluator.preEvaluateOneOf({
+            name: 'user_read',
+            data: realm('realm-2'),
+        })).rejects.toThrow();
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'legacy_only' })).rejects.toThrow();
+
+        // it asks about the identity's own realm plus the global rows
+        const [request] = findRequests(httpClient, '/authorization/check');
+        expect(request?.body).toEqual({ realms: 'ownOrNull' });
+    });
+
+    it('memoizes the check per signed-in session, like the catalog', async () => {
+        const { store, httpClient } = buildStore({
+            'GET /authorization': () => {
+                throw createResponseError(403, 'Forbidden');
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        store.applyTokenGrantResponse({ ...GRANT_RESPONSE, access_token: 'xyz-2' });
+        await store.resolve();
+
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(1);
+
+        await store.logout();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(findRequests(httpClient, '/authorization/check')).toHaveLength(2);
+    });
+
+    it('asks for the catalog again for the next signed-in session after a 403', async () => {
         const { store, httpClient } = buildStore({
             'GET /authorization': () => {
                 throw createResponseError(403, 'Forbidden');
@@ -266,7 +327,6 @@ describe('core/store (authorization catalog)', () => {
 
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
         expect(findRequests(httpClient, '/authorization')).toHaveLength(1);
-        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read', data: realm('realm-2') })).resolves.toBeUndefined();
 
         // a 403 is per credential: the memo does not outlive the session
         await store.logout();

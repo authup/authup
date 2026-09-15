@@ -238,3 +238,51 @@ same aggregation and evaluators, which is what makes the decisions equal.
 5. A resource server must fail closed on a missing or malformed catalog and on
    an introspection without a grant list. Do not read the entries' names alone
    there.
+
+## Gating a public client with the batch check
+
+The catalog is gated, and that gate is unsatisfiable for a **public client**: it
+holds no secret, so it can obtain no `client_credentials` token and has no
+credential of its own to be gated on. Making the catalog anonymous instead
+would publish every policy predicate to anyone who can reach the server, so a
+public client reads verdicts rather than configuration.
+
+```typescript
+const result = await client.authorization.check(
+    { realms: 'ownOrNull' },
+    { authorizationHeader: { type: 'Bearer', token: accessToken } },
+);
+// [{ name: 'user_read', realms: ['<your realm id>', null] }]
+
+const evaluator = await createAuthorizationCheckEvaluator({ result, identity });
+await evaluator.preEvaluateOneOf({ name: 'user_read' });
+```
+
+`POST /authorization/check` needs an identity and no permission. Both body
+members are optional:
+
+- `names` restricts the check to a subset. Omit it and every definition is
+  checked, which is the point: a client that names what it checks has to keep
+  that list in step with its own UI, and a name missing from the request fails
+  silently as a control that quietly disappears.
+- `realms` is `own`, `ownOrNull` (the default) or an explicit list, with `null`
+  for the global rows every realm shares. A symbolic selector resolves against
+  your own identity. An explicit list is taken and echoed verbatim, so the
+  server resolves no realm key and you match the answer against your own input.
+  There is no `any`: name the realm you care about. At most 256 names and 8
+  realms per call.
+
+A permission that reaches none of the requested realms is **absent** from the
+answer, so absent means denied, and a check carrying a `realmMatch` for a realm
+you never asked about denies too. Ask about the realms your UI will ask about.
+
+Two limits to hold on to:
+
+- **It is an upper bound on what may be attempted, never an entitlement.** It
+  is a pre-gate, so a grant restricted by a junction policy that needs a
+  resource row passes here and is still decided per row on the server. Use it
+  for coarse gating of nav items, buttons and routes. A resource server
+  deciding access to its own rows wants the catalog, which can evaluate those
+  policies against the row and lower a collection query through `compile()`.
+- **A bare name means "in at least one requested realm".** A `realmScope: none`
+  grant therefore does not pass, where a realm-less check would let it through.

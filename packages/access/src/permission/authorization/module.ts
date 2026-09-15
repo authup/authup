@@ -25,14 +25,20 @@ import type {
     PermissionEvaluationContext,
 } from '../evaluator';
 import { PermissionEvaluator } from '../evaluator';
+import { PermissionError } from '../error';
 import { buildPermissionKey } from '../helpers';
 import { PermissionMemoryProvider } from '../provider';
 import { normalizeRealmScope } from '../realm-scope';
 import type { BasePermission, PermissionPolicyBinding } from '../types';
 import { AuthorizationCatalogStaleError } from './error';
 import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
+import { parseAuthorizationCheckEvaluatorInput } from './check-schema';
 import { parseAuthorizationEvaluatorInput } from './schema';
-import type { AuthorizationEvaluatorInput, AuthorizationPolicy } from './types';
+import type {
+    AuthorizationCheckEvaluatorInput,
+    AuthorizationEvaluatorInput,
+    AuthorizationPolicy,
+} from './types';
 
 const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
 
@@ -292,6 +298,142 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
                 clientId: ctx.clientId,
                 data: withIdentity(ctx.data),
             });
+        },
+    };
+}
+
+/**
+ * An `IPermissionEvaluator` over the answer `POST /authorization/check`
+ * served: the caller's own verdicts, paired with the realms they hold in.
+ *
+ * It is what a PUBLIC client gets where the catalog is out of reach. A public
+ * client holds no secret, so it can obtain no `client_credentials` token and
+ * has no credential of its own for the catalog's gate to be satisfied by;
+ * publishing every policy predicate to it instead would be the wrong trade.
+ * The verdicts are computed by the server from the same grants and the same
+ * evaluators a request runs, so this is authoritative where the name-only
+ * fallback it replaces is merely coarse.
+ *
+ * Two properties follow from the answer being a pre-gate:
+ *
+ * It is an UPPER BOUND, so `evaluate` and `evaluateOneOf` answer exactly what
+ * the pre-gate pair answers. A check that depends on a resource row belongs to
+ * whoever holds the row, and the server decides it there; answering such a
+ * check here would mean inventing a verdict. That is the same bound the
+ * name-only fallback already had, so nothing that gates on it loosens.
+ *
+ * And a resource realm is matched against what the REQUEST asked about: a
+ * `realmMatch` naming a realm the request never carried is in no entry's list
+ * and therefore denies. That is fail-closed by construction rather than by a
+ * rule, and it is why a caller must ask about the realms its UI will ask
+ * about.
+ */
+export async function createAuthorizationCheckEvaluator(
+    input: AuthorizationCheckEvaluatorInput,
+) : Promise<IPermissionEvaluator> {
+    const { result, identity } = await parseAuthorizationCheckEvaluatorInput(input);
+
+    const verdicts = new Map<string, Set<string | null>>();
+    for (const permission of result) {
+        verdicts.set(permission.name, new Set<string | null>(permission.realms));
+    }
+
+    // The server resolves `own` / `ownOrNull` to the identity's realm ID, while
+    // a caller may name its own realm either way: the reach comparison the
+    // server makes accepts the id or the name, so the consumer has to as well,
+    // or a check carrying the realm NAME would deny against an answer keyed by
+    // the id.
+    const ownKeys = new Set<string>();
+    if (identity?.realmId) {
+        ownKeys.add(identity.realmId);
+    }
+    if (identity?.realmName) {
+        ownKeys.add(identity.realmName);
+    }
+
+    const matchesRealm = (realms: Set<string | null>, value: string | null) : boolean => {
+        if (realms.has(value)) {
+            return true;
+        }
+
+        if (value === null || !ownKeys.has(value)) {
+            return false;
+        }
+
+        for (const key of ownKeys) {
+            if (realms.has(key)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const holds = (name: string, data?: PolicyData) : boolean => {
+        const realms = verdicts.get(name);
+        if (!realms) {
+            return false;
+        }
+
+        if (!data || !data.has(BuiltInPolicyType.REALM_MATCH)) {
+            // No resource realm named, so the question is whether the
+            // permission is held at all, which it is: an entry only exists
+            // when at least one requested realm passed.
+            return true;
+        }
+
+        const value = data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
+        if (Array.isArray(value)) {
+            // A resource spanning several realms needs every one of them,
+            // fail-closed on the empty set, the rule `realmScopeMatches` applies.
+            if (value.length === 0) {
+                return false;
+            }
+
+            return value.every((entry) => matchesRealm(realms, entry ?? null));
+        }
+
+        return matchesRealm(realms, value ?? null);
+    };
+
+    const names = (ctx: PermissionEvaluationContext) : string[] => (Array.isArray(ctx.name) ?
+        ctx.name :
+        [ctx.name]);
+
+    const assertEvery = async (ctx: PermissionEvaluationContext) : Promise<void> => {
+        for (const name of names(ctx)) {
+            if (!holds(name, ctx.data)) {
+                throw PermissionError.evaluationFailed(ctx.name);
+            }
+        }
+    };
+
+    const assertSome = async (ctx: PermissionEvaluationContext) : Promise<void> => {
+        const list = names(ctx);
+        for (const name of list) {
+            if (holds(name, ctx.data)) {
+                return;
+            }
+        }
+
+        throw PermissionError.evaluationFailed(ctx.name);
+    };
+
+    return {
+        evaluate: assertEvery,
+        evaluateOneOf: assertSome,
+        preEvaluate: assertEvery,
+        preEvaluateOneOf: assertSome,
+        async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
+            // A verdict set carries no row predicate, so nothing here can be
+            // lowered into a query. `deny` is still sound and worth answering:
+            // a name held in no requested realm cannot match a row either.
+            const list = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
+            if (list.some((name) => holds(name, ctx.data))) {
+                return { verdict: 'post' };
+            }
+
+            return { verdict: 'deny' };
         },
     };
 }

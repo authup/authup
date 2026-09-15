@@ -5,8 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePermission, BasePolicy } from '@authup/access';
+import type {
+    AuthorizationCheckRealms,
+    BasePermission,
+    BasePolicy,
+    IPermissionEvaluator,
+    IdentityPolicyData,
+} from '@authup/access';
 import type { Logger } from '@authup/server-kit';
+import type { IIdentityPermissionProvider } from '../identity/index.ts';
 
 /**
  * One permission definition: the permission and the policy trees bound to it.
@@ -46,3 +53,50 @@ export type AuthorizationCatalogBuilderContext = {
  * configuration.
  */
 export type AuthorizationRealmReach = (realmId: string | null) => Promise<boolean>;
+
+/**
+ * Everything the batch check is built from, per boot. The definitions come
+ * from the same bulk read the catalog uses, and the grants from the provider
+ * every request path already resolves them through, so a verdict cannot
+ * disagree with the gate that would decide the same call.
+ */
+export type AuthorizationCheckBuilderContext = {
+    catalogRepository: IAuthorizationCatalogRepository,
+    identityPermissionProvider: IIdentityPermissionProvider,
+};
+
+export type AuthorizationCheckRequest = {
+    /**
+     * The permission namespaces to check. Omitted, every global definition is
+     * checked, so a caller never maintains a list in step with its own UI.
+     */
+    names?: string[],
+    /**
+     * Which resource realms to check against, symbolic or verbatim. Omitted,
+     * `ownOrNull`.
+     */
+    realms?: AuthorizationCheckRealms,
+    /**
+     * The caller's identity, used to resolve a symbolic realm selector. It is
+     * NOT what the evaluation reads: the identity reaches the policy data
+     * through `decorate`, under the scope condition that belongs there.
+     */
+    identity?: IdentityPolicyData,
+    /**
+     * Wrap the evaluator the build composes, so the caller's own request rules
+     * apply to it. REQUIRED rather than defaulted: the one rule that matters
+     * here withholds the identity from a credential whose scopes lack
+     * `global`, and a default would make forgetting it fail open.
+     */
+    decorate: (evaluator: IPermissionEvaluator) => IPermissionEvaluator,
+};
+
+/**
+ * The validated body of `POST /authorization/check`. Declared here rather than
+ * taken from `@authup/core-http-kit`, which is the wire-facing shape: this is
+ * what the validator produces and the builder consumes.
+ */
+export type AuthorizationCheckPayload = {
+    names?: string[],
+    realms?: AuthorizationCheckRealms,
+};

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog } from '@authup/access';
+import type { AuthorizationCatalog, AuthorizationCheckResult } from '@authup/access';
 import type { OAuth2TokenPermission } from '@authup/specs';
 
 /**
@@ -55,4 +55,13 @@ export function buildAuthorizationGrants() : OAuth2TokenPermission[] {
         realm_scope: 'own',
         policies: [],
     }];
+}
+
+/**
+ * The verdicts `POST /authorization/check` answers for the same definition:
+ * held in the identity's own realm and not globally, which is what the
+ * catalog's `own` grant evaluates to.
+ */
+export function buildAuthorizationCheck() : AuthorizationCheckResult {
+    return [{ name: 'user_read', realms: [AUTHORIZATION_REALM] }];
 }

@@ -1,0 +1,292 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { describe, expect, it } from 'vitest';
+import type {
+    IPermissionEvaluator,
+    IdentityPolicyData,
+    PermissionEvaluationContext,
+    PermissionPolicyBinding,
+} from '@authup/access';
+import { BuiltInPolicyType, PolicyData, RealmScope } from '@authup/access';
+import { buildAuthorizationCheck } from '../../../../src/core/authorization/check.ts';
+import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
+import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorization-catalog-repository.ts';
+import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permission-provider.ts';
+
+const REALM_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
+const FOREIGN_REALM_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb099';
+const CLIENT_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
+
+const systemDefault = {
+    id: 'policy-default',
+    name: 'system.default',
+    realmId: null,
+    builtIn: true,
+    type: 'composite',
+    decisionStrategy: 'unanimous',
+    children: [
+        {
+            id: 'policy-identity', 
+            realmId: null, 
+            type: 'identity', 
+            builtIn: true, 
+        },
+        {
+            id: 'policy-binding', 
+            realmId: null, 
+            type: 'permissionBinding', 
+            builtIn: true, 
+        },
+    ],
+};
+
+function definition(name: string, overrides: Record<string, any> = {}) : PermissionPolicies {
+    return [
+        {
+            name, 
+            realmId: null, 
+            clientId: null, 
+            ...overrides,
+        },
+        [systemDefault as any],
+    ];
+}
+
+const identity : IdentityPolicyData = {
+    type: 'user',
+    id: 'c641912c-21e5-4cb4-84b6-169e2b2bb001',
+    realmId: REALM_ID,
+    realmName: 'tenant',
+    clientId: null,
+};
+
+/**
+ * What `RequestPermissionEvaluator` does for a request: attach the identity.
+ * Spelled out here so a spec can also model the credential that carries no
+ * `global` scope, where the production wrapper attaches nothing.
+ */
+function decorateWith(value?: IdentityPolicyData) {
+    return (evaluator: IPermissionEvaluator) : IPermissionEvaluator => {
+        const extend = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
+            if (!value) {
+                return ctx;
+            }
+
+            const data = ctx.data || new PolicyData();
+            data.set(BuiltInPolicyType.IDENTITY, value);
+
+            return { ...ctx, data };
+        };
+
+        return {
+            evaluate: (ctx) => evaluator.evaluate(extend(ctx)),
+            evaluateOneOf: (ctx) => evaluator.evaluateOneOf(extend(ctx)),
+            preEvaluate: (ctx) => evaluator.preEvaluate(extend(ctx)),
+            preEvaluateOneOf: (ctx) => evaluator.preEvaluateOneOf(extend(ctx)),
+            compile: (ctx) => evaluator.compile(ctx as any),
+        };
+    };
+}
+
+function grant(name: string, realmScope: `${RealmScope}`) : PermissionPolicyBinding {
+    return {
+        permission: {
+            name, 
+            realmId: null, 
+            clientId: null, 
+        },
+        realmScope,
+    };
+}
+
+function setup(definitions: PermissionPolicies[], grants: PermissionPolicyBinding[]) {
+    const catalogRepository = new FakeAuthorizationCatalogRepository();
+    catalogRepository.setDefinitions(definitions);
+
+    const identityPermissionProvider = new FakeIdentityPermissionProvider();
+    identityPermissionProvider.setBindings(grants);
+
+    return { catalogRepository, identityPermissionProvider };
+}
+
+describe('core/authorization/check', () => {
+    it('answers the own realm and the global rows for an ownOrNull grant', async () => {
+        const ctx = setup(
+            [definition('user_update'), definition('user_read')],
+            [grant('user_update', RealmScope.OWN_OR_NULL)],
+        );
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([
+            { name: 'user_update', realms: [REALM_ID, null] },
+        ]);
+    });
+
+    it('answers the own realm alone for an own grant', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
+    });
+
+    it('answers a named foreign realm only for an any grant', async () => {
+        const ctx = setup(
+            [definition('user_update'), definition('realm_read')],
+            [
+                grant('user_update', RealmScope.OWN),
+                grant('realm_read', RealmScope.ANY),
+            ],
+        );
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            realms: [FOREIGN_REALM_ID],
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([{ name: 'realm_read', realms: [FOREIGN_REALM_ID] }]);
+    });
+
+    it('omits a permission reaching none of the requested realms', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.NONE)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([]);
+    });
+
+    it('omits a requested name with no global definition', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            names: ['user_update', 'not_a_permission'],
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
+    });
+
+    it('answers nothing for a credential whose scopes withhold the identity', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.ANY)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(undefined),
+        });
+
+        expect(result).toEqual([]);
+    });
+
+    it('resolves the own selector to the identity realm alone', async () => {
+        const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.OWN_OR_NULL)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            realms: RealmScope.OWN,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([{ name: 'user_read', realms: [REALM_ID] }]);
+    });
+
+    it('echoes an explicit realm list verbatim and deduplicates it', async () => {
+        const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            realms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toEqual([
+            { name: 'user_read', realms: [FOREIGN_REALM_ID, null] },
+        ]);
+    });
+
+    it('skips a realm- or client-scoped definition, which no gate can resolve either', async () => {
+        const ctx = setup(
+            [
+                definition('user_read'),
+                definition('tenant_thing', { realmId: REALM_ID }),
+                definition('client_thing', { clientId: CLIENT_ID }),
+            ],
+            [
+                grant('user_read', RealmScope.ANY),
+                grant('tenant_thing', RealmScope.ANY),
+                grant('client_thing', RealmScope.ANY),
+            ],
+        );
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result.map((entry) => entry.name)).toEqual(['user_read']);
+    });
+
+    it('loads the identity grants exactly once for the whole batch', async () => {
+        const ctx = setup(
+            [definition('a_read'), definition('b_read'), definition('c_read')],
+            [
+                grant('a_read', RealmScope.ANY),
+                grant('b_read', RealmScope.ANY),
+                grant('c_read', RealmScope.ANY),
+            ],
+        );
+
+        let loads = 0;
+        const provider = ctx.identityPermissionProvider;
+        const inner = provider.getFor.bind(provider);
+        provider.getFor = async (value: IdentityPolicyData) => {
+            loads += 1;
+
+            return inner(value);
+        };
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity,
+            decorate: decorateWith(identity),
+        });
+
+        expect(result).toHaveLength(3);
+        expect(loads).toEqual(1);
+    });
+
+    it('answers nothing when the identity has no realm to resolve own against', async () => {
+        const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
+
+        const result = await buildAuthorizationCheck(ctx, {
+            identity: {
+                ...identity, 
+                realmId: null, 
+                realmName: null, 
+            },
+            realms: RealmScope.OWN,
+            decorate: decorateWith({
+                ...identity, 
+                realmId: null, 
+                realmName: null, 
+            }),
+        });
+
+        expect(result).toEqual([]);
+    });
+});

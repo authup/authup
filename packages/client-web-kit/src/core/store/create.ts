@@ -5,8 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, IPermissionEvaluator, IdentityPolicyData } from '@authup/access';
-import { createAuthorizationEvaluator, isAuthorizationCatalogStaleError } from '@authup/access';
+import type {
+    AuthorizationCatalog,
+    AuthorizationCheckResult,
+    IPermissionEvaluator,
+    IdentityPolicyData,
+} from '@authup/access';
+import {
+    RealmScope,
+    createAuthorizationCheckEvaluator,
+    createAuthorizationEvaluator,
+    isAuthorizationCatalogStaleError,
+} from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
@@ -315,8 +325,16 @@ export function createStore(context: StoreCreateContext) {
     // cleanup() clears it and each signed-in session fetches it once.
     let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
 
+    // The memoized answer `POST /authorization/check` serves, which is what a
+    // PUBLIC client gets where the catalog is out of reach: it holds no secret,
+    // so it can obtain no `client_credentials` token and has no credential of
+    // its own for the catalog's gate. Per identity rather than per credential,
+    // and cleared by the same cleanup() for the same reason.
+    let checkPromise : Promise<AuthorizationCheckResult | null> | undefined;
+
     const reloadCatalog = () => {
         catalogPromise = undefined;
+        checkPromise = undefined;
     };
 
     // --------------------------------------------------------------------
@@ -450,6 +468,49 @@ export function createStore(context: StoreCreateContext) {
         return catalogPromise;
     };
 
+    /**
+     * The verdicts, asked about the two realms this session knows at staging:
+     * its own and the global rows, which is the reach a realm administrator's
+     * reads are held at and what a console gates on. A realm the request never
+     * named is fail-closed in the evaluator, so a surface that later asks about
+     * a third realm needs its own call rather than a wider answer here.
+     *
+     * A `404` (a server predating the route) memoizes as null and lands on the
+     * name-only view, so a console newer than its server keeps working. Any
+     * other failure rejects and clears the memo, so the next resolve retries.
+     */
+    const fetchCheck = async (token?: string) : Promise<AuthorizationCheckResult | null> => {
+        try {
+            return await client.authorization.check(
+                { realms: RealmScope.OWN_OR_NULL },
+                token ? { authorizationHeader: { type: 'Bearer', token } } : undefined,
+            );
+        } catch (e) {
+            const { status } = extractErrorContext(e);
+            if (status === 404) {
+                return null;
+            }
+
+            throw e;
+        }
+    };
+
+    const loadCheck = (token?: string) : Promise<AuthorizationCheckResult | null> => {
+        if (!checkPromise) {
+            const promise = fetchCheck(token).catch((e) => {
+                if (checkPromise === promise) {
+                    checkPromise = undefined;
+                }
+
+                throw e;
+            });
+
+            checkPromise = promise;
+        }
+
+        return checkPromise;
+    };
+
     const buildIdentity = (
         introspection: OAuth2TokenIntrospectionResponse,
     ) : IdentityPolicyData => {
@@ -506,13 +567,23 @@ export function createStore(context: StoreCreateContext) {
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
     ) : Promise<IPermissionEvaluator | null> => {
+        const identity = buildIdentity(introspection);
+
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
-            return null;
+            const result = await loadCheck(token);
+            if (!result) {
+                return null;
+            }
+
+            try {
+                return await createAuthorizationCheckEvaluator({ result, identity });
+            } catch {
+                return createDenyAllPermissionEvaluator();
+            }
         }
 
-        const identity = buildIdentity(introspection);
         const grants = introspection.permissions ?? [];
 
         try {

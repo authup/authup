@@ -6,6 +6,7 @@
  */
 
 export * from './check';
+export * from './check-schema';
 export * from './constants';
 export * from './error';
 export * from './module';

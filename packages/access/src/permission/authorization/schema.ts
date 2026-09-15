@@ -11,7 +11,11 @@ import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
 import { z } from 'zod';
 import { RealmScope } from '../realm-scope';
-import type { AuthorizationCatalog, AuthorizationEvaluatorInput, AuthorizationGrant } from './types';
+import type {
+    AuthorizationCatalog,
+    AuthorizationEvaluatorInput,
+    AuthorizationGrant,
+} from './types';
 
 const id = z.string().min(1);
 const namespaceId = id.nullable();
@@ -161,3 +165,15 @@ export async function parseAuthorizationEvaluatorInput(
         identity,
     };
 }
+
+/**
+ * One verdict: the permission namespace and the requested realms it holds in.
+ * A realm value is a realm key the caller itself supplied, or `null` for the
+ * global rows, so nothing here is resolved or looked up.
+ */
+export const authorizationCheckPermissionSchema = z.object({
+    name: z.string().min(1),
+    realms: z.array(z.string().min(1).nullable()).min(1),
+});
+
+export const authorizationCheckResultSchema = z.array(authorizationCheckPermissionSchema);
