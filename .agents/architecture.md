@@ -2974,13 +2974,13 @@ behalf.
 constant-false `inArray('id', [])` on `deny`, the per-row drop loop on `post`)
 and `getOne` runs `evaluateOneOf` with `resourceRealmMatch(entity)` after the
 fetch. So on these four endpoints an `ownOrNull` reader sees its own realm's rows
-plus the global ones and nothing else, with exact totals and pagination; `policy`
-inherits the gate on `/policies/:id/expanded`, which delegates to the same
-`getOne`. The JUNCTION reads are a separate family and still carry no realm
-predicate, so a row of these four types remains reachable cross-realm as an
-include target there (`GET /role-permissions?include=permission` and its
-siblings) — tracked as #3594, since the fix is the same compiled-WHERE shape
-over each junction's owner-realm key rather than anything here.
+plus the global ones and nothing else, with exact totals and pagination on the
+`conditional` verdict (the `post` fallback's totals are an upper bound — see
+*The `post` verdict is approximate* below); `policy` inherits the gate on
+`/policies/:id/expanded`, which delegates to the same `getOne`. The JUNCTION
+reads carry the same gate since #3594, lowered onto each junction's owner-realm
+key, so a row of these four types is no longer reachable cross-realm as an
+include target either.
 
 The two halves ship together on purpose. Gating only the list would hide a row
 that `GET /<entity>/<uuid>` still returns, and that is the more dangerous
@@ -3007,10 +3007,68 @@ operator role granted `<E>_READ` through the API takes the junction default
 actor cannot bind a global row either, but it is why `realm_admin` holds these
 reads at `ownOrNull`.
 
-The shape is repeated per service rather than extracted: thirteen call sites now
-spell it out, five of them OR an ownership term in that no pure helper covers,
-and a core service cannot import the repository-layer helpers anyway
+The shape is repeated per service rather than extracted: twenty-one call sites
+now spell it out, five of them OR an ownership term in that no pure helper
+covers, and a core service cannot import the repository-layer helpers anyway
 (conventions.md → *Consolidating shallow modules*).
+
+### Junction reads
+
+**Every `JunctionEntityService` read carries the same gate, lowered onto the
+OWNER realm key** (issue #3594). All EIGHT of them — `permission-policy`,
+`role-permission`, `client-role`, `client-scope`, `user-role`,
+`client-permission`, `user-permission`, `identity-provider-role-mapping` — ran a
+name-level pre-gate and then handed the decoded query straight to the
+repository, so `GET /role-permissions?include=permission` and its siblings
+returned another realm's permission, role, scope and policy rows to any caller
+holding the target triple. The relations read gate (#3295) could not catch it:
+it runs `preEvaluateOneOf` with no `realmMatch` data, so the realmScope factor
+neutral-passes and the gate asks whether the caller may read that TYPE, never
+whether it may reach that ROW's realm. `getOne` was the same hole one layer
+down, and shipped with it for the reason #3574 gives: a gated list that hides a
+row `GET /<junction>/<uuid>` still returns is the more dangerous direction.
+
+**A junction row carries no `realmId`, which is why this needed a seam rather
+than a copy.** The compiled reach binds a column, and
+`RealmMatchPolicyEvaluator` scope-mode lowering hard-coded `realmId`; a verbatim
+copy of the entity shape would have emitted `eq('realmId', …)` against
+`auth_role_permissions` and died at the driver. The override already half
+existed — that evaluator reads `attributeName` as the lowered column and scope
+mode ignores it while EVALUATING — so the column name is now threaded as
+`PermissionCompileContext.realmAttributeName` →
+`PolicyEvaluationContext.realmAttributeName` → the inline `{ scope }` policy the
+binding evaluator builds. It can never move an `evaluate()` outcome, because
+settled scope-mode evaluation takes the resource realm from the `realmMatch`
+data key and consults no column name at all. Each service passes
+`this.ownerRealmKey`, the field `JunctionEntityService` already declares
+`abstract` so a junction cannot silently skip its realm.
+
+Three details are load-bearing. The OWNER key, never the member key: `user-role`
+gates on `userRealmId`, not the `roleRealmId` of a role that is usually global,
+and gating on the member side would deny every own-reach reader. The post
+fallback passes `junctionResourceRealm(entity)` under `REALM_MATCH` explicitly —
+`resourceRealmMatch` is presence-based on `realmId`, which a junction row never
+has, so it would return `{}` and neutral-pass every foreign row while looking
+correct. And the adapters force-select that key through
+`applyJunctionRealmScopeSelect` (the sibling of `applyRealmScopeSelect`, which
+prepends a `realmId` no junction table has): a client `fields=` projection
+replaces the schema default, and a stripped owner realm coalesces to `null`,
+which an `ownOrNull` reader reaches.
+
+Two consequences worth stating. `permission-policy` gates on
+`permissionRealmId`, and the built-in permission catalogue is global, so an
+`own`-reach reader sees no built-in permission's policy bindings — the same
+narrowing `own` already means for the permissions themselves. And `client-scope`
+and `identity-provider-role-mapping` pre-gate on the PARENT family
+(`CLIENT_*`, `IDENTITY_PROVIDER_*`), so the compiled reach describes the parent
+entity's realm; that coincides with `clientRealmId` / `providerRealmId` only
+because the junction denormalizes it, which is correct but is why the name list
+each service compiles is copied verbatim from its own pre-gate rather than
+normalized to a READ/UPDATE/DELETE triple.
+
+The junction WRITE paths were already gated (`junctionResourceRealm` stamps the
+owner realm, pinned by `test/unit/http/controllers/security/realm-isolation.spec.ts`);
+only the reads were open.
 
 ### Realm Defaulting
 
@@ -3701,10 +3759,13 @@ term is `and(reachCondition, junctionPolicyCondition)`, OR-composed all-or-nothi
 condition (`inArray('id', [])`, keeps meta shape); `conditional` →
 `appendQueryConditions` — the authorization runs as WHERE, so **pagination and totals
 stay exact**; `post` → a per-row `evaluate` + `total -= 1` drop loop is the sound
-fallback (and the plan-039 force-select discipline still serves exactly that
+fallback, approximate in the two ways *The `post` verdict is approximate* states
+(and the plan-039 force-select discipline still serves exactly that
 path). Converted: `KeyService`/`TrustAnchorService` and, since #3574, the four
 global-capable `RoleService`/`ScopeService`/`PermissionService`/`PolicyService`
 (pure realm gate — see *Realm Scoping Model → Global-capable entity reads*);
+since #3594 the eight `JunctionEntityService` reads, which compile with
+`realmAttributeName: this.ownerRealmKey` — see *Junction reads* below;
 `SessionService`/`EventService`/`ConsentService` compose their **ownership
 alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition)`
 (events: `actorId`/`actorType`); on `deny` the ownership condition alone applies.
@@ -3730,6 +3791,47 @@ gate (key/trust-anchor shape, no ownership term).
 per-row expectations; override via `setCompileResult`. The final #3286 piece —
 include gating via `relations.validate` — shipped as #3295: see *Query IR flow →
 Include authorization*.
+
+**The `post` verdict is approximate, and this is the one place that says so
+(#3595).** The `conditional` verdict runs the authorization as a WHERE, so the
+database counts and pages the authorized set and `meta.total` is exact. The
+`post` fallback cannot: it fetches ONE page through the un-gated query and then
+drops rows from that page, so it is approximate in two ways, both deliberate.
+`meta.total` is `unscopedTotal - droppedOnThisPage`, i.e. an **upper bound** on
+the accessible set — it still counts unauthorized rows on pages the caller has
+not fetched. And a page comes back **shorter than its `limit`**, empty in the
+worst case, while later pages still hold authorized rows. A consumer paginating
+a `post`-verdict read must therefore walk to the end rather than stop on a short
+page, and must not render `meta.total` as a count of what it may see. The six
+services that compose an ownership alternative widen the skew slightly further:
+`or(ownership, compiled.condition)` is built only on the non-`post` branch, so
+the `post` branch fetches over a strictly wider row set and relies on the
+per-row check alone.
+
+Fetching the whole matching collection before paginating is the obvious fix and
+is **rejected**: every registered schema declares `pagination: { maxLimit: 50 }`
+precisely to bound a read, and an unpaginated fetch plus a per-row policy
+evaluation turns an authenticated list request into an unbounded one — the whole
+permission catalogue on `auth_permissions`, an unbounded table on `auth_events`
+and `auth_sessions`. Lowering `AttributeNamesPolicyEvaluator` (the type that
+forces `post` in practice) is rejected too, and not as a cost trade: that policy
+is a predicate over which KEYS the evaluation bag carries — a write payload's
+field names, or a requested projection — never over a row's VALUES, so as a row
+predicate it is row-INDEPENDENT and `compile()` does not know the projection it
+would have to range over. `IPolicyEvaluator.toCondition`'s own contract already
+names `attributeNames` among the policies that never lower. What keeps the
+approximation narrow is that `post` is only reached when a grant carries a
+policy with no `toCondition`: under default provisioning every `admin` /
+`realm_admin` grant is policy-free, so the reach lowers and the verdict is
+`conditional`.
+
+The same two properties hold for the two per-row drop loops that reach this
+shape without calling `compile()` at all — `SessionTokenService.getMany` and
+`IdentityProviderAccountService.getMany` (which skips the compile deliberately:
+its rows carry no `realmId` column for a reach condition to bind). The one
+`compile()` caller that is NOT a drop loop is `secretReadGate` in
+`client/schema.ts`, a field-visibility gate that fails CLOSED on `post` rather
+than falling back per row.
 
 ### EA loading on tree roots
 
@@ -5179,8 +5281,17 @@ and the code issue. A device approval hands the gate `{ realm_id: code.realm_id 
 `prompt`, `max_age` or `acr_values`) and the access-policy error carries no redirect
 (`redirectUriVerified` is never set). `classifyAuthorizeFailure` (`authorization/helpers.ts`)
 maps a refusal onto its `authup_authorize_total` outcome label so both callers record the
-same labels; the approval additionally records `login_required` when the shared `resolve`
-refuses a foreign-realm user, since that refusal runs before the gate.
+same labels. The foreign-realm refusal runs BEFORE the gate, so it is counted in
+`resolveForDecision`, the wrapper the two DECISION methods call (issue #3591; `deny`
+ran the same refusal as `approve` and recorded nothing, so the outcome counted
+approvals only). `lookup` deliberately calls the bare `resolve`: it is a page render,
+the device analogue of the `/authorize` GET, which records nothing either, and it can
+never produce the counter's other labels — contributing only `login_required` would
+skew the ratio. The wrapper is shared rather than duplicated per method for the reason
+the issue exists: the guard sat on one of the two and not the other. It classifies by
+the error's own marker rather than through `classifyAuthorizeFailure`, which would
+label `resolve`'s throttle and user-code-miss throws `error` — one counter per
+brute-force guess.
 
 **The service** (`OAuth2DeviceAuthorizationService`). `issue` freezes the granted scope and
 mints up to five `(device_code, user_code)` pairs against an index collision, then answers the
