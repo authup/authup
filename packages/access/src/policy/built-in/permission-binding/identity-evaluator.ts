@@ -210,14 +210,15 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             if (outcome.pending) {
                 pending = true;
 
-                // `realmAttributeName` says the rows being compiled are NOT the entity this
-                // permission names — a junction, whose realm lives under another column — and
-                // nothing rebases a GRANT policy's own condition onto that row shape. An
-                // operator's policy is written against the entity (`realmId`, its columns), so
-                // lowering it here emits SQL over columns the junction table does not have.
-                // Refuse the whole class rather than rebasing one case: the caller falls back
-                // to the per-row `post` branch, which evaluates that same policy against the
-                // junction's real attributes and reaches the identical verdict. The grant's
+                // A caller that names its realm column has told us the row shape is not the
+                // default one, and nothing rebases a GRANT policy's own condition onto it.
+                // Authup's own junction reads are the case that proves it: the policy is the
+                // operator's, written against the ENTITY the permission names, so lowering it
+                // emits SQL over columns `auth_role_permissions` and its siblings do not have.
+                // We cannot tell a row shape that does carry those fields from one that does
+                // not, so refuse the class: the caller falls back to the per-row `post` branch,
+                // which evaluates the same policy against the real attributes and reaches the
+                // identical verdict wherever the pushdown would not have crashed. The grant's
                 // REACH is unaffected — it is built above from the column the caller named, so
                 // the policy-free grants that dominate real deployments still push down.
                 if (ctx.withConditions && outcome.condition && !ctx.realmAttributeName) {
