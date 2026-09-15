@@ -179,8 +179,12 @@ switch (compiled.verdict) {
 `condition` is a rapiq condition over row attributes; grant reach targets the
 `realmId` column, or another column named with
 `compile({ name, realmAttributeName })` when your rows carry their realm
-elsewhere. Call `compile` without `realmMatch` or `attributes` data. A pending
-policy that cannot be lowered produces `post`, never an unrestricted query.
+elsewhere. Naming one also declares that the rows are not the entity the
+permission names, so a grant's own junction policy — written against that
+entity's columns — is not lowered onto them: such a grant compiles to `post`
+rather than to a condition over a column your rows may not have. Call `compile`
+without `realmMatch` or `attributes` data. A pending policy that cannot be
+lowered produces `post`, never an unrestricted query.
 
 ## Catalog and grant contract
 

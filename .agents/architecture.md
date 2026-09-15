@@ -2978,9 +2978,15 @@ plus the global ones and nothing else, with exact totals and pagination on the
 `conditional` verdict (the `post` fallback's totals are an upper bound — see
 *The `post` verdict is approximate* below); `policy` inherits the gate on
 `/policies/:id/expanded`, which delegates to the same `getOne`. The JUNCTION
-reads carry the same gate since #3594, lowered onto each junction's owner-realm
-key, so a row of these four types is no longer reachable cross-realm as an
-include target either.
+reads carry the same gate since #3594, lowered onto each junction's OWNER realm
+key, so a FOREIGN-realm junction row no longer carries a row of these four types
+along as an include target. The MEMBER side stays ungated by design (see
+*Junction reads*): a junction row whose owner is GLOBAL — the two nullable owner
+keys, `role-permission`'s `roleRealmId` and `permission-policy`'s
+`permissionRealmId` — is reachable by an `ownOrNull` reader, so a realm-scoped
+member bound onto a global owner still surfaces through `include=`. Only an
+`any` actor can create that binding, and closing it needs the decode-time
+include gate to become reach-aware, the larger alternative #3594 names.
 
 The two halves ship together on purpose. Gating only the list would hide a row
 that `GET /<entity>/<uuid>` still returns, and that is the more dangerous
@@ -3008,7 +3014,7 @@ actor cannot bind a global row either, but it is why `realm_admin` holds these
 reads at `ownOrNull`.
 
 The shape is repeated per service rather than extracted: twenty-one call sites
-now spell it out, five of them OR an ownership term in that no pure helper
+now spell it out, six of them OR an ownership term in that no pure helper
 covers, and a core service cannot import the repository-layer helpers anyway
 (conventions.md → *Consolidating shallow modules*).
 
@@ -3042,6 +3048,22 @@ settled scope-mode evaluation takes the resource realm from the `realmMatch`
 data key and consults no column name at all. Each service passes
 `this.ownerRealmKey`, the field `JunctionEntityService` already declares
 `abstract` so a junction cannot silently skip its realm.
+
+**A declared column also REFUSES to lower the grant's own policy.** A grant may
+carry a `policyId`, and that policy is the operator's, written against the ENTITY
+the permission names — an `ATTRIBUTES` query over `realmId`, a scope-mode
+`realmMatch`. Nothing rebases such a policy onto a junction's row shape, so
+pushing its condition down emits SQL over a column the junction table does not
+have and the list answers 500, where before the gate existed it answered 200.
+`IdentityPermissionBindingPolicyEvaluator` therefore lowers a pending grant
+policy only while `ctx.realmAttributeName` is unset; under a declared column it
+sets `lowerable = false`, the compile answers `post`, and the per-row branch
+evaluates that same policy against the junction's real attributes and reaches
+the identical verdict. The whole class is refused rather than one instance
+rebased, because the next lowerable policy type would reopen it. The grant's
+REACH is unaffected — it is built from the column the caller named, so the
+policy-free grants that dominate real deployments still push down and keep exact
+totals; only a policy-bound junction reader pays the `post` approximation.
 
 Three details are load-bearing. The OWNER key, never the member key: `user-role`
 gates on `userRealmId`, not the `roleRealmId` of a role that is usually global,
@@ -3827,8 +3849,10 @@ policy with no `toCondition`: under default provisioning every `admin` /
 
 The same two properties hold for the two per-row drop loops that reach this
 shape without calling `compile()` at all — `SessionTokenService.getMany` and
-`IdentityProviderAccountService.getMany` (which skips the compile deliberately:
-its rows carry no `realmId` column for a reach condition to bind). The one
+`IdentityProviderAccountService.getMany`, which skips the compile because its rows
+carry no `realmId` column for a reach condition to bind — a reason #3594 has since
+made obsolete, since `compile({ realmAttributeName })` can name `userRealmId`; it
+is a candidate for conversion, not a place the fallback is required. The one
 `compile()` caller that is NOT a drop loop is `secretReadGate` in
 `client/schema.ts`, a field-visibility gate that fails CLOSED on `post` rather
 than falling back per row.
