@@ -558,6 +558,12 @@ describe('OAuth2DeviceAuthorizationService', () => {
             const serialized = JSON.stringify(caught);
             expect(serialized).not.toContain(foreignRealmId);
             expect(serialized).not.toContain(REALM_ID);
+
+            // the lookup is a page render, the device analogue of the `/authorize`
+            // GET, so it records NO authorize outcome — it can never produce the
+            // counter's other labels, and contributing only login_required would
+            // skew the ratio (#3591)
+            expect(metrics.authorizeCalls).toEqual([]);
             expect(serialized).not.toContain(USER_ID);
             expect(repository.countLookupMissCalls).toHaveLength(0);
         });
@@ -759,6 +765,19 @@ describe('OAuth2DeviceAuthorizationService', () => {
             });
             expect(metrics.authorizeCalls).toEqual(['denied']);
             expect(consentService.recordCalls).toHaveLength(0);
+        });
+
+        it('should refuse a foreign-realm user with login_required and record the refusal', async () => {
+            // the deny ran the same `resolve()` refusal as the approve and recorded
+            // nothing, so the realm-mismatch outcome counted approvals only (#3591)
+            const { request } = seedCode();
+
+            await expect(buildService().deny(request.user_code, buildIdentity({ realmId: randomUUID() })))
+                .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
+
+            expect(repository.decideCalls).toHaveLength(0);
+            expect(metrics.authorizeCalls).toEqual(['login_required']);
+            expect(eventService.recordCalls).toHaveLength(0);
         });
     });
 });
