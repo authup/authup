@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { CLIENT_ACCOUNT_CONSOLE_NAME, CLIENT_ADMIN_CONSOLE_NAME, PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
@@ -247,7 +248,13 @@ describe.each(CONSOLES)('$name console session', ({
         expect((await refused.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
 
         const { data: permissionRead } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
-        await suite.client.userPermission.create({ userId: user.id, permissionId: permissionRead.id });
+        // `ownOrNull`, the reach a realm_admin reads with: the built-in
+        // definitions are global rows, which the default `own` does not reach
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permissionRead.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
 
         const authorizationResponse = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
         expect(authorizationResponse.status).toEqual(200);

@@ -17,8 +17,24 @@ any other authenticated credential is answered 403. A resource server therefore
 fetches it with its own client credential, never with the end user's bearer:
 the catalog is identity-free, so the user's grants say nothing about reading
 it, and one `client-permission` row binding `permission_read` to the resource
-server's client is all it needs. The answer is the same for every permitted
-caller, so cache it per process rather than per subject.
+server's client is all it needs.
+
+**Bind that grant at `ownOrNull` or wider.** The default realm scope of a
+junction is `own`, which does not reach a global row, and every permission is
+bound to the global `system.default` policy, so a credential granted the family
+and nothing else reaches no definition at all and is answered 403 rather than a
+document that denies everything.
+
+What you get back is narrowed to your own realm reach, the way those two reads
+are narrowed. Reach removes the policy configuration rather than the entry: a
+definition outside your reach arrives with `policies: null` and denies, and a
+policy tree outside it arrives as a node no consumer can project, which drops
+the grants naming it. A foreign realm's definitions therefore still appear,
+carrying their `name`, `realm_id`, `client_id` and `decision_strategy` with no
+policies, so that an absent definition keeps its one meaning: your copy is
+older than the server's. Cache the answer per credential rather than per
+process, and give a resource server serving several realms a credential whose
+reach covers them.
 
 **A 403 is not a catalog, and what to do with it depends on who you are.** A
 console falls back to gating on the entry names alone, which is coarser than

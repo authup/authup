@@ -3191,19 +3191,41 @@ answers the IDENTITY-FREE `AuthorizationCatalog`
 (declared in `@authup/access` next to its zod schema and its consumer
 `createAuthorizationEvaluator`): every permission definition with its junction policy ids
 and its `decisionStrategy`, and each policy tree ONCE under `policies`, keyed by the tree's
-id, whether a definition or a grant names it. It is the same document for every caller,
-which is what makes it cacheable, and it is an upper bound on what may be asked rather than
+id, whether a definition or a grant names it. It is one document per CREDENTIAL, which is
+what a consumer caches it by, and it is an upper bound on what may be asked rather than
 an entitlement (the `GET /schemas` posture): every decision it feeds runs over the caller's
-own grants. **Its gate is exactly the gate of the entity reads it aggregates.** After
+own grants. **Its gate is the gate of the entity reads it aggregates, in both
+halves, and its narrowing is deliberately coarser than theirs.** After
 `ForceLoggedIn` the controller runs the same `preEvaluateOneOf` over `PERMISSION_READ` /
 `PERMISSION_UPDATE` / `PERMISSION_DELETE` that `PermissionService.getMany` runs for
 `GET /permissions` (reach is neutral at the pre-gate, so a `realm_admin` passes), and a
 refused caller gets the evaluator's own `PermissionError` (403,
 `permission_evaluation_failed`, the code `GET /permissions` answers the same bearer with).
-Every namespace, with the realm and client ids of foreign realms, and every policy
-configuration, attribute predicates included, is therefore readable here by exactly the
-principals that may read them one by one; `ForceLoggedIn` alone was wider than that and
-let any bearer read the whole policy configuration. Two rules follow. A resource server
+Then every row is checked against the caller's REALM REACH, because
+`GET /permissions` and `GET /policies` narrow the same rows the same way (#3593) and
+this route would otherwise be the way around both. **Reach withholds the
+CONFIGURATION, never an entry**: a definition out of reach travels with `policies: null`,
+the tombstone an unprojectable one already uses, and a tree out of reach travels as a
+node no consumer can project (`AUTHORIZATION_POLICY_WITHHELD_TYPE`, declared in
+`@authup/access` next to the projection that has to keep refusing it, and pinned by that
+package's own test), which is how a grant naming it is dropped rather than read as stale.
+An ABSENT definition has to keep meaning exactly one thing, that the consumer's copy is
+older than the definition, since that is the one signal a refetch answers. **So a foreign
+realm still discloses more here than through those reads**, which return the row to
+nobody: the identifier tuple of every definition (`name`, `realm_id`, `client_id`,
+`decision_strategy`) and the id of every policy key. That is the price of the key space
+staying whole, and it is the trade to re-open if the tuple ever carries something the
+identifiers do not. The reach test asks about the REALM alone, so a read grant restricted
+by an ATTRIBUTES junction policy has no row to evaluate against, denies every realm and
+lands on the refusal below; fail-closed, and feeding it a synthetic row instead would
+widen, since a missing key neutral-passes in the object bag. A caller whose reach covers
+NO definition is answered 403 (`permission_denied`, next to the pre-gate's
+`permission_evaluation_failed`) rather than a document that denies everything: the default
+junction reach is `own`, which excludes the global rows every built-in definition is, and
+every permission is bound to the global `system.default`, so a grant held at the default
+reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
+single-realm resource server as much as for a console, and an all-deny document would
+read as authoritative where the refusal is what a console's name-only fallback answers. Two rules follow. A resource server
 reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
 `client-permission` row: the document is identity-free, so the end user's bearer is the
 wrong credential for it, and a resource server must fail closed when it has no catalog.
@@ -3223,7 +3245,8 @@ junction row references (`findGrantPolicies`, so a grant can never name a tree t
 lacks) and sorts the definitions by key. A projection failure is warned about and never
 drops a definition: one whose tree fails projection is carried with `policies: null`,
 because the definition is real and an absence in the catalog must mean exactly one thing,
-a copy older than the definition. A grant tree that fails projection is dropped with a
+a copy older than the definition. A tree the CALLER may not read is withheld the same
+way, so the two reasons a definition cannot be evaluated reach a consumer as one state. A grant tree that fails projection is dropped with a
 warning, and the introspection drops every grant of it.
 
 The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on

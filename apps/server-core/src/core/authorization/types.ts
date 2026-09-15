@@ -37,3 +37,12 @@ export type AuthorizationCatalogBuilderContext = {
     catalogRepository: IAuthorizationCatalogRepository,
     logger?: Logger,
 };
+
+/**
+ * Whether the caller's own read grant reaches rows of this realm, `null` for a
+ * global row. A required ARGUMENT of the build rather than a member of its
+ * context: the context is per boot and the reach is per request, and an
+ * optional one would fail open on a document carrying every realm's policy
+ * configuration.
+ */
+export type AuthorizationRealmReach = (realmId: string | null) => Promise<boolean>;

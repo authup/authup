@@ -425,12 +425,14 @@ export function createStore(context: StoreCreateContext) {
 
     /**
      * The catalog `GET /authorization` serves, memoized per signed-in
-     * session. A `404` (a server predating the route) and a `403` (a
-     * credential holding none of the permission family the catalog is gated
-     * on) memoize as null: the catalog only sharpens advisory UI gating, so
-     * the name-only view stays the fallback there, where a resource server
-     * must fail closed. Any other failure rejects and clears the memo, so
-     * the next resolve retries.
+     * session, which is per credential: what it carries is what that
+     * credential's own realm reach covers. A `404` (a server predating the
+     * route) and a `403` (a credential holding none of the permission family
+     * the catalog is gated on, or whose reach covers no definition) memoize
+     * as null: the catalog only sharpens advisory UI gating, so the name-only
+     * view stays the fallback there, where a resource server must fail
+     * closed. Any other failure rejects and clears the memo, so the next
+     * resolve retries.
      */
     const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
         if (!catalogPromise) {

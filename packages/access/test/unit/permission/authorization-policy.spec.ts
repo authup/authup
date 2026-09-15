@@ -7,7 +7,7 @@
 
 import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
-import { projectAuthorizationPolicy } from '../../../src';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE, projectAuthorizationPolicy } from '../../../src';
 
 describe('permission/authorization/policy', () => {
     it('keeps the configuration keys of a type and drops entity columns', async () => {
@@ -78,6 +78,20 @@ describe('permission/authorization/policy', () => {
     it('round-trips a childless composite', async () => {
         expect(await projectAuthorizationPolicy({ type: 'composite', children: [] }))
             .toEqual({ type: 'composite', children: [] });
+    });
+
+    // The server emits this node for a tree the caller's realm reach does not
+    // cover. Its whole safety is that the projection REFUSES it: projected, a
+    // withheld tree would be evaluated as whatever type it names, and the grants
+    // naming it would pass rather than drop.
+    it('refuses the node a withheld policy travels as', async () => {
+        await expect(projectAuthorizationPolicy({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }))
+            .rejects.toThrow();
+        await expect(projectAuthorizationPolicy({
+            type: 'composite',
+            decisionStrategy: 'unanimous',
+            children: [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }],
+        })).rejects.toThrow();
     });
 
     it('refuses a malformed configuration', async () => {

@@ -16,7 +16,12 @@ import {
     it,
 } from 'vitest';
 import type { AuthorizationCatalog } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, createAuthorizationEvaluator } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
+    createAuthorizationEvaluator,
+} from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenPermission } from '@authup/specs';
@@ -30,7 +35,8 @@ import {
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../app';
-import { createFakeUser, httpRequest } from '../../../../utils';
+import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('src/http/controllers/workflows/authorization/*.ts', () => {
     const suite = createTestApplication();
@@ -144,7 +150,25 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect((await entities.json()).code).toEqual(code);
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
-        await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
+        const { data: junction } = await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+        });
+
+        // the default junction reach is `own`, which excludes the global rows
+        // every built-in definition is, so the caller reaches none of them and
+        // is answered the refusal its console falls back to the name-only view on
+        const scoped = await suite.client.token.createWithPassword({ username: user.name, password });
+        const reachless = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${scoped.access_token}` } });
+        expect(reachless.status).toBe(403);
+        expect((await reachless.json()).code).toEqual(ErrorCode.PERMISSION_DENIED);
+
+        await suite.client.userPermission.delete(junction.id);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
 
         const granted = await suite.client.token.createWithPassword({ username: user.name, password });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
@@ -152,6 +176,56 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const catalog : AuthorizationCatalog = await response.json();
         expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
+    });
+
+    // The catalog aggregates `GET /permissions` and `GET /policies`, which narrow
+    // their rows by the caller's realm reach (#3593), so this route narrows the
+    // same way. It withholds the CONFIGURATION rather than the entry: an absent
+    // definition has to keep meaning that the consumer's copy is out of date.
+    it('withholds another realm\'s definitions from a caller whose read grant does not reach it', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreign } = await suite.client.permission.create({
+            name: `plan109_foreign_${realm.name}`,
+            realmId: realm.id,
+        });
+        const { data: policy } = await suite.client.policy.create(createFakeTimePolicy({ realmId: realm.id }));
+        await suite.client.permissionPolicy.create({ permissionId: foreign.id, policyId: policy.id });
+
+        const password = 'start123-authorization-reach';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+        // `ownOrNull` is the reach a realm_admin reads with: own realm plus the
+        // global building blocks, never another realm's rows
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const granted = await suite.client.token.createWithPassword({ username: user.name, password });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
+        expect(response.status).toBe(200);
+
+        const catalog : AuthorizationCatalog = await response.json();
+        const entry = catalog.permissions.find((item) => item.name === foreign.name);
+        expect(entry).toBeDefined();
+        expect(entry!.realm_id).toEqual(realm.id);
+        expect(entry!.policies).toBeNull();
+        expect(catalog.policies).not.toHaveProperty(policy.id);
+
+        // its own global definitions stay whole, bodies included
+        const own = catalog.permissions.find((item) => item.name === PermissionName.USER_READ);
+        expect(own!.policies).not.toBeNull();
+        expect(own!.policies!.length).toBeGreaterThan(0);
+        for (const id of own!.policies!) {
+            expect(catalog.policies[id]).toHaveProperty('type');
+        }
+
+        // the control: a caller reaching every realm reads the same definition whole
+        const admin = await suite.client.authorization.get();
+        const adminEntry = admin.permissions.find((item) => item.name === foreign.name);
+        expect(adminEntry!.policies).toContain(policy.id);
+        expect(admin.policies[policy.id]).toHaveProperty('type', BuiltInPolicyType.TIME);
     });
 
     it('exports each realm reach into identical row checks and query conditions', async () => {
