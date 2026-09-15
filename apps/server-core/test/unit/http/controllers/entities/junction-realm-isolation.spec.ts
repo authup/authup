@@ -108,6 +108,16 @@ describe('junction entities (realm isolation)', () => {
         PermissionName.ROLE_READ,
     ];
 
+    // The setup below is a `suite.setup()` plus roughly fifty API round-trips:
+    // two realms with their clients, users, roles and permissions, one row of
+    // every junction type on both sides, and four `client_credentials` tokens.
+    // Vitest's default hook budget is 10s, which the sqlite runs clear and the
+    // server ones do not: they share one database with every other spec file
+    // and run with file parallelism off, so this serializes behind whatever
+    // else is in flight. The work is real, so the budget is raised rather than
+    // the hook trimmed - the `federation-e2e` precedent.
+    const SETUP_HOOK_TIMEOUT = 60_000;
+
     beforeAll(async () => {
         await suite.setup();
 
@@ -333,11 +343,11 @@ describe('junction entities (realm isolation)', () => {
 
         scopePolicyReader = await createPolicyBoundReader(scopePolicyReaderSecret, scopePolicy.id);
         attributesPolicyReader = await createPolicyBoundReader(attributesPolicyReaderSecret, attributesPolicy.id);
-    });
+    }, SETUP_HOOK_TIMEOUT);
 
     afterAll(async () => {
         await suite.teardown();
-    });
+    }, SETUP_HOOK_TIMEOUT);
 
     const collections = () => [
         ['role-permission', reader.rolePermission, ownRolePermissionId, foreignRolePermissionId],
