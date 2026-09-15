@@ -248,13 +248,13 @@ would publish every policy predicate to anyone who can reach the server, so a
 public client reads verdicts rather than configuration.
 
 ```typescript
-const result = await client.authorization.check(
+const permissions = await client.authorization.check(
     { realms: 'ownOrNull' },
     { authorizationHeader: { type: 'Bearer', token: accessToken } },
 );
 // [{ name: 'user_read', realms: ['<your realm id>', null] }]
 
-const evaluator = await createAuthorizationCheckEvaluator({ result, identity });
+const evaluator = await createAuthorizationCheckEvaluator({ permissions, identity });
 await evaluator.preEvaluateOneOf({ name: 'user_read' });
 ```
 

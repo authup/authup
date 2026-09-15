@@ -122,13 +122,13 @@ export type AuthorizationCheckPermission = {
  * grant whose junction policy needs a resource row passes here and is still
  * decided per row on the server, which stays the enforcement point.
  */
-export type AuthorizationCheckResult = AuthorizationCheckPermission[];
+export type AuthorizationCheckPermissions = AuthorizationCheckPermission[];
 
 export type AuthorizationCheckEvaluatorInput = {
     /**
-     * An `AuthorizationCheckResult`, validated by the schema.
+     * An `AuthorizationCheckPermissions`, validated by the schema.
      */
-    result: unknown,
+    permissions: unknown,
     /**
      * The identity the verdicts belong to, used to resolve a `realmMatch` of
      * `own` shape: a resource realm equal to this identity's realm id or name

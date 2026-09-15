@@ -13,7 +13,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { AuthorizationCheckResult } from '@authup/access';
+import type { AuthorizationCheckPermissions } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
@@ -21,7 +21,7 @@ import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/cons
 import { createTestApplication } from '../../../../app';
 import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
 
-function entryOf(result: AuthorizationCheckResult, name: string) {
+function entryOf(result: AuthorizationCheckPermissions, name: string) {
     return result.find((item) => item.name === name);
 }
 
@@ -115,7 +115,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         // one database copy, and a permission another spec created through the
         // API carries no Layer-1 policy, so it passes for any authenticated
         // caller and would make an empty-array assertion flake
-        const result : AuthorizationCheckResult = await response.json();
+        const result : AuthorizationCheckPermissions = await response.json();
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
         expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
@@ -128,7 +128,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {}, { Authorization: `Bearer ${grant.access_token}` });
 
         expect(response.status).toBe(200);
-        const result : AuthorizationCheckResult = await response.json();
+        const result : AuthorizationCheckPermissions = await response.json();
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
         expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
@@ -149,7 +149,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
 
         const own = await postCheck(suite, { realms: RealmScope.OWN }, headers);
         expect(own.status).toBe(200);
-        const ownResult : AuthorizationCheckResult = await own.json();
+        const ownResult : AuthorizationCheckPermissions = await own.json();
         expect(entryOf(ownResult, PermissionName.USER_UPDATE)?.realms).toEqual([user.realmId]);
 
         // `own` reaches neither a global row nor another realm's

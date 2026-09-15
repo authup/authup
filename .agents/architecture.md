@@ -3383,7 +3383,7 @@ and each (name, realm) pair costs one synchronous policy-tree walk, and the real
 the half a CALLER controls, since an unresolvable name is refused before any walk. Four
 covers the own realm, the global rows and two named ones.
 
-The answer is the bare array `AuthorizationCheckResult`
+The answer is the bare array `AuthorizationCheckPermissions`
 (`{ name, realms }[]`, `@authup/access`), with no envelope and no `version` field
 (conventions.md -> *Response Versioning*). Only a permission reaching at least one
 requested realm appears, so ABSENT means denied, and a `realmMatch` naming a realm the
@@ -3421,7 +3421,7 @@ Fabricating one would WIDEN rather than inform, since a made-up row can satisfy 
 the real row fails. Absent, such a policy pends and permits, which is exactly the upper
 bound this answer is documented to be.
 
-`createAuthorizationCheckEvaluator({ result, identity })` (`@authup/access`, next to
+`createAuthorizationCheckEvaluator({ permissions, identity })` (`@authup/access`, next to
 `createAuthorizationEvaluator`) is the consumer. It picks the realm class from
 `data.realmMatch`: absent passes if any requested realm did, `null` is the global rows,
 a value equal to the identity's realm id OR NAME is its own realm (the server resolves a

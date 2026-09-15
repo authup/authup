@@ -8,8 +8,8 @@
 import { defineIssueItem } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
-import { authorizationCheckResultSchema, authorizationIdentitySchema } from './schema';
-import type { AuthorizationCheckEvaluatorInput, AuthorizationCheckResult } from './types';
+import { authorizationCheckPermissionsSchema, authorizationIdentitySchema } from './schema';
+import type { AuthorizationCheckEvaluatorInput, AuthorizationCheckPermissions } from './types';
 
 /**
  * The whole input `createAuthorizationCheckEvaluator` takes: the answer
@@ -21,7 +21,7 @@ export class AuthorizationCheckEvaluatorInputValidator extends Container<Authori
     override initialize() {
         super.initialize();
 
-        this.mount('result', createValidator(authorizationCheckResultSchema));
+        this.mount('permissions', createValidator(authorizationCheckPermissionsSchema));
         this.mount('identity', createValidator(authorizationIdentitySchema.optional()));
     }
 }
@@ -29,7 +29,7 @@ export class AuthorizationCheckEvaluatorInputValidator extends Container<Authori
 const checkValidator = new AuthorizationCheckEvaluatorInputValidator();
 
 export type AuthorizationCheckEvaluatorInputParsed = {
-    result: AuthorizationCheckResult,
+    permissions: AuthorizationCheckPermissions,
     identity: AuthorizationCheckEvaluatorInput['identity'],
 };
 
@@ -45,26 +45,26 @@ export async function parseAuthorizationCheckEvaluatorInput(
     // Detach for the reason the catalog's input is detached: a later mutation
     // of a cached HTTP response cannot widen verdicts after validation.
     const {
-        result,
+        permissions,
         identity,
     } = await checkValidator.run(
         structuredClone(input) as Record<string, any>,
     ) as {
-        result: AuthorizationCheckResult,
+        permissions: AuthorizationCheckPermissions,
         identity?: AuthorizationCheckEvaluatorInput['identity'],
     };
 
     const seen = new Set<string>();
-    for (const [i, permission] of result.entries()) {
+    for (const [i, permission] of permissions.entries()) {
         if (seen.has(permission.name)) {
             throw new ValidupError([defineIssueItem({
                 message: `The permission ${permission.name} is answered more than once.`,
-                path: ['result', i, 'name'],
+                path: ['permissions', i, 'name'],
             })]);
         }
 
         seen.add(permission.name);
     }
 
-    return { result, identity };
+    return { permissions, identity };
 }

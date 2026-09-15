@@ -176,4 +176,4 @@ export const authorizationCheckPermissionSchema = z.object({
     realms: z.array(z.string().min(1).nullable()).min(1),
 });
 
-export const authorizationCheckResultSchema = z.array(authorizationCheckPermissionSchema);
+export const authorizationCheckPermissionsSchema = z.array(authorizationCheckPermissionSchema);

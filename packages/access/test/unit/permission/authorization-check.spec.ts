@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { AuthorizationCheckResult, IdentityPolicyData } from '../../../src';
+import type { AuthorizationCheckPermissions, IdentityPolicyData } from '../../../src';
 import {
     BuiltInPolicyType,
     createAuthorizationCheckEvaluator,
@@ -24,14 +24,14 @@ const identity : IdentityPolicyData = {
     realmName: REALM_NAME,
 };
 
-const result : AuthorizationCheckResult = [
+const result : AuthorizationCheckPermissions = [
     { name: 'user_update', realms: [REALM_ID] },
     { name: 'user_read', realms: [REALM_ID, null] },
     { name: 'realm_read', realms: [REALM_ID, null, FOREIGN_REALM_ID] },
 ];
 
-async function buildEvaluator(input: AuthorizationCheckResult = result) {
-    return createAuthorizationCheckEvaluator({ result: input, identity });
+async function buildEvaluator(input: AuthorizationCheckPermissions = result) {
+    return createAuthorizationCheckEvaluator({ permissions: input, identity });
 }
 
 function withRealm(value: string | string[] | null) {
@@ -142,7 +142,7 @@ describe('permission/authorization/check-evaluator', () => {
     });
 
     it('denies every check without an identity, since a realm key cannot resolve', async () => {
-        const evaluator = await createAuthorizationCheckEvaluator({ result });
+        const evaluator = await createAuthorizationCheckEvaluator({ permissions: result });
 
         await expect(evaluator.preEvaluate({ name: 'user_read' })).resolves.toBeUndefined();
         await expect(evaluator.preEvaluate({
@@ -152,25 +152,27 @@ describe('permission/authorization/check-evaluator', () => {
     });
 
     it('refuses a malformed answer', async () => {
-        await expect(createAuthorizationCheckEvaluator({ result: [{ name: 'user_read' }] })).rejects.toThrow();
+        await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read' }] })).rejects.toThrow();
 
-        await expect(createAuthorizationCheckEvaluator({ result: [{ name: 'user_read', realms: [] }] })).rejects.toThrow();
+        await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read', realms: [] }] })).rejects.toThrow();
 
-        await expect(createAuthorizationCheckEvaluator({ result: { user_read: ['x'] } })).rejects.toThrow();
+        await expect(createAuthorizationCheckEvaluator({ permissions: { user_read: ['x'] } })).rejects.toThrow();
     });
 
+    // The PATH is what discriminates the reason: the duplicate refusal points at
+    // the SECOND entry's name, where a schema failure carries no index at all.
     it('refuses a permission answered more than once', async () => {
         await expect(createAuthorizationCheckEvaluator({
-            result: [
+            permissions: [
                 { name: 'user_read', realms: [REALM_ID] },
                 { name: 'user_read', realms: [null] },
             ],
-        })).rejects.toThrow();
+        })).rejects.toThrow(/permissions\[1\]\.name/);
     });
 
     it('does not adopt a later mutation of the answer it was given', async () => {
-        const mutable : AuthorizationCheckResult = [{ name: 'user_read', realms: [REALM_ID] }];
-        const evaluator = await createAuthorizationCheckEvaluator({ result: mutable, identity });
+        const mutable : AuthorizationCheckPermissions = [{ name: 'user_read', realms: [REALM_ID] }];
+        const evaluator = await createAuthorizationCheckEvaluator({ permissions: mutable, identity });
 
         mutable.push({ name: 'client_delete', realms: [REALM_ID] });
 

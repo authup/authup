@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, AuthorizationCheckResult } from '@authup/access';
+import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
 import type { OAuth2TokenPermission } from '@authup/specs';
 
 /**
@@ -62,6 +62,6 @@ export function buildAuthorizationGrants() : OAuth2TokenPermission[] {
  * held in the identity's own realm and not globally, which is what the
  * catalog's `own` grant evaluates to.
  */
-export function buildAuthorizationCheck() : AuthorizationCheckResult {
+export function buildAuthorizationCheck() : AuthorizationCheckPermissions {
     return [{ name: 'user_read', realms: [AUTHORIZATION_REALM] }];
 }

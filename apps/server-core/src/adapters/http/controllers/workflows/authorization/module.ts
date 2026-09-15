@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, AuthorizationCheckResult } from '@authup/access';
+import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
 import {
     BuiltInPolicyType,
     PermissionError,
@@ -189,7 +189,7 @@ export class AuthorizationController {
     async check(
         @DBody() data: AuthorizationCheckPayload,
         @DContext() event: IAppEvent,
-    ): Promise<AuthorizationCheckResult> {
+    ): Promise<AuthorizationCheckPermissions> {
         const payload = await this.checkValidator.run(data) as AuthorizationCheckPayload;
 
         const actor = buildActorContext(event);

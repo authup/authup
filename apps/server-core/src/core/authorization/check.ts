@@ -7,7 +7,7 @@
 
 import type {
     AuthorizationCheckPermission,
-    AuthorizationCheckResult,
+    AuthorizationCheckPermissions,
     IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
@@ -92,7 +92,7 @@ function resolveRealms(
 export async function buildAuthorizationCheck(
     ctx: AuthorizationCheckBuilderContext,
     request: AuthorizationCheckRequest,
-) : Promise<AuthorizationCheckResult> {
+) : Promise<AuthorizationCheckPermissions> {
     const definitions = await ctx.catalogRepository.findDefinitions();
 
     const bindings : PermissionPolicyBinding[] = [];
@@ -139,7 +139,7 @@ export async function buildAuthorizationCheck(
         policyEngine,
     }));
 
-    const result : AuthorizationCheckResult = [];
+    const result : AuthorizationCheckPermissions = [];
     for (const name of requested) {
         const held : Array<string | null> = [];
 

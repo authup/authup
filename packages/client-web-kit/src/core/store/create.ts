@@ -7,7 +7,7 @@
 
 import type {
     AuthorizationCatalog,
-    AuthorizationCheckResult,
+    AuthorizationCheckPermissions,
     IPermissionEvaluator,
     IdentityPolicyData,
 } from '@authup/access';
@@ -341,7 +341,7 @@ export function createStore(context: StoreCreateContext) {
     // introspection reports. Keyed on both, this memo is exactly as stale as
     // that path: fresh whenever the introspection's own authorization inputs
     // move, reused when they do not, so an unchanged session still asks once.
-    let checkPromise : Promise<AuthorizationCheckResult | null> | undefined;
+    let checkPromise : Promise<AuthorizationCheckPermissions | null> | undefined;
     let checkKey : string | undefined;
 
     const reloadCatalog = () => {
@@ -491,7 +491,7 @@ export function createStore(context: StoreCreateContext) {
      * name-only view, so a console newer than its server keeps working. Any
      * other failure rejects and clears the memo, so the next resolve retries.
      */
-    const fetchCheck = async (token?: string) : Promise<AuthorizationCheckResult | null> => {
+    const fetchCheck = async (token?: string) : Promise<AuthorizationCheckPermissions | null> => {
         try {
             return await client.authorization.check(
                 { realms: RealmScope.OWN_OR_NULL },
@@ -507,7 +507,7 @@ export function createStore(context: StoreCreateContext) {
         }
     };
 
-    const loadCheck = (key: string, token?: string) : Promise<AuthorizationCheckResult | null> => {
+    const loadCheck = (key: string, token?: string) : Promise<AuthorizationCheckPermissions | null> => {
         if (!checkPromise || checkKey !== key) {
             const promise = fetchCheck(token).catch((e) => {
                 if (checkPromise === promise) {
@@ -608,13 +608,13 @@ export function createStore(context: StoreCreateContext) {
         const promise = loadCatalog(token);
         const catalog = await promise;
         if (!catalog) {
-            const result = await loadCheck(buildCheckKey(introspection, identity), token);
-            if (!result) {
+            const permissions = await loadCheck(buildCheckKey(introspection, identity), token);
+            if (!permissions) {
                 return null;
             }
 
             try {
-                return await createAuthorizationCheckEvaluator({ result, identity });
+                return await createAuthorizationCheckEvaluator({ permissions, identity });
             } catch {
                 return createDenyAllPermissionEvaluator();
             }

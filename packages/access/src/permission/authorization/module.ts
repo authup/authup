@@ -331,10 +331,10 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
 export async function createAuthorizationCheckEvaluator(
     input: AuthorizationCheckEvaluatorInput,
 ) : Promise<IPermissionEvaluator> {
-    const { result, identity } = await parseAuthorizationCheckEvaluatorInput(input);
+    const { permissions, identity } = await parseAuthorizationCheckEvaluatorInput(input);
 
     const verdicts = new Map<string, Set<string | null>>();
-    for (const permission of result) {
+    for (const permission of permissions) {
         verdicts.set(permission.name, new Set<string | null>(permission.realms));
     }
 

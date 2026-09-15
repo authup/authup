@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, AuthorizationCheckRealms, AuthorizationCheckResult } from '@authup/access';
+import type { AuthorizationCatalog, AuthorizationCheckPermissions, AuthorizationCheckRealms } from '@authup/access';
 import type { AuthorizationHeader } from 'hapic';
 
 export type AuthorizationRequestOptions = {
@@ -58,5 +58,5 @@ export interface IAuthorizationAPI {
     check(
         payload?: AuthorizationCheckPayload,
         options?: AuthorizationRequestOptions,
-    ) : Promise<AuthorizationCheckResult>;
+    ) : Promise<AuthorizationCheckPermissions>;
 }
