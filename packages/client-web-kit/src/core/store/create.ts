@@ -28,23 +28,6 @@ import type {
     UserMinimal,
 } from './types';
 
-/**
- * The evaluator a session commits when its authorization data could not be
- * built at all. An ordinary evaluator rather than a marker, so the staged
- * value has only ONE special state, `null`, the name-only fallback that reads
- * the grant names off the introspection.
- */
-function denyAllAuthorization(e: unknown) : IPermissionEvaluator {
-    // eslint-disable-next-line no-console
-    console.warn(
-        '[authup] The authorization catalog could not be evaluated. ' +
-        'Every permission check denies for this session.',
-        e,
-    );
-
-    return createDenyAllPermissionEvaluator();
-}
-
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
 
@@ -538,7 +521,7 @@ export function createStore(context: StoreCreateContext) {
             });
         } catch (e) {
             if (!isAuthorizationCatalogStaleError(e)) {
-                return denyAllAuthorization(e);
+                return createDenyAllPermissionEvaluator();
             }
         }
 
@@ -563,7 +546,7 @@ export function createStore(context: StoreCreateContext) {
                 reloadCatalog();
             }
 
-            return denyAllAuthorization(e);
+            return createDenyAllPermissionEvaluator();
         }
     };
 

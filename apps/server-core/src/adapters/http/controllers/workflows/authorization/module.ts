@@ -19,8 +19,6 @@ import { buildAuthorizationCatalog } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
-export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
-
 /**
  * The identity-free permission catalog: every definition with its policy
  * trees plus every tree a grant can name, for a console or a resource server
@@ -50,9 +48,9 @@ export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext;
 @DTags('auth')
 @DController('/authorization')
 export class AuthorizationController {
-    protected ctx: AuthorizationControllerContext;
+    protected ctx: AuthorizationCatalogBuilderContext;
 
-    constructor(ctx: AuthorizationControllerContext) {
+    constructor(ctx: AuthorizationCatalogBuilderContext) {
         this.ctx = ctx;
     }
 
