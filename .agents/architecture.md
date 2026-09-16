@@ -3393,9 +3393,10 @@ with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
 `core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
 cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
 warning, since the server fails such a grant closed itself. The projection runs over the
-RESOLVED identity (`toIdentityPolicyData`) under the INTROSPECTED token's own client,
-exactly as a request made with that token is evaluated, so a user's grants owned by
-another client are absent (see *A user's client-owned grants apply through that client's
+RESOLVED identity (`toIdentityPolicyData`) under the described credential's client (the
+introspected token's on `POST /token/introspect`, the request's own on the GET), exactly
+as a request made with that credential is evaluated, so a user's grants owned by another
+client are absent (see *A user's client-owned grants apply through that client's
 credentials*). **The
 list is NOT narrowed by the token's `scope`**, so a bearer holding no `global` scope
 reports its full grant set while the server denies it every `system.default`-bound
@@ -3569,11 +3570,14 @@ A permission or a role may be owned by a client (`client_id`). For a USER, such 
 applies only through a credential issued to that client (#3597): through a token issued
 to client Y, a permission owned by X is withheld, and so is a role owned by X together
 with the GLOBAL permissions it carries. Unowned grants always apply. A credential issued
-to no client (a clientless password grant, Basic, the console cookie) narrows nothing:
-it is first-party, and making it global-only would stop the served console and Basic
-from binding client-owned permissions, which admin and realm_admin hold through
-auto-assignment. Client subjects and the role side of `isSuperset` (`getForRole`'s
-equality) are unchanged.
+to no client (a clientless password grant, Basic, the served console's cookie) narrows
+nothing: it is first-party, and making it global-only would stop the served console and
+Basic from binding client-owned permissions, which admin and realm_admin hold through
+auto-assignment. A bearer-mode admin console (standalone-hosted, or its vite dev server)
+holds `admin-console` tokens and IS narrowed. The system console clients are deliberately
+not exempted: they are public and auto-consenting, so with the `POST /authorize` residual
+below an exemption would hand any application un-narrowed grants. Client subjects and the
+role side of `isSuperset` (`getForRole`'s equality) are unchanged.
 
 The rule is one function, `appliesThroughCredentialClient`
 (`core/identity/permission/credential-client.ts`), and it is a DISJUNCTION: an equality
@@ -3586,9 +3590,10 @@ the subject's own client, and a role reads it as its owner, so the credential's 
 travels separately as `IdentityCredentialOptions.credentialClientId`, a REQUIRED
 parameter of `getFor`, `getRolesFor`, `isSuperset` (describing the parent; the child is
 resolved under none) and `resolveJunctionGrant`, so no call site widens a credential by
-leaving it out. Its one source is the verified bearer's `client_id`
-(`setRequestCredentialClientId`, next to the scopes in the authorization middleware). It
-then reaches:
+leaving it out. On the request path its one source is the verified bearer's `client_id`
+(`setRequestCredentialClientId`, next to the scopes in the authorization middleware);
+`POST /token/introspect` and the access-token issuer read the described token's own
+`client_id` instead. It reaches:
 
 - **evaluation**: `RequestPermissionEvaluator` stamps `credentialClientId` on every
   `Permission*Context`, `PermissionEvaluator` forwards it into the policy context in
@@ -3596,16 +3601,26 @@ then reaches:
   check inherits it through `decorate`;
 - **delegation**: `buildActorContext` copies it onto `ActorContext`, and the junction
   services pass `actor.credentialClientId` to `isSuperset` / `resolveJunctionGrant`, so a
-  Y token cannot assign a role or propagate a grant held only through X;
+  Y token cannot assign a role or propagate a grant held only through X. A literal `null`
+  would still compile there, which `junction-credential-client.spec.ts` pins per site;
 - **introspection**: `POST /token/introspect` narrows by the INTROSPECTED token's
   `client_id`, never by the caller's, and `GET /sessions/@me/introspect` by the request's
   own. A local `createAuthorizationEvaluator` therefore reaches the server's verdict.
 
 The access token's `realm_access` / `global_access` claims are narrowed by the same rule.
-Two things stay open: an engine built outside `RequestPermissionEvaluator` resolves
-unnarrowed, and `POST /authorize` / device approve accept any user bearer, so a holder of
-a Y token can mint an X token for a public client X. A grant minting from an existing
-credential must copy its `client_id` (refresh, MFA completion and device do).
+A grant minting from an existing credential must copy its `client_id` (refresh and MFA
+completion do; the device grant binds the device's own client). Open, and stated rather
+than guarded:
+
+- an engine built outside `RequestPermissionEvaluator` (the policy checker) resolves
+  unnarrowed;
+- `POST /authorize` and device approve accept any user bearer, so a holder of a Y token
+  can mint an X token for a public client X;
+- an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
+  one acting through X's credential can assign itself an unowned role carrying grants it
+  holds only through X: delegation checks what the actor holds, not where it applies.
+  Such a change reaches a user's grants after the 60 s owned-roles / owned-permissions
+  query cache.
 
 ### Policy engine evaluators are per engine
 

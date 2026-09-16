@@ -19,19 +19,33 @@ other client, the server withholds:
 - the user's roles owned by another client, together with the **global**
   permissions those roles carry.
 
-This applies to request authorization, `POST /authorization/check`, the
-`permissions` list of both introspection endpoints (narrowed by the
-introspected token's own client, never the caller's), and delegation: assigning a role or
-binding a permission through a token issued to another client is refused when
-the actor holds the required grants only through the other client.
+This applies to:
+
+- request authorization and `POST /authorization/check`;
+- the `permissions` list of `POST /token/introspect`, narrowed by the
+  introspected token's own client and never by the caller's;
+- the `permissions` list of `GET /sessions/@me/introspect`, narrowed by the
+  request's own credential;
+- delegation: assigning a role or binding a permission through a token issued
+  to another client is refused when the actor holds the required grants only
+  through the other client.
 
 Credentials issued to no client are not narrowed: Basic authentication, a
 password grant sent without a client, and the served console's session cookie.
 
-Check before upgrading: an application that exercised a user's grants owned by
-another client, or an administrator binding client-scoped permissions through
-a downstream application's token, now receives `403`. Use a token issued to the
-owning client, or make the grant global.
+Check before upgrading:
+
+- An application that exercised a user's grants owned by another client, or an
+  administrator binding client-scoped permissions through a downstream
+  application's token, now receives `403`. Use a token issued to the owning
+  client.
+- **The admin console hosted standalone**, and its `vite` dev server, signs in
+  through the `admin-console` client, so its tokens are narrowed like any other
+  client's. From there, binding another client's permissions or assigning its
+  roles answers `403`. Do that work through the console served at
+  `<publicUrl>/console/admin`, or with Basic authentication. Do not make the
+  grant global to get around it: that lifts the restriction for every
+  application.
 
 ### Role, scope, permission and policy reads are realm-gated
 
