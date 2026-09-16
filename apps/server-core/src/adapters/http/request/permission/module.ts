@@ -55,33 +55,38 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
     // --------------------------------------------------------------
 
     protected extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : T {
-        const scopes = useRequestScopes(this.event);
-        const identity = useRequestIdentity(this.event);
-
-        // Only attach the identity policy data when an identity was actually
-        // resolved. Setting it to `undefined` would still make
-        // `PolicyData.has('identity')` true (key presence), so the built-in
-        // identity evaluator would run its validator against `undefined` and
-        // throw an uncaught error instead of a clean permission denial — see
-        // the deleted-subject edge case in issue #3184.
-        if (identity && scopes.includes(ScopeName.GLOBAL)) {
-            ctx.data = ctx.data || new PolicyData();
-            ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
-
-            return ctx;
-        }
-
-        // Symmetrical, so this is the ONE place the scope condition is spelled:
-        // a caller may place an identity in the bag itself (the batch
-        // authorization check does, so every identity-reading policy in a tree
-        // gets it), and what the request was NOT resolved as must never survive
-        // that. Without the removal the gate only held for a caller that
-        // happened to leave the key empty, so placing it anywhere else silently
-        // answered a scope-restricted bearer as a fully-scoped one.
-        if (ctx.data) {
-            ctx.data.delete(BuiltInPolicyType.IDENTITY);
-        }
+        ctx.data = applyRequestIdentity(this.event, ctx.data || new PolicyData());
 
         return ctx;
     }
+}
+
+/**
+ * The ONE place the `global`-scope condition is spelled. Every evaluation
+ * through `RequestPermissionEvaluator` passes its bag here, and so does
+ * `POST /policies/:id/check`, which evaluates a policy with the engine and has
+ * no permission evaluator to route through.
+ *
+ * Symmetrical: the identity is the request's own when the scopes include
+ * `global`, overwriting whatever a caller placed, and absent otherwise. An
+ * attach-only version held the gate only for a caller that left the key empty,
+ * and a caller-named identity is what the permission-binding evaluator loads
+ * grants for, so honouring one answers for another subject (#3604).
+ */
+export function applyRequestIdentity(event: IAppEvent, data: PolicyData) : PolicyData {
+    const identity = useRequestIdentity(event);
+
+    // Only attach the identity policy data when an identity was actually
+    // resolved. Setting it to `undefined` would still make
+    // `PolicyData.has('identity')` true (key presence), so the built-in
+    // identity evaluator would run its validator against `undefined` and
+    // throw an uncaught error instead of a clean permission denial (the
+    // deleted-subject edge case in issue #3184).
+    if (identity && useRequestScopes(event).includes(ScopeName.GLOBAL)) {
+        data.set(BuiltInPolicyType.IDENTITY, identity);
+    } else {
+        data.delete(BuiltInPolicyType.IDENTITY);
+    }
+
+    return data;
 }

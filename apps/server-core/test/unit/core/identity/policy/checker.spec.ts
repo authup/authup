@@ -12,11 +12,10 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BuiltInPolicyType, PolicyError } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, PolicyError } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
-import { createAllowAllActor } from '@authup/server-test-kit';
 import type { UserEntity } from '../../../../../src';
 import {
     PolicyRepository,
@@ -65,7 +64,7 @@ describe('core/identity/policy/checker', () => {
 
     it('throws EntityNotFoundError for an unknown policy', async () => {
         await expect(
-            service.check(createNanoID(), {}, createAllowAllActor()),
+            service.check(createNanoID(), new PolicyData()),
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
@@ -79,11 +78,13 @@ describe('core/identity/policy/checker', () => {
 
         await expect(service.check(
             policy.id,
-            {},
-            {
-                permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser as any },
-            },
+            new PolicyData({
+                [BuiltInPolicyType.IDENTITY]: {
+                    type: IdentityType.USER,
+                    id: adminUser.id,
+                    realmId: adminUser.realmId,
+                },
+            }),
         )).resolves.toBeUndefined();
     });
 
@@ -97,13 +98,12 @@ describe('core/identity/policy/checker', () => {
 
         await expect(service.check(
             policy.id,
-            {},
-            createAllowAllActor(),
+            new PolicyData(),
         )).rejects.toBeInstanceOf(PolicyError);
     });
 
     it('safeCheck wraps failures into Result<null>', async () => {
-        const result = await service.safeCheck(createNanoID(), {}, createAllowAllActor());
+        const result = await service.safeCheck(createNanoID(), new PolicyData());
         expect(result.success).toBe(false);
         if (!result.success) {
             expect(result.error).toBeInstanceOf(EntityNotFoundError);

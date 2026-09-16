@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
-import type { ActorContext } from '@authup/server-kit';
 import type {
     IPolicyRepository,
     IRealmRepository,
@@ -22,28 +22,21 @@ export type PolicyCheckerServiceContext = {
 export interface IPolicyCheckerService {
     /**
      * Resolve a policy by id (UUID) or name and evaluate it against the
-     * supplied data and actor. Throws on any failure — entity not found,
-     * evaluator denial, validator error.
-     *
-     * If `data[identity]` is unset (and not explicitly `null`), the
-     * actor's identity (flattened to `IdentityPolicyData`) is injected.
-     * Passing an explicit `null` opts out of the default — useful for
-     * checking a policy as anonymous.
+     * supplied data. Throws on any failure: entity not found, evaluator
+     * denial, validator error.
      *
      * @param idOrName Policy UUID or name. Names are resolved within the
      *   supplied realm (or the resolved fallback realm).
-     * @param data Caller-supplied evaluation input. Mutated copy is used
-     *   internally.
-     * @param actor The caller context. `actor.identity` becomes the
-     *   default identity input when `data[identity]` is unset.
+     * @param data The evaluation input, evaluated exactly as given: the
+     *   caller owns every key, the identity included. The HTTP route
+     *   applies `applyRequestIdentity` to it first.
      * @param realm Optional realm id used to disambiguate name lookups.
      * @throws {EntityNotFoundError} When no policy matches.
      * @throws {Error} Whatever the policy engine throws on denial.
      */
     check(
         idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
+        data: PolicyData,
         realm?: string,
     ): Promise<void>;
 
@@ -55,8 +48,7 @@ export interface IPolicyCheckerService {
      */
     safeCheck(
         idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
+        data: PolicyData,
         realm?: string,
     ): Promise<Result<null>>;
 }

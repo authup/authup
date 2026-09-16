@@ -13,12 +13,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BuiltInPolicyType, RealmScope } from '@authup/access';
-import { IdentityType } from '@authup/core-kit';
+import { BuiltInPolicyType, PermissionEvaluator, RealmScope } from '@authup/access';
+import type { Identity } from '@authup/core-kit';
+import { IdentityType, ScopeName } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
 import type { ActorContext } from '@authup/server-kit';
+import type { IAppEvent } from 'routup';
 import type { UserEntity } from '../../../../../src';
 import {
     PermissionEntity,
@@ -28,12 +30,17 @@ import {
     UserPermissionEntity,
     UserRepository,
 } from '../../../../../src';
-import { PermissionCheckerService } from '../../../../../src/core';
+import { PermissionCheckerService, PolicyEngine } from '../../../../../src/core';
 import type { IIdentityPermissionProvider } from '../../../../../src/core';
 import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import { PermissionRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/permission/repository.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
+import {
+    RequestPermissionEvaluator,
+    setRequestIdentity,
+    setRequestScopes,
+} from '../../../../../src/adapters/http/request';
 import { createTestApplication } from '../../../../app';
 
 describe('core/identity/permission/checker', () => {
@@ -41,6 +48,25 @@ describe('core/identity/permission/checker', () => {
 
     let service: PermissionCheckerService;
     let adminUser: UserEntity;
+    let identityPermissionProvider: IIdentityPermissionProvider;
+
+    /**
+     * The actor a request hands the checker: the authorization middleware's
+     * evaluator behind the request wrapper, which owns the identity key.
+     */
+    function requestActor(identity: Identity, scopes: string[] = [ScopeName.GLOBAL]) : ActorContext {
+        const event = { store: {} } as unknown as IAppEvent;
+        setRequestIdentity(event, identity);
+        setRequestScopes(event, scopes);
+
+        return {
+            identity,
+            permissionEvaluator: new RequestPermissionEvaluator(event, new PermissionEvaluator({
+                provider: new PermissionDatabaseProvider(suite.dataSource),
+                policyEngine: new PolicyEngine(identityPermissionProvider),
+            })),
+        };
+    }
 
     beforeAll(async () => {
         await suite.setup();
@@ -54,15 +80,13 @@ describe('core/identity/permission/checker', () => {
             repository: suite.dataSource.getRepository(PermissionEntity),
             realmRepository: realmEntityRepository,
         });
-        const identityPermissionProvider = suite.container.resolve<IIdentityPermissionProvider>(
+        identityPermissionProvider = suite.container.resolve<IIdentityPermissionProvider>(
             IdentityInjectionKey.PermissionProvider,
         );
 
         service = new PermissionCheckerService({
             repository: permissionRepository,
             realmRepository,
-            permissionProvider: new PermissionDatabaseProvider(suite.dataSource),
-            identityPermissionProvider,
         });
     });
 
@@ -119,11 +143,54 @@ describe('core/identity/permission/checker', () => {
         await expect(service.check(
             permission.id,
             {},
-            {
-                permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser },
-            },
+            requestActor({ type: IdentityType.USER, data: adminUser }),
         )).resolves.toBeUndefined();
+    });
+
+    it('throws for a binding-protected permission the actor owns when its scopes withhold global (#3604)', async () => {
+        const policyRepository = new PolicyRepository(suite.dataSource);
+        const policy = await policyRepository.save(policyRepository.create({
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyType.PERMISSION_BINDING,
+            builtIn: true,
+        }));
+
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permission = await permissionRepository.save(permissionRepository.create({
+            name: createNanoID(),
+            builtIn: true,
+        }));
+
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({
+            permissionId: permission.id,
+            policyId: policy.id,
+        }));
+
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+        await userPermissionRepository.save(userPermissionRepository.create({
+            userId: adminUser.id,
+            userRealmId: adminUser.realmId,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+        }));
+
+        const identity : Identity = { type: IdentityType.USER, data: adminUser };
+
+        await expect(service.check(permission.id, {}, requestActor(identity)))
+            .resolves.toBeUndefined();
+
+        await expect(service.check(
+            permission.id,
+            {
+                [BuiltInPolicyType.IDENTITY]: {
+                    type: IdentityType.USER, 
+                    id: adminUser.id, 
+                    realmId: adminUser.realmId, 
+                }, 
+            },
+            requestActor(identity, [ScopeName.OPEN_ID]),
+        )).rejects.toThrow();
     });
 
     it('throws for a binding-protected permission the actor does not own', async () => {
@@ -146,10 +213,7 @@ describe('core/identity/permission/checker', () => {
         await expect(service.check(
             permission.name,
             {},
-            {
-                permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser },
-            },
+            requestActor({ type: IdentityType.USER, data: adminUser }),
         )).rejects.toThrow();
     });
 
@@ -197,10 +261,7 @@ describe('core/identity/permission/checker', () => {
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
         const otherRealm = await realmRepository.save(realmRepository.create({ name: createNanoID() }));
 
-        const actor: ActorContext = {
-            permissionEvaluator: createAllowAllActor().permissionEvaluator,
-            identity: { type: IdentityType.USER, data: user },
-        };
+        const actor = requestActor({ type: IdentityType.USER, data: user });
 
         // cross-realm resource realm -> denied under own
         await expect(service.check(

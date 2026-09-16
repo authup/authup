@@ -6,13 +6,11 @@
  */
 
 import type { PermissionEvaluationContext } from '@authup/access';
-import { BuiltInPolicyType, PermissionEvaluator, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
-import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { toIdentityPolicyData } from '../identity-policy-data.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -52,9 +50,6 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         }
 
         const input = { ...data };
-        if (typeof input[BuiltInPolicyType.IDENTITY] === 'undefined') {
-            input[BuiltInPolicyType.IDENTITY] = toIdentityPolicyData(actor.identity);
-        }
         // Surface the resource realm to the realm_scope reach factor (realm-match scope mode).
         // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
         // the preEvaluate path below and neutral-passes.
@@ -68,18 +63,16 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             data: definePolicyData(input),
         };
 
-        const evaluator = new PermissionEvaluator({
-            provider: this.ctx.permissionProvider,
-            policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
-        });
-
+        // The actor's evaluator owns the identity key: on a request it asserts the
+        // caller's own identity when the scopes include `global` and removes it
+        // otherwise, whatever the body named (#3604).
         if (
             evaluationContext.data &&
             evaluationContext.data.has(BuiltInPolicyType.ATTRIBUTES)
         ) {
-            await evaluator.evaluate(evaluationContext);
+            await actor.permissionEvaluator.evaluate(evaluationContext);
         } else {
-            await evaluator.preEvaluate(evaluationContext);
+            await actor.permissionEvaluator.preEvaluate(evaluationContext);
         }
     }
 

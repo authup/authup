@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
+import type { PolicyData } from '@authup/access';
+import { definePolicyEvaluationContext } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
-import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { toIdentityPolicyData } from '../../permission/identity-policy-data.ts';
 import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
@@ -26,8 +25,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
     async check(
         idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
+        data: PolicyData,
         realm?: string,
     ): Promise<void> {
         let criteria: Record<string, any>;
@@ -50,29 +48,20 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
-        const input = { ...data };
-        if (
-            !input[BuiltInPolicyType.IDENTITY] &&
-            input[BuiltInPolicyType.IDENTITY] !== null
-        ) {
-            input[BuiltInPolicyType.IDENTITY] = toIdentityPolicyData(actor.identity);
-        }
-
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
         await engine.evaluateOrFail(
             entity,
-            definePolicyEvaluationContext({ data: new PolicyData(input) }),
+            definePolicyEvaluationContext({ data }),
         );
     }
 
     async safeCheck(
         idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
+        data: PolicyData,
         realm?: string,
     ): Promise<Result<null>> {
         try {
-            await this.check(idOrName, data, actor, realm);
+            await this.check(idOrName, data, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
