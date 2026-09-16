@@ -21,9 +21,9 @@ import { createFakeUser, createScopeRestrictedClient } from '../../../../../util
 
 // Service-level coverage of the DB-backed permission-checker lives in
 // test/unit/core/identity/permission/checker.spec.ts. The HTTP tests below
-// stay minimal: they verify the controller's auth gate and the
-// status-code / response-shape contract — the actual checker logic is
-// exercised at the service layer.
+// pin the controller's auth gate, the status-code / response-shape contract,
+// and the identity and scope rule, which the check reaches only through the
+// request's own evaluator.
 
 describe('http/controllers/entities/permission/checker', () => {
     const suite = createTestApplication();
@@ -69,16 +69,16 @@ describe('http/controllers/entities/permission/checker', () => {
 
         const named = await client.permission.check(PermissionName.USER_UPDATE, {
             identity: {
-                type: payload.sub_kind, 
-                id: payload.sub, 
-                realmId: payload.realm_id, 
-            }, 
+                type: payload.sub_kind,
+                id: payload.sub,
+                realmId: payload.realm_id,
+            },
         });
         expect(named.status).toEqual('error');
     });
 
-    it('evaluates the caller\'s own grants, never those of an identity the body names', async () => {
-        const { payload: admin } = await createScopeRestrictedClient(suite);
+    it('evaluates the caller\'s own grants, never those of an identity the body names (#3604)', async () => {
+        const { data: admin } = await suite.client.user.getOne('@me');
 
         const password = 'start123-checker-ungranted';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
@@ -89,10 +89,10 @@ describe('http/controllers/entities/permission/checker', () => {
 
         const response = await client.permission.check(PermissionName.USER_UPDATE, {
             identity: {
-                type: admin.sub_kind, 
-                id: admin.sub, 
-                realmId: admin.realm_id, 
-            }, 
+                type: 'user',
+                id: admin.id,
+                realmId: admin.realmId,
+            },
         });
         expect(response.status).toEqual('error');
     });

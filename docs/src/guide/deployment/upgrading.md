@@ -45,6 +45,25 @@ Two consequences to check before upgrading:
 The admin console needs no change: its four list pages already scope to the
 active realm plus the global rows.
 
+### The permission and policy check routes answer for the caller only
+
+`POST /permissions/:id/check` and `POST /policies/:id/check` now evaluate with
+the identity the request was authenticated as, under the same scope rule as
+every other route:
+
+- an `identity` in the request body is ignored, `null` included, so the policy
+  route no longer has an "anonymous" opt-out
+- a bearer whose token lacks the `global` scope is evaluated without an identity,
+  so a permission or policy that needs one answers `status: "error"`
+
+Previously both routes evaluated a body `identity` as given. Since the
+permission-binding policy loads the grants of the identity it is handed, any
+authenticated caller could ask whether another user or client holds a
+permission. An integration that used these routes to check on behalf of another
+subject now receives its own verdict instead: authenticate as that subject, or
+read the subject's grants from `POST /token/introspect` and evaluate them
+against `GET /authorization`.
+
 ### The device authorization grant is available, opt-in per client
 
 `POST /device_authorization` and `grant_type=urn:ietf:params:oauth:grant-type:device_code`

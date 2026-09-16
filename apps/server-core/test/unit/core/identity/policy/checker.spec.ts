@@ -68,7 +68,7 @@ describe('core/identity/policy/checker', () => {
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
-    it('resolves when an identity policy passes for the actor', async () => {
+    it('resolves when an identity policy passes for the supplied identity', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,

@@ -22,9 +22,9 @@ import { createFakeUser, createScopeRestrictedClient } from '../../../../../util
 
 // Service-level coverage of the DB-backed policy-checker lives in
 // test/unit/core/identity/policy/checker.spec.ts. The HTTP tests below
-// stay minimal: they verify the controller's auth gate and the
-// status-code / response-shape contract — the actual checker logic is
-// exercised at the service layer.
+// pin the controller's auth gate, the status-code / response-shape contract,
+// and the identity and scope rule, which only the controller applies: the
+// service evaluates the bag exactly as given.
 
 describe('http/controllers/entities/policy/checker', () => {
     const suite = createTestApplication();
@@ -71,6 +71,10 @@ describe('http/controllers/entities/policy/checker', () => {
         const control = await suite.client.policy.check(policy.id);
         expect(control.status).toEqual('success');
 
+        // no anonymous opt-out: a null identity is the caller's own
+        const nulled = await suite.client.policy.check(policy.id, { identity: null });
+        expect(nulled.status).toEqual('success');
+
         const { client, payload } = await createScopeRestrictedClient(suite);
 
         const bare = await client.policy.check(policy.id);
@@ -78,16 +82,16 @@ describe('http/controllers/entities/policy/checker', () => {
 
         const named = await client.policy.check(policy.id, {
             identity: {
-                type: payload.sub_kind, 
-                id: payload.sub, 
-                realmId: payload.realm_id, 
-            }, 
+                type: payload.sub_kind,
+                id: payload.sub,
+                realmId: payload.realm_id,
+            },
         });
         expect(named.status).toEqual('error');
     });
 
-    it('evaluates the caller\'s own grants, never those of an identity the body names', async () => {
-        const { payload: admin } = await createScopeRestrictedClient(suite);
+    it('evaluates the caller\'s own grants, never those of an identity the body names (#3604)', async () => {
+        const { data: admin } = await suite.client.user.getOne('@me');
 
         const password = 'start123-policy-checker-ungranted';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
@@ -98,16 +102,16 @@ describe('http/controllers/entities/policy/checker', () => {
 
         const response = await client.policy.check(SystemPolicyName.PERMISSION_BINDING, {
             identity: {
-                type: admin.sub_kind,
-                id: admin.sub,
-                realmId: admin.realm_id,
+                type: 'user',
+                id: admin.id,
+                realmId: admin.realmId,
             },
             permissionBinding: {
                 permission: {
-                    name: PermissionName.USER_UPDATE, 
-                    realmId: null, 
-                    clientId: null, 
-                }, 
+                    name: PermissionName.USER_UPDATE,
+                    realmId: null,
+                    clientId: null,
+                },
             },
         });
         expect(response.status).toEqual('error');
