@@ -37,7 +37,7 @@ import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestCredentialClientId,
+    useRequestClientId,
     useRequestIdentity,
     useRequestSessionId,
 } from '../../../request/index.ts';
@@ -96,7 +96,7 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * The permission read is narrowed by the request's own credential client
+     * The permission read is narrowed by the request's own token client
      * (#3597), the value its request evaluation is narrowed by: the bearer's
      * `client_id`, or none for the console cookie. Never a caller-chosen value
      * and never the subject's `clientId`.
@@ -138,7 +138,7 @@ export class SessionController {
             sub: identity.id,
             subKind: identity.type,
             active: true,
-            credentialClientId: useRequestCredentialClientId(event),
+            tokenClientId: useRequestClientId(event),
         });
 
         return {

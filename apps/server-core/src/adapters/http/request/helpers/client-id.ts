@@ -7,18 +7,21 @@
 
 import type { IAppEvent } from 'routup';
 
-const sym = Symbol('RCredentialClientId');
+const sym = Symbol('RClientId');
 
 /**
- * The client the request's credential was issued to: the verified bearer's
+ * The client the request's token was issued to: the VERIFIED bearer's
  * `client_id`, stashed by the authorization middleware next to its scopes.
- * `null` for a credential issued to no client (a clientless token, Basic, the
+ * `null` for a request without a token client (a clientless token, Basic, the
  * console cookie), which narrows nothing (#3597).
+ *
+ * Not the subject's own client (`RequestIdentity.clientId`), and never a
+ * `client_id` a request presents in its body.
  */
-export function useRequestCredentialClientId(event: IAppEvent): string | null {
+export function useRequestClientId(event: IAppEvent): string | null {
     return (event.store[sym] as string | undefined) ?? null;
 }
 
-export function setRequestCredentialClientId(event: IAppEvent, clientId: string): void {
+export function setRequestClientId(event: IAppEvent, clientId: string): void {
     event.store[sym] = clientId;
 }

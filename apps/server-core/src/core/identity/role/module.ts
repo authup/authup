@@ -6,10 +6,10 @@
  */
 
 import type { Role } from '@authup/core-kit';
-import type { IdentityCredentialOptions, IdentityPolicyData } from '@authup/access';
+import type { IdentityPolicyData, IdentityTokenOptions } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
-import { appliesThroughCredentialClient } from '../permission/credential-client.ts';
+import { appliesThroughTokenClient } from '../permission/token-client.ts';
 import type { IIdentityRoleProvider, IdentityRoleProviderContext } from './types.ts';
 
 export class IdentityRoleProvider implements IIdentityRoleProvider {
@@ -22,7 +22,7 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
         this.userRepository = ctx.userRepository;
     }
 
-    async getRolesFor(identity: IdentityPolicyData, options: IdentityCredentialOptions) : Promise<Role[]> {
+    async getRolesFor(identity: IdentityPolicyData, options: IdentityTokenOptions) : Promise<Role[]> {
         switch (identity.type) {
             case 'client': {
                 return this.clientRepository.getBoundRoles(identity.id);
@@ -30,7 +30,7 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
             case 'user': {
                 const roles = await this.userRepository.getBoundRoles(identity.id);
 
-                return roles.filter((role) => appliesThroughCredentialClient(role.clientId, options.credentialClientId));
+                return roles.filter((role) => appliesThroughTokenClient(role.clientId, options.tokenClientId));
             }
         }
 

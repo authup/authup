@@ -7,8 +7,8 @@
 
 import type { Policy } from '@authup/core-kit';
 import type {
-    IdentityCredentialOptions,
     IdentityPolicyData,
+    IdentityTokenOptions,
     PermissionPolicyBinding,
     RealmScope,
 } from '@authup/access';
@@ -18,11 +18,11 @@ import type { IUserRepository } from '../../entities/user/types.ts';
 import type { IIdentityRoleProvider } from '../role/types.ts';
 
 /**
- * `credentialClientId` is the ACTOR's credential client, so the grant is
+ * `tokenClientId` is the ACTOR's token client, so the grant is
  * selected from the grants the actor's own gates evaluated (#3597). `clientId`
  * selects the permission definition.
  */
-export type ResolveJunctionPolicyOptions = IdentityCredentialOptions & {
+export type ResolveJunctionPolicyOptions = IdentityTokenOptions & {
     name: string;
     realmId?: string | null;
     clientId?: string | null;
@@ -50,11 +50,11 @@ export type ResolveJunctionGrantResult = {
 };
 
 export interface IIdentityPermissionProvider {
-    getFor(identity: IdentityPolicyData, options: IdentityCredentialOptions): Promise<PermissionPolicyBinding[]>;
+    getFor(identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<PermissionPolicyBinding[]>;
     /**
-     * `options` describe the PARENT's credential; the child is resolved under none.
+     * `options` describe the PARENT's token; the child is resolved under none.
      */
-    isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData, options: IdentityCredentialOptions): Promise<boolean>;
+    isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData, options: IdentityTokenOptions): Promise<boolean>;
     resolveJunctionGrant(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 

@@ -31,25 +31,25 @@ describe('IdentityRoleProvider', () => {
     const webRole = role('web-scoped', 'web-client-id');
     const otherRole = role('other-scoped', 'other-client-id');
 
-    it('should return all roles for a credential issued to no client', async () => {
+    it('should return all roles for a request without a token client', async () => {
         const provider = createProvider([globalRole, webRole, otherRole]);
 
-        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { credentialClientId: null });
+        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { tokenClientId: null });
 
         expect(result).toEqual([globalRole, webRole, otherRole]);
     });
 
-    it('should keep client-agnostic (null) roles plus roles owned by the credential client', async () => {
+    it('should keep client-agnostic (null) roles plus roles owned by the token client', async () => {
         const provider = createProvider([globalRole, webRole, otherRole]);
 
-        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { credentialClientId: 'web-client-id' });
+        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { tokenClientId: 'web-client-id' });
 
-        // The global role MUST survive: a credential issued to a client must
+        // The global role MUST survive: a token issued to a client must
         // not strip a user's global/realm roles.
         expect(result).toEqual([globalRole, webRole]);
     });
 
-    it('should not read the subject\'s own clientId as the credential client', async () => {
+    it('should not read the subject\'s own clientId as the token client', async () => {
         const provider = createProvider([globalRole, webRole, otherRole]);
 
         const result = await provider.getRolesFor(
@@ -58,7 +58,7 @@ describe('IdentityRoleProvider', () => {
                 id: 'u1', 
                 clientId: 'web-client-id', 
             },
-            { credentialClientId: null },
+            { tokenClientId: null },
         );
 
         expect(result).toEqual([globalRole, webRole, otherRole]);

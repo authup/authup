@@ -281,7 +281,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                     realmId,
                     realmName: 'master',
                 },
-                options: { credentialClientId: clientId },
+                options: { tokenClientId: clientId },
             }]);
         });
 
@@ -295,7 +295,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 realm_id: realmId,
             });
 
-            expect(provider.getRolesForCalls[0]!.options).toEqual({ credentialClientId: null });
+            expect(provider.getRolesForCalls[0]!.options).toEqual({ tokenClientId: null });
         });
     });
 });

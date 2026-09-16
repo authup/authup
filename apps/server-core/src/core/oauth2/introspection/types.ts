@@ -34,11 +34,11 @@ export type OAuth2IntrospectionSubjectInput = {
      */
     active: boolean,
     /**
-     * The client the DESCRIBED credential was issued to, narrowing the grants
+     * The client the DESCRIBED token was issued to, narrowing the grants
      * exactly as a request made with it is narrowed (#3597). Never the
-     * caller's credential. Required, so no caller widens it by omission.
+     * caller's token. Required, so no caller widens it by omission.
      */
-    credentialClientId: string | null,
+    tokenClientId: string | null,
 };
 
 export type OAuth2IntrospectionSubject = {

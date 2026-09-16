@@ -151,7 +151,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
                     id: validated.roleId,
                     clientId: validated.role.clientId,
                 },
-                { credentialClientId: actor.credentialClientId ?? null },
+                { tokenClientId: actor.tokenClientId ?? null },
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

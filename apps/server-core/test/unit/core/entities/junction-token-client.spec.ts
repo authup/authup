@@ -19,14 +19,14 @@ import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permiss
 
 /**
  * Every junction service delegates the ACTOR's grants (#3597), so each one must
- * resolve them under the actor's credential client. The parameter is required,
+ * resolve them under the actor's token client. The parameter is required,
  * which keeps an omission from compiling, but a literal `null` would compile
  * and silently let a token issued to one client delegate another client's
  * grants: this table is what catches that, one row per call site.
  */
-describe('core/entities (junction delegation resolves under the actor credential client)', () => {
-    const credentialClientId = randomUUID();
-    const actor = () => ({ ...createMasterRealmActor(), credentialClientId });
+describe('core/entities (junction delegation resolves under the actor token client)', () => {
+    const tokenClientId = randomUUID();
+    const actor = () => ({ ...createMasterRealmActor(), tokenClientId });
 
     type Case = [string, (provider: FakeIdentityPermissionProvider) => Promise<unknown>];
 
@@ -121,6 +121,6 @@ describe('core/entities (junction delegation resolves under the actor credential
 
         await run(provider);
 
-        expect(provider.credentialOptions).toEqual([{ credentialClientId }]);
+        expect(provider.tokenOptions).toEqual([{ tokenClientId }]);
     });
 });

@@ -25,13 +25,14 @@ This applies to:
 - the `permissions` list of `POST /token/introspect`, narrowed by the
   introspected token's own client and never by the caller's;
 - the `permissions` list of `GET /sessions/@me/introspect`, narrowed by the
-  request's own credential;
+  request's own token;
 - delegation: assigning a role or binding a permission through a token issued
   to another client is refused when the actor holds the required grants only
   through the other client.
 
-Credentials issued to no client are not narrowed: Basic authentication, a
-password grant sent without a client, and the served console's session cookie.
+Requests without a token issued to a client are not narrowed: Basic
+authentication, a password grant sent without a client, and the served
+console's session cookie.
 
 Check before upgrading:
 

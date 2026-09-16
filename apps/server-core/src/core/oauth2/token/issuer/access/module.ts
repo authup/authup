@@ -94,7 +94,7 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             id: input.sub,
             realmId: input.realm_id,
             realmName: input.realm_name,
-        }, { credentialClientId: input.client_id ?? null });
+        }, { tokenClientId: input.client_id ?? null });
 
         const realmRoles: string[] = [];
         const globalRoles: string[] = [];

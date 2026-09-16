@@ -8,7 +8,7 @@
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import type { IdentityCredentialOptions, PermissionPolicyBinding } from '../../../src';
+import type { IdentityTokenOptions, PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -201,11 +201,11 @@ describe('identity permission binding compilation', () => {
         expect(predicate({ realmId: identity.realmId })).toBeTruthy();
     });
 
-    // The grant provider narrows a user's grants to the client the credential was
+    // The grant provider narrows a user's grants to the client the token was
     // issued to (#3597), so that value must reach it from EVERY entry point, not
     // only from compile() the way realmAttributeName does.
-    it('forwards the credential client to the grant provider from every entry point', async () => {
-        const seen : IdentityCredentialOptions[] = [];
+    it('forwards the token client to the grant provider from every entry point', async () => {
+        const seen : IdentityTokenOptions[] = [];
         const engine = new PolicyEngine({
             ...PolicyDefaultEvaluators,
             [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator({
@@ -227,37 +227,37 @@ describe('identity permission binding compilation', () => {
         await evaluator.evaluate({
             name: permission.name, 
             data: data(), 
-            credentialClientId: 'x', 
+            tokenClientId: 'x', 
         });
         await evaluator.evaluateOneOf({
             name: permission.name, 
             data: data(), 
-            credentialClientId: 'x', 
+            tokenClientId: 'x', 
         });
         await evaluator.preEvaluate({
             name: permission.name, 
             data: data(), 
-            credentialClientId: 'x', 
+            tokenClientId: 'x', 
         });
         await evaluator.preEvaluateOneOf({
             name: permission.name, 
             data: data(), 
-            credentialClientId: 'x', 
+            tokenClientId: 'x', 
         });
         await evaluator.compile({
             name: permission.name, 
             data: data(), 
-            credentialClientId: 'x', 
+            tokenClientId: 'x', 
         });
         await evaluator.evaluate({ name: permission.name, data: data() });
 
         expect(seen).toEqual([
-            { credentialClientId: 'x' },
-            { credentialClientId: 'x' },
-            { credentialClientId: 'x' },
-            { credentialClientId: 'x' },
-            { credentialClientId: 'x' },
-            { credentialClientId: null },
+            { tokenClientId: 'x' },
+            { tokenClientId: 'x' },
+            { tokenClientId: 'x' },
+            { tokenClientId: 'x' },
+            { tokenClientId: 'x' },
+            { tokenClientId: null },
         ]);
     });
 });

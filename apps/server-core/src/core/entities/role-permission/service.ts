@@ -169,7 +169,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                     realmId: validated.permission.realmId,
                     clientId: validated.permission.clientId,
                     realmScope: validated.realmScope ?? RealmScope.OWN,
-                    credentialClientId: actor.credentialClientId ?? null,
+                    tokenClientId: actor.tokenClientId ?? null,
                 },
             );
 
@@ -232,7 +232,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                     realmId: permission.realmId,
                     clientId: permission.clientId,
                     realmScope: validated.realmScope ?? entity.realmScope,
-                    credentialClientId: actor.credentialClientId ?? null,
+                    tokenClientId: actor.tokenClientId ?? null,
                 },
             );
             actorScope = grant.realmScope;

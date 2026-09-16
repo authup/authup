@@ -575,9 +575,9 @@ scope.
 
 The permissions and roles a client defines apply to a user only through that
 client's tokens. Through a token issued to another client they are withheld,
-including the global permissions a client-scoped role carries. A credential
-issued to no client (Basic authentication, a password grant without a client,
-the served console's session cookie) is not narrowed.
+including the global permissions a client-scoped role carries. Requests without
+a token issued to a client (Basic authentication, a password grant without a
+client, the served console's session cookie) are not narrowed.
 
 ## Strategies
 

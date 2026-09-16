@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
-    setRequestCredentialClientId,
+    setRequestClientId,
     setRequestIdentity,
     setRequestScopes,
 } from '../../../../../src/adapters/http/request';
@@ -117,21 +117,21 @@ describe('RequestPermissionEvaluator', () => {
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
     });
 
-    // The credential's client is stamped from the verified request on every
+    // The token's client is stamped from the verified request on every
     // entry point and never taken from the caller: a service must not be able
-    // to widen a narrowed credential, nor narrow another one, by supplying it.
-    it('should stamp the request\'s credential client over a caller-supplied one', async () => {
+    // to widen a narrowed token, nor narrow another one, by supplying it.
+    it('should stamp the request\'s token client over a caller-supplied one', async () => {
         const event = createEvent();
-        setRequestCredentialClientId(event, 'x');
+        setRequestClientId(event, 'x');
 
         const base = new FakePermissionEvaluator();
         const evaluator = new RequestPermissionEvaluator(event, base);
 
-        await evaluator.evaluate({ name: 'test', credentialClientId: 'forged' });
-        await evaluator.evaluateOneOf({ name: 'test', credentialClientId: 'forged' });
-        await evaluator.preEvaluate({ name: 'test', credentialClientId: 'forged' });
-        await evaluator.preEvaluateOneOf({ name: 'test', credentialClientId: 'forged' });
-        await evaluator.compile({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.evaluate({ name: 'test', tokenClientId: 'forged' });
+        await evaluator.evaluateOneOf({ name: 'test', tokenClientId: 'forged' });
+        await evaluator.preEvaluate({ name: 'test', tokenClientId: 'forged' });
+        await evaluator.preEvaluateOneOf({ name: 'test', tokenClientId: 'forged' });
+        await evaluator.compile({ name: 'test', tokenClientId: 'forged' });
 
         expect([
             ...base.evaluateCalls,
@@ -139,15 +139,15 @@ describe('RequestPermissionEvaluator', () => {
             ...base.preEvaluateCalls,
             ...base.preEvaluateOneOfCalls,
             ...base.compileCalls,
-        ].map((ctx) => ctx.credentialClientId)).toEqual(['x', 'x', 'x', 'x', 'x']);
+        ].map((ctx) => ctx.tokenClientId)).toEqual(['x', 'x', 'x', 'x', 'x']);
     });
 
-    it('should clear a caller-supplied credential client when the request carries none', async () => {
+    it('should clear a caller-supplied token client when the request carries none', async () => {
         const base = new FakePermissionEvaluator();
         const evaluator = new RequestPermissionEvaluator(createEvent(), base);
 
-        await evaluator.evaluate({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.evaluate({ name: 'test', tokenClientId: 'forged' });
 
-        expect(base.evaluateCalls[0].credentialClientId).toBeNull();
+        expect(base.evaluateCalls[0].tokenClientId).toBeNull();
     });
 });

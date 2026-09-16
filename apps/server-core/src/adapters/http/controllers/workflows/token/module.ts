@@ -255,9 +255,9 @@ export class TokenController {
                 subKind: payload.sub_kind,
                 active,
                 // the INTROSPECTED token's client, never the caller's: a resource
-                // server introspecting with its own credential must see what
-                // this token may do
-                credentialClientId: payload.client_id ?? null,
+                // server introspecting on its own behalf must see what this
+                // token may do
+                tokenClientId: payload.client_id ?? null,
             });
 
             if (!active) {

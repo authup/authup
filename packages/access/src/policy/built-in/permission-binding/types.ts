@@ -12,18 +12,18 @@ export interface PermissionBindingPolicy extends BasePolicy {
 }
 
 /**
- * The credential an identity's grants are resolved for (#3597).
+ * The token an identity's grants are resolved for (#3597).
  */
-export type IdentityCredentialOptions = {
+export type IdentityTokenOptions = {
     /**
-     * The client the credential was issued to: a token's `client_id`. A
-     * PROPERTY OF THE CREDENTIAL, never the subject's own client
+     * The client the token was issued to: its `client_id` claim. A property
+     * of the TOKEN, never the subject's own client
      * (`IdentityPolicyData.clientId`) and never the definition selector
      * (`PermissionEvaluationContext.clientId`).
      *
      * A user's grants owned by another client are withheld under it, roles
-     * included. `null` is a credential issued to no client, which narrows
-     * nothing. Required, so no caller widens a credential by leaving it out.
+     * included. `null` is a request without a token client, which narrows
+     * nothing. Required, so no caller widens a request by leaving it out.
      */
-    credentialClientId: string | null,
+    tokenClientId: string | null,
 };

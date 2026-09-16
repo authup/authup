@@ -6,7 +6,7 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IdentityCredentialOptions, IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
+import type { IdentityPolicyData, IdentityTokenOptions, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
@@ -41,19 +41,19 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionScope = scope;
     }
 
-    public credentialOptions: IdentityCredentialOptions[] = [];
+    public tokenOptions: IdentityTokenOptions[] = [];
 
-    async getFor(_identity: IdentityPolicyData, options: IdentityCredentialOptions): Promise<PermissionPolicyBinding[]> {
-        this.credentialOptions.push(options);
+    async getFor(_identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<PermissionPolicyBinding[]> {
+        this.tokenOptions.push(options);
         return this.bindings;
     }
 
     async isSuperset(
         _parent: IdentityPolicyData,
         _child: IdentityPolicyData,
-        options: IdentityCredentialOptions,
+        options: IdentityTokenOptions,
     ): Promise<boolean> {
-        this.credentialOptions.push(options);
+        this.tokenOptions.push(options);
         return this.supersetResult;
     }
 
@@ -61,7 +61,7 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         _identity: IdentityPolicyData,
         options: ResolveJunctionPolicyOptions,
     ): Promise<ResolveJunctionGrantResult> {
-        this.credentialOptions.push({ credentialClientId: options.credentialClientId });
+        this.tokenOptions.push({ tokenClientId: options.tokenClientId });
         return {
             policy: this.junctionPolicy,
             realmScope: this.junctionScope,

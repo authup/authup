@@ -25,10 +25,10 @@ import {
 } from '../../../../utils';
 
 /**
- * A user's client-owned grants apply only through that client's credentials
+ * A user's client-owned grants apply only through that client's tokens
  * (#3597): a permission owned by client X, and a role owned by X together with
  * the GLOBAL permissions it carries, are withheld from a token issued to client
- * Y. A credential issued to no client (a clientless password grant, Basic, the
+ * Y. A request without a token client (a clientless password grant, Basic, the
  * console cookie) narrows nothing.
  *
  * The same narrowing has to hold on every surface that answers the question,
@@ -36,11 +36,11 @@ import {
  * different verdict than the server: request gates, the batch check, both
  * introspection endpoints, and delegation.
  */
-describe('http/controllers/security (credential client narrowing)', () => {
+describe('http/controllers/security (token client narrowing)', () => {
     const suite = createTestApplication();
 
-    const secret = 'credential-client-secret-123';
-    const password = 'credential-client-password-123';
+    const secret = 'token-client-secret-123';
+    const password = 'token-client-password-123';
 
     let clientX : Client;
     let clientY : Client;
@@ -171,7 +171,7 @@ describe('http/controllers/security (credential client narrowing)', () => {
     });
 
     describe('request evaluation', () => {
-        it('should gate a route on the grants the credential reaches', async () => {
+        it('should gate a route on the grants the token reaches', async () => {
             const statuses = await Promise.all([tokens.x, tokens.y, tokens.none].map(async (token) => {
                 const response = await httpRequest(suite, 'GET', '/roles', { headers: bearer(token) });
                 return response.status;
@@ -180,7 +180,7 @@ describe('http/controllers/security (credential client narrowing)', () => {
             expect(statuses).toEqual([200, 403, 200]);
         });
 
-        it('should answer the batch check with the grants the credential reaches', async () => {
+        it('should answer the batch check with the grants the token reaches', async () => {
             const holds = await Promise.all([tokens.x, tokens.y].map(async (token) => {
                 const response = await httpRequest(suite, 'POST', '/authorization/check', {
                     headers: { ...bearer(token), 'content-type': 'application/json' },

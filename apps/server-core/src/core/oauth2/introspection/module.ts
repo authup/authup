@@ -35,9 +35,9 @@ import type {
  * stale catalog to every consumer.
  *
  * The projection runs over the RESOLVED identity (`toIdentityPolicyData`) plus
- * the credential's client as a separate input, exactly as a request does, so
+ * the token's client as a separate input, exactly as a request does, so
  * both endpoints report what the server's own evaluator resolves for that
- * credential: a user's grants owned by another client are withheld (#3597).
+ * token: a user's grants owned by another client are withheld (#3597).
  * The client never goes into the subject's `clientId`, which a role reads as
  * its owner; an equality there once dropped every global grant.
  *
@@ -65,7 +65,7 @@ export async function resolveIntrospectionSubject(
 
     const bindings = await ctx.identityPermissionProvider.getFor(
         toIdentityPolicyData(identity)!,
-        { credentialClientId: input.credentialClientId },
+        { tokenClientId: input.tokenClientId },
     );
 
     const permissions : OAuth2TokenPermission[] = [];
