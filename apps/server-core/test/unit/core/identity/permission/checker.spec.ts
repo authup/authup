@@ -187,10 +187,10 @@ describe('core/identity/permission/checker', () => {
             permission.id,
             {
                 [BuiltInPolicyType.IDENTITY]: {
-                    type: IdentityType.USER, 
-                    id: adminUser.id, 
-                    realmId: adminUser.realmId, 
-                }, 
+                    type: IdentityType.USER,
+                    id: adminUser.id,
+                    realmId: adminUser.realmId,
+                },
             },
             requestActor(identity, [ScopeName.OPEN_ID]),
         )).rejects.toThrow();
