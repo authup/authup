@@ -100,6 +100,12 @@ describe('http/controllers/entities/permission/checker', () => {
             () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'robot', id: subject.id } }),
             { status: 400 },
         );
+
+        // a name is refused: names repeat across realms, so it would not say which subject
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.name } }),
+            { status: 400 },
+        );
     });
 
     it('refuses a caller without permission_check that names a subject (#3604)', async () => {
@@ -114,6 +120,12 @@ describe('http/controllers/entities/permission/checker', () => {
 
         await expectClientError(
             () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: admin.id } }),
+            { status: 403 },
+        );
+
+        // refused before the lookup, so an unknown subject reads the same as a known one
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: randomUUID() } }),
             { status: 403 },
         );
     });

@@ -91,10 +91,10 @@ describe('http/controllers/entities/policy/checker', () => {
         const { data: subject } = await suite.client.user.create(createFakeUser());
         const permissionBinding = {
             permission: {
-                name: PermissionName.USER_UPDATE, 
-                realmId: null, 
-                clientId: null, 
-            }, 
+                name: PermissionName.USER_UPDATE,
+                realmId: null,
+                clientId: null,
+            },
         };
 
         const self = await suite.client.policy.check(SystemPolicyName.PERMISSION_BINDING, {
@@ -125,10 +125,10 @@ describe('http/controllers/entities/policy/checker', () => {
                 identity: { type: 'user', id: admin.id },
                 permissionBinding: {
                     permission: {
-                        name: PermissionName.USER_UPDATE, 
-                        realmId: null, 
-                        clientId: null, 
-                    }, 
+                        name: PermissionName.USER_UPDATE,
+                        realmId: null,
+                        clientId: null,
+                    },
                 },
             }),
             { status: 403 },

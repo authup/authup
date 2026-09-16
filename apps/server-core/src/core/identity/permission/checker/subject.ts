@@ -9,7 +9,7 @@ import type { IdentityPolicyData } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
-import { isObject } from '@authup/kit';
+import { isObject, isUUID } from '@authup/kit';
 import type { ActorContext } from '@authup/server-kit';
 import type { IIdentityResolver } from '../../resolver/types.ts';
 import { toIdentityPolicyData } from '../identity-policy-data.ts';
@@ -20,7 +20,9 @@ import { toIdentityPolicyData } from '../identity-policy-data.ts';
  * request governs. Naming a subject requires PERMISSION_CHECK, matched against
  * the realm of the subject as stored rather than any realm the caller wrote,
  * because the permission-binding evaluator loads the grants of whatever
- * identity it is handed (#3604).
+ * identity it is handed (#3604). The subject is named by id only: names repeat
+ * across realms (every realm has an `admin-console` client), so a name would
+ * not say which subject is meant.
  *
  * The gate is pre-evaluated before the subject is looked up, so a caller
  * holding no such grant learns nothing about which subjects exist.
@@ -37,9 +39,10 @@ export async function resolveCheckSubject(
     if (
         !isObject(input) ||
         !Object.values(IdentityType).includes(input.type) ||
-        typeof input.id !== 'string'
+        typeof input.id !== 'string' ||
+        !isUUID(input.id)
     ) {
-        throw new ValidationError('The identity to check for must name a user or a client by type and id.');
+        throw new ValidationError('The identity to check for must name a user or a client by type and id (UUID).');
     }
 
     await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CHECK });

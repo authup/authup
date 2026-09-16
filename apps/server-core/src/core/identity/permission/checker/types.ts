@@ -26,28 +26,28 @@ export type PermissionCheckerServiceContext = {
 export interface IPermissionCheckerService {
     /**
      * Resolve a permission by id (UUID) or name and evaluate it against
-     * the supplied data on the actor's evaluator. Throws on any failure:
-     * entity not found, evaluator denial, validator error.
+     * the supplied data, for the caller or for a `subject`. Throws on any
+     * failure: entity not found, evaluator denial, validator error.
      *
-     * Without a `subject` the check is about the caller: the actor's
-     * evaluator owns the identity key, and on a request it is the caller's
-     * own identity when the scopes include `global` and absent otherwise,
-     * whatever `data[identity]` named. With a `subject` the actor must hold
-     * PERMISSION_CHECK reaching the subject's realm, and the check is
-     * evaluated for the subject as stored. If `data[attributes]` is present, the evaluator runs a full
-     * `evaluate` and its `realmId` reaches the realm reach factor under
-     * `realmMatch`; otherwise it runs a `preEvaluate` (data-less gate
+     * Without a `subject` the check runs on the actor's evaluator, which owns
+     * the identity key: on a request it is the caller's own identity when the
+     * scopes include `global` and absent otherwise, whatever `data[identity]`
+     * named. With a `subject` the actor must hold PERMISSION_CHECK reaching
+     * the subject's realm, and the check runs on a bare evaluator for the
+     * subject as stored. If `data[attributes]` is present, the evaluator runs
+     * a full `evaluate` and its `realmId` reaches the realm reach factor
+     * under `realmMatch`; otherwise it runs a `preEvaluate` (data-less gate
      * check).
      *
      * @param idOrName Permission UUID or name. Names are resolved within
      *   the supplied realm (or the resolved fallback realm).
      * @param data Caller-supplied evaluation input. Mutated copy is used
      *   internally.
-     * @param actor The caller context, supplying the evaluator the check
-     *   runs on.
+     * @param actor The caller context: its evaluator runs a check for the
+     *   caller and gates a check for a `subject`.
      * @param realm Optional realm id used to disambiguate name lookups.
      * @param subject The raw `{ type, id }` naming the user or client to
-     *   check for; `undefined` or `null` checks for the caller.
+     *   check for, by UUID; `undefined` or `null` checks for the caller.
      * @throws {ValidationError} When the subject is malformed.
      * @throws {PermissionError} When the actor may not check for the subject.
      * @throws {EntityNotFoundError} When no permission or subject matches.

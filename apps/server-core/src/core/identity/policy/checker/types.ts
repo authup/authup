@@ -37,7 +37,7 @@ export interface IPolicyCheckerService {
      * @param actor The caller context, whose evaluator gates a `subject`.
      * @param realm Optional realm id used to disambiguate name lookups.
      * @param subject The raw `{ type, id }` naming the user or client to
-     *   check for, which requires PERMISSION_CHECK reaching the subject's
+     *   check for by UUID, which requires PERMISSION_CHECK reaching the subject's
      *   realm; `undefined` or `null` checks the data as given.
      * @throws {ValidationError} When the subject is malformed.
      * @throws {PermissionError} When the actor may not check for the subject.

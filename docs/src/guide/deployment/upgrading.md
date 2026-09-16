@@ -55,7 +55,8 @@ caller unless the body names another subject, and naming one is now gated:
   lacks the `global` scope is evaluated without an identity, so a permission or
   policy that needs one answers `status: "error"`. The policy route's
   `identity: null` "anonymous" option now means the caller like an absent key.
-- **With `identity: { type, id }`** naming a user or client, the caller must hold
+- **With `identity: { type, id }`** naming a user or client by its UUID (a
+  name is refused, since names repeat across realms), the caller must hold
   the new `permission_check` permission, and the grant's realm scope must reach
   the subject's realm. Only `type` and `id` are read; the subject is loaded from
   the database, so a `realmId` in the body is ignored. A caller without the grant
