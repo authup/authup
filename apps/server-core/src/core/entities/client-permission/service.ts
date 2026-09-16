@@ -165,6 +165,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                     realmId: validated.permission.realmId,
                     clientId: validated.permission.clientId,
                     realmScope: validated.realmScope ?? RealmScope.OWN,
+                    credentialClientId: actor.credentialClientId ?? null,
                 },
             );
 
@@ -221,6 +222,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                     realmId: permission.realmId,
                     clientId: permission.clientId,
                     realmScope: validated.realmScope ?? entity.realmScope,
+                    credentialClientId: actor.credentialClientId ?? null,
                 },
             );
             actorScope = grant.realmScope;

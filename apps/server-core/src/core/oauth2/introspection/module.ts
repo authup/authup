@@ -34,13 +34,12 @@ import type {
  * the server itself fails such a grant closed, and naming it would read as a
  * stale catalog to every consumer.
  *
- * The projection runs over the RESOLVED identity, exactly as a request does
- * (`toIdentityPolicyData`), never over the client a token was issued to: the
- * provider narrows a user's grants to the identity's own `clientId`, and a
- * provisioned permission is global, so scoping it to the token's client
- * dropped every direct `auth_user_permissions` grant from any token carrying
- * one. Both endpoints therefore report what the server's own evaluator
- * resolves for that subject.
+ * The projection runs over the RESOLVED identity (`toIdentityPolicyData`) plus
+ * the credential's client as a separate input, exactly as a request does, so
+ * both endpoints report what the server's own evaluator resolves for that
+ * credential: a user's grants owned by another client are withheld (#3597).
+ * The client never goes into the subject's `clientId`, which a role reads as
+ * its owner; an equality there once dropped every global grant.
  *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
@@ -64,7 +63,10 @@ export async function resolveIntrospectionSubject(
         };
     }
 
-    const bindings = await ctx.identityPermissionProvider.getFor(toIdentityPolicyData(identity)!);
+    const bindings = await ctx.identityPermissionProvider.getFor(
+        toIdentityPolicyData(identity)!,
+        { credentialClientId: input.credentialClientId },
+    );
 
     const permissions : OAuth2TokenPermission[] = [];
     for (const binding of bindings) {

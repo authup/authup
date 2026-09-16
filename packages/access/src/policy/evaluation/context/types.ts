@@ -28,7 +28,14 @@ export type PolicyEvaluationContext = {
      * evaluation takes the resource realm from the `realmMatch` data key and never
      * consults a column name, so this can never change an evaluate() outcome.
      */
-    readonly realmAttributeName?: string
+    readonly realmAttributeName?: string,
+    /**
+     * The client the evaluated credential was issued to (#3597), handed to the
+     * grant provider so a user's grants owned by another client are withheld.
+     * Unlike `realmAttributeName` it CAN move an evaluate() outcome. Absent
+     * means a credential issued to no client, which narrows nothing.
+     */
+    readonly credentialClientId?: string | null
 };
 
 export type PolicyEvaluationContextInput = Partial<PolicyEvaluationContext>;

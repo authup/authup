@@ -11,4 +11,9 @@ import type { Identity } from '@authup/core-kit';
 export type ActorContext = {
     permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
+    /**
+     * The client the actor's credential was issued to, so a service delegating
+     * the actor's grants resolves the same grants its gates evaluated (#3597).
+     */
+    credentialClientId?: string | null;
 };

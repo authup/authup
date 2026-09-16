@@ -151,6 +151,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                     id: validated.roleId,
                     clientId: validated.role.clientId,
                 },
+                { credentialClientId: actor.credentialClientId ?? null },
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

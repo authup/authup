@@ -51,6 +51,7 @@ import {
     RequestPermissionEvaluator,
     extractClientCertificateEvidence,
     isSameOriginRequest,
+    setRequestCredentialClientId,
     setRequestIdentity,
     setRequestMfaLoginTicket,
     setRequestPermissionEvaluator,
@@ -316,6 +317,12 @@ export class AuthorizationMiddleware {
 
         if (payload.scope) {
             setRequestScopes(event, deserializeOAuth2Scope(payload.scope));
+        }
+
+        // Like the scope, a property of the CREDENTIAL: only a signed claim
+        // may set it, so no other branch of this middleware writes it.
+        if (payload.client_id) {
+            setRequestCredentialClientId(event, payload.client_id);
         }
 
         // -------------------------------------------------------

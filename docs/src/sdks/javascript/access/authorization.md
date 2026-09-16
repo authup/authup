@@ -217,6 +217,10 @@ The grants (the introspection response's `permissions`):
 
 - One entry per grant, so a name may repeat when the identity holds it through
   several junction rows.
+- For a user, only the grants that apply through the INTROSPECTED token's
+  client are listed: a permission owned by another client is absent, and so is
+  everything a role owned by another client carries. Build one evaluator per
+  token rather than sharing one across tokens issued to different clients.
 - `name`, `realm_id` and `client_id` name the definition. `realm_scope` is the
   grant's own reach, `own` when absent. `policies` are the ids of the junction
   policy trees, resolved against the catalog; empty means no junction policy.

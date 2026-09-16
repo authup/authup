@@ -33,6 +33,12 @@ export type OAuth2IntrospectionSubjectInput = {
      * must not pay for a permission read.
      */
     active: boolean,
+    /**
+     * The client the DESCRIBED credential was issued to, narrowing the grants
+     * exactly as a request made with it is narrowed (#3597). Never the
+     * caller's credential. Required, so no caller widens it by omission.
+     */
+    credentialClientId: string | null,
 };
 
 export type OAuth2IntrospectionSubject = {

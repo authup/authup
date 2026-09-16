@@ -24,7 +24,8 @@ export type IdentityPolicyData = {
      */
     id: string,
     /**
-     * Client associated with identity.
+     * The SUBJECT's own client: a client's id, a role's owner. Never the
+     * client a credential was issued to (`IdentityCredentialOptions`).
      */
     clientId?: string | null,
     /**

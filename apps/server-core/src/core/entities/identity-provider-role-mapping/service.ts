@@ -164,6 +164,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     id: validated.roleId,
                     clientId: validated.role.clientId,
                 },
+                { credentialClientId: actor.credentialClientId ?? null },
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });
@@ -218,6 +219,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     id: role.id,
                     clientId: role.clientId,
                 },
+                { credentialClientId: actor.credentialClientId ?? null },
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

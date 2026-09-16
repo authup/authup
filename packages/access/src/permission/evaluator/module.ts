@@ -147,6 +147,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     include: options.policiesIncluded,
                     exclude: options.policiesExcluded,
                     data,
+                    credentialClientId: ctx.credentialClientId,
                 }),
             );
 
@@ -282,6 +283,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     data,
                     withConditions: true,
                     realmAttributeName: ctx.realmAttributeName,
+                    credentialClientId: ctx.credentialClientId,
                 }),
             );
 

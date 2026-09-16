@@ -6,7 +6,7 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
+import type { IdentityCredentialOptions, IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
@@ -41,18 +41,27 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionScope = scope;
     }
 
-    async getFor(_identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+    public credentialOptions: IdentityCredentialOptions[] = [];
+
+    async getFor(_identity: IdentityPolicyData, options: IdentityCredentialOptions): Promise<PermissionPolicyBinding[]> {
+        this.credentialOptions.push(options);
         return this.bindings;
     }
 
-    async isSuperset(_parent: IdentityPolicyData, _child: IdentityPolicyData): Promise<boolean> {
+    async isSuperset(
+        _parent: IdentityPolicyData,
+        _child: IdentityPolicyData,
+        options: IdentityCredentialOptions,
+    ): Promise<boolean> {
+        this.credentialOptions.push(options);
         return this.supersetResult;
     }
 
     async resolveJunctionGrant(
         _identity: IdentityPolicyData,
-        _options: ResolveJunctionPolicyOptions,
+        options: ResolveJunctionPolicyOptions,
     ): Promise<ResolveJunctionGrantResult> {
+        this.credentialOptions.push({ credentialClientId: options.credentialClientId });
         return {
             policy: this.junctionPolicy,
             realmScope: this.junctionScope,

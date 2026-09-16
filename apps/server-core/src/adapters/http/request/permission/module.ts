@@ -14,7 +14,7 @@ import type {
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { IAppEvent } from 'routup';
-import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
+import { useRequestCredentialClientId, useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionEvaluator implements IPermissionEvaluator {
     protected event: IAppEvent;
@@ -57,6 +57,12 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
     protected extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : T {
         const scopes = useRequestScopes(this.event);
         const identity = useRequestIdentity(this.event);
+
+        // The credential's client narrows the identity's grants (#3597). Always
+        // the request's own value, overwriting the caller's, for the same
+        // reason the identity below is: what the request was not issued for
+        // must never reach an evaluation.
+        ctx.credentialClientId = useRequestCredentialClientId(this.event);
 
         // Only attach the identity policy data when an identity was actually
         // resolved. Setting it to `undefined` would still make

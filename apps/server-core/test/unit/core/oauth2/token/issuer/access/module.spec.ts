@@ -272,13 +272,30 @@ describe('OAuth2AccessTokenIssuer', () => {
                 client_id: clientId,
             });
 
-            expect(provider.getRolesForCalls).toContainEqual({
-                type: OAuth2SubKind.USER,
-                id: userId,
-                clientId,
-                realmId,
-                realmName: 'master',
+            // The token's client is the CREDENTIAL's, so it travels as its own
+            // input and never as the subject's `clientId`.
+            expect(provider.getRolesForCalls).toEqual([{
+                identity: {
+                    type: OAuth2SubKind.USER,
+                    id: userId,
+                    realmId,
+                    realmName: 'master',
+                },
+                options: { credentialClientId: clientId },
+            }]);
+        });
+
+        it('should resolve roles unnarrowed for a token issued to no client', async () => {
+            const provider = new FakeIdentityRoleProvider([]);
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, {}, provider);
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_id: realmId,
             });
+
+            expect(provider.getRolesForCalls[0]!.options).toEqual({ credentialClientId: null });
         });
     });
 });

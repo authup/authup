@@ -31,25 +31,36 @@ describe('IdentityRoleProvider', () => {
     const webRole = role('web-scoped', 'web-client-id');
     const otherRole = role('other-scoped', 'other-client-id');
 
-    it('should return all roles when the identity has no client', async () => {
+    it('should return all roles for a credential issued to no client', async () => {
         const provider = createProvider([globalRole, webRole, otherRole]);
 
-        const result = await provider.getRolesFor({ type: 'user', id: 'u1' });
+        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { credentialClientId: null });
 
         expect(result).toEqual([globalRole, webRole, otherRole]);
     });
 
-    it('should keep client-agnostic (null) roles plus roles scoped to the identity client', async () => {
+    it('should keep client-agnostic (null) roles plus roles owned by the credential client', async () => {
         const provider = createProvider([globalRole, webRole, otherRole]);
 
-        const result = await provider.getRolesFor({
-            type: 'user',
-            id: 'u1',
-            clientId: 'web-client-id',
-        });
+        const result = await provider.getRolesFor({ type: 'user', id: 'u1' }, { credentialClientId: 'web-client-id' });
 
-        // The global role MUST survive — authenticating via the per-realm
-        // `web` client must not strip a user's global/realm roles.
+        // The global role MUST survive: a credential issued to a client must
+        // not strip a user's global/realm roles.
         expect(result).toEqual([globalRole, webRole]);
+    });
+
+    it('should not read the subject\'s own clientId as the credential client', async () => {
+        const provider = createProvider([globalRole, webRole, otherRole]);
+
+        const result = await provider.getRolesFor(
+            {
+                type: 'user', 
+                id: 'u1', 
+                clientId: 'web-client-id', 
+            },
+            { credentialClientId: null },
+        );
+
+        expect(result).toEqual([globalRole, webRole, otherRole]);
     });
 });

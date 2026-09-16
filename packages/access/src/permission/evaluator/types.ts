@@ -48,7 +48,15 @@ export type PermissionEvaluationOptions = {
 export type PermissionEvaluationContext = {
     name: string | string[],
     realmId?: string | null,
+    /**
+     * Selects the permission DEFINITION owned by this client.
+     */
     clientId?: string | null,
+    /**
+     * The client the evaluated credential was issued to, which narrows the
+     * identity's grants (#3597). Not the definition selector `clientId`.
+     */
+    credentialClientId?: string | null,
     data?: PolicyData,
     options?: PermissionEvaluationOptions
 };
@@ -61,6 +69,10 @@ export type PermissionCompileContext = {
     name: string | string[],
     realmId?: string | null,
     clientId?: string | null,
+    /**
+     * See `PermissionEvaluationContext.credentialClientId`.
+     */
+    credentialClientId?: string | null,
     /**
      * The knowns bag (typically the actor identity). Row-dependent keys
      * (`attributes`, `realmMatch`) are deliberately absent — they are what the

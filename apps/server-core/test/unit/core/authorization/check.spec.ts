@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type {
     IPermissionEvaluator,
+    IdentityCredentialOptions,
     IdentityPolicyData,
     PermissionEvaluationContext,
     PermissionPolicyBinding,
@@ -347,10 +348,10 @@ describe('core/authorization/check', () => {
         let loads = 0;
         const provider = ctx.identityPermissionProvider;
         const inner = provider.getFor.bind(provider);
-        provider.getFor = async (value: IdentityPolicyData) => {
+        provider.getFor = async (value: IdentityPolicyData, options: IdentityCredentialOptions) => {
             loads += 1;
 
-            return inner(value);
+            return inner(value, options);
         };
 
         const result = await buildAuthorizationCheck(ctx, {

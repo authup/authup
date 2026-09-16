@@ -8,6 +8,7 @@
 import type { IAppEvent } from 'routup';
 import type { ActorContext } from '@authup/server-kit';
 import { useRequestPermissionEvaluator } from '../permission/helper.ts';
+import { useRequestCredentialClientId } from './credential-client-id.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(event: IAppEvent): ActorContext {
@@ -16,5 +17,6 @@ export function buildActorContext(event: IAppEvent): ActorContext {
     return {
         permissionEvaluator: useRequestPermissionEvaluator(event),
         identity: identity ? identity.raw : undefined,
+        credentialClientId: useRequestCredentialClientId(event),
     };
 }

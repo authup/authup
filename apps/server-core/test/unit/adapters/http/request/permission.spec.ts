@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
+    setRequestCredentialClientId,
     setRequestIdentity,
     setRequestScopes,
 } from '../../../../../src/adapters/http/request';
@@ -114,5 +115,39 @@ describe('RequestPermissionEvaluator', () => {
 
         const ctx = base.preEvaluateCalls[0];
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
+    });
+
+    // The credential's client is stamped from the verified request on every
+    // entry point and never taken from the caller: a service must not be able
+    // to widen a narrowed credential, nor narrow another one, by supplying it.
+    it('should stamp the request\'s credential client over a caller-supplied one', async () => {
+        const event = createEvent();
+        setRequestCredentialClientId(event, 'x');
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await evaluator.evaluate({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.evaluateOneOf({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.preEvaluate({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.preEvaluateOneOf({ name: 'test', credentialClientId: 'forged' });
+        await evaluator.compile({ name: 'test', credentialClientId: 'forged' });
+
+        expect([
+            ...base.evaluateCalls,
+            ...base.evaluateOneOfCalls,
+            ...base.preEvaluateCalls,
+            ...base.preEvaluateOneOfCalls,
+            ...base.compileCalls,
+        ].map((ctx) => ctx.credentialClientId)).toEqual(['x', 'x', 'x', 'x', 'x']);
+    });
+
+    it('should clear a caller-supplied credential client when the request carries none', async () => {
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(createEvent(), base);
+
+        await evaluator.evaluate({ name: 'test', credentialClientId: 'forged' });
+
+        expect(base.evaluateCalls[0].credentialClientId).toBeNull();
     });
 });

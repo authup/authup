@@ -7,6 +7,32 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### A user's client-owned grants apply only through that client's tokens
+
+A permission or a role owned by a client (`client_id`) now applies to a user
+only through a token issued to that client. Through a token issued to any
+other client, the server withholds:
+
+- the user's permissions owned by another client, however they are held,
+  directly or through a role (including the ones `admin` and `realm_admin`
+  receive when a client-scoped permission is created);
+- the user's roles owned by another client, together with the **global**
+  permissions those roles carry.
+
+This applies to request authorization, `POST /authorization/check`, the
+`permissions` list of both introspection endpoints (narrowed by the
+introspected token's own client, never the caller's), and delegation: assigning a role or
+binding a permission through a token issued to another client is refused when
+the actor holds the required grants only through the other client.
+
+Credentials issued to no client are not narrowed: Basic authentication, a
+password grant sent without a client, and the served console's session cookie.
+
+Check before upgrading: an application that exercised a user's grants owned by
+another client, or an administrator binding client-scoped permissions through
+a downstream application's token, now receives `403`. Use a token issued to the
+owning client, or make the grant global.
+
 ### Role, scope, permission and policy reads are realm-gated
 
 Both read paths of the four global-capable entities now apply the `realmScope` of

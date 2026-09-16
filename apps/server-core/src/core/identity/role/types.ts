@@ -6,12 +6,12 @@
  */
 
 import type { Role } from '@authup/core-kit';
-import type { IdentityPolicyData } from '@authup/access';
+import type { IdentityCredentialOptions, IdentityPolicyData } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
 
 export interface IIdentityRoleProvider {
-    getRolesFor(identity: IdentityPolicyData): Promise<Role[]>;
+    getRolesFor(identity: IdentityPolicyData, options: IdentityCredentialOptions): Promise<Role[]>;
 }
 
 export type IdentityRoleProviderContext = {

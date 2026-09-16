@@ -35,7 +35,12 @@ import {
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, useRequestIdentity, useRequestSessionId } from '../../../request/index.ts';
+import {
+    buildActorContext,
+    useRequestCredentialClientId,
+    useRequestIdentity,
+    useRequestSessionId,
+} from '../../../request/index.ts';
 import { EntityType, IdentityType } from '@authup/core-kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { OAuth2SubKind, serializeOAuth2Scope } from '@authup/specs';
@@ -91,12 +96,10 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * No client scope on the permission read, deliberately, and there is no
-     * parameter left to supply one: `resolveIntrospectionSubject` projects the
-     * RESOLVED identity, the derivation the request path uses.
-     * `reduceBindingsByIdentityClient` keeps only permissions whose own
-     * `clientId` matches the identity's, so any caller-chosen value drops
-     * every global permission, which is nearly all of them.
+     * The permission read is narrowed by the request's own credential client
+     * (#3597), the value its request evaluation is narrowed by: the bearer's
+     * `client_id`, or none for the console cookie. Never a caller-chosen value
+     * and never the subject's `clientId`.
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
@@ -135,6 +138,7 @@ export class SessionController {
             sub: identity.id,
             subKind: identity.type,
             active: true,
+            credentialClientId: useRequestCredentialClientId(event),
         });
 
         return {

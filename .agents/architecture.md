@@ -796,17 +796,19 @@ import type { Identity } from '@authup/core-kit';
 export type ActorContext = {
     permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
+    credentialClientId?: string | null;
 };
 ```
 
 - `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
 - `identity` — the actor's identity (user, client)
+- `credentialClientId` — the client the actor's credential was issued to, which a service delegating the actor's grants (`isSuperset`, `resolveJunctionGrant`) must pass on, so delegation resolves the grants the gates evaluated
 
 #### RequestPermissionEvaluator
 
 The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
 
-**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`).
+**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`). It stamps the context's `credentialClientId` the same way, unconditionally from the request, so a caller can neither widen nor narrow a credential by supplying one.
 
 Note two routes still assemble an identity bag around a BARE `PermissionEvaluator` and so reach none of this: `POST /permissions/:id/check` and `POST /policies/:id/check` (`PermissionCheckerService` / the policy checker), which is why they answer a scope-restricted bearer as a fully-scoped one (#3604). Routing them through this wrapper is the fix, and with the symmetry above it needs no rule of its own.
 
@@ -817,6 +819,7 @@ export function buildActorContext(req: Request): ActorContext {
     return {
         permissionEvaluator: useRequestPermissionEvaluator(req),
         identity: identity ? identity.raw : undefined,
+        credentialClientId: useRequestCredentialClientId(req),
     };
 }
 ```
@@ -2369,14 +2372,14 @@ rather than trusted until `exp`.
 - **`GET /sessions/@me/introspect` is the same projection `POST /token/introspect`
   answers with**, minus everything token-shaped, so the kit's `commitSession`
   needs no new shape. Both share one owner, `resolveIntrospectionSubject`
-  (`core/oauth2/introspection/`), so the two cannot drift. **Neither route
-  passes a client id**: the input is the subject plus whether the credential
-  is usable, and the projection runs over the RESOLVED identity
-  (`toIdentityPolicyData`), the derivation every request path uses, so an
-  introspection cannot disagree with an in-process evaluation of the same
-  subject. Do not re-add one. `reduceBindingsByIdentityClient` narrows a
-  user's grants to the identity's own `clientId`, so any caller-chosen value
-  drops every global permission, which is nearly the whole catalogue. Both
+  (`core/oauth2/introspection/`), so the two cannot drift. The input is the
+  subject, whether the credential is usable, and the credential's client
+  (the introspected token's `client_id`, the bearer's on the GET, none for
+  the cookie), and the projection runs over the RESOLVED identity
+  (`toIdentityPolicyData`), so an introspection cannot disagree with an
+  in-process evaluation of the same credential (see *A user's client-owned
+  grants apply through that client's credentials*). The client never goes
+  into the subject's `clientId`. Both
   routes set `Cache-Control: no-store` and `Vary: Cookie`: the GET is a
   per-user document whose only discriminator is an opaque cookie, exactly
   what an intermediary would otherwise cross-serve.
@@ -3390,11 +3393,10 @@ with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
 `core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
 cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
 warning, since the server fails such a grant closed itself. The projection runs over the
-RESOLVED identity, exactly as a request does (`toIdentityPolicyData`), never over the
-client a token was issued to: the provider narrows a user's grants to the identity's own
-`clientId`, and every provisioned permission is global, so scoping it to the token's
-client dropped every direct `auth_user_permissions` grant from any token carrying one,
-which is every authorization-code token and therefore every console and RP login. **The
+RESOLVED identity (`toIdentityPolicyData`) under the INTROSPECTED token's own client,
+exactly as a request made with that token is evaluated, so a user's grants owned by
+another client are absent (see *A user's client-owned grants apply through that client's
+credentials*). **The
 list is NOT narrowed by the token's `scope`**, so a bearer holding no `global` scope
 reports its full grant set while the server denies it every `system.default`-bound
 permission (the request path withholds the IDENTITY policy data from it); a resource
@@ -3560,6 +3562,50 @@ the next resolve retries. The result is committed into ONE stable
 swaps what it delegates to). `usePermissionCheck` and the routing guards call
 `preEvaluateOneOf`; a check carrying `realmMatch` settles reach per row, one without keeps
 the neutral pass. The server stays the enforcement point.
+
+### A user's client-owned grants apply through that client's credentials
+
+A permission or a role may be owned by a client (`client_id`). For a USER, such a grant
+applies only through a credential issued to that client (#3597): through a token issued
+to client Y, a permission owned by X is withheld, and so is a role owned by X together
+with the GLOBAL permissions it carries. Unowned grants always apply. A credential issued
+to no client (a clientless password grant, Basic, the console cookie) narrows nothing:
+it is first-party, and making it global-only would stop the served console and Basic
+from binding client-owned permissions, which admin and realm_admin hold through
+auto-assignment. Client subjects and the role side of `isSuperset` (`getForRole`'s
+equality) are unchanged.
+
+The rule is one function, `appliesThroughCredentialClient`
+(`core/identity/permission/credential-client.ts`), and it is a DISJUNCTION: an equality
+drops every global grant, which already regressed introspection once. `getRolesFor`
+filters the user's roles by it and `getForUser` filters the MERGED direct and
+role-derived grants by it.
+
+**The carrier is the credential, never the subject.** `IdentityPolicyData.clientId` is
+the subject's own client, and a role reads it as its owner, so the credential's client
+travels separately as `IdentityCredentialOptions.credentialClientId`, a REQUIRED
+parameter of `getFor`, `getRolesFor`, `isSuperset` (describing the parent; the child is
+resolved under none) and `resolveJunctionGrant`, so no call site widens a credential by
+leaving it out. Its one source is the verified bearer's `client_id`
+(`setRequestCredentialClientId`, next to the scopes in the authorization middleware). It
+then reaches:
+
+- **evaluation**: `RequestPermissionEvaluator` stamps `credentialClientId` on every
+  `Permission*Context`, `PermissionEvaluator` forwards it into the policy context in
+  `evaluate` AND `compile`, and the binding evaluator hands it to `getFor`. The batch
+  check inherits it through `decorate`;
+- **delegation**: `buildActorContext` copies it onto `ActorContext`, and the junction
+  services pass `actor.credentialClientId` to `isSuperset` / `resolveJunctionGrant`, so a
+  Y token cannot assign a role or propagate a grant held only through X;
+- **introspection**: `POST /token/introspect` narrows by the INTROSPECTED token's
+  `client_id`, never by the caller's, and `GET /sessions/@me/introspect` by the request's
+  own. A local `createAuthorizationEvaluator` therefore reaches the server's verdict.
+
+The access token's `realm_access` / `global_access` claims are narrowed by the same rule.
+Two things stay open: an engine built outside `RequestPermissionEvaluator` resolves
+unnarrowed, and `POST /authorize` / device approve accept any user bearer, so a holder of
+a Y token can mint an X token for a public client X. A grant minting from an existing
+credential must copy its `client_id` (refresh, MFA completion and device do).
 
 ### Policy engine evaluators are per engine
 
