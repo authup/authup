@@ -103,12 +103,13 @@ export class PermissionController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PermissionAPICheckResponse> {
-        const actor = buildActorContext(event);
+        const { identity: subject, ...rest } = data ?? {};
         const result = await this.checkerService.safeCheck(
             id,
-            data,
-            actor,
+            rest,
+            buildActorContext(event),
             getRequestRealmID(event),
+            subject,
         );
 
         event.response.status = 202;

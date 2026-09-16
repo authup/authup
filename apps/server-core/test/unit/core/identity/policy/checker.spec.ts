@@ -16,6 +16,7 @@ import { BuiltInPolicyType, PolicyData, PolicyError } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
+import { createAllowAllActor } from '@authup/server-test-kit';
 import type { UserEntity } from '../../../../../src';
 import {
     PolicyRepository,
@@ -54,6 +55,7 @@ describe('core/identity/policy/checker', () => {
         service = new PolicyCheckerService({
             repository: policyRepository,
             realmRepository,
+            identityResolver: suite.container.resolve(IdentityInjectionKey.Resolver),
             identityPermissionProvider,
         });
     });
@@ -64,7 +66,7 @@ describe('core/identity/policy/checker', () => {
 
     it('throws EntityNotFoundError for an unknown policy', async () => {
         await expect(
-            service.check(createNanoID(), new PolicyData()),
+            service.check(createNanoID(), new PolicyData(), createAllowAllActor()),
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
@@ -85,6 +87,7 @@ describe('core/identity/policy/checker', () => {
                     realmId: adminUser.realmId,
                 },
             }),
+            createAllowAllActor(),
         )).resolves.toBeUndefined();
     });
 
@@ -99,11 +102,12 @@ describe('core/identity/policy/checker', () => {
         await expect(service.check(
             policy.id,
             new PolicyData(),
+            createAllowAllActor(),
         )).rejects.toBeInstanceOf(PolicyError);
     });
 
     it('safeCheck wraps failures into Result<null>', async () => {
-        const result = await service.safeCheck(createNanoID(), new PolicyData());
+        const result = await service.safeCheck(createNanoID(), new PolicyData(), createAllowAllActor());
         expect(result.success).toBe(false);
         if (!result.success) {
             expect(result.error).toBeInstanceOf(EntityNotFoundError);

@@ -87,6 +87,9 @@ describe('core/identity/permission/checker', () => {
         service = new PermissionCheckerService({
             repository: permissionRepository,
             realmRepository,
+            identityResolver: suite.container.resolve(IdentityInjectionKey.Resolver),
+            permissionProvider: new PermissionDatabaseProvider(suite.dataSource),
+            identityPermissionProvider,
         });
     });
 

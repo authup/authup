@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionEvaluationContext } from '@authup/access';
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import type { IdentityPolicyData, PermissionEvaluationContext } from '@authup/access';
+import { BuiltInPolicyType, PermissionEvaluator, definePolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
+import { PolicyEngine } from '../../../security/policy/engine.ts';
+import { resolveCheckSubject } from './subject.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -28,6 +30,37 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
+        subject?: unknown,
+    ): Promise<void> {
+        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+
+        await this.evaluate(idOrName, data, actor, realm, identity);
+    }
+
+    async safeCheck(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realm?: string,
+        subject?: unknown,
+    ): Promise<Result<null>> {
+        // outside the try: being refused the subject answers the request, not the check
+        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+
+        try {
+            await this.evaluate(idOrName, data, actor, realm, identity);
+            return { success: true, data: null };
+        } catch (e) {
+            return { success: false, error: normalizeError(e) };
+        }
+    }
+
+    protected async evaluate(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realm: string | undefined,
+        identity: IdentityPolicyData | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
@@ -58,35 +91,31 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
+        // Asked about the caller, the actor's evaluator owns the identity key: on a
+        // request it asserts the caller's own identity when the scopes include
+        // `global` and removes it otherwise. Asked about a subject that passed the
+        // gate, the subject's identity is evaluated as stored (#3604).
+        let evaluator = actor.permissionEvaluator;
+        if (identity) {
+            input[BuiltInPolicyType.IDENTITY] = identity;
+            evaluator = new PermissionEvaluator({
+                provider: this.ctx.permissionProvider,
+                policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
+            });
+        }
+
         const evaluationContext: PermissionEvaluationContext = {
             name: entity.name,
             data: definePolicyData(input),
         };
 
-        // The actor's evaluator owns the identity key: on a request it asserts the
-        // caller's own identity when the scopes include `global` and removes it
-        // otherwise, whatever the body named (#3604).
         if (
             evaluationContext.data &&
             evaluationContext.data.has(BuiltInPolicyType.ATTRIBUTES)
         ) {
-            await actor.permissionEvaluator.evaluate(evaluationContext);
+            await evaluator.evaluate(evaluationContext);
         } else {
-            await actor.permissionEvaluator.preEvaluate(evaluationContext);
-        }
-    }
-
-    async safeCheck(
-        idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
-        realm?: string,
-    ): Promise<Result<null>> {
-        try {
-            await this.check(idOrName, data, actor, realm);
-            return { success: true, data: null };
-        } catch (e) {
-            return { success: false, error: normalizeError(e) };
+            await evaluator.preEvaluate(evaluationContext);
         }
     }
 }

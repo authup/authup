@@ -67,6 +67,7 @@ export enum PermissionName {
     PERMISSION_DELETE = 'permission_delete',
     PERMISSION_UPDATE = 'permission_update',
     PERMISSION_READ = 'permission_read',
+    PERMISSION_CHECK = 'permission_check',
 
     REALM_CREATE = 'realm_create',
     REALM_DELETE = 'realm_delete',

@@ -118,10 +118,13 @@ export class PolicyController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PolicyAPICheckResponse> {
+        const { identity: subject, ...rest } = data ?? {};
         const result = await this.checkerService.safeCheck(
             id,
-            applyRequestIdentity(event, new PolicyData({ ...data })),
+            applyRequestIdentity(event, new PolicyData(rest)),
+            buildActorContext(event),
             getRequestRealmID(event),
+            subject,
         );
 
         event.response.status = 202;

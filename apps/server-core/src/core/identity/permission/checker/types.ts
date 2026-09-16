@@ -5,16 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IPermissionProvider } from '@authup/access';
 import type { Result } from '@authup/kit';
 import type { ActorContext } from '@authup/server-kit';
 import type {
     IPermissionRepository,
     IRealmRepository,
 } from '../../../entities/index.ts';
+import type { IIdentityResolver } from '../../resolver/types.ts';
+import type { IIdentityPermissionProvider } from '../types.ts';
 
 export type PermissionCheckerServiceContext = {
     repository: IPermissionRepository;
     realmRepository: IRealmRepository;
+    identityResolver: IIdentityResolver;
+    permissionProvider: IPermissionProvider;
+    identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export interface IPermissionCheckerService {
@@ -23,10 +29,12 @@ export interface IPermissionCheckerService {
      * the supplied data on the actor's evaluator. Throws on any failure:
      * entity not found, evaluator denial, validator error.
      *
-     * The service places no identity: the actor's evaluator owns that key,
-     * and on a request it is the caller's own identity when the scopes
-     * include `global` and absent otherwise, whatever `data[identity]`
-     * named. If `data[attributes]` is present, the evaluator runs a full
+     * Without a `subject` the check is about the caller: the actor's
+     * evaluator owns the identity key, and on a request it is the caller's
+     * own identity when the scopes include `global` and absent otherwise,
+     * whatever `data[identity]` named. With a `subject` the actor must hold
+     * PERMISSION_CHECK reaching the subject's realm, and the check is
+     * evaluated for the subject as stored. If `data[attributes]` is present, the evaluator runs a full
      * `evaluate` and its `realmId` reaches the realm reach factor under
      * `realmMatch`; otherwise it runs a `preEvaluate` (data-less gate
      * check).
@@ -38,7 +46,11 @@ export interface IPermissionCheckerService {
      * @param actor The caller context, supplying the evaluator the check
      *   runs on.
      * @param realm Optional realm id used to disambiguate name lookups.
-     * @throws {EntityNotFoundError} When no permission matches.
+     * @param subject The raw `{ type, id }` naming the user or client to
+     *   check for; `undefined` or `null` checks for the caller.
+     * @throws {ValidationError} When the subject is malformed.
+     * @throws {PermissionError} When the actor may not check for the subject.
+     * @throws {EntityNotFoundError} When no permission or subject matches.
      * @throws {Error} Whatever the evaluator throws on denial.
      */
     check(
@@ -46,18 +58,21 @@ export interface IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
+        subject?: unknown,
     ): Promise<void>;
 
     /**
-     * Same as `check`, but never throws — collapses any failure into a
-     * `Result<null>` with `success: false` and the originating error.
-     * Use this at boundaries that want to embed denial in a response body
-     * rather than propagate it.
+     * Same as `check`, but collapses a failure of the check itself into a
+     * `Result<null>` with `success: false` and the originating error. Use
+     * this at boundaries that want to embed denial in a response body
+     * rather than propagate it. Resolving the `subject` still throws: a
+     * refusal to check for it answers the request, not the check.
      */
     safeCheck(
         idOrName: string,
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
+        subject?: unknown,
     ): Promise<Result<null>>;
 }

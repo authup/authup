@@ -45,24 +45,29 @@ Two consequences to check before upgrading:
 The admin console needs no change: its four list pages already scope to the
 active realm plus the global rows.
 
-### The permission and policy check routes answer for the caller only
+### Checking another subject's permissions requires `permission_check`
 
-`POST /permissions/:id/check` and `POST /policies/:id/check` now evaluate with
-the identity the request was authenticated as, under the same scope rule as
-every other route:
+`POST /permissions/:id/check` and `POST /policies/:id/check` answer for the
+caller unless the body names another subject, and naming one is now gated:
 
-- an `identity` in the request body is ignored, `null` included, so the policy
-  route no longer has an "anonymous" opt-out
-- a bearer whose token lacks the `global` scope is evaluated without an identity,
-  so a permission or policy that needs one answers `status: "error"`
+- **Without an `identity` in the body (or with `null`)** the check is about the
+  caller, under the same scope rule as every other route. A bearer whose token
+  lacks the `global` scope is evaluated without an identity, so a permission or
+  policy that needs one answers `status: "error"`. The policy route's
+  `identity: null` "anonymous" option now means the caller like an absent key.
+- **With `identity: { type, id }`** naming a user or client, the caller must hold
+  the new `permission_check` permission, and the grant's realm scope must reach
+  the subject's realm. Only `type` and `id` are read; the subject is loaded from
+  the database, so a `realmId` in the body is ignored. A caller without the grant
+  is refused with `403`, a malformed `identity` with `400`, and an unknown subject
+  with `404`. Previously any authenticated caller could name any identity, and
+  since the permission-binding policy loads the grants of the identity it is
+  handed, read another user's or client's authorization in any realm.
 
-Previously both routes evaluated a body `identity` as given. Since the
-permission-binding policy loads the grants of the identity it is handed, any
-authenticated caller could ask whether another user or client holds a
-permission. An integration that used these routes to check on behalf of another
-subject now receives its own verdict instead: authenticate as that subject, or
-read the subject's grants from `POST /token/introspect` and evaluate them
-against `GET /authorization`.
+The built-in `admin` role holds `permission_check` in every realm and
+`realm_admin` in its own after the next start, like every provisioned
+permission. An integration that checks on behalf of other subjects needs a
+grant of `permission_check` for its credential.
 
 ### The device authorization grant is available, opt-in per client
 
