@@ -16,6 +16,7 @@ import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { Client, User } from '@authup/core-kit';
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
+    EventName,
     IdentityType,
     ScopeName,
     UserAuthenticatorKind,
@@ -683,12 +684,30 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         const { deviceCode, userCode } = await issue(client);
         const { accessToken } = await createUserBearer();
 
+        const loginIntrospect = await suite.client.token.introspect(
+            { token: accessToken },
+            { authorizationHeaderInherit: true },
+        );
+        const loginSessionId = loginIntrospect.session_id as string;
+        expect(loginSessionId).toBeDefined();
+
         const approved = await verify('approve', accessToken, { user_code: userCode });
         expect(approved.status).toEqual(200);
 
         await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
 
         await expectInvalidGrant(await poll(deviceCode, { client_id: client.id }));
+
+        // the backstop leaves the row the interactive leg leaves (#3575).
+        // AUTHORIZE_FAILED by name: the approval above already recorded an
+        // AUTHORIZE row for this client.
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.AUTHORIZE_FAILED, clientId: client.id } });
+        expect(events).toHaveLength(1);
+        expect(events[0].data).toEqual({
+            reason: 'accessPolicy',
+            grantType: OAuth2TokenGrant.DEVICE_CODE,
+        });
+        expect(events[0].sessionId).toEqual(loginSessionId);
     });
 
     it('should throttle the actor after ten misses while a valid lookup consumes none', async () => {

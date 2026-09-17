@@ -250,6 +250,25 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             }
 
             if (!allowed) {
+                // The policy is evaluated before any session exists, so the
+                // row names none (#3575).
+                await this.eventService?.record({
+                    scope: EventScope.OAUTH2,
+                    name: EventName.AUTHORIZE_FAILED,
+                    refType: EventRefType.CLIENT,
+                    refId: verified.client.id,
+                    clientId: verified.client.id,
+                    sessionId: null,
+                    actorType: IdentityType.USER,
+                    actorId: user.id,
+                    actorName: user.name,
+                    realmId: verified.client.realmId ?? null,
+                    requestIpAddress: input.request?.ipAddress ?? null,
+                    requestUserAgent: input.request?.userAgent ?? null,
+                    data: { reason: 'accessPolicy', providerId: provider.id },
+                });
+                this.metrics?.recordAuthorize('denied');
+
                 return {
                     kind: 'refused',
                     refusal: OAuth2FederatedLoginRefusal.ACCESS_DENIED,

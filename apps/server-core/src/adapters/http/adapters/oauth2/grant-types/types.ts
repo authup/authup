@@ -11,7 +11,9 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import type {
     BaseGrantContext,
+    IAuthFlowMetrics,
     ICredentialsAuthenticator,
+    IEventService,
     ILoginThrottleService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
@@ -31,6 +33,13 @@ export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+    /**
+     * An access-policy denial at the token endpoint leaves the same
+     * AUTHORIZE_FAILED row and `denied` count the interactive leg leaves
+     * (#3575).
+     */
+    eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
     certificateSource: CertificateSource,
 };
 
@@ -39,6 +48,8 @@ export type HTTPOAuth2DeviceCodeGrantContext = OAuth2AuthorizeGrantContext & {
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+    eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
     certificateSource: CertificateSource,
 };
 

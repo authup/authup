@@ -12,12 +12,21 @@ import {
     it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
+import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { Client, Policy } from '@authup/core-kit';
-import { IdentityType, ScopeName } from '@authup/core-kit';
+import { EventName, IdentityType, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
+import {
+    OAuth2AuthorizationResponseType,
+    OAuth2ErrorCode,
+    OAuth2TokenGrant,
+} from '@authup/specs';
 import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient, expectClientError } from '../../../../../utils';
+import {
+    createFakeClient,
+    createFakeUser,
+    expectClientError,
+} from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 // Application access policy (plan 052), /token backstop: a code minted BEFORE
@@ -67,8 +76,8 @@ describe('grant-authorize (access policy backstop)', () => {
         return client;
     };
 
-    const issueCode = async (clientId: string): Promise<string> => {
-        const response = await suite.client.authorize.confirm({
+    const issueCode = async (clientId: string, actor: HTTPClient = suite.client): Promise<string> => {
+        const response = await actor.authorize.confirm({
             response_type: OAuth2AuthorizationResponseType.CODE,
             client_id: clientId,
             redirect_uri: 'https://example.com/redirect',
@@ -82,7 +91,23 @@ describe('grant-authorize (access policy backstop)', () => {
         const secret = generateOAuth2CodeVerifier();
         const client = await createClientWithScope(secret);
 
-        const code = await issueCode(client.id);
+        // the code is minted by a bearer session, so the refusal below can
+        // name the session it was minted under
+        const password = generateOAuth2CodeVerifier();
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const login = await suite.client.token.createWithPassword({ username: user.name, password });
+
+        const bearer = new HTTPClient({ baseURL: suite.baseURL });
+        bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        const introspection = await bearer.token.introspect(
+            { token: login.access_token },
+            { authorizationHeaderInherit: true },
+        );
+        const sessionId = introspection.session_id as string;
+        expect(sessionId).toBeDefined();
+
+        const code = await issueCode(client.id, bearer);
 
         // attach the policy AFTER issuance — the /authorize gate never saw it
         await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
@@ -100,6 +125,17 @@ describe('grant-authorize (access policy backstop)', () => {
                 data: { error: OAuth2ErrorCode.INVALID_GRANT },
             },
         );
+
+        // the backstop leaves the row the interactive leg leaves (#3575).
+        // AUTHORIZE_FAILED by name: the successful /authorize above already
+        // recorded an AUTHORIZE row for this client.
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.AUTHORIZE_FAILED, clientId: client.id } });
+        expect(events).toHaveLength(1);
+        expect(events[0].data).toEqual({
+            reason: 'accessPolicy',
+            grantType: OAuth2TokenGrant.AUTHORIZATION_CODE,
+        });
+        expect(events[0].sessionId).toEqual(sessionId);
     });
 
     it('should redeem a pre-policy code when the attached policy permits the subject', async () => {

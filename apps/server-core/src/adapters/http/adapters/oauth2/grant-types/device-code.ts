@@ -7,13 +7,15 @@
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
+    IAuthFlowMetrics,
+    IEventService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2DeviceCodeVerifier,
     IRealmRepository,
@@ -23,6 +25,7 @@ import type {
 import type { HTTPOAuth2DeviceCodeGrantContext, IHTTPOAuth2Grant } from './types.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 import {
+    assertAccessPolicyBackstop,
     extractClientCredentialsFromRequest,
     extractOAuth2ClientCertificateEvidence,
     readRealmHint,
@@ -58,6 +61,10 @@ export class HTTPOAuth2DeviceCodeGrant extends OAuth2AuthorizeGrant implements I
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
+    protected eventService? : IEventService;
+
+    protected metrics? : IAuthFlowMetrics;
+
     protected certificateSource: CertificateSource;
 
     constructor(ctx: HTTPOAuth2DeviceCodeGrantContext) {
@@ -67,6 +74,8 @@ export class HTTPOAuth2DeviceCodeGrant extends OAuth2AuthorizeGrant implements I
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.realmRepository = ctx.realmRepository;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
+        this.eventService = ctx.eventService;
+        this.metrics = ctx.metrics;
         this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
@@ -98,22 +107,25 @@ export class HTTPOAuth2DeviceCodeGrant extends OAuth2AuthorizeGrant implements I
             realmId: client.realmId,
         });
 
-        if (client.accessPolicyId) {
-            let allowed = false;
-            if (this.accessPolicyEvaluator) {
-                allowed = await this.accessPolicyEvaluator.evaluate(client.accessPolicyId, {
-                    type: entity.decision.sub_kind,
-                    id: entity.decision.sub,
-                    realmId: entity.realm_id,
-                    realmName: entity.realm_name,
-                    clientId: entity.client_id,
-                });
-            }
-
-            if (!allowed) {
-                throw OAuth2GrantError.invalid();
-            }
-        }
+        await assertAccessPolicyBackstop({
+            client,
+            grantType: OAuth2TokenGrant.DEVICE_CODE,
+            subject: {
+                type: entity.decision.sub_kind,
+                id: entity.decision.sub,
+                realmId: entity.realm_id,
+                realmName: entity.realm_name,
+                clientId: entity.client_id,
+            },
+            sessionId: entity.decision.session_id ?? null,
+            request: {
+                ipAddress: getRequestIP(event),
+                userAgent: getRequestHeader(event, 'user-agent'),
+            },
+            evaluator: this.accessPolicyEvaluator,
+            eventService: this.eventService,
+            metrics: this.metrics,
+        });
 
         return this.runWith(toAuthorizationCode(entity), {
             confirmation,
