@@ -29,10 +29,17 @@ import type { IClient } from '@authup/core-http-kit';
  * against an older contract would otherwise fail per request on
  * `/authorize` rather than at boot with an actionable message.
  */
-export const CONTRACT_VERSION = 4;
+export const CONTRACT_VERSION = 5;
 
 /*
  * History:
+ *
+ * 5 - the `/device` payload carries `federatedLogin: { providerId }` and the
+ *     page has to complete it the way `/authorize` does (version 3), then
+ *     return to the code step (#3589). The provider buttons live in the kit,
+ *     so a package built on the new kit whose own page ignores the field
+ *     sends the person code, login, provider and back to the code in a loop,
+ *     with the provider's code spent each time.
  *
  * 4 - the host renders `/device` (the RFC 8628 device verification page,
  *     plan 065) with a payload of `{ features, userCode? }`; a bundle built

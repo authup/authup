@@ -7,6 +7,7 @@
 
 import type { AuthorizeInfo, StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import { Client } from '@authup/core-http-kit';
+import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from './redirect';
@@ -174,4 +175,27 @@ export function readDeviceUserCode(event: IAppEvent) : string | undefined {
     }
 
     return canonical;
+}
+
+/**
+ * The provider a federated login on the device page came back from (#3589).
+ * A routing hint and no secret: the pending login itself rides an HttpOnly
+ * cookie. Anything that is not a uuid is dropped, the rule `/authorize`
+ * reads its own hint by: the page interpolates the value into the
+ * completion request path.
+ */
+export function readDeviceFederatedLogin(event: IAppEvent) : { providerId: string } | undefined {
+    const { provider } = useRequestQuery(event);
+
+    return typeof provider === 'string' && isUUID(provider) ?
+        { providerId: provider } :
+        undefined;
+}
+
+/**
+ * The refusal marker the federated callback may attach. A closed set of one,
+ * so nothing request-derived is rendered.
+ */
+export function readDeviceError(event: IAppEvent) : 'access_denied' | undefined {
+    return useRequestQuery(event).error === 'access_denied' ? 'access_denied' : undefined;
 }

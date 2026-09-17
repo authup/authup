@@ -11,7 +11,7 @@ import type { CONTRACT_VERSION as BundleContractVersion } from '@authup/client-a
  * The render contract this service compiles against. The literal type fails
  * the build the moment the bundle's constant moves without this one.
  */
-export const CONTRACT_VERSION : typeof BundleContractVersion = 4;
+export const CONTRACT_VERSION : typeof BundleContractVersion = 5;
 
 /**
  * The vite base the auth console bundle is built with. Asset hrefs in the
