@@ -25,7 +25,7 @@ import { toIdentityPolicyData } from '../identity-policy-data.ts';
  * - any other identity: that identity, as given, once the actor may check
  *   for it (see `authorizeCheckFor`).
  */
-export async function buildCheckData(
+export async function buildPermissionCheckerData(
     data: Record<string, any>,
     actor: ActorContext,
     identityResolver: IIdentityResolver,

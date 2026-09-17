@@ -27,7 +27,7 @@ export interface IPolicyCheckerService {
      * supplied data. Throws on any failure: entity not found, evaluator
      * denial, validator error.
      *
-     * `data[identity]` decides who is evaluated (see `buildCheckData`):
+     * `data[identity]` decides who is evaluated (see `buildPermissionCheckerData`):
      * absent, the actor's identity; `null`, no identity; an identity, that
      * identity as given, which needs PERMISSION_CHECK reaching the subject's
      * stored realm when it is not the actor's own.

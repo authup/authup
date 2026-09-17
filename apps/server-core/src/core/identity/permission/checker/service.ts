@@ -12,7 +12,7 @@ import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { buildCheckData } from './data.ts';
+import { buildPermissionCheckerData } from './data.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -31,7 +31,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<void> {
-        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
+        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
         await this.evaluate(idOrName, input, realm);
     }
@@ -43,7 +43,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         realm?: string,
     ): Promise<Result<null>> {
         // outside the try: being refused the subject answers the request, not the check
-        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
+        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
         try {
             await this.evaluate(idOrName, input, realm);
