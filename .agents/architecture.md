@@ -2924,7 +2924,10 @@ their checkout.
 different ones.** `@authup/client-auth-console` exports `CONTRACT_VERSION`
 as a runtime value alongside `render()` (missing = version 1; version 2
 added the federated callback's interstitial route and payload, version 3 the
-`federatedLogin` payload the page must redeem. Nothing renders the interstitial route any more, but the floor only rises. The history
+`federatedLogin` payload the `/authorize` page must redeem, version 4 the
+`/device` page, version 5 the same `federatedLogin` payload on `/device`.
+Nothing renders the interstitial route any more, but the floor only rises. The
+history
 lives in `src/contract.ts`). A static console's contract is its config
 MARKER (`<!--account-config-->`, `<!--admin-config-->`) plus the vite base
 its asset hrefs carry, both spelled as constants in the serving service;
@@ -5172,20 +5175,30 @@ neutral message: no identity/policy detail, no enumeration oracle).
   evaluation error, and even a policy-carrying client with **no wired
   evaluator** all deny. Only a genuinely-null `accessPolicyId` allows (a
   deleted policy degrades to null via `SET NULL`).
-- **Three enforcement legs** (plan-041 layered-enforcement shape): (1)
-  `OAuth2Authorization.authorizeInner` — the LAST gate before code issuance
-  (order: realm → MFA backstop/step-up → prompt/max_age freshness → **access
-  policy** → issue), so a denial is only revealed to a fully-authenticated,
-  second-factor-complete identity; (2) the **federated-IdP callback** (it
+- **Four enforcement legs**: (1) `OAuth2AuthorizationGate.evaluate`, the LAST
+  gate before issuance (order: realm → MFA backstop/step-up → prompt/max_age
+  freshness → **access policy** → issue), so a denial is only revealed to a
+  fully-authenticated, second-factor-complete identity. `POST /authorize` and
+  the device approval both run it; (2) the **federated-IdP callback** (it
   admits an external identity before the hosted ladder runs): on deny it
   redirects back to the hosted `/authorize` page with `error=access_denied`
   (`serve()` maps that recognized query param onto a neutral
-  hydration-payload error), and no session is established; (3) a **`/token`
-  code-redemption backstop** — catches codes minted before a policy change or
-  by a missed minting site; the subject is built from the code-blob scalars
-  (no DB identity load) and denial surfaces as `invalid_grant` (RFC 6749 §5.2
-  has no `access_denied`; a denied redemption also burns the code — retries
-  hit code-reuse `invalid_grant`).
+  hydration-payload error), and no session is established; (3) and (4) the two
+  **`/token` redemption backstops**, for an authorization code and for a device
+  code, which catch an artifact minted before a policy change or by a missed
+  minting site. Both call `assertAccessPolicyBackstop`
+  (`adapters/http/adapters/oauth2/grant-types/utils/access-policy.ts`): the
+  subject is built from the blob scalars (no DB identity load) and denial
+  surfaces as `invalid_grant` (RFC 6749 §5.2 has no `access_denied`; a denied
+  redemption also burns the artifact, so retries hit reuse `invalid_grant`).
+  **Leg (2) exists only for a login that completes a code request.** A
+  federated login started on the device page has no client at the callback
+  (see *Federated Login Completion*), so a device client's policy stops the
+  approval and the redemption, not the pending `ext` session or the bearer
+  the page redeems it for. What stops federated sessions in a realm is
+  `provider.enabled` (or `requiredAmr` / `requiredAcr`), not a client policy.
+  A default deployment loses nothing to this: every realm carries policy-free
+  system clients a federated login can already name.
 - **Denial transport honors `redirectUriVerified`** (threaded from the
   code-request verifier through `OAuth2AuthorizationOptions` alongside
   `client`): verified → `AuthorizeController.confirm` catches the error and
@@ -5206,15 +5219,16 @@ neutral message: no identity/policy detail, no enumeration oracle).
   every boot. The admin form binds it via
   `APolicyPicker` in `AClientForm`. Client caches mean a policy
   (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
-- **Observability (leg-scoped):** a denial at the **interactive
-  `/authorize`** leg records `EventName.AUTHORIZE_FAILED`
-  (`data.reason: 'accessPolicy'`, ref = client) and increments
-  `authup_authorize_total{outcome="denied"}` — done in
-  `OAuth2Authorization.authorize()`'s catch, the only emit site. The
-  federated-IdP-callback and `/token`-backstop legs are **not** yet
-  instrumented (neither carries an `eventService`/metrics dependency today) —
-  a known audit-coverage gap, not a security gap (the deny itself is
-  enforced at all three legs). Wiring those two legs is a follow-up.
+- **Observability: every leg records** (#3575). A denial leaves one
+  `EventName.AUTHORIZE_FAILED` row (`data.reason: 'accessPolicy'`, ref =
+  client) and one `authup_authorize_total{outcome="denied"}`, wherever it
+  happens: `OAuth2Authorization.authorize()`'s catch and the device approval
+  for leg (1), `OAuth2FederatedLoginService.complete` for leg (2), the shared
+  backstop helper for legs (3) and (4). The rows differ in what each leg
+  knows. The federated row carries `data.providerId` and `sessionId: null`,
+  because the policy is evaluated before the pending session is created. A
+  backstop row carries `data.grantType` and the blob's own `session_id`, and
+  its actor is the blob's subject with no name (no identity is loaded there).
 - **Admission control, not continuous enforcement:** the gate decides who
   may *obtain* a token via the interactive code flow (+ the redemption
   backstop). It is deliberately **not** evaluated on the `refresh_token`
@@ -5367,10 +5381,10 @@ no table, no migration, no config key, no new `EventName`, no new metric.
 
 | Threat | Control | Where |
 |---|---|---|
-| §5.1 user code brute forcing | 34.6 bits, 600 s, lookups for an authenticated user only, misses counted per ACTOR (10 per 600 s, the MFA throttle shape), fail closed on a cache outage (a thrown throttle read answers 429 with the whole window), one neutral `invalid_grant` for unknown / expired / decided / malformed / non-string codes, one bounded `AUTHORIZE_FAILED { reason: 'userCode' }` row per miss | `user-code.ts`, `OAuth2DeviceAuthorizationService.resolve`, `ForceUserLoggedInMiddleware` on the three page routes |
+| §5.1 user code brute forcing | 34.6 bits, 600 s, lookups for an authenticated user only, misses counted per ACTOR (10 per 600 s, the MFA throttle shape) and forgiven by a decision ONCE per window, fail closed on a cache outage (a thrown throttle read answers 429 with the whole window), one neutral `invalid_grant` for unknown / expired / decided / malformed / non-string codes, one bounded `AUTHORIZE_FAILED { reason: 'userCode' }` row per miss | `user-code.ts`, `OAuth2DeviceAuthorizationService.resolve`, `ForceUserLoggedInMiddleware` on the three page routes |
 | §5.2 device code brute forcing | 256 bits, keyed by itself, never derivable from `user_code`, bound to `client_id` + `realm_id`, popped at redemption | the repository, `OAuth2DeviceCodeVerifier` |
 | §5.3 / §5.6 device trustworthiness | a confidential client authenticates at BOTH endpoints; a public client identifies by `client_id` and a supplied secret is refused; opt-in per client | `DeviceAuthorizationController.request`, `HTTPOAuth2DeviceCodeGrant`, `assertClientGrantAllowed` |
-| §5.4 remote phishing | the page shows client, realm and scopes and requires an explicit Approve; the approval runs the `/authorize` admission gates (realm binding, MFA backstop, access policy); with `verification_uri_complete` the code is still displayed and confirmed | `ADeviceVerifyForm`, `OAuth2DeviceAuthorizationService.approve`, `OAuth2AuthorizationGate` |
+| §5.4 remote phishing | the page shows client, realm and scopes and requires an explicit Approve; the approval runs the `/authorize` admission gates (realm binding, MFA backstop, access policy); with `verification_uri_complete`, and on the return from an identity provider, the code is still displayed and confirmed before any lookup | `ADeviceVerifyForm`, `OAuth2DeviceAuthorizationService.approve`, `OAuth2AuthorizationGate` |
 | §5.5 session spying | `device_code` never enters a browser; the page handles `user_code` only, in JSON POST bodies; `/device_authorization` is in `OAUTH2_ISSUANCE_PATHS` (prefix match), so the console session cookie cannot become a device token | `issuance.ts` |
 | §3.5 polling abuse | `slow_down` enforced with a per-`device_code` set-if-absent key over a FIXED 5 s window; a refused poll leaves the standing window | `touchPoll` |
 | confused deputy across realms | approver `identity.data.realmId === blob.realm_id` at lookup, approve and deny (`login_required`, no identity data); at redemption `blob.client_id === client.id` and `blob.realm_id === client.realmId` (`invalid_grant`, byte-identical to "unknown") | `resolve`, verifier step 2 |
@@ -5395,7 +5409,7 @@ DI `OAuth2InjectionToken.DeviceCodeRepository`) writes five key families, every 
 | `oauth2_device_user_code` | canonical `user_code` | `<device_code>` | 600 s, written with `add` so a collision is refused and the caller regenerates |
 | `oauth2_device_decision` | `<device_code>` | the decision | remaining lifetime + grace, written ONCE with `add` |
 | `oauth2_device_poll` | `<device_code>` | `1` | 5 s, fixed |
-| `oauth2_device_lookup_attempt` | `actor:<sub>` / `lock:actor:<sub>` | counter / deadline | 600 s |
+| `oauth2_device_lookup_attempt` | `actor:<sub>` / `lock:actor:<sub>` / `reset:actor:<sub>` | counter / deadline / forgiveness marker, written with `add` | 600 s |
 
 The blob is never rewritten: the decision is its own write-once key and reads return the merged
 view, which is what makes the concurrency trivial with the primitives `ICache` has (`add` is
@@ -5408,6 +5422,17 @@ escalating (the RFC makes the +5 s the client's duty; the server only refuses; a
 client costs one cache `add` per poll, which the IP rate limiter bounds), and misses are
 throttled per ACTOR only (a bearer-gated guess is bounded by accounts held, not by codes; a
 per-code counter is the upgrade if a distributed guess across many accounts ever matters).
+
+**A decision forgives the actor's misses once per window, never on demand (#3590).** `approve`
+and `deny` call `resetLookupMisses`, which `add`s a `reset:` marker with the window's TTL and
+drops the counter only when that `add` won, so nine typos followed by an approval and one more
+typo do not add up to a lockout. The bound is the point. The MFA throttle this mechanism copies
+resets on every success, and that does not carry over: nobody can self-serve an MFA success,
+but `POST /device_authorization` accepts a public client by `client_id` alone and `deny` runs
+no gate, so any account can decide on a code it minted itself. An unbounded reset would turn
+"10 misses per 600 s" into "9 guesses per self-served decision" and leave the IP rate limiter
+as the only bound on a 34.6-bit code. With the marker the worst case is 19 misses per window.
+An armed lock is left alone and runs out.
 
 **The admission gate is shared with `/authorize`.** `OAuth2AuthorizationGate`
 (`core/oauth2/authorization/gate.ts`, `IOAuth2AuthorizationGate`) is the body of
@@ -5498,17 +5523,36 @@ there exactly as at `/token`). `GET /` and the realm record's `meta.endpoints` s
 they enumerate discovery documents, not grant endpoints.
 
 **The hosted page.** server-core's `GET /device` hands over to `@authup/server-auth-console`,
-whose `/device` handler renders the bundle with `{ features, userCode }` (`readDeviceUserCode`:
-uppercased, `[^A-Z0-9]` stripped, capped at 16 characters, else undefined; no API call beyond
-the memoized `GET /`), render contract **4**. `apps/client-auth-console`'s `pages/device.vue`
+whose `/device` handler renders the bundle with `{ features, userCode, federatedLogin?, error? }`
+(`readDeviceUserCode`: uppercased, `[^A-Z0-9]` stripped, capped at 16 characters, else undefined;
+`federatedLogin: { providerId }` only for a `provider` query that is a uuid; `error` from a closed
+set of one, `access_denied`; no API call beyond the memoized `GET /`), render contract **5**.
+`apps/client-auth-console`'s `pages/device.vue` strips `provider` and `error` from the address bar
+once it has read them from the payload, and
 renders the kit's `ADeviceVerifyForm` (`components/workflows/device/`), a ladder keyed on its
 own `step` rather than on `AAuthorize`'s `codeRequest`: code (prefilled from the prop and still
-rendered, §3.3.1) → login (`ALoginForm`, password only: a federated login needs a code request
-and none exists here) → lookup (`invalid_grant` → back to the code with `DEVICE_CODE_INVALID`,
+rendered, §3.3.1) → login (`ALoginForm`, handed the canonical code as `deviceUserCode`, so it
+offers the picked realm's OAuth2 / OIDC providers next to the password form) → lookup (`invalid_grant` → back to the code with `DEVICE_CODE_INVALID`,
 the throttle marker → `DEVICE_VERIFY_THROTTLED`, `login_required` → the realm-mismatch card) →
 the MFA challenge or enrollment when `GET /authenticators/challenge` requires it → confirm
 (client name, scope chips, the "Not you?" chip, Approve / Deny; `client.builtIn` is never read)
 → done. Register and password-forgot links carry `redirect=/device?user_code=<code>`.
+
+**Coming back from an identity provider lands on the CODE step, never on the lookup (#3589).**
+With `federatedLogin` set the form shows the loading text, redeems the pending login
+(`completeLogin` → `store.loginWithTokenGrant`) and then renders the code step with the code
+filled in; the person's Confirm click is the only way to `lookup()` and the Approve card, and with
+the session established it goes straight there. The reason is §5.4: `authorize-out?user_code=` is
+an anonymous GET, so an attacker can mint that link for the code of THEIR device. A victim with an
+upstream SSO session would come back signed in, and a page that looked the URL's code up on its
+own would open on "Authorize <client>?" for a code the victim never saw, one click from approving
+the attacker's device. A failed redemption follows the `/authorize` rule (*Federated Login
+Completion*): local `store.logout()` unless the refusal is `IDENTITY_PROVIDER_LOGIN_NOT_PENDING`,
+then the code step. The callback's `access_denied` marker (user inactive, assurance insufficient)
+renders the form's existing access-denied card. The provider list needs a realm before it loads:
+with no code request nothing seeds one, and a list query filtering `realm_id = ''` is a 500 on
+postgres (a uuid column) on an anonymous route, so the buttons appear once the realm picker has a
+value.
 
 **Typed client.** `client.deviceAuthorization.create` posts the RFC request with hapic's
 token-API header semantics (the client-level `Authorization` header is DROPPED unless
@@ -5517,8 +5561,8 @@ credentials `extractClientCredentialsFromRequest` refuses); `lookup` / `approve`
 the caller's own bearer; `client.token.createWithDeviceCode` sends the URN.
 
 **Deliberately absent.** `prompt`, `max_age`, `acr_values` on the device request (the RFC
-defines none); federated login on the `/device` page (a device-flow authorize state is a named
-follow-up); config keys for lifetime and interval (600 / 5 are the RFC's examples and
+defines none); a callback-side lookup of the user code for a federated login (see *Federated
+Login Completion*); config keys for lifetime and interval (600 / 5 are the RFC's examples and
 Keycloak's defaults; the upgrade is one `core.deviceCodeMaxAge` registry entry); a CLI login
 command (one loop over the typed client, nothing server-side); CIBA; QR rendering. A table for
 the artifact was rejected because a ten-minute blob would cost a migration and a sweeper; a
@@ -5749,11 +5793,15 @@ as `sessionId` (so `authTime` is the callback instant), and the exchange
 reuses it (#3191). One `auth_sessions` row per federated login, `amr:
 ['ext']`, `+'otp'` and `acr: urn:authup:mfa` once a factor was verified.
 
-The render contract is at **version 3** for this: the `/authorize` payload
-carries `federatedLogin: { providerId }` and the page has to complete it, so a
-substituted console built against version 2 would strand every federated login
-on the login form. That is exactly the drift a substituted package must be
-checked for; see *Console substitution* for where that check lives now.
+The render contract rose to **version 3** for this, and to **version 5** when
+`/device` gained the same payload: the page has to complete
+`federatedLogin: { providerId }`, so a substituted console that ignores the
+field strands every federated login on the login form (on `/device` it loops
+the person code, login, provider and back, with the provider's code spent each
+time). The provider buttons live in the kit and the completion in the page, so
+"an older bundle never offers the buttons" holds only when its kit is older
+too. That is exactly the drift a substituted package must be checked for; see
+*Console substitution* for where that check lives now.
 
 The access-policy leg stays at the callback rather than moving into
 `authorizeInner` with the rest: it is already implemented and correct there,
@@ -5780,20 +5828,57 @@ exists, because the hosted page navigates the target and renders it as an href,
 which on a script-capable scheme is script execution on the IdP origin (the kit
 store cookies are JS-readable).
 
-**A federated login without a code request does not exist (#3457).**
-`authorize-out` refuses to start one (`invalid_request`, before any provider
-round trip; it refuses a disabled provider up front for the same reason), and
-the callback refuses a login state that carries none (the
-backstop for states minted before the change; the account-link branch is
-dispatched before it and is unaffected). The former fallback minted a code from
-`{ response_type: 'code' }` and redirected to the server root: that code was
-bound to no `client_id`, `redirect_uri` or `code_challenge`, so
-`OAuth2AuthorizationCodeVerifier` skipped every binding check for it and any
-confidential client could have redeemed it. The kit's `LoginForm` renders its
-identity-provider list only when it holds a `codeRequest`; a button leading to
-a guaranteed 400 is worse than no button. The hosted `/authorize` page always
-passes one; a host embedding `ALoginForm` without one gets the password login
-alone.
+**A federated login has somewhere to return to, or it does not start (#3457,
+#3589).** `authorize-out` takes a `codeRequest` (the RP's authorization
+request) or a `user_code` (the device verification page's pending code) and
+refuses a request carrying neither (`invalid_request`, before any provider
+round trip; it refuses a disabled provider up front for the same reason). The
+callback refuses a state carrying neither as well; the account-link branch is
+dispatched before it and is unaffected. The rule exists because a login with
+no target once minted a code bound to no `client_id`, `redirect_uri` or
+`code_challenge`, which any confidential client could have redeemed. No leg
+mints a code at the callback any more, so what the rule protects now is that
+the browser always lands on a page that completes the login.
+
+**The device variant is a session and nothing else.** `authorize-out` checks
+only the FORMAT of the user code (`normalizeDeviceUserCode`) and stores the
+canonical form as `device: { userCode }` next to the browser nonce. It never
+reads the device-code cache: the route is anonymous, and a lookup there would
+say which codes exist (RFC 8628 §5.1), so a code that was never minted starts a
+login exactly like a live one. The callback passes
+`complete({ codeRequest: null })`; the key is REQUIRED and nullable, so omitting
+it is a compile error and only a state with no code request can take that path.
+With `null`, `complete()` skips everything that needs a client (request
+re-verification, the provider/client realm match, the `redirect_uri` checks,
+the access policy) and keeps the rest of the ladder: the browser-nonce cookie,
+provider enabled, the assurance allow-list, user active, the pending `ext`
+session and the pending-login cookie. Nothing is lost, because the device flow
+runs those gates itself once the person is signed in: `lookup` refuses a
+foreign-realm user and `approve` runs the whole `OAuth2AuthorizationGate`. That
+is where the client-dependent gates run for the password login on the same
+page, which is clientless too. Looking the code up at the callback was
+rejected: it duplicates `resolve` and the gate, needs a miss-accounting rule
+with no actor id, and refuses a login over a code that lapsed at the provider
+when a re-typed one would have served.
+
+**The return URL comes from the popped STATE alone.** The hosted authorize URL
+for a code request, else `<publicUrl>/device?user_code=XXXX-XXXX` formatted
+from the state's canonical code; nothing the provider's redirect carries
+reaches it, and `complete()`'s results carry no `codeRequest` for the
+controller to read instead. Every bounce uses it: a nonce mismatch and a
+provider `error` with no marker, a refusal with its marker when it has one,
+and the issued case with `provider=<id>`. The marker is the service's own
+constant on both targets, and each page maps a CLOSED set: `/authorize` reads
+`access_denied` and `login_required`, `/device` reads `access_denied` alone
+(an inactive user, an assurance refusal) and drops the `login_required` a
+disabled provider produces, since that provider is already gone from the list
+the person returns to.
+
+The kit's `LoginForm` renders its identity-provider list only when it holds a
+`codeRequest` or a `deviceUserCode`, and only once a realm is known; a button
+leading to a guaranteed 400 is worse than no button. The hosted `/authorize`
+page always passes a code request and `ADeviceVerifyForm` its canonical code; a
+host embedding `ALoginForm` with neither gets the password login alone.
 
 **The provider LIST is the anonymous surface, the provider RECORD is not
 (#3480).** `GET /identity-providers` stays ungated: the hosted login page
