@@ -206,7 +206,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
     async resetLookupMisses(key: string): Promise<void> {
         this.resetLookupMissesCalls.push(key);
 
-        if (this.resets.has(key)) {
+        if (!this.attempts.has(key) || this.resets.has(key)) {
             return;
         }
 

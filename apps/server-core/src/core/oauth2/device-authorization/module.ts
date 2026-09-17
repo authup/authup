@@ -189,7 +189,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         await this.repository.removeUserCode(code.user_code);
-        await this.repository.resetLookupMisses(this.buildActorKey(identity));
+        await this.forgiveLookupMisses(identity);
 
         if (!client.builtIn && this.consentService) {
             try {
@@ -230,7 +230,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         await this.repository.removeUserCode(code.user_code);
-        await this.repository.resetLookupMisses(this.buildActorKey(identity));
+        await this.forgiveLookupMisses(identity);
 
         await this.eventService?.record({
             ...this.buildClientAttribution(EventName.AUTHORIZE_FAILED, code, client, identity),
@@ -311,6 +311,19 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         return { code, client };
+    }
+
+    /**
+     * Best effort: the decision is already written, so throttle bookkeeping
+     * must not turn it into an error or cost it its audit row. A failed reset
+     * only leaves the actor's misses standing, which is the strict direction.
+     */
+    protected async forgiveLookupMisses(identity: Identity) : Promise<void> {
+        try {
+            await this.repository.resetLookupMisses(this.buildActorKey(identity));
+        } catch (e) {
+            this.logger?.warn('Resetting the device lookup misses failed.', { error: e });
+        }
     }
 
     protected buildActorKey(identity: Identity) : string {

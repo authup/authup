@@ -800,6 +800,47 @@ describe('OAuth2DeviceAuthorizationService', () => {
             expect(isDeviceVerificationThrottledError(caught)).toBe(true);
             expect(caught).toMatchObject({ code: ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED });
         });
+
+        it('should not spend the forgiveness on a decision that had nothing to forgive', async () => {
+            await seedSession();
+            const service = buildService();
+            const identity = buildIdentity();
+            const clean = seedCode(undefined, { user_code: 'BCDFGHJM' });
+            const typed = seedCode(undefined, { user_code: 'BCDFGHJN' });
+
+            // no miss so far: this approval must leave the window's one
+            // forgiveness for the typos that follow
+            await service.approve(clean.request.user_code, identity, { sessionId: SESSION_ID });
+
+            for (let i = 0; i < OAUTH2_DEVICE_LOOKUP_ATTEMPTS_PER_ACTOR - 1; i++) {
+                await expect(service.lookup('WXZB-WXZB', identity))
+                    .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+            }
+
+            await service.approve(typed.request.user_code, identity, { sessionId: SESSION_ID });
+
+            let caught : unknown;
+            try {
+                await service.lookup('WXZB-WXZB', identity);
+            } catch (e) {
+                caught = e;
+            }
+
+            expect(isDeviceVerificationThrottledError(caught)).toBe(false);
+            expect(caught).toMatchObject({ code: ErrorCode.OAUTH_GRANT_INVALID });
+        });
+
+        it('should not fail the approval, nor lose its audit row, over a failed reset', async () => {
+            await seedSession();
+            const { request } = seedCode();
+            repository.resetLookupMisses = async () => {
+                throw new Error('the cache is unreachable');
+            };
+
+            await buildService().approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID });
+
+            expect(eventService.recordCalls.map((call) => call.name)).toContain(EventName.AUTHORIZE);
+        });
     });
 
     describe('deny', () => {

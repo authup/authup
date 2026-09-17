@@ -162,6 +162,12 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
     }
 
     async resetLookupMisses(key: string): Promise<void> {
+        // Nothing to forgive, nothing spent: a clean decision must not use up
+        // the window's one forgiveness before the typos it is meant for.
+        if (!await this.cache.has(this.buildLookupAttemptKey(key))) {
+            return;
+        }
+
         // `add` is set-if-absent, so the marker keeps the ttl of the FIRST
         // reset in the window and a later one can neither win nor re-arm it.
         const first = await this.cache.add(
