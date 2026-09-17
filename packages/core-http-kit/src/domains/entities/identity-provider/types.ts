@@ -43,14 +43,21 @@ export type IdentityProviderLinkConfirmPayload = {
 };
 
 export type IdentityProviderAuthorizeUriOptions = {
-    codeRequest?: OAuth2AuthorizationCodeRequest
+    codeRequest?: OAuth2AuthorizationCodeRequest,
+    /**
+     * The device verification page's pending user code (RFC 8628), for a
+     * login that completes no authorization request. Ignored when a
+     * `codeRequest` is given.
+     */
+    userCode?: string
 };
 
 export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
     /**
      * The URL that starts a federated login through the provider. A login
-     * needs the authorization code request it completes; without one the
-     * server refuses to start it (`invalid_request`).
+     * needs the authorization code request it completes, or the device page's
+     * user code; without either the server refuses to start it
+     * (`invalid_request`).
      */
     getAuthorizeUri(id: IdentityProvider['id'], options?: IdentityProviderAuthorizeUriOptions) : string;
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
