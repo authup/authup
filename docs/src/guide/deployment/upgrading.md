@@ -54,16 +54,18 @@ for from the `identity` in the request body:
   rule as every other route. A bearer whose token lacks the `global` scope is
   evaluated without an identity, so a permission or policy that needs one
   answers `status: "error"`.
-- **With `identity: { type, id }`** naming a user or client by its UUID, the
-  caller must hold the new `permission_check` permission, and the grant's realm
-  scope must reach the subject's realm. The subject is loaded from the
-  database, so any other field of `identity` (a `realmId`, say) is ignored. A
-  caller without the grant is refused with `403`, an unknown subject with `404`,
-  and a malformed `identity` with `400`. A name is malformed, since names repeat
-  across realms, and so is `identity: null`, which used to check a policy as
-  anonymous. Previously any authenticated caller could name any identity, and
-  since the permission-binding policy loads the grants of the identity it is
-  handed, read another user's or client's authorization in any realm.
+- **With `identity: null`** the check runs without any identity.
+- **With an identity** the check runs for that identity, as sent. Naming the
+  caller's own identity needs nothing more. Naming anyone else requires the new
+  `permission_check` permission, and the grant's realm scope must reach the
+  realm the subject is stored in (a `realmId` in the body does not count). The
+  subject must be named as `{ type: 'user' | 'client', id: <UUID> }`, since
+  names repeat across realms. A caller without the grant is refused with `403`,
+  an unknown subject with `404`, and a malformed `identity` with `400`. A token
+  without `global` needs the grant even for its own identity. Previously any
+  authenticated caller could name any identity, and since the permission-binding
+  policy loads the grants of the identity it is handed, read another user's or
+  client's authorization in any realm.
 
 A realm- or client-scoped permission is now evaluated as itself; before, the
 check used a global permission of the same name, or answered that none exists.

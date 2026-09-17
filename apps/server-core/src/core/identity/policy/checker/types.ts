@@ -24,22 +24,21 @@ export type PolicyCheckerServiceContext = {
 export interface IPolicyCheckerService {
     /**
      * Resolve a policy by id (UUID) or name and evaluate it against the
-     * supplied data, for the caller or for the subject `data[identity]`
-     * names. Throws on any failure: entity not found, evaluator denial,
-     * validator error.
+     * supplied data. Throws on any failure: entity not found, evaluator
+     * denial, validator error.
      *
-     * Without `data[identity]` the actor's identity is evaluated, when it has
-     * one. With it, the reference must be a user or client `{ type, id }`
-     * by UUID, the actor must hold PERMISSION_CHECK reaching that subject's
-     * realm, and the reference is replaced by the subject as stored.
+     * `data[identity]` decides who is evaluated (see `buildCheckData`):
+     * absent, the actor's identity; `null`, no identity; an identity, that
+     * identity as given, which needs PERMISSION_CHECK reaching the subject's
+     * stored realm when it is not the actor's own.
      *
      * @param idOrName Policy UUID or name. Names are resolved within the
      *   supplied realm (or the resolved fallback realm).
      * @param data Caller-supplied evaluation input. A copy is used
      *   internally.
-     * @param actor The caller context: its identity is evaluated when the
-     *   data names none (the HTTP route passes one only when the request's
-     *   scopes include `global`), and its evaluator gates a subject.
+     * @param actor The caller context: its identity is the default (the HTTP
+     *   route passes one only when the request's scopes include `global`),
+     *   and its evaluator gates a check for another subject.
      * @param realm Optional realm id used to disambiguate name lookups.
      * @throws {ValidationError} When `data[identity]` is present but malformed.
      * @throws {PermissionError} When the actor may not check for the subject.

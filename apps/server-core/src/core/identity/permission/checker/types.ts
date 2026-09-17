@@ -26,17 +26,15 @@ export type PermissionCheckerServiceContext = {
 export interface IPermissionCheckerService {
     /**
      * Resolve a permission by id (UUID) or name and evaluate it against the
-     * supplied data, for the caller or for the subject `data[identity]`
-     * names. Throws on any failure: entity not found, evaluator denial,
-     * validator error.
+     * supplied data. Throws on any failure: entity not found, evaluator
+     * denial, validator error.
      *
-     * Without `data[identity]` the actor's identity is evaluated, on the
-     * actor's evaluator, which on a request keeps it only when the scopes
-     * include `global`. With it, the reference must be a user or client `{ type, id }`
-     * by UUID, the actor must hold PERMISSION_CHECK reaching that subject's
-     * realm, and the check runs on a bare evaluator with the reference
-     * replaced by the subject as stored. The resolved permission row is
-     * evaluated, not a global permission of the same name. If
+     * `data[identity]` decides who is evaluated (see `buildCheckData`):
+     * absent, the actor's identity; `null`, no identity; an identity, that
+     * identity as given, which needs PERMISSION_CHECK reaching the subject's
+     * stored realm when it is not the actor's own.
+     * The resolved permission row is evaluated, not a global permission of
+     * the same name. If
      * `data[attributes]` is present, the evaluator runs a full `evaluate` and
      * its `realmId` reaches the realm reach factor under `realmMatch`;
      * otherwise it runs a `preEvaluate` (data-less gate check).
@@ -45,8 +43,9 @@ export interface IPermissionCheckerService {
      *   the supplied realm (or the resolved fallback realm).
      * @param data Caller-supplied evaluation input. A copy is used
      *   internally.
-     * @param actor The caller context: its evaluator runs a check for the
-     *   caller and gates a check for a subject.
+     * @param actor The caller context: its identity is the default (the HTTP
+     *   route passes one only when the request's scopes include `global`),
+     *   and its evaluator gates a check for another subject.
      * @param realm Optional realm id used to disambiguate name lookups.
      * @throws {ValidationError} When `data[identity]` is present but malformed.
      * @throws {PermissionError} When the actor may not check for the subject.

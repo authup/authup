@@ -51,8 +51,9 @@ describe('core/identity/permission/checker', () => {
     let identityPermissionProvider: IIdentityPermissionProvider;
 
     /**
-     * The actor a request hands the checker: the authorization middleware's
-     * evaluator behind the request wrapper, which owns the identity key.
+     * The actor the controller hands the checker: the authorization
+     * middleware's evaluator behind the request wrapper, and the identity
+     * policies may see for the request, which a token without `global` has not.
      */
     function requestActor(identity: Identity, scopes: string[] = [ScopeName.GLOBAL]) : ActorContext {
         const event = { store: {} } as unknown as IAppEvent;
@@ -60,7 +61,7 @@ describe('core/identity/permission/checker', () => {
         setRequestScopes(event, scopes);
 
         return {
-            identity,
+            identity: scopes.includes(ScopeName.GLOBAL) ? identity : undefined,
             permissionEvaluator: new RequestPermissionEvaluator(event, new PermissionEvaluator({
                 provider: new PermissionDatabaseProvider(suite.dataSource),
                 policyEngine: new PolicyEngine(identityPermissionProvider),

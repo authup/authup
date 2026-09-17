@@ -5,15 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
+import { PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { resolveCheckSubject } from '../../permission/checker/subject.ts';
-import { toIdentityPolicyData } from '../../permission/identity-policy-data.ts';
+import { buildCheckData } from '../../permission/checker/data.ts';
 import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
@@ -32,10 +30,9 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<void> {
-        const input = { ...data };
-        const subject = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, input, realm, subject ?? toIdentityPolicyData(actor.identity));
+        await this.evaluate(idOrName, input, realm);
     }
 
     async safeCheck(
@@ -44,12 +41,11 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<Result<null>> {
-        const input = { ...data };
         // outside the try: being refused the subject answers the request, not the check
-        const subject = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, input, realm, subject ?? toIdentityPolicyData(actor.identity));
+            await this.evaluate(idOrName, input, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -60,7 +56,6 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         idOrName: string,
         input: Record<string, any>,
         realm: string | undefined,
-        identity: IdentityPolicyData | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
@@ -80,11 +75,6 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         const entity = await this.ctx.repository.findOneBy(criteria);
         if (!entity) {
             throw new EntityNotFoundError();
-        }
-
-        // the subject as stored, or the actor when the data names none
-        if (identity) {
-            input[BuiltInPolicyType.IDENTITY] = identity;
         }
 
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);

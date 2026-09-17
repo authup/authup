@@ -117,8 +117,8 @@ export class PolicyController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PolicyAPICheckResponse> {
-        // the policy engine has no request evaluator to apply the scope rule, so
-        // the actor it sees is the identity policies may see for this request
+        // the checker evaluates the data on its own evaluator, so the actor's identity
+        // is the one policies may see for this request
         const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
             id,

@@ -101,16 +101,19 @@ describe('http/controllers/entities/permission/checker', () => {
             { status: 400 },
         );
 
-        await expectClientError(
-            () => suite.client.permission.check(PermissionName.USER_READ, { identity: null }),
-            { status: 400 },
-        );
-
         // a name is refused: names repeat across realms, so it would not say which subject
         await expectClientError(
             () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.name } }),
             { status: 400 },
         );
+    });
+
+    it('checks without any identity when the data sets it to null (#3604)', async () => {
+        const requester = await suite.client.permission.check(PermissionName.USER_READ);
+        expect(requester.status).toEqual('success');
+
+        const none = await suite.client.permission.check(PermissionName.USER_READ, { identity: null });
+        expect(none.status).toEqual('error');
     });
 
     it('refuses a caller without permission_check that names a subject (#3604)', async () => {
@@ -127,6 +130,12 @@ describe('http/controllers/entities/permission/checker', () => {
             () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: admin.id } }),
             { status: 403 },
         );
+
+        // its own identity needs no grant
+        const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        await suite.client.userPermission.create({ userId: user.id, permissionId: userRead.id });
+        const own = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: user.id } });
+        expect(own.status).toEqual('success');
 
         // refused before the lookup, so an unknown subject reads the same as a known one
         await expectClientError(
@@ -161,6 +170,18 @@ describe('http/controllers/entities/permission/checker', () => {
         const { data: foreign } = await suite.client.user.create(createFakeUser({ realmId: realm.id }));
         await expectClientError(
             () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: foreign.id } }),
+            { status: 403 },
+        );
+
+        // a realm written into the data does not bound the gate
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, {
+                identity: {
+                    type: 'user',
+                    id: foreign.id,
+                    realmId: checker.realmId,
+                },
+            }),
             { status: 403 },
         );
     });

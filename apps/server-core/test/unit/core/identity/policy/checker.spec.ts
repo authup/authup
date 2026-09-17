@@ -129,6 +129,7 @@ describe('core/identity/policy/checker', () => {
 
         await expect(service.check(policy.id, {}, actor)).resolves.toBeUndefined();
         await expect(service.check(policy.id, {}, createAllowAllActor())).rejects.toBeInstanceOf(PolicyError);
+        await expect(service.check(policy.id, { [BuiltInPolicyType.IDENTITY]: null }, actor)).rejects.toBeInstanceOf(PolicyError);
 
         const reference = { type: IdentityType.USER, id: adminUser.id };
         const data = { [BuiltInPolicyType.IDENTITY]: reference };

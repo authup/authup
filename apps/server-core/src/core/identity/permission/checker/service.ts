@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PermissionEvaluationContext } from '@authup/access';
+import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, PermissionEvaluator, definePolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { toIdentityPolicyData } from '../identity-policy-data.ts';
-import { resolveCheckSubject } from './subject.ts';
+import { buildCheckData } from './data.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -32,10 +31,9 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<void> {
-        const input = { ...data };
-        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, input, actor, realm, identity);
+        await this.evaluate(idOrName, input, realm);
     }
 
     async safeCheck(
@@ -44,12 +42,11 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<Result<null>> {
-        const input = { ...data };
         // outside the try: being refused the subject answers the request, not the check
-        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const input = await buildCheckData(data, actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, input, actor, realm, identity);
+            await this.evaluate(idOrName, input, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -59,9 +56,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
     protected async evaluate(
         idOrName: string,
         input: Record<string, any>,
-        actor: ActorContext,
         realm: string | undefined,
-        identity: IdentityPolicyData | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
@@ -91,22 +86,11 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
-        // Asked about the actor (no identity in the data), its evaluator governs
-        // the identity under the request's scopes. Asked about a subject that passed
-        // the gate, the subject as stored runs on an evaluator that keeps it (#3604).
-        let evaluator = actor.permissionEvaluator;
-        if (identity) {
-            input[BuiltInPolicyType.IDENTITY] = identity;
-            evaluator = new PermissionEvaluator({
-                provider: this.ctx.permissionProvider,
-                policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
-            });
-        } else {
-            const own = toIdentityPolicyData(actor.identity);
-            if (own) {
-                input[BuiltInPolicyType.IDENTITY] = own;
-            }
-        }
+        // the data already says which identity is evaluated, so nothing may re-assert it
+        const evaluator = new PermissionEvaluator({
+            provider: this.ctx.permissionProvider,
+            policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
+        });
 
         // the resolved row, not a global permission of the same name
         const evaluationContext: PermissionEvaluationContext = {
