@@ -104,8 +104,11 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             });
         }
 
+        // the resolved row, not a global permission of the same name
         const evaluationContext: PermissionEvaluationContext = {
             name: entity.name,
+            realmId: entity.realmId,
+            clientId: entity.clientId,
             data: definePolicyData(input),
         };
 

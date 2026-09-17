@@ -113,4 +113,24 @@ describe('core/identity/policy/checker', () => {
             expect(result.error).toBeInstanceOf(EntityNotFoundError);
         }
     });
+
+    it('leaves the supplied data untouched when checking for a subject', async () => {
+        const policyRepository = new PolicyRepository(suite.dataSource);
+        const policy = await policyRepository.save(policyRepository.create({
+            type: BuiltInPolicyType.IDENTITY,
+            name: createNanoID(),
+            builtIn: true,
+        }));
+
+        const data = new PolicyData();
+        await expect(service.check(
+            policy.id,
+            data,
+            createAllowAllActor(),
+            undefined,
+            { type: IdentityType.USER, id: adminUser.id },
+        )).resolves.toBeUndefined();
+
+        expect(data.has(BuiltInPolicyType.IDENTITY)).toBe(false);
+    });
 });

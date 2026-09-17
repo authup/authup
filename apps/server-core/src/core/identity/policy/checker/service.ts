@@ -81,14 +81,16 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
+        let evaluationData = data;
         if (identity) {
-            data.set(BuiltInPolicyType.IDENTITY, identity);
+            evaluationData = data.clone();
+            evaluationData.set(BuiltInPolicyType.IDENTITY, identity);
         }
 
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
         await engine.evaluateOrFail(
             entity,
-            definePolicyEvaluationContext({ data }),
+            definePolicyEvaluationContext({ data: evaluationData }),
         );
     }
 }

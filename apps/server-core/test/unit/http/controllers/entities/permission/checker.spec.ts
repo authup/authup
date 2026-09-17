@@ -159,4 +159,22 @@ describe('http/controllers/entities/permission/checker', () => {
             { status: 403 },
         );
     });
+
+    it('evaluates the resolved permission row, not a global permission of the same name', async () => {
+        const { data: admin } = await suite.client.user.getOne('@me');
+        const { data: permission } = await suite.client.permission.create({
+            name: createNanoID(),
+            realmId: admin.realmId,
+        });
+
+        const { data: subject } = await suite.client.user.create(createFakeUser());
+        await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
+        await suite.client.userPermission.create({ userId: admin.id, permissionId: permission.id });
+
+        const self = await suite.client.permission.check(permission.id);
+        expect(self.status).toEqual('success');
+
+        const other = await suite.client.permission.check(permission.id, { identity: { type: 'user', id: subject.id } });
+        expect(other.status).toEqual('success');
+    });
 });
