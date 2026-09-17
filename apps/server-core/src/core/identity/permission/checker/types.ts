@@ -30,9 +30,9 @@ export interface IPermissionCheckerService {
      * names. Throws on any failure: entity not found, evaluator denial,
      * validator error.
      *
-     * Without `data[identity]` the check runs on the actor's evaluator, which
-     * on a request attaches the caller's own identity when the scopes include
-     * `global`. With it, the reference must be a user or client `{ type, id }`
+     * Without `data[identity]` the actor's identity is evaluated, on the
+     * actor's evaluator, which on a request keeps it only when the scopes
+     * include `global`. With it, the reference must be a user or client `{ type, id }`
      * by UUID, the actor must hold PERMISSION_CHECK reaching that subject's
      * realm, and the check runs on a bare evaluator with the reference
      * replaced by the subject as stored. The resolved permission row is

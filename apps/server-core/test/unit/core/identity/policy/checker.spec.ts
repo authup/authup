@@ -17,6 +17,7 @@ import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
+import type { ActorContext } from '@authup/server-kit';
 import type { UserEntity } from '../../../../../src';
 import {
     PolicyRepository,
@@ -113,7 +114,7 @@ describe('core/identity/policy/checker', () => {
         }
     });
 
-    it('evaluates the caller only when the data names no subject', async () => {
+    it('evaluates the actor when the data names no subject, and never rewrites the data', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
@@ -121,20 +122,17 @@ describe('core/identity/policy/checker', () => {
             builtIn: true,
         }));
 
-        const caller = {
-            type: IdentityType.USER,
-            id: adminUser.id,
-            realmId: adminUser.realmId,
+        const actor : ActorContext = {
+            ...createAllowAllActor(),
+            identity: { type: IdentityType.USER, data: adminUser },
         };
 
-        await expect(service.check(policy.id, {}, createAllowAllActor(), undefined, caller))
-            .resolves.toBeUndefined();
+        await expect(service.check(policy.id, {}, actor)).resolves.toBeUndefined();
+        await expect(service.check(policy.id, {}, createAllowAllActor())).rejects.toBeInstanceOf(PolicyError);
 
-        // a data identity is the subject, and the reference itself is never rewritten
         const reference = { type: IdentityType.USER, id: adminUser.id };
         const data = { [BuiltInPolicyType.IDENTITY]: reference };
-        await expect(service.check(policy.id, data, createAllowAllActor(), undefined, caller))
-            .resolves.toBeUndefined();
+        await expect(service.check(policy.id, data, actor)).resolves.toBeUndefined();
         expect(data[BuiltInPolicyType.IDENTITY]).toBe(reference);
         expect(reference).toEqual({ type: IdentityType.USER, id: adminUser.id });
     });

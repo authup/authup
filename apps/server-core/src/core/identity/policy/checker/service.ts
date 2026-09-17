@@ -13,6 +13,7 @@ import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
 import { resolveCheckSubject } from '../../permission/checker/subject.ts';
+import { toIdentityPolicyData } from '../../permission/identity-policy-data.ts';
 import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
@@ -30,12 +31,11 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        caller?: IdentityPolicyData,
     ): Promise<void> {
         const input = { ...data };
-        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const subject = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, input, realm, identity ?? caller);
+        await this.evaluate(idOrName, input, realm, subject ?? toIdentityPolicyData(actor.identity));
     }
 
     async safeCheck(
@@ -43,14 +43,13 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        caller?: IdentityPolicyData,
     ): Promise<Result<null>> {
         const input = { ...data };
         // outside the try: being refused the subject answers the request, not the check
-        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
+        const subject = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, input, realm, identity ?? caller);
+            await this.evaluate(idOrName, input, realm, subject ?? toIdentityPolicyData(actor.identity));
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -83,7 +82,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
-        // the subject as stored, or the caller when the data names none
+        // the subject as stored, or the actor when the data names none
         if (identity) {
             input[BuiltInPolicyType.IDENTITY] = identity;
         }

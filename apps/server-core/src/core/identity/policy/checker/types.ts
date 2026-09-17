@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import type { ActorContext } from '@authup/server-kit';
 import type {
@@ -29,8 +28,8 @@ export interface IPolicyCheckerService {
      * names. Throws on any failure: entity not found, evaluator denial,
      * validator error.
      *
-     * Without `data[identity]` the `caller` identity is evaluated, when one
-     * is given. With it, the reference must be a user or client `{ type, id }`
+     * Without `data[identity]` the actor's identity is evaluated, when it has
+     * one. With it, the reference must be a user or client `{ type, id }`
      * by UUID, the actor must hold PERMISSION_CHECK reaching that subject's
      * realm, and the reference is replaced by the subject as stored.
      *
@@ -38,11 +37,10 @@ export interface IPolicyCheckerService {
      *   supplied realm (or the resolved fallback realm).
      * @param data Caller-supplied evaluation input. A copy is used
      *   internally.
-     * @param actor The caller context, whose evaluator gates a subject.
+     * @param actor The caller context: its identity is evaluated when the
+     *   data names none (the HTTP route passes one only when the request's
+     *   scopes include `global`), and its evaluator gates a subject.
      * @param realm Optional realm id used to disambiguate name lookups.
-     * @param caller The identity the caller may be evaluated as. The HTTP
-     *   route passes the request's own when its scopes include `global`, and
-     *   none otherwise.
      * @throws {ValidationError} When `data[identity]` is present but malformed.
      * @throws {PermissionError} When the actor may not check for the subject.
      * @throws {EntityNotFoundError} When no policy or subject matches.
@@ -53,7 +51,6 @@ export interface IPolicyCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        caller?: IdentityPolicyData,
     ): Promise<void>;
 
     /**
@@ -68,6 +65,5 @@ export interface IPolicyCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        caller?: IdentityPolicyData,
     ): Promise<Result<null>>;
 }

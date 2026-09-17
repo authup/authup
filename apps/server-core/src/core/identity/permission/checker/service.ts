@@ -12,6 +12,7 @@ import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
+import { toIdentityPolicyData } from '../identity-policy-data.ts';
 import { resolveCheckSubject } from './subject.ts';
 import type {
     IPermissionCheckerService,
@@ -90,10 +91,9 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
-        // Asked about the caller (no identity in the data), the actor's evaluator
-        // attaches the caller's own identity when the scopes include `global`.
-        // Asked about a subject that passed the gate, the reference is replaced by
-        // the subject as stored, on an evaluator that leaves it alone (#3604).
+        // Asked about the actor (no identity in the data), its evaluator governs
+        // the identity under the request's scopes. Asked about a subject that passed
+        // the gate, the subject as stored runs on an evaluator that keeps it (#3604).
         let evaluator = actor.permissionEvaluator;
         if (identity) {
             input[BuiltInPolicyType.IDENTITY] = identity;
@@ -101,6 +101,11 @@ export class PermissionCheckerService implements IPermissionCheckerService {
                 provider: this.ctx.permissionProvider,
                 policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
             });
+        } else {
+            const own = toIdentityPolicyData(actor.identity);
+            if (own) {
+                input[BuiltInPolicyType.IDENTITY] = own;
+            }
         }
 
         // the resolved row, not a global permission of the same name
