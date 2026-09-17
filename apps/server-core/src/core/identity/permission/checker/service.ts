@@ -12,7 +12,7 @@ import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { toIdentityPolicyData } from '../identity-policy-data.ts';
+import { buildPermissionCheckerData } from './data.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -30,6 +30,33 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
+    ): Promise<void> {
+        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
+
+        await this.evaluate(idOrName, input, realm);
+    }
+
+    async safeCheck(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realm?: string,
+    ): Promise<Result<null>> {
+        // outside the try: being refused the subject answers the request, not the check
+        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
+
+        try {
+            await this.evaluate(idOrName, input, realm);
+            return { success: true, data: null };
+        } catch (e) {
+            return { success: false, error: normalizeError(e) };
+        }
+    }
+
+    protected async evaluate(
+        idOrName: string,
+        input: Record<string, any>,
+        realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
@@ -51,10 +78,6 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             throw new EntityNotFoundError();
         }
 
-        const input = { ...data };
-        if (typeof input[BuiltInPolicyType.IDENTITY] === 'undefined') {
-            input[BuiltInPolicyType.IDENTITY] = toIdentityPolicyData(actor.identity);
-        }
         // Surface the resource realm to the realm_scope reach factor (realm-match scope mode).
         // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
         // the preEvaluate path below and neutral-passes.
@@ -63,15 +86,19 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
-        const evaluationContext: PermissionEvaluationContext = {
-            name: entity.name,
-            data: definePolicyData(input),
-        };
-
+        // the data already says which identity is evaluated, so nothing may re-assert it
         const evaluator = new PermissionEvaluator({
             provider: this.ctx.permissionProvider,
             policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
         });
+
+        // the resolved row, not a global permission of the same name
+        const evaluationContext: PermissionEvaluationContext = {
+            name: entity.name,
+            realmId: entity.realmId,
+            clientId: entity.clientId,
+            data: definePolicyData(input),
+        };
 
         if (
             evaluationContext.data &&
@@ -80,20 +107,6 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             await evaluator.evaluate(evaluationContext);
         } else {
             await evaluator.preEvaluate(evaluationContext);
-        }
-    }
-
-    async safeCheck(
-        idOrName: string,
-        data: Record<string, any>,
-        actor: ActorContext,
-        realm?: string,
-    ): Promise<Result<null>> {
-        try {
-            await this.check(idOrName, data, actor, realm);
-            return { success: true, data: null };
-        } catch (e) {
-            return { success: false, error: normalizeError(e) };
         }
     }
 }

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -12,15 +13,24 @@ import {
     expect,
     it,
 } from 'vitest';
+import { RealmScope } from '@authup/access';
+import { Client } from '@authup/core-http-kit';
+import { PermissionName } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { PermissionEntity } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
+import {
+    createFakeRealm,
+    createFakeUser,
+    createScopeRestrictedClient,
+    expectClientError,
+} from '../../../../../utils';
 
 // Service-level coverage of the DB-backed permission-checker lives in
 // test/unit/core/identity/permission/checker.spec.ts. The HTTP tests below
-// stay minimal: they verify the controller's auth gate and the
-// status-code / response-shape contract — the actual checker logic is
-// exercised at the service layer.
+// pin the controller's auth gate, the status-code / response-shape contract,
+// the identity and scope rule, which the check reaches only through the
+// request's own evaluator, and the permission_check gate on naming a subject.
 
 describe('http/controllers/entities/permission/checker', () => {
     const suite = createTestApplication();
@@ -53,5 +63,158 @@ describe('http/controllers/entities/permission/checker', () => {
         const response = await suite.client.permission.check(permission.id);
         expect(response).toBeDefined();
         expect(response.status).toMatch(/^(success|error)$/);
+    });
+
+    it('answers a bearer without the global scope an error, and refuses it naming a subject (#3604)', async () => {
+        const control = await suite.client.permission.check(PermissionName.USER_UPDATE);
+        expect(control.status).toEqual('success');
+
+        const { client, payload } = await createScopeRestrictedClient(suite);
+
+        const bare = await client.permission.check(PermissionName.USER_UPDATE);
+        expect(bare.status).toEqual('error');
+
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: payload.sub_kind, id: payload.sub } }),
+            { status: 403 },
+        );
+    });
+
+    it('answers for the subject a permission_check holder names (#3604)', async () => {
+        const { data: subject } = await suite.client.user.create(createFakeUser());
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
+
+        const held = await suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.id } });
+        expect(held.status).toEqual('success');
+
+        const missing = await suite.client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: subject.id } });
+        expect(missing.status).toEqual('error');
+
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: randomUUID() } }),
+            { status: 404 },
+        );
+
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'robot', id: subject.id } }),
+            { status: 400 },
+        );
+
+        // a name is refused: names repeat across realms, so it would not say which subject
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.name } }),
+            { status: 400 },
+        );
+    });
+
+    it('checks without any identity when the data sets it to null (#3604)', async () => {
+        const requester = await suite.client.permission.check(PermissionName.USER_READ);
+        expect(requester.status).toEqual('success');
+
+        const none = await suite.client.permission.check(PermissionName.USER_READ, { identity: null });
+        expect(none.status).toEqual('error');
+    });
+
+    it('refuses a caller without permission_check that names a subject (#3604)', async () => {
+        const { data: admin } = await suite.client.user.getOne('@me');
+
+        const password = 'start123-checker-ungranted';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+
+        const client = new Client({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
+
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: admin.id } }),
+            { status: 403 },
+        );
+
+        // its own identity needs no grant
+        const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        await suite.client.userPermission.create({ userId: user.id, permissionId: userRead.id });
+        const own = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: user.id } });
+        expect(own.status).toEqual('success');
+
+        // refused before the lookup, so an unknown subject reads the same as a known one
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: randomUUID() } }),
+            { status: 403 },
+        );
+    });
+
+    it('matches a permission_check grant against the realm of the subject (#3604)', async () => {
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_CHECK);
+
+        const password = 'start123-checker-own';
+        const { data: checker } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userPermission.create({
+            userId: checker.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN,
+        });
+        const grant = await suite.client.token.createWithPassword({ username: checker.name, password });
+
+        const client = new Client({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
+
+        // the checker holds no user_read itself, so a success can only be the subject's
+        const { data: local } = await suite.client.user.create(createFakeUser());
+        const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        await suite.client.userPermission.create({ userId: local.id, permissionId: userRead.id });
+        const inRealm = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: local.id } });
+        expect(inRealm.status).toEqual('success');
+
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreign } = await suite.client.user.create(createFakeUser({ realmId: realm.id }));
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: foreign.id } }),
+            { status: 403 },
+        );
+
+        // the check data is permission X's, so none of it reaches the gate
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, {
+                identity: { type: 'user', id: foreign.id },
+                realmMatch: checker.realmId,
+            }),
+            { status: 403 },
+        );
+
+        // a realm written into the data does not bound the gate
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, {
+                identity: {
+                    type: 'user',
+                    id: foreign.id,
+                    realmId: checker.realmId,
+                },
+            }),
+            { status: 403 },
+        );
+    });
+
+    it('evaluates the resolved permission row, not a global permission of the same name', async () => {
+        const { data: admin } = await suite.client.user.getOne('@me');
+        const { data: permission } = await suite.client.permission.create({
+            name: createNanoID(),
+            realmId: admin.realmId,
+        });
+        // a global permission of the same name, granted to nobody
+        await suite.client.permission.create({
+            name: permission.name,
+            realmId: null,
+        });
+
+        const { data: subject } = await suite.client.user.create(createFakeUser());
+        await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
+        await suite.client.userPermission.create({ userId: admin.id, permissionId: permission.id });
+
+        const self = await suite.client.permission.check(permission.id);
+        expect(self.status).toEqual('success');
+
+        const other = await suite.client.permission.check(permission.id, { identity: { type: 'user', id: subject.id } });
+        expect(other.status).toEqual('success');
     });
 });

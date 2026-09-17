@@ -163,10 +163,10 @@ export class AuthorizationController {
      * Unlike the catalog above it carries NO permission gate, and that
      * asymmetry is the point rather than an oversight. The catalog publishes
      * definitions and policy trees, which is why it is gated; a verdict set
-     * publishes neither. What this discloses is strictly less than the already
-     * ungated `POST /permissions/:id/check` discloses one name at a time:
-     * answers about the caller's own authorization, no definition, no policy
-     * configuration, and no realm key the caller did not itself supply.
+     * publishes neither. What this discloses is strictly less than the caller
+     * form of `POST /permissions/:id/check`, ungated too, discloses one name at
+     * a time: answers about the caller's own authorization, no definition, no
+     * policy configuration, and no realm key the caller did not itself supply.
      *
      * That is what serves the client this route exists for. A public client
      * holds no secret, so it can obtain no `client_credentials` token and has

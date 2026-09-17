@@ -726,14 +726,12 @@ export class HTTPControllerModule {
             permissionPolicyRepository,
         });
 
-        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const permissionProvider = new PermissionDatabaseProvider(dataSource);
-
         const checkerService = new PermissionCheckerService({
             repository,
             realmRepository: realmRepositoryAdapter,
-            permissionProvider,
-            identityPermissionProvider,
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
+            permissionProvider: new PermissionDatabaseProvider(dataSource),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
         });
 
         return new PermissionController({
@@ -1116,6 +1114,7 @@ export class HTTPControllerModule {
         const checkerService = new PolicyCheckerService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
             identityPermissionProvider,
         });
 

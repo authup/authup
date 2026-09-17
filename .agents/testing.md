@@ -248,6 +248,8 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 `suite.client.permission.getOne(name)` resolves the provisioned permission by name. See `test/unit/http/controllers/entities/client-self-manage.spec.ts` for a working example asserting both allowed-field updates and ATTRIBUTE_NAMES policy rejections.
 
+A bearer WITHOUT the `global` scope cannot be obtained from the token endpoint: the password grant always stamps `global`, and Basic auth and the console cookie session carry it too. `createScopeRestrictedClient(suite, scope?)` (`test/utils/token.ts`) re-signs the admin's own claims with `scope` (default `openid`) through `OAuth2InjectionToken.TokenSigner` and returns a client bearing it plus the introspected `payload`.
+
 ### Testing the hosted pages (they render in another workspace now)
 
 The auth pages are NOT rendered by server-core, so its suite has no page assertions left: a hosted page GET is a redirect, and that is all server-core's specs check. The render itself belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port and asserts against the BUILT `@authup/client-auth-console` bundle. `/logout` is the honest smoke test there, because it is the one page the service can answer with no backend at all (it drives the end-session call from the browser, so the render is a pure shell); the other pages hydrate over HTTP from server-core and a spec that wants them needs a stub API, not a DI seam.
