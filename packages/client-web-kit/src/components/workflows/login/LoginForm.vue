@@ -90,6 +90,10 @@ export default defineComponent({
         passwordForgotLink: { type: Object as PropType<LinkProps> },
         // OIDC login_hint — pre-fills the identifier field.
         usernameHint: { type: String },
+        // The device verification page's pending user code (RFC 8628). A
+        // federated login started from there completes no authorization
+        // request, so the code is what the server returns the person to.
+        deviceUserCode: { type: String },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
@@ -345,7 +349,7 @@ export default defineComponent({
         };
 
         const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
-            .getAuthorizeUri(id, { codeRequest: props.codeRequest });
+            .getAuthorizeUri(id, { codeRequest: props.codeRequest, userCode: props.deviceUserCode });
 
         // useSubmitButton from @vuecs/forms returns a computed binding
         // for VCButton ({ type: 'submit', label, iconLeft, color,
@@ -524,12 +528,15 @@ export default defineComponent({
                     </template>
 
                     <!--
-                      A federated login completes an authorization code request:
-                      authorize-out refuses to start one without it (#3457), so a
-                      provider button is only offered when a request is at hand.
+                      A federated login completes an authorization code request
+                      or signs the person in on the device verification page:
+                      authorize-out refuses to start one with neither (#3457,
+                      #3589), so a provider button is only offered for one of
+                      the two. The realm is required on top because the list's
+                      own query filters on it.
                     -->
                     <AIdentityProviders
-                        v-if="codeRequest"
+                        v-if="(codeRequest || deviceUserCode) && form.realmId"
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
                         :footer="false"

@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import type { DeviceAuthorizationInfo, UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { isDeviceVerificationThrottledError } from '@authup/errors';
 import {
     TranslatorTranslationActionKey,
@@ -21,7 +22,12 @@ import { VCIcon } from '@vuecs/icon';
 import type { LinkProps } from '@vuecs/link';
 import { storeToRefs } from 'pinia';
 import type { PropType } from 'vue';
-import { computed, defineComponent, ref } from 'vue';
+import {
+    computed,
+    defineComponent,
+    onMounted,
+    ref,
+} from 'vue';
 import {
     StoreAuthStatus,
     extractErrorContext,
@@ -66,6 +72,16 @@ export default defineComponent({
     },
     props: {
         userCode: { type: String },
+        /**
+         * Set when the person came back from an external provider: the page
+         * redeems the pending login before anything else (#3589).
+         */
+        federatedLogin: { type: Object as PropType<{ providerId: string }> },
+        /**
+         * A refusal marker the federated callback attached. Only
+         * `access_denied` is mapped; anything else is ignored.
+         */
+        error: { type: String },
         registerLink: { type: Object as PropType<LinkProps> },
         passwordForgotLink: { type: Object as PropType<LinkProps> },
     },
@@ -95,12 +111,17 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCESS_DENIED_TEXT },
         ]);
 
-        const step = ref<Step>('code');
+        // A pending federated login is redeemed on mount, and the `lookup`
+        // step is what renders the loading text while it runs.
+        const step = ref<Step>(props.federatedLogin ? 'lookup' : 'code');
         const code = ref<string>(props.userCode ? formatUserCode(props.userCode) : '');
         const codeError = ref<CodeError | null>(null);
         const info = ref<DeviceAuthorizationInfo | null>(null);
         const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
-        const accessDenied = ref<boolean>(false);
+        const accessDenied = ref<boolean>(props.error === OAuth2ErrorCode.ACCESS_DENIED);
+        if (accessDenied.value) {
+            step.value = 'done';
+        }
         const decision = ref<'approved' | 'denied' | null>(null);
         const busy = ref<boolean>(false);
 
@@ -135,6 +156,39 @@ export default defineComponent({
                 case 'invalid': return translations.deviceCodeInvalid;
                 case 'throttled': return translations.deviceVerifyThrottled;
                 default: return null;
+            }
+        });
+
+        onMounted(async () => {
+            const federated = props.federatedLogin;
+            if (!federated || accessDenied.value) {
+                return;
+            }
+
+            try {
+                const grant = await httpClient.identityProvider.completeLogin(federated.providerId);
+
+                await store.loginWithTokenGrant(grant);
+            } catch (e) {
+                const ctx = extractErrorContext(e);
+
+                // The person's intent was the provider account, so a failed
+                // redemption must leave no session to approve a device with.
+                // Skipped when no completion was pending: the hint is a plain
+                // query parameter, and logging out on it would make every
+                // device link a one-click logout.
+                if (ctx.data?.reason !== IDENTITY_PROVIDER_LOGIN_NOT_PENDING) {
+                    await store.logout();
+                }
+
+                emit('failed', ctx.message ?? (e instanceof Error ? e.message : String(e)));
+            } finally {
+                // Never straight to the lookup: authorize-out is an anonymous
+                // GET, so the code in the URL may be one the person never saw.
+                // The code stays displayed and confirmed (RFC 8628 section
+                // 3.3.1), and with the session established the confirm click
+                // goes straight to the lookup.
+                step.value = 'code';
             }
         });
 
@@ -259,6 +313,7 @@ export default defineComponent({
             translations,
             step,
             code,
+            canonical,
             codeErrorText,
             info,
             mfaStatus,
@@ -324,6 +379,7 @@ export default defineComponent({
     </form>
     <Suspense v-else-if="step === 'login'">
         <LoginForm
+            :device-user-code="canonical"
             :register-link="registerLink"
             :password-forgot-link="passwordForgotLink"
             @done="lookup"
