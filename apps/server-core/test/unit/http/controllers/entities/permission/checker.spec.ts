@@ -101,6 +101,11 @@ describe('http/controllers/entities/permission/checker', () => {
             { status: 400 },
         );
 
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: null }),
+            { status: 400 },
+        );
+
         // a name is refused: names repeat across realms, so it would not say which subject
         await expectClientError(
             () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.name } }),

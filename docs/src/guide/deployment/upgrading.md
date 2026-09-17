@@ -47,23 +47,26 @@ active realm plus the global rows.
 
 ### Checking another subject's permissions requires `permission_check`
 
-`POST /permissions/:id/check` and `POST /policies/:id/check` answer for the
-caller unless the body names another subject, and naming one is now gated:
+`POST /permissions/:id/check` and `POST /policies/:id/check` read who to check
+for from the `identity` in the request body:
 
-- **Without an `identity` in the body (or with `null`)** the check is about the
-  caller, under the same scope rule as every other route. A bearer whose token
-  lacks the `global` scope is evaluated without an identity, so a permission or
-  policy that needs one answers `status: "error"`. The policy route's
-  `identity: null` "anonymous" option now means the caller like an absent key.
-- **With `identity: { type, id }`** naming a user or client by its UUID (a
-  name is refused, since names repeat across realms), the caller must hold
-  the new `permission_check` permission, and the grant's realm scope must reach
-  the subject's realm. Only `type` and `id` are read; the subject is loaded from
-  the database, so a `realmId` in the body is ignored. A caller without the grant
-  is refused with `403`, a malformed `identity` with `400`, and an unknown subject
-  with `404`. Previously any authenticated caller could name any identity, and
+- **Without `identity`** the check is about the caller, under the same scope
+  rule as every other route. A bearer whose token lacks the `global` scope is
+  evaluated without an identity, so a permission or policy that needs one
+  answers `status: "error"`.
+- **With `identity: { type, id }`** naming a user or client by its UUID, the
+  caller must hold the new `permission_check` permission, and the grant's realm
+  scope must reach the subject's realm. The subject is loaded from the
+  database, so any other field of `identity` (a `realmId`, say) is ignored. A
+  caller without the grant is refused with `403`, an unknown subject with `404`,
+  and a malformed `identity` with `400`. A name is malformed, since names repeat
+  across realms, and so is `identity: null`, which used to check a policy as
+  anonymous. Previously any authenticated caller could name any identity, and
   since the permission-binding policy loads the grants of the identity it is
   handed, read another user's or client's authorization in any realm.
+
+A realm- or client-scoped permission is now evaluated as itself; before, the
+check used a global permission of the same name, or answered that none exists.
 
 The built-in `admin` role holds `permission_check` in every realm and
 `realm_admin` in its own after the next start, like every provisioned

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PolicyData } from '@authup/access';
-import { BuiltInPolicyType, definePolicyEvaluationContext } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
@@ -27,28 +27,30 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
     async check(
         idOrName: string,
-        data: PolicyData,
+        data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
+        caller?: IdentityPolicyData,
     ): Promise<void> {
-        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+        const input = { ...data };
+        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, data, realm, identity);
+        await this.evaluate(idOrName, input, realm, identity ?? caller);
     }
 
     async safeCheck(
         idOrName: string,
-        data: PolicyData,
+        data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
+        caller?: IdentityPolicyData,
     ): Promise<Result<null>> {
+        const input = { ...data };
         // outside the try: being refused the subject answers the request, not the check
-        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, data, realm, identity);
+            await this.evaluate(idOrName, input, realm, identity ?? caller);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -57,7 +59,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
     protected async evaluate(
         idOrName: string,
-        data: PolicyData,
+        input: Record<string, any>,
         realm: string | undefined,
         identity: IdentityPolicyData | undefined,
     ): Promise<void> {
@@ -81,16 +83,15 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
-        let evaluationData = data;
+        // the subject as stored, or the caller when the data names none
         if (identity) {
-            evaluationData = data.clone();
-            evaluationData.set(BuiltInPolicyType.IDENTITY, identity);
+            input[BuiltInPolicyType.IDENTITY] = identity;
         }
 
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
         await engine.evaluateOrFail(
             entity,
-            definePolicyEvaluationContext({ data: evaluationData }),
+            definePolicyEvaluationContext({ data: new PolicyData(input) }),
         );
     }
 }

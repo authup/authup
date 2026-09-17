@@ -15,9 +15,10 @@ import type { IIdentityResolver } from '../../resolver/types.ts';
 import { toIdentityPolicyData } from '../identity-policy-data.ts';
 
 /**
- * The identity a permission or policy check is asked FOR, when the request
- * names one. `undefined` and `null` ask about the caller, whose identity the
- * request governs. Naming a subject requires PERMISSION_CHECK, matched against
+ * The identity a permission or policy check is asked FOR, read from the
+ * check data's own `identity` key. Absent asks about the caller, whose
+ * identity the request governs; anything present, `null` included, names a
+ * subject. Naming a subject requires PERMISSION_CHECK, matched against
  * the realm of the subject as stored rather than any realm the caller wrote,
  * because the permission-binding evaluator loads the grants of whatever
  * identity it is handed (#3604). The subject is named by id only: names repeat
@@ -32,7 +33,7 @@ export async function resolveCheckSubject(
     actor: ActorContext,
     identityResolver: IIdentityResolver,
 ) : Promise<IdentityPolicyData | undefined> {
-    if (input === undefined || input === null) {
+    if (typeof input === 'undefined') {
         return undefined;
     }
 

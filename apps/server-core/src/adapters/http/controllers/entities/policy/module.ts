@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyData } from '@authup/access';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
@@ -42,10 +41,10 @@ import {
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    applyRequestIdentity,
     applyRouteRealmIDToBody,
     buildActorContext,
     getRequestRealmID,
+    useRequestPolicyIdentity,
 } from '../../../request/index.ts';
 
 export type PolicyControllerContext = {
@@ -118,13 +117,13 @@ export class PolicyController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PolicyAPICheckResponse> {
-        const { identity: subject, ...rest } = data ?? {};
+        const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
             id,
-            applyRequestIdentity(event, new PolicyData(rest)),
-            buildActorContext(event),
+            data,
+            actor,
             getRequestRealmID(event),
-            subject,
+            useRequestPolicyIdentity(event),
         );
 
         event.response.status = 202;

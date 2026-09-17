@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import type { ActorContext } from '@authup/server-kit';
 import type {
@@ -25,45 +25,49 @@ export type PolicyCheckerServiceContext = {
 export interface IPolicyCheckerService {
     /**
      * Resolve a policy by id (UUID) or name and evaluate it against the
-     * supplied data. Throws on any failure: entity not found, evaluator
-     * denial, validator error.
+     * supplied data, for the caller or for the subject `data[identity]`
+     * names. Throws on any failure: entity not found, evaluator denial,
+     * validator error.
+     *
+     * Without `data[identity]` the `caller` identity is evaluated, when one
+     * is given. With it, the reference must be a user or client `{ type, id }`
+     * by UUID, the actor must hold PERMISSION_CHECK reaching that subject's
+     * realm, and the reference is replaced by the subject as stored.
      *
      * @param idOrName Policy UUID or name. Names are resolved within the
      *   supplied realm (or the resolved fallback realm).
-     * @param data The evaluation input. Without a `subject` it is evaluated
-     *   exactly as given: the caller owns every key, the identity included,
-     *   and the HTTP route applies `applyRequestIdentity` to it first. With
-     *   a `subject` its identity is replaced by the subject's.
-     * @param actor The caller context, whose evaluator gates a `subject`.
+     * @param data Caller-supplied evaluation input. A copy is used
+     *   internally.
+     * @param actor The caller context, whose evaluator gates a subject.
      * @param realm Optional realm id used to disambiguate name lookups.
-     * @param subject The raw `{ type, id }` naming the user or client to
-     *   check for by UUID, which requires PERMISSION_CHECK reaching the subject's
-     *   realm; `undefined` or `null` checks the data as given.
-     * @throws {ValidationError} When the subject is malformed.
+     * @param caller The identity the caller may be evaluated as. The HTTP
+     *   route passes the request's own when its scopes include `global`, and
+     *   none otherwise.
+     * @throws {ValidationError} When `data[identity]` is present but malformed.
      * @throws {PermissionError} When the actor may not check for the subject.
      * @throws {EntityNotFoundError} When no policy or subject matches.
      * @throws {Error} Whatever the policy engine throws on denial.
      */
     check(
         idOrName: string,
-        data: PolicyData,
+        data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
+        caller?: IdentityPolicyData,
     ): Promise<void>;
 
     /**
      * Same as `check`, but collapses a failure of the check itself into a
      * `Result<null>` with `success: false` and the originating error. Use
      * this at boundaries that want to embed denial in a response body
-     * rather than propagate it. Resolving the `subject` still throws: a
+     * rather than propagate it. Resolving the subject still throws: a
      * refusal to check for it answers the request, not the check.
      */
     safeCheck(
         idOrName: string,
-        data: PolicyData,
+        data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
+        caller?: IdentityPolicyData,
     ): Promise<Result<null>>;
 }

@@ -71,9 +71,11 @@ describe('http/controllers/entities/policy/checker', () => {
         const control = await suite.client.policy.check(policy.id);
         expect(control.status).toEqual('success');
 
-        // no anonymous opt-out: a null identity is the caller's own
-        const nulled = await suite.client.policy.check(policy.id, { identity: null });
-        expect(nulled.status).toEqual('success');
+        // no anonymous opt-out: a present identity names a subject, and null names none
+        await expectClientError(
+            () => suite.client.policy.check(policy.id, { identity: null }),
+            { status: 400 },
+        );
 
         const { client, payload } = await createScopeRestrictedClient(suite);
 

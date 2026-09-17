@@ -30,11 +30,11 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
     ): Promise<void> {
-        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+        const input = { ...data };
+        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, data, actor, realm, identity);
+        await this.evaluate(idOrName, input, actor, realm, identity);
     }
 
     async safeCheck(
@@ -42,13 +42,13 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-        subject?: unknown,
     ): Promise<Result<null>> {
+        const input = { ...data };
         // outside the try: being refused the subject answers the request, not the check
-        const identity = await resolveCheckSubject(subject, actor, this.ctx.identityResolver);
+        const identity = await resolveCheckSubject(input[BuiltInPolicyType.IDENTITY], actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, data, actor, realm, identity);
+            await this.evaluate(idOrName, input, actor, realm, identity);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -57,7 +57,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
     protected async evaluate(
         idOrName: string,
-        data: Record<string, any>,
+        input: Record<string, any>,
         actor: ActorContext,
         realm: string | undefined,
         identity: IdentityPolicyData | undefined,
@@ -82,7 +82,6 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             throw new EntityNotFoundError();
         }
 
-        const input = { ...data };
         // Surface the resource realm to the realm_scope reach factor (realm-match scope mode).
         // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
         // the preEvaluate path below and neutral-passes.
@@ -91,10 +90,10 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
-        // Asked about the caller, the actor's evaluator owns the identity key: on a
-        // request it asserts the caller's own identity when the scopes include
-        // `global` and removes it otherwise. Asked about a subject that passed the
-        // gate, the subject's identity is evaluated as stored (#3604).
+        // Asked about the caller (no identity in the data), the actor's evaluator
+        // attaches the caller's own identity when the scopes include `global`.
+        // Asked about a subject that passed the gate, the reference is replaced by
+        // the subject as stored, on an evaluator that leaves it alone (#3604).
         let evaluator = actor.permissionEvaluator;
         if (identity) {
             input[BuiltInPolicyType.IDENTITY] = identity;
