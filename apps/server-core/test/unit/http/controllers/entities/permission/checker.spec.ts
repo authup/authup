@@ -201,6 +201,11 @@ describe('http/controllers/entities/permission/checker', () => {
             name: createNanoID(),
             realmId: admin.realmId,
         });
+        // a global permission of the same name, granted to nobody
+        await suite.client.permission.create({
+            name: permission.name,
+            realmId: null,
+        });
 
         const { data: subject } = await suite.client.user.create(createFakeUser());
         await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
