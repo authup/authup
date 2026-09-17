@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IdentityPolicyData } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
@@ -20,13 +21,9 @@ import { toIdentityPolicyData } from '../identity-policy-data.ts';
  * - absent: the actor's identity, which the HTTP routes hand over only when
  *   the request's scopes include `global`;
  * - `null`: no identity at all;
- * - an identity: that identity, as given. When it is not the actor's own, the
- *   actor must hold PERMISSION_CHECK reaching the subject's STORED realm. The
- *   grant lookup loads by id alone, so a realm written in the data could not
- *   bound the gate; the subject is looked up for its realm and nothing else,
- *   and only after the gate is pre-evaluated, so a caller holding no grant
- *   learns nothing about which subjects exist. It is named by UUID, since
- *   names repeat across realms.
+ * - the actor's own identity: that identity, as given;
+ * - any other identity: that identity, as given, once the actor may check
+ *   for it (see `authorizeCheckFor`).
  */
 export async function buildCheckData(
     data: Record<string, any>,
@@ -45,13 +42,38 @@ export async function buildCheckData(
         return output;
     }
 
-    if (
-        identity === null ||
-        (own && isObject(identity) && identity.type === own.type && identity.id === own.id)
-    ) {
-        return output;
+    if (identity !== null && !isOwnIdentity(identity, own)) {
+        await authorizeCheckFor(identity, output, own, actor, identityResolver);
     }
 
+    return output;
+}
+
+function isOwnIdentity(identity: unknown, own: IdentityPolicyData | undefined) : boolean {
+    return !!own &&
+        isObject(identity) &&
+        identity.type === own.type &&
+        identity.id === own.id;
+}
+
+/**
+ * Checking for anyone but the actor needs PERMISSION_CHECK, evaluated for the
+ * actor over the rest of the check data, with the subject as the resource:
+ * its identity projection under `attributes` (never the stored row, which the
+ * resolver loads with its password or secret) and its STORED realm under
+ * `realmMatch`. The grant lookup loads by id alone, so a realm written into
+ * the data could not bound the gate. The gate is pre-evaluated before the
+ * subject is looked up, so a caller holding no grant learns nothing about
+ * which subjects exist. The subject is named by UUID, since names repeat
+ * across realms.
+ */
+async function authorizeCheckFor(
+    identity: unknown,
+    data: Record<string, any>,
+    own: IdentityPolicyData | undefined,
+    actor: ActorContext,
+    identityResolver: IIdentityResolver,
+) : Promise<void> {
     if (
         !isObject(identity) ||
         !Object.values(IdentityType).includes(identity.type) ||
@@ -71,10 +93,10 @@ export async function buildCheckData(
     await actor.permissionEvaluator.evaluate({
         name: PermissionName.PERMISSION_CHECK,
         data: new PolicyData({
+            ...data,
             ...(own ? { [BuiltInPolicyType.IDENTITY]: own } : {}),
+            [BuiltInPolicyType.ATTRIBUTES]: toIdentityPolicyData(subject),
             [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null,
         }),
     });
-
-    return output;
 }

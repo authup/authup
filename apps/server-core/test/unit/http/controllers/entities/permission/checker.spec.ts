@@ -13,13 +13,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { RealmScope } from '@authup/access';
+import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { Client } from '@authup/core-http-kit';
 import { PermissionName } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { PermissionEntity } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
 import {
+    createFakeClient,
     createFakeRealm,
     createFakeUser,
     createScopeRestrictedClient,
@@ -173,6 +174,14 @@ describe('http/controllers/entities/permission/checker', () => {
             { status: 403 },
         );
 
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_UPDATE, {
+                identity: { type: 'user', id: foreign.id },
+                realmMatch: checker.realmId,
+            }),
+            { status: 403 },
+        );
+
         // a realm written into the data does not bound the gate
         await expectClientError(
             () => client.permission.check(PermissionName.USER_UPDATE, {
@@ -202,5 +211,46 @@ describe('http/controllers/entities/permission/checker', () => {
 
         const other = await suite.client.permission.check(permission.id, { identity: { type: 'user', id: subject.id } });
         expect(other.status).toEqual('success');
+    });
+
+    it('hands the subject to the policies of the permission_check grant (#3604)', async () => {
+        const { data: onlyClients } = await suite.client.policy.create({
+            name: createNanoID(),
+            type: BuiltInPolicyType.ATTRIBUTES,
+            query: { type: { $eq: 'client' } },
+        } as any);
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_CHECK);
+
+        const password = 'start123-checker-attributes';
+        const { data: checker } = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.userPermission.create({
+            userId: checker.id,
+            permissionId: permission.id,
+            policyId: onlyClients.id,
+        });
+        const grant = await suite.client.token.createWithPassword({ username: checker.name, password });
+
+        const client = new Client({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
+
+        const { data: target } = await suite.client.client.create(createFakeClient());
+        const allowed = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'client', id: target.id } });
+        expect(allowed.status).toEqual('error');
+
+        const { data: user } = await suite.client.user.create(createFakeUser());
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: user.id } }),
+            { status: 403 },
+        );
+
+        // the requester's own data rides along, but cannot stand in for the subject
+        await expectClientError(
+            () => client.permission.check(PermissionName.USER_READ, {
+                identity: { type: 'user', id: user.id },
+                attributes: { type: 'client' },
+            }),
+            { status: 403 },
+        );
     });
 });
