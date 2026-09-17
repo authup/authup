@@ -44,6 +44,7 @@ import {
     applyRouteRealmIDToBody,
     buildActorContext,
     getRequestRealmID,
+    useRequestPolicyIdentity,
 } from '../../../request/index.ts';
 
 export type PermissionControllerContext = {
@@ -103,11 +104,13 @@ export class PermissionController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PermissionAPICheckResponse> {
+        // the checker evaluates the data on its own evaluator, so the actor's identity
+        // is the one policies may see for this request
         const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
             id,
             data,
-            actor,
+            { ...actor, identity: useRequestPolicyIdentity(event)?.raw },
             getRequestRealmID(event),
         );
 

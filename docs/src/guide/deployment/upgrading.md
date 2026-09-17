@@ -45,6 +45,36 @@ Two consequences to check before upgrading:
 The admin console needs no change: its four list pages already scope to the
 active realm plus the global rows.
 
+### Checking another subject's permissions requires `permission_check`
+
+`POST /permissions/:id/check` and `POST /policies/:id/check` read who to check
+for from the `identity` in the request body:
+
+- **Without `identity`** the check is about the caller, under the same scope
+  rule as every other route. A bearer whose token lacks the `global` scope is
+  evaluated without an identity, so a permission or policy that needs one
+  answers `status: "error"`.
+- **With `identity: null`** the check runs without any identity.
+- **With an identity** the check runs for that identity, as sent. Naming the
+  caller's own identity needs nothing more. Naming anyone else requires the new
+  `permission_check` permission, and the grant's realm scope must reach the
+  realm the subject is stored in (a `realmId` in the body does not count). The
+  subject must be named as `{ type: 'user' | 'client', id: <UUID> }`, since
+  names repeat across realms. A caller without the grant is refused with `403`,
+  an unknown subject with `404`, and a malformed `identity` with `400`. A token
+  without `global` needs the grant even for its own identity. Previously any
+  authenticated caller could name any identity, and since the permission-binding
+  policy loads the grants of the identity it is handed, read another user's or
+  client's authorization in any realm.
+
+A realm- or client-scoped permission is now evaluated as itself; before, the
+check used a global permission of the same name, or answered that none exists.
+
+The built-in `admin` role holds `permission_check` in every realm and
+`realm_admin` in its own after the next start, like every provisioned
+permission. An integration that checks on behalf of other subjects needs a
+grant of `permission_check` for its credential.
+
 ### The device authorization grant is available, opt-in per client
 
 `POST /device_authorization` and `grant_type=urn:ietf:params:oauth:grant-type:device_code`

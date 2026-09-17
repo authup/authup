@@ -14,6 +14,7 @@ import type {
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { IAppEvent } from 'routup';
+import type { RequestIdentity } from '../helpers/index.ts';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionEvaluator implements IPermissionEvaluator {
@@ -55,16 +56,8 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
     // --------------------------------------------------------------
 
     protected extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : T {
-        const scopes = useRequestScopes(this.event);
-        const identity = useRequestIdentity(this.event);
-
-        // Only attach the identity policy data when an identity was actually
-        // resolved. Setting it to `undefined` would still make
-        // `PolicyData.has('identity')` true (key presence), so the built-in
-        // identity evaluator would run its validator against `undefined` and
-        // throw an uncaught error instead of a clean permission denial — see
-        // the deleted-subject edge case in issue #3184.
-        if (identity && scopes.includes(ScopeName.GLOBAL)) {
+        const identity = useRequestPolicyIdentity(this.event);
+        if (identity) {
             ctx.data = ctx.data || new PolicyData();
             ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
 
@@ -84,4 +77,26 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 
         return ctx;
     }
+}
+
+/**
+ * The identity a policy may see for this request: its own when the scopes
+ * include `global`, none otherwise. The ONE place that condition is spelled:
+ * `RequestPermissionEvaluator` asserts it on every evaluation, and
+ * `POST /policies/:id/check`, which runs the policy engine without a
+ * permission evaluator, hands it to the checker as the caller (#3604).
+ */
+export function useRequestPolicyIdentity(event: IAppEvent) : RequestIdentity | undefined {
+    const identity = useRequestIdentity(event);
+
+    // Only an identity that was actually resolved. Setting `undefined` would
+    // still make `PolicyData.has('identity')` true (key presence), so the
+    // built-in identity evaluator would run its validator against `undefined`
+    // and throw an uncaught error instead of a clean permission denial (the
+    // deleted-subject edge case in issue #3184).
+    if (identity && useRequestScopes(event).includes(ScopeName.GLOBAL)) {
+        return identity;
+    }
+
+    return undefined;
 }

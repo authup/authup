@@ -10,3 +10,4 @@ export * from './cookie-jar';
 export * from './domains';
 export * from './http';
 export * from './properties';
+export * from './token';
