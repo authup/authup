@@ -376,6 +376,13 @@ describe('ADeviceVerifyForm federated login', () => {
             federatedHandlers(),
             false,
         );
+
+        // while the redemption is in flight there is no code form to confirm:
+        // a click then would look the code up under whatever session the
+        // cookies still hold
+        expect(wrapper.find('input').exists()).toBe(false);
+        expect(wrapper.find('form').exists()).toBe(false);
+
         await flushPromises();
 
         expect(requestsTo(httpClient, LOGIN_COMPLETE_PATH)).toHaveLength(1);

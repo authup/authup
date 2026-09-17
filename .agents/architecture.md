@@ -5432,7 +5432,13 @@ but `POST /device_authorization` accepts a public client by `client_id` alone an
 no gate, so any account can decide on a code it minted itself. An unbounded reset would turn
 "10 misses per 600 s" into "9 guesses per self-served decision" and leave the IP rate limiter
 as the only bound on a 34.6-bit code. With the marker the worst case is 19 misses per window.
-An armed lock is left alone and runs out.
+An armed lock is left alone and runs out. Two details keep the forgiveness where it belongs. It
+is claimed only when a counter exists, so a clean approval does not spend the window's one
+forgiveness ahead of the typos it is meant for (the attacker's bound is unchanged: the second
+decision still finds the marker). And it is best effort in the service
+(`forgiveLookupMisses`, a warn line on failure): the decision is already written by then, so
+bookkeeping must not turn it into a 500 or cost it the `AUTHORIZE` row, and a failed reset only
+leaves the misses standing.
 
 **The admission gate is shared with `/authorize`.** `OAuth2AuthorizationGate`
 (`core/oauth2/authorization/gate.ts`, `IOAuth2AuthorizationGate`) is the body of
@@ -5572,11 +5578,15 @@ the federated login already make.
 
 ## Federated Login Completion (`authorize-in`)
 
-The external-IdP callback completes the EXTERNAL leg of the RP's **original**
-authorization request. It re-verifies the code request that `authorize-out`
-stored on the state blob, establishes the authup session, and returns the
-browser to the hosted `/authorize` page carrying a one-time **login handle**
-for that session. The RP's code is issued at the end of the hosted
+The external-IdP callback completes the EXTERNAL leg of a login one of two
+hosted pages started: the RP's **original** authorization request on
+`/authorize`, or the device verification page's pending user code on `/device`
+(#3589). It establishes the authup session and returns the browser to the page
+the login came from, carrying a one-time **login handle** for that session.
+For an authorization request it first re-verifies the code request that
+`authorize-out` stored on the state blob; the device variant has none, see
+*The device variant is a session and nothing else* below. The RP's code is
+issued at the end of the hosted
 ladder, by the same `POST /authorize` an interactive login posts, so a
 federated login passes the gates that belong to it: `prompt=login` /
 `max_age` freshness, `select_account`, the `acr_values` step-up, consent and
@@ -5587,11 +5597,12 @@ upstream returned. Three properties are load-bearing, and each of the first two
 was a shipped bug (issue #3446):
 
 The ladder itself is **`OAuth2FederatedLoginService`**
-(`core/oauth2/federated-login/`), not the controller: realm match, code-request
-re-verification, redirect-scheme gate, provider and user state, access policy
-and the session live there, and `complete()` answers with a discriminated
-result (`{ kind: 'refused', refusal, error?, codeRequest }` /
-`{ kind: 'issued', pendingLoginId, codeRequest }`). Its sibling
+(`core/oauth2/federated-login/`), not the controller: the code-request gates
+(realm match, re-verification, redirect-scheme gate, access policy), provider
+and user state and the session live there, and `complete()` answers with a
+discriminated result (`{ kind: 'refused', refusal, error? }` /
+`{ kind: 'issued', pendingLoginId }`). The result carries no request: the
+controller builds the return URL from the state it popped. Its sibling
 `completeHandoff()` is the other half: it consumes the pending login, extends
 its session to the regular lifetime and mints the AT+RT pair the hosted page
 runs the ladder with. The controller only maps those answers onto a transport,

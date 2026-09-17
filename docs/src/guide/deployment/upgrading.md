@@ -94,10 +94,13 @@ set. Four codes join `ErrorCode`: `authorization_pending`, `slow_down` and
 the verification page. A consumer switching exhaustively over the enum, or a
 translation catalog keyed by it, needs the four entries.
 
-The render contract of `@authup/client-auth-console` is version `4`, which
-renders the `/device` page. A substituted auth console package
-(`AUTH_CONSOLE_PATH`) built against version 3 is refused at boot; rebuild it
-against the current contract. A split deployment needs no new proxy rule:
+The render contract of `@authup/client-auth-console` is version `5`. Version
+4 renders the `/device` page, and version 5 has that page complete a login
+through an identity provider: the payload carries
+`federatedLogin: { providerId }`, which the page redeems the way `/authorize`
+does and then returns to the code step. A substituted auth console package
+(`AUTH_CONSOLE_PATH`) built against an older version is refused at boot;
+rebuild it against the current contract. A split deployment needs no new proxy rule:
 `/device` and `/device_authorization` sit outside `/console` and land on the
 API set, and `/console/auth/device` follows the console rule (see
 [Console Replicas](./console-replicas.md#routing)).
@@ -240,7 +243,7 @@ stores the hash, while a bcrypt value in the file is kept verbatim.
 
 With a built bundle in place, `authup start` / `authup start console auth`
 refuse to start when the bundle's `CONTRACT_VERSION` (missing = 1) is not
-the version this release requires (4), naming the entry and both versions.
+the version this release requires (5), naming the entry and both versions.
 v1.0.0-beta.64 shipped without the check and rendered such a bundle. Rebuild
 the substituted package against the current `@authup/client-auth-console`
 contract. A missing bundle still answers the actionable per-request error
