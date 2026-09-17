@@ -43,7 +43,7 @@ export async function buildCheckData(
     }
 
     if (identity !== null && !isOwnIdentity(identity, own)) {
-        await authorizeCheckFor(identity, output, own, actor, identityResolver);
+        await authorizeCheckFor(identity, own, actor, identityResolver);
     }
 
     return output;
@@ -58,18 +58,16 @@ function isOwnIdentity(identity: unknown, own: IdentityPolicyData | undefined) :
 
 /**
  * Checking for anyone but the actor needs PERMISSION_CHECK, evaluated for the
- * actor over the rest of the check data, with the subject as the resource:
- * its identity projection under `attributes` (never the stored row, which the
- * resolver loads with its password or secret) and its STORED realm under
- * `realmMatch`. The grant lookup loads by id alone, so a realm written into
- * the data could not bound the gate. The gate is pre-evaluated before the
+ * actor with the subject's STORED realm under `realmMatch`. The check data
+ * belongs to the permission or policy being checked, so none of it reaches
+ * this gate. The grant lookup loads by id alone, so a realm written into the
+ * data could not bound the gate either. The gate is pre-evaluated before the
  * subject is looked up, so a caller holding no grant learns nothing about
  * which subjects exist. The subject is named by UUID, since names repeat
  * across realms.
  */
 async function authorizeCheckFor(
     identity: unknown,
-    data: Record<string, any>,
     own: IdentityPolicyData | undefined,
     actor: ActorContext,
     identityResolver: IIdentityResolver,
@@ -93,9 +91,7 @@ async function authorizeCheckFor(
     await actor.permissionEvaluator.evaluate({
         name: PermissionName.PERMISSION_CHECK,
         data: new PolicyData({
-            ...data,
             ...(own ? { [BuiltInPolicyType.IDENTITY]: own } : {}),
-            [BuiltInPolicyType.ATTRIBUTES]: toIdentityPolicyData(subject),
             [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null,
         }),
     });
