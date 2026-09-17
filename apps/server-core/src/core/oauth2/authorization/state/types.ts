@@ -16,8 +16,23 @@ export type OAuth2AuthorizationStateLink = {
     providerId: string,
 };
 
+export type OAuth2AuthorizationStateDevice = {
+    /**
+     * The canonical user code the person confirmed on the device page. Its
+     * FORMAT was checked when the login started and nothing else: the route
+     * is anonymous, and looking the code up there would tell a caller which
+     * codes exist (RFC 8628 section 5.1).
+     */
+    userCode: string,
+};
+
 export type OAuth2AuthorizationState = {
     codeRequest?: OAuth2AuthorizationCodeRequest,
+    /**
+     * Present on a login started from the device verification page (#3589),
+     * which completes no authorization request. Exclusive with `codeRequest`.
+     */
+    device?: OAuth2AuthorizationStateDevice,
     /**
      * Present on an account-linking round-trip (plan 091): the callback
      * links the external identity to this user instead of running the

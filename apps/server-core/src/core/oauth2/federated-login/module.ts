@@ -114,59 +114,67 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             provider, 
         } = input;
 
-        // Re-verify the request BEFORE the provider's single-use code is
-        // spent. It re-resolves the client (active, grant allowlist, scopes)
-        // and re-matches the redirect_uri against the client's registered
-        // patterns, so a client deactivated (or a pattern removed) while the
-        // person was away at the provider cannot still receive a code, and a
-        // refused completion provisions no user.
-        //
-        // Only a refusal is reported as one; a server failure keeps throwing.
-        let verified : OAuth2AuthorizationCodeRequestVerificationResult;
-        try {
-            verified = await this.codeRequestVerifier.verify(codeRequest);
-        } catch (e) {
-            if (!isOAuth2Error(e)) {
-                throw e;
+        // Null for a login the device verification page started: there is no
+        // client there, and the device flow's own lookup and approval run the
+        // client-dependent gates (#3589).
+        let verified : OAuth2AuthorizationCodeRequestVerificationResult | null = null;
+        if (codeRequest) {
+            // Re-verify the request BEFORE the provider's single-use code is
+            // spent. It re-resolves the client (active, grant allowlist,
+            // scopes) and re-matches the redirect_uri against the client's
+            // registered patterns, so a client deactivated (or a pattern
+            // removed) while the person was away at the provider cannot
+            // still receive a code, and a refused completion provisions no
+            // user.
+            //
+            // Only a refusal is reported as one; a server failure keeps
+            // throwing.
+            try {
+                verified = await this.codeRequestVerifier.verify(codeRequest);
+            } catch (e) {
+                if (!isOAuth2Error(e)) {
+                    throw e;
+                }
+
+                return {
+                    kind: 'refused',
+                    refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
+                };
             }
 
-            return {
-                kind: 'refused',
-                refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
-                codeRequest,
-            };
-        }
+            // The provider and the client must share a realm, the
+            // completion-side half of the plan-041 binding. It rests on the
+            // client the verification just resolved rather than the
+            // `realm_id` carried on the state blob: that value is only there
+            // because `authorize-out` stores the VERIFIED request, so a guard
+            // reading it would disappear silently for any state that reached
+            // here without the stamp. A realm-less (global) provider matches
+            // every client by design.
+            if (provider.realmId && verified.client.realmId !== provider.realmId) {
+                throw OAuth2RequestError.malformed('The provider and client realm do not match.');
+            }
 
-        // The provider and the client must share a realm, the completion-side
-        // half of the plan-041 binding. It rests on the client the
-        // verification just resolved rather than the `realm_id` carried on
-        // the state blob: that value is only there because `authorize-out`
-        // stores the VERIFIED request, so a guard reading it would disappear
-        // silently for any state that reached here without the stamp. A
-        // realm-less (global) provider matches every client by design.
-        if (provider.realmId && verified.client.realmId !== provider.realmId) {
-            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
-        }
+            // A stored code request always carries a redirect_uri (that mount
+            // is required in OAuth2AuthorizationCodeRequestValidator, unlike
+            // `state`), so a verified request is a verified redirect target.
+            // The guard keeps the redirect decision resting on the match
+            // itself, which is the only thing here that knows the uri was
+            // ever matched.
+            const redirectUri = verified.data.redirect_uri;
+            if (!redirectUri || !verified.redirectUriVerified) {
+                throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
+            }
 
-        // A stored code request always carries a redirect_uri (that mount is
-        // required in OAuth2AuthorizationCodeRequestValidator, unlike
-        // `state`), so a verified request is a verified redirect target. The
-        // guard keeps the redirect decision resting on the match itself,
-        // which is the only thing here that knows the uri was ever matched.
-        const redirectUri = verified.data.redirect_uri;
-        if (!redirectUri || !verified.redirectUriVerified) {
-            throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
-        }
-
-        // A non-http(s) target is navigated from the interstitial page, which
-        // `location.assign`s it and renders it as an href, so a
-        // script-capable scheme would execute on the IdP origin. The client
-        // validator and the code-request verifier both refuse such a scheme;
-        // this fails closed should either gap, and it runs before the
-        // provider's single-use code is spent, a user provisioned or a code
-        // minted.
-        if (!isSafeRedirectURLScheme(redirectUri)) {
-            throw new InternalError('The redirect_uri scheme is not allowed.');
+            // A non-http(s) target is navigated from the interstitial page,
+            // which `location.assign`s it and renders it as an href, so a
+            // script-capable scheme would execute on the IdP origin. The
+            // client validator and the code-request verifier both refuse such
+            // a scheme; this fails closed should either gap, and it runs
+            // before the provider's single-use code is spent, a user
+            // provisioned or a code minted.
+            if (!isSafeRedirectURLScheme(redirectUri)) {
+                throw new InternalError('The redirect_uri scheme is not allowed.');
+            }
         }
 
         // The provider must still be enabled, the rule the link path already
@@ -178,13 +186,12 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                 kind: 'refused',
                 refusal: OAuth2FederatedLoginRefusal.PROVIDER_DISABLED,
                 error: OAuth2ErrorCode.LOGIN_REQUIRED,
-                codeRequest: verified.data,
             };
         }
 
         const authenticator = this.authenticatorFactory(provider, {
             baseURL: this.options.baseURL,
-            clientId: verified.data.client_id,
+            clientId: verified?.data.client_id,
             logger: this.logger,
         });
 
@@ -212,7 +219,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                 kind: 'refused',
                 refusal: OAuth2FederatedLoginRefusal.ASSURANCE_INSUFFICIENT,
                 error: OAuth2ErrorCode.ACCESS_DENIED,
-                codeRequest: verified.data,
             };
         }
 
@@ -225,13 +231,14 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                 kind: 'refused',
                 refusal: OAuth2FederatedLoginRefusal.USER_INACTIVE,
                 error: OAuth2ErrorCode.ACCESS_DENIED,
-                codeRequest: verified.data,
             };
         }
 
         // Application access policy (plan 052), federated leg. A policy id
-        // with no wired evaluator denies (fail closed).
-        if (verified.client.accessPolicyId) {
+        // with no wired evaluator denies (fail closed). Without a code
+        // request there is no client and so no policy to evaluate: a device
+        // client's policy stops the approval and the /token redemption.
+        if (verified?.client.accessPolicyId) {
             const realm = await this.realmRepository.resolve(provider.realmId, true);
             let allowed = false;
 
@@ -273,7 +280,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                     kind: 'refused',
                     refusal: OAuth2FederatedLoginRefusal.ACCESS_DENIED,
                     error: OAuth2ErrorCode.ACCESS_DENIED,
-                    codeRequest: verified.data,
                 };
             }
         }
@@ -310,7 +316,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         return {
             kind: 'issued',
             pendingLoginId,
-            codeRequest: verified.data,
         };
     }
 

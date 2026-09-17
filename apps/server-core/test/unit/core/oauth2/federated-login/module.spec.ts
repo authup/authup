@@ -149,7 +149,9 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         // hosted ladder, once the second factor and consent have run
         expect(typeof result.pendingLoginId).toEqual('string');
         expect(pendingLoginStore.saved).toHaveLength(1);
-        expect(result.codeRequest).toEqual(codeRequest);
+        // the caller re-renders the request its own state carries, so the
+        // result hands none back
+        expect(result).not.toHaveProperty('codeRequest');
 
         const [session] = sessionManager.createCalls;
         expect(session).toMatchObject({
@@ -257,7 +259,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         expect(result).toEqual({
             kind: 'refused',
             refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
-            codeRequest,
         });
         // the hosted page re-runs the same verifier, so nothing is echoed
         expect(result.kind === 'refused' && result.error).toBeFalsy();
@@ -507,6 +508,169 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         expect(eventService.recordCalls).toHaveLength(1);
         expect(eventService.recordCalls[0].name).toEqual(EventName.AUTHORIZE_FAILED);
         expect(metrics.authorizeCalls).toEqual(['denied']);
+    });
+});
+
+/**
+ * A login the device verification page started (#3589). It completes no
+ * authorization request, so there is no client: nothing client-dependent may
+ * run here, and the device flow's own lookup and approval carry those gates.
+ */
+describe('core/oauth2/federated-login — device variant', () => {
+    const untouchedVerifier : IOAuth2AuthorizationCodeRequestVerifier = {
+        verify: async () => {
+            throw new Error('the code request verifier ran without a code request');
+        },
+    };
+
+    const untouchedEvaluator : IOAuth2AccessPolicyEvaluator = {
+        evaluate: async () => {
+            throw new Error('the access policy was evaluated without a client');
+        },
+    };
+
+    it('should establish the pending session without a code request', async () => {
+        const user = createUser();
+        const provider = createProvider({ realmId: randomUUID() });
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+        } = buildService({ user, verifier: untouchedVerifier });
+
+        const result = await service.complete({
+            provider,
+            codeRequest: null,
+            code: 'provider-code',
+            request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
+        });
+
+        expect(result).toEqual({
+            kind: 'issued',
+            pendingLoginId: expect.any(String),
+        });
+
+        expect(sessionManager.createCalls).toHaveLength(1);
+        const [session] = sessionManager.createCalls;
+        expect(session).toMatchObject({
+            sub: user.id,
+            subKind: IdentityType.USER,
+            realmId: user.realmId,
+            authMethod: SessionAuthMethod.EXTERNAL,
+            mfaAt: null,
+        });
+        expect(session.clientId).toBeUndefined();
+
+        expect(pendingLoginStore.saved).toHaveLength(1);
+        expect(pendingLoginStore.saved[0]).toMatchObject({
+            providerId: provider.id,
+            userName: user.name,
+        });
+    });
+
+    it('should evaluate no access policy without a client', async () => {
+        const {
+            service,
+            sessionManager,
+            eventService,
+            metrics,
+        } = buildService({
+            verifier: untouchedVerifier,
+            accessPolicyEvaluator: untouchedEvaluator,
+        });
+
+        const result = await service.complete({
+            provider: createProvider(),
+            codeRequest: null,
+            code: 'provider-code',
+        });
+
+        expect(result.kind).toEqual('issued');
+        expect(sessionManager.createCalls).toHaveLength(1);
+        expect(eventService.recordCalls).toHaveLength(0);
+        expect(metrics.authorizeCalls).toEqual([]);
+    });
+
+    it('should still refuse a disabled provider', async () => {
+        let authenticated = false;
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+        } = buildService({
+            verifier: untouchedVerifier,
+            authenticate: async () => {
+                authenticated = true;
+                return createUser();
+            },
+        });
+
+        const result = await service.complete({
+            provider: createProvider({ enabled: false }),
+            codeRequest: null,
+            code: 'provider-code',
+        });
+
+        expect(result).toEqual({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.PROVIDER_DISABLED,
+            error: OAuth2ErrorCode.LOGIN_REQUIRED,
+        });
+        expect(authenticated).toBe(false);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should still refuse an inactive user', async () => {
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+        } = buildService({
+            verifier: untouchedVerifier,
+            user: createUser({ active: false }),
+        });
+
+        const result = await service.complete({
+            provider: createProvider(),
+            codeRequest: null,
+            code: 'provider-code',
+        });
+
+        expect(result).toEqual({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.USER_INACTIVE,
+            error: OAuth2ErrorCode.ACCESS_DENIED,
+        });
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should still refuse an upstream missing the assurance allow-list', async () => {
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+        } = buildService({
+            verifier: untouchedVerifier,
+            authenticate: async () => {
+                throw new IdentityProviderAssuranceError('the amr claim does not satisfy: mfa.');
+            },
+        });
+
+        const result = await service.complete({
+            provider: createProvider({ requiredAmr: 'mfa' }),
+            codeRequest: null,
+            code: 'provider-code',
+        });
+
+        expect(result).toEqual({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.ASSURANCE_INSUFFICIENT,
+            error: OAuth2ErrorCode.ACCESS_DENIED,
+        });
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 });
 
