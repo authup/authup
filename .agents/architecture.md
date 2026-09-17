@@ -790,25 +790,25 @@ Services receive an `ActorContext` instead of a raw HTTP request. This decouples
 
 ```typescript
 // @authup/server-kit (packages/server-kit/src/core/actor/types.ts)
-import type { IPermissionEvaluator } from '@authup/access';
+import type { IPermissionEvaluator, PermissionPolicyBinding } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
 export type ActorContext = {
     permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
-    tokenClientId?: string | null;
+    grants?: () => Promise<PermissionPolicyBinding[]>;
 };
 ```
 
 - `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
 - `identity` — the actor's identity (user, client)
-- `tokenClientId` — the client the actor's token was issued to, which a service delegating the actor's grants (`isSuperset`, `resolveJunctionGrant`) must pass on, so delegation resolves the grants the gates evaluated
+- `grants` — the actor's own grants as its request resolved them (for a token, the grants that token carries). A service delegating the actor's grants (`isSuperset`, `resolveJunctionGrant`) reads them through `getActorGrants`, so it checks exactly what the gates evaluated; a missing resolver yields none
 
 #### RequestPermissionEvaluator
 
-The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
+The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. The authorization middleware composes one per request, over an engine that reads the request's grants (see *A user's client-owned grants apply through that client's tokens*).
 
-**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`). It stamps the context's `tokenClientId` the same way, unconditionally from the request, so a caller can neither widen nor narrow a request by supplying one.
+**`extendContext` is SYMMETRICAL, and that is what makes it the one place the `global`-scope condition is spelled.** It sets `IDENTITY` to the request's own identity when the scope permits (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when it does not. A caller may therefore fill the bag itself — the batch authorization check does, so every identity-reading policy in a tree gets the data — without any of them restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`).
 
 Note two routes still assemble an identity bag around a BARE `PermissionEvaluator` and so reach none of this: `POST /permissions/:id/check` and `POST /policies/:id/check` (`PermissionCheckerService` / the policy checker), which is why they answer a scope-restricted bearer as a fully-scoped one (#3604). Routing them through this wrapper is the fix, and with the symmetry above it needs no rule of its own.
 
@@ -819,7 +819,7 @@ export function buildActorContext(req: Request): ActorContext {
     return {
         permissionEvaluator: useRequestPermissionEvaluator(req),
         identity: identity ? identity.raw : undefined,
-        tokenClientId: useRequestClientId(req),
+        grants: identity ? () => useRequestGrants(req, { type: identity.type, id: identity.id }) : undefined,
     };
 }
 ```
@@ -2373,13 +2373,12 @@ rather than trusted until `exp`.
   answers with**, minus everything token-shaped, so the kit's `commitSession`
   needs no new shape. Both share one owner, `resolveIntrospectionSubject`
   (`core/oauth2/introspection/`), so the two cannot drift. The input is the
-  subject, whether the credential is usable, and the token's client
-  (the introspected token's `client_id`, the bearer's on the GET, none for
-  the cookie), and the projection runs over the RESOLVED identity
-  (`toIdentityPolicyData`), so an introspection cannot disagree with an
-  in-process evaluation of the same request (see *A user's client-owned
-  grants apply through that client's tokens*). The client never goes
-  into the subject's `clientId`. Both
+  token the answer describes (the introspected one, the request's own on the
+  GET, its subject alone for the cookie) and whether it is usable, and the
+  projection is `getForToken`, the grants a request made with that token
+  evaluates, so an introspection cannot disagree with an in-process
+  evaluation (see *A user's client-owned grants apply through that client's
+  tokens*). Both
   routes set `Cache-Control: no-store` and `Vary: Cookie`: the GET is a
   per-user document whose only discriminator is an opaque cookie, exactly
   what an intermediary would otherwise cross-serve.
@@ -3392,11 +3391,10 @@ with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
 `realm_scope` and the ids of its junction policy trees (`resolveIntrospectionSubject`,
 `core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
 cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
-warning, since the server fails such a grant closed itself. The projection runs over the
-RESOLVED identity (`toIdentityPolicyData`) under the described token's client (the
-introspected token's on `POST /token/introspect`, the request's own on the GET), exactly
-as a request made with that token is evaluated, so a user's grants owned by another
-client are absent (see *A user's client-owned grants apply through that client's
+warning, since the server fails such a grant closed itself. The projection is the grants the
+described token carries (`getForToken`: the introspected token on
+`POST /token/introspect`, the request's own on the GET), exactly what a request made with it
+evaluates, so a user's grants owned by another client are absent (see *A user's client-owned grants apply through that client's
 tokens*). **The
 list is NOT narrowed by the token's `scope`**, so a bearer holding no `global` scope
 reports its full grant set while the server denies it every `system.default`-bound
@@ -3579,35 +3577,31 @@ not exempted: they are public and auto-consenting, so with the `POST /authorize`
 below an exemption would hand any application un-narrowed grants. Client subjects and the
 role side of `isSuperset` (`getForRole`'s equality) are unchanged.
 
-The rule is one function, `appliesThroughTokenClient`
-(`core/identity/permission/token-client.ts`), and it is a DISJUNCTION: an equality
-drops every global grant, which already regressed introspection once. `getRolesFor`
-filters the user's roles by it and `getForUser` filters the MERGED direct and
-role-derived grants by it.
+**The narrowing is a property of the token, resolved once.** `getForToken(token)`
+(`IdentityPermissionProvider`) is the one place it happens: from the token's `sub`,
+`sub_kind` and `client_id` it loads the user's roles, drops those owned by another
+client, loads their permissions, and drops every permission owned by another client. It
+is a DISJUNCTION (unowned OR the token's client): an equality drops every global grant,
+which already regressed introspection once. `getFor(identity)` stays unnarrowed; nothing
+passes the client alongside the subject. Everything else reads that one grant set:
 
-**The carrier is the token, never the subject.** `IdentityPolicyData.clientId` is
-the subject's own client, and a role reads it as its owner, so the token's client
-travels separately as `IdentityTokenOptions.tokenClientId`, a REQUIRED
-parameter of `getFor`, `getRolesFor`, `isSuperset` (describing the parent; the child is
-resolved under none) and `resolveJunctionGrant`, so no call site widens a request by
-leaving it out. On the request path its one source is the verified bearer's `client_id`
-(`setRequestClientId`, next to the scopes in the authorization middleware);
-`POST /token/introspect` and the access-token issuer read the described token's own
-`client_id` instead. It reaches:
+- **evaluation**: the authorization middleware composes the request's evaluator per
+  request, over an engine whose grant source is `createGrantsResolver`: the request's own
+  subject resolves through `getForToken` with the verified bearer's payload
+  (`useRequestTokenPayload`), memoized for the request; any other subject (a check made
+  on another's behalf) and any request without a token resolve through `getFor`. The
+  batch check reads the same source (`AuthorizationCheckRequest.grants`);
+- **delegation**: `buildActorContext` exposes that source as `ActorContext.grants`, and
+  `isSuperset(parent, child)` / `resolveJunctionGrant(bindings, options)` take the
+  actor's grants rather than re-loading them by identity, through `getActorGrants`
+  (none when the resolver is missing, so a mistake denies). A site re-loading by identity
+  would compile and silently widen, which `junction-actor-grants.spec.ts` pins per site;
+- **introspection**: `resolveIntrospectionSubject` projects `getForToken` for the token
+  it describes: the INTROSPECTED token on `POST /token/introspect`, never the caller's,
+  and the request's own on `GET /sessions/@me/introspect`. A local
+  `createAuthorizationEvaluator` therefore reaches the server's verdict.
 
-- **evaluation**: `RequestPermissionEvaluator` stamps `tokenClientId` on every
-  `Permission*Context`, `PermissionEvaluator` forwards it into the policy context in
-  `evaluate` AND `compile`, and the binding evaluator hands it to `getFor`. The batch
-  check inherits it through `decorate`;
-- **delegation**: `buildActorContext` copies it onto `ActorContext`, and the junction
-  services pass `actor.tokenClientId` to `isSuperset` / `resolveJunctionGrant`, so a
-  Y token cannot assign a role or propagate a grant held only through X. A literal `null`
-  would still compile there, which `junction-token-client.spec.ts` pins per site;
-- **introspection**: `POST /token/introspect` narrows by the INTROSPECTED token's
-  `client_id`, never by the caller's, and `GET /sessions/@me/introspect` by the request's
-  own. A local `createAuthorizationEvaluator` therefore reaches the server's verdict.
-
-The access token's `realm_access` / `global_access` claims are narrowed by the same rule.
+The access token's `realm_access` / `global_access` claims apply the same rule to roles.
 A grant minting from an existing token must copy its `client_id` (refresh and MFA
 completion do; the device grant binds the device's own client). Open, and stated rather
 than guarded:

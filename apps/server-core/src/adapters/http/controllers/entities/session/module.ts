@@ -37,9 +37,9 @@ import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestClientId,
     useRequestIdentity,
     useRequestSessionId,
+    useRequestTokenPayload,
 } from '../../../request/index.ts';
 import { EntityType, IdentityType } from '@authup/core-kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
@@ -96,10 +96,9 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * The permission read is narrowed by the request's own token client
-     * (#3597), the value its request evaluation is narrowed by: the bearer's
-     * `client_id`, or none for the console cookie. Never a caller-chosen value
-     * and never the subject's `clientId`.
+     * The permissions are the grants the request's own token carries (#3597),
+     * what its request evaluation reads: narrowed to the bearer's client, not
+     * narrowed for the console cookie.
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
@@ -135,10 +134,12 @@ export class SessionController {
             identityPermissionProvider: this.identityPermissionProvider,
             logger: this.logger,
         }, {
-            sub: identity.id,
-            subKind: identity.type,
+            token: {
+                sub: identity.id,
+                sub_kind: identity.type,
+                client_id: useRequestTokenPayload(event)?.client_id,
+            },
             active: true,
-            tokenClientId: useRequestClientId(event),
         });
 
         return {

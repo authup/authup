@@ -6,10 +6,11 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IdentityPolicyData, IdentityTokenOptions, PermissionPolicyBinding } from '@authup/access';
+import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
+    IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
 } from '../../../../src/core/identity/permission/types.ts';
@@ -41,27 +42,29 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionScope = scope;
     }
 
-    public tokenOptions: IdentityTokenOptions[] = [];
+    /**
+     * The actor grants each delegation call was handed, in call order.
+     */
+    public delegatedGrants: PermissionPolicyBinding[][] = [];
 
-    async getFor(_identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<PermissionPolicyBinding[]> {
-        this.tokenOptions.push(options);
+    async getFor(_identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
         return this.bindings;
     }
 
-    async isSuperset(
-        _parent: IdentityPolicyData,
-        _child: IdentityPolicyData,
-        options: IdentityTokenOptions,
-    ): Promise<boolean> {
-        this.tokenOptions.push(options);
+    async getForToken(_token: IdentityToken): Promise<PermissionPolicyBinding[]> {
+        return this.bindings;
+    }
+
+    async isSuperset(parent: PermissionPolicyBinding[], _child: IdentityPolicyData): Promise<boolean> {
+        this.delegatedGrants.push(parent);
         return this.supersetResult;
     }
 
     async resolveJunctionGrant(
-        _identity: IdentityPolicyData,
-        options: ResolveJunctionPolicyOptions,
+        bindings: PermissionPolicyBinding[],
+        _options: ResolveJunctionPolicyOptions,
     ): Promise<ResolveJunctionGrantResult> {
-        this.tokenOptions.push({ tokenClientId: options.tokenClientId });
+        this.delegatedGrants.push(bindings);
         return {
             policy: this.junctionPolicy,
             realmScope: this.junctionScope,

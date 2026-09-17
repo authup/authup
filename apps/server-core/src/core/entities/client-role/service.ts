@@ -142,16 +142,12 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
 
         if (validated.role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
-                {
-                    type: actor.identity.type,
-                    id: actor.identity.data.id,
-                },
+                await this.getActorGrants(actor),
                 {
                     type: 'role',
                     id: validated.roleId,
                     clientId: validated.role.clientId,
                 },
-                { tokenClientId: actor.tokenClientId ?? null },
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

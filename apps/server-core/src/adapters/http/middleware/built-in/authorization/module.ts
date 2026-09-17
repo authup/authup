@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionEvaluator } from '@authup/access';
+import type { IPermissionProvider, PermissionPolicyBinding } from '@authup/access';
 import { PermissionEvaluator } from '@authup/access';
 import type { Client, Session, User } from '@authup/core-kit';
 import {
@@ -41,23 +41,27 @@ import {
 } from '../../../../../core/index.ts';
 import type {
     ICredentialsAuthenticator,
+    IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2TokenVerifier,
     ISessionManager,
     ISessionRepository,
 } from '../../../../../core/index.ts';
+import type { RequestGrantsResolver } from '../../../request/index.ts';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
     extractClientCertificateEvidence,
     isSameOriginRequest,
-    setRequestClientId,
+    setRequestGrantsResolver,
     setRequestIdentity,
     setRequestMfaLoginTicket,
     setRequestPermissionEvaluator,
     setRequestScopes,
     setRequestSessionId,
     setRequestToken,
+    setRequestTokenPayload,
+    useRequestTokenPayload,
 } from '../../../request/index.ts';
 import { isOAuth2IssuancePath } from './issuance.ts';
 import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types.ts';
@@ -71,7 +75,9 @@ export class AuthorizationMiddleware {
 
     protected oauth2TokenVerifier: IOAuth2TokenVerifier;
 
-    protected permissionEvaluator: IPermissionEvaluator;
+    protected permissionProvider: IPermissionProvider;
+
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     // --------------------------------------
 
@@ -104,12 +110,8 @@ export class AuthorizationMiddleware {
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
-        this.permissionEvaluator = new PermissionEvaluator({
-            provider: ctx.permissionProvider,
-            policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
-            realmId: null,
-            clientId: null,
-        });
+        this.permissionProvider = ctx.permissionProvider;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     // --------------------------------------
@@ -134,9 +136,19 @@ export class AuthorizationMiddleware {
     }
 
     protected async runInner(event: IAppEvent): Promise<void> {
+        // Per request, because what a subject holds depends on the token it
+        // presents (#3597): the evaluator reads the request's grants.
+        const grants = this.createGrantsResolver(event);
+        setRequestGrantsResolver(event, grants);
+
         const requestAccessContext = new RequestPermissionEvaluator(
             event,
-            this.permissionEvaluator,
+            new PermissionEvaluator({
+                provider: this.permissionProvider,
+                policyEngine: new PolicyEngine({ getFor: grants }),
+                realmId: null,
+                clientId: null,
+            }),
         );
         setRequestPermissionEvaluator(event, requestAccessContext);
 
@@ -162,6 +174,25 @@ export class AuthorizationMiddleware {
         }
 
         throw AuthHeaderError.unsupportedType(header.type);
+    }
+
+    /**
+     * The request's own subject holds what its token carries, resolved once;
+     * any other subject (a check made on another's behalf) and any request
+     * without a token resolve as themselves.
+     */
+    protected createGrantsResolver(event: IAppEvent): RequestGrantsResolver {
+        let tokenGrants : Promise<PermissionPolicyBinding[]> | undefined;
+
+        return (identity) => {
+            const token = useRequestTokenPayload(event);
+            if (token && token.sub === identity.id && token.sub_kind === identity.type) {
+                tokenGrants = tokenGrants || this.identityPermissionProvider.getForToken(token);
+                return tokenGrants;
+            }
+
+            return this.identityPermissionProvider.getFor(identity);
+        };
     }
 
     /**
@@ -319,12 +350,6 @@ export class AuthorizationMiddleware {
             setRequestScopes(event, deserializeOAuth2Scope(payload.scope));
         }
 
-        // Like the scope, a property of the CREDENTIAL: only a signed claim
-        // may set it, so no other branch of this middleware writes it.
-        if (payload.client_id) {
-            setRequestClientId(event, payload.client_id);
-        }
-
         // -------------------------------------------------------
 
         if (!payload.session_id) {
@@ -363,6 +388,7 @@ export class AuthorizationMiddleware {
 
         if (identity) {
             setRequestIdentity(event, identity);
+            setRequestTokenPayload(event, payload);
         }
     }
 

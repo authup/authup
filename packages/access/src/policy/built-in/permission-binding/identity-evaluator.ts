@@ -19,11 +19,10 @@ import { BuiltInPolicyType } from '../constants';
 import type { IdentityPolicyData } from '../identity';
 import { IdentityPolicyEvaluator } from '../identity';
 import { RealmMatchPolicyEvaluator } from '../realm-match';
-import type { IdentityTokenOptions } from './types';
 import { PermissionBindingPolicyValidator } from './validator';
 
 type IdentityPermissionProvider = {
-    getFor(identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<PermissionPolicyBinding[]>,
+    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>,
 };
 
 export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -97,8 +96,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             };
         }
 
-        const identityBindings = await this.identityPermissionProvider
-            .getFor(identity, { tokenClientId: ctx.tokenClientId ?? null })
+        const identityBindings = await this.identityPermissionProvider.getFor(identity)
             .then((bindings) => bindings.filter((item) => {
                 if (item.permission.name !== binding.permission.name) {
                     return false;

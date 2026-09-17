@@ -8,21 +8,16 @@
 import type { Policy } from '@authup/core-kit';
 import type {
     IdentityPolicyData,
-    IdentityTokenOptions,
     PermissionPolicyBinding,
     RealmScope,
 } from '@authup/access';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
 import type { IIdentityRoleProvider } from '../role/types.ts';
 
-/**
- * `tokenClientId` is the ACTOR's token client, so the grant is
- * selected from the grants the actor's own gates evaluated (#3597). `clientId`
- * selects the permission definition.
- */
-export type ResolveJunctionPolicyOptions = IdentityTokenOptions & {
+export type ResolveJunctionPolicyOptions = {
     name: string;
     realmId?: string | null;
     clientId?: string | null;
@@ -49,13 +44,21 @@ export type ResolveJunctionGrantResult = {
     realmScope: `${RealmScope}`;
 };
 
+/**
+ * The part of a token its grants are resolved from: whose it is, and the
+ * client it was issued to.
+ */
+export type IdentityToken = Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'client_id'>;
+
 export interface IIdentityPermissionProvider {
-    getFor(identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<PermissionPolicyBinding[]>;
+    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
+    getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]>;
     /**
-     * `options` describe the PARENT's token; the child is resolved under none.
+     * `parent` is the actor's own grants, as the request resolved them, so an
+     * assignment is checked against exactly what the actor's gates evaluated.
      */
-    isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData, options: IdentityTokenOptions): Promise<boolean>;
-    resolveJunctionGrant(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
+    isSuperset(parent: PermissionPolicyBinding[], child: IdentityPolicyData): Promise<boolean>;
+    resolveJunctionGrant(bindings: PermissionPolicyBinding[], options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 
 export type IdentityPermissionProviderContext = {

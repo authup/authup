@@ -10,7 +10,6 @@ import type {
     AuthorizationCheckPermissions,
     IPermissionEvaluator,
     IdentityPolicyData,
-    IdentityTokenOptions,
     PermissionPolicyBinding,
 } from '@authup/access';
 import {
@@ -127,10 +126,8 @@ export async function buildAuthorizationCheck(
     policyEngine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator({
-            // one memo for the whole request is sound: `decorate` stamps the
-            // same identity and token client (#3597) on every evaluation
-            getFor: (identity: IdentityPolicyData, options: IdentityTokenOptions) => {
-                grants = grants || ctx.identityPermissionProvider.getFor(identity, options);
+            getFor: (identity: IdentityPolicyData) => {
+                grants = grants || request.grants(identity);
 
                 return grants;
             },

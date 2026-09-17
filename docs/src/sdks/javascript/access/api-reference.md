@@ -9,15 +9,7 @@ import { PermissionEvaluationOptions, PolicyData } from '@authup/access';
 export type PermissionEvaluationContext = {
     name: string | string[],
     realmId?: string | null,
-    /**
-     * Selects the permission DEFINITION owned by this client.
-     */
     clientId?: string | null,
-    /**
-     * The client the evaluated token was issued to, which narrows the
-     * identity's grants. Not the definition selector `clientId`.
-     */
-    tokenClientId?: string | null,
     data?: PolicyData,
     options?: PermissionEvaluationOptions
 };
@@ -112,8 +104,7 @@ export type IdentityPolicyData = {
      */
     id: string,
     /**
-     * The SUBJECT's own client: a client's id, a role's owner. Never the
-     * client a token was issued to (`IdentityTokenOptions`).
+     * Client associated with identity.
      */
     clientId?: string | null,
     /**

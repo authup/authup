@@ -92,9 +92,10 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         const roles = await this.identityRoleProvider.getRolesFor({
             type: input.sub_kind,
             id: input.sub,
+            clientId: input.client_id,
             realmId: input.realm_id,
             realmName: input.realm_name,
-        }, { tokenClientId: input.client_id ?? null });
+        });
 
         const realmRoles: string[] = [];
         const globalRoles: string[] = [];

@@ -6,11 +6,11 @@
  */
 
 import type { Role } from '@authup/core-kit';
-import type { IdentityPolicyData, IdentityTokenOptions } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
 import type { IIdentityRoleProvider } from '../../../../src/core/identity/role/types.ts';
 
 export class FakeIdentityRoleProvider implements IIdentityRoleProvider {
-    public getRolesForCalls: { identity: IdentityPolicyData, options: IdentityTokenOptions }[] = [];
+    public getRolesForCalls: IdentityPolicyData[] = [];
 
     constructor(private roles: Role[] = []) {}
 
@@ -18,8 +18,8 @@ export class FakeIdentityRoleProvider implements IIdentityRoleProvider {
         this.roles = roles;
     }
 
-    async getRolesFor(identity: IdentityPolicyData, options: IdentityTokenOptions): Promise<Role[]> {
-        this.getRolesForCalls.push({ identity, options });
+    async getRolesFor(identity: IdentityPolicyData): Promise<Role[]> {
+        this.getRolesForCalls.push(identity);
         return this.roles;
     }
 }

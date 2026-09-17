@@ -50,7 +50,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 ],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(false);
         });
 
@@ -69,7 +69,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 ],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(true);
         });
 
@@ -79,7 +79,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_read' }, realmScope: RealmScope.ANY }],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(false);
         });
 
@@ -89,7 +89,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_read' } }, { permission: { name: 'user_write' } }],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(false);
         });
 
@@ -100,7 +100,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_update' }, policies: [policyOther] }],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(false);
         });
 
@@ -110,7 +110,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_update' }, policies: [policy] }],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(true);
         });
 
@@ -135,7 +135,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 }],
             });
 
-            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' }, { tokenClientId: null });
+            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
             expect(result).toBe(true);
         });
     });
@@ -157,12 +157,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             // The actor genuinely holds (own, no-policy), so an own-scoped junction must stay
             // ungated — it must NOT inherit the wider (any, policy) grant's policy (the #3160 bug).
             const result = await mixedActor().resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.OWN, 
-                    tokenClientId: null, 
-                },
+                await mixedActor().getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.OWN },
             );
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
@@ -171,12 +167,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         it('selects the wider policy-bound grant when the request needs its reach', async () => {
             // Reaching `any` is only possible via the (any, policy) grant, so its policy rides along.
             const result = await mixedActor().resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.ANY, 
-                    tokenClientId: null, 
-                },
+                await mixedActor().getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.ANY },
             );
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy?.id).toBe('policy-1');
@@ -184,8 +176,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
 
         it('defaults the request to own when no realmScope option is given', async () => {
             const result = await mixedActor().resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                { name: 'user_read', tokenClientId: null },
+                await mixedActor().getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read' },
             );
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
@@ -204,12 +196,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await provider.resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.ANY, 
-                    tokenClientId: null, 
-                },
+                await provider.getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.ANY },
             );
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy).toBeUndefined();
@@ -218,7 +206,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         it('defaults to own when the actor holds no matching grant', async () => {
             const provider = createProvider({ actor: [] });
 
-            const result = await provider.resolveJunctionGrant({ type: 'role', id: 'actor' }, { name: 'user_read', tokenClientId: null });
+            const result = await provider.resolveJunctionGrant(await provider.getFor({ type: 'role', id: 'actor' }), { name: 'user_read' });
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
@@ -237,12 +225,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await provider.resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.ANY, 
-                    tokenClientId: null, 
-                },
+                await provider.getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.ANY },
             );
             expect(result.realmScope).toBe(RealmScope.NONE);
             expect(result.policy).toBeUndefined();
@@ -281,20 +265,12 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const a = await forward.resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.ANY, 
-                    tokenClientId: null, 
-                },
+                await forward.getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.ANY },
             );
             const b = await reverse.resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.ANY, 
-                    tokenClientId: null, 
-                },
+                await reverse.getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.ANY },
             );
 
             expect(a.policy?.id).toBe('policy-1');
@@ -316,12 +292,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await provider.resolveJunctionGrant(
-                { type: 'role', id: 'actor' },
-                {
-                    name: 'user_read', 
-                    realmScope: RealmScope.OWN, 
-                    tokenClientId: null, 
-                },
+                await provider.getFor({ type: 'role', id: 'actor' }),
+                { name: 'user_read', realmScope: RealmScope.OWN },
             );
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
@@ -329,17 +301,14 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
     });
 });
 
-describe('core/identity/permission — token client narrowing (#3597)', () => {
+describe('core/identity/permission — the grants a token carries (#3597)', () => {
     const X = '9a3b1ee1-7c4f-4e33-8d1e-2f7b1a6c0001';
     const Z = '9a3b1ee1-7c4f-4e33-8d1e-2f7b1a6c0002';
 
-    // A user holding a global permission, one owned by X and one owned by Z directly;
-    // a GLOBAL role carrying the same spread; a role owned by Z carrying a global one.
+    // A user holding a global permission, one owned by X and one owned by Z
+    // directly; a GLOBAL role carrying the same spread; a role owned by Z
+    // carrying a global permission.
     function createUserProvider(childBindings: PermissionPolicyBinding[] = []) {
-        const roles = [
-            { id: 'r-global', clientId: null },
-            { id: 'r-z', clientId: Z },
-        ];
         const roleBindings: Record<string, PermissionPolicyBinding[]> = {
             'r-global': [
                 { permission: { name: 'q', clientId: null } },
@@ -355,7 +324,10 @@ describe('core/identity/permission — token client narrowing (#3597)', () => {
                 { permission: { name: 'p_x', clientId: X } },
                 { permission: { name: 'p_z', clientId: Z } },
             ],
-            getBoundRoles: async () => roles,
+            getBoundRoles: async () => [
+                { id: 'r-global', clientId: null },
+                { id: 'r-z', clientId: Z },
+            ],
         };
 
         return new IdentityPermissionProvider({
@@ -363,7 +335,7 @@ describe('core/identity/permission — token client narrowing (#3597)', () => {
             clientRepository: {} as any,
             roleRepository: {
                 getBoundPermissions: async () => childBindings,
-                getBoundPermissionsForMany: async (input: { id: string }[]) => input.flatMap((r) => roleBindings[r.id] ?? []),
+                getBoundPermissionsForMany: async (roles: { id: string }[]) => roles.flatMap((role) => roleBindings[role.id] ?? []),
             } as any,
             roleProvider: new IdentityRoleProvider({
                 userRepository: userRepository as any,
@@ -375,7 +347,11 @@ describe('core/identity/permission — token client narrowing (#3597)', () => {
     const names = (bindings: PermissionPolicyBinding[]) => bindings.map((b) => b.permission.name).sort();
 
     it('keeps unowned grants plus the token client\'s, direct and role-derived', async () => {
-        const result = await createUserProvider().getFor({ type: 'user', id: 'u' }, { tokenClientId: X });
+        const result = await createUserProvider().getForToken({
+            sub: 'u', 
+            sub_kind: 'user', 
+            client_id: X, 
+        });
 
         // `g` and `q` surviving pins the equality regression: a client on the
         // token must never drop the global catalogue.
@@ -383,59 +359,38 @@ describe('core/identity/permission — token client narrowing (#3597)', () => {
     });
 
     it('keeps a role owned by the token client, with the global permissions it carries', async () => {
-        const result = await createUserProvider().getFor({ type: 'user', id: 'u' }, { tokenClientId: Z });
+        const result = await createUserProvider().getForToken({
+            sub: 'u', 
+            sub_kind: 'user', 
+            client_id: Z, 
+        });
+
         expect(names(result)).toEqual(['g', 'p_z', 'q', 'q_z', 'r']);
     });
 
-    it('narrows nothing for a request without a token client', async () => {
-        const result = await createUserProvider().getFor({ type: 'user', id: 'u' }, { tokenClientId: null });
-        expect(names(result)).toEqual(['g', 'p_x', 'p_z', 'q', 'q_x', 'q_z', 'r']);
-    });
-
-    it('never reads the subject\'s own clientId as the token client', async () => {
-        const result = await createUserProvider().getFor(
-            {
-                type: 'user', 
-                id: 'u', 
-                clientId: X, 
-            },
-            { tokenClientId: null },
-        );
-        expect(names(result)).toEqual(['g', 'p_x', 'p_z', 'q', 'q_x', 'q_z', 'r']);
-    });
-
-    it('resolves the superset parent under the token client and the child role without one', async () => {
-        // The child role carries `r`, which the user holds only through the Z-owned role.
-        const provider = createUserProvider([{ permission: { name: 'r', clientId: null } }]);
-        const parent = { type: 'user', id: 'u' };
-        const child = { type: 'role', id: 'child' };
-
-        await expect(provider.isSuperset(parent, child, { tokenClientId: X })).resolves.toBe(false);
-        await expect(provider.isSuperset(parent, child, { tokenClientId: Z })).resolves.toBe(true);
-        await expect(provider.isSuperset(parent, child, { tokenClientId: null })).resolves.toBe(true);
-    });
-
-    it('selects a junction grant only from grants the token reaches', async () => {
+    it('narrows nothing for a token issued to no client', async () => {
         const provider = createUserProvider();
 
-        const underX = await provider.resolveJunctionGrant(
-            { type: 'user', id: 'u' },
-            {
-                name: 'r', 
-                realmScope: RealmScope.ANY, 
-                tokenClientId: X, 
-            },
-        );
-        expect(underX.realmScope).toBe(RealmScope.OWN);
+        expect(names(await provider.getForToken({ sub: 'u', sub_kind: 'user' })))
+            .toEqual(names(await provider.getFor({ type: 'user', id: 'u' })));
+    });
 
-        const underZ = await provider.resolveJunctionGrant(
-            { type: 'user', id: 'u' },
-            {
-                name: 'r', 
-                realmScope: RealmScope.ANY, 
-                tokenClientId: Z, 
-            },
-        );
-        expect(underZ.realmScope).toBe(RealmScope.ANY);
+    it('lets a delegation check see only what the token carries', async () => {
+        // The child role carries `r`, which the user holds only through the Z-owned role.
+        const provider = createUserProvider([{ permission: { name: 'r', clientId: null } }]);
+        const child = { type: 'role', id: 'child' };
+
+        await expect(provider.isSuperset(await provider.getForToken({
+            sub: 'u', 
+            sub_kind: 'user', 
+            client_id: X, 
+        }), child))
+            .resolves.toBe(false);
+        await expect(provider.isSuperset(await provider.getForToken({
+            sub: 'u', 
+            sub_kind: 'user', 
+            client_id: Z, 
+        }), child))
+            .resolves.toBe(true);
     });
 });

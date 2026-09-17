@@ -6,10 +6,9 @@
  */
 
 import type { Role } from '@authup/core-kit';
-import type { IdentityPolicyData, IdentityTokenOptions } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
-import { appliesThroughTokenClient } from '../permission/token-client.ts';
 import type { IIdentityRoleProvider, IdentityRoleProviderContext } from './types.ts';
 
 export class IdentityRoleProvider implements IIdentityRoleProvider {
@@ -22,18 +21,35 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
         this.userRepository = ctx.userRepository;
     }
 
-    async getRolesFor(identity: IdentityPolicyData, options: IdentityTokenOptions) : Promise<Role[]> {
+    async getRolesFor(identity: IdentityPolicyData) : Promise<Role[]> {
         switch (identity.type) {
             case 'client': {
                 return this.clientRepository.getBoundRoles(identity.id);
             }
             case 'user': {
-                const roles = await this.userRepository.getBoundRoles(identity.id);
-
-                return roles.filter((role) => appliesThroughTokenClient(role.clientId, options.tokenClientId));
+                return this.userRepository.getBoundRoles(identity.id)
+                    .then((data) => this.reduceByIdentityClient(data, identity));
             }
         }
 
         return [];
+    }
+
+    private reduceByIdentityClient<T extends { clientId?: string | null }>(
+        entities: T[],
+        identity: IdentityPolicyData,
+    ): T[] {
+        if (!identity.clientId) {
+            return entities;
+        }
+
+        // Keep client-agnostic (global / realm) roles — clientId null — in
+        // addition to roles scoped to the authenticating client. Dropping the
+        // null case stripped every global/realm role from a token issued via
+        // a real client (e.g. the per-realm `web` client used by the
+        // realm-selection login), leaving permissions/roles empty.
+        return entities.filter(
+            (entity) => !entity.clientId || entity.clientId === identity.clientId,
+        );
     }
 }

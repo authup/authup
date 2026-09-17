@@ -251,13 +251,13 @@ export class TokenController {
                 identityPermissionProvider: this.identityPermissionProvider,
                 logger: this.logger,
             }, {
-                sub: payload.sub,
-                subKind: payload.sub_kind,
+                token: {
+                    sub: payload.sub,
+                    sub_kind: payload.sub_kind,
+                    // the INTROSPECTED token's client, never the caller's
+                    client_id: payload.client_id,
+                },
                 active,
-                // the INTROSPECTED token's client, never the caller's: a resource
-                // server introspecting on its own behalf must see what this
-                // token may do
-                tokenClientId: payload.client_id ?? null,
             });
 
             if (!active) {

@@ -19,14 +19,15 @@ import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permiss
 
 /**
  * Every junction service delegates the ACTOR's grants (#3597), so each one must
- * resolve them under the actor's token client. The parameter is required,
- * which keeps an omission from compiling, but a literal `null` would compile
- * and silently let a token issued to one client delegate another client's
- * grants: this table is what catches that, one row per call site.
+ * check the grants the actor's request resolved, which for a token are the
+ * grants that token carries. Resolving them afresh from the actor's identity
+ * would compile just as well and silently let a token issued to one client
+ * delegate another client's grants: this table catches that, one row per call
+ * site.
  */
-describe('core/entities (junction delegation resolves under the actor token client)', () => {
-    const tokenClientId = randomUUID();
-    const actor = () => ({ ...createMasterRealmActor(), tokenClientId });
+describe('core/entities (junction delegation checks the actor grants)', () => {
+    const grants = [{ permission: { name: 'custom_perm', clientId: randomUUID() } }];
+    const actor = () => ({ ...createMasterRealmActor(), grants: async () => grants });
 
     type Case = [string, (provider: FakeIdentityPermissionProvider) => Promise<unknown>];
 
@@ -121,6 +122,7 @@ describe('core/entities (junction delegation resolves under the actor token clie
 
         await run(provider);
 
-        expect(provider.tokenOptions).toEqual([{ tokenClientId }]);
+        expect(provider.delegatedGrants).toEqual([grants]);
+        expect(provider.delegatedGrants[0]).toBe(grants);
     });
 });

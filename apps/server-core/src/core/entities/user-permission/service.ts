@@ -157,16 +157,12 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         if (validated.permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                {
-                    type: actor.identity.type,
-                    id: actor.identity.data.id,
-                },
+                await this.getActorGrants(actor),
                 {
                     name: validated.permission.name,
                     realmId: validated.permission.realmId,
                     clientId: validated.permission.clientId,
                     realmScope: validated.realmScope ?? RealmScope.OWN,
-                    tokenClientId: actor.tokenClientId ?? null,
                 },
             );
 
@@ -217,13 +213,12 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         let actorPolicyId: string | null = null;
         if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                { type: actor.identity.type, id: actor.identity.data.id },
+                await this.getActorGrants(actor),
                 {
                     name: permission.name,
                     realmId: permission.realmId,
                     clientId: permission.clientId,
                     realmScope: validated.realmScope ?? entity.realmScope,
-                    tokenClientId: actor.tokenClientId ?? null,
                 },
             );
             actorScope = grant.realmScope;

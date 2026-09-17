@@ -19,6 +19,5 @@ export function definePolicyEvaluationContext(
         exclude: input.exclude || [],
         withConditions: input.withConditions ?? false,
         realmAttributeName: input.realmAttributeName,
-        tokenClientId: input.tokenClientId,
     };
 }

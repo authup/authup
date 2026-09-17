@@ -9,7 +9,6 @@ import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } f
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
-import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import type {
     OAuth2IntrospectionSubject,
@@ -34,12 +33,10 @@ import type {
  * the server itself fails such a grant closed, and naming it would read as a
  * stale catalog to every consumer.
  *
- * The projection runs over the RESOLVED identity (`toIdentityPolicyData`) plus
- * the token's client as a separate input, exactly as a request does, so
- * both endpoints report what the server's own evaluator resolves for that
- * token: a user's grants owned by another client are withheld (#3597).
- * The client never goes into the subject's `clientId`, which a role reads as
- * its owner; an equality there once dropped every global grant.
+ * The projection is the grants the token carries (`getForToken`), exactly what
+ * a request made with it evaluates, so both endpoints report what the server's
+ * own evaluator resolves: a user's grants owned by another client are absent
+ * (#3597).
  *
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
@@ -47,7 +44,7 @@ export async function resolveIntrospectionSubject(
     ctx: OAuth2IntrospectionSubjectContext,
     input: OAuth2IntrospectionSubjectInput,
 ) : Promise<OAuth2IntrospectionSubject> {
-    const identity = await ctx.identityResolver.resolve(input.subKind, input.sub);
+    const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
     if (!identity) {
         // todo: differentiate between client & user
         throw OAuth2RequestError.identityInvalid();
@@ -63,10 +60,7 @@ export async function resolveIntrospectionSubject(
         };
     }
 
-    const bindings = await ctx.identityPermissionProvider.getFor(
-        toIdentityPolicyData(identity)!,
-        { tokenClientId: input.tokenClientId },
-    );
+    const bindings = await ctx.identityPermissionProvider.getForToken(input.token);
 
     const permissions : OAuth2TokenPermission[] = [];
     for (const binding of bindings) {

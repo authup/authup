@@ -8,12 +8,10 @@
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import type { IdentityTokenOptions, PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
-    PermissionEvaluator,
-    PermissionMemoryProvider,
     PolicyDefaultEvaluators,
     PolicyEngine,
     definePolicyData,
@@ -199,65 +197,5 @@ describe('identity permission binding compilation', () => {
         expect(entity.condition).toBeDefined();
         const predicate = compileFilters(entity.condition! as IFilter | IFilters, { caseSensitive: true });
         expect(predicate({ realmId: identity.realmId })).toBeTruthy();
-    });
-
-    // The grant provider narrows a user's grants to the client the token was
-    // issued to (#3597), so that value must reach it from EVERY entry point, not
-    // only from compile() the way realmAttributeName does.
-    it('forwards the token client to the grant provider from every entry point', async () => {
-        const seen : IdentityTokenOptions[] = [];
-        const engine = new PolicyEngine({
-            ...PolicyDefaultEvaluators,
-            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator({
-                getFor: async (_identity, options) => {
-                    seen.push(options);
-                    return [{ permission, realmScope: 'any' }];
-                },
-            }),
-        });
-        const evaluator = new PermissionEvaluator({
-            provider: new PermissionMemoryProvider([{
-                permission,
-                policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
-            }]),
-            policyEngine: engine,
-        });
-        const data = () => definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity });
-
-        await evaluator.evaluate({
-            name: permission.name, 
-            data: data(), 
-            tokenClientId: 'x', 
-        });
-        await evaluator.evaluateOneOf({
-            name: permission.name, 
-            data: data(), 
-            tokenClientId: 'x', 
-        });
-        await evaluator.preEvaluate({
-            name: permission.name, 
-            data: data(), 
-            tokenClientId: 'x', 
-        });
-        await evaluator.preEvaluateOneOf({
-            name: permission.name, 
-            data: data(), 
-            tokenClientId: 'x', 
-        });
-        await evaluator.compile({
-            name: permission.name, 
-            data: data(), 
-            tokenClientId: 'x', 
-        });
-        await evaluator.evaluate({ name: permission.name, data: data() });
-
-        expect(seen).toEqual([
-            { tokenClientId: 'x' },
-            { tokenClientId: 'x' },
-            { tokenClientId: 'x' },
-            { tokenClientId: 'x' },
-            { tokenClientId: 'x' },
-            { tokenClientId: null },
-        ]);
     });
 });
