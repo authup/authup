@@ -54,10 +54,11 @@ export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
     getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]>;
     /**
-     * `parent` is the actor's own grants, as the request resolved them, so an
-     * assignment is checked against exactly what the actor's gates evaluated.
+     * Whether `parent` covers every grant in `child`. A caller passes the
+     * actor's own grants as its request resolved them, so an assignment is
+     * checked against exactly what the actor's gates evaluated.
      */
-    isSuperset(parent: PermissionPolicyBinding[], child: IdentityPolicyData): Promise<boolean>;
+    isSuperset(parent: PermissionPolicyBinding[], child: PermissionPolicyBinding[]): Promise<boolean>;
     resolveJunctionGrant(bindings: PermissionPolicyBinding[], options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 

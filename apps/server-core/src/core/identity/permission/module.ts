@@ -48,9 +48,9 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         this.roleProvider = ctx.roleProvider;
     }
 
-    async isSuperset(parent: PermissionPolicyBinding[], child: IdentityPolicyData) : Promise<boolean> {
+    async isSuperset(parent: PermissionPolicyBinding[], child: PermissionPolicyBinding[]) : Promise<boolean> {
         const parentAggregated = aggregatePermissionPolicyBindings(parent);
-        const childAggregated = aggregatePermissionPolicyBindings(await this.getFor(child));
+        const childAggregated = aggregatePermissionPolicyBindings(child);
 
         for (const childItem of childAggregated) {
             const parentItem = parentAggregated.find(

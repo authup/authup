@@ -143,11 +143,11 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         if (validated.role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
                 await this.getActorGrants(actor),
-                {
+                await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: validated.roleId,
                     clientId: validated.role.clientId,
-                },
+                }),
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

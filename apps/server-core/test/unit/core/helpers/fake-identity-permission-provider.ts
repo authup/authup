@@ -61,7 +61,7 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         return this.bindings;
     }
 
-    async isSuperset(parent: PermissionPolicyBinding[], _child: IdentityPolicyData): Promise<boolean> {
+    async isSuperset(parent: PermissionPolicyBinding[], _child: PermissionPolicyBinding[]): Promise<boolean> {
         this.delegatedGrants.push(parent);
         return this.supersetResult;
     }

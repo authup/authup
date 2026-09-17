@@ -30,6 +30,13 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
     });
 }
 
+async function isRoleSuperset(provider: IdentityPermissionProvider) {
+    return provider.isSuperset(
+        await provider.getFor({ type: 'role', id: 'parent' }),
+        await provider.getFor({ type: 'role', id: 'child' }),
+    );
+}
+
 const policy = { id: 'policy-1', type: BuiltInPolicyType.IDENTITY } as any;
 const policyOther = { id: 'policy-2', type: BuiltInPolicyType.ATTRIBUTES } as any;
 
@@ -50,7 +57,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 ],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(false);
         });
 
@@ -69,7 +76,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 ],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(true);
         });
 
@@ -79,7 +86,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_read' }, realmScope: RealmScope.ANY }],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(false);
         });
 
@@ -89,7 +96,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_read' } }, { permission: { name: 'user_write' } }],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(false);
         });
 
@@ -100,7 +107,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_update' }, policies: [policyOther] }],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(false);
         });
 
@@ -110,7 +117,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: [{ permission: { name: 'user_update' }, policies: [policy] }],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(true);
         });
 
@@ -135,7 +142,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 }],
             });
 
-            const result = await provider.isSuperset(await provider.getFor({ type: 'role', id: 'parent' }), { type: 'role', id: 'child' });
+            const result = await isRoleSuperset(provider);
             expect(result).toBe(true);
         });
     });
@@ -409,13 +416,13 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
             sub: 'u', 
             sub_kind: 'user', 
             client_id: X, 
-        }), child))
+        }), await provider.getFor(child)))
             .resolves.toBe(false);
         await expect(provider.isSuperset(await provider.getForToken({
             sub: 'u', 
             sub_kind: 'user', 
             client_id: Z, 
-        }), child))
+        }), await provider.getFor(child)))
             .resolves.toBe(true);
     });
 });
