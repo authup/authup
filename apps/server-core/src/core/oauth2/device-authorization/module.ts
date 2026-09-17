@@ -189,6 +189,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         await this.repository.removeUserCode(code.user_code);
+        await this.repository.resetLookupMisses(this.buildActorKey(identity));
 
         if (!client.builtIn && this.consentService) {
             try {
@@ -229,6 +230,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         await this.repository.removeUserCode(code.user_code);
+        await this.repository.resetLookupMisses(this.buildActorKey(identity));
 
         await this.eventService?.record({
             ...this.buildClientAttribution(EventName.AUTHORIZE_FAILED, code, client, identity),
@@ -262,7 +264,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
     }
 
     protected async resolve(userCode: unknown, identity: Identity) : Promise<ResolvedDeviceCode> {
-        const actorKey = `actor:${identity.data.id}`;
+        const actorKey = this.buildActorKey(identity);
 
         let retryAfter : number | null;
         try {
@@ -309,6 +311,10 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         }
 
         return { code, client };
+    }
+
+    protected buildActorKey(identity: Identity) : string {
+        return `actor:${identity.data.id}`;
     }
 
     protected buildClientAttribution(

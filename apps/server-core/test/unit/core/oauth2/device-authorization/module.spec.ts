@@ -731,6 +731,75 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
             expect(repository.decideCalls).toHaveLength(2);
         });
+
+        it('should forgive earlier misses once the actor decided on a code', async () => {
+            await seedSession();
+            const service = buildService();
+            const identity = buildIdentity();
+            const { request } = seedCode();
+            const pending = seedCode(undefined, { user_code: 'BCDFGHJM' });
+
+            for (let i = 0; i < OAUTH2_DEVICE_LOOKUP_ATTEMPTS_PER_ACTOR - 1; i++) {
+                await expect(service.lookup('WXZB-WXZB', identity))
+                    .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+            }
+
+            await service.approve(request.user_code, identity, { sessionId: SESSION_ID });
+
+            expect(repository.resetLookupMissesCalls).toEqual([`actor:${USER_ID}`]);
+
+            let caught : unknown;
+            try {
+                await service.lookup('WXZB-WXZB', identity);
+            } catch (e) {
+                caught = e;
+            }
+
+            expect(isDeviceVerificationThrottledError(caught)).toBe(false);
+            expect(caught).toMatchObject({ code: ErrorCode.OAUTH_GRANT_INVALID });
+
+            const info = await service.lookup(pending.request.user_code, identity);
+            expect(info.scope).toEqual(pending.request.scope);
+        });
+
+        it('should forgive once per window, so a self-served decision cannot reset the throttle again', async () => {
+            await seedSession();
+            const service = buildService();
+            const identity = buildIdentity();
+            const denied = seedCode(undefined, { user_code: 'BCDFGHJM' });
+            const approved = seedCode(undefined, { user_code: 'BCDFGHJN' });
+            const pending = seedCode(undefined, { user_code: 'BCDFGHJP' });
+
+            const missNineTimes = async () => {
+                for (let i = 0; i < OAUTH2_DEVICE_LOOKUP_ATTEMPTS_PER_ACTOR - 1; i++) {
+                    await expect(service.lookup('WXZB-WXZB', identity))
+                        .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+                }
+            };
+
+            await missNineTimes();
+            await service.deny(denied.request.user_code, identity);
+
+            await missNineTimes();
+            await service.approve(approved.request.user_code, identity, { sessionId: SESSION_ID });
+
+            expect(repository.resetLookupMissesCalls).toEqual([`actor:${USER_ID}`, `actor:${USER_ID}`]);
+
+            // the tenth miss since the single forgiveness: it still answers the
+            // neutral refusal and arms the lock behind it
+            await expect(service.lookup('WXZB-WXZB', identity))
+                .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+
+            let caught : unknown;
+            try {
+                await service.lookup(pending.request.user_code, identity);
+            } catch (e) {
+                caught = e;
+            }
+
+            expect(isDeviceVerificationThrottledError(caught)).toBe(true);
+            expect(caught).toMatchObject({ code: ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED });
+        });
     });
 
     describe('deny', () => {
