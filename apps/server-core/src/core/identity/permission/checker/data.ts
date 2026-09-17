@@ -70,7 +70,10 @@ export async function buildCheckData(
 
     await actor.permissionEvaluator.evaluate({
         name: PermissionName.PERMISSION_CHECK,
-        data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null }),
+        data: new PolicyData({
+            ...(own ? { [BuiltInPolicyType.IDENTITY]: own } : {}),
+            [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null,
+        }),
     });
 
     return output;
