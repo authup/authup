@@ -375,6 +375,31 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
             .toEqual(names(await provider.getFor({ type: 'user', id: 'u' })));
     });
 
+    it('resolves a client subject as itself, whatever client_id it carries', async () => {
+        const clientBindings = [
+            { permission: { name: 'c', clientId: null } },
+            { permission: { name: 'c_z', clientId: Z } },
+        ];
+        const provider = new IdentityPermissionProvider({
+            userRepository: {} as any,
+            clientRepository: { getBoundPermissions: async () => clientBindings } as any,
+            roleRepository: { getBoundPermissionsForMany: async () => [] } as any,
+            roleProvider: { getRolesFor: async () => [] } as any,
+        });
+
+        const result = await provider.getForToken({
+            sub: 'c1', 
+            sub_kind: 'client', 
+            client_id: X, 
+        });
+
+        expect(names(result)).toEqual(['c', 'c_z']);
+    });
+
+    it('resolves nothing for a token naming no subject', async () => {
+        await expect(createUserProvider().getForToken({ client_id: X })).resolves.toEqual([]);
+    });
+
     it('lets a delegation check see only what the token carries', async () => {
         // The child role carries `r`, which the user holds only through the Z-owned role.
         const provider = createUserProvider([{ permission: { name: 'r', clientId: null } }]);

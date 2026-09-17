@@ -11,7 +11,7 @@ import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { buildPermissionCheckerData } from '../../permission/checker/data.ts';
+import { buildPermissionCheckerData, createCheckerGrantSource } from '../../permission/checker/data.ts';
 import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
@@ -32,7 +32,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
     ): Promise<void> {
         const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, input, realm);
+        await this.evaluate(idOrName, input, actor, realm);
     }
 
     async safeCheck(
@@ -45,7 +45,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, input, realm);
+            await this.evaluate(idOrName, input, actor, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -55,6 +55,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
     protected async evaluate(
         idOrName: string,
         input: Record<string, any>,
+        actor: ActorContext,
         realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
@@ -77,7 +78,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
-        const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
+        const engine = new PolicyEngine(createCheckerGrantSource(actor, this.ctx.identityPermissionProvider));
         await engine.evaluateOrFail(
             entity,
             definePolicyEvaluationContext({ data: new PolicyData(input) }),

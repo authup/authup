@@ -912,7 +912,7 @@ Service responsibility:
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
 | **Junction** | client-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realmId extraction from joins |
-| **Junction with superset check** | client-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
+| **Junction with superset check** | client-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset(await this.getActorGrants(actor), role)` in service to verify the actor's grants (as its request resolved them) cover all permissions in the target role |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
 | **Complex with self-access** | client, user | Self-edit fallback via `{ENTITY}_SELF_MANAGE` permission with ATTRIBUTE_NAMES policy, self-access detection in `getOne`, name-lock protection (user) |
@@ -3597,7 +3597,10 @@ passes the client alongside the subject. Everything else reads that one grant se
   subject resolves through `getForToken` with the verified bearer's payload
   (`useRequestTokenPayload`), memoized for the request; any other subject (a check made
   on another's behalf) and any request without a token resolve through `getFor`. The
-  batch check reads the same source (`AuthorizationCheckRequest.grants`);
+  batch check reads the same source (`AuthorizationCheckRequest.grants`), and the two
+  `POST /permissions/:id/check` and `POST /policies/:id/check` routes read the actor's
+  grants when they evaluate the actor (`createCheckerGrantSource`), a foreign subject's as
+  stored;
 - **delegation**: `buildActorContext` exposes that source as `ActorContext.grants`, and
   `isSuperset(parent, child)` / `resolveJunctionGrant(bindings, options)` take the
   actor's grants rather than re-loading them by identity, through `getActorGrants`
@@ -3613,8 +3616,12 @@ A grant minting from an existing token must copy its `client_id` (refresh and MF
 completion do; the device grant binds the device's own client). Open, and stated rather
 than guarded:
 
-- an engine built outside `RequestPermissionEvaluator` (the policy checker) resolves
-  unnarrowed;
+- the application access-policy engine (`OAuth2AccessPolicyEvaluator`) still holds the
+  bare provider; it evaluates with IDENTITY data only, so it never reads grants;
+- assigning a client-owned role checks none of the GLOBAL permissions it carries:
+  `getForRole` keeps only the permissions owned by the role's own client, an empty child
+  passes `isSuperset`, so an actor holding only `USER_ROLE_CREATE` can assign itself an
+  owned role carrying any global permission. This predates the token narrowing;
 - `POST /authorize` and device approve accept any user bearer, so a holder of a Y token
   can mint an X token for a public client X;
 - an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
@@ -3691,7 +3698,7 @@ expressed via a `policyId` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
+When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor's grants (`parent`, as its request resolved them through `getActorGrants`, so a token's grants are narrowed to its client) cover at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
 
 1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
 2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
@@ -3708,7 +3715,7 @@ An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants 
 
 When creating or updating any permission-binding junction (role-permission, user-permission, client-permission):
 
-1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realmScope ?? own` on create; `data.realmScope ?? entity.realmScope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
+1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(await this.getActorGrants(actor), { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realmScope ?? own` on create; `data.realmScope ?? entity.realmScope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
 2. It aggregates the actor's grants for that permission and selects the grant **relative to the requested reach** (`selectGrantForRequest`, #3160): each grant is ranked by the reach it can confer *for this request* — its `realmScope` capped to `realmScope` — so a lower-scoped policy-free grant beats a higher-scoped policy-bound grant when both cap to the same requested reach (highest *capped* reach, policy-free preferred on a tie). This is **not** a global "ceiling" — a mixed-grant actor (e.g. `own`+no-policy *and* `any`+policy) propagates its policy-free `own` grant for an `own` request instead of inheriting the wider grant's policy.
 3. The selected grant is returned **uncapped**; the new junction is then capped by the consumer: `realmScope = min(requested, selected.realmScope)`, and the selected grant's **own** `policy` (its `id`) is propagated as `policyId` — never the target's. (If the selected grant is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realmScope: none`. A clean lower-scoped grant covering the request avoids that fail-closed.)
 4. Returning the selected grant uncapped preserves the "only an unrestricted (`any`, policy-free) actor may set an explicit `policyId`" rule: that check reads the selected grant's uncapped `realmScope`/`policy`, so it still fires exactly when the actor genuinely holds an `any` policy-free grant.

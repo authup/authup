@@ -21,7 +21,9 @@ other client, the server withholds:
 
 This applies to:
 
-- request authorization and `POST /authorization/check`;
+- request authorization, `POST /authorization/check`, and the
+  `POST /permissions/:id/check` and `POST /policies/:id/check` routes when they
+  check the caller;
 - the `permissions` list of `POST /token/introspect`, narrowed by the
   introspected token's own client and never by the caller's;
 - the `permissions` list of `GET /sessions/@me/introspect`, narrowed by the
@@ -40,6 +42,12 @@ Check before upgrading:
   administrator binding client-scoped permissions through a downstream
   application's token, now receives `403`. Use a token issued to the owning
   client.
+- **Permissions owned by an API client, used through a separate front-end
+  client.** A user signs in through the front end, so the token carries the
+  front end's client, and the permissions the API client owns are withheld,
+  both from requests and from what `POST /token/introspect` reports to the API.
+  Own those permissions by the client the users' tokens are issued to, or leave
+  them global.
 - **The admin console hosted standalone**, and its `vite` dev server, signs in
   through the `admin-console` client, so its tokens are narrowed like any other
   client's. From there, binding another client's permissions or assigning its

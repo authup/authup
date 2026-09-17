@@ -12,7 +12,7 @@ import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { buildPermissionCheckerData } from './data.ts';
+import { buildPermissionCheckerData, createCheckerGrantSource } from './data.ts';
 import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
@@ -33,7 +33,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
     ): Promise<void> {
         const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
-        await this.evaluate(idOrName, input, realm);
+        await this.evaluate(idOrName, input, actor, realm);
     }
 
     async safeCheck(
@@ -46,7 +46,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
 
         try {
-            await this.evaluate(idOrName, input, realm);
+            await this.evaluate(idOrName, input, actor, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -56,6 +56,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
     protected async evaluate(
         idOrName: string,
         input: Record<string, any>,
+        actor: ActorContext,
         realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
@@ -89,7 +90,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         // the data already says which identity is evaluated, so nothing may re-assert it
         const evaluator = new PermissionEvaluator({
             provider: this.ctx.permissionProvider,
-            policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
+            policyEngine: new PolicyEngine(createCheckerGrantSource(actor, this.ctx.identityPermissionProvider)),
         });
 
         // the resolved row, not a global permission of the same name

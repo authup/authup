@@ -47,11 +47,17 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
      */
     public delegatedGrants: PermissionPolicyBinding[][] = [];
 
-    async getFor(_identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+    public getForCalls: IdentityPolicyData[] = [];
+
+    public getForTokenCalls: IdentityToken[] = [];
+
+    async getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+        this.getForCalls.push(identity);
         return this.bindings;
     }
 
-    async getForToken(_token: IdentityToken): Promise<PermissionPolicyBinding[]> {
+    async getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]> {
+        this.getForTokenCalls.push(token);
         return this.bindings;
     }
 

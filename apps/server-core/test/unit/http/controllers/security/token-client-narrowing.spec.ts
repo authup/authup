@@ -194,6 +194,23 @@ describe('http/controllers/security (token client narrowing)', () => {
 
             expect(holds).toEqual([true, false]);
         });
+
+        it('should answer the permission check route with the grants the token reaches', async () => {
+            const { data: roleRead } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+
+            const statuses = await Promise.all([tokens.x, tokens.y, tokens.none].map(async (token) => {
+                const response = await httpRequest(suite, 'POST', `/permissions/${roleRead.id}/check`, {
+                    headers: { ...bearer(token), 'content-type': 'application/json' },
+                    body: JSON.stringify({}),
+                });
+                expect(response.status).toEqual(202);
+
+                const body = await response.json() as { status: string };
+                return body.status;
+            }));
+
+            expect(statuses).toEqual(['success', 'error', 'success']);
+        });
     });
 
     describe('delegation', () => {
