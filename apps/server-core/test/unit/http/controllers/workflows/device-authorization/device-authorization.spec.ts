@@ -164,7 +164,7 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         return { deviceCode: body.device_code, userCode: body.user_code };
     }
 
-    async function createUserBearer(realmId?: string) : Promise<UserBearer> {
+    async function createUserBearer(realmId?: string, clientId?: string) : Promise<UserBearer> {
         const password = generateOAuth2CodeVerifier();
         const { data: user } = await suite.client.user.create(createFakeUser({
             password,
@@ -174,6 +174,7 @@ describe('src/http/controllers/workflows/device-authorization', () => {
             username: user.name,
             password,
             ...(realmId ? { realm_id: realmId } : {}),
+            ...(clientId ? { client_id: clientId } : {}),
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
@@ -485,6 +486,32 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         const pending = await poll(deviceCode, { client_id: client.id });
         expect(pending.status).toEqual(400);
         expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+    });
+
+    it('should refuse an approval presented with a token issued to a client', async () => {
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+
+        // a client that may run the password grant, so the user's token
+        // carries a client_id — which may not approve anything (#3608)
+        const other = await createPublicClient({ grantTypes: null }, []);
+        const { accessToken } = await createUserBearer(undefined, other.id);
+
+        const response = await verify('approve', accessToken, { user_code: userCode });
+        expect(response.status).toEqual(400);
+
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
+        expect(body.error).toEqual(OAuth2ErrorCode.LOGIN_REQUIRED);
+
+        // the decision was never written: the device keeps polling
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect(pending.status).toEqual(400);
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+
+        // the control: the hosted page's own login carries no client
+        const { accessToken: hosted } = await createUserBearer();
+        expect((await verify('approve', hosted, { user_code: userCode })).status).toEqual(200);
     });
 
     it('should answer the lookup with the client summary, the realm and the scope', async () => {

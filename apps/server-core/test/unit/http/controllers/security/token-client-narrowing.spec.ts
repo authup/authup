@@ -6,8 +6,10 @@
  */
 
 import type { Client, Permission, User } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, ScopeName } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
+import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
 import {
     afterAll,
     beforeAll,
@@ -41,6 +43,7 @@ describe('http/controllers/security (token client narrowing)', () => {
 
     const secret = 'token-client-secret-123';
     const password = 'token-client-password-123';
+    const redirectUri = 'https://token-client.example.com/callback';
 
     let clientX : Client;
     let clientY : Client;
@@ -66,6 +69,7 @@ describe('http/controllers/security (token client narrowing)', () => {
             secret,
             secretHashed: false,
             secretEncrypted: false,
+            redirectUri,
         });
 
         return data;
@@ -248,6 +252,55 @@ describe('http/controllers/security (token client narrowing)', () => {
 
             expect((await bind(adminY)).status).toEqual(403);
             expect((await bind(adminX)).status).toEqual(201);
+        });
+    });
+
+    /**
+     * The narrowing only holds while a token cannot be exchanged for another
+     * client's (#3608): only the user at the authorization server may authorize
+     * an application, and their token there carries no client.
+     */
+    describe('issuance', () => {
+        beforeAll(async () => {
+            const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+            await suite.client.clientScope.create({ clientId: clientX.id, scopeId: scope.id });
+        });
+
+        function authorize(token: string) {
+            return httpRequest(suite, 'POST', '/authorize', {
+                headers: { ...bearer(token), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                    client_id: clientX.id,
+                    redirect_uri: redirectUri,
+                    scope: ScopeName.GLOBAL,
+                }),
+            });
+        }
+
+        async function expectRefusal(token: string) {
+            const response = await authorize(token);
+            expect(response.status).toEqual(400);
+
+            const body = await response.json();
+            expect(body.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
+            expect(body.error).toEqual(OAuth2ErrorCode.LOGIN_REQUIRED);
+        }
+
+        it('should refuse to authorize a client with another client\'s token', async () => {
+            await expectRefusal(tokens.y);
+        });
+
+        it('should refuse to authorize a client with its own token', async () => {
+            await expectRefusal(tokens.x);
+        });
+
+        it('should issue a code for a token issued to no client', async () => {
+            const response = await authorize(tokens.none);
+            expect(response.status).toEqual(200);
+
+            const { url } = await response.json() as { url: string };
+            expect(new URL(url).searchParams.get('code')).toBeTruthy();
         });
     });
 });

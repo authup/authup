@@ -3583,9 +3583,9 @@ nothing: it is first-party, and making it global-only would stop the served cons
 Basic from binding client-owned permissions, which admin and realm_admin hold through
 auto-assignment. A bearer-mode admin console (standalone-hosted, or its vite dev server)
 holds `admin-console` tokens and IS narrowed. The system console clients are deliberately
-not exempted: they are public and auto-consenting, so with the `POST /authorize` residual
-below an exemption would hand any application un-narrowed grants. Client subjects and the
-role side of `isSuperset` (`getForRole`'s equality) are unchanged.
+not exempted: they are public and auto-consenting, so an exemption would hand any origin
+that reaches one un-narrowed grants. Client subjects and the role side of `isSuperset`
+(`getForRole`'s equality) are unchanged.
 
 **The narrowing is a property of the token, resolved once.** `getForToken(token)`
 (`IdentityPermissionProvider`) is the one place it happens: from the token's `sub`,
@@ -3625,8 +3625,10 @@ than guarded:
   `getForRole` keeps only the permissions owned by the role's own client, an empty child
   passes `isSuperset`, so an actor holding only `USER_ROLE_CREATE` can assign itself an
   owned role carrying any global permission. This predates the token narrowing (#3607);
-- `POST /authorize` and device approve accept any user bearer, so a holder of a Y token
-  can mint an X token for a public client X (#3608);
+- the served consoles authenticate with the session cookie, which carries no token and so
+  narrows nothing: inside them a user's grants owned by ANY client apply. That is the
+  fail-open above read from the other side, and it is why the two routes that AUTHORIZE a
+  client refuse a token carrying a `client_id` (below) rather than narrowing one;
 - an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
@@ -4780,6 +4782,38 @@ mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
 call `DELETE /sessions/@me` (that endpoint remains the session-management API for
 revoking a specific session from the sessions UI).
 
+### Only the user at the authorization server may authorize an application
+
+The realm binding above asks WHOSE identity is authorizing; this asks WHICH credential
+presented it. `POST /authorize` and `POST /device_authorization/approve` refuse a bearer
+that carries a `client_id` (`assertTokenMayAuthorize`,
+`adapters/http/request/helpers/token.ts`, called at the top of
+`HTTPOAuth2Authorizer.authorizeWithRequest` and of `DeviceAuthorizationController.approve`,
+`login_required` / 400). Only the user AT the authorization server may authorize an
+application, and their token there carries no client: the hosted password login sends none
+(`store.login` has one call site and `StoreLoginContext` has no client field, and the form
+deliberately forwards only `codeRequest.realm_id`, never its `client_id`), the MFA-ticket
+completion inherits that, and the federated handoff's issue payload has no such key at all.
+Basic carries no token, so a session-less authorize is unaffected.
+
+Without it a holder of a token issued to client Y mints a code, and then a token, for a
+public client X, which turns the X-owned grants the #3597 narrowing withholds from Y back
+on (#3608) — for a `builtIn` client with no consent step and, since the POST answers with
+the redirect URL in its body, with no browser at all. **This is the bearer half of the
+refusal `isOAuth2IssuancePath` already makes for the console cookie**, which is denied on
+this same surface for the same reason, and it is deliberately not an equality check against
+the client being authorized. A client re-authorizing ITSELF gains no grant it does not hold,
+but it does gain scope and lifetime: `resolveGrantedScope` admits any request asking for
+`global` whatever the client has bound, the server records consent rather than gating on it,
+and the code exchange answers with a fresh refresh chain — so equality would leave an
+application able to widen its own 15-minute `openid` token into a 3-day `global` one, past
+the consent the user gave, unattended. Refusing outright also needs nothing but the request,
+where a comparison needs the resolved client, which on the device path only core knows.
+
+`lookup` and `deny` keep taking any user bearer: both need the `user_code`, and neither
+mints anything. `HTTPOAuth2IdentityGrantType` is unregistered but mints a grant straight
+from the request identity, so wiring it means calling the assert there too.
+
 ### Response types — code only
 
 `response_type=code` is the **only** supported response type (OAuth 2.1
@@ -5450,6 +5484,7 @@ no table, no migration, no config key, no new `EventName`, no new metric.
 | §5.5 session spying | `device_code` never enters a browser; the page handles `user_code` only, in JSON POST bodies; `/device_authorization` is in `OAUTH2_ISSUANCE_PATHS` (prefix match), so the console session cookie cannot become a device token | `issuance.ts` |
 | §3.5 polling abuse | `slow_down` enforced with a per-`device_code` set-if-absent key over a FIXED 5 s window; a refused poll leaves the standing window | `touchPoll` |
 | confused deputy across realms | approver `identity.data.realmId === blob.realm_id` at lookup, approve and deny (`login_required`, no identity data); at redemption `blob.client_id === client.id` and `blob.realm_id === client.realmId` (`invalid_grant`, byte-identical to "unknown") | `resolve`, verifier step 2 |
+| confused deputy across clients | the approval refuses a bearer carrying a `client_id`, so an application holding a user's token cannot approve a device for another client and collect its grants (#3608); `lookup` and `deny` are exempt, since both need the `user_code` and neither mints | `assertTokenMayAuthorize` |
 
 **Accepted residual oracle.** A foreign-realm user holding a VALID code receives
 `login_required` (the realm-mismatch card) while an invalid code receives the neutral error,
