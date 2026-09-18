@@ -187,6 +187,11 @@ This means an `admin` (every permission at `any`, policy-free) can assign any ro
 `realm_admin` (confined to `own`/`ownOrNull` reach) cannot assign the `admin` role — the
 admin role confers wider reach than the realm_admin owns.
 
+The actor's grants are the ones its token reaches. A user's permissions and roles owned
+by a client apply only through a token issued to that client, so through another client's
+token even an `admin` cannot assign a role carrying them. Basic authentication, a password
+grant sent without a client and the served console's session cookie are not narrowed.
+
 ### Junction Policy Propagation
 
 When creating any permission binding (role-permission, user-permission, client-permission),

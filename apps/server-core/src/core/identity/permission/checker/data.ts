@@ -13,6 +13,7 @@ import { isObject, isUUID } from '@authup/kit';
 import type { ActorContext } from '@authup/server-kit';
 import type { IIdentityResolver } from '../../resolver/types.ts';
 import { toIdentityPolicyData } from '../identity-policy-data.ts';
+import type { IIdentityPermissionProvider } from '../types.ts';
 
 /**
  * The data a permission or policy check evaluates, decided by its own
@@ -95,4 +96,27 @@ async function authorizeCheckFor(
             [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null,
         }),
     });
+}
+
+/**
+ * Where a check's engine reads grants from: the actor's own, as its request
+ * resolved them (#3597: a token's grants are narrowed to its client), when the
+ * check evaluates the actor, so the route answers what the actor's gates
+ * decide; any other subject's as stored.
+ */
+export function createCheckerGrantSource(
+    actor: ActorContext,
+    provider: Pick<IIdentityPermissionProvider, 'getFor'>,
+) : Pick<IIdentityPermissionProvider, 'getFor'> {
+    const own = toIdentityPolicyData(actor.identity);
+
+    return {
+        getFor: (identity) => {
+            if (actor.grants && isOwnIdentity(identity, own)) {
+                return actor.grants();
+            }
+
+            return provider.getFor(identity);
+        },
+    };
 }

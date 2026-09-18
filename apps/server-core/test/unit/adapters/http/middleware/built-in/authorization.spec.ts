@@ -16,7 +16,7 @@ import {
     it,
 } from 'vitest';
 import { AuthorizationMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/authorization/module.ts';
-import { useRequestIdentity } from '../../../../../../src/adapters/http/request/index.ts';
+import { buildActorContext, useRequestGrants, useRequestIdentity } from '../../../../../../src/adapters/http/request/index.ts';
 import {
     FakeIdentityPermissionProvider,
     FakeIdentityResolver,
@@ -33,10 +33,11 @@ function createSuite() {
     const sessionManager = new FakeSessionManager();
     const sessionRepository = new FakeSessionRepository();
     const identityResolver = new FakeIdentityResolver();
+    const identityPermissionProvider = new FakeIdentityPermissionProvider();
 
     const middleware = new AuthorizationMiddleware({
         identityResolver,
-        identityPermissionProvider: new FakeIdentityPermissionProvider(),
+        identityPermissionProvider,
         sessionManager,
         sessionRepository,
         oauth2TokenVerifier: tokenVerifier,
@@ -50,6 +51,7 @@ function createSuite() {
         sessionManager,
         sessionRepository,
         identityResolver,
+        identityPermissionProvider,
     };
 }
 
@@ -145,5 +147,79 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
         // header-less runs verify nothing but still settle per request
         expect(suite.tokenVerifier.verifyCalls).toHaveLength(0);
         expect(first.store).not.toBe(second.store);
+    });
+});
+
+/**
+ * The request's grants (#3597): its own subject holds what its token carries,
+ * resolved once per request; anyone else, and a request without a token,
+ * resolve as themselves.
+ */
+describe('src/adapters/http/middleware/built-in/authorization (request grants)', () => {
+    const clientId = randomUUID();
+
+    async function runBearer(suite: ReturnType<typeof createSuite>) {
+        const realmId = randomUUID();
+        const user = {
+            id: randomUUID(), 
+            name: 'jdoe', 
+            realmId, 
+        } as User;
+
+        const session = await suite.sessionManager.create({ sub: user.id, subKind: IdentityType.USER });
+        suite.tokenVerifier.seed(TOKEN, {
+            kind: OAuth2TokenKind.ACCESS,
+            realm_id: realmId,
+            session_id: session.id,
+            sub: user.id,
+            sub_kind: OAuth2SubKind.USER,
+            client_id: clientId,
+        });
+        suite.identityResolver.setIdentity({ type: IdentityType.USER, data: user });
+
+        const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+        await suite.middleware.run(event);
+
+        return { event, user };
+    }
+
+    it('resolves the request subject through its token, once per request', async () => {
+        const suite = createSuite();
+        const { event, user } = await runBearer(suite);
+
+        await useRequestGrants(event, { type: IdentityType.USER, id: user.id });
+        await useRequestGrants(event, { type: IdentityType.USER, id: user.id });
+        await buildActorContext(event).grants!();
+
+        expect(suite.identityPermissionProvider.getForTokenCalls).toHaveLength(1);
+        expect(suite.identityPermissionProvider.getForTokenCalls[0]).toMatchObject({
+            sub: user.id,
+            sub_kind: OAuth2SubKind.USER,
+            client_id: clientId,
+        });
+        expect(suite.identityPermissionProvider.getForCalls).toHaveLength(0);
+    });
+
+    it('resolves any other subject as itself', async () => {
+        const suite = createSuite();
+        const { event } = await runBearer(suite);
+
+        const other = { type: IdentityType.USER, id: randomUUID() };
+        await useRequestGrants(event, other);
+
+        expect(suite.identityPermissionProvider.getForTokenCalls).toHaveLength(0);
+        expect(suite.identityPermissionProvider.getForCalls).toEqual([other]);
+    });
+
+    it('resolves a request without a token as itself', async () => {
+        const suite = createSuite();
+        const event = createFakeEvent({});
+        await suite.middleware.run(event);
+
+        const identity = { type: IdentityType.USER, id: randomUUID() };
+        await useRequestGrants(event, identity);
+
+        expect(suite.identityPermissionProvider.getForTokenCalls).toHaveLength(0);
+        expect(suite.identityPermissionProvider.getForCalls).toEqual([identity]);
     });
 });

@@ -120,6 +120,11 @@ the browser-side authorization-code flow with PKCE and keeps its tokens in
 JavaScript. That is decided at runtime from the injected configuration, not
 configured.
 
+Those tokens are issued to the `admin-console` client, so a user's grants
+owned by another client do not apply through them: a standalone console cannot
+bind another client's permissions or assign its roles. Use the served console
+or Basic authentication for that.
+
 ## Retired environment variables
 
 The console had its own runtime configuration while it ran as a server. None

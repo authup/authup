@@ -14,7 +14,7 @@ import {
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PolicyEngine extends BasePolicyEngine {
-    constructor(identityPermissionProvider: IIdentityPermissionProvider) {
+    constructor(identityPermissionProvider: Pick<IIdentityPermissionProvider, 'getFor'>) {
         super(PolicyDefaultEvaluators);
 
         this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new IdentityPermissionBindingPolicyEvaluator(identityPermissionProvider));

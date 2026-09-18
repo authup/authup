@@ -155,15 +155,12 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
 
         if (validated.role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
-                {
-                    type: actor.identity.type,
-                    id: actor.identity.data.id,
-                },
-                {
+                await this.getActorGrants(actor),
+                await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: validated.roleId,
                     clientId: validated.role.clientId,
-                },
+                }),
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });
@@ -209,15 +206,12 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         const role = await this.roleRepository.findOneById(entity.roleId);
         if (role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
-                {
-                    type: actor.identity.type,
-                    id: actor.identity.data.id,
-                },
-                {
+                await this.getActorGrants(actor),
+                await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: role.id,
                     clientId: role.clientId,
-                },
+                }),
             );
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });

@@ -8,6 +8,7 @@
 import type { IAppEvent } from 'routup';
 import type { ActorContext } from '@authup/server-kit';
 import { useRequestPermissionEvaluator } from '../permission/helper.ts';
+import { useRequestGrants } from './grants.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(event: IAppEvent): ActorContext {
@@ -16,5 +17,8 @@ export function buildActorContext(event: IAppEvent): ActorContext {
     return {
         permissionEvaluator: useRequestPermissionEvaluator(event),
         identity: identity ? identity.raw : undefined,
+        grants: identity ?
+            () => useRequestGrants(event, { type: identity.type, id: identity.id }) :
+            undefined,
     };
 }

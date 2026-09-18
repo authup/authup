@@ -165,12 +165,13 @@ describe('token-introspect', () => {
         }
     });
 
-    // The grant list is the IDENTITY's own, whatever client the token was
-    // minted for. Scoping it to the token's client dropped every DIRECT
-    // auth_user_permissions grant, since a provisioned permission is global
-    // and no global permission equals a client id - so an authorization-code
-    // token, which is how the consoles and every RP authenticate, reported a
-    // near-empty list while the server allowed the action.
+    // The grant list is narrowed by the token's client as a DISJUNCTION
+    // (unowned OR that client's, #3597), so a direct GLOBAL grant survives on a
+    // token minted for a client. The equality form dropped every direct
+    // auth_user_permissions grant, since no global permission equals a client
+    // id - so an authorization-code token, which is how the consoles and every
+    // RP authenticate, reported a near-empty list while the server allowed the
+    // action.
     it('should report a direct grant of a token minted for a client', async () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const password = 'start123-introspect';

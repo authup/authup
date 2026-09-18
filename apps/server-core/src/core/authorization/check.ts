@@ -127,7 +127,7 @@ export async function buildAuthorizationCheck(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator({
             getFor: (identity: IdentityPolicyData) => {
-                grants = grants || ctx.identityPermissionProvider.getFor(identity);
+                grants = grants || request.grants(identity);
 
                 return grants;
             },

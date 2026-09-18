@@ -11,6 +11,7 @@ import type {
     PermissionPolicyBinding,
     RealmScope,
 } from '@authup/access';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
@@ -43,10 +44,22 @@ export type ResolveJunctionGrantResult = {
     realmScope: `${RealmScope}`;
 };
 
+/**
+ * The part of a token its grants are resolved from: whose it is, and the
+ * client it was issued to.
+ */
+export type IdentityToken = Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'client_id'>;
+
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
-    isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData): Promise<boolean>;
-    resolveJunctionGrant(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
+    getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]>;
+    /**
+     * Whether `parent` covers every grant in `child`. A caller passes the
+     * actor's own grants as its request resolved them, so an assignment is
+     * checked against exactly what the actor's gates evaluated.
+     */
+    isSuperset(parent: PermissionPolicyBinding[], child: PermissionPolicyBinding[]): Promise<boolean>;
+    resolveJunctionGrant(bindings: PermissionPolicyBinding[], options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 
 export type IdentityPermissionProviderContext = {

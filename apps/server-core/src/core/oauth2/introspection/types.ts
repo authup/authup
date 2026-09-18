@@ -8,7 +8,7 @@
 import type { Identity, IdentityType } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
-import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
+import type { IIdentityPermissionProvider, IdentityToken } from '../../identity/permission/types.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 
 export type OAuth2IntrospectionSubjectContext = {
@@ -19,13 +19,11 @@ export type OAuth2IntrospectionSubjectContext = {
 
 export type OAuth2IntrospectionSubjectInput = {
     /**
-     * Subject id.
+     * The token the answer describes: whose it is, and the client it was
+     * issued to, whose grants it carries (#3597). A console session is
+     * described by its subject alone.
      */
-    sub: string,
-    /**
-     * Subject kind (user, client).
-     */
-    subKind: `${IdentityType}`,
+    token: IdentityToken & { sub: string, sub_kind: `${IdentityType}` },
     /**
      * Whether the credential the projection describes is usable. Permissions
      * are resolved ONLY when it is: an inactive credential reports who it

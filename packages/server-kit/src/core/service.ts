@@ -5,11 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType } from '@authup/access';
 import { hasOwnProperty, isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
 
 export abstract class AbstractEntityService {
+    /**
+     * The actor's grants, or none: an actor whose grants were not resolved can
+     * delegate nothing, so a missing resolver denies rather than widens.
+     */
+    protected async getActorGrants(actor: ActorContext): Promise<PermissionPolicyBinding[]> {
+        return actor.grants ? actor.grants() : [];
+    }
+
     protected getActorRealmId(actor: ActorContext): string | undefined {
         if (!actor.identity) {
             return undefined;

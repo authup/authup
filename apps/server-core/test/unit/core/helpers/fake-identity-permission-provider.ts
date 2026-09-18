@@ -10,6 +10,7 @@ import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
+    IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
 } from '../../../../src/core/identity/permission/types.ts';
@@ -41,18 +42,35 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionScope = scope;
     }
 
-    async getFor(_identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+    /**
+     * The actor grants each delegation call was handed, in call order.
+     */
+    public delegatedGrants: PermissionPolicyBinding[][] = [];
+
+    public getForCalls: IdentityPolicyData[] = [];
+
+    public getForTokenCalls: IdentityToken[] = [];
+
+    async getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+        this.getForCalls.push(identity);
         return this.bindings;
     }
 
-    async isSuperset(_parent: IdentityPolicyData, _child: IdentityPolicyData): Promise<boolean> {
+    async getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]> {
+        this.getForTokenCalls.push(token);
+        return this.bindings;
+    }
+
+    async isSuperset(parent: PermissionPolicyBinding[], _child: PermissionPolicyBinding[]): Promise<boolean> {
+        this.delegatedGrants.push(parent);
         return this.supersetResult;
     }
 
     async resolveJunctionGrant(
-        _identity: IdentityPolicyData,
+        bindings: PermissionPolicyBinding[],
         _options: ResolveJunctionPolicyOptions,
     ): Promise<ResolveJunctionGrantResult> {
+        this.delegatedGrants.push(bindings);
         return {
             policy: this.junctionPolicy,
             realmScope: this.junctionScope,

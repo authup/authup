@@ -160,10 +160,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         if (validated.permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                {
-                    type: actor.identity.type,
-                    id: actor.identity.data.id,
-                },
+                await this.getActorGrants(actor),
                 {
                     name: validated.permission.name,
                     realmId: validated.permission.realmId,
@@ -225,7 +222,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         let actorPolicyId: string | null = null;
         if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                { type: actor.identity.type, id: actor.identity.data.id },
+                await this.getActorGrants(actor),
                 {
                     name: permission.name,
                     realmId: permission.realmId,

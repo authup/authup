@@ -11,9 +11,9 @@ import type {
     BasePolicy,
     IPermissionEvaluator,
     IdentityPolicyData,
+    PermissionPolicyBinding,
 } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
-import type { IIdentityPermissionProvider } from '../identity/index.ts';
 
 /**
  * One permission definition: the permission and the policy trees bound to it.
@@ -56,13 +56,10 @@ export type AuthorizationRealmReach = (realmId: string | null) => Promise<boolea
 
 /**
  * Everything the batch check is built from, per boot. The definitions come
- * from the same bulk read the catalog uses, and the grants from the provider
- * every request path already resolves them through, so a verdict cannot
- * disagree with the gate that would decide the same call.
+ * from the same bulk read the catalog uses.
  */
 export type AuthorizationCheckBuilderContext = {
     catalogRepository: IAuthorizationCatalogRepository,
-    identityPermissionProvider: IIdentityPermissionProvider,
     logger?: Logger,
 };
 
@@ -90,6 +87,14 @@ export type AuthorizationCheckRequest = {
      * `global`, and a default would make forgetting it fail open.
      */
     decorate: (evaluator: IPermissionEvaluator) => IPermissionEvaluator,
+    /**
+     * The grants an identity holds for this request, the source every gate of
+     * the request reads (#3597), so a verdict cannot disagree with the gate
+     * that would decide the same call. REQUIRED for the same reason as
+     * `decorate`: a default would resolve grants the request's token does not
+     * carry.
+     */
+    grants: (identity: IdentityPolicyData) => Promise<PermissionPolicyBinding[]>,
 };
 
 /**

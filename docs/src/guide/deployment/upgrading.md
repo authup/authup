@@ -7,6 +7,55 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### A user's client-owned grants apply only through that client's tokens
+
+A permission or a role owned by a client (`client_id`) now applies to a user
+only through a token issued to that client. Through a token issued to any
+other client, the server withholds:
+
+- the user's permissions owned by another client, however they are held,
+  directly or through a role (including the ones `admin` and `realm_admin`
+  receive when a client-scoped permission is created);
+- the user's roles owned by another client, together with the **global**
+  permissions those roles carry.
+
+This applies to:
+
+- request authorization, `POST /authorization/check`, and the
+  `POST /permissions/:id/check` and `POST /policies/:id/check` routes when they
+  check the caller;
+- the `permissions` list of `POST /token/introspect`, narrowed by the
+  introspected token's own client and never by the caller's;
+- the `permissions` list of `GET /sessions/@me/introspect`, narrowed by the
+  request's own token;
+- delegation: assigning a role or binding a permission through a token issued
+  to another client is refused when the actor holds the required grants only
+  through the other client.
+
+Requests without a token issued to a client are not narrowed: Basic
+authentication, a password grant sent without a client, and the served
+console's session cookie.
+
+Check before upgrading:
+
+- An application that exercised a user's grants owned by another client, or an
+  administrator binding client-scoped permissions through a downstream
+  application's token, now receives `403`. Use a token issued to the owning
+  client.
+- **Permissions owned by an API client, used through a separate front-end
+  client.** A user signs in through the front end, so the token carries the
+  front end's client, and the permissions the API client owns are withheld,
+  both from requests and from what `POST /token/introspect` reports to the API.
+  Own those permissions by the client the users' tokens are issued to, or leave
+  them global.
+- **The admin console hosted standalone**, and its `vite` dev server, signs in
+  through the `admin-console` client, so its tokens are narrowed like any other
+  client's. From there, binding another client's permissions or assigning its
+  roles answers `403`. Do that work through the console served at
+  `<publicUrl>/console/admin`, or with Basic authentication. Do not make the
+  grant global to get around it: that lifts the restriction for every
+  application.
+
 ### Role, scope, permission and policy reads are realm-gated
 
 Both read paths of the four global-capable entities now apply the `realmScope` of

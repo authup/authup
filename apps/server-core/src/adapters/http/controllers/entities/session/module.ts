@@ -35,7 +35,12 @@ import {
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, useRequestIdentity, useRequestSessionId } from '../../../request/index.ts';
+import {
+    buildActorContext,
+    useRequestIdentity,
+    useRequestSessionId,
+    useRequestTokenPayload,
+} from '../../../request/index.ts';
 import { EntityType, IdentityType } from '@authup/core-kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { OAuth2SubKind, serializeOAuth2Scope } from '@authup/specs';
@@ -91,12 +96,9 @@ export class SessionController {
      * literally the introspection projection, keyed off the request's own
      * credential instead of a token in the body.
      *
-     * No client scope on the permission read, deliberately, and there is no
-     * parameter left to supply one: `resolveIntrospectionSubject` projects the
-     * RESOLVED identity, the derivation the request path uses.
-     * `reduceBindingsByIdentityClient` keeps only permissions whose own
-     * `clientId` matches the identity's, so any caller-chosen value drops
-     * every global permission, which is nearly all of them.
+     * The permissions are the grants the request's own token carries (#3597),
+     * what its request evaluation reads: narrowed to the bearer's client, not
+     * narrowed for the console cookie.
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
@@ -132,8 +134,11 @@ export class SessionController {
             identityPermissionProvider: this.identityPermissionProvider,
             logger: this.logger,
         }, {
-            sub: identity.id,
-            subKind: identity.type,
+            token: {
+                sub: identity.id,
+                sub_kind: identity.type,
+                client_id: useRequestTokenPayload(event)?.client_id,
+            },
             active: true,
         });
 
