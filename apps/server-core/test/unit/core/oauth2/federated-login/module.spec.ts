@@ -721,6 +721,10 @@ describe('core/oauth2/federated-login — completing the handoff', () => {
             session_id: sessionId,
         });
         expect(accessTokenIssuer.issueCalls[0].acr).toBeUndefined();
+        // and no client: the handoff token is the user's own at the
+        // authorization server, which is what lets it authorize an
+        // application at all (#3608)
+        expect(accessTokenIssuer.issueCalls[0].client_id).toBeUndefined();
     });
 
     it('should refuse a pending login whose session has expired', async () => {

@@ -35,7 +35,7 @@ import {
     readStringField,
 } from '../../../adapters/index.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
-import { useRequestIdentityOrFail, useRequestSessionId } from '../../../request/index.ts';
+import { assertTokenMayAuthorize, useRequestIdentityOrFail, useRequestSessionId } from '../../../request/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 import type { DeviceAuthorizationControllerContext } from './types.ts';
 
@@ -125,6 +125,10 @@ export class DeviceAuthorizationController {
         @DContext() event: IAppEvent,
     ) : Promise<DeviceAuthorizationDecisionResponse> {
         event.response.headers.set('cache-control', 'no-store');
+
+        // `lookup` and `deny` deliberately keep taking any user bearer: both
+        // need the user_code, and neither mints anything.
+        assertTokenMayAuthorize(event);
 
         const userCode : unknown = data.user_code;
 

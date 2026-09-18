@@ -38,4 +38,8 @@ export class OAuth2LoginRequiredError extends OAuth2Error {
     static providerUnavailable() {
         return new OAuth2LoginRequiredError({ message: 'The identity provider is not available. Return to the application and start the login again.' });
     }
+
+    static tokenClientBound() {
+        return new OAuth2LoginRequiredError({ message: 'A token issued to a client may not authorize an application.' });
+    }
 }
