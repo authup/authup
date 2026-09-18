@@ -7,6 +7,25 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.64)
 
+### Only a token without a client may authorize an application
+
+`POST /authorize` and `POST /device_authorization/approve` now refuse a bearer that was
+issued to a client, with `login_required` (HTTP 400). Only the user at the authorization
+server may authorize an application, and the token they hold there carries no client.
+
+Nothing in a normal deployment sends one. The hosted login pages authenticate with a
+password grant that names no client, the second-factor completion and the identity-provider
+handoff inherit that, and the served consoles start their login by navigating the browser to
+`/authorize` rather than posting their own token. HTTP Basic authentication carries no token
+and is unaffected, and `POST /device_authorization/lookup` and `/deny` still accept any user
+bearer.
+
+Check before upgrading: an integration that obtains a user token with `grant_type=password`
+plus its own `client_id` and then posts `/authorize` or approves a device with it. Post those
+requests with a token minted without `client_id`, or send the user through the hosted
+`/authorize` page. Before this change such a token could obtain an authorization code for a
+*different* application and pick up that application's client-owned grants for the user.
+
 ### A user's client-owned grants apply only through that client's tokens
 
 A permission or a role owned by a client (`client_id`) now applies to a user
