@@ -4080,15 +4080,20 @@ it is SERVED at `<publicUrl>/console/admin` (by
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
 
-**CLI API access (#3592).** `login`, `api` and `logout` in
-`apps/authup/src/commands/remote.ts` use the existing device and refresh grants
-through `core-http-kit`, with an operator-supplied public client UUID.
-`src/remote/` owns polling and URL-scoped local credentials: private atomic
-files, one command per server to prevent rotation races, SIGINT/SIGTERM
-cancellation, and no automatic API mutation replay. Targets come from
-`--server` / `AUTHUP_SERVER_URL` (default loopback port 3000), never from the
-deployment document. `healthcheck` and `config validate` require no login.
-API paths stay under the configured base URL; redirects are refused.
+**CLI API access (#3592).** `login`, `api`, `resource` and `logout` in
+`apps/authup/src/commands/` use the existing device and refresh grants through
+`core-http-kit`, with an operator-supplied public client UUID. `resource`
+maps CRUD operations onto `remote/request.ts`, shared with raw `api` requests.
+`remote/session/` separates types, session/locking logic, file storage and
+keychain storage. The default is the OS keychain through an optional, lazily
+loaded `@napi-rs/keyring` (Linux explicitly requires persistent Secret Service).
+`--credential-store=file` / `AUTHUP_CREDENTIAL_STORE=file` explicitly selects
+private atomic token files; failures never silently downgrade storage.
+One command per server prevents rotation races; SIGINT/SIGTERM releases its
+lock. Targets come from `--server` / `AUTHUP_SERVER_URL` (default loopback port
+3000), never the deployment document. `healthcheck` and `config validate`
+require no login. API paths stay under the configured base URL; redirects
+and automatic mutation replay are refused.
 
 **Process topology: one binary, one listener verb, several roles.** The
 batteries-included container runs `start`, which is `authup start`:

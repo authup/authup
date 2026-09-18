@@ -429,7 +429,7 @@ the smoke suite exercises built and packed deployments.
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
   meta read from the package and exactly the subcommands it should
-  (`api`, `config`, `dev`, `healthcheck`, `login`, `logout`, `migration`, `start`, and no `core`,
+  (`api`, `config`, `dev`, `healthcheck`, `login`, `logout`, `migration`, `resource`, `start`, and no `core`,
   `console` or `worker`: those are roles of `start`). The root `setup`
   refuses a stray positional on `dev` alone and leaves the commands whose
   positional is real alone (`migration run`, `start console admin`);
@@ -448,8 +448,10 @@ the smoke suite exercises built and packed deployments.
   entrypoint, maps a child environment or holds a routing table.
 - **Remote CLI** (`test/unit/remote.spec.ts`) runs the real HTTP client pipeline
   over `MemoryTransport`: device polling/backoff, terminal errors, cancellation,
-  private storage, server isolation, refresh rotation and JSON API requests.
-  No live credentials or server are needed.
+  private storage, server isolation, refresh rotation, JSON API requests and
+  resource commands. `session.spec.ts` mocks the native keyring and checks
+  store selection, keychain failures and persistence before mutations. Tests
+  never access the developer's real keychain or need live credentials.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.
   - The **composed** scenario boots the built CLI's `start` against sqlite on

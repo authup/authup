@@ -25,7 +25,12 @@ import {
     it,
     vi,
 } from 'vitest';
-import { defineCLIAPICommand, defineCLILoginCommand, defineCLILogoutCommand } from '../../src/commands/remote.ts';
+import {
+    defineCLIAPICommand,
+    defineCLILoginCommand,
+    defineCLILogoutCommand,
+    defineCLIResourceCommand,
+} from '../../src/commands/index.ts';
 
 vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn() }));
 
@@ -59,6 +64,7 @@ describe('remote CLI commands', () => {
         directory = await fs.mkdtemp(path.join(os.tmpdir(), 'authup-cli-remote-'));
         vi.stubEnv('XDG_CONFIG_HOME', directory);
         vi.stubEnv('AUTHUP_SERVER_URL', server);
+        vi.stubEnv('AUTHUP_CREDENTIAL_STORE', 'file');
         now = 100000;
         vi.spyOn(Date, 'now').mockImplementation(() => now);
         vi.mocked(setTimeout).mockImplementation(async (delay) => { now += Number(delay); });
@@ -226,7 +232,7 @@ describe('remote CLI commands', () => {
     it('does not expose credential contents when stored JSON is malformed', async () => {
         await login();
         await fs.writeFile(await credentialFile(), '{"accessToken":"secret-access", broken');
-        await expect(api()).rejects.toThrow('Invalid credentials file. Run authup login again.');
+        await expect(api()).rejects.toThrow('Invalid saved credentials. Run authup login again.');
         expect(transport.requests).toHaveLength(2);
     });
 
@@ -245,5 +251,38 @@ describe('remote CLI commands', () => {
             expect(request.redirect).toBe('error');
             expect(request.signal).toBeInstanceOf(AbortSignal);
         }
+    });
+    it.each([
+        [['users', 'list', '--query', 'page[limit]=10'], 'GET', 'users?page%5Blimit%5D=10', undefined],
+        [['roles', 'get', 'role-id'], 'GET', 'roles/role-id', undefined],
+        [['users', 'create', '--data', '{"name":"alice"}'], 'POST', 'users', '{"name":"alice"}'],
+        [['users', 'update', 'user-id', '--data', '{"displayName":"Alice"}'], 'POST', 'users/user-id', '{"displayName":"Alice"}'],
+        [['clients', 'delete', 'client-id'], 'DELETE', 'clients/client-id', undefined],
+    ])('maps resource command %j through the authenticated API request', async (rawArgs, method, target, body) => {
+        await login();
+        await runCommand(defineCLIResourceCommand(), { rawArgs });
+        const request = transport.requests.at(-1)!;
+        expect(request.url).toBe(`${server}${target}`);
+        expect(request.method).toBe(method);
+        expect(request.body ?? undefined).toBe(body);
+        expect(new Headers(request.headers).get('authorization')).toBe('Bearer secret-access');
+    });
+
+    it.each([
+        ['bogus', 'list'],
+        ['users', 'bogus'],
+        ['users', 'get'],
+        ['users', 'list', 'extra'],
+        ['users', 'create'],
+        ['users', 'update', 'id'],
+        ['users', 'delete', 'id', '--data', '{}'],
+        ['users', 'create', '--data', '[]'],
+        ['users', 'create', '--data', 'null'],
+        ['users', 'get', '..'],
+        ['users', 'get', 'a/b'],
+        ['users', 'delete', 'id', '--query', 'foo=bar'],
+    ].map((rawArgs) => [rawArgs]))('rejects invalid resource arguments %j before sending requests', async (rawArgs) => {
+        await expect(runCommand(defineCLIResourceCommand(), { rawArgs })).rejects.toThrow();
+        expect(transport.requests).toHaveLength(0);
     });
 });

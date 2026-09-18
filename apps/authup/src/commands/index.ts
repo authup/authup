@@ -9,4 +9,7 @@ export * from './config.ts';
 export * from './dev.ts';
 export * from './healthcheck.ts';
 export * from './start.ts';
-export * from './remote.ts';
+export * from './api.ts';
+export * from './login.ts';
+export * from './logout.ts';
+export * from './resource/index.ts';

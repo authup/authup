@@ -80,5 +80,8 @@
         "ts-node": "^10.8.2",
         "vite": "^8.2.2",
         "vitest": "^4.0.18"
+    },
+    "optionalDependencies": {
+        "@napi-rs/keyring": "^2.1.0"
     }
 }
