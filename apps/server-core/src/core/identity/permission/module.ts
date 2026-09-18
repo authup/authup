@@ -205,8 +205,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     }
 
     async getForRole(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
-        return this.roleRepository.getBoundPermissions(identity.id)
-            .then((data) => this.reduceBindingsByIdentityClient(data, identity));
+        return this.roleRepository.getBoundPermissions(identity.id);
     }
 
     private async combineWithRoleBindings(
@@ -227,17 +226,6 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             ...bindings,
             ...roleBindings,
         ];
-    }
-
-    private reduceBindingsByIdentityClient(
-        bindings: PermissionPolicyBinding[],
-        identity: IdentityPolicyData,
-    ): PermissionPolicyBinding[] {
-        if (!identity.clientId) {
-            return bindings;
-        }
-
-        return bindings.filter((binding) => binding.permission.clientId === identity.clientId);
     }
 }
 

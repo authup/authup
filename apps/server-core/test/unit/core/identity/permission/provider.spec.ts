@@ -41,6 +41,28 @@ const policy = { id: 'policy-1', type: BuiltInPolicyType.IDENTITY } as any;
 const policyOther = { id: 'policy-2', type: BuiltInPolicyType.ATTRIBUTES } as any;
 
 describe('core/identity/permission — IdentityPermissionProvider disjunction (#3155)', () => {
+    it('resolves every permission a client-owned role carries (#3607)', async () => {
+        const provider = createProvider({
+            child: [
+                { permission: { name: 'user_delete', clientId: null } },
+                { permission: { name: 'client_x', clientId: 'x' } },
+                { permission: { name: 'client_y', clientId: 'y' } },
+            ],
+        });
+
+        const bindings = await provider.getFor({
+            type: 'role',
+            id: 'child',
+            clientId: 'x',
+        });
+
+        expect(bindings.map((binding) => binding.permission.name)).toEqual([
+            'user_delete',
+            'client_x',
+            'client_y',
+        ]);
+    });
+
     describe('isSuperset', () => {
         it('blocks a mixed-grant actor (own no-policy + any policy) from assigning an unconditional any role', async () => {
             const provider = createProvider({

@@ -3584,8 +3584,9 @@ Basic from binding client-owned permissions, which admin and realm_admin hold th
 auto-assignment. A bearer-mode admin console (standalone-hosted, or its vite dev server)
 holds `admin-console` tokens and IS narrowed. The system console clients are deliberately
 not exempted: they are public and auto-consenting, so with the `POST /authorize` residual
-below an exemption would hand any application un-narrowed grants. Client subjects and the
-role side of `isSuperset` (`getForRole`'s equality) are unchanged.
+below an exemption would hand any application un-narrowed grants. Client subjects resolve
+their full grants. The role side of `isSuperset` also includes every permission the role
+carries, regardless of client ownership (#3607).
 
 **The narrowing is a property of the token, resolved once.** `getForToken(token)`
 (`IdentityPermissionProvider`) is the one place it happens: from the token's `sub`,
@@ -3621,10 +3622,6 @@ than guarded:
 
 - the application access-policy engine (`OAuth2AccessPolicyEvaluator`) still holds the
   bare provider; it evaluates with IDENTITY data only, so it never reads grants;
-- assigning a client-owned role checks none of the GLOBAL permissions it carries:
-  `getForRole` keeps only the permissions owned by the role's own client, an empty child
-  passes `isSuperset`, so an actor holding only `USER_ROLE_CREATE` can assign itself an
-  owned role carrying any global permission. This predates the token narrowing (#3607);
 - `POST /authorize` and device approve accept any user bearer, so a holder of a Y token
   can mint an X token for a public client X (#3608);
 - an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
@@ -3701,7 +3698,7 @@ expressed via a `policyId` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies that one grant list covers another: the service passes the actor's grants as `parent` (as its request resolved them through `getActorGrants`, so a token's grants are narrowed to its client) and the target role's grants, loaded through `getFor`, as `child`. It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
+When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies that one grant list covers another: the service passes the actor's grants as `parent` (as its request resolved them through `getActorGrants`, so a token's grants are narrowed to its client) and the target role's full grants, loaded through `getFor({ type: 'role', id })`, as `child`. `getForRole` returns every binding without filtering by the role's client ownership (#3607). It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
 
 1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
 2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
