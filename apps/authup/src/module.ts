@@ -17,9 +17,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
 import {
+    defineCLIAPICommand,
     defineCLIConfigCommand,
     defineCLIDevCommand,
     defineCLIHealthCheckCommand,
+    defineCLILoginCommand,
+    defineCLILogoutCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
 
@@ -41,6 +44,9 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
+            api: defineCLIAPICommand(),
+            login: defineCLILoginCommand(),
+            logout: defineCLILogoutCommand(),
             config: defineCLIConfigCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),

@@ -174,8 +174,60 @@ $ authup healthcheck
 port, so API replicas can hand them over, and it refuses to start while
 `core.worker.enabled` is false. See [Worker](./worker.md).
 
-All commands honor `--configDirectory` / `--configFile`, and `migration`
+Deployment commands honor `--configDirectory` / `--configFile`, and `migration`
 finds its migration files wherever it is started from. The `migration`
 operations are `run`, `revert` and `status`; `generate` is a repository
 development tool that exists only in server-core's dev CLI
 (`npm run cli -w apps/server-core -- migration generate`).
+
+## Login and API requests
+
+Use a public OAuth2 client (`authMethod: none`) in the realm you want to manage.
+Its `grantTypes` must explicitly include
+`urn:ietf:params:oauth:grant-type:device_code`; include `refresh_token` to keep
+using the login after the access token expires. A null grant allowlist does
+not enable the device flow. Supply the client's UUID, not a client secret.
+The signed-in user's permissions still govern every API request.
+
+```shell
+# Local server (default http://localhost:3000/)
+authup login --client-id <client-uuid>
+authup api 'users?page[limit]=10'
+
+# Remote server; --server <url> overrides AUTHUP_SERVER_URL
+export AUTHUP_SERVER_URL=https://auth.example.com/
+authup login --client-id <client-uuid>
+# Open the printed URL in a browser and approve the displayed code.
+authup api 'users?filter[name]=alice'
+authup api users --method POST --data '{"name":"alice","realmId":"<realm-uuid>"}'
+authup api users/<user-uuid> --method PATCH --data '{"displayName":"Alice"}'
+authup api users/<user-uuid> --method DELETE
+authup logout
+```
+
+`--scope 'scope-a scope-b'` requests explicit scopes during login. Client scope
+restrictions and user permissions are enforced by the server as usual.
+API paths are relative to the configured base URL, including any path prefix;
+quote query strings so the shell does not interpret brackets. `--method` (`-X`)
+defaults to GET; `--data` (`-d`) takes JSON for POST, PUT, PATCH or DELETE.
+Successful responses go to stdout as JSON (no output for HEAD or 204).
+Progress and errors go to stderr; failures exit nonzero. Requests time out
+after 30 seconds and do not follow redirects. Remote servers require HTTPS;
+HTTP is accepted for localhost, 127.0.0.1 and [::1].
+
+Logins are stored separately for each normalized server URL under
+`$XDG_CONFIG_HOME/authup/credentials`, or `~/.config/authup/credentials` when
+unset. These are **unencrypted token files**, with a private directory (0700)
+and files (0600) on POSIX. Protect the account and filesystem that hold them;
+Windows access follows the user's filesystem ACLs. The CLI refreshes expiring
+access tokens and saves rotated refresh tokens before sending an API request.
+Failed mutations are never automatically replayed.
+
+Only one command per server runs at a time, to prevent refresh-token races.
+Ctrl-C releases the lock; after a forced kill or crash, remove the stale lock
+named in the error once no command is running. `logout` removes the local
+login only; revoke the session on the server to invalidate its tokens.
+
+These client commands select their target through `--server` or
+`AUTHUP_SERVER_URL`; they do not read `authup.yml`. `healthcheck` and
+`config validate` remain independent of login.

@@ -4080,6 +4080,16 @@ it is SERVED at `<publicUrl>/console/admin` (by
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
 
+**CLI API access (#3592).** `login`, `api` and `logout` in
+`apps/authup/src/commands/remote.ts` use the existing device and refresh grants
+through `core-http-kit`, with an operator-supplied public client UUID.
+`src/remote/` owns polling and URL-scoped local credentials: private atomic
+files, one command per server to prevent rotation races, SIGINT/SIGTERM
+cancellation, and no automatic API mutation replay. Targets come from
+`--server` / `AUTHUP_SERVER_URL` (default loopback port 3000), never from the
+deployment document. `healthcheck` and `config validate` require no login.
+API paths stay under the configured base URL; redirects are refused.
+
 **Process topology: one binary, one listener verb, several roles.** The
 batteries-included container runs `start`, which is `authup start`:
 server-core plus every enabled console on ONE listener, with the worker
