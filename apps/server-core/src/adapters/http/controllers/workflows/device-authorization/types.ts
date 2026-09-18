@@ -19,14 +19,3 @@ export type DeviceAuthorizationControllerContext = {
     certificateSource: CertificateSource,
 };
 
-export type DeviceControllerOptions = {
-    /**
-     * Where the auth console service renders the verification page this
-     * controller hands over to.
-     */
-    authConsoleUrl: string,
-};
-
-export type DeviceControllerContext = {
-    options: DeviceControllerOptions,
-};
