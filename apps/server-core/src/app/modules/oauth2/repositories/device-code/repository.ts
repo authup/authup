@@ -140,9 +140,11 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
     // mfaThrottle pair). An attacker holding many accounts in one realm gets
     // the limit per account per window against a 34.6-bit space, and every
     // guess is bearer-gated, so the work is bounded by accounts held, not by
-    // codes. Upgrade path: a second code:<canonical> counter with a lower
-    // limit, armed only when the canonical code is non-null, if a distributed
-    // guess across many accounts is ever a concern.
+    // codes. The one forgiveness a decision buys (resetLookupMisses) lifts that
+    // ceiling to 19 misses per account per window, worst case. Upgrade path: a
+    // second code:<canonical> counter with a lower limit, armed only when the
+    // canonical code is non-null, if a distributed guess across many accounts
+    // is ever a concern.
     async countLookupMiss(key: string, limit: number): Promise<void> {
         const count = await this.cache.increment(
             this.buildLookupAttemptKey(key),
@@ -157,6 +159,27 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
                 { ttl: OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW * 1000 },
             );
         }
+    }
+
+    async resetLookupMisses(key: string): Promise<void> {
+        // Nothing to forgive, nothing spent: a clean decision must not use up
+        // the window's one forgiveness before the typos it is meant for.
+        if (!await this.cache.has(this.buildLookupAttemptKey(key))) {
+            return;
+        }
+
+        // `add` is set-if-absent, so the marker keeps the ttl of the FIRST
+        // reset in the window and a later one can neither win nor re-arm it.
+        const first = await this.cache.add(
+            this.buildLookupResetKey(key),
+            1,
+            { ttl: OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW * 1000 },
+        );
+        if (!first) {
+            return;
+        }
+
+        await this.cache.drop(this.buildLookupAttemptKey(key));
     }
 
     protected merge(request: OAuth2DeviceCodeRequest, decision: OAuth2DeviceCodeDecision | null): OAuth2DeviceCode {
@@ -193,5 +216,9 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     protected buildLookupLockKey(key: string): string {
         return buildCacheKey({ prefix: CacheOAuth2Prefix.DEVICE_LOOKUP_ATTEMPT, key: `lock:${key}` });
+    }
+
+    protected buildLookupResetKey(key: string): string {
+        return buildCacheKey({ prefix: CacheOAuth2Prefix.DEVICE_LOOKUP_ATTEMPT, key: `reset:${key}` });
     }
 }

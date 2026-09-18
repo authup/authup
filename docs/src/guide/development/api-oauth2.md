@@ -508,11 +508,15 @@ listed) and `insufficient_scope`.
 
 #### Verification
 
-The person opens the verification URI, enters the code, signs in with a
-username and password (then the second factor when one is enrolled) and sees
-the client's name, its realm and the scopes it asked for. The page offers no
-identity-provider buttons, so a person who authenticates only through an
-external provider must already hold a hosted-login session in that browser. Approving or denying is always an
+The person opens the verification URI, enters the code, signs in (then
+completes the second factor when one is enrolled) and sees the client's name,
+its realm and the scopes it asked for. Signing in is a username and password,
+or an external identity provider: once a realm is picked the login form offers
+that realm's OAuth2 and OpenID Connect providers. A person coming back from a
+provider is signed in and lands on the code step again, with the code filled
+in, and confirms it before anything is looked up. The link that starts such a
+login is an ordinary URL anyone can build for a code of their own, so the page
+never skips showing the code it is about to act on. Approving or denying is always an
 explicit click, for a `builtIn` client as well: the page cannot know which
 device is asking, so nothing is auto-consented. The approval runs the gates
 `/authorize` runs. The person's realm must match the client's, a user holding a
@@ -521,7 +525,9 @@ routes a user without one through enrollment, and the client's access policy
 is evaluated. A wrong or expired code answers one neutral error whatever the
 reason. After ten misses within ten minutes the page refuses further attempts
 by that user with `429` (`device_verification_throttled`, `retryAfter` in
-seconds).
+seconds). Approving or denying a code forgives the misses counted so far, at
+most once per ten minutes, so a few typos before a successful approval do not
+add up to a lockout later.
 
 `GET /device` is one of the hosted auth pages: like `/authorize` it hands over
 to the auth console, carrying the `user_code` it was called with.

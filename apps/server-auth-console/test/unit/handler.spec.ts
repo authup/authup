@@ -133,7 +133,7 @@ describe('createHandler', () => {
         const root = await writeBundle({
             'client/index.html': SHELL,
             'client/.vite/ssr-manifest.json': '{}',
-            'server/server.js': 'export const CONTRACT_VERSION = 4; export async function render() { return ["substituted-bundle", ""]; }',
+            'server/server.js': 'export const CONTRACT_VERSION = 5; export async function render() { return ["substituted-bundle", ""]; }',
         });
 
         const second = serve(
@@ -194,7 +194,7 @@ describe('createHandler bundle contract', () => {
         });
 
         await expect(createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })))
-            .rejects.toThrow(/render-contract version 3, but this service requires 4/);
+            .rejects.toThrow(/render-contract version 3, but this service requires 5/);
     });
 
     it('reads a bundle without the export as version 1', async () => {
@@ -391,6 +391,66 @@ describe('createHandler server-side fetch', () => {
             expect(body).not.toContain('<!--app-html-->');
             expect(body).toContain('"userCode":"BCDFGHJK"');
             expect(body).toContain('"baseURL":"https://example.com"');
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should hand the provider hint and the refusal marker to the device page', async () => {
+        const config = {
+            ...await resolveConfig({ publicUrl: 'https://example.com' }),
+            apiInternalUrl: apiURL,
+        };
+
+        const local = serve(await createHandler(config), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const provider = '2b05eb6e-8a0b-4a7f-9b0f-0f0c1bb4f7a1';
+            const response = await fetch(
+                `${url}/device?user_code=bcdf-ghjk&provider=${provider}&error=access_denied`,
+            );
+
+            expect(response.status).toEqual(200);
+
+            const body = await response.text();
+
+            expect(body).toContain('"userCode":"BCDFGHJK"');
+            expect(body).toContain(`"federatedLogin":{"providerId":"${provider}"}`);
+            expect(body).toContain('"error":"access_denied"');
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should drop a provider hint that is not a uuid and a marker outside the closed set', async () => {
+        const config = {
+            ...await resolveConfig({ publicUrl: 'https://example.com' }),
+            apiInternalUrl: apiURL,
+        };
+
+        const local = serve(await createHandler(config), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            // eslint-disable-next-line no-script-url -- the shape a non-uuid hint must not reach the page as
+            const provider = encodeURIComponent('javascript:alert(1)');
+            const marker = encodeURIComponent('<script>alert(2)</script>');
+            const response = await fetch(
+                `${url}/device?user_code=bcdf-ghjk&provider=${provider}&error=${marker}`,
+            );
+
+            expect(response.status).toEqual(200);
+
+            const body = await response.text();
+
+            expect(body).toContain('"userCode":"BCDFGHJK"');
+            expect(body).not.toContain('"federatedLogin"');
+            expect(body).not.toContain('"error":');
+            expect(body).not.toContain('alert(1)');
+            expect(body).not.toContain('alert(2)');
         } finally {
             await local.close(true);
         }

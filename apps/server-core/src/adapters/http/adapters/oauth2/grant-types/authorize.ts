@@ -7,13 +7,15 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { isClientPublic } from '@authup/core-kit';
-import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
+    IAuthFlowMetrics,
+    IEventService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
     IRealmRepository,
@@ -22,6 +24,7 @@ import type {
 import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 import {
+    assertAccessPolicyBackstop,
     extractClientCredentialsFromRequest,
     extractOAuth2ClientCertificateEvidence,
     readRealmHint,
@@ -36,6 +39,10 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
+    protected eventService? : IEventService;
+
+    protected metrics? : IAuthFlowMetrics;
+
     protected certificateSource: CertificateSource;
 
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
@@ -45,6 +52,8 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.realmRepository = ctx.realmRepository;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
+        this.eventService = ctx.eventService;
+        this.metrics = ctx.metrics;
         this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
@@ -83,25 +92,26 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
         // Application access policy (plan 052), /token backstop: a code
         // minted before the policy was attached (or outside authorize())
-        // must not redeem. The subject is built from the code-blob scalars —
-        // no DB identity load; attribute-rich policies are enforced at the
-        // issuance legs. Denial = invalid_grant, never access_denied here.
-        if (client.accessPolicyId) {
-            let allowed = false;
-            if (this.accessPolicyEvaluator) {
-                allowed = await this.accessPolicyEvaluator.evaluate(client.accessPolicyId, {
-                    type: entity.sub_kind,
-                    id: entity.sub,
-                    realmId: entity.realm_id ?? null,
-                    realmName: entity.realm_name ?? null,
-                    clientId: entity.client_id ?? null,
-                });
-            }
-
-            if (!allowed) {
-                throw OAuth2GrantError.invalid();
-            }
-        }
+        // must not redeem.
+        await assertAccessPolicyBackstop({
+            client,
+            grantType: OAuth2TokenGrant.AUTHORIZATION_CODE,
+            subject: {
+                type: entity.sub_kind,
+                id: entity.sub,
+                realmId: entity.realm_id ?? null,
+                realmName: entity.realm_name ?? null,
+                clientId: entity.client_id ?? null,
+            },
+            sessionId: entity.session_id ?? null,
+            request: {
+                ipAddress: getRequestIP(event),
+                userAgent: getRequestHeader(event, 'user-agent'),
+            },
+            evaluator: this.accessPolicyEvaluator,
+            eventService: this.eventService,
+            metrics: this.metrics,
+        });
 
         return this.runWith(entity, {
             confirmation,

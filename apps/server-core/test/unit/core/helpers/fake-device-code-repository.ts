@@ -38,6 +38,8 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
 
     public countLookupMissCalls: { key: string, limit: number }[] = [];
 
+    public resetLookupMissesCalls: string[] = [];
+
     private requests = new Map<string, OAuth2DeviceCodeRequest>();
 
     private userCodes = new Map<string, string>();
@@ -47,6 +49,8 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
     private polls = new Map<string, number>();
 
     private attempts = new Map<string, number>();
+
+    private resets = new Set<string>();
 
     private locks = new Map<string, number>();
 
@@ -197,6 +201,17 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         if (count >= limit) {
             this.locks.set(key, Math.floor(Date.now() / 1000) + OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW);
         }
+    }
+
+    async resetLookupMisses(key: string): Promise<void> {
+        this.resetLookupMissesCalls.push(key);
+
+        if (!this.attempts.has(key) || this.resets.has(key)) {
+            return;
+        }
+
+        this.resets.add(key);
+        this.attempts.delete(key);
     }
 
     private merge(request: OAuth2DeviceCodeRequest): OAuth2DeviceCode {

@@ -315,13 +315,38 @@ describe('components/workflows/login', () => {
         expect(providers.emitted('failed')).toBeTruthy();
     });
 
-    it('should offer no identity provider without a code request', async () => {
-        // authorize-out refuses a federated login that carries no code
-        // request, so a provider button would lead to a guaranteed 400.
+    it('should offer no identity provider without a code request or a device user code', async () => {
+        // authorize-out refuses a federated login that completes neither, so
+        // a provider button would lead to a guaranteed 400.
         const { wrapper } = mountLoginForm();
         await flushPromises();
 
         expect(wrapper.find('form').exists()).toBe(true);
         expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(false);
+    });
+
+    // The provider list filters on a realm, and with no code request nothing
+    // seeds one: an empty realm would be sent as `eq(realmId, '')`, which
+    // postgres rejects on a uuid column.
+    it('should offer no identity provider for a device user code before a realm is picked', async () => {
+        const { wrapper } = mountLoginForm({ deviceUserCode: 'BCDFGHJK' });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(false);
+    });
+
+    it('should offer identity providers for a device user code once a realm is picked', async () => {
+        const { wrapper } = mountLoginForm({ deviceUserCode: 'BCDFGHJK' });
+        await flushPromises();
+
+        wrapper.findComponent(ARealmPicker).vm.$emit('change', ['realm-a']);
+        await flushPromises();
+
+        expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(true);
+
+        const url = (wrapper.vm as any).buildIdentityProviderURL('provider-1');
+        expect(url).toContain('/identity-providers/provider-1/authorize-out');
+        expect(url).toContain('user_code=BCDFGHJK');
+        expect(url).not.toContain('codeRequest');
     });
 });

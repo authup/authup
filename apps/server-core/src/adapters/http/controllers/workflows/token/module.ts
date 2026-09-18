@@ -119,6 +119,8 @@ export class TokenController {
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
+                eventService: ctx.eventService,
+                metrics: ctx.metrics,
                 certificateSource: ctx.certificateSource,
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
@@ -167,6 +169,8 @@ export class TokenController {
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
+                eventService: ctx.eventService,
+                metrics: ctx.metrics,
                 certificateSource: ctx.certificateSource,
             }),
         };

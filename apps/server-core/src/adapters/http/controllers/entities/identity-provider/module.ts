@@ -89,7 +89,9 @@ import {
     createIdentityProviderOAuth2Authenticator,
     decodeQuery,
     describeQuerySchema,
+    formatDeviceUserCode,
     identityProviderSchema,
+    normalizeDeviceUserCode,
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -283,33 +285,49 @@ export class IdentityProviderController {
             throw new BadRequestError('The identity provider is not enabled.');
         }
 
-        // A federated login completes an RP's authorization request: the
-        // callback mints a code bound to that request and delivers it to the
-        // request's redirect_uri. Without one there is nowhere to deliver a
-        // code (the callback used to mint an unbound one and hand it to the
-        // server root, issue #3457), so the login must not start.
+        // A federated login completes an RP's authorization request, or signs
+        // a person in on the device verification page. The callback returns
+        // the browser to one or the other, and with neither there is nothing
+        // to return to, so the login must not start (#3457, #3589). A request
+        // naming a code request is held to it: a malformed one is refused,
+        // never reread as a device login.
         const query = useRequestQuery(event);
-        if (typeof query.codeRequest !== 'string') {
-            throw OAuth2RequestError.malformed('A federated login requires an authorization code request.');
-        }
 
-        let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
+        let target : Pick<OAuth2AuthorizationState, 'codeRequest' | 'device'>;
+        if (typeof query.codeRequest === 'string') {
+            let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
-        try {
-            codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
-        } catch {
-            throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
-        }
+            try {
+                codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
+            } catch {
+                throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
+            }
 
-        const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
-        const data = await this.codeRequestVerifier.verify(codeRequestValidated);
+            const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
+            const data = await this.codeRequestVerifier.verify(codeRequestValidated);
 
-        if (
-            data.client.realmId &&
-            entity.realmId &&
-            entity.realmId !== data.client.realmId
-        ) {
-            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
+            if (
+                data.client.realmId &&
+                entity.realmId &&
+                entity.realmId !== data.client.realmId
+            ) {
+                throw OAuth2RequestError.malformed('The provider and client realm do not match.');
+            }
+
+            target = { codeRequest: data.data };
+        } else if (typeof query.user_code === 'string') {
+            // The device verification page's login (#3589). Only the FORMAT is
+            // checked: this route is anonymous, and a lookup here would say
+            // which user codes exist (RFC 8628 section 5.1). The device flow's
+            // own lookup resolves the code, once the person is signed in.
+            const userCode = normalizeDeviceUserCode(query.user_code);
+            if (!userCode) {
+                throw OAuth2RequestError.malformed('The user code is malformed.');
+            }
+
+            target = { device: { userCode } };
+        } else {
+            throw OAuth2RequestError.malformed('A federated login requires an authorization code request or a device user code.');
         }
 
         const authenticator = this.buildProviderAuthenticator(entity);
@@ -324,7 +342,7 @@ export class IdentityProviderController {
         this.setFederatedLoginCookie(event, browserNonce);
 
         const state = await this.saveAuthorizationState(event, {
-            codeRequest: data.data,
+            ...target,
             browserNonce,
         });
 
@@ -383,24 +401,26 @@ export class IdentityProviderController {
             return this.completeLink(event, entity, data, link);
         }
 
-        // authorize-out no longer mints a login state without a code request;
-        // this refuses the ones minted before that (issue #3457).
-        if (!data.codeRequest) {
-            throw OAuth2RequestError.malformed('The state carries no authorization code request.');
-        }
+        // Where the browser goes back to, from the STATE alone: nothing the
+        // provider's redirect carries reaches it. Resolved once, before the
+        // provider's answer is read, so every exit below returns to the same
+        // place. It also refuses a state that names no target at all, which
+        // authorize-out never mints (#3457).
+        const returnURL = this.buildReturnURL(data);
 
         // The browser that started this login is the only one that may
         // finish it. Refused before the provider's single-use code is spent
         // and before any session exists. A state minted before this shipped
         // carries no nonce and is refused the same way; the hosted page
-        // re-renders the request and the next attempt carries one.
+        // renders its request (or the user code) again and the next attempt
+        // carries one.
         const browserNonce = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
         if (
             typeof browserNonce !== 'string' ||
             !data.browserNonce ||
             browserNonce !== data.browserNonce
         ) {
-            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+            return sendRedirect(event, returnURL.href);
         }
 
         const { code, error } = useRequestQuery(event);
@@ -408,23 +428,27 @@ export class IdentityProviderController {
         // RFC 6749 section 4.1.2.1: a provider answers a refused or failed
         // authorization (the person cancelled at the provider, the provider
         // is down) with `error` and no code. A top-level browser navigation
-        // like every other refusal here, so it lands on the hosted login
+        // like every other refusal here, so it lands on the hosted page
         // again. Nothing of the provider's answer is echoed: whoever controls
         // the provider's redirect shapes those values.
         if (typeof error === 'string' && error.length > 0) {
             // JSON-quoted: a raw query value must not be able to forge a log line
             this.logger?.info(`The identity provider ${entity.id} answered the authorization with ${JSON.stringify(error.slice(0, 64))}.`);
 
-            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+            return sendRedirect(event, returnURL.href);
         }
 
         if (typeof code !== 'string' || code.length === 0) {
             throw new BadRequestError('The authorization code is missing.');
         }
 
+        // The state's own code request, whenever it carries one, so its gates
+        // (re-verification, realm match, redirect_uri, access policy) run for
+        // every such login. Only a state without one reaches the service as
+        // the device page's login, which has no client to run them against.
         const result = await this.loginService.complete({
             provider: entity,
-            codeRequest: data.codeRequest,
+            codeRequest: data.codeRequest ?? null,
             code,
             request: {
                 ipAddress: getRequestIP(event),
@@ -434,18 +458,17 @@ export class IdentityProviderController {
 
         // A refusal is a decision the person at the browser has to be told
         // about, and this is a top-level navigation, so it lands on the
-        // hosted login rather than in a JSON body (issue #3458). A marker is
-        // only attached when the refusal carries one; without it the page
-        // re-runs the same verifier over the same request and states the
-        // reason itself, so nothing is echoed.
-        const url = this.buildHostedAuthorizeURL(result.codeRequest);
-
+        // hosted page rather than in a JSON body (issue #3458). A marker is
+        // only attached when the refusal carries one; without it the
+        // authorize page re-runs the same verifier over the same request and
+        // states the reason itself, so nothing is echoed. The marker is the
+        // service's own constant, never a value from this request.
         if (result.kind === 'refused') {
             if (result.error) {
-                url.searchParams.set('error', result.error);
+                returnURL.searchParams.set('error', result.error);
             }
 
-            return sendRedirect(event, url.href);
+            return sendRedirect(event, returnURL.href);
         }
 
         // The application's code is NOT minted here. The browser goes back to
@@ -453,7 +476,9 @@ export class IdentityProviderController {
         // ladder an interactive login runs (prompt freshness, consent) before
         // any code exists (plan 094). So a custom-scheme redirect_uri needs no
         // interstitial on this leg either: it is navigated at the end of the
-        // ladder, exactly as it is for an interactive login.
+        // ladder, exactly as it is for an interactive login. The device page
+        // completes the login the same way and then has the person confirm
+        // the user code, which is where the device flow's own gates run.
         //
         // The pending login rides a cookie rather than the URL, which is what
         // Keycloak and Authentik both do: only the browser that started the
@@ -464,9 +489,9 @@ export class IdentityProviderController {
         // secret.
         this.setFederatedLoginCookie(event, result.pendingLoginId);
 
-        url.searchParams.set('provider', entity.id);
+        returnURL.searchParams.set('provider', entity.id);
 
-        return sendRedirect(event, url.href);
+        return sendRedirect(event, returnURL.href);
     }
 
     @DPost('/:id/login-complete', [])
@@ -789,6 +814,32 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    /**
+     * The hosted page a login state returns the browser to. The code request
+     * decides whenever the state carries one; the device page is the target
+     * only for a state that carries none.
+     *
+     * @throws OAuth2RequestError when the state names no target at all
+     */
+    private buildReturnURL(state: OAuth2AuthorizationState): URL {
+        if (state.codeRequest) {
+            return this.buildHostedAuthorizeURL(state.codeRequest);
+        }
+
+        if (state.device) {
+            return this.buildHostedDeviceURL(state.device.userCode);
+        }
+
+        throw OAuth2RequestError.malformed('The state carries no authorization code request and no device user code.');
+    }
+
+    private buildHostedDeviceURL(userCode: string): URL {
+        const url = new URL(resolveURL(this.options.baseURL, 'device'));
+        url.searchParams.set('user_code', formatDeviceUserCode(userCode));
+
+        return url;
+    }
+
     private buildHostedAuthorizeURL(codeRequest: OAuth2AuthorizationCodeRequest): URL {
         const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
 
@@ -878,7 +929,7 @@ export class IdentityProviderController {
 
     private async saveAuthorizationState(
         event: IAppEvent,
-        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link' | 'browserNonce'> = {},
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'device' | 'link' | 'browserNonce'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
             ...data,

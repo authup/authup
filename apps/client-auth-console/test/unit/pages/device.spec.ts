@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/* global window */
+
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, ref } from 'vue';
@@ -16,6 +18,14 @@ const DeviceVerifyFormStub = defineComponent({
     name: 'ADeviceVerifyForm',
     props: {
         userCode: {
+            type: String,
+            default: undefined,
+        },
+        federatedLogin: {
+            type: Object,
+            default: undefined,
+        },
+        error: {
             type: String,
             default: undefined,
         },
@@ -133,6 +143,53 @@ describe('device page', () => {
 
         expect(form.props('registerLink')).toBeUndefined();
         expect(form.props('passwordForgotLink')).toBeUndefined();
+    });
+
+    it('hands the federated login and the refusal marker to the form', () => {
+        const { wrapper } = mountDevicePage({
+            features: FEATURES,
+            userCode: 'BCDFGHJK',
+            federatedLogin: { providerId: 'provider-1' },
+            error: 'access_denied',
+        });
+        const form = wrapper.findComponent(DeviceVerifyFormStub);
+
+        expect(form.props('federatedLogin')).toEqual({ providerId: 'provider-1' });
+        expect(form.props('error')).toEqual('access_denied');
+    });
+
+    it('passes neither when the payload carries neither', () => {
+        const { wrapper } = mountDevicePage({ features: FEATURES, userCode: 'BCDFGHJK' });
+        const form = wrapper.findComponent(DeviceVerifyFormStub);
+
+        expect(form.props('federatedLogin')).toBeUndefined();
+        expect(form.props('error')).toBeUndefined();
+    });
+
+    /**
+     * The completion rides a cookie the first attempt spends, and the marker
+     * belongs to the attempt that produced it, so a reload must re-attempt
+     * neither and show neither.
+     */
+    it('drops the provider hint and the marker from the address bar', () => {
+        window.history.replaceState(null, '', '/device?user_code=BCDF-GHJK&provider=p-1&error=access_denied');
+
+        mountDevicePage({
+            features: FEATURES,
+            userCode: 'BCDFGHJK',
+            federatedLogin: { providerId: 'p-1' },
+            error: 'access_denied',
+        });
+
+        expect(window.location.search).toEqual('?user_code=BCDF-GHJK');
+    });
+
+    it('leaves an ordinary device URL alone', () => {
+        window.history.replaceState(null, '', '/device?user_code=BCDF-GHJK');
+
+        mountDevicePage({ features: FEATURES, userCode: 'BCDFGHJK' });
+
+        expect(window.location.search).toEqual('?user_code=BCDF-GHJK');
     });
 
     it('toasts the failed emit', () => {

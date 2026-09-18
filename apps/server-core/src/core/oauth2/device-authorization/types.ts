@@ -128,6 +128,15 @@ export interface IOAuth2DeviceCodeRepository {
      * counts a MISS; arms the lock when the limit is reached
      */
     countLookupMiss(key: string, limit: number): Promise<void>;
+
+    /**
+     * Forgives the misses counted under `key`, at most ONCE per attempt
+     * window. A decision is what calls it, and a decision can be self-served
+     * (any account may decide on a code it minted itself), so an unbounded
+     * reset would hand the actor its guesses back on demand (#3590). An armed
+     * lock is left alone and still runs out.
+     */
+    resetLookupMisses(key: string): Promise<void>;
 }
 
 export type OAuth2DeviceCodeVerifyOptions = {

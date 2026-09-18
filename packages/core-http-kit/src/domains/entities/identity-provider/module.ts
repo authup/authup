@@ -31,6 +31,10 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
             return `${url}?codeRequest=${base64URLEncode(JSON.stringify(options.codeRequest))}`;
         }
 
+        if (options.userCode) {
+            return `${url}?user_code=${encodeURIComponent(options.userCode)}`;
+        }
+
         return url;
     }
 

@@ -350,4 +350,67 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
         expect(await repository.lookupThrottle(other)).toBeNull();
     });
+
+    it('should forgive the counter once per window and leave the lock alone', async () => {
+        const key = `actor:${randomUUID()}`;
+        const locked = `actor:${randomUUID()}`;
+
+        for (let i = 0; i < 9; i++) {
+            await repository.countLookupMiss(key, 10);
+        }
+
+        cache.records = [];
+        await repository.resetLookupMisses(key);
+
+        // the marker's ttl is what bounds the forgiveness to one per window,
+        // and it is handed over in milliseconds like every other key here
+        expect(cache.records).toEqual([{
+            method: 'add',
+            key: keyOf(CacheOAuth2Prefix.DEVICE_LOOKUP_ATTEMPT, `reset:${key}`),
+            ttl: OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW * 1000,
+        }]);
+        cache.records = [];
+
+        await repository.countLookupMiss(key, 10);
+        expect(await repository.lookupThrottle(key)).toBeNull();
+
+        // the second reset in the window adds nothing, so the counter keeps
+        // running and the tenth miss behind it arms the lock
+        await repository.resetLookupMisses(key);
+        for (let i = 0; i < 9; i++) {
+            await repository.countLookupMiss(key, 10);
+        }
+
+        expect(await repository.lookupThrottle(key)).toBeGreaterThan(0);
+        expect(cache.records).toContainEqual({
+            method: 'set',
+            key: keyOf(CacheOAuth2Prefix.DEVICE_LOOKUP_ATTEMPT, `lock:${key}`),
+            ttl: OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW * 1000,
+        });
+
+        for (let i = 0; i < 10; i++) {
+            await repository.countLookupMiss(locked, 10);
+        }
+
+        await repository.resetLookupMisses(locked);
+
+        expect(await repository.lookupThrottle(locked)).toBeGreaterThan(0);
+    });
+
+    it('should spend no forgiveness when there is nothing to forgive', async () => {
+        const key = `actor:${randomUUID()}`;
+
+        await repository.resetLookupMisses(key);
+
+        expect(cache.records).toEqual([]);
+
+        // so the first real reset in the window still wins
+        for (let i = 0; i < 9; i++) {
+            await repository.countLookupMiss(key, 10);
+        }
+        await repository.resetLookupMisses(key);
+        await repository.countLookupMiss(key, 10);
+
+        expect(await repository.lookupThrottle(key)).toBeNull();
+    });
 });

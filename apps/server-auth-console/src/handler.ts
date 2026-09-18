@@ -22,6 +22,8 @@ import {
     createAPIClient,
     createFeaturesReader,
     readAuthorizeInfo,
+    readDeviceError,
+    readDeviceFederatedLogin,
     readDeviceUserCode,
 } from './payload';
 import { assertRenderContract, createRenderPage } from './render';
@@ -135,6 +137,8 @@ export async function createHandler(
             data: {
                 features: await readFeatures(),
                 userCode: readDeviceUserCode(event),
+                federatedLogin: readDeviceFederatedLogin(event),
+                error: readDeviceError(event),
             },
             theme,
         }),

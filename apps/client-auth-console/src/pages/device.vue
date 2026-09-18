@@ -5,11 +5,12 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+/* global window */
 import { AAuthShell, ADeviceVerifyForm } from '@authup/client-web-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProps } from '@vuecs/link';
 import { useToast } from '@vuecs/overlays';
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, onMounted } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
@@ -21,8 +22,28 @@ export default defineComponent({
     setup() {
         const payload = injectPayload<{
             features?: StatusResponseFeatures,
-            userCode?: string
+            userCode?: string,
+            federatedLogin?: { providerId: string },
+            error?: string
         }>();
+
+        // Both have done their job once the page has read them from the
+        // payload: a reload must not re-attempt a completion whose cookie is
+        // spent, nor show a refusal that belonged to an earlier attempt.
+        onMounted(() => {
+            if (typeof window === 'undefined') {
+                return;
+            }
+
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('provider') && !url.searchParams.has('error')) {
+                return;
+            }
+
+            url.searchParams.delete('provider');
+            url.searchParams.delete('error');
+            window.history.replaceState(window.history.state, '', url.href);
+        });
 
         const withBasePath = useBasePath();
 
@@ -76,6 +97,8 @@ export default defineComponent({
     <AAuthShell>
         <ADeviceVerifyForm
             :user-code="data.userCode"
+            :federated-login="data.federatedLogin"
+            :error="data.error"
             :register-link="registerLink"
             :password-forgot-link="passwordForgotLink"
             @failed="handleFailed"

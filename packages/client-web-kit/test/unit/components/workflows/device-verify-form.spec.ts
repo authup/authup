@@ -6,6 +6,7 @@
  */
 
 import type { DeviceAuthorizationInfo } from '@authup/core-http-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import type { FakeClient, FakeHandlerMap } from '@authup/core-http-kit/testing';
 import { DeviceVerificationThrottledError } from '@authup/errors';
 import { flushPromises } from '@vue/test-utils';
@@ -19,7 +20,7 @@ import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-a
 import { ADeviceVerifyForm } from '../../../../src/components/workflows/device';
 import { ALoginForm } from '../../../../src/components/workflows/login';
 import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
-import { injectStore } from '../../../../src/core';
+import { StoreAuthStatus, injectStore } from '../../../../src/core';
 import { mountKitComponent } from '../../../utils';
 
 // The locally registered VCIcon would otherwise fetch every unregistered
@@ -57,6 +58,17 @@ function oauth2Error(error: string, status = 400) {
                 error,
                 message: error,
             },
+        };
+        throw e;
+    };
+}
+
+function loginCompleteError(body: Record<string, unknown>) {
+    return () => {
+        const e = new Error(String(body.message ?? 'the redemption failed')) as Error & { response?: unknown };
+        e.response = {
+            status: 400,
+            data: body,
         };
         throw e;
     };
@@ -148,6 +160,16 @@ describe('ADeviceVerifyForm', () => {
         expect(lookup).toBeDefined();
         expect(lookup.body).toEqual({ user_code: 'BCDFGHJK' });
         expect(wrapper.text()).toContain('TV App');
+    });
+
+    it('hands its code to the login form', async () => {
+        const { wrapper } = mountForm({ userCode: 'BCDFGHJK' }, {}, false);
+
+        await submitCode(wrapper);
+
+        const loginForm = wrapper.findComponent(ALoginForm);
+        expect(loginForm.exists()).toBe(true);
+        expect(loginForm.props('deviceUserCode')).toEqual('BCDFGHJK');
     });
 
     it('returns to the code step with the invalid-code text on invalid_grant', async () => {
@@ -317,5 +339,115 @@ describe('ADeviceVerifyForm', () => {
         expect(findButton(wrapper, 'Abort')).toBeDefined();
         expect(requestsTo(httpClient, '/device_authorization/approve')).toHaveLength(0);
         expect(wrapper.emitted('done')).toBeFalsy();
+    });
+});
+
+/**
+ * The person signed in at an external provider and came back. The page has
+ * the pending login to redeem, and has to land on the code step for the
+ * confirmation click rather than on the lookup (#3589).
+ */
+describe('ADeviceVerifyForm federated login', () => {
+    const FEDERATED_LOGIN = { providerId: 'p-1' };
+
+    const LOGIN_COMPLETE_PATH = '/identity-providers/p-1/login-complete';
+
+    const federatedHandlers = (overrides: FakeHandlerMap = {}) : FakeHandlerMap => ({
+        'POST /identity-providers/p-1/login-complete': () => ({
+            access_token: 'federated-at',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            refresh_token: 'federated-rt',
+        }),
+        'POST /token/introspect': () => ({
+            active: true,
+            sub: 'user-1',
+            sub_kind: 'user',
+            name: 'jdoe',
+            realm_id: REALM.id,
+            realm_name: REALM.name,
+        }),
+        ...overrides,
+    });
+
+    it('completes a federated login and returns to the prefilled code step', async () => {
+        const { wrapper, httpClient } = mountForm(
+            { userCode: 'BCDFGHJK', federatedLogin: FEDERATED_LOGIN },
+            federatedHandlers(),
+            false,
+        );
+
+        // while the redemption is in flight there is no code form to confirm:
+        // a click then would look the code up under whatever session the
+        // cookies still hold
+        expect(wrapper.find('input').exists()).toBe(false);
+        expect(wrapper.find('form').exists()).toBe(false);
+
+        await flushPromises();
+
+        expect(requestsTo(httpClient, LOGIN_COMPLETE_PATH)).toHaveLength(1);
+        expect(requestsTo(httpClient, '/device_authorization/lookup')).toHaveLength(0);
+
+        const input = wrapper.find('input');
+        expect((input.element as HTMLInputElement).value).toEqual('BCDF-GHJK');
+        expect(wrapper.findComponent(ALoginForm).exists()).toBe(false);
+    });
+
+    it('looks the code up only after the person confirms it', async () => {
+        const { wrapper, httpClient } = mountForm(
+            { userCode: 'BCDFGHJK', federatedLogin: FEDERATED_LOGIN },
+            federatedHandlers(),
+            false,
+        );
+        await flushPromises();
+
+        await submitCode(wrapper);
+
+        const lookups = requestsTo(httpClient, '/device_authorization/lookup');
+        expect(lookups).toHaveLength(1);
+        expect(lookups[0].body).toEqual({ user_code: 'BCDFGHJK' });
+    });
+
+    it('signs the lingering session out when the redemption fails', async () => {
+        const { wrapper, store } = mountForm(
+            { userCode: 'BCDFGHJK', federatedLogin: FEDERATED_LOGIN },
+            federatedHandlers({ 'POST /identity-providers/p-1/login-complete': loginCompleteError({ message: 'The login request is unknown or expired.' }) }),
+        );
+        await flushPromises();
+
+        expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+        expect(wrapper.emitted('failed')).toBeTruthy();
+        expect(wrapper.find('input').exists()).toBe(true);
+    });
+
+    it('keeps the session when no login was pending', async () => {
+        const { store } = mountForm(
+            { userCode: 'BCDFGHJK', federatedLogin: FEDERATED_LOGIN },
+            federatedHandlers({
+                'POST /identity-providers/p-1/login-complete': loginCompleteError({
+                    message: 'The login request is unknown or expired.',
+                    reason: IDENTITY_PROVIDER_LOGIN_NOT_PENDING,
+                }),
+            }),
+        );
+        await flushPromises();
+
+        expect(store.status).toEqual(StoreAuthStatus.AUTHENTICATED);
+    });
+
+    it('renders the access-denied card for the access_denied marker', async () => {
+        const { wrapper, httpClient } = mountForm(
+            {
+                userCode: 'BCDFGHJK', 
+                error: 'access_denied', 
+                federatedLogin: FEDERATED_LOGIN, 
+            },
+            federatedHandlers(),
+        );
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('You are not permitted to access this application.');
+        expect(wrapper.find('input').exists()).toBe(false);
+        expect(requestsTo(httpClient, LOGIN_COMPLETE_PATH)).toHaveLength(0);
     });
 });

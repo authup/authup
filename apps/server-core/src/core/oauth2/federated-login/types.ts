@@ -31,8 +31,16 @@ export type OAuth2FederatedLoginCompleteInput = {
     /**
      * The RP's original authorization request, as `authorize-out` stored
      * it on the state blob. It is re-verified here rather than trusted.
+     *
+     * `null` is the device verification page's login (#3589), which
+     * completes no authorization request and therefore has no client. Nothing
+     * client-dependent runs for it here (request re-verification, the
+     * provider and client realm match, the redirect_uri checks, the access
+     * policy): the device flow's own lookup and approval carry those gates.
+     * Required rather than optional, so leaving it out cannot select that
+     * path by accident.
      */
-    codeRequest: OAuth2AuthorizationCodeRequest,
+    codeRequest: OAuth2AuthorizationCodeRequest | null,
     /**
      * The provider's single-use authorization code.
      */
@@ -81,32 +89,24 @@ export type OAuth2FederatedLoginRefusedResult = {
     kind: 'refused',
     refusal: OAuth2FederatedLoginRefusal,
     /**
-     * The marker the hosted authorize page maps onto its own copy, when
-     * the refusal has one. Absent means "render the request again", which
-     * re-runs the verifier and states the reason itself.
+     * The marker the hosted page maps onto its own copy, when the refusal
+     * has one. Absent means "render what the state carries again": the
+     * caller returns the browser to the request (or the device user code) on
+     * its own state, and the authorize page re-runs the verifier and states
+     * the reason itself.
      */
     error?: `${OAuth2ErrorCode}`,
-    /**
-     * The request to re-render. The verified copy when re-verification got
-     * that far, else the stored one.
-     */
-    codeRequest: OAuth2AuthorizationCodeRequest,
 };
 
 export type OAuth2FederatedLoginIssuedResult = {
     kind: 'issued',
     /**
-     * Identifies the pending login the hosted authorize page completes. The
-     * caller puts it in a cookie; it is never a URL parameter. No token and no
+     * Identifies the pending login the hosted page completes. The caller
+     * puts it in a cookie; it is never a URL parameter. No token and no
      * authorization code: the application's code is issued at the end of the
      * hosted ladder, once the prompt gates and consent have run.
      */
     pendingLoginId: string,
-    /**
-     * The verified request, which the caller re-renders on the hosted
-     * page alongside it.
-     */
-    codeRequest: OAuth2AuthorizationCodeRequest,
 };
 
 /**
