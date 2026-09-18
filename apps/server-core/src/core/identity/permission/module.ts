@@ -6,7 +6,6 @@
  */
 
 import type {
-    IdentityPolicyData,
     PermissionGrant,
     PermissionPolicyBinding,
 } from '@authup/access';
@@ -27,6 +26,7 @@ import type { IIdentityRoleProvider } from '../role/types.ts';
 import type {
     IIdentityPermissionProvider,
     IdentityPermissionProviderContext,
+    IdentityPermissionSubject,
     IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
@@ -143,7 +143,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         return { policy, realmScope: selected.realmScope };
     }
 
-    async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
+    async getFor(identity: IdentityPermissionSubject) : Promise<PermissionPolicyBinding[]> {
         switch (identity.type) {
             case 'client': {
                 return this.getForClient(identity);
@@ -172,7 +172,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return [];
         }
 
-        const identity : IdentityPolicyData = { type: token.sub_kind, id: token.sub };
+        const identity : IdentityPermissionSubject = { type: token.sub_kind, id: token.sub };
         if (identity.type !== 'user' || !token.client_id) {
             return this.getFor(identity);
         }
@@ -188,14 +188,14 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         return bindings.filter((binding) => applies(binding.permission.clientId));
     }
 
-    async getForClient(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
+    async getForClient(identity: IdentityPermissionSubject) : Promise<PermissionPolicyBinding[]> {
         return this.combineWithRoleBindings(
             this.clientRepository.getBoundPermissions(identity.id),
             identity,
         );
     }
 
-    async getForUser(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
+    async getForUser(identity: IdentityPermissionSubject) : Promise<PermissionPolicyBinding[]> {
         // No client narrowing here: a user owns no client, and the grants a user
         // holds through a token are `getForToken`'s.
         return this.combineWithRoleBindings(
@@ -204,18 +204,18 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         );
     }
 
-    async getForRole(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
+    async getForRole(identity: IdentityPermissionSubject) : Promise<PermissionPolicyBinding[]> {
         return this.roleRepository.getBoundPermissions(identity.id);
     }
 
     private async combineWithRoleBindings(
         bindingsPromise: Promise<PermissionPolicyBinding[]>,
-        identity: IdentityPolicyData,
+        identity: IdentityPermissionSubject,
         keepRole: (role: Role) => boolean = () => true,
     ): Promise<PermissionPolicyBinding[]> {
         const [bindings, roles] = await Promise.all([
             bindingsPromise,
-            this.roleProvider.getRolesFor(identity),
+            this.roleProvider.getRolesFor({ type: identity.type, id: identity.id }),
         ]);
         const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles.filter(keepRole));
         if (roleBindings.length === 0) {

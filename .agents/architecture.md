@@ -3593,8 +3593,10 @@ carries, regardless of client ownership (#3607).
 `sub_kind` and `client_id` it loads the user's roles, drops those owned by another
 client, loads their permissions, and drops every permission owned by another client. It
 is a DISJUNCTION (unowned OR the token's client): an equality drops every global grant,
-which already regressed introspection once. `getFor(identity)` stays unnarrowed; nothing
-passes the client alongside the subject. Everything else reads that one grant set:
+which already regressed introspection once. `getFor(identity)` accepts only the subject's
+`type` and `id` and returns its full assignments. It passes only those fields to the role
+provider, so identity metadata cannot narrow the result. Client applicability is applied
+separately by `getForToken`. Everything else reads that one grant set:
 
 - **evaluation**: the authorization middleware composes the request's evaluator per
   request, over an engine whose grant source is `createGrantsResolver`: the request's own

@@ -5,10 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionPolicyBinding } from '@authup/access';
+import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
-import { describe, expect, it } from 'vitest';
+import {
+    describe,
+    expect,
+    expectTypeOf,
+    it,
+} from 'vitest';
 import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
+import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module.ts';
 
 /**
@@ -41,6 +47,13 @@ const policy = { id: 'policy-1', type: BuiltInPolicyType.IDENTITY } as any;
 const policyOther = { id: 'policy-2', type: BuiltInPolicyType.ATTRIBUTES } as any;
 
 describe('core/identity/permission — IdentityPermissionProvider disjunction (#3155)', () => {
+    it('accepts only the identity type and id for permission lookup', () => {
+        expectTypeOf<Parameters<IIdentityPermissionProvider['getFor']>[0]>()
+            .toEqualTypeOf<{ type: string; id: string }>();
+        expectTypeOf<Parameters<IdentityPermissionProvider['getFor']>[0]>()
+            .toEqualTypeOf<{ type: string; id: string }>();
+    });
+
     it('resolves every permission a client-owned role carries (#3607)', async () => {
         const provider = createProvider({
             child: [
@@ -50,11 +63,12 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             ],
         });
 
-        const bindings = await provider.getFor({
+        const identity: IdentityPolicyData = {
             type: 'role',
             id: 'child',
             clientId: 'x',
-        });
+        };
+        const bindings = await provider.getFor(identity);
 
         expect(bindings.map((binding) => binding.permission.name)).toEqual([
             'user_delete',
@@ -374,6 +388,18 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
     }
 
     const names = (bindings: PermissionPolicyBinding[]) => bindings.map((b) => b.permission.name).sort();
+
+    it('loads all assignments even when the identity object carries client metadata', async () => {
+        const identity: IdentityPolicyData = {
+            type: 'user',
+            id: 'u',
+            clientId: X,
+        };
+
+        const result = await createUserProvider().getFor(identity);
+
+        expect(names(result)).toEqual(['g', 'p_x', 'p_z', 'q', 'q_x', 'q_z', 'r']);
+    });
 
     it('keeps unowned grants plus the token client\'s, direct and role-derived', async () => {
         const result = await createUserProvider().getForToken({
