@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.65) (2026-09-18)
+
+
+### Bug Fixes
+
+* **server-core:** scope the check routes to the caller, and gate checks for other subjects behind permission_check ([#3605](https://github.com/authup/authup/issues/3605)) ([7e1d06d](https://github.com/authup/authup/commit/7e1d06dae16c8f6b1a237f39fdab6a46a2c1ff06))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

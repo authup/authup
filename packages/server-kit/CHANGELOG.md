@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.65) (2026-09-18)
+
+
+### Bug Fixes
+
+* narrow a user's client-owned grants to the token's client ([#3606](https://github.com/authup/authup/issues/3606)) ([5efbd46](https://github.com/authup/authup/commit/5efbd464f638bf23d441fd7ebece74a0342d69da))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.1-beta.65
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
