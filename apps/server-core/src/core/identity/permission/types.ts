@@ -50,8 +50,10 @@ export type ResolveJunctionGrantResult = {
  */
 export type IdentityToken = Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'client_id'>;
 
+export type IdentityPermissionSubject = Pick<IdentityPolicyData, 'type' | 'id'>;
+
 export interface IIdentityPermissionProvider {
-    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
+    getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]>;
     getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]>;
     /**
      * Whether `parent` covers every grant in `child`. A caller passes the

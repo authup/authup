@@ -146,7 +146,6 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                 await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: validated.roleId,
-                    clientId: validated.role.clientId,
                 }),
             );
             if (!hasPermissions) {

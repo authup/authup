@@ -146,7 +146,6 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
                 await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: validated.roleId,
-                    clientId: validated.role.clientId,
                 }),
             );
             if (!hasPermissions) {
