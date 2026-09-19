@@ -9,6 +9,7 @@ import { defineCommand } from 'citty';
 import { REMOTE_ARGS } from '../../remote/args.ts';
 import { runRemoteRequest } from '../../remote/request.ts';
 import { RESOURCE_METHODS, RESOURCE_NAMES } from './constants.ts';
+import { validateResourceArguments } from './validation.ts';
 
 export function defineCLIResourceCommand() {
     return defineCommand({
@@ -38,26 +39,22 @@ export function defineCLIResourceCommand() {
             },
         },
         async run({ args }) {
-            if (args._.length > 3) throw new Error('Unexpected resource argument.');
-            if (!RESOURCE_NAMES.includes(args.resource)) throw new Error(`Unknown resource. Choose ${RESOURCE_NAMES.join(', ')}.`);
-            if (!Object.hasOwn(RESOURCE_METHODS, args.operation)) throw new Error('Unknown operation. Use list, get, create, update or delete.');
-            const needsId = ['get', 'update', 'delete'].includes(args.operation);
-            if (needsId !== !!args.id) throw new Error(needsId ? 'This operation requires a record ID.' : 'This operation does not take a record ID.');
-            if (args.id && (['.', '..'].includes(args.id) || /[\\/?#]/.test(args.id))) throw new Error('Invalid record ID.');
-            const writes = args.operation === 'create' || args.operation === 'update';
-            if (writes !== (args.data !== undefined)) throw new Error(writes ? 'This operation requires --data.' : 'This operation does not accept --data.');
-            if (writes) {
-                let data;
-                try { data = JSON.parse(args.data!); } catch { throw new Error('--data must be a JSON object.'); }
-                if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('--data must be a JSON object.');
+            const operation = validateResourceArguments(args);
+
+            let resourcePath = args.resource;
+            if (args.id) {
+                resourcePath += `/${encodeURIComponent(args.id)}`;
             }
-            if (args.query !== undefined && !['list', 'get'].includes(args.operation)) throw new Error('--query is only supported for list/get.');
-            const query = args.query ? `?${new URLSearchParams(args.query)}` : '';
+
+            if (args.query) {
+                resourcePath += `?${new URLSearchParams(args.query)}`;
+            }
+
             await runRemoteRequest({
                 server: args.server,
                 'credential-store': args['credential-store'],
-                path: `${args.resource}${args.id ? `/${encodeURIComponent(args.id)}` : ''}${query}`,
-                method: RESOURCE_METHODS[args.operation as keyof typeof RESOURCE_METHODS],
+                path: resourcePath,
+                method: RESOURCE_METHODS[operation],
                 data: args.data,
             });
         },
