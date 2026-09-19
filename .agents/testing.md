@@ -422,14 +422,14 @@ against, before the async lookup settles.
 
 ## CLI Tests (apps/authup)
 
-The `authup` CLI runs every service in process, so almost
-nothing is left to unit-test: the wiring is the assertion, and the behaviour
-lives in the packages. The suite is split in two accordingly.
+The `authup` CLI tests cover service composition, command validation and
+remote client authentication. The unit suite uses isolated dependencies;
+the smoke suite exercises built and packed deployments.
 
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): `createCLIEntryPointCommand` carries the `authup`
   meta read from the package and exactly the subcommands it should
-  (`config`, `dev`, `healthcheck`, `migration`, `start`, and no `core`,
+  (`api`, `config`, `dev`, `healthcheck`, `login`, `logout`, `migration`, `resource`, `start`, and no `core`,
   `console` or `worker`: those are roles of `start`). The root `setup`
   refuses a stray positional on `dev` alone and leaves the commands whose
   positional is real alone (`migration run`, `start console admin`);
@@ -446,6 +446,12 @@ lives in the packages. The suite is split in two accordingly.
   in `@authup/server-config`, so there is no pair of declarations to prove
   consistent. There is no supervisor either, so nothing resolves an
   entrypoint, maps a child environment or holds a routing table.
+- **Remote CLI** (`test/unit/remote.spec.ts`) runs the real HTTP client pipeline
+  over `MemoryTransport`: device polling/backoff, terminal errors, cancellation,
+  private storage, server isolation, refresh rotation, JSON API requests and
+  resource commands. `session.spec.ts` mocks the native keyring and checks
+  store selection, keychain failures and persistence before mutations. Tests
+  never access the developer's real keychain or need live credentials.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.
   - The **composed** scenario boots the built CLI's `start` against sqlite on

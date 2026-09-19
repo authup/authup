@@ -19,6 +19,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Documentation](#documentation)
 - [Usage](#usage)
 - [Commands](#commands)
+- [Login and API requests](#login-and-api-requests)
 - [Configuration](#configuration)
 - [License](#license)
 
@@ -68,6 +69,91 @@ name. The retired `--worker` flag is refused as well, with a message naming
 
 `authup dev` is the EXPERIMENTAL development variant of `start`; see the
 documentation.
+
+## Login and API requests
+
+Use a public OAuth2 client (`authMethod: none`) in the realm you want to manage.
+Its `grantTypes` must explicitly include
+`urn:ietf:params:oauth:grant-type:device_code`; include `refresh_token` to keep
+using the login after the access token expires. A null grant allowlist does
+not enable the device flow. Supply the client's UUID, not a client secret.
+The signed-in user's permissions still govern every API request.
+
+```shell
+# Local server (default http://localhost:3000/)
+authup login --client-id <client-uuid>
+authup api 'users?page[limit]=10'
+
+# Remote server; --server <url> overrides AUTHUP_SERVER_URL
+export AUTHUP_SERVER_URL=https://auth.example.com/
+authup login --client-id <client-uuid>
+# Open the printed URL in a browser and approve the displayed code.
+authup api 'users?filter[name]=alice'
+authup api users --method POST --data '{"name":"alice","realmId":"<realm-uuid>"}'
+authup api users/<user-uuid> --method POST --data '{"displayName":"Alice"}'
+authup api users/<user-uuid> --method DELETE
+authup logout
+```
+
+For resource operations, use the `resource` prefix:
+
+```shell
+authup resource users list --query 'page[limit]=10'
+authup resource users get <user-uuid>
+authup resource users create --data '{"name":"alice","realmId":"<realm-uuid>"}'
+authup resource users update <user-uuid> --data '{"displayName":"Alice"}'
+authup resource users delete <user-uuid>
+```
+
+Supported resources are `users`, `clients`, `realms`, `roles`, `permissions`,
+`policies` and `scopes`. `list`/`get` accept `--query`; `create`/`update` require
+a JSON object in `--data`. These commands share authentication and request
+handling with `api`; use `api` for other endpoints and workflow operations.
+
+`--scope 'scope-a scope-b'` requests explicit scopes during login. Client scope
+restrictions and user permissions are enforced by the server as usual.
+API paths are relative to the configured base URL, including any path prefix;
+quote query strings so the shell does not interpret brackets. `--method` (`-X`)
+defaults to GET; `--data` (`-d`) takes JSON for POST, PUT, PATCH or DELETE.
+Successful responses go to stdout as JSON (no output for HEAD or 204).
+Progress and errors go to stderr; failures exit nonzero. Requests time out
+after 30 seconds and do not follow redirects. Remote servers require HTTPS;
+HTTP is accepted for localhost, 127.0.0.1 and [::1].
+
+The default credential store is the OS keychain through `@napi-rs/keyring`:
+macOS Keychain, Windows Credential Manager, or Linux Secret Service. Linux
+requires a running Secret Service (for example GNOME Keyring or KWallet);
+the CLI does not use the temporary kernel keyring. Each normalized server
+URL has a separate entry under the `authup` service.
+
+If the keychain is unavailable, use `--credential-store=file` explicitly,
+or set `AUTHUP_CREDENTIAL_STORE=file` for all client commands:
+
+```shell
+export AUTHUP_CREDENTIAL_STORE=file
+authup login --client-id <client-uuid>
+authup resource users list
+authup logout
+```
+
+Keychain errors never silently switch to file storage. File storage uses
+`$XDG_CONFIG_HOME/authup/credentials` (fallback `~/.config/authup/credentials`)
+with a private directory (0700) and **unencrypted token files** (0600) on
+POSIX; Windows access follows the user's filesystem ACLs. Select the same
+store for login, requests and logout. Stores are independent; logout removes
+the entry from the selected store only.
+
+The CLI refreshes expiring access tokens and saves rotated refresh tokens
+before sending an API request. Failed mutations are never automatically replayed.
+
+Only one command per server runs at a time, to prevent refresh-token races.
+Ctrl-C releases the lock; after a forced kill or crash, remove the stale lock
+named in the error once no command is running. `logout` removes the local
+login only; revoke the session on the server to invalidate its tokens.
+
+These client commands select their target through `--server` or
+`AUTHUP_SERVER_URL`; they do not read `authup.yml`. `healthcheck` and
+`config validate` remain independent of login.
 
 ## Configuration
 
