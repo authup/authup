@@ -23,7 +23,8 @@ authup login --server https://auth.example.com --client cli --realm master
 name repeats per realm; without a realm the master realm is assumed). Both are
 remembered per server, so a later `authup login` to the same server needs no
 flags. `--server` falls back to `AUTHUP_SERVER_URL`, then to the server of the
-last login. Plain `http:` is accepted for `localhost` only.
+last login. Plain `http:` is accepted for loopback only (`localhost`,
+`127.0.0.1`, `[::1]`).
 
 The command prints the verification URL and the code; open the URL, sign in
 and confirm the code. The CLI polls until the approval lands.

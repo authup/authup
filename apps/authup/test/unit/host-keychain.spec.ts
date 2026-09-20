@@ -17,9 +17,9 @@ import { createHostStore, createKeychainTokenStorage, selectTokenStorage } from 
 const keyring = vi.hoisted(() => {
     const entries = new Map<string, string>();
     const constructed : {
-        service: string, 
-        account: string, 
-        options: unknown 
+        service: string,
+        account: string,
+        options: unknown
     }[] = [];
     let failing = false;
 
@@ -28,9 +28,9 @@ const keyring = vi.hoisted(() => {
 
         constructor(service: string, account: string, options: unknown) {
             constructed.push({
-                service, 
-                account, 
-                options, 
+                service,
+                account,
+                options,
             });
             this.account = account;
         }
@@ -52,9 +52,9 @@ const keyring = vi.hoisted(() => {
     }
 
     return {
-        entries, 
-        constructed, 
-        AsyncEntry, 
+        entries,
+        constructed,
+        AsyncEntry,
         fail: (value: boolean) => { failing = value; },
     };
 });
@@ -76,25 +76,25 @@ describe('keychain token storage', () => {
         expect(await storage.read(host)).toBeUndefined();
 
         await storage.write(host, {
-            accessToken: 'a', 
-            refreshToken: 'r', 
-            expiresAt: 1000, 
+            accessToken: 'a',
+            refreshToken: 'r',
+            expiresAt: 1000,
         });
 
         expect(keyring.constructed[0]).toEqual({
-            service: 'authup', 
-            account: host, 
-            options: { linux: { store: 'secret-service' } }, 
+            service: 'authup',
+            account: host,
+            options: { linux: { store: 'secret-service' } },
         });
         expect(JSON.parse(keyring.entries.get(host)!)).toEqual({
-            accessToken: 'a', 
-            refreshToken: 'r', 
-            expiresAt: 1000, 
+            accessToken: 'a',
+            refreshToken: 'r',
+            expiresAt: 1000,
         });
         expect(await storage.read(host)).toEqual({
-            accessToken: 'a', 
-            refreshToken: 'r', 
-            expiresAt: 1000, 
+            accessToken: 'a',
+            refreshToken: 'r',
+            expiresAt: 1000,
         });
 
         await storage.remove(host);

@@ -25,14 +25,13 @@ function keychainUnavailable() : Error {
  * does not survive the session.
  */
 async function openEntry(host: string) : Promise<AsyncEntry> {
-    let module : typeof KeyringModule;
     try {
-        module = await import('@napi-rs/keyring');
+        const module : typeof KeyringModule = await import('@napi-rs/keyring');
+
+        return new module.AsyncEntry(KEYCHAIN_SERVICE_NAME, host, { linux: { store: 'secret-service' } });
     } catch {
         throw keychainUnavailable();
     }
-
-    return new module.AsyncEntry(KEYCHAIN_SERVICE_NAME, host, { linux: { store: 'secret-service' } });
 }
 
 export function createKeychainTokenStorage() : IHostTokenStorage {

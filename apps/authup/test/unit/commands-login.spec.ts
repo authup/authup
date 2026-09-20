@@ -139,6 +139,15 @@ describe('authup login', () => {
         expect(forms[0]).toEqual({ client_id: 'cli', realm_name: 'master' });
     });
 
+    it('keeps the remembered realm when the same client is passed again', async () => {
+        await login(['--server', host, '--client', 'cli', '--realm', 'master']);
+        forms.length = 0;
+
+        await login(['--client', 'cli']);
+
+        expect(forms[0]).toEqual({ client_id: 'cli', realm_name: 'master' });
+    });
+
     it('keeps the tokens in the hosts file on --insecure-storage and drops the keychain entry', async () => {
         await login(['--server', host, '--client', 'cli']);
         expect(keyring.entries.has(host)).toBe(true);

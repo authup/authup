@@ -47,6 +47,9 @@ async function acquire(file: string) : Promise<FileHandle> {
  * twice, and strict rotation answers the replay by revoking the family.
  * The lock wraps a rotation and a write of the hosts file, never a whole
  * command; a lock older than the stale cut belongs to a process that died.
+ * A holder that outlived the stale cut deletes its successor's lock file on
+ * release, so exclusion is not absolute; the 30 s cut and the short critical
+ * sections keep that window small.
  */
 export async function withHostLock<T>(directory: string, fn: () => Promise<T>) : Promise<T> {
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });

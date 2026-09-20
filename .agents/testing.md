@@ -453,9 +453,9 @@ lives in the packages. The suite is split in two accordingly.
   `XDG_CONFIG_HOME` pointed at a tmp dir. Pinned: the device poll cadence and its terminal
   answers, the hosts document and both token storages, the stale-lock takeover, a 401 that
   refreshes once and replays, the adoption of another process's rotation, the refresh-on-401
-  deadlock guard, the derived noun set (equal to the kit's registry, so a new sub-API fails
-  this list until it is acknowledged) and verbs, and the flags reaching the URL as rapiq
-  parameters.
+  deadlock guard, the derived noun set (every `EntityType` value `pickEntityAPI` resolves on
+  the client except the owner-scoped `userAuthenticator`, so a new sub-API fails this list
+  until it is acknowledged) and verbs, and the flags reaching the URL as rapiq parameters.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.
   - The **composed** scenario boots the built CLI's `start` against sqlite on

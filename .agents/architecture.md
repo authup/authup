@@ -4119,8 +4119,9 @@ conditions ride one `--filter` joined by `&`, because citty parses with
 `util.parseArgs` and no `multiple`, so a repeated flag keeps its last value.
 Output is the response body as JSON; errors are rendered once
 (`describeHostError`: `code: message` plus validation issue paths for an
-`AuthupError` body, hapic's method-and-URL message otherwise, never a body,
-a `cause` or a bearer). Rejected: a provisioned `cli`
+`AuthupError` body, the server's own `message` for another JSON body, hapic's
+status, method and URL otherwise; never a raw body, a `cause` or a bearer).
+Rejected: a provisioned `cli`
 system client (admission control), a raw `api <path>` passthrough and a
 hand-listed resource set (both are a curl wrapper next to a typed client),
 keychain-first with a silent file fallback (a downgrade nobody sees).

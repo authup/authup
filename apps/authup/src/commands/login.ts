@@ -57,7 +57,8 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
                 throw new Error(`No client is remembered for ${host}. Pass --client <id|name>, and --realm for a name outside the master realm.`);
             }
 
-            const realm = args.client ? args.realm : (args.realm || previous?.realm);
+            const clientChanged = !!args.client && args.client !== previous?.clientId;
+            const realm = clientChanged ? args.realm : (args.realm || previous?.realm);
             const storage : HostStorage = args['insecure-storage'] ? 'file' : 'keychain';
 
             const grant = await runDeviceLogin(

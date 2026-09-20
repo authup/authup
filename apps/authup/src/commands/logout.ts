@@ -65,7 +65,11 @@ export function defineCLILogoutCommand(context: HostCommandContext = {}) {
             }
 
             await withHostLock(store.directory, async () => {
-                await storage.remove(host);
+                try {
+                    await storage.remove(host);
+                } catch {
+                    writeNotice(`Could not remove the keychain entry for ${host}; remove it by hand (service authup). The tokens are revoked and the host is forgotten.`);
+                }
 
                 const latest = await store.read();
                 delete latest.hosts[host];

@@ -54,10 +54,10 @@ describe('host store', () => {
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    realm: 'master', 
-                    storage: 'keychain', 
-                }, 
+                    clientId: 'cli',
+                    realm: 'master',
+                    storage: 'keychain',
+                },
             },
         };
 
@@ -97,21 +97,21 @@ describe('host store', () => {
             expect(await storage.read(host)).toBeUndefined();
 
             await storage.write(host, {
-                accessToken: 'a', 
-                refreshToken: 'r', 
-                expiresAt: 1000, 
+                accessToken: 'a',
+                refreshToken: 'r',
+                expiresAt: 1000,
             });
 
             expect(await storage.read(host)).toEqual({
-                accessToken: 'a', 
-                refreshToken: 'r', 
-                expiresAt: 1000, 
+                accessToken: 'a',
+                refreshToken: 'r',
+                expiresAt: 1000,
             });
             expect((await store.read()).hosts[host]).toEqual({
-                clientId: 'cli', 
-                storage: 'file', 
-                accessToken: 'a', 
-                refreshToken: 'r', 
+                clientId: 'cli',
+                storage: 'file',
+                accessToken: 'a',
+                refreshToken: 'r',
                 expiresAt: 1000,
             });
 

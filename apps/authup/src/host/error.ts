@@ -23,8 +23,12 @@ function describeIssues(issues: unknown) : string[] {
 }
 
 /**
- * A hapic error's own message names the method and the URL and nothing
- * else; the request it carries holds the bearer, so it is never rendered.
+ * The kit `Client` installs a hook that overwrites a hapic error's own
+ * message with `response.data.message` whenever the body is a JSON object
+ * carrying one, so for a non-authup JSON body `error.message` is the
+ * server's own text; for anything else it stays hapic's status, method and
+ * URL. Neither case renders the body itself, and never the request, which
+ * carries the bearer.
  */
 export function describeHostError(error: unknown) : string {
     if (isClientError(error)) {

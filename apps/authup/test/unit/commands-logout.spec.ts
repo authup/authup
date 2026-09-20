@@ -19,6 +19,40 @@ import { defineCLILogoutCommand } from '../../src/commands/logout.ts';
 import { createHostStore, resolveHostsDirectory } from '../../src/host/store/index.ts';
 import { createHostTransport, createHostsDirectory } from '../utils/host.ts';
 
+const keyring = vi.hoisted(() => {
+    const entries = new Map<string, string>();
+    let failing = false;
+
+    class AsyncEntry {
+        account : string;
+
+        constructor(_service: string, account: string) {
+            this.account = account;
+        }
+
+        async getPassword() : Promise<string | undefined> {
+            return entries.get(this.account);
+        }
+
+        async setPassword(value: string) : Promise<void> {
+            entries.set(this.account, value);
+        }
+
+        async deleteCredential() : Promise<boolean> {
+            if (failing) throw new Error('keychain locked');
+            return entries.delete(this.account);
+        }
+    }
+
+    return {
+        entries,
+        AsyncEntry,
+        fail: (value: boolean) => { failing = value; },
+    };
+});
+
+vi.mock('@napi-rs/keyring', () => ({ AsyncEntry: keyring.AsyncEntry }));
+
 const host = 'https://auth.example.com';
 
 describe('authup logout', () => {
@@ -50,6 +84,8 @@ describe('authup logout', () => {
     afterEach(async () => {
         vi.restoreAllMocks();
         vi.unstubAllEnvs();
+        keyring.fail(false);
+        keyring.entries.clear();
         await fs.rm(root, { recursive: true, force: true });
     });
 
@@ -94,5 +130,24 @@ describe('authup logout', () => {
     it('refuses a host without a sign-in', async () => {
         await expect(runCommand(defineCLILogoutCommand(), { rawArgs: ['--server', 'https://other.test'] }))
             .rejects.toThrow(/Not signed in to https:\/\/other.test/);
+    });
+
+    it('forgets the host when the keychain refuses to remove the entry', async () => {
+        await createHostStore(resolveHostsDirectory()).write({
+            current: host,
+            hosts: { [host]: { clientId: 'cli', storage: 'keychain' } },
+        });
+        keyring.entries.set(host, JSON.stringify({
+            accessToken: 'secret-access',
+            refreshToken: 'secret-refresh',
+            expiresAt: 5,
+        }));
+        keyring.fail(true);
+        const transport = createHostTransport({ 'POST /token/revoke': () => ({ status: 200, body: {} }) });
+
+        await runCommand(defineCLILogoutCommand({ transport }), { rawArgs: [] });
+
+        expect(await createHostStore(resolveHostsDirectory()).read()).toEqual({ hosts: {} });
+        expect(notices.join('')).toContain('Could not remove the keychain entry');
     });
 });
