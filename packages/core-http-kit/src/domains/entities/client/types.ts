@@ -27,6 +27,7 @@ export type ClientCreatePayload = Pick<Client, 'name'> &
         'baseUrl' |
         'grantTypes' |
         'realmId' |
+        'pathId' |
         'accessPolicyId'>>;
 /**
  * The storage mode is a create-time property: on an existing client it

@@ -27,6 +27,7 @@ import type {
     IOAuth2DeviceAuthorizationAPI,
     IOAuth2TokenAPI,
     IOAuth2UserInfoAPI,
+    IPathAPI,
     IPermissionAPI,
     IPermissionPolicyAPI,
     IPolicyAPI,
@@ -96,6 +97,12 @@ export interface IClient extends IBaseClient {
     readonly identityProviderRoleMapping : IIdentityProviderRoleMappingAPI;
 
     readonly key : IKeyAPI;
+
+    /**
+     * The realm's folder tree: one segment `name` per folder, the full
+     * slash `path` derived by the server from the parent chain.
+     */
+    readonly path : IPathAPI;
 
     readonly permission : IPermissionAPI;
 
