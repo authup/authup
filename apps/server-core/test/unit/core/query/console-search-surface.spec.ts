@@ -39,6 +39,9 @@ import { decodeQuery } from '../../../../src/core/query/index.ts';
 const CONSOLE_SEARCH_FIELDS : Record<string, string[]> = {
     [EntityType.CLIENT]: ['name', 'displayName'],
     [EntityType.IDENTITY_PROVIDER]: ['name', 'displayName'],
+    // a folder's single-segment `name` is deliberately not filterable:
+    // the full `path` covers it, so the console searches the label alone
+    [EntityType.PATH]: ['displayName'],
     [EntityType.PERMISSION]: ['name', 'displayName'],
     [EntityType.POLICY]: ['name', 'displayName'],
     [EntityType.REALM]: ['name', 'displayName'],

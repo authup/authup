@@ -7,6 +7,7 @@
 
 export * from './client';
 export * from './identity-provider';
+export * from './path';
 export * from './permission';
 export * from './realm';
 export * from './role';

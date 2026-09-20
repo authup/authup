@@ -20,7 +20,11 @@ import { createFieldsReadGate } from '../../query/fields.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 
-const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY };
+const schemaMapping = {
+    realm: EntityType.REALM,
+    accessPolicy: EntityType.POLICY,
+    path: EntityType.PATH,
+};
 
 /**
  * Per-row visibility gate for the `secret` column (issue #3322) —
@@ -116,7 +120,7 @@ export const clientSchema = defineSchema<Client>({
         allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active', 'builtIn'],
         indexed: true,
     },
-    relations: { allowed: ['realm', 'accessPolicy'], validate: createRelationsReadGate(schemaMapping) },
+    relations: { allowed: ['realm', 'accessPolicy', 'path'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,

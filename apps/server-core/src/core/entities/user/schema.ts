@@ -10,7 +10,10 @@ import type { User } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
 
-const schemaMapping = { realm: EntityType.REALM };
+const schemaMapping = {
+    realm: EntityType.REALM,
+    path: EntityType.PATH,
+};
 
 export const userSchema = defineSchema<User>({
     name: EntityType.USER,
@@ -49,7 +52,7 @@ export const userSchema = defineSchema<User>({
         allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active'],
         indexed: true,
     },
-    relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
+    relations: { allowed: ['realm', 'path'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
