@@ -61,8 +61,12 @@ hold a `sales/berlin`.
 - **Deleting a folder deletes its descendants and unfiles their occupants** in
   the same statement. No user and no client is ever deleted with a folder: the
   folder reference is cleared and the rows become unfiled. This is never
-  refused and needs no force flag; the admin console states how many rows are
-  about to be unfiled before it sends the request.
+  refused and needs no force flag. Before it sends the request the admin
+  console reads the subtree and names three numbers in the confirmation: how
+  many subfolders are deleted, and how many users and how many clients are
+  unfiled. When one of those reads is refused, or the subtree is larger than
+  the console can resolve, the confirmation says the counts are unavailable
+  and describes the effect instead.
 
 ## Filing a user or a client
 
@@ -93,16 +97,21 @@ a description), so a reader who may see the row may see where it is filed: the
 folder column in the admin console's user list renders for every reader of that
 list, and the account console shows a user their own folder without granting
 them anything. The folder **collection** is gated: listing the realm's folders
-requires the read permission.
+requires the read permission, which is why the folder dropdown that scopes the
+users and clients lists is shown only to a reader holding it.
 
 To manage folders in the admin console:
 
 1. Select the target realm.
 2. Open **Paths** in the sidebar and build the tree there.
-3. On the users and clients pages, pick a folder in the tree next to the table
-   to scope the list to that folder and everything below it. The search box is
-   independent of that scope: it searches names and display names, and the two
-   narrow the list together.
+3. On the users and clients pages, pick a folder from the folder dropdown
+   above the table to scope the list to that folder and everything below it.
+   (A tree pane replaces the dropdown once the component it needs ships,
+   tada5hi/vuecs#1729.) The search box is independent of that scope: it
+   searches names and display names, and the two narrow the list together. A
+   subtree with more folders than the console can resolve in ten requests is
+   not scoped at all: the page then lists every row and says why, rather than
+   showing a silently shortened list.
 4. On a user or client form, choose the folder the row belongs to.
 
 ## Federated users
@@ -112,10 +121,20 @@ under `sources/<provider name>` on first login, and the folder chain is created
 if it does not exist yet. An attribute mapping that targets the folder wins
 over that default.
 
-The rule applies at creation only. A later login never refiles an existing
-user, so an administrator who moves a federated user elsewhere keeps that
-placement. Nothing is reserved about the `sources` prefix: it is a convention,
-and an ordinary folder may live next to it.
+That **default** applies at creation only. A later login never refiles an
+existing user, so an administrator who moves a federated user elsewhere keeps
+that placement, and a folder that cannot be created leaves the user unfiled
+rather than failing the login.
+
+An **attribute mapping** that targets the folder behaves like every other
+mapped attribute and is re-applied on **every** login, so it overwrites a
+manual refile. It must supply the folder's **UUID**: nothing resolves a path
+such as `sales/berlin` to a folder there. The folder must belong to the user's
+realm, and a mapping naming another realm's folder is refused, which fails that
+provider's logins until the mapping is corrected.
+
+Nothing is reserved about the `sources` prefix: it is a convention, and an
+ordinary folder may live next to it.
 
 ## Declaring folders in a provisioning file
 

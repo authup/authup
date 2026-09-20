@@ -1542,9 +1542,11 @@ one into every realm would fight the system MERGE on every boot).
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
-`RealmProvisioningSynchronizer` processes per realm: scopes → clients → permissions → roles → users.
+`RealmProvisioningSynchronizer` processes per realm: scopes → paths → clients → permissions → roles → users.
 Scopes run first because they are leaf entities carrying no relations of their
-own, and a client in the same realm block may bind them via `realmScopes`.
+own, and a client in the same realm block may bind them via `realmScopes`;
+paths follow for the same reason, since a client or a user in that block may
+name one under `relations.path`.
 
 ### Concurrent boots: the provisioning lock (issue #3356)
 
@@ -3339,26 +3341,35 @@ folder's realm equals the row's, since `validateJoinColumns` checks existence
 only, and a mismatch is a plain `ValidationError`. It joins
 `system.user-names-self-manage` and `system.client-names-self-manage`, so a
 user cannot refile itself. Both schemas carry `pathId` in `fields.default`,
-`filters.allowed`, `sorts.allowed` and `indexes`, and `path` in
-`relations.allowed` with `schemaMapping.path = EntityType.PATH`.
+`filters.allowed` and `indexes`, and `path` in `relations.allowed` with
+`schemaMapping.path = EntityType.PATH`. It is deliberately NOT sortable:
+ordering rows by a uuid answers nothing, and the folder a row is filed under is
+read through the relation rather than through its key.
 
 **The `path` RELATION is deliberately ungated in `RELATION_TARGET_READ_GATES`,
 like `realm`; the folder COLLECTION is not.** A folder row holds organizational
 metadata alone (name, path, display name, description), so a reader who may see
 a row may see where it is filed: that is what lets the account console render a
 user its own folder through `GET /users/@me?include=path` with no `PATH_READ`,
-and the admin list render the folder column for any reader of the list.
-`GET /paths` stays gated on the `PATH_*` read triple.
+and the admin list render the folder column for any reader of the list, which
+is what that ungating was granted for. `GET /paths` stays gated on the `PATH_*`
+read triple, so the console's folder SELECT and the subtree lookup behind it
+are what `PATH_READ` gates, never the column.
 
 **Folder lifecycle.** Rename is `POST /paths/:id { name }` and move is
 `{ parentId }`; the new parent must sit in the same realm and must be neither
 the folder itself nor one of its descendants (a prefix test on `path`). Either
 recomputes the folder's `path` and rewrites every descendant's by prefix in ONE
-transaction, while the users and clients filed there follow by id with no write
-at all. Empty folders are legal. Delete is never refused on occupancy: the
+transaction, whose reads take a row lock (`lockRows`, the
+`UserRepositoryAdapter` precedent): two renames at different depths of one chain
+read different rows, so the transaction's own re-read cannot see the other and
+the unique key catches nothing, since `marketing` and `sales/munich` collide on
+no constraint. The users and clients filed there follow by id with no write at
+all. Empty folders are legal. Delete is never refused on occupancy: the
 `CASCADE` on `parentId` removes the subtree and the `SET NULL` on `pathId`
-unfiles every occupant in the same statement, and the console states the
-occupant count before it sends the call.
+unfiles every occupant in the same statement, and the console reads the subtree
+plus the two occupant totals and names all three in the confirmation before it
+sends the call (a count it may not read degrades to a prompt saying so).
 
 **`ensurePath(repository, realmId, 'a/b/c')` is the one primitive** ("mkdir
 -p"): it walks the segments, creates each missing folder under the previous one
@@ -3367,10 +3378,17 @@ goes through it: the provisioning synchronizers (the realm's `paths` list and
 the `relations.path` of a user or client alike), and
 `IdentityProviderAccountManager.saveUser`, which files a federated user under
 `sources/<provider name>` at CREATE when no attribute mapping targets the
-folder (a mapping wins). That default is forward-only, like `name`: a later
-login never refiles an existing user. Two concurrent first logins race on the
-`(realmId, path)` unique index, which is caught the way the account-link path
-catches its own (`isUniqueConstraintDatabaseError`, re-read, continue).
+folder (a mapping wins). That DEFAULT is forward-only, like `name`: a later
+login never refiles an existing user, and it is never-fail, since the folder is
+decoration and a login must not die over one. A MAPPING is the opposite on both
+counts: it re-applies on every login, like every other mapped attribute, so it
+overwrites a manual refile; it supplies a folder UUID, since nothing resolves a
+path string there; and it is checked against the user's realm in `saveUser`,
+because that write never passes through `UserService.save` and a foreign folder
+would travel on every ungated `include=path` of that realm. Two concurrent
+first logins race on the `(realmId, path)` unique index, which is caught the way
+the account-link path catches its own (`isUniqueConstraintDatabaseError`,
+re-read, continue).
 
 **Provisioning** gives a realm entry `paths`, declared by full `path` plus
 `displayName` / `description` and the usual `strategy` (so a parent needs no
@@ -3385,10 +3403,13 @@ wildcard realm entry seeds one folder set into every realm.
 console resolves the subtree on the paths table (`GET /paths` with the
 sibling-safe prefix form, plus the folder itself) and filters the collection
 with `inArray('pathId', ids)`, which lowers to `IN` and uses the index on every
-dialect. `filter[path.path]` is deliberately not the console's shape: a reader
-lacking `PATH_READ` would have it stripped by the relations read gate and see
-every row, and fail-soft on a user-facing filter is a wrong answer rather than a
-narrower one. The prefix filter on `auth_paths.path` itself is a scan on
+dialect, where `filter[path.path]` joins `auth_paths` per read to compare a
+column the row already references by key. The subtree read is PAGED to
+`meta.total`, bounded at ten pages: one page is the schema's own `maxLimit`, so
+a short id list would drop rows out of a user-facing list with no error, and
+past the bound the console scopes NOTHING and says so, since fail-soft on a
+user-facing filter is a wrong answer rather than a narrower one. The prefix
+filter on `auth_paths.path` itself is a scan on
 postgres and mysql, since `@rapiq/adapter-sql` lowers an anchored `startsWith`
 to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);
 the declaration makes that filter legal, not fast, and the folder table is small
