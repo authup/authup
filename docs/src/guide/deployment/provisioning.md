@@ -1,7 +1,7 @@
 # Provisioning
 
 Provisioning allows you to declaratively define the initial state of your Authup instance:
-users, roles, permissions, scopes, clients, and their relationships.
+users, roles, permissions, scopes, clients, paths, and their relationships.
 
 On every server startup, the provisioning system synchronizes the declared state into the database.
 Built-in defaults (admin user, admin role, system permissions) are always applied first.
@@ -477,8 +477,58 @@ and `relations`.
 | `permissions` | `PermissionProvisioning[]`    | Realm-scoped permissions         |
 | `scopes`      | `ScopeProvisioning[]`         | Realm-scoped scopes              |
 | `roles`       | `RoleProvisioning[]`          | Realm-scoped roles               |
+| `paths`       | `PathProvisioning[]`          | Folders for users and clients    |
 | `users`       | `UserProvisioning[]`          | Users in this realm              |
 | `clients`     | `ClientProvisioning[]`        | OAuth2 clients in this realm     |
+
+### Path
+
+Paths are folders that organize the users and clients of a realm, and must be
+nested inside one. They carry no authorization: a folder grants nothing and
+restricts nothing. See [Paths](../user/paths.md) for the concept.
+
+| Field        | Type               | Description                          |
+|--------------|--------------------|--------------------------------------|
+| `strategy`   | `Strategy`         | Sync strategy (optional)             |
+| `attributes` | object             | `path` (required), `displayName`, `description` |
+
+A folder is declared by its **full path** (`sales/berlin`), not by a parent
+reference, and the missing part of the chain is created along with it: `sales`
+does not have to be declared before `sales/berlin`. Every segment uses the
+usual name character set and is trimmed and lowercased, so `Sales/Berlin` is
+stored as `sales/berlin`.
+
+```yaml
+realms:
+  - attributes:
+      name: acme
+    relations:
+      paths:
+        - attributes:
+            path: sales/berlin
+            displayName: Berlin
+        - attributes:
+            path: engineering
+      users:
+        - attributes:
+            name: alice
+            password: replace-with-a-strong-secret
+          relations:
+            path: sales/berlin
+      clients:
+        - attributes:
+            name: acme-app
+            authMethod: none
+          relations:
+            path: engineering
+```
+
+Folders are synchronized before the realm's clients and users, so a folder
+declared in the same entry can be referenced by both. A `relations.path` that
+names a folder no `paths` entry declares creates it, missing parents included,
+so declaring a folder under `paths` is only necessary to give it a display name
+or a description. A user or client entry that names no folder leaves the row
+unfiled.
 
 ### User
 
@@ -496,6 +546,7 @@ If `email` is omitted, a placeholder is generated automatically.
 
 | Field               | Type                       | Description                                                   |
 |---------------------|----------------------------|---------------------------------------------------------------|
+| `path`              | `string`                   | Full path of the folder this user is filed under. The folder and its missing parents are created when the path does not exist yet. |
 | `globalPermissions` | `string[]`                 | Global permission names. `'*'` = all.                        |
 | `realmPermissions`  | `string[]`                 | Realm permission names. `'*'` = all.                         |
 | `clientPermissions` | `Record<string, string[]>` | Key = client name, value = permission names. `'*'` = all.    |
@@ -560,6 +611,7 @@ realms:
 
 | Field               | Type                          | Description                                              |
 |---------------------|-------------------------------|----------------------------------------------------------|
+| `path`              | `string`                      | Full path of the folder this client is filed under. The folder and its missing parents are created when the path does not exist yet. |
 | `permissions`       | `PermissionProvisioning[]`    | Define new client-scoped permissions                     |
 | `roles`             | `RoleProvisioning[]`          | Define new client-scoped roles                           |
 | `globalPermissions` | `string[]`                    | Assign global permissions. `'*'` = all.                 |
@@ -687,10 +739,11 @@ Entities are synchronized in dependency order:
 3. Roles (global, with permission assignments)
 4. Scopes (global)
 5. Realms, then for each realm:
-   1. Clients (with nested permissions/roles)
-   2. Permissions (realm-scoped)
-   3. Roles (realm-scoped, with permission assignments)
-   4. Users (with permission/role assignments)
-   5. Scopes (realm-scoped)
+   1. Scopes (realm-scoped)
+   2. Paths (folders for users and clients)
+   3. Clients (with nested permissions/roles)
+   4. Permissions (realm-scoped)
+   5. Roles (realm-scoped, with permission assignments)
+   6. Users (with permission/role assignments)
 
 Define entities before referencing them. For example, create a permission before assigning it to a role.
