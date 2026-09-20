@@ -18,13 +18,14 @@ import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormSelect } from '@vuecs/forms';
+import { VCAlert } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
 import {
-    computed, 
-    defineComponent, 
-    ref, 
+    computed,
+    defineComponent,
+    ref,
     watch,
 } from 'vue';
 import { reloadCollection, usePathScope } from '../../../composables/path-scope';
@@ -36,6 +37,7 @@ export default defineComponent({
         ASearch,
         AUsers,
         AEntityDelete,
+        VCAlert,
         VCButton,
         VCFormSelect,
         VCIcon,
@@ -49,9 +51,11 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        // Without PATH_READ the include is stripped by the server anyway,
-        // so the column and the control are hidden and the composable asks
-        // for no folder at all.
+        // The folder COLUMN is ungated: the `path` relation is deliberately
+        // ungated server-side (a folder row is organizational metadata, so a
+        // reader of the row may see where it is filed), and the column is the
+        // rationale that was granted for. What PATH_READ gates is the folder
+        // SELECT and the request behind it, since `GET /paths` IS gated.
         const hasPathReadPermission = usePermissionCheck({ name: PermissionName.PATH_READ });
 
         const pathScope = usePathScope({
@@ -115,6 +119,10 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.PATH_SCOPE_ALL,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED,
+            },
         ]);
 
         // ponytail: a flat select of the realm's folders. The
@@ -140,12 +148,12 @@ export default defineComponent({
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
-            ...(hasPathReadPermission.value ? [{
+            {
                 key: 'path',
                 label: translations.path,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
-            }] : []),
+            },
             {
                 key: 'createdAt',
                 label: translations.createdAt,
@@ -173,6 +181,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             pathScopePending: pathScope.pending,
+            pathScopeTruncated: pathScope.truncated,
             pathScopeOptions,
             pathScopeValue,
             query,
@@ -211,6 +220,14 @@ export default defineComponent({
                     />
                 </div>
             </div>
+            <VCAlert
+                v-if="pathScopeTruncated"
+                color="warning"
+                variant="soft"
+                class="mt-2"
+            >
+                {{ translations.pathScopeTruncated }}
+            </VCAlert>
         </template>
         <template #footer="props">
             <APagination

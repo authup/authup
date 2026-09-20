@@ -5,16 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildQueryString } from '@authup/core-http-kit';
+import { compileFilters } from '@rapiq/adapter-memory';
+import type { IFilter, IFilters } from '@rapiq/core';
 import {
-    Query,
-    defineFilters,
     eq,
     or,
     startsWith,
 } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import { buildPathScopeCondition } from '../../../src/core';
+
+/** The condition as a row predicate, the way an adapter lowers it. */
+const predicate = (path: string) => compileFilters(
+    buildPathScopeCondition(path) as IFilter | IFilters,
+    { caseSensitive: true },
+);
 
 describe('core/path', () => {
     it('should match the folder itself and every folder below it', () => {
@@ -23,18 +28,25 @@ describe('core/path', () => {
         );
     });
 
-    it('should encode a separator terminated prefix, so a sibling is no descendant', () => {
-        // The two calls the collection manager makes to turn a condition into
-        // a request: defineFilters over the condition, then the query string.
-        const encoded = decodeURIComponent(buildQueryString(new Query({ filters: defineFilters(buildPathScopeCondition('sales')) })));
+    // The sibling-safety property, EVALUATED rather than read off the encoded
+    // string: an assertion on the encoding passes against a condition that
+    // does not actually exclude `sales2`, which is the one row the separator
+    // in the prefix leg exists to keep out.
+    it('should reach the subtree without reaching a sibling sharing the prefix', () => {
+        const matches = predicate('sales');
 
-        expect(encoded).toContain('eq(path,\'sales\')');
-        expect(encoded).toContain('startsWith(path,\'sales/\')');
+        expect(matches({ path: 'sales' })).toBeTruthy();
+        expect(matches({ path: 'sales/berlin' })).toBeTruthy();
+        expect(matches({ path: 'sales2' })).toBeFalsy();
+        expect(matches({ path: 'sales2/berlin' })).toBeFalsy();
+    });
 
-        // `sales2` shares the prefix but is a sibling, not a descendant: the
-        // exact leg compares the whole value and the prefix leg carries the
-        // separator, so neither admits it. A prefix without the separator
-        // would.
-        expect(encoded).not.toContain('startsWith(path,\'sales\')');
+    it('should reach a nested folder from a nested scope', () => {
+        const matches = predicate('sales/berlin');
+
+        expect(matches({ path: 'sales/berlin' })).toBeTruthy();
+        expect(matches({ path: 'sales/berlin/east' })).toBeTruthy();
+        expect(matches({ path: 'sales' })).toBeFalsy();
+        expect(matches({ path: 'sales/berlin2' })).toBeFalsy();
     });
 });

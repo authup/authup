@@ -1,36 +1,41 @@
 <script lang="ts">
 import { defineQuery } from '@rapiq/core';
 import type { Path } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { EntityType, PermissionName } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import {
-    AEntityDelete,
     APagination,
     APaths,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
+    useTranslation,
     useTranslations,
+    useTranslator,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
+import { useAlertDialog } from '@vuecs/overlays';
 import type { ListLoadFn } from '@authup/client-web-kit';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
-import { 
-    computed, 
-    defineComponent, 
-    ref, 
-    watch, 
+import {
+    computed,
+    defineComponent,
+    ref,
+    watch,
 } from 'vue';
 import { useRoute } from 'vue-router';
+import { readPathDeleteImpact } from '../../../composables/path-delete';
 import {
     PATH_SCOPE_QUERY_KEY,
     buildPathCollectionFilters,
@@ -44,7 +49,6 @@ export default defineComponent({
         APagination,
         APaths,
         ASearch,
-        AEntityDelete,
         VCButton,
         VCIcon,
         VCTimeago,
@@ -57,6 +61,7 @@ export default defineComponent({
 
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
+        const httpClient = injectHTTPClient();
 
         // A record's breadcrumb links an ancestor segment to
         // `/paths?path=<prefix>`, so the collection narrows to that subtree
@@ -101,7 +106,76 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.DETAILS,
             },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.DELETE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ABORT,
+            },
         ]);
+
+        // its own ref rather than another `useTranslations` element: that
+        // helper keys its output by the translation KEY, and the entity noun
+        // and the field label are both `path`
+        const entityLabel = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: EntityType.PATH,
+            count: 1,
+        });
+
+        const confirmDialog = useAlertDialog();
+        const translate = useTranslator();
+
+        // A folder delete is never refused on occupancy: the cascade removes
+        // the subtree and the SET NULL unfiles every user and client in it, so
+        // this dialog is the only place the operator learns how much that is.
+        // The generic AEntityDelete prompt names the entity noun and nothing
+        // else, which reads the same for an empty leaf.
+        const handleDelete = async (row: Path, deletedCb: (item: Path) => void) => {
+            const impact = await readPathDeleteImpact(
+                httpClient,
+                realmManagementId.value ?? null,
+                row.path,
+            );
+
+            const confirmed = await confirmDialog({
+                title: await translate({
+                    namespace: TranslatorTranslationNamespace.APP,
+                    key: TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE,
+                    data: { entity: entityLabel.value },
+                }),
+                // a count that could not be read (a truncated subtree, a
+                // reader without USER_READ) degrades to the plain warning
+                // rather than to a number nobody stands behind
+                description: await translate({
+                    namespace: TranslatorTranslationNamespace.APP,
+                    key: impact.resolved ?
+                        TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION :
+                        TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN,
+                    data: {
+                        paths: impact.paths,
+                        users: impact.users,
+                        clients: impact.clients,
+                    },
+                }),
+                confirmLabel: translations.delete,
+                cancelLabel: translations.abort,
+                tone: 'error',
+            });
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const deleted = await httpClient.path.delete(row.id);
+                deletedCb({ ...deleted.data, id: row.id });
+            } catch (e) {
+                emit('failed', e);
+            }
+        };
 
         const columns = computed<TableColumn<Path>[]>(() => [
             {
@@ -132,6 +206,7 @@ export default defineComponent({
         return {
             collection,
             columns,
+            handleDelete,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -190,13 +265,19 @@ export default defineComponent({
                             <VCIcon name="fa6-solid:bars" />
                         </template>
                     </VCButton>
-                    <AEntityDelete
-                        :entity-id="row.id"
-                        entity-type="path"
-                        :with-text="false"
+                    <VCButton
+                        :aria-label="translations.delete"
+                        :title="translations.delete"
+                        size="sm"
+                        color="error"
+                        variant="outline"
                         :disabled="!hasDropPermission"
-                        @deleted="props.deleted"
-                    />
+                        @click.prevent="handleDelete(row, props.deleted)"
+                    >
+                        <template #leading>
+                            <VCIcon name="fa6-solid:trash" />
+                        </template>
+                    </VCButton>
                 </template>
             </VCTable>
         </template>

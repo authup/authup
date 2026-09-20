@@ -7,8 +7,10 @@ import { useRouter } from 'vue-router';
 
 export default defineComponent({
     components: { APathForm },
-    emits: ['failed', 'created'],
-    setup(props, { emit }) {
+    // `created` is not re-emitted: the page navigates to the new folder
+    // instead, so the only event a parent can act on is the failure
+    emits: ['failed'],
+    setup(_props, { emit }) {
         const router = useRouter();
 
         const handleCreated = (e: Path) => {

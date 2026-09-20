@@ -12,9 +12,9 @@ import type { ICondition } from '@rapiq/core';
 import { and, defineQuery, eq } from '@rapiq/core';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import {
-    computed, 
-    ref, 
-    toValue, 
+    computed,
+    ref,
+    toValue,
     watch,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -23,15 +23,63 @@ import { useRoute, useRouter } from 'vue-router';
 export const PATH_SCOPE_QUERY_KEY = 'path';
 
 /**
- * How many folders the control offers and how far a scope reaches. It is
- * the path schema's own `pagination.maxLimit`, so asking for more is a 400.
+ * How many folders one request reads. It is the path schema's own
+ * `pagination.maxLimit`, so asking for more is a 400.
  */
-const PATH_SCOPE_LIMIT = 50;
+export const PATH_SCOPE_LIMIT = 50;
+
+/**
+ * ponytail: how many pages a subtree lookup walks before it gives up, so the
+ * ceiling is 10 pages of 50 = 500 folders. A realm past that scopes nothing
+ * and says so: the list is shown unnarrowed rather than silently short, which
+ * is the one thing a folder filter must never be.
+ */
+export const PATH_SCOPE_PAGE_LIMIT = 10;
 
 /** The filter a folder scope contributes to a collection page's query. */
 export type PathScopeFilters = {
     pathId?: string[]
 };
+
+/** One page of a folder lookup, as the collection response carries it. */
+export type PathScopePage = {
+    data: Path[],
+    meta?: { total?: number }
+};
+
+/**
+ * Walk a folder lookup to completion, bounded at
+ * {@see PATH_SCOPE_PAGE_LIMIT} pages.
+ *
+ * One page cannot answer a subtree: `PATH_SCOPE_LIMIT` is the server's own
+ * `maxLimit`, so a realm holding more folders than that would feed a short id
+ * list into the collection's `IN` and drop rows out of the list with no error
+ * and a plausible-looking total. Past the bound the caller is told rather than
+ * narrowed, so the wrong answer is never served.
+ */
+export async function collectPathPages(
+    load: (offset: number) => Promise<PathScopePage>,
+) : Promise<{ data: Path[], truncated: boolean }> {
+    const data : Path[] = [];
+
+    for (let page = 0; page < PATH_SCOPE_PAGE_LIMIT; page += 1) {
+        const response = await load(page * PATH_SCOPE_LIMIT);
+        data.push(...response.data);
+
+        const total = response.meta?.total ?? data.length;
+        if (response.data.length === 0 || data.length >= total) {
+            return {
+                data,
+                truncated: false,
+            };
+        }
+    }
+
+    return {
+        data,
+        truncated: true,
+    };
+}
 
 /** How many times a refused reload is re-offered before it gives up. */
 export const RELOAD_ATTEMPTS = 3;
@@ -102,6 +150,12 @@ export type PathScope = {
     options: Ref<Path[]>,
     /** True while the folder named by `path` is being resolved. */
     pending: Ref<boolean>,
+    /**
+     * True when the subtree outgrew {@see PATH_SCOPE_PAGE_LIMIT} pages. The
+     * scope then narrows NOTHING, so a page that renders the list has to say
+     * why it is showing every row.
+     */
+    truncated: Ref<boolean>,
     /** The `pathId` filter the page spreads into its own query. */
     filters: ComputedRef<PathScopeFilters>,
     /** Write the folder into the route, or clear it with `null`. */
@@ -128,12 +182,18 @@ export function readPathScopeQuery(value: unknown) : string | null {
  * nothing yields the EMPTY list rather than no key at all: rapiq encodes
  * that as `in(pathId)`, a constant false, so an unknown folder lists
  * nothing where a dropped key would list every row.
+ *
+ * A TRUNCATED subtree is the one case that contributes nothing: the ids are
+ * known to be incomplete, so filtering by them would drop rows the visitor
+ * asked to see. The unnarrowed list plus the page's notice is the honest
+ * answer; a silently short one is not.
  */
 export function buildPathScopeFilters(
     path: string | null,
     paths: Pick<Path, 'id'>[],
+    truncated = false,
 ) : PathScopeFilters {
-    if (!path) {
+    if (!path || truncated) {
         return {};
     }
 
@@ -192,6 +252,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
     const paths = ref<Path[]>([]);
     const options = ref<Path[]>([]);
     const pending = ref<boolean>(false);
+    const truncated = ref<boolean>(false);
 
     // Two rapid selections leave two lookups in flight, and the slower one
     // must not overwrite the newer folder's ids.
@@ -226,6 +287,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
 
         if (!value || !realmId) {
             pending.value = false;
+            truncated.value = false;
             paths.value = [];
             return;
         }
@@ -233,14 +295,19 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         pending.value = true;
 
         let resolved : Path[];
+        let overflowed = false;
         try {
-            const response = await httpClient.path.getMany(defineQuery<Path>({
+            const collected = await collectPathPages((offset) => httpClient.path.getMany(defineQuery<Path>({
                 filters: and(eq('realmId', realmId), buildPathScopeCondition(value)),
                 sorts: ['path'],
-                pagination: { limit: PATH_SCOPE_LIMIT },
-            }));
+                pagination: {
+                    limit: PATH_SCOPE_LIMIT,
+                    offset,
+                },
+            })));
 
-            resolved = response.data;
+            resolved = collected.data;
+            overflowed = collected.truncated;
         } catch {
             // A lookup that failed reaches no folder, which lists nothing.
             // Falling back to the unscoped list would show rows the visitor
@@ -257,6 +324,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         // are always a fresh array, so that watcher fires on every outcome:
         // a lookup that answered nothing still has to let the list load.
         pending.value = false;
+        truncated.value = overflowed;
         paths.value = resolved;
     };
 
@@ -286,7 +354,8 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         path,
         options,
         pending,
-        filters: computed(() => buildPathScopeFilters(path.value, paths.value)),
+        truncated,
+        filters: computed(() => buildPathScopeFilters(path.value, paths.value, truncated.value)),
         select,
     };
 }

@@ -10,9 +10,12 @@ import type { Path } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import {
+    PATH_SCOPE_LIMIT,
+    PATH_SCOPE_PAGE_LIMIT,
     RELOAD_ATTEMPTS,
     buildPathCollectionFilters,
     buildPathScopeFilters,
+    collectPathPages,
     readPathScopeQuery,
     reloadCollection,
 } from '../../src/composables/path-scope';
@@ -56,6 +59,92 @@ describe('src/composables/path-scope -> buildPathScopeFilters', () => {
     // unknown folder lists nothing. Dropping the key would list every row.
     it('should list nothing for a folder that resolved to nothing', () => {
         expect(buildPathScopeFilters('unknown', [])).toEqual({ pathId: [] });
+    });
+
+    // The ids are known to be incomplete there, so narrowing by them would
+    // drop rows with no error: the unnarrowed list plus the page's notice is
+    // the honest answer.
+    it('should narrow nothing for a subtree that outgrew the page ceiling', () => {
+        expect(buildPathScopeFilters('sales', [{ id: SALES_ID }], true)).toEqual({});
+    });
+});
+
+/** A folder page in the shape the collection response carries. */
+function createPathPages(total: number) {
+    const pages = {
+        offsets: [] as number[],
+        async load(offset: number) {
+            pages.offsets.push(offset);
+
+            const data = Array.from(
+                { length: Math.max(Math.min(PATH_SCOPE_LIMIT, total - offset), 0) },
+                (_, index) => ({ id: `${offset + index}` } as Path),
+            );
+
+            return {
+                data,
+                meta: { total },
+            };
+        },
+    };
+
+    return pages;
+}
+
+describe('src/composables/path-scope -> collectPathPages', () => {
+    it('should stop after one page when it holds the whole subtree', async () => {
+        const pages = createPathPages(3);
+
+        const result = await collectPathPages(pages.load);
+
+        expect(result.data).toHaveLength(3);
+        expect(result.truncated).toBe(false);
+        expect(pages.offsets).toEqual([0]);
+    });
+
+    // One request cannot answer a subtree: the limit is the server's own
+    // maxLimit, so a short id list would drop rows out of the scoped list
+    // with no error and a plausible-looking total.
+    it('should assemble the pages of a subtree larger than one page', async () => {
+        const pages = createPathPages(PATH_SCOPE_LIMIT + 2);
+
+        const result = await collectPathPages(pages.load);
+
+        expect(result.data).toHaveLength(PATH_SCOPE_LIMIT + 2);
+        expect(result.truncated).toBe(false);
+        expect(pages.offsets).toEqual([0, PATH_SCOPE_LIMIT]);
+    });
+
+    it('should report a subtree that outgrew the page ceiling as truncated', async () => {
+        const pages = createPathPages(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT + 1);
+
+        const result = await collectPathPages(pages.load);
+
+        expect(result.truncated).toBe(true);
+        expect(pages.offsets).toHaveLength(PATH_SCOPE_PAGE_LIMIT);
+        expect(result.data).toHaveLength(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT);
+
+        // and the scope then narrows nothing at all
+        expect(buildPathScopeFilters('sales', result.data, result.truncated)).toEqual({});
+    });
+
+    it('should stop on an empty page rather than trust the reported total', async () => {
+        const pages = {
+            offsets: [] as number[],
+            async load(offset: number) {
+                pages.offsets.push(offset);
+                return {
+                    data: [],
+                    meta: { total: 500 },
+                };
+            },
+        };
+
+        const result = await collectPathPages(pages.load);
+
+        expect(result.data).toHaveLength(0);
+        expect(result.truncated).toBe(false);
+        expect(pages.offsets).toEqual([0]);
     });
 });
 

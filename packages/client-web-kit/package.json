@@ -80,6 +80,7 @@
     },
     "devDependencies": {
         "@iconify/vue": "^5.0.0",
+        "@rapiq/adapter-memory": "^2.2.0",
         "@ilingo/validup-vue": "^1.2.0",
         "@ilingo/vue": "^6.1.1",
         "@types/node": "^26.4.1",
