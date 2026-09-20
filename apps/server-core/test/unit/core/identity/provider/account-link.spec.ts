@@ -20,6 +20,7 @@ import { IdentityProviderAccountManager } from '../../../../../src/core/identity
 import { IdentityProviderAccountAlreadyLinkedError, isIdentityProviderAccountAlreadyLinkedError } from '../../../../../src/core/identity/provider/account/error.ts';
 import { FakeIdentityProviderAccountRepository } from '../../entities/identity-provider-account/fake-repository.ts';
 import { FakeUserIdentityRepository } from '../../entities/identity-provider-account/fake-user-repository.ts';
+import { FakePathRepository } from '../../entities/path/fake-repository.ts';
 
 const realmId = randomUUID();
 const providerId = randomUUID();
@@ -55,6 +56,9 @@ describe('IdentityProviderAccountManager.link', () => {
         manager = new IdentityProviderAccountManager({
             repository,
             userRepository,
+            // link() never provisions a user, so the folder default the
+            // manager holds for saveUser is never reached from here
+            pathRepository: new FakePathRepository(),
             attributeMapper: mapper,
             permissionMapper: mapper,
             roleMapper: mapper,

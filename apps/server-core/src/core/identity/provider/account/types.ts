@@ -10,6 +10,7 @@ import type { Logger } from '@authup/server-kit';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
 import type { IdentityProviderIdentity } from '../types.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 // The account repository port moved into the entity module (plan 091):
 // one unified port serves the management API and the login/link flows.
 import type { IIdentityProviderAccountRepository } from '../../../entities/identity-provider-account/types.ts';
@@ -66,7 +67,8 @@ export type IdentityProviderAccountManagerContext = {
     logger?: Logger,
 
     repository: IIdentityProviderAccountRepository,
-    userRepository: IUserIdentityRepository
+    userRepository: IUserIdentityRepository,
+    pathRepository: IPathRepository
 };
 
 export interface IIdentityProviderAccountManager {

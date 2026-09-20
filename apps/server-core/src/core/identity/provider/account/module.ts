@@ -10,12 +10,15 @@ import {
     UserValidator,
     buildUserFakeEmail,
     isUserFakeEmail,
+    joinPath,
 } from '@authup/core-kit';
 import { ValidatorGroup, createNanoID, extendObject } from '@authup/kit';
 import { ValidationError, isEntityConflictError } from '@authup/errors';
 import { isValidupError, stringifyPath } from 'validup';
 import type { Logger } from '@authup/server-kit';
 import { describeError } from '../../../../utils/index.ts';
+import { ensurePath } from '../../../entities/path/helpers.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
@@ -35,6 +38,8 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
     protected userRepository: IUserIdentityRepository;
 
+    protected pathRepository: IPathRepository;
+
     protected userValidator : UserValidator;
 
     protected logger?: Logger;
@@ -45,6 +50,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         this.roleMapper = ctx.roleMapper;
         this.repository = ctx.repository;
         this.userRepository = ctx.userRepository;
+        this.pathRepository = ctx.pathRepository;
         this.logger = ctx.logger;
 
         this.userValidator = new UserValidator();
@@ -220,6 +226,18 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             entity.active = true;
             entity.nameLocked = true;
             entity.clientId = identity.clientId || null;
+
+            // Authentik's user_path_template default: a user the provider
+            // provisions is filed under sources/<provider> unless a mapping
+            // placed it, and never refiled on a later login.
+            if (typeof entity.pathId === 'undefined') {
+                const folder = await ensurePath(
+                    this.pathRepository,
+                    identity.provider.realmId,
+                    joinPath('sources', identity.provider.name),
+                );
+                entity.pathId = folder.id;
+            }
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);

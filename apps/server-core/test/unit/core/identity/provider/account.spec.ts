@@ -35,6 +35,8 @@ import {
     IdentityProviderRepository,
     IdentityProviderRoleMappingEntity,
     IdentityProviderRoleMappingRepository,
+    PathEntity,
+    PathRepositoryAdapter,
     PermissionEntity,
     RealmEntity,
     RoleRepository,
@@ -112,6 +114,10 @@ describe('core/identity/provider/account', () => {
             permissionMapper,
             userRepository,
             repository: accountRepository,
+            pathRepository: new PathRepositoryAdapter({
+                repository: suite.dataSource.getRepository(PathEntity),
+                realmRepository: suite.dataSource.getRepository(RealmEntity),
+            }),
         });
     });
 
@@ -446,6 +452,93 @@ describe('core/identity/provider/account', () => {
         });
         expect(row?.email).toEqual('same@example.com');
         expect(row?.emailVerified).toEqual(true);
+
+        await mappings.remove(mapping);
+    });
+
+    it('should file a provisioned user under sources/<provider>', async () => {
+        const account = await accountManager.save({
+            data: claims,
+            id: 'filed',
+            attributeCandidates: { name: ['filed'] },
+            provider,
+        });
+
+        const paths = suite.dataSource.getRepository(PathEntity);
+        const folder = await paths.findOneBy({
+            path: 'sources/keycloak',
+            realmId: realm.id,
+        });
+
+        expect(folder).not.toBeNull();
+        expect(account.user.pathId).toEqual(folder!.id);
+
+        const parent = await paths.findOneBy({ id: folder!.parentId! });
+        expect(parent?.path).toEqual('sources');
+    });
+
+    it('should keep the folder on a second login', async () => {
+        const buildIdentity = () : IdentityProviderIdentity => ({
+            data: claims,
+            id: 'refiled',
+            attributeCandidates: { name: ['refiled'] },
+            provider,
+        });
+        const created = await accountManager.save(buildIdentity());
+
+        const paths = suite.dataSource.getRepository(PathEntity);
+        const source = await paths.findOneBy({
+            path: 'sources/keycloak',
+            realmId: realm.id,
+        });
+        expect(source).not.toBeNull();
+        expect(created.user.pathId).toEqual(source!.id);
+
+        // an operator moved the user out of the provider's folder
+        const target = await paths.save(paths.create({
+            name: 'staff',
+            path: 'staff',
+            realmId: realm.id,
+        }));
+
+        const users = suite.dataSource.getRepository(UserEntity);
+        await users.update(created.user.id, { pathId: target.id });
+
+        await accountManager.save(buildIdentity());
+
+        const row = await users.findOneBy({ id: created.user.id });
+        expect(row?.pathId).toEqual(target.id);
+    });
+
+    it('should let a mapping win', async () => {
+        const paths = suite.dataSource.getRepository(PathEntity);
+        const folder = await paths.save(paths.create({
+            name: 'mapped',
+            path: 'mapped',
+            realmId: realm.id,
+        }));
+
+        const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const mapping = await mappings.save(mappings.create({
+            synchronizationMode: 'always',
+            targetName: 'pathId',
+            targetValue: folder.id,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
+        }));
+
+        const pathsBefore = await paths.count();
+
+        const account = await accountManager.save({
+            data: claims,
+            id: 'mapped-folder',
+            attributeCandidates: { name: ['mapped-folder'] },
+            provider,
+        });
+
+        expect(account.user.pathId).toEqual(folder.id);
+        // the default never ran, so it created no folder of its own
+        expect(await paths.count()).toEqual(pathsBefore);
 
         await mappings.remove(mapping);
     });
