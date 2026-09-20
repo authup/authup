@@ -126,8 +126,9 @@ export class DeviceAuthorizationController {
     ) : Promise<DeviceAuthorizationDecisionResponse> {
         event.response.headers.set('cache-control', 'no-store');
 
-        // `lookup` and `deny` deliberately keep taking any user bearer: both
-        // need the user_code, and neither mints anything.
+        // only the user at the authorization server may approve; `lookup` and
+        // `deny` deliberately keep taking any user bearer, since both need the
+        // user_code and neither mints anything.
         assertTokenMayAuthorize(event);
 
         const userCode : unknown = data.user_code;

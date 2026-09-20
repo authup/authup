@@ -26,6 +26,13 @@ requests with a token minted without `client_id`, or send the user through the h
 `/authorize` page. Before this change such a token could obtain an authorization code for a
 *different* application and pick up that application's client-owned grants for the user.
 
+One shared-origin deployment can notice this as an extra sign-in prompt: an application that
+embeds `@authup/client-web-kit` on the same origin as the hosted auth pages, under a wider
+cookie path, writes the session cookies the hosted page reads, so that page can pick up the
+application's own token and then asks the visitor to sign in once. That is the same collision
+[`cookiePrefix`](../../sdks/javascript/client-web-nuxt/index.md) already exists for — give the
+embedding application its own cookie namespace.
+
 ### A user's client-owned grants apply only through that client's tokens
 
 A permission or a role owned by a client (`client_id`) now applies to a user
