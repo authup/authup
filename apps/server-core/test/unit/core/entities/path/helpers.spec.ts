@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { EntityConflictError, ErrorCode } from '@authup/errors';
-import { PATH_MAX_DEPTH } from '@authup/core-kit';
+import { PATH_MAX_DEPTH, PATH_SEGMENT_MAX_LENGTH } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
@@ -79,6 +79,18 @@ describe('core/entities/path/helpers', () => {
 
         await expect(
             ensurePath(repository, realmId, segments.join('/')),
+        ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+        expect((await repository.findManyBy({ realmId })).length).toBe(0);
+    });
+
+    it('should refuse a segment longer than the maximum segment length', async () => {
+        // the segment bound is the validator's on an API write, and ensurePath
+        // runs no validator: a provisioning file reaches it directly
+        const segment = 'a'.repeat(PATH_SEGMENT_MAX_LENGTH + 1);
+
+        await expect(
+            ensurePath(repository, realmId, `sales/${segment}`),
         ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
         expect((await repository.findManyBy({ realmId })).length).toBe(0);

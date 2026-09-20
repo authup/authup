@@ -10,6 +10,7 @@ import type { Path } from '@authup/core-kit';
 import {
     PATH_MAX_DEPTH,
     PATH_MAX_LENGTH,
+    PATH_SEGMENT_MAX_LENGTH,
     isPathValid,
     joinPath,
     splitPath,
@@ -25,8 +26,18 @@ export function assertPathBounds(path: string) : void {
         throw new ValidationError(`The path must not be longer than ${PATH_MAX_LENGTH} characters.`);
     }
 
-    if (splitPath(path).length > PATH_MAX_DEPTH) {
+    const segments = splitPath(path);
+    if (segments.length > PATH_MAX_DEPTH) {
         throw new ValidationError(`The path must not be nested deeper than ${PATH_MAX_DEPTH} levels.`);
+    }
+
+    // the per-segment bound is the validator's on an API write, but ensurePath
+    // builds its segments straight from caller input, so it is asserted here
+    // for every caller rather than once per entry point
+    for (const segment of segments) {
+        if (segment.length > PATH_SEGMENT_MAX_LENGTH) {
+            throw new ValidationError(`A path segment must not be longer than ${PATH_SEGMENT_MAX_LENGTH} characters.`);
+        }
     }
 }
 
@@ -43,10 +54,18 @@ export async function ensurePath(
 ) : Promise<Path> {
     const path = input.trim().toLowerCase();
 
+    let valid: boolean;
     try {
-        isPathValid(path, { throwOnFailure: true });
+        valid = isPathValid(path, { throwOnFailure: true });
     } catch (e) {
         throw new ValidationError(e instanceof Error ? e.message : 'The path is not valid.');
+    }
+
+    // the throwing form reports every rejection it knows about, but the
+    // verdict is the contract: a refusal that stops reaching for the throw
+    // must not pass here as a created chain
+    if (!valid) {
+        throw new ValidationError('The path is not valid.');
     }
 
     assertPathBounds(path);

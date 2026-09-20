@@ -155,7 +155,7 @@ export class PathService extends AbstractEntityService implements IPathService {
             validated.realmId = actorRealmId;
         }
 
-        const parent = await this.resolveParent(validated.parentId ?? null, validated.realmId);
+        const parent = await this.resolveParent(this.repository, validated.parentId ?? null, validated.realmId);
         // the validator omits an absent optional key, so a root folder is
         // stamped explicitly rather than left undefined: the created record
         // must read like a later fetch of the same row
@@ -189,25 +189,12 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
-        const name = validated.name ?? entity.name;
-        const parentId = isPropertySet(validated, 'parentId') ?
-            (validated.parentId ?? null) :
-            entity.parentId;
-
-        const parent = await this.resolveParent(parentId, entity.realmId);
-        if (
-            parent &&
-            (
-                parent.id === entity.id ||
-                parent.path === entity.path ||
-                parent.path.startsWith(`${entity.path}/`)
-            )
-        ) {
-            throw new ValidationError('A path can not be moved under itself.');
-        }
-
-        const nextPath = buildPathForParent(parent, name);
-        assertPathBounds(nextPath);
+        // The gate and the uniqueness check run on the row as it reads now,
+        // OUTSIDE the transaction: the evaluator's grant loads and
+        // checkUniqueness each take a pooled connection of their own, and
+        // holding one while a transaction pins another deadlocks the pool
+        // under concurrency (issue #3526).
+        const resolved = await this.resolveNextPath(this.repository, entity, validated);
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PATH_UPDATE,
@@ -215,36 +202,65 @@ export class PathService extends AbstractEntityService implements IPathService {
                 [BuiltInPolicyType.ATTRIBUTES]: {
                     ...entity,
                     ...validated,
-                    path: nextPath,
+                    path: resolved.path,
                 },
                 ...this.resourceRealmMatch(entity),
             }),
         });
 
-        if (nextPath !== entity.path) {
+        if (resolved.path !== entity.path) {
             await this.repository.checkUniqueness({
-                path: nextPath,
+                path: resolved.path,
                 realmId: entity.realmId,
             }, entity);
         }
 
-        // The descendants are read by the OLD prefix and rewritten with the
-        // new one inside the same transaction as the folder itself, so a
-        // rename can never leave a child under a path that no longer exists.
-        // Users and clients follow by id and are not touched.
-        const previousPath = entity.path;
-
         return this.repository.transaction(async (repository) => {
-            if (nextPath !== previousPath) {
-                const descendants = await repository.findDescendants(entity);
-                for (const descendant of descendants) {
-                    descendant.path = `${nextPath}${descendant.path.slice(previousPath.length)}`;
-                    assertPathBounds(descendant.path);
-                    await repository.save(descendant);
-                }
+            // The row is re-read inside the transaction and everything the
+            // write depends on is recomputed from it. Merging onto the copy
+            // loaded above would write that copy's path back: a concurrent
+            // rename of the same folder commits between the two reads, this
+            // request derives its `nextPath` from the old name, sees no
+            // change and rewrites no descendant, and the folder lands back at
+            // its old path while its children stay under the new one.
+            const current = await repository.findOneBy({ id: entity.id });
+            if (!current) {
+                throw new EntityNotFoundError();
             }
 
-            const merged = repository.merge(entity, {
+            const {
+                name, 
+                parentId, 
+                path: nextPath, 
+            } = await this.resolveNextPath(
+                repository,
+                current,
+                validated,
+            );
+
+            const previousPath = current.path;
+            const descendants = nextPath === previousPath ?
+                [] :
+                await repository.findDescendants(current);
+
+            // every bound is asserted before the first write, so a descendant
+            // whose new path is too long can not leave the subtree half
+            // rewritten
+            assertPathBounds(nextPath);
+            const rewritten = descendants.map((descendant) => {
+                const path = `${nextPath}${descendant.path.slice(previousPath.length)}`;
+                assertPathBounds(path);
+
+                return { descendant, path };
+            });
+
+            // Users and clients follow their folder by id and are not touched.
+            for (const item of rewritten) {
+                item.descendant.path = item.path;
+                await repository.save(item.descendant);
+            }
+
+            const merged = repository.merge(current, {
                 ...validated,
                 name,
                 parentId,
@@ -279,12 +295,54 @@ export class PathService extends AbstractEntityService implements IPathService {
         return entity;
     }
 
-    protected async resolveParent(parentId: string | null, realmId: string): Promise<Path | null> {
+    /**
+     * The name, the parent and the derived path an update would write, read
+     * through the repository it is given: the transaction hands over one bound
+     * to itself, so the checks decide on the rows that write will see.
+     */
+    protected async resolveNextPath(
+        repository: IPathRepository,
+        entity: Path,
+        validated: Record<string, any>,
+    ): Promise<{
+        name: string, 
+        parentId: string | null, 
+        path: string 
+    }> {
+        const name = validated.name ?? entity.name;
+        const parentId = isPropertySet(validated, 'parentId') ?
+            (validated.parentId ?? null) :
+            entity.parentId;
+
+        const parent = await this.resolveParent(repository, parentId, entity.realmId);
+        if (
+            parent &&
+            (
+                parent.id === entity.id ||
+                parent.path === entity.path ||
+                parent.path.startsWith(`${entity.path}/`)
+            )
+        ) {
+            throw new ValidationError('A path can not be moved under itself.');
+        }
+
+        return {
+            name,
+            parentId,
+            path: buildPathForParent(parent, name),
+        };
+    }
+
+    protected async resolveParent(
+        repository: IPathRepository,
+        parentId: string | null,
+        realmId: string,
+    ): Promise<Path | null> {
         if (!parentId) {
             return null;
         }
 
-        const parent = await this.repository.findOneById(parentId);
+        const parent = await repository.findOneById(parentId);
         if (!parent) {
             throw new ValidationError('The parent path does not exist.');
         }

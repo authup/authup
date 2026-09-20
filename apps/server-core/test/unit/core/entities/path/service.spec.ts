@@ -13,6 +13,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import {
@@ -214,6 +215,54 @@ describe('core/entities/path/service', () => {
             expect((await repository.findOneById(east.id))!.parentId).toBe(berlin.id);
 
             expect(repository.transactionCalls).toBe(1);
+        });
+
+        it('should leave the path and the descendants untouched when only the display name changes', async () => {
+            const sales = seedPath({
+                name: 'sales',
+                path: 'sales',
+            });
+            const berlin = seedPath({
+                name: 'berlin',
+                path: 'sales/berlin',
+                parentId: sales.id,
+            });
+
+            const result = await service.update(sales.id, { displayName: 'Sales' }, createAllowAllActor());
+
+            expect(result.displayName).toBe('Sales');
+            expect(result.path).toBe('sales');
+            expect(result.parentId).toBeNull();
+            expect((await repository.findOneById(berlin.id))!.path).toBe('sales/berlin');
+            expect(repository.transactionCalls).toBe(1);
+        });
+
+        it('should rewrite the descendants from the row as it reads inside the transaction', async () => {
+            const sales = seedPath({
+                name: 'sales',
+                path: 'sales',
+            });
+            const berlin = seedPath({
+                name: 'berlin',
+                path: 'sales/berlin',
+                parentId: sales.id,
+            });
+
+            // a concurrent rename of the same folder commits between the read
+            // and the transaction: the service holds a stale snapshot while
+            // the store already reads `marketing`
+            const stale : Path = { ...sales };
+            sales.name = 'marketing';
+            sales.path = 'marketing';
+            berlin.path = 'marketing/berlin';
+
+            vi.spyOn(repository, 'findOneByIdOrName').mockResolvedValueOnce(stale);
+
+            const result = await service.update(sales.id, { name: 'sales-eu' }, createAllowAllActor());
+
+            expect(result.path).toBe('sales-eu');
+            expect((await repository.findOneById(sales.id))!.path).toBe('sales-eu');
+            expect((await repository.findOneById(berlin.id))!.path).toBe('sales-eu/berlin');
         });
 
         it('should keep the parent when only the name changes', async () => {
