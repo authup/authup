@@ -73,8 +73,42 @@ describe('createCLIEntryPointCommand', () => {
     it('carries the authup meta and every command', async () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
-        expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['config', 'dev', 'healthcheck', 'migration', 'start']);
+        expect(Object.keys(command.subCommands ?? {}).sort()).toEqual([
+            'client', 
+            'client-permission', 
+            'client-role', 
+            'client-scope', 
+            'config', 
+            'consent', 
+            'dev',
+            'event', 
+            'healthcheck', 
+            'identity-provider', 
+            'identity-provider-account',
+            'identity-provider-role-mapping', 
+            'key', 
+            'login', 
+            'logout', 
+            'migration', 
+            'permission',
+            'permission-policy', 
+            'policy', 
+            'realm', 
+            'role', 
+            'role-attribute', 
+            'role-permission',
+            'scope', 
+            'session', 
+            'session-token', 
+            'start', 
+            'trust-anchor', 
+            'user', 
+            'user-attribute',
+            'user-authenticator', 
+            'user-permission', 
+            'user-role', 
+            'whoami',
+        ]);
     });
 
     it('refuses a stray positional on dev but leaves the roles and the migration operation alone', async () => {
@@ -88,6 +122,8 @@ describe('createCLIEntryPointCommand', () => {
             ['start', 'worker'],
             ['start', 'console', 'admin'],
             ['migration', 'run'],
+            ['user', 'list'],
+            ['login'],
         ]) {
             expect(() => command.setup?.(createSetupContext(command, positionals)))
                 .not.toThrow();
