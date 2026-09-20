@@ -15,6 +15,7 @@ export * from './identity-provider/index.ts';
 export * from './identity-provider-account/index.ts';
 export * from './identity-provide-role/index.ts';
 export * from './key/index.ts';
+export * from './path/index.ts';
 export * from './permission/index.ts';
 export * from './permission-policy/index.ts';
 export * from './realm/index.ts';

@@ -12,6 +12,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    Path,
     Permission,
     PermissionPolicy,
     Realm,
@@ -32,6 +33,7 @@ import {
     ClientScopeEntity,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
+    PathEntity,
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyRepository,
@@ -55,6 +57,7 @@ import {
     DatabaseInjectionKey,
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
+    PathRepositoryAdapter,
     PermissionDatabaseProvider,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
@@ -82,6 +85,7 @@ import {
     IdentityProviderController,
     IdentityProviderRoleMappingController,
     KeyController,
+    PathController,
     PermissionController,
     PermissionPolicyController,
     PolicyController,
@@ -143,6 +147,7 @@ import {
     OAuth2FederatedLoginService,
     OAuth2MfaLoginService,
     PasswordRecoveryService,
+    PathService,
     PermissionCheckerService,
     PermissionPolicyService,
     PermissionService,
@@ -192,6 +197,7 @@ export class HTTPControllerModule {
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
+        const pathController = this.createPathController(container);
         const keyController = this.createKeyController(container);
         const trustAnchorController = this.createTrustAnchorController(container);
         const sessionController = this.createSessionController(container);
@@ -239,6 +245,7 @@ export class HTTPControllerModule {
                 this.createIdentityProvider(container),
                 keyController,
                 trustAnchorController,
+                pathController,
                 permissionController,
                 permissionPolicyController,
                 policyController,
@@ -833,6 +840,21 @@ export class HTTPControllerModule {
             realmRepository,
         });
         return new ScopeController({ service });
+    }
+
+    createPathController(container: IContainer) {
+        const realmRepository = new RealmRepositoryAdapter(
+            container.resolve<Repository<Realm>>(RealmEntity),
+        );
+        const repository = new PathRepositoryAdapter({
+            repository: container.resolve<Repository<Path>>(PathEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
+        const service = new PathService({
+            repository,
+            realmRepository,
+        });
+        return new PathController({ service });
     }
 
     createKeyController(container: IContainer) {
