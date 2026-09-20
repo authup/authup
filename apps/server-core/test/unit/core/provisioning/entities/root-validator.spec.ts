@@ -8,6 +8,8 @@
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
+import type { ValidupError } from 'validup';
+import { isValidupError } from 'validup';
 import { RootProvisioningValidator } from '../../../../../src/core/provisioning/entities';
 
 const validator = new RootProvisioningValidator();
@@ -24,6 +26,21 @@ describe('core/provisioning/entities/root-validator', () => {
 
     it('should reject a missing entity name', async () => {
         await expect(run({ roles: [{ attributes: { displayName: 'No Name' } }] })).rejects.toThrow();
+    });
+
+    it('should reject a realm path relation with a malformed path', async () => {
+        await expect(run({
+            realms: [
+                {
+                    attributes: { name: 'foo' },
+                    relations: { paths: [{ attributes: { path: '/bad' } }] },
+                },
+            ],
+        })).rejects.toSatisfy((e: unknown) => {
+            expect(isValidupError(e)).toBe(true);
+            expect(JSON.stringify((e as ValidupError).issues)).toMatch(/"paths"/);
+            return true;
+        });
     });
 
     it('should reject an invalid nested realm-relation entity', async () => {

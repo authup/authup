@@ -8,11 +8,14 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
+import { createPathValidator } from '../path/utils.ts';
 import type { UserProvisioningRelations } from './types.ts';
 
 export class UserProvisioningRelationsValidator extends Container<UserProvisioningRelations> {
     protected initialize() {
         super.initialize();
+
+        this.mount('path', { optional: true }, createPathValidator());
 
         this.mount('clientPermissions', { optional: true }, createValidator(
             z.record(z.string(), z.array(z.string())),

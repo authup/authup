@@ -14,6 +14,7 @@ import type {
     IRoleRepository,
     IScopeRepository,
 } from '../../../entities/index.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
 import type { IProvisioningSynchronizer } from '../../types.ts';
@@ -31,6 +32,12 @@ export type ClientProvisioningSynchronizerContext = {
 
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
+
+    /**
+     * Resolves the folder an entry names through `relations.path`, creating
+     * the missing chain; without it such a declaration fails the boot.
+     */
+    pathRepository?: IPathRepository,
 
     /**
      * Encrypts a file-declared secret stored in encrypted mode under the

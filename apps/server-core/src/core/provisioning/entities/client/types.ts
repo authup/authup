@@ -11,6 +11,12 @@ import type { BaseProvisioningEntity } from '../types.ts';
 
 export type ClientProvisioningRelations = {
     /**
+     * File the client under the folder with this full path. The folder and
+     * its missing parents are created when the path does not exist yet.
+     */
+    path?: string,
+
+    /**
      * Create or update permissions for client.
      */
     permissions?: PermissionProvisioningEntity[],

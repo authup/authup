@@ -13,10 +13,13 @@ import type {
     Role,
     Scope,
 } from '@authup/core-kit';
+import { AuthupError } from '@authup/errors';
 import { isBCryptHash, pickRecord } from '@authup/kit';
 import { ClientCredentialsService } from '../../../authentication/credential/entities/client/module.ts';
 import { assertSecretModeExclusive } from '../../../entities/client/service.ts';
 import type { IClientRepository } from '../../../entities/index.ts';
+import { ensurePath } from '../../../entities/path/helpers.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 import { isRealmCipherBlob } from '../../../key/realm-cipher.ts';
 import type { IRealmCipher } from '../../../key/types.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
@@ -31,6 +34,8 @@ import type { ClientProvisioningSynchronizerContext } from './types.ts';
 
 export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningEntity> {
     protected clientRepository: IClientRepository;
+
+    protected pathRepository?: IPathRepository;
 
     protected cipher?: IRealmCipher;
 
@@ -54,6 +59,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         super();
 
         this.clientRepository = ctx.clientRepository;
+        this.pathRepository = ctx.pathRepository;
         this.cipher = ctx.cipher;
 
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
@@ -97,9 +103,11 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
+
+        await this.resolvePath(input);
 
         if (attributes) {
             switch (strategy.type) {
@@ -214,6 +222,28 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             ...input,
             attributes,
         };
+    }
+
+    /**
+     * A client is filed by the FULL path of its folder, so the chain is
+     * created on demand and only the resolved id reaches the row.
+     */
+    protected async resolvePath(input: ClientProvisioningEntity): Promise<void> {
+        if (!input.relations || !input.relations.path) {
+            return;
+        }
+
+        if (!this.pathRepository) {
+            throw new AuthupError('A client path relation needs the path repository, which is not wired here.');
+        }
+
+        const entity = await ensurePath(
+            this.pathRepository,
+            input.attributes.realmId as string,
+            input.relations.path,
+        );
+
+        input.attributes.pathId = entity.id;
     }
 
     /**

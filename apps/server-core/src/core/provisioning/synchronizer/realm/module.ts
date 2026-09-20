@@ -8,6 +8,7 @@
 import { pickRecord } from '@authup/kit';
 import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
+import type { PathProvisioningEntity } from '../../entities/path/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
@@ -30,6 +31,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningEntity>;
 
+    protected pathSynchronizer : IProvisioningSynchronizer<PathProvisioningEntity>;
+
     constructor(ctx: RealmProvisioningSynchronizerContext) {
         super();
 
@@ -39,6 +42,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.roleSynchronizer = ctx.roleSynchronizer;
         this.userSynchronizer = ctx.userSynchronizer;
         this.scopeSynchronizer = ctx.scopeSynchronizer;
+        this.pathSynchronizer = ctx.pathSynchronizer;
     }
 
     async synchronize(input: RealmProvisioningEntity): Promise<RealmProvisioningEntity> {
@@ -88,6 +92,18 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             });
 
             await this.scopeSynchronizer.synchronizeMany(scopes);
+        }
+
+        // Folders next: both the clients and the users below may be filed
+        // under one through `relations.path`, and an entry declared here is
+        // what gives such a folder a display name or a description.
+        if (input.relations && input.relations.paths) {
+            const paths = input.relations.paths.map((child) => {
+                child.attributes.realmId = attributes.id;
+                return child;
+            });
+
+            await this.pathSynchronizer.synchronizeMany(paths);
         }
 
         if (input.relations && input.relations.clients) {

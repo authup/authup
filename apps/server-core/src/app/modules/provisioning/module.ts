@@ -9,6 +9,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    Path,
     PermissionPolicy,
     Realm,
     Role,
@@ -23,6 +24,7 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
+    PathEntity,
     PermissionEntity,
     RealmEntity,
     RoleEntity,
@@ -42,6 +44,7 @@ import type { IContainer } from 'eldin';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
+    PathProvisioningSynchronizer,
     PermissionProvisioningSynchronizer,
     PolicyProvisioningSynchronizer,
     RealmProvisioningSynchronizer,
@@ -63,6 +66,7 @@ import {
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
     KeyRepositoryAdapter,
+    PathRepositoryAdapter,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
@@ -191,6 +195,10 @@ export class ProvisionerModule implements IModule {
         const clientScopeRepository = new ClientScopeRepositoryAdapter(
             container.resolve<Repository<ClientScope>>(ClientScopeEntity),
         );
+        const pathRepository = new PathRepositoryAdapter({
+            repository: container.resolve<Repository<Path>>(PathEntity),
+            realmRepository,
+        });
 
         // The oauth2 module's key store registration is PREFERRED but
         // optional, so provisioning stays runnable in minimal module graphs
@@ -229,6 +237,7 @@ export class ProvisionerModule implements IModule {
 
         const clientSynchronizer = new ClientProvisioningSynchronizer({
             clientRepository,
+            pathRepository,
             cipher,
             clientRoleRepository: new ClientRoleRepositoryAdapter(
                 container.resolve<Repository<ClientRole>>(ClientRoleEntity),
@@ -261,9 +270,11 @@ export class ProvisionerModule implements IModule {
             clientRepository,
             roleRepository,
             permissionRepository,
+            pathRepository,
         });
 
         const scopeSynchronizer = new ScopeProvisioningSynchronizer({ repository: scopeRepository });
+        const pathSynchronizer = new PathProvisioningSynchronizer({ repository: pathRepository });
 
         const realmSynchronizer = new RealmProvisioningSynchronizer({
             repository: new RealmRepositoryAdapter(realmRepository),
@@ -273,6 +284,7 @@ export class ProvisionerModule implements IModule {
             permissionSynchronizer,
             userSynchronizer,
             scopeSynchronizer,
+            pathSynchronizer,
         });
 
         const rootSynchronizer = new GraphProvisioningSynchronizer({

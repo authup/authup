@@ -8,6 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
+import { createPathValidator } from '../path/utils.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { RoleProvisioningValidator } from '../role/index.ts';
 import { createProvisioningEntitiesValidator } from '../utils.ts';
@@ -19,6 +20,8 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
 
         const permissionValidator = new PermissionProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
+
+        this.mount('path', { optional: true }, createPathValidator());
 
         this.mount('permissions', { optional: true }, createValidator(
             z

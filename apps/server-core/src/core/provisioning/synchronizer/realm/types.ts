@@ -8,6 +8,7 @@
 import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client/index.ts';
+import type { PathProvisioningEntity } from '../../entities/path/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
@@ -21,4 +22,5 @@ export type RealmProvisioningSynchronizerContext = {
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
     userSynchronizer: IProvisioningSynchronizer<UserProvisioningEntity>,
     scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningEntity>,
+    pathSynchronizer: IProvisioningSynchronizer<PathProvisioningEntity>,
 };
