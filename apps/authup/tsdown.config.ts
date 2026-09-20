@@ -13,5 +13,9 @@ export default defineConfig({
     // graceful "vite could not be resolved" failure `loadVite` throws and
     // multiplies the package size for a codepath a published install never
     // reaches.
-    deps: { neverBundle: ['vite'] },
+    //
+    // `@napi-rs/keyring` is a native optional dependency reached through an
+    // `await import` in `src/host/store/keychain.ts`: a platform with no
+    // prebuilt binary must still run every other command.
+    deps: { neverBundle: ['vite', '@napi-rs/keyring'] },
 });
