@@ -3,7 +3,6 @@ import {
     TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
-    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import {
@@ -11,7 +10,7 @@ import {
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
-import type { Client } from '@authup/core-kit';
+import type { Path } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
@@ -20,7 +19,7 @@ import { computed, defineComponent, ref } from 'vue';
 import { buildRecordHeading } from '../../composables/record';
 import { LayoutSection } from '../../config/layout';
 import { useRoute, useRouter } from 'vue-router';
-import { buildEntityBreadcrumb, buildPathAncestors, useSectionBreadcrumb } from '../../composables/breadcrumb';
+import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../composables/breadcrumb';
 import { useErrorToast } from '../../composables/error';
 import { useToast } from '../../composables/toast';
 
@@ -35,41 +34,19 @@ export default defineComponent({
 
         // Resolves through inject(), so it has to run before the record fetch
         // below is awaited.
-        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.CLIENTS);
+        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.PATHS);
 
-        const translationsDefault = useTranslations(
-            [
-                {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.GENERAL, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.SCOPE, 
-                    count: 2, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.URL, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.PERMISSION, 
-                    count: 2, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.ROLE, 
-                    count: 2, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.CLIENT, 
-                    count: 1, 
-                },
-            ],
-        );
-
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GENERAL,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.PATH,
+                count: 1,
+            },
+        ]);
 
         const translate = useTranslator();
 
@@ -77,70 +54,56 @@ export default defineComponent({
 
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
-        let entity : Ref<Client | null> = ref(null);
+        let entity : Ref<Path | null> = ref(null);
         try {
             entity = ref(await httpClient
-                .client
-                .getOne(route.params.id as string, { fields: ['+secret'], relations: ['path'] })
+                .path
+                .getOne(route.params.id as string)
                 .then((response) => response.data));
         } catch {
-            await router.replace({ path: '/clients' });
+            await router.replace({ path: '/paths' });
         }
 
         const items = computed(() => (entity.value ? [
             {
                 name: '',
                 icon: 'fa6-solid:arrow-left',
-                url: '/clients',
+                url: '/paths',
             },
             {
                 name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
-                url: `/clients/${entity.value.id}`,
-            },
-            {
-                name: translationsDefault.scope,
-                icon: 'fa6-solid:meteor',
-                url: `/clients/${entity.value.id}/scopes`,
-            },
-            {
-                name: translationsDefault.url,
-                icon: 'fa6-solid:link',
-                url: `/clients/${entity.value.id}/url`,
-            },
-            {
-                name: translationsDefault.permission,
-                icon: 'fa6-solid:user-secret',
-                url: `/clients/${entity.value.id}/permissions`,
-            },
-            {
-                name: translationsDefault.role,
-                icon: 'fa6-solid:user-group',
-                url: `/clients/${entity.value.id}/roles`,
+                url: `/paths/${entity.value.id}`,
             },
         ] : []));
 
-        const heading = computed(() => buildRecordHeading(entity.value ?? {}));
+        // The heading leads with the segment name (or the display name), so
+        // the full path is what the line under it should say. It only falls
+        // back to the derived path where the folder carries no description
+        // of its own.
+        const heading = computed(() => buildRecordHeading(entity.value ? {
+            ...entity.value,
+            description: entity.value.description || entity.value.path,
+        } : {}));
 
         const breadcrumbItems = computed(() => buildEntityBreadcrumb({
             base: breadcrumbBase.value,
-            ancestors: buildPathAncestors(entity.value?.path),
             entity: {
                 label: heading.value.label,
-                url: `/clients/${entity.value?.id}`,
+                url: `/paths/${entity.value?.id}`,
             },
             path: route.path,
             tabs: items.value,
         }));
 
-        const handleUpdated = async (e: Client) => {
+        const handleUpdated = async (e: Path) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
                     body: await translate({
                         namespace: TranslatorTranslationNamespace.APP,
                         key: TranslatorTranslationAppKey.ENTITY_UPDATED,
-                        data: { entity: translationsDefault.client },
+                        data: { entity: translationsDefault.path },
                     }),
                 });
             }
@@ -170,7 +133,7 @@ export default defineComponent({
         <div class="mb-3">
             <h1 class="title no-border mb-0">
                 <VCIcon
-                    name="fa6-solid:cube"
+                    name="fa6-solid:folder-tree"
                     class="me-1"
                 /> {{ heading.label }}
             </h1>

@@ -6,6 +6,8 @@
  */
 
 import { useTranslation } from '@authup/client-web-kit';
+import type { Path } from '@authup/core-kit';
+import { PATH_SEPARATOR, splitPath } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
@@ -121,9 +123,20 @@ export function useSectionBreadcrumb(
     });
 }
 
+/** A crumb between the section and the record, one folder of its path. */
+export type EntityBreadcrumbAncestor = {
+    label: string,
+    url: string
+};
+
 export type EntityBreadcrumbContext = {
     /** The `Home > Section` head, from {@see useSectionBreadcrumb}. */
     base: BreadcrumbItem[],
+    /**
+     * The folder trail of a record filed under a path, from
+     * {@see buildPathAncestors}. A record without a folder passes none.
+     */
+    ancestors?: EntityBreadcrumbAncestor[],
     /** The record: its display label and its own route. */
     entity: {
         label: string,
@@ -151,6 +164,10 @@ export type EntityBreadcrumbContext = {
 export function buildEntityBreadcrumb(ctx: EntityBreadcrumbContext) : BreadcrumbItem[] {
     const items : BreadcrumbItem[] = [
         ...ctx.base,
+        ...(ctx.ancestors ?? []).map((ancestor) => ({
+            label: ancestor.label,
+            to: ancestor.url,
+        })),
         {
             label: ctx.entity.label,
             to: ctx.entity.url,
@@ -174,4 +191,32 @@ export function buildEntityBreadcrumb(ctx: EntityBreadcrumbContext) : Breadcrumb
     }
 
     return items;
+}
+
+/**
+ * The folder trail of a record filed under a path, as the ancestor crumbs
+ * {@see buildEntityBreadcrumb} places between the section and the record.
+ *
+ * Only the leaf is a folder the record names, so it is the only segment
+ * whose own record route is known; every segment above it links to the
+ * folder collection scoped to that prefix instead.
+ *
+ * Takes the two columns it reads rather than the whole record, so a caller
+ * may hand over a `Path` relation or just its projection.
+ */
+export function buildPathAncestors(
+    path?: Pick<Path, 'id' | 'path'> | null,
+) : EntityBreadcrumbAncestor[] {
+    if (!path) {
+        return [];
+    }
+
+    const segments = splitPath(path.path);
+
+    return segments.map((segment, index) => ({
+        label: segment,
+        url: index === segments.length - 1 ?
+            `/paths/${path.id}` :
+            `/paths?path=${encodeURIComponent(segments.slice(0, index + 1).join(PATH_SEPARATOR))}`,
+    }));
 }

@@ -3,6 +3,7 @@ import { defineQuery } from '@rapiq/core';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import type { ListLoadFn } from '@authup/client-web-kit';
 import {
     AEntityDelete,
     APagination,
@@ -15,10 +16,18 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
+import type { FormOption } from '@vuecs/forms';
+import { VCFormSelect } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent } from 'vue';
+import {
+    computed, 
+    defineComponent, 
+    ref, 
+    watch,
+} from 'vue';
+import { usePathScope } from '../../../composables/path-scope';
 
 export default defineComponent({
     components: {
@@ -28,6 +37,7 @@ export default defineComponent({
         AUsers,
         AEntityDelete,
         VCButton,
+        VCFormSelect,
         VCIcon,
     },
     emits: ['deleted'],
@@ -39,7 +49,31 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query = defineQuery<User>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+        const pathScope = usePathScope({ realmId: realmManagementId });
+
+        const query = computed(() => defineQuery<User>({
+            filters: {
+                realmId: [realmManagementId.value ?? null, null],
+                ...pathScope.filters.value,
+            },
+            relations: ['path'],
+        }));
+
+        // The collection reads its base query on every load but does not
+        // watch the prop, so a folder resolved after mount needs the list
+        // reloaded. Both the control below and a `?path=` deep link land
+        // here; the initial load is held back while a deep link is still
+        // resolving, since a load in flight would swallow this one. A scope
+        // still resolving is skipped so the list is not emptied and refilled
+        // on every selection.
+        const collection = ref<{ load: ListLoadFn } | null>(null);
+        watch(pathScope.filters, () => {
+            if (pathScope.pending.value) {
+                return;
+            }
+
+            collection.value?.load({ pagination: { offset: 0 } });
+        });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.USER_DELETE });
@@ -48,6 +82,10 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PATH,
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
@@ -61,12 +99,42 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.DETAILS,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE_ALL,
+            },
         ]);
+
+        // ponytail: a flat select of the realm's folders. The
+        // Authentik-style tree pane replaces it once VCTree ships
+        // (tada5hi/vuecs#1729); `usePathScope` is the piece it reuses.
+        const pathScopeOptions = computed<FormOption[]>(() => [
+            { value: '', label: translations.pathScopeAll },
+            ...pathScope.options.value.map((entry) => ({
+                value: entry.path,
+                label: entry.path,
+            })),
+        ]);
+
+        const pathScopeValue = computed<string>({
+            get: () => pathScope.path.value ?? '',
+            set: (value) => pathScope.select(value.length > 0 ? value : null),
+        });
 
         const columns = computed<TableColumn<User>[]>(() => [
             {
                 key: 'name',
                 label: translations.name,
+                headerClass: 'text-left',
+                cellClass: 'text-left',
+            },
+            {
+                key: 'path',
+                label: translations.path,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
@@ -90,10 +158,14 @@ export default defineComponent({
         ]);
 
         return {
+            collection,
             columns,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            pathScopePending: pathScope.pending,
+            pathScopeOptions,
+            pathScopeValue,
             query,
             translations,
             VCLink,
@@ -103,17 +175,30 @@ export default defineComponent({
 </script>
 <template>
     <AUsers
+        ref="collection"
         :query="query"
         :body="{tag: 'div'}"
         :footer="true"
+        :load-on-setup="!pathScopePending"
         @deleted="handleDeleted"
     >
         <template #header="props">
             <ATitle />
-            <ASearch
-                :load="props.load"
-                :busy="props.busy"
-            />
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="w-full sm:w-64">
+                    <VCFormSelect
+                        v-model="pathScopeValue"
+                        :options="pathScopeOptions"
+                        :aria-label="translations.pathScope"
+                    />
+                </div>
+                <div class="grow">
+                    <ASearch
+                        :load="props.load"
+                        :busy="props.busy"
+                    />
+                </div>
+            </div>
         </template>
         <template #footer="props">
             <APagination
@@ -128,6 +213,9 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
+                <template #cell-path="{ row }">
+                    {{ row.path?.path ?? '' }}
+                </template>
                 <template #cell-createdAt="{ row }">
                     <VCTimeago :datetime="row.createdAt" />
                 </template>

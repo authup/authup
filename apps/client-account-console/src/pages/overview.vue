@@ -12,10 +12,11 @@ import {
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
-import type { User } from '@authup/core-kit';
+import type { Path, User } from '@authup/core-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
@@ -39,6 +40,12 @@ export default defineComponent({
         // user's address.
         const entity = ref<User | null>(null);
 
+        // `/userinfo` is a flat claims document and carries no relation, so
+        // the folder is read separately. It is decoration on this page, not
+        // its content, so a read that fails renders no line at all rather
+        // than taking the profile form down with it.
+        const path = ref<Path | null>(null);
+
         const toasts = useAccountToasts();
         const pageError = usePageError();
         const translate = useTranslator();
@@ -47,6 +54,10 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON,
                 key: TranslatorTranslationCommonKey.GENERAL,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PATH,
             },
         ]);
 
@@ -62,6 +73,15 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => toasts.error(e);
 
+        const loadPath = async () => {
+            try {
+                const response = await httpClient.user.getOne('@me', { relations: ['path'] });
+                path.value = response.data.path;
+            } catch {
+                path.value = null;
+            }
+        };
+
         // The load is the page's only content, so a failure renders the
         // error state rather than a toast over an empty surface.
         const load = async () => {
@@ -70,13 +90,17 @@ export default defineComponent({
                 pageError.reset();
             } catch (e) {
                 await pageError.capture(e);
+                return;
             }
+
+            await loadPath();
         };
 
         onMounted(load);
 
         return {
             entity,
+            path,
             realmId,
             translations,
             error: pageError.error,
@@ -96,13 +120,20 @@ export default defineComponent({
             v-if="error"
             @retry="load"
         />
-        <AUserForm
-            v-else-if="entity"
-            :can-manage="false"
-            :realm-id="realmId"
-            :entity="entity"
-            @updated="handleUpdated"
-            @failed="handleFailed"
-        />
+        <template v-else-if="entity">
+            <p
+                v-if="path"
+                class="text-sm text-fg-muted mb-2"
+            >
+                {{ translations.path }}: {{ path.path }}
+            </p>
+            <AUserForm
+                :can-manage="false"
+                :realm-id="realmId"
+                :entity="entity"
+                @updated="handleUpdated"
+                @failed="handleFailed"
+            />
+        </template>
     </div>
 </template>
