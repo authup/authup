@@ -19,7 +19,8 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
-import type { Realm, User } from '@authup/core-kit';
+import type { Path, Realm, User } from '@authup/core-kit';
+import { PathEntity } from '../path/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_users' })
@@ -198,6 +199,21 @@ export class UserEntity implements User {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
     realm: Realm;
+
+    @Index()
+    @Column({
+        name: 'path_id',
+        type: 'uuid',
+        nullable: true,
+    })
+    pathId: Path['id'] | null;
+
+    @ManyToOne(() => PathEntity, {
+        onDelete: 'SET NULL',
+        nullable: true,
+    })
+    @JoinColumn({ name: 'path_id' })
+    path: Path | null;
 
     // ------------------------------------------------------------------
 

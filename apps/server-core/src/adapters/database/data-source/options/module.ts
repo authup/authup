@@ -37,6 +37,8 @@ import {
     IdentityProviderRoleSubscriber,
     IdentityProviderSubscriber,
     KeyEntity,
+    PathEntity,
+    PathSubscriber,
     PermissionEntity,
     PermissionPolicyEntity,
     PermissionSubscriber,
@@ -168,6 +170,8 @@ export class DataSourceOptionsBuilder {
                 IdentityProviderPermissionMappingEntity,
                 IdentityProviderAttributeMappingEntity,
 
+                PathEntity,
+
                 PermissionEntity,
                 PermissionPolicyEntity,
 
@@ -204,6 +208,8 @@ export class DataSourceOptionsBuilder {
                 IdentityProviderAccountSubscriber,
                 IdentityProviderAttributeSubscriber,
                 IdentityProviderRoleSubscriber,
+
+                PathSubscriber,
 
                 PermissionSubscriber,
                 PolicySubscriber,

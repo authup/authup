@@ -102,6 +102,8 @@ const buildClient = (data: Partial<Client> = {}) : Client => {
         updatedAt: timestamp,
         realmId: REALM_ID,
         realm: buildRealm(),
+        pathId: null,
+        path: null,
         ...data,
     };
 };
@@ -143,6 +145,8 @@ const buildIdentity = (data: Partial<UserIdentity['data']> = {}) : UserIdentity 
         updatedAt: new Date().toISOString(),
         realmId: REALM_ID,
         realm: buildRealm(),
+        pathId: null,
+        path: null,
         ...data,
     },
 });

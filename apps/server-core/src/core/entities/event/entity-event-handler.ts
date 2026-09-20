@@ -65,6 +65,7 @@ const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
     [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING]: 'providerRealmId',
     [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: 'providerRealmId',
     [EntityType.KEY]: 'realmId',
+    [EntityType.PATH]: 'realmId',
     [EntityType.POLICY]: 'realmId',
     [EntityType.POLICY_ATTRIBUTE]: 'realmId',
     [EntityType.PERMISSION]: 'realmId',

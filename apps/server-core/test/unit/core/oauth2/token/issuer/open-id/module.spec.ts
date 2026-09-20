@@ -58,6 +58,8 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         updatedAt: '2025-01-01T00:00:00.000Z',
         realmId,
         realm,
+        pathId: null,
+        path: null,
     };
 
     const identity: Identity = {

@@ -56,6 +56,8 @@ function createClient(): Client {
         updatedAt: TIMESTAMP,
         realmId: realm.id,
         realm,
+        pathId: null,
+        path: null,
     };
 }
 
