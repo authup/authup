@@ -328,6 +328,9 @@ export enum TranslatorTranslationAppKey {
     PATH_HINT = 'pathHint',
     PATH_SCOPE = 'pathScope',
     PATH_SCOPE_ALL = 'pathScopeAll',
+    PATH_SCOPE_TRUNCATED = 'pathScopeTruncated',
+    PATH_DELETE_CONFIRM_DESCRIPTION = 'pathDeleteConfirmDescription',
+    PATH_DELETE_CONFIRM_UNKNOWN = 'pathDeleteConfirmUnknown',
 
     BACK_TO_APP = 'backToApp',
 }
