@@ -19,6 +19,7 @@ export enum EntityType {
     IDENTITY_PROVIDER_PERMISSION_MAPPING = 'identityProviderPermissionMapping',
     IDENTITY_PROVIDER_ROLE_MAPPING = 'identityProviderRoleMapping',
     KEY = 'key',
+    PATH = 'path',
     POLICY = 'policy',
     POLICY_ATTRIBUTE = 'policyAttribute',
     PERMISSION = 'permission',

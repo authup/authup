@@ -170,6 +170,14 @@ export class UserValidator extends Container<User> {
             createValidator(z.uuid()),
         );
 
+        // Unlike realmId above, a folder is not fixed at creation: a user
+        // moves between folders, so every group may write it.
+        this.mount(
+            'pathId',
+            { optional: true },
+            createValidator(z.uuid().nullable()),
+        );
+
         this.mount(
             'status',
             { optional: true },

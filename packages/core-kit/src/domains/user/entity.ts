@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Path } from '../path';
 import type { Realm } from '../realm';
 
 export interface User {
@@ -68,6 +69,10 @@ export interface User {
     realmId: Realm['id'];
 
     realm: Realm;
+
+    pathId: Path['id'] | null;
+
+    path: Path | null;
 
     // ------------------------------------------------------------------
 

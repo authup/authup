@@ -17,6 +17,7 @@ import type { IdentityProviderAccount } from './identity-provider-account';
 import type { IdentityProviderAttribute } from './identity-provider-attribute';
 import type { IdentityProviderRoleMapping } from './identity-provider-role-mapping';
 import type { Key } from './key';
+import type { Path } from './path';
 import type { Permission } from './permission';
 import type { PermissionPolicy } from './permission-policy';
 import type { Policy } from './policy';
@@ -46,6 +47,7 @@ type EntityTypeMapRaw = {
     [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
     [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
     [EntityType.KEY]: Key,
+    [EntityType.PATH]: Path,
     [EntityType.POLICY]: Policy,
     [EntityType.POLICY_ATTRIBUTE]: PolicyAttribute,
     [EntityType.PERMISSION]: Permission,

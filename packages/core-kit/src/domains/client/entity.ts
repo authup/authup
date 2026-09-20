@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Path } from '../path';
 import type { Policy } from '../policy';
 import type { Realm } from '../realm';
 import type { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
@@ -74,6 +75,10 @@ export interface Client {
     realmId: Realm['id'],
 
     realm: Realm,
+
+    pathId: Path['id'] | null,
+
+    path: Path | null,
 
     accessPolicyId: Policy['id'] | null,
 
