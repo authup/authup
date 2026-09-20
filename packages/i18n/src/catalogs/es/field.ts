@@ -81,6 +81,7 @@ export const TranslatorTranslationFieldSpanish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.ACCESS_POLICY]: 'Política de acceso',
     [TranslatorTranslationFieldKey.ACTOR]: 'Actor',
     [TranslatorTranslationFieldKey.REF]: 'Referencia',
+    [TranslatorTranslationFieldKey.PARENT]: 'Superior',
     [TranslatorTranslationFieldKey.PATH]: 'Ruta',
     [TranslatorTranslationFieldKey.METHOD]: 'Método',
     [TranslatorTranslationFieldKey.USE]: 'Uso',

@@ -34,6 +34,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.POLICY_DESCRIPTION]: 'Regeln, die bestimmen, wann eine Berechtigung gilt.',
     [TranslatorTranslationAppKey.EVENT_DESCRIPTION]: 'Fortlaufendes Protokoll sicherheitsrelevanter Aktivitäten.',
     [TranslatorTranslationAppKey.SESSION_DESCRIPTION]: 'Aktive Anmeldungen mit den zugehörigen Geräten und Tokens.',
+    [TranslatorTranslationAppKey.PATH_DESCRIPTION]: 'Ordner, die Benutzer und Clients innerhalb einer Organisation gliedern.',
     [TranslatorTranslationAppKey.SET_MANAGEMENT_REALM]: 'Als Verwaltungs-Realm festlegen',
     [TranslatorTranslationAppKey.API_DOCS]: 'API-Dokumentation',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Erstellt mit',
@@ -106,6 +107,10 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'Das Konto konnte nicht verbunden werden.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Verschlüsselungsschlüssel unwiderruflich löschen?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Dieser Schlüssel wird noch von {{count}} verschlüsselten Geheimnissen referenziert. Das Löschen macht sie dauerhaft unlesbar.',
+
+    [TranslatorTranslationAppKey.PATH_HINT]: 'Rein organisatorisch. Ein Pfad beeinflusst weder Berechtigungen noch Rollen noch die Anmeldung.',
+    [TranslatorTranslationAppKey.PATH_SCOPE]: 'Pfad',
+    [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'Alle Pfade',
 
     [TranslatorTranslationAppKey.BACK_TO_APP]: 'Zurück zu {{host}}',
 };

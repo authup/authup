@@ -16,6 +16,7 @@ export const TranslatorTranslationEntityGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Identitätsanbieter', other: 'Identitätsanbieter' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER_ACCOUNT]: definePlural({ one: 'Verknüpftes Konto', other: 'Verknüpfte Konten' }),
     [TranslatorTranslationEntityKey.KEY]: definePlural({ one: 'Schlüssel', other: 'Schlüssel' }),
+    [TranslatorTranslationEntityKey.PATH]: definePlural({ one: 'Pfad', other: 'Pfade' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Berechtigung', other: 'Berechtigungen' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Richtlinie', other: 'Richtlinien' }),
     [TranslatorTranslationEntityKey.REALM]: definePlural({ one: 'Organisation', other: 'Organisationen' }),
