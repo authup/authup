@@ -8,6 +8,7 @@
 import type { Client as ClientEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
+import { ErrorCode } from '@authup/errors';
 import {
     afterAll,
     beforeAll,
@@ -16,7 +17,7 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient } from '../../../../utils';
+import { createFakeClient, expectClientError } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('http/controllers/client (self-manage)', () => {
@@ -109,9 +110,15 @@ describe('http/controllers/client (self-manage)', () => {
             realmId: entity.realmId,
         });
 
-        await expect(
-            selfClient.client.update(entity.id, { pathId: path.id }),
-        ).rejects.toThrow();
+        await expectClientError(
+            () => selfClient.client.update(entity.id, { pathId: path.id }),
+            {
+                // the denylist refusal is the policy evaluation failing, not
+                // an input error: a bare rejects.toThrow() would pass on a 500
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
 
         const { data: current } = await suite.client.client.getOne(entity.id);
         expect(current.pathId).toBeNull();

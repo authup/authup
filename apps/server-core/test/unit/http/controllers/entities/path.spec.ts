@@ -209,6 +209,14 @@ describe('src/http/controllers/path', () => {
     });
 
     it('should scope the nested realm mount', async () => {
+        // the second realm holds no folder of its own yet, and `every` over an
+        // empty array is vacuously true, so the row the mount must return is
+        // created first
+        const { data: imported } = await suite.client.path.create({
+            name: 'imported',
+            realmId: otherRealm.id,
+        });
+
         const response = await httpRequest(
             suite,
             'GET',
@@ -218,6 +226,7 @@ describe('src/http/controllers/path', () => {
         expect(response.status).toEqual(200);
 
         const body = await response.json() as { data: Path[] };
+        expect(body.data.some((entity) => entity.id === imported.id)).toBe(true);
         expect(body.data.every((entity) => entity.realmId === otherRealm.id)).toBe(true);
         expect(body.data.some((entity) => entity.id === berlin.id)).toBe(false);
     });
@@ -234,6 +243,39 @@ describe('src/http/controllers/path', () => {
         const { data: own } = await realmAdmin.path.create({ name: 'engineering' });
         expect(own.realmId).toEqual(otherRealm.id);
         expect(own.path).toEqual('engineering');
+    });
+
+    it('should list a realm_admin only the folders of its own realm', async () => {
+        const { data } = await realmAdmin.path.getMany();
+
+        // the reach compiles into the WHERE, so the foreign rows are absent
+        // from the page AND from the total
+        expect(data.length).toBeGreaterThan(0);
+        expect(data.every((entity) => entity.realmId === otherRealm.id)).toBe(true);
+        expect(data.some((entity) => entity.path === 'engineering')).toBe(true);
+        expect(data.some((entity) => entity.id === berlin.id)).toBe(false);
+        expect(data.some((entity) => entity.id === sales.id)).toBe(false);
+    });
+
+    it('should refuse a realm_admin the single read of a foreign folder', async () => {
+        // gating the list without the single read is the more dangerous half
+        // (issue #3574): the flat mount resolves the row by id across realms
+        // and the post-fetch realm match is what refuses it
+        await expectClientError(
+            () => realmAdmin.path.getOne(berlin.id),
+            { status: 403 },
+        );
+    });
+
+    it('should keep a foreign folder out of a realm_admin list under a fields projection', async () => {
+        // a `fields=` projection replaces the schema default, so without the
+        // adapter's force-select the realm-match key would be absent and
+        // neutral-pass: this is what makes applyRealmScopeSelect observable
+        const { data } = await realmAdmin.path.getMany({ fields: ['id', 'name'] });
+
+        expect(data.length).toBeGreaterThan(0);
+        expect(data.some((entity) => entity.id === berlin.id)).toBe(false);
+        expect(data.some((entity) => entity.id === sales.id)).toBe(false);
     });
 
     it('should delete a folder with its descendants and unfile its members', async () => {

@@ -16,11 +16,11 @@ describe('src/domains/entities/path', () => {
                 'POST /paths': (request) => ({ data: { id: 'p1', ...(request.body as Record<string, any>) }, meta: {} }),
                 'GET /paths/p1': () => ({
                     data: {
-                        id: 'p1', 
-                        name: 'berlin', 
-                        path: 'sales/berlin', 
+                        id: 'p1',
+                        name: 'berlin',
+                        path: 'sales/berlin',
                     },
-                    meta: {}, 
+                    meta: {},
                 }),
             },
         });

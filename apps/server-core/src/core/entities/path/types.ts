@@ -11,8 +11,6 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 export interface IPathRepository extends IEntityRepository<Path> {
     checkUniqueness(data: Partial<Path>, existing?: Path): Promise<void>;
 
-    findManyBy(where: Record<string, any>): Promise<Path[]>;
-
     /** Every folder below `entity` (prefix `entity.path + '/'`) in its realm. */
     findDescendants(entity: Path): Promise<Path[]>;
 

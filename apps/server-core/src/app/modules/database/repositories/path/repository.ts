@@ -26,14 +26,21 @@ export type PathRepositoryAdapterContext = {
     realmRepository: Repository<Realm>,
 };
 
+export type PathRepositoryAdapterOptions = {
+    lockRows?: boolean,
+};
+
 export class PathRepositoryAdapter implements IPathRepository {
     private readonly repository: Repository<Path>;
 
     private readonly realmRepository: IRealmRepository;
 
-    constructor(ctx: PathRepositoryAdapterContext) {
+    private readonly lockRows: boolean;
+
+    constructor(ctx: PathRepositoryAdapterContext, options: PathRepositoryAdapterOptions = {}) {
         this.repository = ctx.repository;
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
+        this.lockRows = options.lockRows ?? false;
     }
 
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Path>> {
@@ -42,7 +49,7 @@ export class PathRepositoryAdapter implements IPathRepository {
 
         const { pagination } = applyQuery(qb, query);
         // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
-        // PRESENCE-based — a `fields=` projection that strips the column would
+        // PRESENCE-based: a `fields=` projection that strips the column would
         // leave the realm-match key absent and neutral-pass (issue #3574)
         applyRealmScopeSelect(qb, 'path');
 
@@ -92,16 +99,30 @@ export class PathRepositoryAdapter implements IPathRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Path | null> {
-        return this.repository.findOneBy(translateWhereConditions(where));
+        return this.repository.findOne({
+            where: translateWhereConditions(where),
+            ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
+        });
     }
 
+    /**
+     * ponytail: the whole subtree is loaded with no `take`, and the caller
+     * writes one row per descendant. The folder table is the small one
+     * (`PATH_MAX_DEPTH` bounds the depth, nothing bounds the breadth), so a
+     * page size here would only buy a half-rewritten subtree across pages.
+     */
     async findDescendants(entity: Path): Promise<Path[]> {
         const prefix = `${entity.path}/`;
 
-        const entities = await this.repository.createQueryBuilder('path')
+        const qb = this.repository.createQueryBuilder('path')
             .where('path.realmId = :realmId', { realmId: entity.realmId })
-            .andWhere('path.path LIKE :prefix', { prefix: `${prefix}%` })
-            .getMany();
+            .andWhere('path.path LIKE :prefix', { prefix: `${prefix}%` });
+
+        if (this.lockRows) {
+            qb.setLock('pessimistic_write');
+        }
+
+        const entities = await qb.getMany();
 
         // `_` is a single-character LIKE wildcard AND a legal path character
         // ([a-z0-9-_.]), so the statement above over-matches: a rename of
@@ -147,12 +168,17 @@ export class PathRepositoryAdapter implements IPathRepository {
         }
 
         // mysql / postgres: a rename rewrites the folder and every descendant,
-        // so the two writes ride one transaction. No row lock is taken: a
-        // concurrent rename of the same subtree loses on the unique key.
+        // so the two writes ride one transaction. The callback gets an adapter
+        // bound to that transaction whose reads take a row lock: the unique key
+        // catches nothing here, since two renames at different depths of one
+        // chain write different paths (`marketing` and `sales/munich`) and
+        // collide on no constraint, leaving a descendant under a stale prefix.
+        // Locking the row, its resolved parent and the descendant set serializes
+        // them, so the second request re-reads what the first committed.
         return dataSource.transaction((manager) => fn(new PathRepositoryAdapter({
             repository: manager.getRepository(PathEntity),
             realmRepository: manager.getRepository(RealmEntity),
-        })));
+        }, { lockRows: true })));
     }
 
     async validateJoinColumns(data: Partial<Path>): Promise<void> {

@@ -13,14 +13,14 @@ const PATH_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 
 const base : BreadcrumbItem[] = [
     {
-        label: 'Home', 
-        to: '/', 
-        icon: 'fa6-solid:house', 
+        label: 'Home',
+        to: '/',
+        icon: 'fa6-solid:house',
     },
     {
-        label: 'Users', 
-        to: '/users', 
-        icon: 'fa6-solid:user', 
+        label: 'Users',
+        to: '/users',
+        icon: 'fa6-solid:user',
     },
 ];
 
@@ -71,14 +71,14 @@ describe('src/composables/breadcrumb', () => {
             path: '/users/1/roles',
             tabs: [
                 {
-                    name: '', 
-                    icon: 'fa6-solid:arrow-left', 
-                    url: '/users', 
+                    name: '',
+                    icon: 'fa6-solid:arrow-left',
+                    url: '/users',
                 },
                 {
-                    name: 'Roles', 
-                    icon: 'fa6-solid:user-group', 
-                    url: '/users/1/roles', 
+                    name: 'Roles',
+                    icon: 'fa6-solid:user-group',
+                    url: '/users/1/roles',
                 },
             ],
         });

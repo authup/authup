@@ -224,9 +224,15 @@ describe('src/http/controllers/user', () => {
             realmId: user.realmId,
         });
 
-        await expect(
-            selfClient.user.update(user.id, { pathId: path.id }),
-        ).rejects.toThrow();
+        await expectClientError(
+            () => selfClient.user.update(user.id, { pathId: path.id }),
+            {
+                // the denylist refusal is the policy evaluation failing, not
+                // an input error: a bare rejects.toThrow() would pass on a 500
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
 
         const { data: current } = await suite.client.user.getOne(user.id);
         expect(current.pathId).toBeNull();

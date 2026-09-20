@@ -169,6 +169,37 @@ describe('core/provisioning/wildcard', () => {
             expect(variants.get('foo')!.clients![0].attributes.displayName).toBe('Explicit Portal');
         });
 
+        it('should merge a wildcard folder into the explicit entry declaring the same path', () => {
+            // A folder carries a full `path` and deliberately no `name`, so the
+            // merge key falls back to it. Without that fallback both entries are
+            // pushed and a wildcard `absent` next to an explicit create would
+            // delete and recreate the subtree on every boot.
+            const entry : RealmProvisioningEntity = {
+                attributes: { name: REALM_WILDCARD_NAME },
+                relations: { paths: [{ attributes: { path: 'sales', displayName: 'Sales' } }] },
+            };
+
+            const data : RootProvisioningEntity = {
+                realms: [{
+                    attributes: { name: 'foo' },
+                    relations: {
+                        paths: [{
+                            attributes: { path: 'sales', description: 'Explicit' },
+                            strategy: { type: 'merge' },
+                        }],
+                    },
+                }],
+            };
+
+            expandWildcardRealmEntry(entry, data);
+
+            const paths = data.realms![0].relations?.paths ?? [];
+            expect(paths).toHaveLength(1);
+            expect(paths[0].attributes.description).toBe('Explicit');
+            expect(paths[0].attributes.displayName).toBe('Sales');
+            expect(paths[0].strategy).toEqual({ type: 'merge' });
+        });
+
         it('should not let a wildcard child supply the strategy of an explicitly declared one', () => {
             // The documented sweep recipe: retire a client everywhere via a
             // wildcard `absent` child. A realm that declares the same client

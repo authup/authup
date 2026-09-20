@@ -11,8 +11,13 @@ import type { MergeProvisioningOptions, MergeableProvisioningEntity } from './ty
 export function buildProvisioningEntityKey(
     attributes: MergeableProvisioningEntity['attributes'],
 ): string | undefined {
-    if (!attributes.name) return undefined;
-    return `${attributes.name}:${attributes.realmId || ''}:${attributes.clientId || ''}`;
+    // a folder declares its full `path` and no `name`, so without the fallback
+    // it would key on nothing and every declaration of one folder would be
+    // pushed as a separate entry: a wildcard `absent` next to an explicit
+    // create would then delete and recreate that subtree on every boot
+    const identifier = attributes.name || attributes.path;
+    if (!identifier) return undefined;
+    return `${identifier}:${attributes.realmId || ''}:${attributes.clientId || ''}`;
 }
 
 export function mergeProvisioningEntities<T extends MergeableProvisioningEntity>(

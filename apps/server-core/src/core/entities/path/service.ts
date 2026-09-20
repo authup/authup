@@ -69,7 +69,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         // the per-row post-evaluation below.
         const compiled = await actor.permissionEvaluator.compile({ name: PERMISSION_NAMES });
         if (compiled.verdict === 'deny') {
-            // no row can pass — a constant-false condition keeps the meta shape
+            // no row can pass: a constant-false condition keeps the meta shape
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
@@ -223,15 +223,20 @@ export class PathService extends AbstractEntityService implements IPathService {
             // request derives its `nextPath` from the old name, sees no
             // change and rewrites no descendant, and the folder lands back at
             // its old path while its children stay under the new one.
+            //
+            // The repository handed over here locks what it reads, so the row,
+            // its resolved parent and the descendant set are all held for the
+            // transaction: a rename of an ANCESTOR is the race the re-read
+            // alone cannot see, since the two requests read different rows.
             const current = await repository.findOneBy({ id: entity.id });
             if (!current) {
                 throw new EntityNotFoundError();
             }
 
             const {
-                name, 
-                parentId, 
-                path: nextPath, 
+                name,
+                parentId,
+                path: nextPath,
             } = await this.resolveNextPath(
                 repository,
                 current,
@@ -305,9 +310,9 @@ export class PathService extends AbstractEntityService implements IPathService {
         entity: Path,
         validated: Record<string, any>,
     ): Promise<{
-        name: string, 
-        parentId: string | null, 
-        path: string 
+        name: string,
+        parentId: string | null,
+        path: string
     }> {
         const name = validated.name ?? entity.name;
         const parentId = isPropertySet(validated, 'parentId') ?

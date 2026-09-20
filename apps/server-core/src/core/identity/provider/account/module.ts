@@ -202,6 +202,26 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         return null;
     }
 
+    /**
+     * The realm assert `UserService.save` runs, for the one write path that
+     * never reaches it: `validateJoinColumns` and the database FK both prove
+     * the folder exists and neither proves it belongs to the user's realm.
+     */
+    protected async assertPathRealm(pathId: string, realmId: string | null): Promise<void> {
+        const path = await this.pathRepository.findOneById(pathId);
+        if (!path) {
+            throw new ValidationError('The path does not exist.');
+        }
+
+        if (!realmId) {
+            throw new ValidationError('A path needs a realm.');
+        }
+
+        if (path.realmId !== realmId) {
+            throw new ValidationError('The path belongs to another realm.');
+        }
+    }
+
     async saveUser(
         identity: IdentityProviderIdentity,
         user?: User,
@@ -226,18 +246,6 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             entity.active = true;
             entity.nameLocked = true;
             entity.clientId = identity.clientId || null;
-
-            // Authentik's user_path_template default: a user the provider
-            // provisions is filed under sources/<provider> unless a mapping
-            // placed it, and never refiled on a later login.
-            if (typeof entity.pathId === 'undefined') {
-                const folder = await ensurePath(
-                    this.pathRepository,
-                    identity.provider.realmId,
-                    joinPath('sources', identity.provider.name),
-                );
-                entity.pathId = folder.id;
-            }
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);
@@ -245,6 +253,37 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             // todo: better error name
             throw new Error('Identity provider attributes could not be validated.');
         }
+
+        // A mapped `pathId` never passes through UserService.save, so the realm
+        // assert every other write runs has to run here: the FK proves the
+        // folder exists, not that it sits in the user's realm, and a foreign
+        // folder would travel on every `GET /users?include=path` of this realm
+        // (the relation is deliberately ungated).
+        if (attributesSelf.pathId) {
+            await this.assertPathRealm(
+                attributesSelf.pathId,
+                user ? user.realmId : identity.provider.realmId,
+            );
+        }
+
+        if (!user && !attributesSelf.pathId) {
+            // Authentik's user_path_template default: a user the provider
+            // provisions is filed under sources/<provider> unless a mapping
+            // placed it, and never refiled on a later login. The folder is
+            // decoration with zero semantics, so a failure here leaves the
+            // user unfiled rather than failing the login.
+            try {
+                const folder = await ensurePath(
+                    this.pathRepository,
+                    identity.provider.realmId,
+                    joinPath('sources', identity.provider.name),
+                );
+                attributesSelf.pathId = folder.id;
+            } catch (e) {
+                this.logger?.warn(describeError(e, 'The default identity provider folder could not be created.'));
+            }
+        }
+
         const attributesSelfKeys = Object.keys(attributesSelf);
 
         const attributesExtra : Record<string, any> = {};

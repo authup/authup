@@ -15,7 +15,7 @@ import {
 } from 'vitest';
 import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
-import { EntityConflictError } from '@authup/errors';
+import { EntityConflictError, ErrorCode } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import type { IdentityProviderIdentity } from '../../../../../src/core';
 import {
@@ -541,5 +541,49 @@ describe('core/identity/provider/account', () => {
         expect(await paths.count()).toEqual(pathsBefore);
 
         await mappings.remove(mapping);
+    });
+
+    it('should refuse a mapping naming a folder of another realm', async () => {
+        const realms = suite.dataSource.getRepository(RealmEntity);
+        const foreignRealm = await realms.save(realms.create({ name: `foreign-${createNanoID()}` }));
+
+        const paths = suite.dataSource.getRepository(PathEntity);
+        const folder = await paths.save(paths.create({
+            name: 'foreign',
+            path: 'foreign',
+            realmId: foreignRealm.id,
+        }));
+
+        const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const mapping = await mappings.save(mappings.create({
+            synchronizationMode: 'always',
+            targetName: 'pathId',
+            targetValue: folder.id,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
+        }));
+
+        const users = suite.dataSource.getRepository(UserEntity);
+
+        // the folder is realm-bound and the `path` relation is ungated, so a
+        // foreign folder would travel on every list read of this realm
+        await expect(accountManager.save({
+            data: claims,
+            id: 'foreign-folder',
+            attributeCandidates: { name: ['foreign-folder'] },
+            provider,
+        })).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+        // the refusal lands before the write, so no user is provisioned
+        expect(await users.findOneBy({ name: 'foreign-folder' })).toBeNull();
+        expect(await accountRepository.findOneByProviderIdentity({
+            id: 'foreign-folder',
+            data: claims,
+            provider,
+        })).toBeNull();
+
+        await mappings.remove(mapping);
+        await paths.remove(folder);
+        await realms.remove(foreignRealm);
     });
 });

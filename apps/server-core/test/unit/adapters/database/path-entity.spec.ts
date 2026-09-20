@@ -45,20 +45,20 @@ describe('adapters/database/domains/path', () => {
     it('should cascade a folder delete to its descendants and unfile their users', async () => {
         const realm = await dataSource.getRepository(RealmEntity).save({ name: 'r1' });
         const sales = await dataSource.getRepository(PathEntity).save({
-            name: 'sales', 
-            path: 'sales', 
-            parentId: null, 
+            name: 'sales',
+            path: 'sales',
+            parentId: null,
             realmId: realm.id,
         });
         const berlin = await dataSource.getRepository(PathEntity).save({
-            name: 'berlin', 
-            path: 'sales/berlin', 
-            parentId: sales.id, 
+            name: 'berlin',
+            path: 'sales/berlin',
+            parentId: sales.id,
             realmId: realm.id,
         });
         const user = await dataSource.getRepository(UserEntity).save({
-            ...createFakeUser(), 
-            realmId: realm.id, 
+            ...createFakeUser(),
+            realmId: realm.id,
             pathId: berlin.id,
         });
 
@@ -71,18 +71,18 @@ describe('adapters/database/domains/path', () => {
     it('should refuse two folders with one path in one realm', async () => {
         const realm = await dataSource.getRepository(RealmEntity).save({ name: 'r2' });
         await dataSource.getRepository(PathEntity).save({
-            name: 'sales', 
-            path: 'sales', 
-            parentId: null, 
+            name: 'sales',
+            path: 'sales',
+            parentId: null,
             realmId: realm.id,
         });
 
         let error : unknown;
         try {
             await dataSource.getRepository(PathEntity).save({
-                name: 'sales', 
-                path: 'sales', 
-                parentId: null, 
+                name: 'sales',
+                path: 'sales',
+                parentId: null,
                 realmId: realm.id,
             });
         } catch (e) {
@@ -98,15 +98,15 @@ describe('adapters/database/domains/path', () => {
         const second = await dataSource.getRepository(RealmEntity).save({ name: 'r4' });
 
         await dataSource.getRepository(PathEntity).save({
-            name: 'sales', 
-            path: 'sales', 
-            parentId: null, 
+            name: 'sales',
+            path: 'sales',
+            parentId: null,
             realmId: first.id,
         });
         await dataSource.getRepository(PathEntity).save({
-            name: 'sales', 
-            path: 'sales', 
-            parentId: null, 
+            name: 'sales',
+            path: 'sales',
+            parentId: null,
             realmId: second.id,
         });
 

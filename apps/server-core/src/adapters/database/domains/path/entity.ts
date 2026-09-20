@@ -17,8 +17,12 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
-import type { Path, Realm } from '@authup/core-kit';
-import { PATH_MAX_LENGTH, PATH_SEGMENT_MAX_LENGTH } from '@authup/core-kit';
+import {
+    PATH_MAX_LENGTH,
+    PATH_SEGMENT_MAX_LENGTH,
+    type Path,
+    type Realm,
+} from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_paths' })

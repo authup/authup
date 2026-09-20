@@ -448,7 +448,13 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new ValidationError('The path does not exist.');
         }
 
-        if (!realmId || path.realmId !== realmId) {
+        // a realm-less row can reach no folder at all, which is a different
+        // refusal from naming a foreign one (PathService.create's wording)
+        if (!realmId) {
+            throw new ValidationError('A path needs a realm.');
+        }
+
+        if (path.realmId !== realmId) {
             throw new ValidationError('The path belongs to another realm.');
         }
     }

@@ -217,6 +217,37 @@ describe('core/entities/path/service', () => {
             expect(repository.transactionCalls).toBe(1);
         });
 
+        it('should read the row, its parent and its descendants through the locked repository', async () => {
+            const sales = seedPath({
+                name: 'sales',
+                path: 'sales',
+            });
+            const berlin = seedPath({
+                name: 'berlin',
+                path: 'sales/berlin',
+                parentId: sales.id,
+            });
+            seedPath({
+                name: 'east',
+                path: 'sales/berlin/east',
+                parentId: berlin.id,
+            });
+
+            await service.update(berlin.id, { name: 'bremen' }, createAllowAllActor());
+
+            // the instance the callback received is the locking one, and every
+            // read the rewrite depends on ran on it: the row itself, the
+            // resolved parent and the descendant set (issue I1). A rename of an
+            // ANCESTOR is the race the transaction's own re-read cannot see.
+            const locked = repository.transactionRepository;
+            expect(locked).toBeDefined();
+            expect(locked!.lockRows).toBe(true);
+            expect(locked!.reads).toContain('findOneBy');
+            expect(locked!.reads).toContain('findOneById');
+            expect(locked!.reads).toContain('findDescendants');
+            expect(repository.reads).not.toContain('findDescendants');
+        });
+
         it('should leave the path and the descendants untouched when only the display name changes', async () => {
             const sales = seedPath({
                 name: 'sales',

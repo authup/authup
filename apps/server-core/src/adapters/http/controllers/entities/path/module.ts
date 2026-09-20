@@ -71,9 +71,16 @@ export class PathController {
     }
 
     /**
-     * A folder is addressed by id or by its FULL path, so only a ROOT folder
-     * is reachable by name here: a nested path carries a separator and is
-     * therefore never one route segment.
+     * A folder is addressed by id or by its FULL path, so a nested folder is
+     * reachable by name only percent-encoded (`sales%2Fberlin`): a raw
+     * separator is more than one route segment and no route serves it.
+     *
+     * On the FLAT mount the name lookup carries no realm predicate, so a full
+     * path is resolved across every realm and the post-fetch realm match then
+     * refuses a foreign row (the scope and key precedent). `sources` exists in
+     * every realm running federated logins, so a caller naming one without the
+     * nested `/realms/:realmId` mount can be answered 403 over a folder its own
+     * realm holds too.
      */
     @DQuerySchema(EntityType.PATH, 'record')
     @DGet('/:id', [ForceLoggedInMiddleware])

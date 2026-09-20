@@ -31,6 +31,11 @@ export type MergeProvisioningOptions = {
 export type MergeableProvisioningEntity = {
     attributes: {
         name?: string,
+        /**
+         * A folder is declared by its full `path` and deliberately carries no
+         * `name`, so it identifies itself through this key instead.
+         */
+        path?: string,
         realmId?: string | null,
         clientId?: string | null,
     },
