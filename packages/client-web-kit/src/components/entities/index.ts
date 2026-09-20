@@ -15,6 +15,7 @@ export * from './identity-provider';
 export * from './identity-provider-account';
 export * from './identity-provider-role';
 export * from './key';
+export * from './path';
 export * from './policy';
 export * from './permission';
 export * from './permission-client';

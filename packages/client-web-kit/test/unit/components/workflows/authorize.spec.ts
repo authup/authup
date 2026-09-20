@@ -78,6 +78,8 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
         activateHash: null,
         createdAt: now,
         updatedAt: now,
+        pathId: null,
+        path: null,
         realmId,
         realm: {
             id: realmId,
@@ -128,6 +130,8 @@ function consentRow(scope: string, expiresAt: string | null = null): Consent {
             baseUrl: null,
             createdAt: now,
             updatedAt: now,
+            pathId: null,
+            path: null,
             realmId: REALM.id,
             realm,
             accessPolicyId: null,
@@ -256,6 +260,8 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         baseUrl: null,
         createdAt: clientTimestamp,
         updatedAt: clientTimestamp,
+        pathId: null,
+        path: null,
         realmId: REALM.id,
         realm: {
             id: REALM.id,

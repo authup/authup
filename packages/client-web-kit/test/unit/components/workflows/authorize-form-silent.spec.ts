@@ -52,6 +52,8 @@ const client: Client = {
     baseUrl: null,
     createdAt: new Date(0).toISOString(),
     updatedAt: new Date(0).toISOString(),
+    pathId: null,
+    path: null,
     realmId: 'realm-x',
     realm: {
         id: 'realm-x',

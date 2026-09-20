@@ -64,6 +64,8 @@ const client: Client = {
     baseUrl: null,
     createdAt: now,
     updatedAt: now,
+    pathId: null,
+    path: null,
     realmId: 'realm-x',
     realm,
     accessPolicyId: null,
