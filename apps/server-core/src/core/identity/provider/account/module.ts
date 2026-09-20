@@ -266,12 +266,14 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             );
         }
 
-        if (!user && !attributesSelf.pathId) {
+        if (!user && typeof attributesSelf.pathId === 'undefined') {
             // Authentik's user_path_template default: a user the provider
             // provisions is filed under sources/<provider> unless a mapping
-            // placed it, and never refiled on a later login. The folder is
-            // decoration with zero semantics, so a failure here leaves the
-            // user unfiled rather than failing the login.
+            // placed it, and never refiled on a later login. A mapping that
+            // says `null` has placed it too, so the key is tested for
+            // PRESENCE. The folder is decoration with zero semantics, so a
+            // failure here leaves the user unfiled rather than failing the
+            // login.
             try {
                 const folder = await ensurePath(
                     this.pathRepository,
