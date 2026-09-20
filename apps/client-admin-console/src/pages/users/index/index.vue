@@ -27,7 +27,7 @@ import {
     ref, 
     watch,
 } from 'vue';
-import { usePathScope } from '../../../composables/path-scope';
+import { reloadCollection, usePathScope } from '../../../composables/path-scope';
 
 export default defineComponent({
     components: {
@@ -49,7 +49,15 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const pathScope = usePathScope({ realmId: realmManagementId });
+        // Without PATH_READ the include is stripped by the server anyway,
+        // so the column and the control are hidden and the composable asks
+        // for no folder at all.
+        const hasPathReadPermission = usePermissionCheck({ name: PermissionName.PATH_READ });
+
+        const pathScope = usePathScope({
+            realmId: realmManagementId,
+            enabled: hasPathReadPermission,
+        });
 
         const query = computed(() => defineQuery<User>({
             filters: {
@@ -62,17 +70,17 @@ export default defineComponent({
         // The collection reads its base query on every load but does not
         // watch the prop, so a folder resolved after mount needs the list
         // reloaded. Both the control below and a `?path=` deep link land
-        // here; the initial load is held back while a deep link is still
-        // resolving, since a load in flight would swallow this one. A scope
-        // still resolving is skipped so the list is not emptied and refilled
-        // on every selection.
-        const collection = ref<{ load: ListLoadFn } | null>(null);
+        // here. A scope still resolving is skipped, so the list is not
+        // emptied and refilled on every selection, and a deep link's
+        // initial load is held back until the first resolution settles;
+        // `reloadCollection` covers a list that is busy when one lands.
+        const collection = ref<{ load: ListLoadFn, data: User[] } | null>(null);
         watch(pathScope.filters, () => {
             if (pathScope.pending.value) {
                 return;
             }
 
-            collection.value?.load({ pagination: { offset: 0 } });
+            reloadCollection(() => collection.value);
         });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
@@ -132,12 +140,12 @@ export default defineComponent({
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
-            {
+            ...(hasPathReadPermission.value ? [{
                 key: 'path',
                 label: translations.path,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
-            },
+            }] : []),
             {
                 key: 'createdAt',
                 label: translations.createdAt,
@@ -160,6 +168,7 @@ export default defineComponent({
         return {
             collection,
             columns,
+            hasPathReadPermission,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -185,7 +194,10 @@ export default defineComponent({
         <template #header="props">
             <ATitle />
             <div class="flex flex-wrap items-center gap-2">
-                <div class="w-full sm:w-64">
+                <div
+                    v-if="hasPathReadPermission"
+                    class="w-full sm:w-64"
+                >
                     <VCFormSelect
                         v-model="pathScopeValue"
                         :options="pathScopeOptions"

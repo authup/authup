@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ListLoadFn } from '@authup/client-web-kit';
 import { buildPathScopeCondition, injectHTTPClient } from '@authup/client-web-kit';
 import type { Path } from '@authup/core-kit';
 import type { ICondition } from '@rapiq/core';
@@ -32,9 +33,66 @@ export type PathScopeFilters = {
     pathId?: string[]
 };
 
+/** How many times a refused reload is re-offered before it gives up. */
+export const RELOAD_ATTEMPTS = 3;
+
+/** How long to wait before re-offering one. */
+const RELOAD_RETRY_INTERVAL = 150;
+
+/** The part of a collection's exposed surface a reload needs. */
+export type ReloadableCollection = {
+    load: ListLoadFn,
+    data: readonly unknown[]
+};
+
+/**
+ * Reload a collection whose BASE query changed.
+ *
+ * The collection reads that query on every load but does not watch the
+ * prop, so a page that narrows its own query has to ask for the reload.
+ * The ask can be refused: `load` is a silent no-op while another load is in
+ * flight, and the collection exposes no busy flag to wait on. What it does
+ * expose is `data`, which a completed load reassigns, so a refusal is
+ * re-offered until the rows change.
+ *
+ * The attempts are capped because a load that RAN and failed also leaves
+ * the rows untouched and cannot be told apart from a refusal here. A
+ * refused offer costs nothing, and an idle collection costs one request.
+ */
+export async function reloadCollection(
+    get: () => ReloadableCollection | null,
+) : Promise<void> {
+    for (let attempt = 0; attempt < RELOAD_ATTEMPTS; attempt += 1) {
+        const collection = get();
+        if (!collection) {
+            return;
+        }
+
+        const rows = collection.data;
+
+        // Back to the first page: the narrowed set is shorter, so the
+        // retained offset would ask for rows past its end.
+        await collection.load({ pagination: { offset: 0 } });
+
+        if (get()?.data !== rows) {
+            return;
+        }
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, RELOAD_RETRY_INTERVAL);
+        });
+    }
+}
+
 export type PathScopeContext = {
     /** The realm whose folders are offered and resolved. */
-    realmId?: MaybeRefOrGetter<string | undefined>
+    realmId?: MaybeRefOrGetter<string | undefined>,
+    /**
+     * Whether the actor may read folders at all. A page gates this on
+     * `PATH_READ`: without it there is no folder to scope by, so the scope
+     * reads as absent and no folder request is made.
+     */
+    enabled?: MaybeRefOrGetter<boolean>
 };
 
 export type PathScope = {
@@ -123,7 +181,14 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
     const router = useRouter();
     const httpClient = injectHTTPClient();
 
-    const path = computed(() => readPathScopeQuery(route.query[PATH_SCOPE_QUERY_KEY]));
+    const enabled = () => toValue(context.enabled ?? true);
+
+    // An actor that may not read folders has no scope: the parameter is
+    // ignored rather than resolved, so the page lists everything it would
+    // have listed anyway and asks for no folder.
+    const path = computed(() => (enabled() ?
+        readPathScopeQuery(route.query[PATH_SCOPE_QUERY_KEY]) :
+        null));
     const paths = ref<Path[]>([]);
     const options = ref<Path[]>([]);
     const pending = ref<boolean>(false);
@@ -134,7 +199,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
 
     const loadOptions = async () => {
         const realmId = toValue(context.realmId);
-        if (!realmId) {
+        if (!realmId || !enabled()) {
             options.value = [];
             return;
         }
@@ -195,7 +260,9 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         paths.value = resolved;
     };
 
-    watch(() => toValue(context.realmId), () => {
+    // `enabled` is a permission check, which starts fail-closed and settles
+    // asynchronously, so both passes rerun when it flips.
+    watch([() => toValue(context.realmId), enabled], () => {
         loadOptions();
     }, { immediate: true });
 

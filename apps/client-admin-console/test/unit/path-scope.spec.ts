@@ -10,9 +10,11 @@ import type { Path } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import {
+    RELOAD_ATTEMPTS,
     buildPathCollectionFilters,
     buildPathScopeFilters,
     readPathScopeQuery,
+    reloadCollection,
 } from '../../src/composables/path-scope';
 
 const SALES_ID = '1f9b2c6d-8a4e-4c1b-9f2a-6d3e5c7b8a90';
@@ -78,5 +80,75 @@ describe('src/composables/path-scope -> buildPathCollectionFilters', () => {
     it('should keep the realm leg when no realm is known', () => {
         expect(encodeFilters(buildPathCollectionFilters(null, null)))
             .toBe('?codec=url-expression&filter=eq(realmId,null)');
+    });
+
+    // What the folder collection page watches: leaving `?path=` behind is a
+    // query-only navigation, which vue-router answers by reusing the page,
+    // so the filter changing is the only signal a reload can hang on.
+    it('should differ between a scoped and an unscoped route value', () => {
+        expect(encodeFilters(buildPathCollectionFilters('sales', REALM_ID)))
+            .not.toBe(encodeFilters(buildPathCollectionFilters(null, REALM_ID)));
+    });
+});
+
+/**
+ * A collection stub in the shape the manager exposes: `load` refuses while
+ * another load is in flight (silently, like the real one), and a completed
+ * load reassigns `data`.
+ */
+function createCollection(options: { refusals?: number, failing?: boolean } = {}) {
+    let refusals = options.refusals ?? 0;
+
+    const collection = {
+        calls: 0,
+        data: [] as unknown[],
+        async load() {
+            collection.calls += 1;
+
+            if (refusals > 0) {
+                refusals -= 1;
+                return;
+            }
+
+            if (options.failing) {
+                return;
+            }
+
+            collection.data = [];
+        },
+    };
+
+    return collection;
+}
+
+describe('src/composables/path-scope -> reloadCollection', () => {
+    it('should ask an idle collection exactly once', async () => {
+        const collection = createCollection();
+
+        await reloadCollection(() => collection);
+
+        expect(collection.calls).toBe(1);
+    });
+
+    it('should re-offer a reload the collection refused', async () => {
+        const collection = createCollection({ refusals: 2 });
+
+        await reloadCollection(() => collection);
+
+        expect(collection.calls).toBe(3);
+    });
+
+    // A load that ran and failed leaves the rows untouched too, which reads
+    // exactly like a refusal from here, so the attempts are capped.
+    it('should give up rather than ask forever', async () => {
+        const collection = createCollection({ failing: true });
+
+        await reloadCollection(() => collection);
+
+        expect(collection.calls).toBe(RELOAD_ATTEMPTS);
+    });
+
+    it('should do nothing without a collection', async () => {
+        await expect(reloadCollection(() => null)).resolves.toBeUndefined();
     });
 });

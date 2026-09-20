@@ -21,11 +21,22 @@ import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
+import type { ListLoadFn } from '@authup/client-web-kit';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
-import { computed, defineComponent } from 'vue';
+import { 
+    computed, 
+    defineComponent, 
+    ref, 
+    watch, 
+} from 'vue';
 import { useRoute } from 'vue-router';
-import { PATH_SCOPE_QUERY_KEY, buildPathCollectionFilters, readPathScopeQuery } from '../../../composables/path-scope';
+import {
+    PATH_SCOPE_QUERY_KEY,
+    buildPathCollectionFilters,
+    readPathScopeQuery,
+    reloadCollection,
+} from '../../../composables/path-scope';
 
 export default defineComponent({
     components: {
@@ -50,9 +61,7 @@ export default defineComponent({
         // A record's breadcrumb links an ancestor segment to
         // `/paths?path=<prefix>`, so the collection narrows to that subtree
         // when the route names one. Without it the realm's whole tree is
-        // listed. The page has no control that rewrites the parameter, so
-        // the value is read once per mount and needs no reload watcher; the
-        // section crumb (`/paths`, no query) is what clears the narrowing.
+        // listed.
         const route = useRoute();
         const query = computed(() => defineQuery<Path>({
             filters: buildPathCollectionFilters(
@@ -61,6 +70,16 @@ export default defineComponent({
             ),
             sorts: ['path'],
         }));
+
+        // The collection reads its base query on every load but does not
+        // watch the prop, and vue-router REUSES this page on a query-only
+        // navigation, so leaving `?path=` behind (the section crumb, the
+        // sidebar entry) would otherwise leave the list narrowed while the
+        // URL and the breadcrumb say it is not.
+        const collection = ref<{ load: ListLoadFn, data: Path[] } | null>(null);
+        watch(query, () => {
+            reloadCollection(() => collection.value);
+        });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PATH_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PATH_DELETE });
@@ -111,6 +130,7 @@ export default defineComponent({
         ]);
 
         return {
+            collection,
             columns,
             hasEditPermission,
             hasDropPermission,
@@ -124,6 +144,7 @@ export default defineComponent({
 </script>
 <template>
     <APaths
+        ref="collection"
         :query="query"
         @deleted="handleDeleted"
     >
