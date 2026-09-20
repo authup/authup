@@ -48,6 +48,7 @@ type UserBearer = {
     user: User,
     bearer: HTTPClient,
     accessToken: string,
+    password: string,
 };
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
@@ -180,9 +181,10 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         return {
-            user, 
-            bearer, 
-            accessToken: login.access_token, 
+            user,
+            bearer,
+            accessToken: login.access_token,
+            password,
         };
     }
 
@@ -485,6 +487,43 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         const pending = await poll(deviceCode, { client_id: client.id });
         expect(pending.status).toEqual(400);
         expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+    });
+
+    it('should refuse an approval presented with a token issued to a client', async () => {
+        const client = await createPublicClient();
+        const { deviceCode, userCode } = await issue(client);
+
+        // ONE user, two of its own tokens: the clientless one the hosted page
+        // holds, and one issued to a client, which may not approve (#3608).
+        // The second client only has to allow the password grant, so
+        // grantTypes is cleared (the device default excludes it).
+        const {
+            user, 
+            accessToken: hosted, 
+            password, 
+        } = await createUserBearer();
+        const other = await createPublicClient({ grantTypes: null }, []);
+        const bound = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            client_id: other.id,
+        });
+        expect(decodeJwtPayload(bound.access_token).client_id).toEqual(other.id);
+
+        const response = await verify('approve', bound.access_token, { user_code: userCode });
+        expect(response.status).toEqual(400);
+
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
+        expect(body.error).toEqual(OAuth2ErrorCode.LOGIN_REQUIRED);
+
+        // the decision was never written: the device keeps polling
+        const pending = await poll(deviceCode, { client_id: client.id });
+        expect(pending.status).toEqual(400);
+        expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
+
+        // the control: the same user's clientless token approves
+        expect((await verify('approve', hosted, { user_code: userCode })).status).toEqual(200);
     });
 
     it('should answer the lookup with the client summary, the realm and the scope', async () => {
