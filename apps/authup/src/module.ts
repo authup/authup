@@ -23,7 +23,6 @@ import {
     defineCLIHealthCheckCommand,
     defineCLILoginCommand,
     defineCLILogoutCommand,
-    defineCLIResourceCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
 
@@ -46,7 +45,6 @@ export async function createCLIEntryPointCommand() {
         },
         subCommands: {
             api: defineCLIAPICommand(),
-            resource: defineCLIResourceCommand(),
             login: defineCLILoginCommand(),
             logout: defineCLILogoutCommand(),
             config: defineCLIConfigCommand(configFs),

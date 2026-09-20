@@ -6,12 +6,12 @@
  */
 
 import { defineCommand } from 'citty';
-import { REMOTE_ARGS } from '../remote/args.ts';
-import { runRemoteRequest } from '../remote/request.ts';
+import { REMOTE_ARGS } from '../../remote/args.ts';
+import { runRemoteRequest } from '../../remote/request.ts';
 
-export function defineCLIAPICommand() {
+export function defineCLIAPIRequestCommand() {
     return defineCommand({
-        meta: { name: 'api', description: 'Send an authenticated API request and print the JSON response.' },
+        meta: { name: 'request', description: 'Send an authenticated API request and print the JSON response.' },
         args: {
             path: {
                 type: 'positional',
@@ -32,7 +32,9 @@ export function defineCLIAPICommand() {
             },
         },
         async run({ args }) {
-            if (args._.length > 1) throw new Error('Expected one API path.');
+            if (args._.length > 1) {
+                throw new Error('Expected one API path.');
+            }
             await runRemoteRequest(args);
         },
     });

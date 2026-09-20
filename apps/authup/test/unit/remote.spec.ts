@@ -29,7 +29,6 @@ import {
     defineCLIAPICommand,
     defineCLILoginCommand,
     defineCLILogoutCommand,
-    defineCLIResourceCommand,
 } from '../../src/commands/index.ts';
 
 vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn() }));
@@ -87,7 +86,7 @@ describe('remote CLI commands', () => {
     }
 
     async function api(rawArgs = ['users']) {
-        return runCommand(defineCLIAPICommand(), { rawArgs });
+        return runCommand(defineCLIAPICommand(), { rawArgs: ['request', ...rawArgs] });
     }
 
     async function credentialFile() {
@@ -260,7 +259,7 @@ describe('remote CLI commands', () => {
         [['clients', 'delete', 'client-id'], 'DELETE', 'clients/client-id', undefined],
     ])('maps resource command %j through the authenticated API request', async (rawArgs, method, target, body) => {
         await login();
-        await runCommand(defineCLIResourceCommand(), { rawArgs });
+        await runCommand(defineCLIAPICommand(), { rawArgs });
         const request = transport.requests.at(-1)!;
         expect(request.url).toBe(`${server}${target}`);
         expect(request.method).toBe(method);
@@ -273,6 +272,7 @@ describe('remote CLI commands', () => {
         ['users', 'bogus'],
         ['users', 'get'],
         ['users', 'list', 'extra'],
+        ['users', 'get', 'id', 'extra'],
         ['users', 'create'],
         ['users', 'update', 'id'],
         ['users', 'delete', 'id', '--data', '{}'],
@@ -282,7 +282,7 @@ describe('remote CLI commands', () => {
         ['users', 'get', 'a/b'],
         ['users', 'delete', 'id', '--query', 'foo=bar'],
     ].map((rawArgs) => [rawArgs]))('rejects invalid resource arguments %j before sending requests', async (rawArgs) => {
-        await expect(runCommand(defineCLIResourceCommand(), { rawArgs })).rejects.toThrow();
+        await expect(runCommand(defineCLIAPICommand(), { rawArgs })).rejects.toThrow();
         expect(transport.requests).toHaveLength(0);
     });
 });

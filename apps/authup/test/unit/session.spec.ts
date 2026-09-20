@@ -138,7 +138,7 @@ describe('CLI credential storage', () => {
         vi.spyOn(FetchTransport.prototype, 'dispatch').mockImplementation((request) => transport.dispatch(request));
         await runCommand(defineCLILoginCommand(), { rawArgs: ['--client-id', 'client-id'] });
         vi.spyOn(AsyncEntry.prototype, 'setPassword').mockRejectedValueOnce(new Error('new-refresh'));
-        await expect(runCommand(defineCLIAPICommand(), { rawArgs: ['users/1', '--method', 'DELETE'] })).rejects.toThrow(/keychain/);
+        await expect(runCommand(defineCLIAPICommand(), { rawArgs: ['request', 'users/1', '--method', 'DELETE'] })).rejects.toThrow(/keychain/);
         expect(transport.requests).toHaveLength(3);
         expect(new URL(transport.requests[2].url).pathname).toBe('/token');
         expect(await fs.readdir(path.join(directory, 'authup', 'credentials'))).toEqual([]);

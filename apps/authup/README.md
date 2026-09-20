@@ -82,33 +82,33 @@ The signed-in user's permissions still govern every API request.
 ```shell
 # Local server (default http://localhost:3000/)
 authup login --client-id <client-uuid>
-authup api 'users?page[limit]=10'
+authup api users list --query 'page[limit]=10'
 
 # Remote server; --server <url> overrides AUTHUP_SERVER_URL
 export AUTHUP_SERVER_URL=https://auth.example.com/
 authup login --client-id <client-uuid>
 # Open the printed URL in a browser and approve the displayed code.
-authup api 'users?filter[name]=alice'
-authup api users --method POST --data '{"name":"alice","realmId":"<realm-uuid>"}'
-authup api users/<user-uuid> --method POST --data '{"displayName":"Alice"}'
-authup api users/<user-uuid> --method DELETE
+authup api request 'users?filter[name]=alice'
+authup api request users --method POST --data '{"name":"alice","realmId":"<realm-uuid>"}'
+authup api request users/<user-uuid> --method POST --data '{"displayName":"Alice"}'
+authup api request users/<user-uuid> --method DELETE
 authup logout
 ```
 
-For resource operations, use the `resource` prefix:
+For resource operations, name the resource and operation under `api`:
 
 ```shell
-authup resource users list --query 'page[limit]=10'
-authup resource users get <user-uuid>
-authup resource users create --data '{"name":"alice","realmId":"<realm-uuid>"}'
-authup resource users update <user-uuid> --data '{"displayName":"Alice"}'
-authup resource users delete <user-uuid>
+authup api users list --query 'page[limit]=10'
+authup api users get <user-uuid>
+authup api users create --data '{"name":"alice","realmId":"<realm-uuid>"}'
+authup api users update <user-uuid> --data '{"displayName":"Alice"}'
+authup api users delete <user-uuid>
 ```
 
 Supported resources are `users`, `clients`, `realms`, `roles`, `permissions`,
 `policies` and `scopes`. `list`/`get` accept `--query`; `create`/`update` require
 a JSON object in `--data`. These commands share authentication and request
-handling with `api`; use `api` for other endpoints and workflow operations.
+handling with `api request`; use `api request` for other endpoints and workflow operations.
 
 `--scope 'scope-a scope-b'` requests explicit scopes during login. Client scope
 restrictions and user permissions are enforced by the server as usual.
@@ -132,7 +132,7 @@ or set `AUTHUP_CREDENTIAL_STORE=file` for all client commands:
 ```shell
 export AUTHUP_CREDENTIAL_STORE=file
 authup login --client-id <client-uuid>
-authup resource users list
+authup api users list
 authup logout
 ```
 

@@ -74,7 +74,7 @@ describe('createCLIEntryPointCommand', () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['api', 'config', 'dev', 'healthcheck', 'login', 'logout', 'migration', 'resource', 'start']);
+            .toEqual(['api', 'config', 'dev', 'healthcheck', 'login', 'logout', 'migration', 'start']);
     });
 
     it('refuses a stray positional on dev but leaves the roles and the migration operation alone', async () => {

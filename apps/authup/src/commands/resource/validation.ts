@@ -6,16 +6,12 @@
  */
 
 import { isObject } from '@authup/kit';
-import { RESOURCE_METHODS, RESOURCE_NAMES } from './constants.ts';
+import { RESOURCE_METHODS } from './constants.ts';
 import type { ResourceCommandArgs, ResourceOperation } from './types.ts';
 
 export function validateResourceArguments(args: ResourceCommandArgs) : ResourceOperation {
-    if (args._.length > 3) {
+    if (args._.length > 2) {
         throw new Error('Unexpected resource argument.');
-    }
-
-    if (!RESOURCE_NAMES.includes(args.resource)) {
-        throw new Error(`Unknown resource. Choose ${RESOURCE_NAMES.join(', ')}.`);
     }
 
     if (!Object.hasOwn(RESOURCE_METHODS, args.operation)) {

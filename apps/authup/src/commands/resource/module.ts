@@ -8,18 +8,13 @@
 import { defineCommand } from 'citty';
 import { REMOTE_ARGS } from '../../remote/args.ts';
 import { runRemoteRequest } from '../../remote/request.ts';
-import { RESOURCE_METHODS, RESOURCE_NAMES } from './constants.ts';
+import { RESOURCE_METHODS } from './constants.ts';
 import { validateResourceArguments } from './validation.ts';
 
-export function defineCLIResourceCommand() {
+export function defineCLIResourceCommand(resource: string) {
     return defineCommand({
-        meta: { name: 'resource', description: 'List, read and modify API resources using the saved login.' },
+        meta: { name: resource, description: `List, read and modify ${resource} using the saved login.` },
         args: {
-            resource: {
-                type: 'positional',
-                required: true,
-                description: RESOURCE_NAMES.join(', '),
-            },
             operation: {
                 type: 'positional',
                 required: true,
@@ -41,7 +36,7 @@ export function defineCLIResourceCommand() {
         async run({ args }) {
             const operation = validateResourceArguments(args);
 
-            let resourcePath = args.resource;
+            let resourcePath = resource;
             if (args.id) {
                 resourcePath += `/${encodeURIComponent(args.id)}`;
             }

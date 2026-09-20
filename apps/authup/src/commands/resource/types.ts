@@ -11,7 +11,6 @@ export type ResourceOperation = keyof typeof RESOURCE_METHODS;
 
 export type ResourceCommandArgs = {
     _: string[],
-    resource: string,
     operation: string,
     id?: string,
     query?: string,
