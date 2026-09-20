@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { ValidatorGroup, isUUID } from '@authup/kit';
+import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     CLIENT_RESERVED_NAMES,
@@ -23,6 +23,7 @@ import {
 import type { Client } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { IPathRepository } from '../path/types.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
@@ -37,6 +38,12 @@ export type ClientServiceContext = {
     repository: IClientRepository;
     realmRepository: IRealmRepository;
     /**
+     * Optional so a caller that never writes a `pathId` needs no folder
+     * repository. A supplied `pathId` without it is refused, never accepted
+     * unchecked.
+     */
+    pathRepository?: IPathRepository;
+    /**
      * The realm cipher behind the encrypted storage mode. Without it that
      * mode is refused and an encrypted value is never revealed.
      */
@@ -49,6 +56,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
     protected repository: IClientRepository;
 
     protected realmRepository: IRealmRepository;
+
+    protected pathRepository?: IPathRepository;
 
     protected validator: ClientValidator;
 
@@ -64,6 +73,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.pathRepository = ctx.pathRepository;
         this.validator = new ClientValidator();
         this.secretValidator = new ClientSecretRotateValidator();
         this.cipher = ctx.cipher;
@@ -279,6 +289,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
         await this.repository.validateJoinColumns(validated);
         await this.repository.checkUniqueness(validated, entity || undefined);
 
+        // Outside the write transaction below: this read would take a second
+        // pooled connection while that one is pinned (#3526). The create
+        // branch runs it further down, after the realm defaulting.
+        if (entity && isPropertySet(validated, 'pathId') && validated.pathId) {
+            await this.assertPathRealm(validated.pathId, entity.realmId);
+        }
+
         const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
 
         if (entity) {
@@ -375,6 +392,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
         }
 
+        if (isPropertySet(validated, 'pathId') && validated.pathId) {
+            await this.assertPathRealm(validated.pathId, validated.realmId ?? null);
+        }
+
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
             data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
@@ -400,6 +421,24 @@ export class ClientService extends AbstractEntityService implements IClientServi
             entity,
             created: true, 
         };
+    }
+
+    // validateJoinColumns proves the folder exists, not that it sits in the
+    // row's realm. A folder is realm-bound, so a cross-realm reference is
+    // refused here, like a cross-realm parent on the folder itself.
+    protected async assertPathRealm(pathId: string, realmId: string | null): Promise<void> {
+        if (!this.pathRepository) {
+            throw new ValidationError('Paths are not available.');
+        }
+
+        const path = await this.pathRepository.findOneById(pathId);
+        if (!path) {
+            throw new ValidationError('The path does not exist.');
+        }
+
+        if (!realmId || path.realmId !== realmId) {
+            throw new ValidationError('The path belongs to another realm.');
+        }
     }
 
     async rotateSecret(

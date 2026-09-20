@@ -100,6 +100,23 @@ describe('http/controllers/client (self-manage)', () => {
         ).rejects.toThrow();
     });
 
+    it('should reject self-update of path_id (rejected by ATTRIBUTE_NAMES policy)', async () => {
+        // a real folder in the client's own realm, so the rejection can only
+        // come from the self-manage denylist: neither the join-column check
+        // nor the realm assert has anything to complain about
+        const { data: path } = await suite.client.path.create({
+            name: 'self-manage-client',
+            realmId: entity.realmId,
+        });
+
+        await expect(
+            selfClient.client.update(entity.id, { pathId: path.id }),
+        ).rejects.toThrow();
+
+        const { data: current } = await suite.client.client.getOne(entity.id);
+        expect(current.pathId).toBeNull();
+    });
+
     it('should silently strip self-update of built_in flag (not in validator schema)', async () => {
         const { data: response } = await selfClient.client.update(entity.id, { builtIn: true } as Partial<ClientEntity>);
 

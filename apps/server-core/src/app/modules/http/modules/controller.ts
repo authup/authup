@@ -675,6 +675,10 @@ export class HTTPControllerModule {
         const service = new ClientService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            pathRepository: new PathRepositoryAdapter({
+                repository: container.resolve<Repository<Path>>(PathEntity),
+                realmRepository,
+            }),
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
@@ -1066,6 +1070,10 @@ export class HTTPControllerModule {
         return new UserService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            pathRepository: new PathRepositoryAdapter({
+                repository: container.resolve<Repository<Path>>(PathEntity),
+                realmRepository,
+            }),
             passwordMinLength: config.passwordMinLength,
         });
     }
