@@ -109,8 +109,8 @@ To manage folders in the admin console:
    (A tree pane replaces the dropdown once the component it needs ships,
    tada5hi/vuecs#1729.) The search box is independent of that scope: it
    searches names and display names, and the two narrow the list together. A
-   subtree with more folders than the console can resolve in ten requests is
-   not scoped at all: the page then lists every row and says why, rather than
+   subtree with more folders than the console can carry in one request is not
+   scoped at all: the page then lists every row and says why, rather than
    showing a silently shortened list.
 4. On a user or client form, choose the folder the row belongs to.
 

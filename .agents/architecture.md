@@ -3405,10 +3405,12 @@ sibling-safe prefix form, plus the folder itself) and filters the collection
 with `inArray('pathId', ids)`, which lowers to `IN` and uses the index on every
 dialect, where `filter[path.path]` joins `auth_paths` per read to compare a
 column the row already references by key. The subtree read is PAGED to
-`meta.total`, bounded at ten pages: one page is the schema's own `maxLimit`, so
-a short id list would drop rows out of a user-facing list with no error, and
-past the bound the console scopes NOTHING and says so, since fail-soft on a
-user-facing filter is a wrong answer rather than a narrower one. The prefix
+`meta.total`, bounded at ten pages and at 300 ids: one page is the schema's own
+`maxLimit`, so a short id list would drop rows out of a user-facing list with no
+error, while 400 ids encode to more than node's default 16 KB header budget and
+could not be sent at all. Past either bound the console scopes NOTHING and says
+so, since fail-soft on a user-facing filter is a wrong answer rather than a
+narrower one, and a failed request is no better an answer than a short list. The prefix
 filter on `auth_paths.path` itself is a scan on
 postgres and mysql, since `@rapiq/adapter-sql` lowers an anchored `startsWith`
 to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);

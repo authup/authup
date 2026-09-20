@@ -10,6 +10,7 @@ import type { Path } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import {
+    PATH_SCOPE_ID_LIMIT,
     PATH_SCOPE_LIMIT,
     PATH_SCOPE_PAGE_LIMIT,
     RELOAD_ATTEMPTS,
@@ -115,17 +116,35 @@ describe('src/composables/path-scope -> collectPathPages', () => {
         expect(pages.offsets).toEqual([0, PATH_SCOPE_LIMIT]);
     });
 
-    it('should report a subtree that outgrew the page ceiling as truncated', async () => {
+    // The id budget is the ceiling that fires first: the ids travel as one
+    // `IN` in a query string, so a longer list would only build a filter the
+    // server refuses before routing it.
+    it('should report a subtree that outgrew the id ceiling as truncated', async () => {
         const pages = createPathPages(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT + 1);
 
         const result = await collectPathPages(pages.load);
 
         expect(result.truncated).toBe(true);
-        expect(pages.offsets).toHaveLength(PATH_SCOPE_PAGE_LIMIT);
-        expect(result.data).toHaveLength(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT);
+        expect(result.data.length).toBeGreaterThanOrEqual(PATH_SCOPE_ID_LIMIT);
+        expect(result.data.length).toBeLessThan(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT);
 
         // and the scope then narrows nothing at all
         expect(buildPathScopeFilters('sales', result.data, result.truncated)).toEqual({});
+    });
+
+    // both ceilings hold: a subtree that fits the id budget but not the page
+    // budget would need a page wider than the server's own maxLimit
+    it('should stop at the page ceiling as well', () => {
+        expect(PATH_SCOPE_ID_LIMIT).toBeLessThanOrEqual(PATH_SCOPE_LIMIT * PATH_SCOPE_PAGE_LIMIT);
+    });
+
+    it('should not truncate a subtree that exactly fills the id budget', async () => {
+        const pages = createPathPages(PATH_SCOPE_ID_LIMIT);
+
+        const result = await collectPathPages(pages.load);
+
+        expect(result.truncated).toBe(false);
+        expect(result.data).toHaveLength(PATH_SCOPE_ID_LIMIT);
     });
 
     it('should stop on an empty page rather than trust the reported total', async () => {

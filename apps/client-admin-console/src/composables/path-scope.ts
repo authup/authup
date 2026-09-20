@@ -36,6 +36,16 @@ export const PATH_SCOPE_LIMIT = 50;
  */
 export const PATH_SCOPE_PAGE_LIMIT = 10;
 
+/**
+ * How many ids a scope may carry, the SECOND ceiling and in practice the one
+ * that fires: the ids travel as one `IN` in a query string, which measures
+ * about 41 characters each, so 300 is roughly 12 KB and 400 already outgrows
+ * node's default 16 KB header budget. A list that cannot travel is truncated
+ * like one that was never assembled, since a failed list request is no better
+ * an answer than a short one.
+ */
+export const PATH_SCOPE_ID_LIMIT = 300;
+
 /** The filter a folder scope contributes to a collection page's query. */
 export type PathScopeFilters = {
     pathId?: string[]
@@ -48,14 +58,14 @@ export type PathScopePage = {
 };
 
 /**
- * Walk a folder lookup to completion, bounded at
- * {@see PATH_SCOPE_PAGE_LIMIT} pages.
+ * Walk a folder lookup to completion, bounded by {@see PATH_SCOPE_PAGE_LIMIT}
+ * pages and {@see PATH_SCOPE_ID_LIMIT} folders.
  *
  * One page cannot answer a subtree: `PATH_SCOPE_LIMIT` is the server's own
  * `maxLimit`, so a realm holding more folders than that would feed a short id
  * list into the collection's `IN` and drop rows out of the list with no error
- * and a plausible-looking total. Past the bound the caller is told rather than
- * narrowed, so the wrong answer is never served.
+ * and a plausible-looking total. Past either bound the caller is told rather
+ * than narrowed, so the wrong answer is never served.
  */
 export async function collectPathPages(
     load: (offset: number) => Promise<PathScopePage>,
@@ -71,6 +81,15 @@ export async function collectPathPages(
             return {
                 data,
                 truncated: false,
+            };
+        }
+
+        // more folders exist AND what is held already fills the id budget, so
+        // the remaining pages would only build a filter that cannot be sent
+        if (data.length >= PATH_SCOPE_ID_LIMIT) {
+            return {
+                data,
+                truncated: true,
             };
         }
     }
