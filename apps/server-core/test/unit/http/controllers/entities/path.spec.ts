@@ -268,9 +268,11 @@ describe('src/http/controllers/path', () => {
     });
 
     it('should keep a foreign folder out of a realm_admin list under a fields projection', async () => {
-        // a `fields=` projection replaces the schema default, so without the
-        // adapter's force-select the realm-match key would be absent and
-        // neutral-pass: this is what makes applyRealmScopeSelect observable
+        // a `fields=` projection replaces the schema default; this pins the
+        // OUTCOME under it and not the adapter's force-select, which a
+        // realm_admin cannot observe: its policy-free grant compiles to the
+        // conditional verdict, so the reach runs as a WHERE and a foreign row
+        // never reaches the projection (the same limit #3574 recorded)
         const { data } = await realmAdmin.path.getMany({ fields: ['id', 'name'] });
 
         expect(data.length).toBeGreaterThan(0);

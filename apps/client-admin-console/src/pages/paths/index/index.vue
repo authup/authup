@@ -133,7 +133,7 @@ export default defineComponent({
         // this dialog is the only place the operator learns how much that is.
         // The generic AEntityDelete prompt names the entity noun and nothing
         // else, which reads the same for an empty leaf.
-        const handleDelete = async (row: Path, deletedCb: (item: Path) => void) => {
+        const runDelete = async (row: Path, deletedCb: (item: Path) => void) => {
             const impact = await readPathDeleteImpact(
                 httpClient,
                 realmManagementId.value ?? null,
@@ -174,6 +174,24 @@ export default defineComponent({
                 deletedCb({ ...deleted.data, id: row.id });
             } catch (e) {
                 emit('failed', e);
+            }
+        };
+
+        // one dialog and one DELETE per click: a second click while the
+        // first is still resolving would queue a second prompt and a
+        // second request that answers 404 (the guard AEntityDelete carried)
+        const deleteBusy = ref(false);
+        const handleDelete = async (row: Path, deletedCb: (item: Path) => void) => {
+            if (deleteBusy.value) {
+                return;
+            }
+
+            deleteBusy.value = true;
+
+            try {
+                await runDelete(row, deletedCb);
+            } finally {
+                deleteBusy.value = false;
             }
         };
 
