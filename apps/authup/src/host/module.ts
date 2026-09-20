@@ -34,7 +34,6 @@ export async function openHost(server: string | undefined, context: HostCommandC
         store,
         client: createHostClient({
             host,
-            entry,
             tokens,
             storage,
             directory: store.directory,

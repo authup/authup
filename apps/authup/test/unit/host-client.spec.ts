@@ -78,11 +78,7 @@ describe('createHostClient', () => {
                 return bearers.length === 1 ? expired : { body: { data: [{ id: 'u1' }], meta: { total: 1 } } };
             },
             'POST /token': (_request, form) => {
-                expect(form).toEqual({
-                    grant_type: 'refresh_token', 
-                    client_id: 'cli', 
-                    refresh_token: 'old-refresh', 
-                });
+                expect(form).toEqual({ grant_type: 'refresh_token', refresh_token: 'old-refresh' });
                 return {
                     body: {
                         access_token: 'new-access', 
@@ -95,11 +91,10 @@ describe('createHostClient', () => {
         });
         const storage = createFileTokenStorage(store);
         const client = createHostClient({
-            host, 
-            entry: { clientId: 'cli', storage: 'file' }, 
-            tokens, 
-            storage, 
-            directory: store.directory, 
+            host,
+            tokens,
+            storage,
+            directory: store.directory,
             transport,
         });
 
@@ -131,11 +126,10 @@ describe('createHostClient', () => {
             },
         });
         const client = createHostClient({
-            host, 
-            entry: { clientId: 'cli', storage: 'file' }, 
-            tokens, 
-            storage, 
-            directory: store.directory, 
+            host,
+            tokens,
+            storage,
+            directory: store.directory,
             transport,
         });
 
@@ -149,7 +143,6 @@ describe('createHostClient', () => {
         const transport = createHostTransport({ 'GET /users': () => expired });
         const client = createHostClient({
             host,
-            entry: { clientId: 'cli', storage: 'file' },
             tokens: { accessToken: 'old-access', expiresAt: 0 },
             storage: createFileTokenStorage(store),
             directory: store.directory,
@@ -165,11 +158,10 @@ describe('createHostClient', () => {
             'POST /token': () => ({ status: 401, body: { code: 'invalid_client', message: 'The client is unknown.' } }),
         });
         const client = createHostClient({
-            host, 
-            entry: { clientId: 'cli', storage: 'file' }, 
-            tokens, 
-            storage: createFileTokenStorage(store), 
-            directory: store.directory, 
+            host,
+            tokens,
+            storage: createFileTokenStorage(store),
+            directory: store.directory,
             transport,
         });
 

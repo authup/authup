@@ -26,7 +26,6 @@ export type DeviceLoginOptions = {
 
 export type HostClientContext = {
     host: string,
-    entry: HostEntry,
     tokens: HostTokens,
     storage: IHostTokenStorage,
     directory: string,

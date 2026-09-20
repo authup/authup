@@ -53,10 +53,10 @@ export function createHostClient(context: HostClientContext) : Client {
                 throw new Error(`The access token for ${context.host} expired and the client issued no refresh token. Run \`authup login\` again.`);
             }
 
-            const grant = await tokenClient.token.createWithRefreshToken({
-                client_id: context.entry.clientId,
-                refresh_token: tokens.refreshToken,
-            });
+            // No `client_id`: a name resolves within the request's realm
+            // hint, the refresh grant carries none, so the server resolves
+            // the client from the token's own `client_id` claim instead.
+            const grant = await tokenClient.token.createWithRefreshToken({ refresh_token: tokens.refreshToken });
 
             tokens = tokensFromGrant(grant);
             await context.storage.write(context.host, tokens);
