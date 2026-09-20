@@ -6,6 +6,8 @@
  */
 
 export * from './file.ts';
+export * from './keychain.ts';
 export * from './module.ts';
+export * from './select.ts';
 export * from './types.ts';
 export * from './validator.ts';
