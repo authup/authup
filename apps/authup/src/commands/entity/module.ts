@@ -86,9 +86,6 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
     const open = async (server: string | undefined) : Promise<EntityAPI> => {
         const opened = await openHost(server, context);
 
-        // `EntityType` carries a few members `EntityTypeMap` has no entry
-        // for (userAuthenticator among them); `pickEntityAPI` resolves by
-        // property presence at runtime regardless.
         return pickEntityAPI(opened.client, type as keyof EntityTypeMap) as EntityAPI;
     };
 
@@ -187,15 +184,24 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
 }
 
 /**
- * One root command per entity the client serves, and one verb per dispatch
- * method: the kit's registry is the only source, so a sub-API added there
- * shows up here with no edit.
+ * One root command per entity-shaped API the client serves, and one verb per
+ * dispatch method: the kit's registry is the source, so a sub-API added
+ * there in the entity shape shows up here with no edit.
  */
 export function defineCLIEntityCommands(context: HostCommandContext = {}) : Record<string, CommandDef> {
     const probe = new Client();
     const commands : Record<string, CommandDef> = {};
 
     for (const type of Object.values(EntityType) as EntityName[]) {
+        // `EntityType` is wider than `EntityTypeMap`: the map deliberately
+        // omits `userAuthenticator`, whose client API is nested under a user
+        // (`getMany(userId, query)`), so it is not entity-shaped and gets no
+        // command. `pickEntityAPI` resolves by property presence at runtime,
+        // which is why the cast alone would let it through.
+        if (type === EntityType.USER_AUTHENTICATOR) {
+            continue;
+        }
+
         const api = pickEntityAPI(probe, type as keyof EntityTypeMap);
         if (!api) {
             continue;

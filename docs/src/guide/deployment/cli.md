@@ -55,7 +55,7 @@ Every entity the API serves is a command, named in kebab-case: `user`,
 `identity-provider`, `identity-provider-account`,
 `identity-provider-role-mapping`, `client-permission`, `client-role`,
 `client-scope`, `role-permission`, `user-role`, `user-permission`,
-`role-attribute`, `user-attribute`, `user-authenticator`, `permission-policy`.
+`role-attribute`, `user-attribute`, `permission-policy`.
 Each carries the verbs its API has: `list`, `get <id>`, `create`,
 `update <id>`, `delete <id>`. A session cannot be created here and a
 `user-role` binding cannot be updated, because the API has no such call;

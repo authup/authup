@@ -8,6 +8,7 @@
 import { createURLCodec } from '@rapiq/codec-url';
 import { runCommand } from 'citty';
 import type { CommandDef } from 'citty';
+import { MemoryTransport } from 'hapic';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Readable } from 'node:stream';
@@ -47,11 +48,10 @@ const NOUNS = [
     'scope', 
     'session', 
     'session-token', 
-    'trust-anchor', 
+    'trust-anchor',
     'user',
-    'user-attribute', 
-    'user-authenticator', 
-    'user-permission', 
+    'user-attribute',
+    'user-permission',
     'user-role',
 ];
 
@@ -62,6 +62,10 @@ function verbsOf(command: CommandDef) : string[] {
 describe('entity commands', () => {
     it('derives one noun per entity the client serves, in kebab-case', () => {
         expect(Object.keys(defineCLIEntityCommands()).sort()).toEqual(NOUNS);
+    });
+
+    it('does not derive a command for the nested user-authenticator API', () => {
+        expect(defineCLIEntityCommands()['user-authenticator']).toBeUndefined();
     });
 
     it('derives the verbs from the dispatch', () => {
@@ -188,6 +192,26 @@ describe('entity commands', () => {
         it('refuses a malformed page number before any request', async () => {
             await expect(run('user', ['list', '--limit', 'ten'], {})).rejects.toThrow(/--limit must be a non-negative integer/);
             expect(requests).toEqual([]);
+        });
+
+        it('lists every noun against its own root collection', async () => {
+            const urls : string[] = [];
+            const transport = new MemoryTransport({
+                fetch: (request) => {
+                    urls.push(request.url);
+                    return { body: { data: [], meta: { total: 0 } } };
+                },
+            });
+            const commands = defineCLIEntityCommands({ transport });
+
+            for (const noun of NOUNS) {
+                await runCommand(commands[noun]!, { rawArgs: ['list'] });
+            }
+
+            expect(urls).toHaveLength(NOUNS.length);
+            for (const url of urls) {
+                expect(new URL(url).pathname).not.toMatch(/undefined|object/);
+            }
         });
     });
 });

@@ -4106,18 +4106,21 @@ deliberately never calls `DELETE /sessions/@me`: the device grant's tokens
 ride the approving browser's `auth_sessions` row. `whoami` reads
 `GET /sessions/@me/introspect`, which describes the request's own bearer, so a
 refresh-and-replay describes the renewed token. The entity commands are
-DERIVED: `defineCLIEntityCommands` walks `EntityType`, keeps every value
-`pickEntityAPI` resolves on a `Client`, names the command in kebab-case and
-gives it the verbs its dispatch has (`list`/`get`/`create`/`update`/`delete`
-over `getMany`/`getOne`/`create`/`update`/`delete`), so a sub-API added to the
-kit is a command with no CLI edit. Query flags are the URL parameters the
-server documents, assembled and decoded through `@rapiq/codec-url` into the
-`IQuery` the typed APIs accept; several filter conditions ride one `--filter`
-joined by `&`, because citty parses with `util.parseArgs` and no `multiple`,
-so a repeated flag keeps its last value. Output is the response body as JSON;
-errors are rendered once (`describeHostError`: `code: message` plus validation
-issue paths for an `AuthupError` body, hapic's method-and-URL message
-otherwise, never a body, a `cause` or a bearer). Rejected: a provisioned `cli`
+DERIVED: `defineCLIEntityCommands` walks `EntityType`, skips `userAuthenticator`
+(its client API is nested under a user, which is why `EntityTypeMap`
+deliberately omits it) and keeps every other value `pickEntityAPI` resolves on
+a `Client`, names the command in kebab-case and gives it the verbs its
+dispatch has (`list`/`get`/`create`/`update`/`delete` over
+`getMany`/`getOne`/`create`/`update`/`delete`), so an entity-shaped sub-API
+added to the kit is a command with no CLI edit. Query flags are the URL
+parameters the server documents, assembled and decoded through
+`@rapiq/codec-url` into the `IQuery` the typed APIs accept; several filter
+conditions ride one `--filter` joined by `&`, because citty parses with
+`util.parseArgs` and no `multiple`, so a repeated flag keeps its last value.
+Output is the response body as JSON; errors are rendered once
+(`describeHostError`: `code: message` plus validation issue paths for an
+`AuthupError` body, hapic's method-and-URL message otherwise, never a body,
+a `cause` or a bearer). Rejected: a provisioned `cli`
 system client (admission control), a raw `api <path>` passthrough and a
 hand-listed resource set (both are a curl wrapper next to a typed client),
 keychain-first with a silent file fallback (a downgrade nobody sees).
