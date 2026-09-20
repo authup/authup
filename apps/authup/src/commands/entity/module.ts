@@ -109,9 +109,9 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
         subCommands.get = defineCommand({
             meta: { name: 'get', description: `Read one ${noun} record.` },
             args: {
-                ...RECORD_ARGS, 
-                ...HOST_ARGS, 
-                fields: QUERY_ARGS.fields, 
+                ...RECORD_ARGS,
+                ...HOST_ARGS,
+                fields: QUERY_ARGS.fields,
                 include: QUERY_ARGS.include,
             },
             run: ({ args }) => runHostCommand(async () => {
@@ -146,9 +146,9 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
         subCommands.update = defineCommand({
             meta: { name: 'update', description: `Update a ${noun} record.` },
             args: {
-                ...RECORD_ARGS, 
-                ...HOST_ARGS, 
-                ...DATA_ARGS, 
+                ...RECORD_ARGS,
+                ...HOST_ARGS,
+                ...DATA_ARGS,
             },
             run: ({ args }) => runHostCommand(async () => {
                 const data = await readEntityData(args.data);

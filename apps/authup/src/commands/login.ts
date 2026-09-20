@@ -64,9 +64,9 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
             const grant = await runDeviceLogin(
                 new Client({ baseURL: host, transport: context.transport }),
                 {
-                    clientId, 
-                    realm, 
-                    scope: args.scope, 
+                    clientId,
+                    realm,
+                    scope: args.scope,
                 },
             );
             const tokens = tokensFromGrant(grant);
@@ -78,9 +78,9 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
 
                 const latest = await store.read();
                 const entry : HostEntry = {
-                    clientId, 
-                    storage, 
-                    ...(realm ? { realm } : {}), 
+                    clientId,
+                    storage,
+                    ...(realm ? { realm } : {}),
                 };
                 latest.hosts[host] = entry;
                 latest.current = host;

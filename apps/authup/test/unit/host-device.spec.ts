@@ -82,10 +82,10 @@ describe('runDeviceLogin', () => {
         return {
             forms,
             promise: runDeviceLogin(client, {
-                clientId: 'cli', 
-                realm: 'master', 
-                scope: 'global openid', 
-            }), 
+                clientId: 'cli',
+                realm: 'master',
+                scope: 'global openid',
+            }),
         };
     }
 
@@ -101,9 +101,9 @@ describe('runDeviceLogin', () => {
 
         expect(vi.mocked(setTimeout).mock.calls.map(([delay]) => delay)).toEqual([5000, 5000, 10000, 10000]);
         expect(forms[0]).toEqual({
-            client_id: 'cli', 
-            realm_name: 'master', 
-            scope: 'global openid', 
+            client_id: 'cli',
+            realm_name: 'master',
+            scope: 'global openid',
         });
         expect(forms[1]).toEqual({
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',

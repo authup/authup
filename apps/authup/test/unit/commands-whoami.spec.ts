@@ -38,10 +38,10 @@ describe('authup whoami', () => {
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    storage: 'file', 
-                    accessToken: 'secret-access', 
-                    refreshToken: 'secret-refresh', 
+                    clientId: 'cli',
+                    storage: 'file',
+                    accessToken: 'secret-access',
+                    refreshToken: 'secret-refresh',
                     expiresAt: 1_000_000 + 12 * 60_000,
                 },
             },
@@ -58,10 +58,10 @@ describe('authup whoami', () => {
         const transport = createHostTransport({
             'GET /sessions/@me/introspect': () => ({
                 body: {
-                    active: true, 
-                    sub: 'u1', 
-                    sub_kind: 'user', 
-                    realm_name: 'master', 
+                    active: true,
+                    sub: 'u1',
+                    sub_kind: 'user',
+                    realm_name: 'master',
                     name: 'alice',
                 },
             }),

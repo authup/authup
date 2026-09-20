@@ -111,18 +111,18 @@ describe('authup login', () => {
         await login(['--server', `${host}/`, '--client', 'cli', '--realm', 'master', '--scope', 'global openid']);
 
         expect(forms[0]).toEqual({
-            client_id: 'cli', 
-            realm_name: 'master', 
-            scope: 'global openid', 
+            client_id: 'cli',
+            realm_name: 'master',
+            scope: 'global openid',
         });
         expect(await createHostStore(resolveHostsDirectory()).read()).toEqual({
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    realm: 'master', 
-                    storage: 'keychain', 
-                }, 
+                    clientId: 'cli',
+                    realm: 'master',
+                    storage: 'keychain',
+                },
             },
         });
         expect(JSON.parse(keyring.entries.get(host)!)).toMatchObject({ accessToken: 'secret-access', refreshToken: 'secret-refresh' });
@@ -156,9 +156,9 @@ describe('authup login', () => {
 
         expect(keyring.entries.has(host)).toBe(false);
         expect((await createHostStore(resolveHostsDirectory()).read()).hosts[host]).toMatchObject({
-            clientId: 'cli', 
-            storage: 'file', 
-            accessToken: 'secret-access', 
+            clientId: 'cli',
+            storage: 'file',
+            accessToken: 'secret-access',
             refreshToken: 'secret-refresh',
         });
     });

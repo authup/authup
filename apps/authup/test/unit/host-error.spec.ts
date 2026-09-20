@@ -52,6 +52,13 @@ describe('describeHostError', () => {
         expect(text).not.toMatch(/gateway|secret-access/);
     });
 
+    it('renders a non-authup JSON body by the message the server chose, never the whole body', async () => {
+        const text = describeHostError(await failingRequest(503, { message: 'Service unavailable, retry later.', detail: 'secret-detail' }));
+
+        expect(text).toEqual('Service unavailable, retry later.');
+        expect(text).not.toMatch(/secret-detail|secret-access/);
+    });
+
     it('renders any other error by its message', () => {
         expect(describeHostError(new Error('plain'))).toEqual('plain');
         expect(describeHostError('text')).toEqual('text');
@@ -61,9 +68,9 @@ describe('describeHostError', () => {
 describe('runHostCommand', () => {
     it('rethrows a plain error carrying the rendered text and no cause', async () => {
         const original = await failingRequest(401, {
-            code: 'expired_token', 
-            message: 'The token expired.', 
-            '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'], 
+            code: 'expired_token',
+            message: 'The token expired.',
+            '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'],
         });
 
         const rejection = runHostCommand(async () => { throw original; });

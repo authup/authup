@@ -71,10 +71,10 @@ describe('authup logout', () => {
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    storage: 'file', 
-                    accessToken: 'secret-access', 
-                    refreshToken: 'secret-refresh', 
+                    clientId: 'cli',
+                    storage: 'file',
+                    accessToken: 'secret-access',
+                    refreshToken: 'secret-refresh',
                     expiresAt: 5,
                 },
             },
@@ -113,11 +113,11 @@ describe('authup logout', () => {
             'POST /token/revoke': () => ({
                 status: 503,
                 body: {
-                    code: 'internal_error', 
-                    message: 'down', 
-                    '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'], 
-                }, 
-            }), 
+                    code: 'internal_error',
+                    message: 'down',
+                    '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'],
+                },
+            }),
         });
 
         await runCommand(defineCLILogoutCommand({ transport }), { rawArgs: [] });

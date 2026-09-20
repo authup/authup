@@ -28,26 +28,26 @@ import type { HostRoute } from '../utils/host.ts';
 const host = 'https://auth.example.com';
 
 const NOUNS = [
-    'client', 
-    'client-permission', 
-    'client-role', 
-    'client-scope', 
-    'consent', 
+    'client',
+    'client-permission',
+    'client-role',
+    'client-scope',
+    'consent',
     'event',
-    'identity-provider', 
-    'identity-provider-account', 
+    'identity-provider',
+    'identity-provider-account',
     'identity-provider-role-mapping',
-    'key', 
-    'permission', 
-    'permission-policy', 
-    'policy', 
-    'realm', 
-    'role', 
+    'key',
+    'permission',
+    'permission-policy',
+    'policy',
+    'realm',
+    'role',
     'role-attribute',
-    'role-permission', 
-    'scope', 
-    'session', 
-    'session-token', 
+    'role-permission',
+    'scope',
+    'session',
+    'session-token',
     'trust-anchor',
     'user',
     'user-attribute',
@@ -80,9 +80,9 @@ describe('entity commands', () => {
         let root : string;
         let output : string[];
         let requests : {
-            method: string, 
-            url: string, 
-            body?: unknown 
+            method: string,
+            url: string,
+            body?: unknown
         }[];
 
         beforeEach(async () => {
@@ -98,10 +98,10 @@ describe('entity commands', () => {
                 current: host,
                 hosts: {
                     [host]: {
-                        clientId: 'cli', 
-                        storage: 'file', 
-                        accessToken: 'a', 
-                        refreshToken: 'r', 
+                        clientId: 'cli',
+                        storage: 'file',
+                        accessToken: 'a',
+                        refreshToken: 'r',
                         expiresAt: Date.now() + 900_000,
                     },
                 },
@@ -143,14 +143,14 @@ describe('entity commands', () => {
                     operator: 'and',
                     value: [
                         {
-                            field: 'name', 
-                            operator: 'endsWith', 
-                            value: 'ali', 
+                            field: 'name',
+                            operator: 'endsWith',
+                            value: 'ali',
                         },
                         {
-                            field: 'realm.name', 
-                            operator: 'eq', 
-                            value: 'master', 
+                            field: 'realm.name',
+                            operator: 'eq',
+                            value: 'master',
                         },
                     ],
                 },

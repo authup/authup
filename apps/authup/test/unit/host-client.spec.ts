@@ -29,10 +29,10 @@ const host = 'https://auth.example.com';
 const expired = {
     status: 401,
     body: {
-        code: 'expired_token', 
-        message: 'The token expired.', 
-        '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'], 
-    }, 
+        code: 'expired_token',
+        message: 'The token expired.',
+        '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'],
+    },
 };
 
 function bearerOf(headers: HeadersInit | undefined) : string | null {
@@ -49,19 +49,19 @@ describe('createHostClient', () => {
         vi.stubEnv('XDG_CONFIG_HOME', root);
         store = createHostStore(resolveHostsDirectory());
         tokens = {
-            accessToken: 'old-access', 
-            refreshToken: 'old-refresh', 
-            expiresAt: Date.now() - 1, 
+            accessToken: 'old-access',
+            refreshToken: 'old-refresh',
+            expiresAt: Date.now() - 1,
         };
         await store.write({
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    storage: 'file', 
-                    ...tokens, 
-                }, 
-            }, 
+                    clientId: 'cli',
+                    storage: 'file',
+                    ...tokens,
+                },
+            },
         });
     });
 
@@ -81,9 +81,9 @@ describe('createHostClient', () => {
                 expect(form).toEqual({ grant_type: 'refresh_token', refresh_token: 'old-refresh' });
                 return {
                     body: {
-                        access_token: 'new-access', 
-                        refresh_token: 'new-refresh', 
-                        expires_in: 900, 
+                        access_token: 'new-access',
+                        refresh_token: 'new-refresh',
+                        expires_in: 900,
                         token_type: 'Bearer',
                     },
                 };
@@ -108,9 +108,9 @@ describe('createHostClient', () => {
     it('adopts a rotation another process saved instead of replaying its own refresh token', async () => {
         const storage = createFileTokenStorage(store);
         await storage.write(host, {
-            accessToken: 'other-access', 
-            refreshToken: 'other-refresh', 
-            expiresAt: Date.now() + 900_000, 
+            accessToken: 'other-access',
+            refreshToken: 'other-refresh',
+            expiresAt: Date.now() + 900_000,
         });
 
         let tokenCalls = 0;
@@ -170,14 +170,14 @@ describe('createHostClient', () => {
 
     it('derives the tokens from a grant', () => {
         expect(tokensFromGrant({
-            access_token: 'a', 
-            refresh_token: 'r', 
-            expires_in: 60, 
+            access_token: 'a',
+            refresh_token: 'r',
+            expires_in: 60,
             token_type: 'Bearer',
         }, 1000)).toEqual({
-            accessToken: 'a', 
-            refreshToken: 'r', 
-            expiresAt: 61_000, 
+            accessToken: 'a',
+            refreshToken: 'r',
+            expiresAt: 61_000,
         });
     });
 });
@@ -206,12 +206,12 @@ describe('openHost', () => {
             current: host,
             hosts: {
                 [host]: {
-                    clientId: 'cli', 
-                    storage: 'file', 
-                    accessToken: 'a', 
-                    refreshToken: 'r', 
-                    expiresAt: 5, 
-                }, 
+                    clientId: 'cli',
+                    storage: 'file',
+                    accessToken: 'a',
+                    refreshToken: 'r',
+                    expiresAt: 5,
+                },
             },
         });
 
@@ -219,9 +219,9 @@ describe('openHost', () => {
 
         expect(opened.host).toEqual(host);
         expect(opened.tokens).toEqual({
-            accessToken: 'a', 
-            refreshToken: 'r', 
-            expiresAt: 5, 
+            accessToken: 'a',
+            refreshToken: 'r',
+            expiresAt: 5,
         });
         expect(opened.entry.clientId).toEqual('cli');
     });
