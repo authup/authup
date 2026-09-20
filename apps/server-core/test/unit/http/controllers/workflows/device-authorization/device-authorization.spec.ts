@@ -48,6 +48,7 @@ type UserBearer = {
     user: User,
     bearer: HTTPClient,
     accessToken: string,
+    password: string,
 };
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
@@ -164,7 +165,7 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         return { deviceCode: body.device_code, userCode: body.user_code };
     }
 
-    async function createUserBearer(realmId?: string, clientId?: string) : Promise<UserBearer> {
+    async function createUserBearer(realmId?: string) : Promise<UserBearer> {
         const password = generateOAuth2CodeVerifier();
         const { data: user } = await suite.client.user.create(createFakeUser({
             password,
@@ -174,16 +175,16 @@ describe('src/http/controllers/workflows/device-authorization', () => {
             username: user.name,
             password,
             ...(realmId ? { realm_id: realmId } : {}),
-            ...(clientId ? { client_id: clientId } : {}),
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         return {
-            user, 
-            bearer, 
-            accessToken: login.access_token, 
+            user,
+            bearer,
+            accessToken: login.access_token,
+            password,
         };
     }
 
@@ -492,12 +493,24 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         const client = await createPublicClient();
         const { deviceCode, userCode } = await issue(client);
 
-        // a client that may run the password grant, so the user's token
-        // carries a client_id — which may not approve anything (#3608)
+        // ONE user, two of its own tokens: the clientless one the hosted page
+        // holds, and one issued to a client, which may not approve (#3608).
+        // The second client only has to allow the password grant, so
+        // grantTypes is cleared (the device default excludes it).
+        const {
+            user, 
+            accessToken: hosted, 
+            password, 
+        } = await createUserBearer();
         const other = await createPublicClient({ grantTypes: null }, []);
-        const { accessToken } = await createUserBearer(undefined, other.id);
+        const bound = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            client_id: other.id,
+        });
+        expect(decodeJwtPayload(bound.access_token).client_id).toEqual(other.id);
 
-        const response = await verify('approve', accessToken, { user_code: userCode });
+        const response = await verify('approve', bound.access_token, { user_code: userCode });
         expect(response.status).toEqual(400);
 
         const body = await response.json();
@@ -509,8 +522,7 @@ describe('src/http/controllers/workflows/device-authorization', () => {
         expect(pending.status).toEqual(400);
         expect((await pending.json()).code).toEqual(ErrorCode.OAUTH_AUTHORIZATION_PENDING);
 
-        // the control: the hosted page's own login carries no client
-        const { accessToken: hosted } = await createUserBearer();
+        // the control: the same user's clientless token approves
         expect((await verify('approve', hosted, { user_code: userCode })).status).toEqual(200);
     });
 

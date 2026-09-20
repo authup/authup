@@ -3624,10 +3624,11 @@ than guarded:
 
 - the application access-policy engine (`OAuth2AccessPolicyEvaluator`) still holds the
   bare provider; it evaluates with IDENTITY data only, so it never reads grants;
-- the served consoles authenticate with the session cookie, which carries no token and so
-  narrows nothing: inside them a user's grants owned by ANY client apply. That is the
-  fail-open above read from the other side, and it is why the two routes that AUTHORIZE a
-  client refuse a token carrying a `client_id` (below) rather than narrowing one;
+- the served consoles authenticate with the session cookie, which sets an identity but no
+  token payload, so `createGrantsResolver` falls through to `getFor` and nothing is narrowed
+  inside them: a console user's grants owned by ANY client apply. That is the fail-open above
+  read from the other side, and it is deliberate — narrowing it would stop the consoles and
+  Basic binding client-owned permissions at all;
 - an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
@@ -4786,9 +4787,10 @@ revoking a specific session from the sessions UI).
 The realm binding above asks WHOSE identity is authorizing; this asks WHICH credential
 presented it. `POST /authorize` and `POST /device_authorization/approve` refuse a bearer
 that carries a `client_id` (`assertTokenMayAuthorize`,
-`adapters/http/request/helpers/token.ts`, called at the top of
-`HTTPOAuth2Authorizer.authorizeWithRequest` and of `DeviceAuthorizationController.approve`,
-`login_required` / 400). Only the user AT the authorization server may authorize an
+`adapters/http/request/helpers/token.ts`, `login_required` / 400). It is the FIRST statement
+of `HTTPOAuth2Authorizer.authorizeWithRequest`, so a refused request resolves no client and
+reads no scope, and it sits in `DeviceAuthorizationController.approve` ahead of the service
+call for the same reason. Only the user AT the authorization server may authorize an
 application, and their token there carries no client: the hosted password login sends none
 (`store.login` has one call site and `StoreLoginContext` has no client field, and the form
 deliberately forwards only `codeRequest.realm_id`, never its `client_id`), the MFA-ticket
