@@ -446,6 +446,16 @@ lives in the packages. The suite is split in two accordingly.
   in `@authup/server-config`, so there is no pair of declarations to prove
   consistent. There is no supervisor either, so nothing resolves an
   entrypoint, maps a child environment or holds a routing table.
+- **Host and commands** (`test/unit/host-*.spec.ts`, `test/unit/commands-*.spec.ts`): the
+  CLI-as-a-client layer runs against hapic's `MemoryTransport` handed to the `Client`, never
+  the kit's `FakeClient` (it overrides `request()` and so never runs the hook path the refresh
+  test exercises), with `@napi-rs/keyring` mocked through `vi.hoisted` and
+  `XDG_CONFIG_HOME` pointed at a tmp dir. Pinned: the device poll cadence and its terminal
+  answers, the hosts document and both token storages, the stale-lock takeover, a 401 that
+  refreshes once and replays, the adoption of another process's rotation, the refresh-on-401
+  deadlock guard, the derived noun set (equal to the kit's registry, so a new sub-API fails
+  this list until it is acknowledged) and verbs, and the flags reaching the URL as rapiq
+  parameters.
 - **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
   way the other cannot show.
   - The **composed** scenario boots the built CLI's `start` against sqlite on

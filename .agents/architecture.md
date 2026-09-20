@@ -4082,6 +4082,46 @@ it is SERVED at `<publicUrl>/console/admin` (by
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
 
+**CLI sign-in (`authup login`, #3592).** The operator binary is also a client
+of a deployment, over `apps/authup/src/host/`. `login` runs the device
+authorization grant against an OPERATOR-SUPPLIED client (`--client <id|name>`,
+`--realm` for a name; both remembered per server in
+`$XDG_CONFIG_HOME/authup/hosts.json`), never a provisioned one: the client's
+`accessPolicyId` is the operator's admission control for the CLI, and a client
+authup stamped into every realm would sit outside it. The tokens go into the
+OS keychain (`@napi-rs/keyring`, an optional dependency imported lazily, Linux
+pinned to Secret Service) unless `login --insecure-storage` put them into the
+hosts file; the choice is recorded on the host entry, no other command takes a
+storage flag, and a keychain failure is an error rather than a fallback (the
+`gh` shape). Plain `http:` is refused for a non-loopback host. Every command
+that talks to a host builds its `Client` through `createHostClient`, which
+attaches core-http-kit's `ClientAuthenticationHook` (`timer: false`) with a
+creator that refreshes under a lock file (`hosts.lock`, stale after 30 s) and
+re-reads the store first, adopting a rotation another process saved instead of
+replaying the refresh token into strict rotation's family revoke; the refresh
+grant itself runs on a second, hook-less `Client`, since a 401 at `/token`
+would otherwise re-enter the hook's own in-flight refresh promise. `logout`
+revokes both tokens at `POST /token/revoke` and forgets the host, and
+deliberately never calls `DELETE /sessions/@me`: the device grant's tokens
+ride the approving browser's `auth_sessions` row. `whoami` reads
+`GET /sessions/@me/introspect`, which describes the request's own bearer, so a
+refresh-and-replay describes the renewed token. The entity commands are
+DERIVED: `defineCLIEntityCommands` walks `EntityType`, keeps every value
+`pickEntityAPI` resolves on a `Client`, names the command in kebab-case and
+gives it the verbs its dispatch has (`list`/`get`/`create`/`update`/`delete`
+over `getMany`/`getOne`/`create`/`update`/`delete`), so a sub-API added to the
+kit is a command with no CLI edit. Query flags are the URL parameters the
+server documents, assembled and decoded through `@rapiq/codec-url` into the
+`IQuery` the typed APIs accept; several filter conditions ride one `--filter`
+joined by `&`, because citty parses with `util.parseArgs` and no `multiple`,
+so a repeated flag keeps its last value. Output is the response body as JSON;
+errors are rendered once (`describeHostError`: `code: message` plus validation
+issue paths for an `AuthupError` body, hapic's method-and-URL message
+otherwise, never a body, a `cause` or a bearer). Rejected: a provisioned `cli`
+system client (admission control), a raw `api <path>` passthrough and a
+hand-listed resource set (both are a curl wrapper next to a typed client),
+keychain-first with a silent file fallback (a downgrade nobody sees).
+
 **Process topology: one binary, one listener verb, several roles.** The
 batteries-included container runs `start`, which is `authup start`:
 server-core plus every enabled console on ONE listener, with the worker
