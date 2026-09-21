@@ -160,19 +160,40 @@ export class AuthorizationController {
      * global permission definition, or the subset the body names, evaluated
      * against the realms the body asks about.
      *
-     * Unlike the catalog above it carries NO permission gate, and that
-     * asymmetry is the point rather than an oversight. The catalog publishes
-     * definitions and policy trees, which is why it is gated; a verdict set
-     * publishes neither. What this discloses is strictly less than the caller
-     * form of `POST /permissions/:id/check`, ungated too, discloses one name at
-     * a time: answers about the caller's own authorization, no definition, no
-     * policy configuration, and no realm key the caller did not itself supply.
+     * Unlike the catalog above it carries NO permission gate and NO login gate,
+     * and that asymmetry is the point rather than an oversight. The catalog
+     * publishes definitions and policy trees, which is why it is gated; a
+     * verdict set publishes neither. What this discloses is strictly less than
+     * the caller form of `POST /permissions/:id/check`, ungated too, discloses
+     * one name at a time: answers about the caller's own authorization, no
+     * definition, no policy configuration, and no realm key the caller did not
+     * itself supply.
      *
      * That is what serves the client this route exists for. A public client
      * holds no secret, so it can obtain no `client_credentials` token and has
      * no credential of its own for the catalog's gate to be satisfied by,
      * while serving it by making the catalog anonymous would publish every
      * policy predicate to anyone who can reach the server.
+     *
+     * ANONYMOUS is a caller class like any other, not a special case. A
+     * definition whose policy layer reads no identity -- a date or time
+     * window, or no policy at all -- is one anybody may attempt, so the
+     * question "may I" has an answer before anyone signs in, and a login gate
+     * here would only withhold it. Everything identity-bound denies by itself:
+     * `IdentityPermissionBindingPolicyEvaluator` deliberately does not declare
+     * IDENTITY among its `requires`, so a missing one is a settled
+     * DATA_MISSING deny rather than a pending permit, and every built-in
+     * definition is bound to the global `system.default`, whose identity child
+     * carries that rule. So a default deployment answers an anonymous caller
+     * an empty set, and the grant load behind `grants` is never reached for
+     * one, since the binding evaluator returns before it. `resolveRealms`
+     * needs no special case either: a realm-less caller resolves `own` to
+     * nothing and `ownOrNull` to the global rows alone, which is what
+     * `realmScopeMatches` already grants such an identity.
+     *
+     * What bounds the cost of an unauthenticated caller is the body caps plus
+     * the rate-limit middleware's anonymous bucket, the same pair every other
+     * anonymous route here rests on.
      *
      * The answer is an upper bound on what may be ATTEMPTED rather than an
      * entitlement, the posture the catalog and `GET /schemas` take: it is a
@@ -185,7 +206,7 @@ export class AuthorizationController {
      * names are operator-created and unbounded, so a no-subset form there
      * would have no defensible default.
      */
-    @DPost('/check', [ForceLoggedInMiddleware])
+    @DPost('/check')
     async check(
         @DBody() data: AuthorizationCheckPayload,
         @DContext() event: IAppEvent,
@@ -200,8 +221,12 @@ export class AuthorizationController {
             names: payload.names,
             realms: payload.realms,
             identity: toIdentityPolicyData(actor.identity),
-            decorate: (evaluator) => new RequestPermissionEvaluator(event, evaluator),
-            grants: (identity) => useRequestGrants(event, identity),
+            decorate: (
+                evaluator,
+            ) => new RequestPermissionEvaluator(event, evaluator),
+            grants: (
+                identity,
+            ) => useRequestGrants(event, identity),
         });
     }
 }

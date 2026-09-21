@@ -14,30 +14,13 @@ import { LayoutSideDefaultNavigation } from './contants';
 import type { NavigationItemMeta, NavigationTranslate } from './types';
 
 export class Navigation {
-    protected initialized : boolean;
-
     protected store: Store;
 
     protected translate?: NavigationTranslate;
 
     constructor(store: Store, translate?: NavigationTranslate) {
-        this.initialized = false;
         this.store = store;
         this.translate = translate;
-    }
-
-    async initialize(): Promise<void> {
-        if (this.initialized) {
-            return;
-        }
-
-        this.initialized = true;
-
-        try {
-            await this.store.resolve();
-        } catch {
-            // do nothing :)
-        }
     }
 
     /**
@@ -46,14 +29,21 @@ export class Navigation {
      * the sidebar's `<VCNavItems>`; the permission checks run after an
      * `await`, so the component re-runs this via its `:watch` whenever the
      * session changes.
+     *
+     * It resolves no session of its own. `main.ts` mounts inside
+     * `router.isReady()`, so the routing guard's `store.resolve()` has always
+     * settled before this component exists, and in cookie mode that call is
+     * unconditional per navigation. A second one here was one extra
+     * `GET /sessions/@me/introspect` on every page load: the shared-promise
+     * wrapper around `resolve()` clears a macrotask after it settles, and the
+     * lazy route-component import between `beforeEach` and `isReady` crosses
+     * that boundary, so the two never shared.
      */
     getSideItems(): Promise<NavigationItem[]> {
         return this.reduce(LayoutSideDefaultNavigation);
     }
 
     protected async reduce(items: NavigationItem[]) : Promise<NavigationItem[]> {
-        await this.initialize();
-
         const promises = items.map(
             (item) => this.reduceItem(item),
         );

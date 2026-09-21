@@ -6,7 +6,6 @@
  */
 
 import type {
-    AuthorizationCatalog,
     AuthorizationCheckPermissions,
     IPermissionEvaluator,
     IdentityPolicyData,
@@ -14,8 +13,6 @@ import type {
 import {
     RealmScope,
     createAuthorizationCheckEvaluator,
-    createAuthorizationEvaluator,
-    isAuthorizationCatalogStaleError,
 } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
@@ -320,32 +317,35 @@ export function createStore(context: StoreCreateContext) {
     // (failure keeps routing into the navigation guards' catch).
     const resolutionStale = ref(false);
 
-    // The memoized catalog `GET /authorization` serves. Identity-free, but
-    // gated per credential (a 403 memoizes as null and sends the store to the
-    // check below), so cleanup() clears it and each session fetches it once.
-    let catalogPromise : Promise<AuthorizationCatalog | null> | undefined;
-
-    // The memoized answer `POST /authorization/check` serves, which is what a
-    // PUBLIC client gets where the catalog is out of reach: it holds no secret,
-    // so it can obtain no `client_credentials` token and has no credential of
-    // its own for the catalog's gate.
+    // The memoized answer `POST /authorization/check` serves, and the store's
+    // ONLY authorization source. This store is always a browser client acting
+    // AS the actor, and that route is the one built for it: no permission gate
+    // and no login gate, answering the caller's own verdicts.
     //
-    // Unlike the catalog it is per IDENTITY and per GRANT SET, so cleanup()
-    // alone cannot key it. A revalidation never cleans up (the credential is
-    // active), and it carries a fresh introspection, so both halves of that
-    // key can move under a memo that only cleanup() clears: the subject, since
-    // the two consoles share one cookie session on one origin and signing in
-    // as someone else in another tab would gate this one on the previous
-    // subject's verdicts; and the grants, since the answer BAKES THEM IN
-    // server-side where the catalog path recomputes from the grants each
-    // introspection reports. Keyed on both, this memo is exactly as stale as
-    // that path: fresh whenever the introspection's own authorization inputs
-    // move, reused when they do not, so an unchanged session still asks once.
+    // `GET /authorization` is deliberately NOT consulted. It is the
+    // resource-server surface -- an identity-free catalog read once with a
+    // client credential to decide for many actors -- and it is gated on
+    // `PERMISSION_READ` / `_UPDATE` / `_DELETE`, which a browser client's user
+    // may or may not hold. Asking it first made the rung depend on the actor:
+    // one console control was gated by locally evaluated policy trees for an
+    // administrator and by server verdicts for everyone else, after a wasted
+    // 403. Asking it as a FALLBACK is worse than pointless, since the check
+    // answers every caller, so nothing could ever reach it.
+    //
+    // It is per IDENTITY and per GRANT SET, so cleanup() alone cannot key it.
+    // A revalidation never cleans up (the credential is active), and it
+    // carries a fresh introspection, so both halves of that key can move under
+    // a memo that only cleanup() clears: the subject, since the two consoles
+    // share one cookie session on one origin and signing in as someone else in
+    // another tab would gate this one on the previous subject's verdicts; and
+    // the grants, since the answer BAKES THEM IN server-side. Keyed on both,
+    // the memo is fresh whenever the introspection's own authorization inputs
+    // move and reused when they do not, so an unchanged session asks once and
+    // a role bound or removed mid-session is picked up on the next resolve.
     let checkPromise : Promise<AuthorizationCheckPermissions | null> | undefined;
     let checkKey : string | undefined;
 
-    const reloadCatalog = () => {
-        catalogPromise = undefined;
+    const resetCheck = () => {
         checkPromise = undefined;
         checkKey = undefined;
     };
@@ -375,7 +375,7 @@ export function createStore(context: StoreCreateContext) {
         lastAuthOrigin.value = null;
 
         permissionEvaluator.reset();
-        reloadCatalog();
+        resetCheck();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -439,47 +439,6 @@ export function createStore(context: StoreCreateContext) {
         return response;
     };
 
-    const fetchCatalog = async (token?: string) : Promise<AuthorizationCatalog | null> => {
-        try {
-            return await client.authorization.get(token ?
-                { authorizationHeader: { type: 'Bearer', token } } :
-                undefined);
-        } catch (e) {
-            const { status } = extractErrorContext(e);
-            if (status === 403 || status === 404) {
-                return null;
-            }
-
-            throw e;
-        }
-    };
-
-    /**
-     * The catalog `GET /authorization` serves, memoized per signed-in
-     * session, which is per credential: what it carries is what that
-     * credential's own realm reach covers. A `404` (a server predating the
-     * route) and a `403` (a credential holding none of the permission family
-     * the catalog is gated on, or whose reach covers no definition) memoize
-     * as null, which sends the store to the check below, where a resource
-     * server must fail closed instead. Any other failure rejects and clears
-     * the memo, so the next resolve retries.
-     */
-    const loadCatalog = (token?: string) : Promise<AuthorizationCatalog | null> => {
-        if (!catalogPromise) {
-            const promise = fetchCatalog(token).catch((e) => {
-                if (catalogPromise === promise) {
-                    reloadCatalog();
-                }
-
-                throw e;
-            });
-
-            catalogPromise = promise;
-        }
-
-        return catalogPromise;
-    };
-
     /**
      * The verdicts, asked about the two realms this session knows at staging:
      * its own and the global rows, which is the reach a realm administrator's
@@ -511,8 +470,7 @@ export function createStore(context: StoreCreateContext) {
         if (!checkPromise || checkKey !== key) {
             const promise = fetchCheck(token).catch((e) => {
                 if (checkPromise === promise) {
-                    checkPromise = undefined;
-                    checkKey = undefined;
+                    resetCheck();
                 }
 
                 throw e;
@@ -580,24 +538,29 @@ export function createStore(context: StoreCreateContext) {
 
     /**
      * The session's evaluator, staged like the introspection and committed
-     * with it: the cached catalog plus the identity and the grants the
-     * introspection itself carries. A grant naming a definition or a policy
-     * the cached catalog lacks means the catalog predates the definition or
-     * the junction row, so it is refetched once and the build retried. Only
-     * the copy just found stale is discarded: a concurrent build may have
-     * stored a fresh one in the meantime. A definition the server could not
-     * project travels with `policies: null` and the consumer denies it
-     * without a refetch.
+     * with it: the verdicts `POST /authorization/check` answers for the
+     * identity the introspection names.
      *
-     * A build that still fails commits a DENY-ALL evaluator and never
-     * rejects: the credential is valid, only the authorization data is not,
-     * and a rejection here reverts the staged session, revokes its grant and
-     * reaches the console guards as a logout. That covers a second stale
-     * answer (the grant list has a query cache in front of it while the
-     * catalog does not, so a deleted or renamed permission makes the two
-     * disagree for as long as that cache lives) and a catalog this copy
-     * cannot build from at all. A failure to FETCH the catalog still
-     * rejects: nothing is known about it, and the next resolve retries.
+     * That route is the ONLY authorization source here, and the store asks it
+     * for every session rather than choosing a source per actor. It carries no
+     * permission gate and no login gate, so it answers every caller the same
+     * way, which is what a console needs: its gating must not depend on
+     * whether the signed-in user happens to hold the permission family
+     * `GET /authorization` is gated on. Nothing is lost by not consulting that
+     * catalog. Every question a consumer asks here is a name-only
+     * `preEvaluateOneOf`, which the verdicts answer at least as precisely,
+     * having been evaluated server-side against the identity's own realm and
+     * the global rows, where a realm-less pre-gate over the catalog
+     * neutral-passes reach and would pass a `realmScope: none` grant.
+     *
+     * A server that serves no such route answers 404, which memoizes as null
+     * and lands the caller on the name-only view.
+     *
+     * A build that fails commits a DENY-ALL evaluator and never rejects: the
+     * credential is valid, only the authorization data is not, and a rejection
+     * here reverts the staged session, revokes its grant and reaches the
+     * console guards as a logout. A failure to FETCH still rejects, since
+     * nothing is known about the answer, and the next resolve retries.
      */
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
@@ -605,56 +568,14 @@ export function createStore(context: StoreCreateContext) {
     ) : Promise<IPermissionEvaluator | null> => {
         const identity = buildIdentity(introspection);
 
-        const promise = loadCatalog(token);
-        const catalog = await promise;
-        if (!catalog) {
-            const permissions = await loadCheck(buildCheckKey(introspection, identity), token);
-            if (!permissions) {
-                return null;
-            }
-
-            try {
-                return await createAuthorizationCheckEvaluator({ permissions, identity });
-            } catch {
-                return createDenyAllPermissionEvaluator();
-            }
-        }
-
-        const grants = introspection.permissions ?? [];
-
-        try {
-            return await createAuthorizationEvaluator({
-                catalog,
-                grants,
-                identity,
-            });
-        } catch (e) {
-            if (!isAuthorizationCatalogStaleError(e)) {
-                return createDenyAllPermissionEvaluator();
-            }
-        }
-
-        if (catalogPromise === promise) {
-            reloadCatalog();
-        }
-
-        const reloadedPromise = loadCatalog(token);
-        const reloaded = await reloadedPromise;
-        if (!reloaded) {
+        const permissions = await loadCheck(buildCheckKey(introspection, identity), token);
+        if (!permissions) {
             return null;
         }
 
         try {
-            return await createAuthorizationEvaluator({
-                catalog: reloaded,
-                grants,
-                identity,
-            });
-        } catch (e) {
-            if (catalogPromise === reloadedPromise && isAuthorizationCatalogStaleError(e)) {
-                reloadCatalog();
-            }
-
+            return await createAuthorizationCheckEvaluator({ permissions, identity });
+        } catch {
             return createDenyAllPermissionEvaluator();
         }
     };
@@ -703,7 +624,7 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        // the catalog- or check-backed evaluator, or null for the name-only view
+        // the check-backed evaluator, or null for the name-only view
         authorization: IPermissionEvaluator | null,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
