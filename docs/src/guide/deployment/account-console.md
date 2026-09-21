@@ -52,6 +52,21 @@ user's session.
 
 A deep link may pin the realm up front: `<publicUrl>/console/account?realmId=<id-or-name>`.
 
+## Language and color mode
+
+A signed-in user's language and color mode are account preferences, not
+browser settings. Changing either with the switcher in the console, in the
+hosted login pages or in an application built on `@authup/client-web-kit`
+writes it to the account (two user attributes, `locale` and `colorMode`), and
+every other application and device the user signs into opens in it from then
+on. The value travels as the `locale` and `color_mode` claims; see
+[OAuth2](../development/api-oauth2#the-locale-and-color_mode-claims).
+
+Before the first sign-in on a browser, the pages use what that browser holds,
+or the `ui_locales` / `ui_color_mode` hint the application sent. The first
+sign-in adopts an explicit browser choice as the account's initial value if the
+account has none yet, so nobody loses a preference to an empty account.
+
 ## Connected accounts
 
 The connected-accounts page lists the realm's enabled OAuth2/OIDC identity

@@ -15,6 +15,7 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { assertPreferenceValue } from './preferences.ts';
 import { userAttributeSchema } from './schema.ts';
 
 export type UserAttributeServiceContext = {
@@ -149,6 +150,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new ValidationError(`The user-attribute name '${data.name}' collides with a User entity column.`);
         }
 
+        assertPreferenceValue(data.name, data.value);
+
         if (data.user) {
             data.realmId = data.user.realmId;
         } else if (
@@ -194,6 +197,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new EntityNotFoundError();
+        }
+
+        // The row's own name governs a value-only update: a reserved row
+        // cannot be renamed into an unchecked one to slip a value past.
+        if (typeof data.value !== 'undefined') {
+            assertPreferenceValue(data.name ?? entity.name, data.value);
         }
 
         const isSelfTarget = !!actor.identity &&

@@ -196,6 +196,41 @@ describe('core/entities/user-attribute/service', () => {
     });
 
     describe('create', () => {
+        // The two reserved rows are served as the `locale` / `color_mode`
+        // claims and seed every device, so their VALUE is the one thing the
+        // attribute service checks; every other name keeps taking any string.
+        it.each([
+            ['locale', 'fr-CA'],
+            ['locale', 'de'],
+            ['colorMode', 'dark'],
+            ['colorMode', 'system'],
+            ['theme', 'anything at all'],
+        ])('should accept %s = %s', async (name, value) => {
+            const result = await service.create({
+                name,
+                value,
+                userId: randomUUID(),
+                user: { realmId: randomUUID() },
+            }, createAllowAllActor());
+
+            expect(result.value).toBe(value);
+        });
+
+        it.each([
+            ['locale', 'banana!'],
+            ['locale', 'f'],
+            ['locale', 42],
+            ['colorMode', 'purple'],
+            ['colorMode', 'DARK'],
+        ])('should refuse %s = %s', async (name, value) => {
+            await expect(service.create({
+                name,
+                value,
+                userId: randomUUID(),
+                user: { realmId: randomUUID() },
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
         it('should create entity with user from join data', async () => {
             const userRealmId = randomUUID();
             const userId = randomUUID();
@@ -337,6 +372,25 @@ describe('core/entities/user-attribute/service', () => {
     });
 
     describe('update', () => {
+        // A value-only update is checked against the ROW's name, so a reserved
+        // row cannot be fed a bad value by a body that omits the name.
+        it('should refuse a bad value on a reserved row even when the name is omitted', async () => {
+            const entity = repository.create(createFakeUserAttribute({ name: 'colorMode', value: 'dark' }));
+            await repository.save(entity);
+
+            await expect(service.update(entity.id, { value: 'purple' }, createAllowAllActor()))
+                .rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should accept a good value on a reserved row', async () => {
+            const entity = repository.create(createFakeUserAttribute({ name: 'locale', value: 'de' }));
+            await repository.save(entity);
+
+            const result = await service.update(entity.id, { value: 'fr' }, createAllowAllActor());
+
+            expect(result.value).toBe('fr');
+        });
+
         it('should update an existing attribute', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 name: 'old',

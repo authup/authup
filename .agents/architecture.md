@@ -5005,6 +5005,55 @@ login, so the closed set is applied where the page renders it
 (`readUIColorModeHint`), and a malformed `ui_locales` LIST is still an
 `invalid_request` the way a malformed `max_age` is.
 
+### The account-level UI preference: `locale` and `color_mode`
+
+The hints above answer "what is this visitor reading right now" for an
+anonymous page. This answers "what did this ACCOUNT choose": two reserved
+user attributes, `UserAttributeName.LOCALE` (`locale`) and
+`UserAttributeName.COLOR_MODE` (`colorMode`), served as the `locale` claim
+(OIDC Core 5.1) and authup's own `color_mode` (bare snake_case like
+`realm_id` / `sub_kind`, and deliberately NOT `ui_color_mode`, which is the
+hint). The browser cookie is a per-browser CACHE of the account value, not an
+independent opinion: the kit seeds the cookie-backed refs from the
+introspection on every `resolve()` (account wins), writes a switcher change
+back to the attribute, and on a first sign-in whose account holds nothing
+bootstraps an explicit browser value UPWARD, so the rollout demotes nobody to
+"unset". Three sources, one rule, no fight.
+
+**The claims cost nothing on the server, which is why attributes and not
+columns.** `OAuth2OpenIDClaimsBuilder.userMap` maps the two names like any
+column, because the identity read (`UserIdentityRepository.find`) already
+ends in `extendOneWithEA`, so a row is an own property on the object the
+builder receives and an absent row is an absent claim (the #3518 rule, never
+`null`). They land on the id_token, the access token, `/userinfo` and both
+introspection routes with no further wiring. A token's copy is frozen at
+issuance like every claim; **introspection rebuilds the claims from the row
+on every call and answers the CURRENT value**, and that is the reader the
+kit uses. The by-id identity read is query-cached for 60s, and the
+user-attribute subscriber drops that key on write, so a change is visible on
+the very next introspection (pinned end to end in `introspect.spec.ts`,
+which introspects, writes, and introspects again).
+
+**The one server-side rule is value validation, and it is per NAME.**
+`assertPreferenceValue` (`core/entities/user-attribute/preferences.ts`) runs
+in `UserAttributeService.create` and, for a value-only `update`, against the
+ROW's name, so a reserved row cannot be fed junk by a body that omits the
+name. `locale` is checked for BCP47 SHAPE only and never narrowed to a catalog
+authup has, since the attribute is the user's preference for every RP that
+reads the claim; `colorMode` must be an `OAuth2UIColorMode`. Every other
+attribute name keeps taking any string, and nothing else about the rows is
+special: a user writes their own under `USER_SELF_MANAGE` (neither name is in
+the denylist and neither is a `User` column), an admin under `USER_UPDATE`, a
+provisioning file can declare them. A keyed upsert route was considered and
+not added: the kit does find-then-write, two requests that only ever run when
+a switcher moves.
+
+**Not columns, and not the token alone.** Columns would buy filterability
+nobody needs for a theme at the price of a migration and two more fields on an
+already wide `User`. A claim in the token alone was rejected outright: signed
+at issuance, it is wrong from the moment the user changes it until the next
+refresh, which is what makes introspection the reader.
+
 ### OIDC prompt surface & id_token claims
 
 `/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`

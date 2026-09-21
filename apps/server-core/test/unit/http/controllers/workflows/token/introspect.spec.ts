@@ -16,7 +16,8 @@ import {
     CLIENT_ADMIN_CONSOLE_NAME,
     PermissionName,
     REALM_MASTER_NAME,
-    buildUserFakeEmail,
+    UserAttributeName, 
+    buildUserFakeEmail, 
 } from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
@@ -273,6 +274,56 @@ describe('token-introspect', () => {
     // (issue #3506). Nothing pinned it: the claim is mapped from a
     // `select: false` column that only survives because the identity
     // repository re-selects it, and both halves are silently droppable.
+    // The account-level UI preference: two reserved user attributes, served
+    // as the `locale` / `color_mode` claims. Introspection rebuilds the
+    // claims from the row on every call, so it answers the CURRENT value
+    // even though the admin's identity read is query-cached (the attribute
+    // subscriber drops that key on write) and even though the token was
+    // minted before the rows existed.
+    it('should carry the current locale and color_mode preference for a live token', async () => {
+        const { data: admin } = await suite.client.user.getOne('admin');
+
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const { data: locale } = await suite.client.userAttribute.create({
+            userId: admin.id,
+            name: UserAttributeName.LOCALE,
+            value: 'fr-CA',
+        });
+        const { data: colorMode } = await suite.client.userAttribute.create({
+            userId: admin.id,
+            name: UserAttributeName.COLOR_MODE,
+            value: 'dark',
+        });
+
+        try {
+            const introspection = await suite.client
+                .token
+                .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
+            expect(introspection.active).toBe(true);
+            expect(introspection.locale).toEqual('fr-CA');
+            expect(introspection.color_mode).toEqual('dark');
+
+            // a value the row no longer holds is not served either
+            await suite.client.userAttribute.update(locale.id, { value: 'de' });
+
+            const updated = await suite.client
+                .token
+                .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
+            expect(updated.locale).toEqual('de');
+        } finally {
+            await suite.client.userAttribute.delete(locale.id);
+            await suite.client.userAttribute.delete(colorMode.id);
+        }
+    });
+
     it('should carry the subject email claim for a live token', async () => {
         const grant = await suite.client
             .token
