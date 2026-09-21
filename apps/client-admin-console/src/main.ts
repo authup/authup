@@ -6,6 +6,8 @@
  */
 
 import {
+    COLOR_MODE_COOKIE,
+    COLOR_MODE_UNSET,
     LOCALE_COOKIE,
     LOCALE_UNSET,
     buildVuecsInstallOptions,
@@ -74,6 +76,11 @@ const localeHandles = installLocale(app, {
     navigatorLanguage: ref(typeof navigator !== 'undefined' ? navigator.language : undefined),
 });
 
+// The same ref every `createColorMode()` in the layouts gets (one per cookie
+// name and document), so the account value seeded below reaches the toggle
+// and a toggle reaches the account.
+const colorModeSource = createCookieRef(COLOR_MODE_COOKIE, undefined, COLOR_MODE_UNSET);
+
 // Install the kit FIRST so `installTranslator()` provides the ilingo locale
 // before `buildVuecsInstallOptions()` (below) reads it via `useTranslation`.
 install(app, {
@@ -85,6 +92,10 @@ install(app, {
     // (shared with the hosted auth pages and the account console: one
     // session per deployment). See resolveCookiePath in ./config.ts.
     cookiePath: config.cookiePath,
+    preferences: {
+        locale: localeSource,
+        colorMode: colorModeSource,
+    },
 });
 
 // One-way: ilingo (authup catalogs) follows vuecs's resolved locale.
