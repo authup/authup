@@ -80,7 +80,20 @@ export type BuildAuthorizeURLContext = {
      */
     prompt?: string,
     maxAge?: number,
-    loginHint?: string
+    loginHint?: string,
+    /**
+     * OIDC `ui_locales`: space-delimited BCP47 tags, most preferred first.
+     * Pass the language this app is rendering in and the hosted pages open in
+     * it, instead of resetting to the browser's. A choice the visitor made on
+     * the IdP origin itself still wins.
+     */
+    uiLocales?: string,
+    /**
+     * authup's `ui_color_mode`: `light`, `dark` or `system`. Same rule as
+     * `uiLocales` — it opens the hosted pages in the mode this app renders
+     * in, and a mode the visitor toggled on the IdP origin still wins.
+     */
+    uiColorMode?: string
 };
 
 export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
@@ -107,6 +120,12 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     }
     if (ctx.loginHint) {
         params.set('login_hint', ctx.loginHint);
+    }
+    if (ctx.uiLocales) {
+        params.set('ui_locales', ctx.uiLocales);
+    }
+    if (ctx.uiColorMode) {
+        params.set('ui_color_mode', ctx.uiColorMode);
     }
 
     return `${base}/authorize?${params.toString()}`;

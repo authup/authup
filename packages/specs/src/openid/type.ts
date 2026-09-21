@@ -98,6 +98,12 @@ export type OpenIDProviderMetadata = {
     acr_values_supported?: string[],
 
     /**
+     * OIDC Discovery: the languages the OP's own pages are authored in, for
+     * an RP choosing what to send as `ui_locales`.
+     */
+    ui_locales_supported?: string[],
+
+    /**
      * OIDC RP-Initiated Logout 1.0 — the OP's end-session (logout) endpoint.
      */
     end_session_endpoint?: string,

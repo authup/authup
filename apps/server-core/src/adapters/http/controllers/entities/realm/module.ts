@@ -16,6 +16,7 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
+import { LOCALE_CODES } from '@authup/i18n';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     OAuth2AuthenticationContextClass,
@@ -174,6 +175,11 @@ export class RealmController {
                 OAuth2AuthenticationContextClass.PASSWORD,
                 OAuth2AuthenticationContextClass.MFA,
             ],
+
+            // What the hosted pages are authored in, so an RP knows which
+            // `ui_locales` are worth sending. A tag outside this list is not
+            // refused, it simply renders in the fallback catalog.
+            ui_locales_supported: [...LOCALE_CODES],
 
             subject_types_supported: [
                 'public',

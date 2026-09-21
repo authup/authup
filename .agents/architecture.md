@@ -4911,6 +4911,57 @@ reading as if it required credentials; refusing it makes the registration say
 what it matches. Custom-scheme and unparsable values keep their previous
 handling (verbatim match, and mismatch).
 
+### The two UI hints: `ui_locales` and `ui_color_mode`
+
+The consoles keep the visitor's language and color mode in the host-only
+`vc-locale` and `vc-color-mode` cookies, so an RP on a sibling host cannot see
+either and a visitor arriving from it lands in the browser default. These two
+carry the preference across instead. `ui_locales` is OIDC Core 3.1.2.1 (a
+space-delimited BCP47 list, most preferred first); `ui_color_mode` is authup's
+own, `light|dark|system`, SINGULAR because a color mode has nothing to
+negotiate. Both are mounted in `OAuth2AuthorizationCodeRequestValidator`, so
+they ride the code blob and survive the rebuild `buildHostedAuthorizeURL`
+makes after a federated round-trip; the page GET's verbatim query hop carries
+them to every other hosted page. `ui_locales_supported` advertises
+`LOCALE_CODES`; the color mode gets no discovery key, since its three values
+are not something an RP has to discover. `buildAuthorizeURL` takes
+`uiLocales` / `uiColorMode`.
+
+**They SEED, and only while the visitor has chosen nothing here.**
+`readUILocalesHint` / `readUIColorModeHint` (auth console service) are applied
+in `render.ts` over `readUIClientPreferences`, each guarded on its cookie's
+own no-choice sentinel: `auto` for the locale (`@vuecs/locale` never writes
+the resolved value back, so a tag there can only have come from the switcher)
+and `system` for the color mode (`AColorModeSwitcher` is a binary toggle, so
+it only ever writes `light` or `dark`). The switcher therefore stays the last
+word and cannot be undone by the next authorize request. Nothing is persisted:
+the ref starts at the seeded value and `createCookieRef`'s watch fires on
+change alone. Because the seed lands in `preferences`, the SSR `<html>` stamp
+and the hydration payload agree for free.
+
+**The claim route was considered and does not fit.** `locale` is the OIDC
+standard claim (Core 5.1) and there is no standard claim for a color mode, but
+the pages that lose the preference — `/authorize`, register, activate, the two
+password pages, `/device` — are ANONYMOUS, so there is no token and no
+introspection to read a claim from. A claim is also per identity, where a
+theme is per browser. A shared cookie `Domain` was the other candidate: it
+covers both halves and both directions, but it needs a configuration key on
+authup AND the matching write on the sibling, and a single host-only write on
+either side shadows the widened record (a shadowed read takes the older one,
+RFC 6265 5.4) and freezes the preference with nothing to point at.
+`ui_locales` is unnarrowed on purpose: a tag authup has no catalog for is
+stamped into `lang` and renders the fallback catalog, the latitude the
+navigator-language path already takes.
+
+**Neither is validated by VALUE in the code-request validator**, only by
+shape: `ui_color_mode` is a bounded string rather than an enum of the three,
+because the validator's job is refusing a malformed request while unknown
+values are the consumer's to ignore, which is why `prompt` and `acr_values`
+tolerate tokens they do not know. A cosmetic hint must never be able to 400 a
+login, so the closed set is applied where the page renders it
+(`readUIColorModeHint`), and a malformed `ui_locales` LIST is still an
+`invalid_request` the way a malformed `max_age` is.
+
 ### OIDC prompt surface & id_token claims
 
 `/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`

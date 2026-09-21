@@ -158,6 +158,45 @@ export function buildWorkflowPageData(
 }
 
 /**
+ * The RP's own UI language, from the OIDC Core section 3.1.2.1 `ui_locales`
+ * parameter: a space-separated list of BCP47 tags in preference order.
+ *
+ * It rides the authorization request, so it survives the page GET's hop and
+ * the rebuild a federated round-trip makes from the stored code request. The
+ * four workflow pages take it straight from their own query, since an RP
+ * linking to one can say the same thing there.
+ */
+export function readUILocalesHint(event: IAppEvent) : string | undefined {
+    const { ui_locales: uiLocales } = useRequestQuery(event);
+    if (typeof uiLocales !== 'string') {
+        return undefined;
+    }
+
+    // ponytail: the first well-formed tag wins, and it is NOT narrowed to a
+    // locale authup has a catalog for. That is the latitude the navigator
+    // path already takes -- a `de-CH` visitor is stamped `lang="de-CH"` and
+    // reads the `de` catalog. Narrow here (matchLocale over LOCALES) if the
+    // lang attribute ever has to name only an authored locale, which costs
+    // this service a dependency on @authup/i18n.
+    return uiLocales
+        .split(' ')
+        .find((tag) => /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$/.test(tag));
+}
+
+/**
+ * The color mode the RP renders in, from authup's own `ui_color_mode`. One
+ * value rather than a list, since there is nothing to negotiate, and checked
+ * against the closed set so nothing else reaches the payload.
+ */
+export function readUIColorModeHint(event: IAppEvent) : string | undefined {
+    const { ui_color_mode: uiColorMode } = useRequestQuery(event);
+
+    return uiColorMode === 'light' || uiColorMode === 'dark' || uiColorMode === 'system' ?
+        uiColorMode :
+        undefined;
+}
+
+/**
  * The `user_code` the device page prefills (RFC 8628 section 3.3.1): the
  * query value uppercased and stripped of everything outside `A-Z0-9`, or
  * `undefined` when nothing bounded remains. The page renders it back, so what

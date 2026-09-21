@@ -149,6 +149,34 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
             createValidator(z.string().trim().min(1).max(256).nullable()),
         );
 
+        // OIDC Core §3.1.2.1: space-delimited BCP47 tags, most preferred
+        // first. A preference and never a demand (§5.5.1.1 reasoning applies
+        // here too) — the hosted pages take the first tag they can use and a
+        // choice already made on this origin outranks it, so the charset is
+        // the whole of the validation.
+        this.mount(
+            'ui_locales',
+            { optional: true },
+            createValidator(z.string().trim().min(2).max(256).regex(
+                /^[a-zA-Z0-9-]+( [a-zA-Z0-9-]+)*$/,
+                'must be a space-delimited list of BCP47 language tags',
+            ).nullable()),
+        );
+
+        // authup's own companion to `ui_locales`, and one value rather than a
+        // list: there is nothing to negotiate about a color mode.
+        //
+        // Shape only, no enum of `light|dark|system`. This validator refuses a
+        // malformed request and leaves unknown VALUES to the consumer, which
+        // is why `prompt` and `acr_values` tolerate tokens they do not know.
+        // A cosmetic hint must not be able to fail a login: the page renders
+        // the three it knows and ignores anything else.
+        this.mount(
+            'ui_color_mode',
+            { optional: true },
+            createValidator(z.string().trim().min(1).max(32).nullable()),
+        );
+
         this.mount(
             'realm_id',
             { optional: true },

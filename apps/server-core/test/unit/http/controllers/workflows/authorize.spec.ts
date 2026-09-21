@@ -68,6 +68,25 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('id_token')).toBeFalsy();
     });
 
+    // The two UI hints are cosmetic, so a value the server does not know must
+    // never fail a login: the page ignores it, the way `prompt` ignores an
+    // unknown token. Only the SHAPE is refused.
+    it.each([
+        [{ ui_color_mode: 'dark' }],
+        [{ ui_color_mode: 'purple' }],
+        [{ ui_locales: 'fr-CA fr' }],
+    ])('should authorize with the UI hint %o', async (hint) => {
+        const response = await suite.client
+            .authorize
+            .confirm({
+                ...payload,
+                response_type: `${OAuth2AuthorizationResponseType.CODE}`,
+                ...hint,
+            } as never);
+
+        expect(new URL(response.url).searchParams.get('code')).toBeDefined();
+    });
+
     // OAuth 2.1 posture: the authorization endpoint issues codes only — the
     // implicit/hybrid response types were dropped (plan 042 item 3). Tokens in
     // the redirect URL leaked via history, proxy logs, and Referer.
