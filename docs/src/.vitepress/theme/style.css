@@ -381,6 +381,20 @@
     --vp-input-switch-bg-color: rgb(255 255 255 / 0.08);
 }
 
+/* `VPFlyout:hover` (vitepress's own, unlayered) sets a literal, already-
+ * resolved `color` on the flyout root itself — not a custom property, so the
+ * `.VPMenu` reset below cannot touch it. Since `VPFlyout` opens on
+ * `@mouseenter`, `:hover` is true for the whole time a mouse user has
+ * Guide/SDKs/About or the narrow-width "extra" menu open, and that resolved
+ * color (the rescoped `--vp-c-brand-1` above) inherits straight into the
+ * popup. Cancel it back to normal inheritance at the source: nothing between
+ * here and `<body>` sets `color` explicitly, so this restores the same,
+ * real, mode-following color the non-hover state already has. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarMenuGroup:hover,
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarExtra:hover {
+    color: inherit;
+}
+
 /* The flyout trap: `.VPMenu` (Guide/SDKs/About dropdowns, the narrow-width
  * "extra" overflow menu) renders as a normal DOM descendant of the bar items
  * above, not a portal, so it would otherwise inherit their dark-on-hero text
