@@ -272,14 +272,41 @@ The following [OpenID Connect Core §3.1.2.1](https://openid.net/specs/openid-co
 | `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `none` performs silent authentication (no UI): a `built_in` client with a valid, realm-matching session is auto-consented and redirected with a `code`; otherwise the OIDC error (`login_required`, `consent_required`, or `interaction_required`) is redirected to the `redirect_uri`. **`prompt=none` must be driven as a top-level navigation, not a hidden iframe** — the authorize page sends `X-Frame-Options: DENY` / `frame-ancestors 'none'`, so the classic iframe silent-renew pattern is blocked. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication (with a banner); `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
 | `max_age` | Maximum acceptable age (seconds) of the authentication. If the session is older, the user is asked to re-authenticate (`max_age=0` forces it). |
 | `login_hint` | Pre-fills the identifier on the login form. |
+| `ui_locales` | Space-delimited BCP47 language tags, most preferred first. The hosted pages open in the first well-formed tag, so a visitor arriving from an application rendered in French is not dropped into their browser's language. A tag Authup has no catalog for renders the fallback catalog rather than failing; the languages worth sending are advertised as `ui_locales_supported`. |
 
 The freshness window for `prompt=login` is configurable via `promptLoginMaxAge` (see the [server configuration](../deployment/configuration-server-core.md)).
+
+One parameter is Authup's own, next to `ui_locales` and read the same way:
+
+| Parameter | Description |
+|---|---|
+| `ui_color_mode` | `light`, `dark` or `system`. Opens the hosted pages in the color mode your application renders in. One value rather than a list, since there is nothing to negotiate. OIDC defines nothing for this, so the accepted values are advertised as `ui_color_modes_supported`. |
+
+Both are **hints, not settings**. They seed the page only while the visitor has
+made no choice on the Authup origin itself: once they use the language or
+color-mode switcher there, that choice wins and the hint is ignored. Neither is
+ever stored. A color mode outside the three is ignored rather than refused, the
+same forward-compatibility rule `prompt` follows; a malformed `ui_locales` list
+is an `invalid_request`, like a malformed `max_age`.
+
+They ride the authorization request, so they survive a round-trip through an
+external identity provider. With `@authup/client-web-kit`, pass `uiLocales` and
+`uiColorMode` to `buildAuthorizeURL`.
+
+::: tip Cookies, not claims
+The two preferences live in the `vc-locale` and `vc-color-mode` cookies, which
+are host-only. An application on a sibling host therefore cannot see what the
+visitor picked on the Authup pages, and vice versa. These two parameters are
+how the preference travels. A stored claim would not help here: the pages that
+lose it (`/authorize`, register, password recovery, device verification) are
+anonymous, so there is no token to read one from.
+:::
 
 The resulting `id_token` includes the OIDC `auth_time` (the real authentication time) and `sid` (session id) claims.
 
 #### Discovery
 
-Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `ui_locales_supported`, `ui_color_modes_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
 
 `grant_types_supported` lists the five grants Authup implements: `authorization_code`, `client_credentials`, `password`, `refresh_token` and `urn:ietf:params:oauth:grant-type:device_code`. It describes the server, not a client: each client's own `grantTypes` allowlist decides what that client may use. With `mtlsPublicUrl` set, `mtls_endpoint_aliases` carries `device_authorization_endpoint` next to the token endpoint alias, because a `tls` client authenticates at the device endpoint exactly as it does at `/token`.
 

@@ -108,6 +108,47 @@ describe('createHandler', () => {
         expect(body).toContain('"basePath":"/console/auth"');
     });
 
+    it('should open in the language the RP named', async () => {
+        const body = await (await fetch(`${baseURL}/logout?ui_locales=fr-CA fr`)).text();
+
+        expect(body).toContain('<html lang="fr-CA"');
+        expect(body).toContain('"locale":"fr-CA"');
+    });
+
+    it('should let a choice made here outrank the language the RP named', async () => {
+        const response = await fetch(`${baseURL}/logout?ui_locales=fr`, { headers: { cookie: 'vc-locale=de' } });
+        const body = await response.text();
+
+        expect(body).toContain('<html lang="de"');
+    });
+
+    it('should take the RP language while the visitor has chosen none here', async () => {
+        // `auto` is what @vuecs/locale leaves in the cookie until the
+        // switcher writes a tag, so it means "no choice", not "English"
+        const response = await fetch(`${baseURL}/logout?ui_locales=fr`, { headers: { cookie: 'vc-locale=auto' } });
+
+        expect(await response.text()).toContain('<html lang="fr"');
+    });
+
+    it('should open in the color mode the RP named', async () => {
+        const body = await (await fetch(`${baseURL}/logout?ui_color_mode=dark`)).text();
+
+        expect(body).toContain('class="dark"');
+        expect(body).toContain('"colorMode":"dark"');
+    });
+
+    it('should let a color mode toggled here outrank the one the RP named', async () => {
+        const response = await fetch(`${baseURL}/logout?ui_color_mode=dark`, { headers: { cookie: 'vc-color-mode=light' } });
+
+        expect(await response.text()).not.toContain('class="dark"');
+    });
+
+    it('should drop a color mode outside the closed set', async () => {
+        const body = await (await fetch(`${baseURL}/logout?ui_color_mode=purple`)).text();
+
+        expect(body).not.toContain('purple');
+    });
+
     it('should serve an asset the shell references', async () => {
         const body = await (await fetch(`${baseURL}/logout`)).text();
 
