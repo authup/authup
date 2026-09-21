@@ -129,6 +129,41 @@ Check before upgrading:
   grant global to get around it: that lifts the restriction for every
   application.
 
+### The introspection `permissions` list is one entry per grant
+
+`permissions` on `POST /token/introspect` and `GET /sessions/@me/introspect` used to
+carry one entry per permission, deduplicated by name, realm and client. It now carries
+one entry per **grant**, so a name repeats when the identity holds it through several
+junction rows, and each entry says what that grant is:
+
+```jsonc
+{
+  "name": "user_update",
+  "realm_id": null,
+  "client_id": null,
+  "realm_scope": "ownOrNull",   // the grant's own realm reach
+  "policies": ["4f0e...", ...]  // ids of its junction policy trees
+}
+```
+
+The ids pair with the trees `GET /authorization` serves, which is what lets a consumer
+rebuild the server's decision with `createAuthorizationEvaluator` from `@authup/access`
+instead of gating on names alone. A grant whose tree that catalog cannot carry is
+dropped from the list, since the server fails such a grant closed itself.
+
+Check before upgrading:
+
+- A consumer that read the list as a **set of names** is unaffected: looking a name up
+  still answers the same question.
+- A consumer that counted it, or built a map keyed by `name` and expected one entry per
+  key, now sees a different number. Deduplicate on the client, or read `realm_scope` and
+  `policies` and evaluate the grants properly.
+- The declared `policy` field is gone, replaced by `policies`. No release ever populated
+  it -- the builder never set it -- so nothing was reading a value.
+
+`realm_id` is now explicitly nullable in the published type, matching what the server has
+always sent for a global permission.
+
 ### Role, scope, permission and policy reads are realm-gated
 
 Both read paths of the four global-capable entities now apply the `realmScope` of
