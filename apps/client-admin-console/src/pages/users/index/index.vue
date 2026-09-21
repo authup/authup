@@ -7,6 +7,7 @@ import type { ListLoadFn } from '@authup/client-web-kit';
 import {
     AEntityDelete,
     APagination,
+    APathTree,
     ASearch,
     ATitle,
     AUsers,
@@ -16,8 +17,6 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
-import type { FormOption } from '@vuecs/forms';
-import { VCFormSelect } from '@vuecs/forms';
 import { VCAlert } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
@@ -34,12 +33,12 @@ export default defineComponent({
     components: {
         ATitle,
         APagination,
+        APathTree,
         ASearch,
         AUsers,
         AEntityDelete,
         VCAlert,
         VCButton,
-        VCFormSelect,
         VCIcon,
     },
     emits: ['deleted'],
@@ -123,22 +122,15 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE,
+            },
         ]);
 
-        // ponytail: a flat select of the realm's folders. The
-        // Authentik-style tree pane replaces it once VCTree ships
-        // (tada5hi/vuecs#1729); `usePathScope` is the piece it reuses.
-        const pathScopeOptions = computed<FormOption[]>(() => [
-            { value: '', label: translations.pathScopeAll },
-            ...pathScope.options.value.map((entry) => ({
-                value: entry.path,
-                label: entry.path,
-            })),
-        ]);
-
-        const pathScopeValue = computed<string>({
-            get: () => pathScope.path.value ?? '',
-            set: (value) => pathScope.select(value.length > 0 ? value : null),
+        const pathScopeValue = computed<string | null>({
+            get: () => pathScope.path.value,
+            set: (value) => pathScope.select(value),
         });
 
         const columns = computed<TableColumn<User>[]>(() => [
@@ -182,7 +174,8 @@ export default defineComponent({
             handleDeleted,
             pathScopePending: pathScope.pending,
             pathScopeTruncated: pathScope.truncated,
-            pathScopeOptions,
+            pathScopeIncomplete: pathScope.optionsTruncated,
+            pathScopePaths: pathScope.options,
             pathScopeValue,
             query,
             translations,
@@ -192,90 +185,112 @@ export default defineComponent({
 });
 </script>
 <template>
-    <AUsers
-        ref="collection"
-        :query="query"
-        :body="{tag: 'div'}"
-        :footer="true"
-        :load-on-setup="!pathScopePending"
-        @deleted="handleDeleted"
-    >
-        <template #header="props">
-            <ATitle />
-            <div class="flex flex-wrap items-center gap-2">
-                <div
-                    v-if="hasPathReadPermission"
-                    class="w-full sm:w-64"
+    <div class="flex flex-col gap-4 md:flex-row md:items-start">
+        <aside
+            v-if="hasPathReadPermission"
+            :aria-label="translations.pathScope"
+            class="w-full shrink-0 md:w-64"
+        >
+            <div class="mb-1 flex items-center justify-between gap-2">
+                <span class="text-sm font-medium">{{ translations.pathScope }}</span>
+                <VCButton
+                    v-if="pathScopeValue"
+                    size="sm"
+                    color="primary"
+                    variant="outline"
+                    @click="pathScopeValue = null"
                 >
-                    <VCFormSelect
-                        v-model="pathScopeValue"
-                        :options="pathScopeOptions"
-                        :aria-label="translations.pathScope"
-                    />
-                </div>
-                <div class="grow">
-                    <ASearch
-                        :load="props.load"
-                        :busy="props.busy"
-                    />
-                </div>
+                    {{ translations.pathScopeAll }}
+                </VCButton>
             </div>
+            <APathTree
+                v-model="pathScopeValue"
+                :paths="pathScopePaths"
+            />
             <VCAlert
-                v-if="pathScopeTruncated"
+                v-if="pathScopeIncomplete"
                 color="warning"
                 variant="soft"
                 class="mt-2"
             >
-                {{ translations.pathScopeTruncated }}
+                {{ translations.pathScopeIncomplete }}
             </VCAlert>
-        </template>
-        <template #footer="props">
-            <APagination
-                :busy="props.busy"
-                :meta="props.meta"
-                :load="props.load"
-            />
-        </template>
-        <template #body="props">
-            <VCTable
-                :data="props.data"
-                :columns="columns"
-                :busy="props.busy"
+        </aside>
+        <!-- `min-w-0`: a flex item defaults to `min-width: auto`, so the
+             table would push the pane off the row instead of scrolling. -->
+        <div class="min-w-0 grow">
+            <AUsers
+                ref="collection"
+                :query="query"
+                :body="{tag: 'div'}"
+                :footer="true"
+                :load-on-setup="!pathScopePending"
+                @deleted="handleDeleted"
             >
-                <template #cell-path="{ row }">
-                    {{ row.path?.path ?? '' }}
-                </template>
-                <template #cell-createdAt="{ row }">
-                    <VCTimeago :datetime="row.createdAt" />
-                </template>
-                <template #cell-updatedAt="{ row }">
-                    <VCTimeago :datetime="row.updatedAt" />
-                </template>
-                <template #cell-options="{ row }">
-                    <VCButton
-                        :as="VCLink"
-                        :to="hasEditPermission ? `/users/${row.id}` : undefined"
-                        :aria-label="translations.details"
-                        :title="translations.details"
-                        size="sm"
-                        color="primary"
-                        variant="outline"
-                        class="me-1"
-                        :disabled="!hasEditPermission"
+                <template #header="props">
+                    <ATitle />
+                    <ASearch
+                        :load="props.load"
+                        :busy="props.busy"
+                    />
+                    <VCAlert
+                        v-if="pathScopeTruncated"
+                        color="warning"
+                        variant="soft"
+                        class="mt-2"
                     >
-                        <template #leading>
-                            <VCIcon name="fa6-solid:bars" />
-                        </template>
-                    </VCButton>
-                    <AEntityDelete
-                        :entity-id="row.id"
-                        entity-type="user"
-                        :with-text="false"
-                        :disabled="!hasDropPermission"
-                        @deleted="props.deleted"
+                        {{ translations.pathScopeTruncated }}
+                    </VCAlert>
+                </template>
+                <template #footer="props">
+                    <APagination
+                        :busy="props.busy"
+                        :meta="props.meta"
+                        :load="props.load"
                     />
                 </template>
-            </VCTable>
-        </template>
-    </AUsers>
+                <template #body="props">
+                    <VCTable
+                        :data="props.data"
+                        :columns="columns"
+                        :busy="props.busy"
+                    >
+                        <template #cell-path="{ row }">
+                            {{ row.path?.path ?? '' }}
+                        </template>
+                        <template #cell-createdAt="{ row }">
+                            <VCTimeago :datetime="row.createdAt" />
+                        </template>
+                        <template #cell-updatedAt="{ row }">
+                            <VCTimeago :datetime="row.updatedAt" />
+                        </template>
+                        <template #cell-options="{ row }">
+                            <VCButton
+                                :as="VCLink"
+                                :to="hasEditPermission ? `/users/${row.id}` : undefined"
+                                :aria-label="translations.details"
+                                :title="translations.details"
+                                size="sm"
+                                color="primary"
+                                variant="outline"
+                                class="me-1"
+                                :disabled="!hasEditPermission"
+                            >
+                                <template #leading>
+                                    <VCIcon name="fa6-solid:bars" />
+                                </template>
+                            </VCButton>
+                            <AEntityDelete
+                                :entity-id="row.id"
+                                entity-type="user"
+                                :with-text="false"
+                                :disabled="!hasDropPermission"
+                                @deleted="props.deleted"
+                            />
+                        </template>
+                    </VCTable>
+                </template>
+            </AUsers>
+        </div>
+    </div>
 </template>

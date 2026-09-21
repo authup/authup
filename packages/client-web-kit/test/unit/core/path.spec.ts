@@ -13,7 +13,7 @@ import {
     startsWith,
 } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import { buildPathScopeCondition } from '../../../src/core';
+import { buildPathScopeCondition, buildPathTreeExpansion } from '../../../src/core';
 
 /** The condition as a row predicate, the way an adapter lowers it. */
 const predicate = (path: string) => compileFilters(
@@ -48,5 +48,26 @@ describe('core/path', () => {
         expect(matches({ path: 'sales/berlin/east' })).toBeTruthy();
         expect(matches({ path: 'sales' })).toBeFalsy();
         expect(matches({ path: 'sales/berlin2' })).toBeFalsy();
+    });
+
+    // The tree pane opens a deep link by key, and the LEAF is part of the
+    // chain: without it a folder that has children arrives selected but
+    // shut, which reads as a leaf.
+    it('should expand every ancestor of a folder and the folder itself', () => {
+        expect(buildPathTreeExpansion('sales/berlin/east')).toEqual([
+            'sales',
+            'sales/berlin',
+            'sales/berlin/east',
+        ]);
+    });
+
+    it('should expand a root folder to itself alone', () => {
+        expect(buildPathTreeExpansion('sales')).toEqual(['sales']);
+    });
+
+    it('should expand nothing without a folder', () => {
+        expect(buildPathTreeExpansion(null)).toEqual([]);
+        expect(buildPathTreeExpansion(undefined)).toEqual([]);
+        expect(buildPathTreeExpansion('')).toEqual([]);
     });
 });

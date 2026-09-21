@@ -10,3 +10,4 @@ export * from './APathPicker';
 export * from './APaths';
 
 export { default as APathForm } from './APathForm.vue';
+export { default as APathTree } from './APathTree.vue';

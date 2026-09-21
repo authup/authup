@@ -46,6 +46,14 @@ export const PATH_SCOPE_PAGE_LIMIT = 10;
  */
 export const PATH_SCOPE_ID_LIMIT = 300;
 
+/**
+ * How many folders the tree pane renders before it reports itself
+ * incomplete. It is the page walk's own ceiling, so the pane is bounded by
+ * the requests it may make and by nothing else: the id budget above is the
+ * `IN` filter's, and the pane builds no filter.
+ */
+export const PATH_TREE_LIMIT = PATH_SCOPE_PAGE_LIMIT * PATH_SCOPE_LIMIT;
+
 /** The filter a folder scope contributes to a collection page's query. */
 export type PathScopeFilters = {
     pathId?: string[]
@@ -59,7 +67,9 @@ export type PathScopePage = {
 
 /**
  * Walk a folder lookup to completion, bounded by {@see PATH_SCOPE_PAGE_LIMIT}
- * pages and {@see PATH_SCOPE_ID_LIMIT} folders.
+ * pages and by `limit` folders ({@see PATH_SCOPE_ID_LIMIT} for a scope that
+ * has to travel as an `IN`, {@see PATH_TREE_LIMIT} for the pane, which
+ * builds no filter and is bounded by the page walk alone).
  *
  * One page cannot answer a subtree: `PATH_SCOPE_LIMIT` is the server's own
  * `maxLimit`, so a realm holding more folders than that would feed a short id
@@ -69,6 +79,7 @@ export type PathScopePage = {
  */
 export async function collectPathPages(
     load: (offset: number) => Promise<PathScopePage>,
+    limit: number = PATH_SCOPE_ID_LIMIT,
 ) : Promise<{ data: Path[], truncated: boolean }> {
     const data : Path[] = [];
 
@@ -84,9 +95,10 @@ export async function collectPathPages(
             };
         }
 
-        // more folders exist AND what is held already fills the id budget, so
-        // the remaining pages would only build a filter that cannot be sent
-        if (data.length >= PATH_SCOPE_ID_LIMIT) {
+        // more folders exist AND what is held already fills the caller's
+        // budget, so the remaining pages would only build a filter that
+        // cannot be sent
+        if (data.length >= limit) {
             return {
                 data,
                 truncated: true,
@@ -165,8 +177,14 @@ export type PathScopeContext = {
 export type PathScope = {
     /** The selected folder's full path, or null while the page is unscoped. */
     path: ComputedRef<string | null>,
-    /** The realm's folders, the options the control offers. */
+    /** The realm's folders, the tree the control renders. */
     options: Ref<Path[]>,
+    /**
+     * True when the realm holds more folders than {@see PATH_TREE_LIMIT}.
+     * The pane then shows a prefix of the tree, so the page has to say that
+     * a folder may be missing rather than let it read as absent.
+     */
+    optionsTruncated: Ref<boolean>,
     /** True while the folder named by `path` is being resolved. */
     pending: Ref<boolean>,
     /**
@@ -270,6 +288,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         null));
     const paths = ref<Path[]>([]);
     const options = ref<Path[]>([]);
+    const optionsTruncated = ref<boolean>(false);
     const pending = ref<boolean>(false);
     const truncated = ref<boolean>(false);
 
@@ -281,21 +300,34 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         const realmId = toValue(context.realmId);
         if (!realmId || !enabled()) {
             options.value = [];
+            optionsTruncated.value = false;
             return;
         }
 
         try {
-            const response = await httpClient.path.getMany(defineQuery<Path>({
-                filters: { realmId },
-                sorts: ['path'],
-                pagination: { limit: PATH_SCOPE_LIMIT },
-            }));
+            // The whole realm, not one page: a tree is read by walking it
+            // down, so a folder missing from the pane is a folder the
+            // visitor cannot reach at all, where a dropdown merely showed
+            // fewer entries.
+            const collected = await collectPathPages(
+                (offset) => httpClient.path.getMany(defineQuery<Path>({
+                    filters: { realmId },
+                    sorts: ['path'],
+                    pagination: {
+                        limit: PATH_SCOPE_LIMIT,
+                        offset,
+                    },
+                })),
+                PATH_TREE_LIMIT,
+            );
 
-            options.value = response.data;
+            options.value = collected.data;
+            optionsTruncated.value = collected.truncated;
         } catch {
             // The control degrades to the unscoped entry. A folder list
             // that could not be read must not take the page down with it.
             options.value = [];
+            optionsTruncated.value = false;
         }
     };
 
@@ -372,6 +404,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
     return {
         path,
         options,
+        optionsTruncated,
         pending,
         truncated,
         filters: computed(() => buildPathScopeFilters(path.value, paths.value, truncated.value)),

@@ -3353,7 +3353,7 @@ a row may see where it is filed: that is what lets the account console render a
 user its own folder through `GET /users/@me?include=path` with no `PATH_READ`,
 and the admin list render the folder column for any reader of the list, which
 is what that ungating was granted for. `GET /paths` stays gated on the `PATH_*`
-read triple, so the console's folder SELECT and the subtree lookup behind it
+read triple, so the console's folder TREE and the subtree lookup behind it
 are what `PATH_READ` gates, never the column.
 
 **Folder lifecycle.** Rename is `POST /paths/:id { name }` and move is
@@ -3432,6 +3432,24 @@ postgres and mysql, since `@rapiq/adapter-sql` lowers an anchored `startsWith`
 to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);
 the declaration makes that filter legal, not fast, and the folder table is small
 enough for that to be the accepted trade.
+
+**The control that picks the folder is a TREE, and it carries a second budget
+of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the
+`@vuecs/tree` helper that turns the realm's flat `path` list into nodes whose
+`id` is the full path, which is what lets a selection travel into `?path=`
+unchanged. Two properties are load-bearing. The pane walks the realm's folders
+to exhaustion rather than reading one page, because a folder missing from a
+tree is a folder that cannot be reached at all, where a dropdown merely offered
+fewer entries; that walk is bounded by the ten pages alone
+(`PATH_TREE_LIMIT`), never by the 300-id budget above, which belongs to the
+`IN` the pane does not build. And the ancestors of the selected folder are
+expanded by the pane itself (`buildPathTreeExpansion`), since a `?path=` link
+names a third-level folder and nothing else, so an unexpanded chain would land
+a visitor on a selection they cannot see. `VCTree` is GENERIC, so it is
+registered globally like `VCTable` rather than in a `components: {}` block, and
+`@vuecs/tree` ships the structural CSS its theme classes set variables for
+(`--vc-tree-gap`, `--vc-tree-row-inset`), which is why the kit theme imports
+`@vuecs/tree/style.css`: without it every level renders at the margin.
 
 ## Policy-Permission Model (n:m)
 

@@ -112,6 +112,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.PATH_SCOPE]: 'Path',
     [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'All paths',
     [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'This folder holds too many subfolders to scope the list, so every row is shown.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'This realm holds too many folders to show them all, so the tree stops short.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'This deletes {{paths}} subfolders and unfiles {{users}} users and {{clients}} clients. No user and no client is deleted. This action cannot be undone.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'The subfolders below this folder are deleted and every user and client filed under them is unfiled. The counts could not be read. This action cannot be undone.',
 

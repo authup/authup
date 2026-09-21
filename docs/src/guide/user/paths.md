@@ -97,21 +97,21 @@ a description), so a reader who may see the row may see where it is filed: the
 folder column in the admin console's user list renders for every reader of that
 list, and the account console shows a user their own folder without granting
 them anything. The folder **collection** is gated: listing the realm's folders
-requires the read permission, which is why the folder dropdown that scopes the
+requires the read permission, which is why the folder tree that scopes the
 users and clients lists is shown only to a reader holding it.
 
 To manage folders in the admin console:
 
 1. Select the target realm.
 2. Open **Paths** in the sidebar and build the tree there.
-3. On the users and clients pages, pick a folder from the folder dropdown
-   above the table to scope the list to that folder and everything below it.
-   (A tree pane replaces the dropdown once the component it needs ships,
-   tada5hi/vuecs#1729.) The search box is independent of that scope: it
-   searches names and display names, and the two narrow the list together. A
-   subtree with more folders than the console can carry in one request is not
-   scoped at all: the page then lists every row and says why, rather than
-   showing a silently shortened list.
+3. On the users and clients pages, pick a folder in the tree beside the table
+   to scope the list to that folder and everything below it. The chosen
+   folder is written into the address, so a scoped list can be shared as a
+   link and survives a reload; **All paths** clears it. The search box is
+   independent of that scope: it searches names and display names, and the
+   two narrow the list together. A subtree with more folders than the console
+   can carry in one request is not scoped at all: the page then lists every
+   row and says why, rather than showing a silently shortened list.
 4. On a user or client form, choose the folder the row belongs to.
 
 ## Federated users

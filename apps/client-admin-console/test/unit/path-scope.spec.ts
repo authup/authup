@@ -13,6 +13,7 @@ import {
     PATH_SCOPE_ID_LIMIT,
     PATH_SCOPE_LIMIT,
     PATH_SCOPE_PAGE_LIMIT,
+    PATH_TREE_LIMIT,
     RELOAD_ATTEMPTS,
     buildPathCollectionFilters,
     buildPathScopeFilters,
@@ -145,6 +146,27 @@ describe('src/composables/path-scope -> collectPathPages', () => {
 
         expect(result.truncated).toBe(false);
         expect(result.data).toHaveLength(PATH_SCOPE_ID_LIMIT);
+    });
+
+    // The pane builds no `IN`, so the id budget is not its ceiling: cutting
+    // the tree at 300 would hide folders a visitor can otherwise reach, where
+    // a short id list would have listed the wrong rows.
+    it('should walk past the id ceiling for the tree pane', async () => {
+        const pages = createPathPages(PATH_SCOPE_ID_LIMIT + 10);
+
+        const result = await collectPathPages(pages.load, PATH_TREE_LIMIT);
+
+        expect(result.truncated).toBe(false);
+        expect(result.data).toHaveLength(PATH_SCOPE_ID_LIMIT + 10);
+    });
+
+    it('should still bound the tree pane by the page ceiling', async () => {
+        const pages = createPathPages(PATH_TREE_LIMIT + 1);
+
+        const result = await collectPathPages(pages.load, PATH_TREE_LIMIT);
+
+        expect(result.truncated).toBe(true);
+        expect(result.data).toHaveLength(PATH_TREE_LIMIT);
     });
 
     it('should stop on an empty page rather than trust the reported total', async () => {

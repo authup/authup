@@ -46,6 +46,15 @@
 @import "@vuecs/design";
 @import "@vuecs/theme-tailwind";
 
+/*
+ * `@vuecs/tree` is the one component package shipping structural CSS of
+ * its own: the per-level indentation reads `--vc-tree-level`, which no
+ * utility class can express, and the theme only supplies the variables it
+ * consumes (`--vc-tree-gap`, `--vc-tree-row-inset`, `--vc-tree-trigger-size`).
+ * Without this import a tree renders flat, with every level at the margin.
+ */
+@import "@vuecs/tree/style.css";
+
 /* ------------------------------------------------------------------
    Kit-component styles
    Authup-owned styles for the components that live in
