@@ -14,7 +14,7 @@ import {
     it,
 } from 'vitest';
 import type { AuthorizationCheckPermissions } from '@authup/access';
-import { RealmScope } from '@authup/access';
+import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
 import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
@@ -39,6 +39,44 @@ function postCheck(
         body: JSON.stringify(body),
         headers: { 'Content-Type': 'application/json', ...headers },
     });
+}
+
+/**
+ * A GLOBAL permission whose only policy is a date window, which is what the
+ * anonymous case needs: `buildAuthorizationCheck` evaluates global definitions
+ * alone, and a date policy reads no identity.
+ *
+ * The unbind is not incidental. `PermissionService.create` binds
+ * `system.default` to every permission it creates, unconditionally, so the API
+ * cannot produce a definition an anonymous caller passes without removing that
+ * binding afterwards. It is the operator path, and it is the only one short of
+ * declaring the permission in a provisioning file.
+ */
+async function createDateBoundPermission(
+    suite: ReturnType<typeof createTestApplication>,
+    window: { start: string, end: string },
+) : Promise<string> {
+    const name = `date_bound_${randomUUID().replace(/-/g, '')}`;
+
+    const { data: permission } = await suite.client.permission.create({ name, realmId: null });
+
+    const { data: bound } = await suite.client.permissionPolicy.getMany({ filters: { permissionId: permission.id } });
+    for (const binding of bound) {
+        await suite.client.permissionPolicy.delete(binding.id);
+    }
+
+    const { data: policy } = await suite.client.policy.create({
+        name: `date_policy_${randomUUID().replace(/-/g, '')}`,
+        type: BuiltInPolicyType.DATE,
+        realmId: null,
+        ...window,
+    });
+    await suite.client.permissionPolicy.create({
+        permissionId: permission.id,
+        policyId: policy.id,
+    });
+
+    return name;
 }
 
 describe('src/http/controllers/workflows/authorization/check', () => {
@@ -78,12 +116,22 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         expect(result.map((item) => item.name)).toEqual([PermissionName.USER_UPDATE]);
     });
 
-    it('refuses an anonymous caller and a refresh token, like every identity route', async () => {
+    it('answers an anonymous caller, who holds no grant and passes nothing identity-bound', async () => {
         const anonymous = await postCheck(suite, {});
-        expect(anonymous.status).toBe(401);
 
+        expect(anonymous.status).toBe(200);
+
+        // every built-in definition is bound to the global `system.default`,
+        // whose identity child settles DATA_MISSING without one
+        const result : AuthorizationCheckPermissions = await anonymous.json();
+        expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
+        expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
+    });
+
+    it('still refuses a refresh token, which the authorization middleware rejects before the route', async () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const refresh = await postCheck(suite, {}, { Authorization: `Bearer ${grant.refresh_token}` });
+
         expect(refresh.status).toBe(401);
     });
 
@@ -195,6 +243,24 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         // `any` is not offered: a caller that wants another realm names it
         const badSelector = await postCheck(suite, { realms: 'any' }, headers);
         expect(badSelector.status).toBe(400);
+    });
+
+    // The payoff of the anonymous case above: a definition restricted by a
+    // DATE window alone needs no identity, so it is answerable to a caller
+    // that has none. Created at runtime, so `assignDefaultPolicy`'s boot-time
+    // `system.default` backfill has not bound it.
+    it('answers an anonymous caller a definition whose only policy needs no identity', async () => {
+        const open = await createDateBoundPermission(suite, { start: '2000-01-01', end: '2999-01-01' });
+        const closed = await createDateBoundPermission(suite, { start: '2000-01-01', end: '2001-01-01' });
+
+        const response = await postCheck(suite, {});
+
+        expect(response.status).toBe(200);
+        const result : AuthorizationCheckPermissions = await response.json();
+        expect(entryOf(result, open)?.realms).toEqual([null]);
+        // the window is evaluated rather than ignored
+        expect(entryOf(result, closed)).toBeUndefined();
+        expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
     });
 
     it('is not cached by an intermediary', async () => {

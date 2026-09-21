@@ -2451,13 +2451,11 @@ rather than trusted until `exp`.
 - **Cookie mode needs no bearer for permission checks.** Of the three
   surfaces that read `accessToken`, only `usePermissionCheck` matters, and
   its evaluator is not token-derived: the store commits the evaluator built
-  from the authorization document it fetches after the introspection
-  (`GET /authorization`, with the staged bearer in bearer mode and with the
-  session cookie in cookie mode). A 404 there, or a 403 for a user holding
-  none of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the
-  three the catalog is gated on, sends it to `POST /authorization/check`
-  instead, and the name-only memory provider is the last rung, for a server
-  serving neither route. The recompute WATCH keys on
+  from the verdicts it fetches after the introspection
+  (`POST /authorization/check`, with the staged bearer in bearer mode and
+  with the session cookie in cookie mode). A 404 there means a server that
+  predates the route, and the name-only memory provider is the fallback. The
+  recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
@@ -3371,18 +3369,31 @@ junction reach is `own`, which excludes the global rows every built-in definitio
 every permission is bound to the global `system.default`, so a grant held at the default
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
-read as authoritative where the refusal is what sends a console to the batch check below. Two rules follow. A resource server
-reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
-`client-permission` row: the document is identity-free, so the end user's bearer is the
-wrong credential for it, and a resource server must fail closed when it has no catalog.
-A console whose signed-in user lacks the family is answered 403 and reads
-`POST /authorization/check` instead (below), which is authoritative where the name-only
-view it replaces is merely coarse. The name-only view survives as the last rung, for a
-server predating both routes. **It is COARSER than either, not equivalent to them**: it
-gates on the entry names alone, ignoring realm reach and junction policies, so a check
-the catalog path denies passes there. It is kept because a console's gating is advisory
-(the server enforces every decision) and it is the gating every console user had before
-the catalog existed. A resource server never takes it. A
+read as authoritative where the refusal is what sends a caller to the batch check below.
+**Who reads which route is decided by the KIND of caller, never by what its actor
+happens to hold.** A resource server reads the catalog with its OWN client credential,
+holding `PERMISSION_READ` through one `client-permission` row: the document is
+identity-free, so the end user's bearer is the wrong credential for it, and a resource
+server must fail closed when it has no catalog. A browser client reads
+`POST /authorization/check` (below) and does not ask for the catalog at all, which is
+what `@authup/client-web-kit`'s store does: it is a public client acting AS the actor,
+so the catalog's gate is structurally unsatisfiable for it, and asking anyway made the
+source depend on whether the signed-in user held the permission family, so one console
+control was gated by local policy trees for an administrator and by server verdicts for
+everyone else. Nothing is lost by the verdicts: every question a console asks is a
+name-only `preEvaluateOneOf`, which they answer at least as precisely, having been
+evaluated against the identity's own realm and the global rows where a realm-less
+pre-gate through the catalog neutral-passes reach. **The store does not consult the
+catalog at all, not even as a fallback.** Both routes shipped in the same release, so no
+deployment serves one without the other, and since the check answers every caller a
+fallback behind it could never be reached — it would be an unreachable second code path
+carrying the whole stale-catalog refetch machinery. The name-only view is the one rung
+below, for a server predating both.
+**It is COARSER than either, not equivalent to them**: it gates on the entry names
+alone, ignoring realm reach and junction policies, so a check the catalog path denies
+passes there. It is kept because a console's gating is advisory (the server enforces
+every decision) and it is the gating every console user had before either route existed.
+A resource server never takes it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
@@ -3458,11 +3469,29 @@ to be gated on. Serving that case by publishing every policy predicate to anyone
 reach the server is the wrong trade, so the route answers VERDICTS instead (#3600). It
 discloses strictly less than the caller form of `POST /permissions/:id/check`, ungated too, discloses
 one name at a time: answers about the caller's own authorization, no definition, no
-policy configuration, and no realm key the caller did not itself supply. Hence
-`ForceLoggedIn` with no permission gate, next to the gated catalog on the same
+policy configuration, and no realm key the caller did not itself supply. Hence no
+permission gate and **no login gate either**, next to the gated catalog on the same
 `:id`-free controller (`POST /permissions/check` would be shadowed by
 `POST /permissions/:id`, and `check` is a legal permission name: the `/roles/schema`
 collision).
+
+**ANONYMOUS is a caller class here, not a hole.** A definition whose policy layer reads
+no identity — a `date` or `time` window, or no policy at all — is one anybody may
+attempt, so "may I" has an answer before anyone signs in and a login gate would only
+withhold it. Everything identity-bound denies by itself:
+`IdentityPermissionBindingPolicyEvaluator` deliberately omits IDENTITY from its
+`requires`, so a missing one is a settled `DATA_MISSING` deny rather than a pending
+permit, and it returns before reaching the grant load, so `grants` is never called for
+an anonymous caller. `resolveRealms` needs no special case either — a realm-less caller
+resolves `own` to nothing and `ownOrNull` to the global rows alone, which is the reach
+`realmScopeMatches` already grants such an identity. A default deployment therefore
+answers an anonymous caller an EMPTY set, because `PermissionService.create` binds the
+global `system.default` to every permission it creates (unconditionally — the
+`permissionsDefaultPolicyAssignment` flag governs only the boot backfill), so reaching
+the anonymous case at all means declaring the permission in a provisioning file with its
+own policies, or unbinding `system.default` from it afterwards. What bounds an
+unauthenticated caller's cost is the body caps plus the rate-limit middleware's
+anonymous bucket, the pair every other anonymous route here rests on.
 
 Body `{ names?, realms? }`, both optional, and an empty body is the point: a caller that
 names nothing asks about every definition, so it never maintains a list in step with its
@@ -3528,45 +3557,38 @@ consumer has to as well), an array needs every member, and anything else denies.
 name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
 a name it does not hold.
 
-The kit reads it at `realms: 'ownOrNull'` when `loadCatalog` answers null, memoized by the
-subject, scope and grants of the introspection it was fetched for (below). One visible
+The kit reads it at `realms: 'ownOrNull'` as its ONLY authorization source, memoized by
+the subject, scope and grants of the introspection it was fetched for (below). One visible
 behaviour change: a bare name is the union of the requested realms, so a
 `realmScope: none` grant stops passing, where a realm-less pre-gate neutral-passes reach
 and lets it enable a control it can never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
 rests on the permission universe being enumerable, and policy names are operator-created
 and unbounded, so a no-subset form there would have no defensible default.
 
-The kit store memoizes ONE catalog per signed-in session: fetched on first use during
-staging and cleared by `cleanup()`, since the gate is per credential (a user without the
-permission family is refused where the next one is not), so a logout and a later login
-fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as null, which sends the store to `POST /authorization/check`, and only a
-server answering 404 there too lands on the name-only view. **That answer has a memo of
-its own, keyed by the introspection's own authorization inputs** rather than by the
-credential: the subject, the token's `scope` and the grant list, compared by value. The
-catalog path recomputes from the grants each introspection reports, so a memo cleared
-only by `cleanup()` would be staler than the path it substitutes for, and a role bound or
-removed mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
+**The kit store reads this route and nothing else**, because it is always a browser
+client acting as the actor and this is the route built for that caller. The answer is
+memoized **keyed by the introspection's own authorization inputs** rather than by the
+credential: the subject, the token's `scope` and the grant list, compared by value. It
+recomputes from the grants each introspection reports, so a memo cleared only by
+`cleanup()` would be stale in a way the answer is not, and a role bound or removed
+mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
 revalidates on every navigation, so that window is the whole document's life). Keyed on
 the inputs, it refetches exactly when they move and asks once when they do not; the
-comparison can only over-refetch, never reuse an answer whose inputs changed. Any other
-fetch failure rejects and clears the memo so the next resolve retries. During
+comparison can only over-refetch, never reuse an answer whose inputs changed. A `404`
+memoizes as null and lands on the name-only view — the route carries no gate a caller
+can fail, so 404 means the server predates it. Any other fetch failure rejects and
+clears the memo so the next resolve retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject
-fails like a failed introspection), refetching the catalog once on a stale error
-(`isAuthorizationCatalogStaleError`, never `instanceof`, since a consumer tree may resolve
-two copies of the package; only the copy just found stale is discarded, compared by
-promise identity, so a concurrent build that stored a fresh one is not thrown away).
-**A build that still fails commits a DENY-ALL evaluator and never rejects**: the
+fails like a failed introspection).
+**A build that fails commits a DENY-ALL evaluator and never rejects**: the
 credential is valid and only the authorization data is not, while a rejection here
 reverts the staged session, revokes its grant and reaches the console guards as a logout.
-That covers a second stale answer, which a routine permission delete or rename makes
-reachable for as long as the junction query cache lives (the grant list rides that 60 s
-cache, the catalog rides none, so the two disagree in the direction "the grants name a
-permission the fresh catalog lacks"), and a catalog the consumer cannot build from at
-all. A failure to FETCH the catalog still rejects, since nothing is known about it, and
-the next resolve retries. The result is committed into ONE stable
+A failure to FETCH still rejects, since nothing is known about the answer, and
+the next resolve retries. `createAuthorizationEvaluator` and
+`isAuthorizationCatalogStaleError` stay exported for a resource server building from the
+catalog; the kit store calls neither. The result is committed into ONE stable
 `StorePermissionEvaluator` (consumers hold on to `store.permissionEvaluator`, so a commit
 swaps what it delegates to). `usePermissionCheck` and the routing guards call
 `preEvaluateOneOf`; a check carrying `realmMatch` settles reach per row, one without keeps
