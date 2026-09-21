@@ -30,6 +30,11 @@ type Preference = {
      * is not written, which is what keeps a seed from echoing straight up.
      */
     known?: string,
+    /**
+     * The value the account refused, so the bootstrap does not retry the
+     * same write on every commit. A change the user makes still goes up.
+     */
+    failed?: string,
     timer?: ReturnType<typeof setTimeout>,
     /**
      * Writes are chained, so two of one preference never race (both would
@@ -74,7 +79,33 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
     // Whose values `known` describes: another subject's are worthless.
     let subject : string | undefined;
 
-    const write = async (preference: Preference, value: string, userId: string) : Promise<void> => {
+    /**
+     * Every timer, write and memo belongs to the subject it was made for.
+     * A subject change (a second tab signing in as someone else on the shared
+     * console session) bumps the generation, so a change the previous user
+     * left in flight can neither be written onto the new account nor block
+     * its seed, and its completion can no longer touch `known`.
+     */
+    let generation = 0;
+
+    const invalidate = () => {
+        generation += 1;
+
+        for (const preference of preferences) {
+            clearTimeout(preference.timer);
+            preference.timer = undefined;
+            preference.known = undefined;
+            preference.failed = undefined;
+            preference.pending = 0;
+        }
+    };
+
+    /**
+     * The no-choice sentinel is not a value the account holds: a preference
+     * moved back to it has its row removed, so the account reports nothing
+     * and every device falls back to its own default.
+     */
+    const write = async (preference: Preference, value: string, userId: string) : Promise<boolean> => {
         try {
             const { data: [existing] } = await ctx.client.userAttribute.getMany({
                 filters: {
@@ -83,7 +114,11 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 },
             });
 
-            if (existing) {
+            if (value === preference.unset) {
+                if (existing) {
+                    await ctx.client.userAttribute.delete(existing.id);
+                }
+            } else if (existing) {
                 await ctx.client.userAttribute.update(existing.id, { value });
             } else {
                 await ctx.client.userAttribute.create({
@@ -93,19 +128,37 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 });
             }
 
-            preference.known = value;
+            return true;
         } catch (e) {
             // eslint-disable-next-line no-console
             console.warn(`[authup] The ${preference.name} preference could not be saved to the account.`, e);
+
+            return false;
         }
     };
 
     const enqueue = (preference: Preference, value: string, userId: string) => {
+        const owner = generation;
+
         preference.pending += 1;
         preference.chain = preference.chain
             .then(() => write(preference, value, userId))
+            .then((stored) => {
+                if (owner !== generation) {
+                    return;
+                }
+
+                if (stored) {
+                    preference.known = value;
+                    preference.failed = undefined;
+                } else {
+                    preference.failed = value;
+                }
+            })
             .finally(() => {
-                preference.pending -= 1;
+                if (owner === generation) {
+                    preference.pending -= 1;
+                }
             });
     };
 
@@ -115,6 +168,15 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 return;
             }
 
+            // The change belongs to whoever is signed in NOW, not to
+            // whoever is signed in when the timer fires.
+            const userId = ctx.userId();
+            if (!userId) {
+                return;
+            }
+
+            const owner = generation;
+
             clearTimeout(preference.timer);
             preference.timer = setTimeout(() => {
                 preference.timer = undefined;
@@ -122,8 +184,11 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 // Whatever the ref holds NOW: a seed that landed inside the
                 // window has already put the account's value back.
                 const current = preference.ref.value;
-                const userId = ctx.userId();
-                if (!userId || current === preference.known) {
+                if (
+                    owner !== generation ||
+                    ctx.userId() !== userId ||
+                    current === preference.known
+                ) {
                     return;
                 }
 
@@ -135,15 +200,14 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
     /**
      * Runs inside the synchronous session commit. The account wins whenever
      * it holds a value; when it holds none, an explicit browser value (never
-     * the no-choice sentinel) becomes the account's initial one, for a user
-     * subject, since a client has no attributes.
+     * the no-choice sentinel, never one the account already refused) becomes
+     * the account's initial one, for a user subject, since a client has no
+     * attributes.
      */
     const seed = (introspection: OAuth2TokenIntrospectionResponse) => {
         if (introspection.sub !== subject) {
             subject = introspection.sub;
-            for (const preference of preferences) {
-                preference.known = undefined;
-            }
+            invalidate();
         }
 
         const userId = introspection.sub_kind === OAuth2SubKind.USER ?
@@ -168,7 +232,8 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 !userId ||
                 !current ||
                 current === preference.unset ||
-                current === preference.known
+                current === preference.known ||
+                current === preference.failed
             ) {
                 continue;
             }
@@ -179,12 +244,7 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
 
     const reset = () => {
         subject = undefined;
-
-        for (const preference of preferences) {
-            clearTimeout(preference.timer);
-            preference.timer = undefined;
-            preference.known = undefined;
-        }
+        invalidate();
     };
 
     return {
