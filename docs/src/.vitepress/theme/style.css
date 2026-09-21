@@ -478,3 +478,22 @@
     --vp-c-divider: initial;
     --vp-c-bg-alt: initial;
 }
+
+/*
+ * `.au-footer` runs full width and paints above the fixed desktop sidebar
+ * (`--vp-z-index-sidebar` is 25 from 960px up; the footer is 26 — see
+ * `.au-footer` above), so at the bottom of a long docs page it covers the
+ * sidebar's lowest ~300px. The sidebar scrolls independently
+ * (`.VPSidebar { overflow-y: auto }`), so give its nav enough bottom
+ * padding that every link — including the last one — can still be
+ * scrolled clear of the footer band, even on a short sidebar that would
+ * not otherwise overflow (the extra padding sits below the fold and is
+ * never seen there). Scoped to >= 960px, where the sidebar is
+ * `position: fixed`; below that it is the mobile drawer, which already
+ * sits above the footer (z-index 60), so it is left untouched.
+ */
+@media (min-width: 960px) {
+    .VPSidebar .nav {
+        padding-bottom: 24rem;
+    }
+}
