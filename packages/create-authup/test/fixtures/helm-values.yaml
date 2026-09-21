@@ -35,9 +35,12 @@ commonAnnotations: {}
 # -- Extra objects to deploy (rendered through tpl; list of manifests or strings)
 extraDeploy: []
 # -- Render Helm hook annotations on the migration Job. Set false only for
-# ArgoCD, which reads its own PreSync annotations instead (it also understands
-# Helm hooks, so true works there too). Flux and plain helm need true: a plain
-# Job's pod template is immutable, so the next upgrade cannot patch it.
+# ArgoCD, which reads its own Sync-phase, sync-wave annotations instead.
+# ArgoCD also understands Helm hooks, but maps pre-upgrade to an unordered
+# PreSync hook: with server.migration.enabled and a built-in database, set
+# false so the Job waits for the database instead of deadlocking the first
+# sync. Flux and plain helm need true: a plain Job's pod template is
+# immutable, so the next upgrade cannot patch it.
 useHelmHooks: true
 diagnosticMode:
   # -- Start every container with a sleep command and disable probes (debugging)
@@ -529,8 +532,8 @@ server:
     # -- Run `migration run` as a pre-upgrade hook Job. Recommended
     # for multi-replica deployments (serializes DDL before pods roll). Fresh
     # installs and non-persistent built-in databases migrate at boot regardless.
-    # Under useHelmHooks=false the Job is a PreSync hook on the first sync too,
-    # so with a built-in database enable it only after that sync
+    # Under useHelmHooks=false the Job runs as an ArgoCD Sync-phase hook ordered
+    # after the built-in database by sync-wave, so it is safe from the first sync
     enabled: false
     # -- Job backoff limit
     backoffLimit: 3
