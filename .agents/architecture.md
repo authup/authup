@@ -3433,6 +3433,19 @@ to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);
 the declaration makes that filter legal, not fast, and the folder table is small
 enough for that to be the accepted trade.
 
+**A page that narrows a collection's BASE query must reload it post flush,
+and the collection has to say whether it took the ask.** The manager reads
+its base query off its own `query` PROP on every load, and a prop is only
+updated when the parent re-renders, so a reload issued from a pre-flush
+watcher composes the query the page held BEFORE the narrowing settled and
+the list comes back unnarrowed. `load` is additionally a silent no-op while
+another load is in flight, which is the ordinary case here (the scope
+settles while the list is still fetching what it mounted with), so the
+manager exposes `busy` next to `load` and `data`: a caller waits for idle
+and then asks once, rather than asking and comparing `data` afterwards,
+which cannot tell its own load from the one already running. Both rules are
+what make `?path=` reach the server at all; the folder scope hit all of it.
+
 **The control that picks the folder is a TREE, and it carries a second budget
 of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the
 `@vuecs/tree` helper that turns the realm's flat `path` list into nodes whose
