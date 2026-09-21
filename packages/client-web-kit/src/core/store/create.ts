@@ -27,6 +27,7 @@ import { extractErrorContext } from '../error';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
 import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator';
+import { createStorePreferenceSync } from './preferences';
 import type {
     RealmMinimal,
     StoreCreateContext,
@@ -253,6 +254,14 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    const preferenceSync = createStorePreferenceSync({
+        client,
+        preferences: context.preferences ?? {},
+        userId: () => user.value?.id,
+    });
+
+    // --------------------------------------------------------------------
+
     // Marks an interactive login()/exchangeAuthorizationCode() in flight —
     // status reads AUTHENTICATING for its whole duration, so consumers never
     // have to interpret the intermediate token/realm/user writes.
@@ -376,6 +385,7 @@ export function createStore(context: StoreCreateContext) {
 
         permissionEvaluator.reset();
         resetCheck();
+        preferenceSync.reset();
 
         validated.value = false;
         resolutionStale.value = false;
@@ -712,6 +722,8 @@ export function createStore(context: StoreCreateContext) {
         if (!user.value || user.value.id !== subject?.id) {
             setUser(subject);
         }
+
+        preferenceSync.seed(ctx.introspection);
 
         if (ctx.authorization) {
             permissionEvaluator.setEvaluator(ctx.authorization);
