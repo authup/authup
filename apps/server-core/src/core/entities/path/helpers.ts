@@ -41,11 +41,62 @@ export function assertPathBounds(path: string) : void {
     }
 }
 
+/** How many times a walk refused by a concurrent walker is re-run. */
+const ENSURE_PATH_ATTEMPTS = 3;
+
+/**
+ * Walk the chain, creating what is missing. Every ancestor it finds is read
+ * through the repository it is given, so under the transaction-bound one each
+ * is held for the walk: an ancestor cannot be renamed between the read that
+ * resolves it and the insert of the child underneath, which would otherwise
+ * store a path the row's own parent chain contradicts.
+ */
+async function walkPath(
+    repository: IPathRepository,
+    realmId: string,
+    path: string,
+) : Promise<Path> {
+    let parent: Path | null = null;
+    let current = '';
+
+    for (const segment of splitPath(path)) {
+        current = joinPath(current, segment);
+
+
+        let entity = await repository.findOneBy({
+            realmId,
+            path: current,
+        });
+
+        if (!entity) {
+            const draft = repository.create({
+                name: segment,
+                path: current,
+                parentId: parent ? parent.id : null,
+                realmId,
+                displayName: null,
+                description: null,
+            });
+
+
+            entity = await repository.save(draft);
+        }
+
+        parent = entity;
+    }
+
+    return parent as Path;
+}
+
 /**
  * Creates every missing folder of `input` in `realmId` (mkdir -p) and answers
- * the leaf. A concurrent caller may win the (realmId, path) unique key for a
- * segment; the adapter reports that as EntityConflictError, and the chain
- * continues on the row that won.
+ * the leaf.
+ *
+ * Two walkers can reach the same missing segment, and the loser's insert is
+ * refused by the (realmId, path) unique key. That refusal cannot be recovered
+ * from where it is raised: postgres aborts the whole transaction on a failed
+ * statement, so a re-read inside it would fail too. The rolled-back walk is
+ * re-run instead, and the second pass reads the row the winner committed.
  */
 export async function ensurePath(
     repository: IPathRepository,
@@ -70,47 +121,21 @@ export async function ensurePath(
 
     assertPathBounds(path);
 
-    let parent: Path | null = null;
-    let current = '';
+    let lastError: unknown;
 
-    for (const segment of splitPath(path)) {
-        current = joinPath(current, segment);
-
-        let entity = await repository.findOneBy({
-            realmId,
-            path: current,
-        });
-
-        if (!entity) {
-            const draft = repository.create({
-                name: segment,
-                path: current,
-                parentId: parent ? parent.id : null,
-                realmId,
-                displayName: null,
-                description: null,
-            });
-
-            try {
-                entity = await repository.save(draft);
-            } catch (e) {
-                if (!isEntityConflictError(e)) {
-                    throw e;
-                }
-
-                entity = await repository.findOneBy({
-                    realmId,
-                    path: current,
-                });
-
-                if (!entity) {
-                    throw e;
-                }
+    for (let attempt = 1; attempt <= ENSURE_PATH_ATTEMPTS; attempt++) {
+        try {
+            return await repository.transaction(
+                (bound) => walkPath(bound, realmId, path),
+            );
+        } catch (e) {
+            if (!isEntityConflictError(e)) {
+                throw e;
             }
-        }
 
-        parent = entity;
+            lastError = e;
+        }
     }
 
-    return parent as Path;
+    throw lastError;
 }

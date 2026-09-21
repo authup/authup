@@ -3364,7 +3364,18 @@ transaction, whose reads take a row lock (`lockRows`, the
 `UserRepositoryAdapter` precedent): two renames at different depths of one chain
 read different rows, so the transaction's own re-read cannot see the other and
 the unique key catches nothing, since `marketing` and `sales/munich` collide on
-no constraint. The users and clients filed there follow by id with no write at
+no constraint. Those two take the rows in OPPOSITE orders, so the server breaks
+the cycle by aborting one side, and the adapter retries a transaction it aborted
+for a transient lock conflict (`isTransientLockDatabaseError`): the aborted
+transaction wrote nothing and the callback derives every write from its own
+locked reads, so re-running it is the whole recovery. Unretried, a parent rename
+raced against its child's answered an unmapped 500 nine times in twenty-four.
+**A create takes the same lock on its resolved parent and derives the new path
+from THAT read**, never from the unlocked resolve the gates ran on: an ancestor
+rename committing in between would otherwise store a path the row's own parent
+chain contradicts, and since nothing recomputes a stored path later the row
+stays out of the subtree prefix under both names (measured at 13 desyncs in 15
+rounds). The users and clients filed there follow by id with no write at
 all. Empty folders are legal. Delete is never refused on occupancy: the
 `CASCADE` on `parentId` removes the subtree and the `SET NULL` on `pathId`
 unfiles every occupant in the same statement, and the console reads the subtree
@@ -3385,10 +3396,15 @@ counts: it re-applies on every login, like every other mapped attribute, so it
 overwrites a manual refile; it supplies a folder UUID, since nothing resolves a
 path string there; and it is checked against the user's realm in `saveUser`,
 because that write never passes through `UserService.save` and a foreign folder
-would travel on every ungated `include=path` of that realm. Two concurrent
-first logins race on the `(realmId, path)` unique index, which is caught the way
-the account-link path catches its own (`isUniqueConstraintDatabaseError`,
-re-read, continue).
+would travel on every ungated `include=path` of that realm. The walk itself
+runs in the repository transaction, so every ancestor it resolves is held for
+it and none can be renamed between that read and the insert of the child under
+it, the same desync a create is locked against. Two concurrent first logins
+still race on the `(realmId, path)` unique index for a segment neither has
+created yet, and that refusal is recovered OUTSIDE the transaction rather than
+inside it: postgres aborts the whole transaction on a failed statement, so a
+re-read there would fail too. The rolled-back walk is simply re-run, and the
+second pass reads the row the winner committed.
 
 **Provisioning** gives a realm entry `paths`, declared by full `path` plus
 `displayName` / `description` and the usual `strategy` (so a parent needs no

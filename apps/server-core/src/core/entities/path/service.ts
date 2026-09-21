@@ -170,8 +170,34 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         await this.repository.checkUniqueness(validated);
 
-        const entity = this.repository.create(validated);
-        return this.repository.save(entity);
+        // The parent is resolved AGAIN inside the transaction, under a row
+        // lock, and the path is recomputed from what that read returns. The
+        // resolve above cannot be the one the write trusts: a rename of an
+        // ANCESTOR commits between it and this insert, and the row would be
+        // written with a path its own parent chain contradicts. Nothing
+        // recomputes a stored path later, so that desync is permanent, and
+        // the subtree prefix then finds the row under neither name.
+        //
+        // The gates and checkUniqueness stay outside for the pool reason the
+        // update path documents (#3526); as there, the policy sees the path
+        // resolved above rather than the one finally written.
+        return this.repository.transaction(async (repository) => {
+            const parentLocked = await this.resolveParent(
+                repository,
+                validated.parentId ?? null,
+                validated.realmId,
+            );
+
+            const path = buildPathForParent(parentLocked, validated.name);
+            assertPathBounds(path);
+
+            const entity = repository.create({
+                ...validated,
+                path,
+            });
+
+            return repository.save(entity);
+        });
     }
 
     async update(
