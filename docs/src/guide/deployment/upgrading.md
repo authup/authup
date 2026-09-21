@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.64)
+## Next release (after v1.0.0-beta.65)
 
 ### Only a token without a client may authorize an application
 
@@ -179,6 +179,8 @@ rebuild it against the current contract. A split deployment needs no new proxy r
 `/device` and `/device_authorization` sit outside `/console` and land on the
 API set, and `/console/auth/device` follows the console rule (see
 [Console Replicas](./console-replicas.md#routing)).
+
+## v1.0.0-beta.65 (was: next release after v1.0.0-beta.64)
 
 ### Identity-provider secrets are encrypted at rest
 
