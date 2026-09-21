@@ -4955,7 +4955,20 @@ metadata) and is the only machine-readable way an RP learns the parameter
 exists at all. That enum is why `readUIColorModeHint` narrows against
 `@authup/specs` rather than local literals: the document ADVERTISES the set,
 so a second spelling would let the pages and the document disagree about what
-the deployment accepts. `buildAuthorizeURL` takes `uiLocales` / `uiColorMode`.
+the deployment accepts.
+
+**`buildAuthorizeURL` DEFAULTS both from the two cookies** (`LOCALE_COOKIE` /
+`COLOR_MODE_COOKIE` in the kit's `core/cookie.ts`, which is now where both
+names and both no-choice sentinels are spelled), so a kit consumer sends them
+without wiring anything and one that forgot could not silently drop the
+visitor into the IdP's browser default. The sentinels are skipped, since
+`auto` and `system` resolve from the same browser on both sides; `uiLocales` /
+`uiColorMode` override, and `''` opts out, the `prompt` convention in the same
+function. Read from the COOKIE rather than from `@vuecs/locale`'s manager
+because this is a plain function a router guard calls, with no component
+instance to inject from — and deliberately not held in the kit's auth store,
+which is session state, and would make a second source of truth for a value
+vuecs owns (structure.md → *Locale ownership*).
 
 **They SEED, and only while the visitor has chosen nothing here.**
 `readUILocalesHint` / `readUIColorModeHint` (auth console service) are applied

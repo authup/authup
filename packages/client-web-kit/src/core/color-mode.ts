@@ -8,9 +8,7 @@
 import type { ColorMode } from '@vuecs/design';
 import { bindColorMode, isColorMode } from '@vuecs/design';
 import { computed } from 'vue';
-import { createCookieRef } from './cookie';
-
-const COOKIE_NAME = 'vc-color-mode';
+import { COLOR_MODE_COOKIE, COLOR_MODE_UNSET, createCookieRef } from './cookie';
 
 /**
  * Non-Nuxt counterpart of `@vuecs/nuxt`'s `useColorMode()`: the shared
@@ -23,7 +21,7 @@ const COOKIE_NAME = 'vc-color-mode';
  * with the markup and nothing flashes before it takes over.
  */
 export function createColorMode(initial?: string) {
-    const source = createCookieRef(COOKIE_NAME, initial, 'system');
+    const source = createCookieRef(COLOR_MODE_COOKIE, initial, COLOR_MODE_UNSET);
     const mode = computed<ColorMode>({
         get: () => (isColorMode(source.value) ? source.value : 'system'),
         set(value) {

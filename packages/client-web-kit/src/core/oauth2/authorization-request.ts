@@ -7,6 +7,13 @@
 
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import type { OAuth2UIColorMode } from '@authup/specs';
+import {
+    COLOR_MODE_COOKIE,
+    COLOR_MODE_UNSET,
+    LOCALE_COOKIE,
+    LOCALE_UNSET,
+    readPreferenceCookie,
+} from '../cookie';
 
 const STORAGE_KEY = 'authup.authorization-request';
 
@@ -83,19 +90,22 @@ export type BuildAuthorizeURLContext = {
     maxAge?: number,
     loginHint?: string,
     /**
-     * OIDC `ui_locales`: space-delimited BCP47 tags, most preferred first.
-     * Pass the language this app is rendering in and the hosted pages open in
-     * it, instead of resetting to the browser's. A choice the visitor made on
-     * the IdP origin itself still wins.
+     * OIDC `ui_locales`: space-delimited BCP47 tags, most preferred first, so
+     * the hosted pages open in the language this app is rendering in instead
+     * of resetting to the browser's. A choice the visitor made on the IdP
+     * origin itself still wins there.
+     *
+     * Defaults to the `vc-locale` cookie this app's own locale manager
+     * writes, so a consumer gets the behaviour without wiring anything. Pass
+     * `''` to opt out, the `prompt` convention above.
      */
     uiLocales?: string,
     /**
-     * authup's `ui_color_mode`: opens the hosted pages in the mode this app
-     * renders in. Same rule as `uiLocales`, and a mode the visitor toggled on
-     * the IdP origin still wins. Advertised per realm as
-     * `ui_color_modes_supported`.
+     * authup's `ui_color_mode`, and everything `uiLocales` says applies:
+     * defaults to the `vc-color-mode` cookie, `''` opts out. Advertised per
+     * realm as `ui_color_modes_supported`.
      */
-    uiColorMode?: `${OAuth2UIColorMode}`
+    uiColorMode?: `${OAuth2UIColorMode}` | ''
 };
 
 export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
@@ -123,11 +133,21 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     if (ctx.loginHint) {
         params.set('login_hint', ctx.loginHint);
     }
-    if (ctx.uiLocales) {
-        params.set('ui_locales', ctx.uiLocales);
+    // Defaulted from the two preference cookies rather than left to the
+    // caller: the values are already in this document, every caller would
+    // have to re-derive the same pair, and one that forgot would silently
+    // drop the visitor into the IdP's browser default with nothing to point
+    // at. Read from the cookie rather than from `@vuecs/locale` because this
+    // is a plain function a router guard calls, where there is no component
+    // instance to inject a manager from.
+    const uiLocales = ctx.uiLocales ?? readPreferenceCookie(LOCALE_COOKIE, LOCALE_UNSET);
+    if (uiLocales) {
+        params.set('ui_locales', uiLocales);
     }
-    if (ctx.uiColorMode) {
-        params.set('ui_color_mode', ctx.uiColorMode);
+
+    const uiColorMode = ctx.uiColorMode ?? readPreferenceCookie(COLOR_MODE_COOKIE, COLOR_MODE_UNSET);
+    if (uiColorMode) {
+        params.set('ui_color_mode', uiColorMode);
     }
 
     return `${base}/authorize?${params.toString()}`;
