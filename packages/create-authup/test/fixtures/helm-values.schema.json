@@ -4712,7 +4712,7 @@
             },
             "enabled": {
               "default": false,
-              "description": "Run `migration run` as a pre-upgrade hook Job. Recommended\nfor multi-replica deployments (serializes DDL before pods roll). Fresh\ninstalls and non-persistent built-in databases migrate at boot regardless.\nUnder useHelmHooks=false the Job is a PreSync hook on the first sync too,\nso with a built-in database enable it only after that sync",
+              "description": "Run `migration run` as a pre-upgrade hook Job. Recommended\nfor multi-replica deployments (serializes DDL before pods roll). Fresh\ninstalls and non-persistent built-in databases migrate at boot regardless.\nUnder useHelmHooks=false the Job runs as an ArgoCD Sync-phase hook ordered\nafter the built-in database by sync-wave, so it is safe from the first sync",
               "required": [],
               "title": "enabled",
               "type": "boolean"
@@ -5594,7 +5594,7 @@
     },
     "useHelmHooks": {
       "default": true,
-      "description": "Render Helm hook annotations on the migration Job. Set false only for\nArgoCD, which reads its own PreSync annotations instead (it also understands\nHelm hooks, so true works there too). Flux and plain helm need true: a plain\nJob's pod template is immutable, so the next upgrade cannot patch it.",
+      "description": "Render Helm hook annotations on the migration Job. Set false only for\nArgoCD, which reads its own Sync-phase, sync-wave annotations instead.\nArgoCD also understands Helm hooks, but maps pre-upgrade to an unordered\nPreSync hook: with server.migration.enabled and a built-in database, set\nfalse so the Job waits for the database instead of deadlocking the first\nsync. Flux and plain helm need true: a plain Job's pod template is\nimmutable, so the next upgrade cannot patch it.",
       "required": [],
       "title": "useHelmHooks",
       "type": "boolean"

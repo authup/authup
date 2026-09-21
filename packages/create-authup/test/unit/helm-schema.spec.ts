@@ -13,11 +13,11 @@ import { renderHelm } from '../../src/targets/helm.ts';
 import type { Answers } from '../../src/types.ts';
 
 // The offline guard against chart drift: test/fixtures/helm-values.schema.json and helm-values.yaml are the chart's own
-// values.schema.json and default values.yaml, vendored from authup/helm (branch feat/beta64-topology, PR #29, commit
-// 97be077, 2026-09-05), and every values.yaml
-// the wizard writes must validate against it. What it cannot cover is the chart's validations.yaml (cross-field rules
-// such as the origin-root requirement of a console split); a CI job rendering this matrix with `helm template` against
-// the live chart, and refreshing the fixture from it, is the follow-up.
+// values.schema.json and default values.yaml, vendored from the released chart at https://helm.authup.org (chart 0.4.1,
+// appVersion 1.0.0-beta.65, 2026-09-21), and every values.yaml the wizard writes must validate against them. Holding
+// the snapshot to the live chart is `npm run test:artifacts` (scripts/verify-emitted.mjs, its own workflow), which
+// fails with the `cp` line that refreshes both files once a chart release moves either one. What neither covers is the
+// chart's validations.yaml (cross-field rules such as the origin-root requirement of a console split).
 const schema = JSON.parse(readFileSync(new URL('../fixtures/helm-values.schema.json', import.meta.url), 'utf8'));
 // helm validates the MERGED values (the chart's values.yaml under the operator's file), and the schema declares every
 // default key as required, so a partial values.yaml is merged onto the vendored defaults first, exactly as helm does.
