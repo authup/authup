@@ -290,8 +290,15 @@ same forward-compatibility rule `prompt` follows; a malformed `ui_locales` list
 is an `invalid_request`, like a malformed `max_age`.
 
 They ride the authorization request, so they survive a round-trip through an
-external identity provider. With `@authup/client-web-kit`, pass `uiLocales` and
-`uiColorMode` to `buildAuthorizeURL`.
+external identity provider.
+
+**An application built on `@authup/client-web-kit` sends both already.**
+`buildAuthorizeURL` reads the `vc-locale` and `vc-color-mode` cookies its own
+locale manager and color mode write, so there is nothing to wire: what the
+visitor picked in your application is what the hosted pages open in. It sends
+nothing while they have picked nothing, since `auto` and `system` resolve to
+the same browser on both sides. Pass `uiLocales` / `uiColorMode` to override
+either, or `''` to opt out.
 
 ::: tip Cookies, not claims
 The two preferences live in the `vc-locale` and `vc-color-mode` cookies, which

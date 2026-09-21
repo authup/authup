@@ -6,6 +6,8 @@
  */
 
 import {
+    LOCALE_COOKIE,
+    LOCALE_UNSET,
     buildVuecsInstallOptions,
     createCookieRef,
     injectStore,
@@ -143,7 +145,7 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // the cookie into `payload.config.locale`; `installLocale` resolves
     // `auto` against the browser language and bridges the resolved value
     // into vuecs's `Config['locale']` (timeago & friends).
-    const localeSource = createCookieRef('vc-locale', payload?.config?.locale, 'auto');
+    const localeSource = createCookieRef(LOCALE_COOKIE, payload?.config?.locale, LOCALE_UNSET);
     const localeHandles = installLocale(app, {
         source: localeSource,
         navigatorLanguage: ref(typeof navigator !== 'undefined' ? navigator.language : undefined),

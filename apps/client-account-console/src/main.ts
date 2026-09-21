@@ -6,6 +6,8 @@
  */
 
 import {
+    LOCALE_COOKIE,
+    LOCALE_UNSET,
     StoreAuthStatus,
     buildVuecsInstallOptions,
     clearAuthorizationRequest,
@@ -218,7 +220,7 @@ provideAccountConsoleConfig(config, app);
 
 // Locale persistence via @vuecs/locale: the `vc-locale` cookie (shared with
 // the auth pages on the IdP origin) backs the locale source.
-const localeSource = createCookieRef('vc-locale', undefined, 'auto');
+const localeSource = createCookieRef(LOCALE_COOKIE, undefined, LOCALE_UNSET);
 const localeHandles = installLocale(app, {
     source: localeSource,
     navigatorLanguage: ref(typeof navigator !== 'undefined' ? navigator.language : undefined),
