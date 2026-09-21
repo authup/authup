@@ -291,62 +291,6 @@
     }
 
     /*
-     * The hero's own motif: a small "keyhole" glyph built from the two shapes
-     * in the Authup mark itself (apps/client-admin-console/src/components/svg/Logo.svg
-     * — a circle over a tapered body), repeated as a quiet rhythm rather than
-     * reproduced as an image. Pure CSS: a circle pseudo-element over a
-     * clip-path pseudo-element, colored with `currentColor`.
-     */
-    .au-keyhole {
-        @apply relative inline-block h-[1.5rem] w-[0.85rem];
-    }
-
-    .au-keyhole::before,
-    .au-keyhole::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        translate: -50% 0;
-        background: currentColor;
-    }
-
-    .au-keyhole::before {
-        top: 0;
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 50%;
-    }
-
-    .au-keyhole::after {
-        bottom: 0;
-        width: 0.46rem;
-        height: 0.8rem;
-        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    }
-
-    .au-keyhole-pulse {
-        animation: au-keyhole-pulse 3.4s ease-in-out infinite;
-        animation-delay: var(--au-keyhole-delay, 0s);
-    }
-
-    @keyframes au-keyhole-pulse {
-        0%,
-        100% {
-            opacity: var(--au-keyhole-opacity, 1);
-        }
-
-        50% {
-            opacity: calc(var(--au-keyhole-opacity, 1) * 0.4);
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .au-keyhole-pulse {
-            animation: none;
-        }
-    }
-
-    /*
      * Site-wide footer: fixed-dark surface, full width on every page — it
      * does not dodge the fixed sidebar with left padding (that shortened the
      * dark band on a docs page); instead it paints above the sidebar's own

@@ -27,19 +27,6 @@
                         View on GitHub
                     </a>
                 </div>
-
-                <div
-                    class="mt-12 flex items-end gap-3 md:gap-4"
-                    aria-hidden="true"
-                >
-                    <span
-                        v-for="(glyph, index) in keyholes"
-                        :key="index"
-                        class="au-keyhole au-keyhole-pulse"
-                        :class="glyph.colorClass"
-                        :style="{ '--au-keyhole-opacity': glyph.opacity, '--au-keyhole-delay': glyph.delay }"
-                    />
-                </div>
             </div>
 
             <div>
@@ -107,25 +94,6 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 
-// The hero's motif: a quiet row of "keyhole" glyphs (see the shape rules for
-// `.au-keyhole` in style.css), echoing the circle-over-body mark in the
-// Authup logo instead of a stock illustration. Mostly the muted primary
-// tone, with two accent glyphs standing out — a rhythm, not a chart.
-const KEYHOLES = [
-    { colorClass: 'text-night-accent-1', opacity: 0.35, delay: '0s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.55, delay: '-0.6s' },
-    { colorClass: 'text-night-accent-3', opacity: 0.5, delay: '-1.2s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.8, delay: '-0.3s' },
-    { colorClass: 'text-night-accent-2', opacity: 1, delay: '-1.8s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.8, delay: '-0.9s' },
-    { colorClass: 'text-night-accent-3', opacity: 0.5, delay: '-1.5s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.55, delay: '-0.2s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.35, delay: '-1s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.5, delay: '-0.7s' },
-    { colorClass: 'text-night-accent-3', opacity: 0.4, delay: '-1.4s' },
-    { colorClass: 'text-night-accent-1', opacity: 0.3, delay: '-0.4s' },
-];
-
 // Quick Start, verbatim from the repo README (`npx authup@latest start`):
 // needs no configuration, falls back to SQLite for trying things out and
 // local development — not production — and serves the API and both consoles.
@@ -164,7 +132,6 @@ export default defineComponent({
         }
 
         return {
-            keyholes: KEYHOLES,
             primaryButtonClass: PRIMARY_BUTTON_CLASS,
             secondaryButtonClass: SECONDARY_BUTTON_CLASS,
             command: COMMAND,
