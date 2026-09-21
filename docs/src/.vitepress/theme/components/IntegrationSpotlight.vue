@@ -1,47 +1,48 @@
 <template>
-    <section class="au-section au-section--alt">
-        <div class="au-section-inner au-spotlight">
-            <div class="au-spotlight__copy">
-                <span class="au-spotlight__eyebrow">Flagship deployment</span>
-                <h2 class="au-spotlight__title">
+    <section class="au-section au-section--alt vp-raw">
+        <div class="au-section-inner grid grid-cols-1 items-center gap-10 vp:grid-cols-[1fr_1.1fr] vp:gap-14">
+            <div>
+                <span class="au-eyebrow">Flagship deployment</span>
+                <h2 class="mb-4 text-[clamp(1.6rem,3vw,2.1rem)] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--au-color-text)]">
                     One docker-compose.yml, full stack ready
                 </h2>
-                <p class="au-spotlight__lede">
+                <p class="mb-5 text-[1.02rem] leading-[1.6] text-[var(--au-color-text-muted)]">
                     The reference deployment wires the server, the consent UI, PostgreSQL and Redis into a single
                     compose file. Bring it up locally, point a reverse proxy at it in production.
                 </p>
-                <ul class="au-spotlight__bullets">
-                    <li>
+                <ul class="mb-6 flex list-none flex-col gap-[0.6rem]">
+                    <li class="flex items-start gap-2 text-[0.95rem] leading-[1.5] text-[var(--au-color-text)]">
                         <span
-                            class="au-spotlight__bullet"
+                            class="shrink-0 font-bold text-[var(--au-color-primary)]"
                             aria-hidden="true"
                         >✓</span>
                         One Authup container serves the API, the login pages and both consoles
                     </li>
-                    <li>
+                    <li class="flex items-start gap-2 text-[0.95rem] leading-[1.5] text-[var(--au-color-text)]">
                         <span
-                            class="au-spotlight__bullet"
+                            class="shrink-0 font-bold text-[var(--au-color-primary)]"
                             aria-hidden="true"
                         >✓</span>
                         PostgreSQL or MySQL persisted in a named volume, Redis for session caching
                     </li>
-                    <li>
+                    <li class="flex items-start gap-2 text-[0.95rem] leading-[1.5] text-[var(--au-color-text)]">
                         <span
-                            class="au-spotlight__bullet"
+                            class="shrink-0 font-bold text-[var(--au-color-primary)]"
                             aria-hidden="true"
                         >✓</span>
-                        Configured via environment variables, a mounted <code>authup.yml</code> file, or both
+                        Configured via environment variables, a mounted <code class="rounded-[4px] border border-[var(--au-color-divider)] bg-[var(--au-color-bg)] px-[0.4em] py-[0.15em] font-[var(--vp-font-family-mono,ui-monospace,monospace)] text-[0.85em] whitespace-nowrap text-[var(--au-color-text)]">authup.yml</code> file, or
+                        both
                     </li>
                 </ul>
                 <a
-                    class="au-spotlight__cta"
+                    class="inline-block font-semibold text-[var(--au-color-primary)] no-underline transition-transform duration-[120ms] ease-out hover:translate-x-[3px]"
                     href="/guide/deployment/docker-compose"
                 >
-                    Read the Docker Compose guide →
+                    Read the Docker Compose guide<span aria-hidden="true"> →</span>
                 </a>
             </div>
 
-            <div class="au-spotlight__code">
+            <div>
                 <div class="au-card-window">
                     <div class="au-card-window__chrome">
                         <span class="au-dot au-dot--r" />
@@ -49,7 +50,7 @@
                         <span class="au-dot au-dot--g" />
                         <span class="au-card-window__title">docker-compose.yml</span>
                     </div>
-                    <pre class="au-spotlight__pre"><code>{{ snippet }}</code></pre>
+                    <pre class="m-0 max-h-[28rem] overflow-x-auto bg-[var(--au-color-bg-alt)] px-6 py-5"><code class="whitespace-pre font-[var(--vp-font-family-mono,ui-monospace,SFMono-Regular,Menlo,monospace)] text-[0.82rem] leading-[1.6] text-[var(--au-color-text)]">{{ snippet }}</code></pre>
                 </div>
             </div>
         </div>
@@ -98,109 +99,3 @@ volumes:
     },
 });
 </script>
-
-<style scoped>
-.au-spotlight {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-    align-items: center;
-}
-
-@media (min-width: 960px) {
-    .au-spotlight {
-        grid-template-columns: 1fr 1.1fr;
-        gap: 3.5rem;
-    }
-}
-
-.au-spotlight__eyebrow {
-    display: inline-block;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--au-color-primary);
-    margin-bottom: 0.75rem;
-}
-
-.au-spotlight__title {
-    font-size: clamp(1.6rem, 3vw, 2.1rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 1rem;
-    color: var(--au-color-text);
-    line-height: 1.2;
-}
-
-.au-spotlight__lede {
-    margin: 0 0 1.25rem;
-    color: var(--au-color-text-muted);
-    font-size: 1.02rem;
-    line-height: 1.6;
-}
-
-.au-spotlight__bullets {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
-.au-spotlight__bullets li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    color: var(--au-color-text);
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.au-spotlight__bullets code {
-    font-family: var(--vp-font-family-mono, ui-monospace, monospace);
-    font-size: 0.85em;
-    padding: 0.15em 0.4em;
-    background: var(--au-color-bg);
-    border-radius: 4px;
-    border: 1px solid var(--au-color-divider);
-    color: var(--au-color-text);
-    white-space: nowrap;
-}
-
-.au-spotlight__bullet {
-    color: var(--au-color-primary);
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.au-spotlight__cta {
-    display: inline-block;
-    color: var(--au-color-primary);
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform var(--au-transition);
-}
-
-.au-spotlight__cta:hover {
-    transform: translateX(3px);
-    text-decoration: none;
-}
-
-.au-spotlight__pre {
-    margin: 0;
-    padding: 1.25rem 1.5rem;
-    overflow-x: auto;
-    max-height: 28rem;
-    background: var(--au-color-bg-alt);
-}
-
-.au-spotlight__pre code {
-    font-family: var(--vp-font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-    font-size: 0.82rem;
-    line-height: 1.6;
-    color: var(--au-color-text);
-    white-space: pre;
-}
-</style>

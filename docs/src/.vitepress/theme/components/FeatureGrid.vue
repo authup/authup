@@ -1,21 +1,33 @@
 <template>
-    <section class="au-features au-section">
-        <header class="au-features__header">
-            <h2 class="au-features__title">What you get</h2>
-            <p class="au-features__subtitle">
+    <section class="au-features au-section vp-raw">
+        <header class="mb-10 text-center">
+            <span class="au-eyebrow">Features</span>
+            <h2 class="au-heading">
+                What you get
+            </h2>
+            <p class="au-lede">
                 A complete identity and access toolkit you can deploy as a service or embed as libraries.
             </p>
         </header>
 
-        <div class="au-features__grid">
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 vp:grid-cols-3">
             <article
                 v-for="feature in features"
                 :key="feature.title"
-                class="au-feature"
+                class="au-card au-card-interactive"
             >
-                <div class="au-feature__icon" aria-hidden="true">{{ feature.icon }}</div>
-                <h3 class="au-feature__title">{{ feature.title }}</h3>
-                <p class="au-feature__detail">{{ feature.detail }}</p>
+                <div
+                    class="mb-3 text-[1.75rem] leading-none"
+                    aria-hidden="true"
+                >
+                    {{ feature.icon }}
+                </div>
+                <h3 class="mb-2 text-[1.1rem] font-bold text-[var(--au-color-text)]">
+                    {{ feature.title }}
+                </h3>
+                <p class="text-[0.94rem] leading-[1.55] text-[var(--au-color-text-muted)]">
+                    {{ feature.detail }}
+                </p>
             </article>
         </div>
     </section>
@@ -70,76 +82,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style scoped>
-.au-features__header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-}
-
-.au-features__title {
-    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 0.5rem;
-    color: var(--au-color-text);
-}
-
-.au-features__subtitle {
-    margin: 0;
-    color: var(--au-color-text-muted);
-    font-size: 1.05rem;
-}
-
-.au-features__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-}
-
-@media (min-width: 768px) {
-    .au-features__grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 960px) {
-    .au-features__grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.au-feature {
-    padding: 1.5rem;
-    background: var(--au-color-bg);
-    border: 1px solid var(--au-color-divider);
-    border-radius: var(--au-radius);
-    transition: transform var(--au-transition), border-color var(--au-transition), box-shadow var(--au-transition);
-}
-
-.au-feature:hover {
-    transform: translateY(-2px);
-    border-color: var(--au-color-primary);
-    box-shadow: var(--au-shadow-card);
-}
-
-.au-feature__icon {
-    font-size: 1.75rem;
-    margin-bottom: 0.75rem;
-    line-height: 1;
-}
-
-.au-feature__title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem;
-    color: var(--au-color-text);
-}
-
-.au-feature__detail {
-    margin: 0;
-    color: var(--au-color-text-muted);
-    font-size: 0.94rem;
-    line-height: 1.55;
-}
-</style>

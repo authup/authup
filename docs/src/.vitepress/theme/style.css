@@ -1,43 +1,425 @@
-/* Design tokens — bind marketing components to VitePress's CSS vars so light/dark mode and brand changes propagate. */
+/*
+ * Tailwind v4 entry.
+ *
+ * VitePress ships its base and doc styles unlayered, so they would win over
+ * every Tailwind utility. The marketing components therefore render inside a
+ * `.vp-raw` wrapper, which `postcssIsolateStyles()` (see config.mjs) excludes
+ * from those styles.
+ */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss" source(none);
+
+/* VitePress toggles `.dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind only generates classes it can see; the marketing components are
+ * the only directory that uses utilities. Unlike some sibling VitePress
+ * sites, `components/` here lives inside `theme/`, next to this file. */
+@source "./components";
+
+@theme inline {
+    --font-sans: var(--vp-font-family-base);
+
+    /* Fixed-dark surfaces that ignore the color mode: the hero and footer. */
+    --color-night: var(--au-dark-bg);
+    --color-night-fg: var(--au-dark-fg);
+    --color-night-fg-muted: var(--au-dark-fg-muted);
+    --color-night-border: var(--au-dark-border);
+
+    /* Accent tones lightened for legibility on the fixed-dark surfaces above,
+     * derived from the existing --au-color-accent-* tokens (see below). */
+    --color-night-accent-1: var(--au-night-accent-1);
+    --color-night-accent-2: var(--au-night-accent-2);
+    --color-night-accent-3: var(--au-night-accent-3);
+}
+
+/*
+ * Named breakpoint at VitePress's own 960px layout breakpoint (nav becomes
+ * fixed, sidebar appears). Defined here rather than used as an arbitrary
+ * `min-[960px]:` variant: arbitrary min-width variants can be emitted before
+ * `md:` in the generated stylesheet, which silently breaks ordering when both
+ * touch the same property.
+ */
+@theme {
+    --breakpoint-vp: 960px;
+}
+
+@layer base {
+    /* Design tokens — bind marketing components to VitePress's CSS vars so light/dark mode and brand changes propagate. */
+    :root {
+        --au-color-bg: var(--vp-c-bg);
+        --au-color-bg-soft: var(--vp-c-bg-soft);
+        --au-color-bg-alt: var(--vp-c-bg-alt);
+        --au-color-text: var(--vp-c-text-1);
+        --au-color-text-muted: var(--vp-c-text-2);
+        --au-color-text-soft: var(--vp-c-text-3);
+        --au-color-divider: var(--vp-c-divider);
+        --au-color-primary: var(--vp-c-brand-1);
+        --au-color-primary-soft: var(--vp-c-brand-2);
+        --au-color-primary-deep: var(--vp-c-brand-3);
+        --au-color-success: #10b981;
+        --au-color-danger: #ef4444;
+        --au-color-warning: #f59e0b;
+
+        /* Authup's own brand accents (packages/client-web-theme/assets/css/
+         * index.css: --authup-periwinkle/-rose/-green) — periwinkle doubles
+         * as the primary/brand color there too. Replaces the old marketing
+         * page's indigo/pink/teal trio, which was never an Authup color. */
+        --au-color-accent-a: #6d7fcc;
+        --au-color-accent-b: #cc8181;
+        --au-color-accent-c: #4f9d6b;
+
+        --au-radius-sm: 6px;
+        --au-radius: 12px;
+        --au-radius-lg: 18px;
+
+        --au-space-tight: 0.75rem;
+        --au-space: 1.25rem;
+        --au-space-loose: 2rem;
+        --au-space-section: 4rem;
+
+        --au-transition: 120ms ease-out;
+        --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+        --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+
+        /* Fixed-dark surface tokens: hero and footer stay dark in both color
+         * modes. `--au-dark-bg` is Authup's own console chrome color
+         * (`--authup-slate-900`, "header / sidebar / footer chrome") — a
+         * warm neutral, not the navy of the reference site this started
+         * from. */
+        --au-dark-bg: #30373e;
+        --au-dark-fg: #eef1fa;
+        --au-dark-fg-muted: #aab2c8;
+        --au-dark-border: rgb(255 255 255 / 0.12);
+
+        /* Accent tones lightened toward white, for text/icons placed directly
+         * on the fixed-dark surfaces above (the flat accent hex values read
+         * fine on card borders but are too low-contrast as small text on
+         * near-black). Derived from the accent tokens, not new hues. Still
+         * clears 4.5:1 against the slate surface above (measured ~6.2–6.9:1
+         * per accent — see the redesign report) at the same 55% mix used
+         * against the previous, darker navy surface. */
+        --au-night-accent-1: color-mix(in srgb, var(--au-color-accent-a) 55%, white);
+        --au-night-accent-2: color-mix(in srgb, var(--au-color-accent-b) 55%, white);
+        --au-night-accent-3: color-mix(in srgb, var(--au-color-accent-c) 55%, white);
+
+        /* Hero glow, mixed from the same accent tokens. */
+        --au-glow-1: color-mix(in srgb, var(--au-color-accent-a) 40%, transparent);
+        --au-glow-2: color-mix(in srgb, var(--au-color-accent-b) 20%, transparent);
+
+        /* Fixed-dark card surface for framed content on the night band (the
+         * hero's quick-start card) — one step lighter than `--au-dark-bg` so
+         * it reads as its own surface. Opaque, not translucent, so it paints
+         * the same regardless of what's behind it (including the hero's own
+         * glow); a `rgb(255 255 255 / x%)` overlay would pick up that glow
+         * and drift out of the range measured here. Measured against this
+         * exact color: --au-dark-fg 8.9:1, --au-dark-fg-muted 4.7:1,
+         * --au-night-accent-1 5.2:1 — all clear 4.5:1. */
+        --au-dark-card-bg: color-mix(in srgb, var(--au-dark-bg) 94%, white);
+    }
+
+    .dark {
+        --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
+        --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Tailwind's preflight resets headings to inherit; restore a scale inside
+     * the isolated `.vp-raw` subtrees. */
+    .vp-raw :where(h1, h2, h3, h4, h5, h6) {
+        @apply mb-2 leading-tight font-medium;
+    }
+
+    .vp-raw h1 { @apply text-4xl; }
+    .vp-raw h2 { @apply text-3xl; }
+    .vp-raw h3 { @apply text-2xl; }
+
+    .vp-raw :where(b, strong) {
+        @apply font-semibold;
+    }
+}
+
+@layer components {
+    .au-section {
+        @apply mx-auto max-w-[1200px] px-6 py-16;
+    }
+
+    .au-section--alt {
+        @apply max-w-none;
+        background: var(--au-color-bg-soft);
+    }
+
+    .au-section--alt > .au-section-inner {
+        @apply mx-auto max-w-[1200px];
+    }
+
+    @media (max-width: 768px) {
+        .au-section {
+            @apply px-5 py-10;
+        }
+    }
+
+    /* Centered content column, reused outside an `.au-section` (the footer's
+     * two stacked rows). Not `container`: that class belongs to VitePress. */
+    .au-wrap {
+        @apply mx-auto w-full max-w-[1200px] px-6;
+    }
+
+    @media (max-width: 768px) {
+        .au-wrap {
+            @apply px-5;
+        }
+    }
+
+    /* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
+    .au-card-window {
+        @apply overflow-hidden rounded-[var(--au-radius-lg)] border;
+        background: var(--au-color-bg-alt);
+        border-color: var(--au-color-divider);
+        box-shadow: var(--au-shadow-card);
+    }
+
+    .au-card-window__chrome {
+        @apply flex items-center gap-[0.4rem] px-4 py-3;
+        background: var(--au-color-bg-soft);
+        border-bottom: 1px solid var(--au-color-divider);
+    }
+
+    .au-card-window__title {
+        @apply ml-3 text-[0.8rem];
+        font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+        color: var(--au-color-text-soft);
+    }
+
+    .au-dot {
+        @apply inline-block h-[11px] w-[11px] rounded-full;
+    }
+
+    .au-dot--r { background: #ff5f57; }
+    .au-dot--y { background: #febc2e; }
+    .au-dot--g { background: #28c840; }
+
+    /*
+     * Fixed-dark variant of `.au-card-window`, for framed content placed on
+     * the always-dark hero band (`.au-night`) instead of a mode-following
+     * section — the base tokens above (`--au-color-bg-alt`,
+     * `--au-color-divider`, `--au-color-text-soft`) follow VitePress's color
+     * mode, which the night surface deliberately does not.
+     */
+    .au-card-window--night {
+        background: var(--au-dark-card-bg);
+        border-color: var(--au-dark-border);
+    }
+
+    .au-card-window--night .au-card-window__chrome {
+        background: transparent;
+        border-bottom-color: var(--au-dark-border);
+    }
+
+    .au-card-window--night .au-card-window__title {
+        color: var(--au-dark-fg-muted);
+    }
+
+    /*
+     * Section rhythm shared by every landing-page section: eyebrow + heading
+     * + lede pattern, and the card styles the feature/deployment grids use.
+     */
+    .au-eyebrow {
+        @apply mb-3 inline-block text-[0.78rem] font-bold tracking-[0.08em] uppercase;
+        color: var(--au-color-primary);
+    }
+
+    .au-heading {
+        @apply mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em];
+        color: var(--au-color-text);
+    }
+
+    .au-lede {
+        @apply text-[1.05rem];
+        color: var(--au-color-text-muted);
+    }
+
+    .au-card {
+        @apply rounded-[var(--au-radius)] border p-6;
+        border-color: var(--au-color-divider);
+        background: var(--au-color-bg);
+    }
+
+    .au-card-interactive {
+        @apply transition-[transform,border-color,box-shadow] duration-[120ms] ease-out
+            hover:-translate-y-0.5 hover:border-[var(--au-color-primary)] hover:shadow-[var(--au-shadow-card)];
+    }
+
+    /* Fixed-dark surface with a glow and a faint grid: the hero. */
+    .au-night {
+        @apply relative overflow-hidden bg-night text-night-fg;
+    }
+
+    .au-night::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(640px 420px at 80% 0%, var(--au-glow-1), transparent 70%),
+            radial-gradient(520px 360px at 100% 100%, var(--au-glow-2), transparent 70%);
+    }
+
+    .au-night::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.5;
+        background-image:
+            linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(circle at 74% 18%, #000 15%, transparent 70%);
+    }
+
+    .au-night > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Accent gradient for the highlighted phrase in the hero headline. */
+    .au-gradient-text {
+        background-image: linear-gradient(90deg, var(--au-night-accent-1), var(--au-night-accent-2));
+        background-clip: text;
+        color: transparent;
+    }
+
+    /*
+     * Site-wide footer: fixed-dark surface, full width on every page — it
+     * does not dodge the fixed sidebar with left padding (that shortened the
+     * dark band on a docs page); instead it paints above the sidebar's own
+     * lower portion once the page is scrolled to the bottom. `.VPSidebar` is
+     * `position: fixed`, with `z-index: var(--vp-z-index-sidebar)` — 25 at
+     * >= 960px (a fixed column) and 60 below it (a drawer). `26` sits above
+     * the desktop value, so the footer wins there, and below the mobile
+     * drawer's, so an open drawer still correctly covers the footer.
+     * `var(--vp-z-index-footer)` (10) is too low for the desktop case.
+     */
+    .au-footer {
+        @apply relative overflow-hidden bg-night text-night-fg-muted;
+        z-index: 26;
+    }
+}
+
+/*
+ * Unlayered: VitePress defines its variables and component styles unlayered,
+ * so overrides of them must stay outside of any @layer to win.
+ */
+
+/*
+ * Site-wide brand color: Authup's own periwinkle, not VitePress's default
+ * indigo — so links, active nav items and focus rings match the admin
+ * console. Raw periwinkle (`--au-color-accent-a`) reads fine as a hover
+ * shade or a border, but is only ~3.8:1 on a white page background, short
+ * of the 4.5:1 body-text needs — darkened here for the light-mode default,
+ * mirroring how vitepress's own indigo default is darkened for light mode
+ * and lightened for dark (`vars.css`: `--vp-c-indigo-1` is `#3451b2` light,
+ * `#a8b1ff` dark, not the same hex both ways).
+ */
 :root {
-    --au-color-bg: var(--vp-c-bg);
-    --au-color-bg-soft: var(--vp-c-bg-soft);
-    --au-color-bg-alt: var(--vp-c-bg-alt);
-    --au-color-text: var(--vp-c-text-1);
-    --au-color-text-muted: var(--vp-c-text-2);
-    --au-color-text-soft: var(--vp-c-text-3);
-    --au-color-divider: var(--vp-c-divider);
-    --au-color-primary: var(--vp-c-brand-1);
-    --au-color-primary-soft: var(--vp-c-brand-2);
-    --au-color-primary-deep: var(--vp-c-brand-3);
-    --au-color-success: #10b981;
-    --au-color-danger: #ef4444;
-    --au-color-warning: #f59e0b;
-    --au-color-accent-a: #6366f1;
-    --au-color-accent-b: #ec4899;
-    --au-color-accent-c: #14b8a6;
-
-    --au-radius-sm: 6px;
-    --au-radius: 12px;
-    --au-radius-lg: 18px;
-
-    --au-space-tight: 0.75rem;
-    --au-space: 1.25rem;
-    --au-space-loose: 2rem;
-    --au-space-section: 4rem;
-
-    --au-transition: 120ms ease-out;
-    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
-    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+    --vp-c-brand-1: color-mix(in srgb, var(--au-color-accent-a) 78%, black);
+    --vp-c-brand-2: var(--au-color-accent-a);
+    --vp-c-brand-3: color-mix(in srgb, var(--au-color-accent-a) 65%, black);
+    --vp-c-brand-soft: color-mix(in srgb, var(--au-color-accent-a) 14%, transparent);
 }
 
 .dark {
-    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
-    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px rgba(0, 0, 0, 0.4);
+    /* Reuses the same lightened periwinkle already verified legible on the
+     * fixed-dark hero/footer surface — also comfortably clears 4.5:1 on
+     * vitepress's (darker) default dark page background. */
+    --vp-c-brand-1: var(--au-night-accent-1);
+    --vp-c-brand-2: var(--au-color-accent-a);
+    --vp-c-brand-3: color-mix(in srgb, var(--au-color-accent-a) 65%, black);
+    --vp-c-brand-soft: color-mix(in srgb, var(--au-color-accent-a) 16%, transparent);
+}
+
+/*
+ * Docs chrome harmony: content, sidebar and nav were three unrelated darks
+ * (vitepress default `--vp-c-bg` #1b1b1f, `--vp-c-bg-alt` #161618 — the
+ * sidebar, via `--vp-sidebar-bg-color: var(--vp-c-bg-alt)` — and the
+ * fixed-dark footer/hero slate `--au-dark-bg` #30373e), with the footer
+ * reading *lighter* than the page it sits under. Retuned so every surface
+ * is a member of the same slate family as the footer (Authup's own
+ * `--authup-slate-900`, `packages/client-web-theme`), not the footer
+ * itself: `color-mix` steps of `--au-dark-bg` toward black (dark mode) or
+ * white (light mode) instead of picking new hues. The footer/hero stay on
+ * the raw, unmixed slate (unchanged) — the brightest, most saturated member
+ * of the family, with content the deepest and the sidebar a visible step
+ * above it, so scrolling from content into the footer band reads as one
+ * warm-neutral ramp rather than a seam.
+ *
+ * Light mode keeps the content area genuinely white (`--vp-c-bg`,
+ * `--vp-c-bg-elv` untouched) — only `-alt`/`-soft` (sidebar, code blocks,
+ * inputs) get a faint tint, per the brief. `--vp-sidebar-bg-color` is left
+ * to its vitepress default (`var(--vp-c-bg-alt)`): custom properties
+ * resolve live, so it already follows `--vp-c-bg-alt` below without a
+ * redundant redeclaration.
+ *
+ * Dark mode needed more than a straight re-hue: an early pass mixed the
+ * surfaces close enough together (content/sidebar ~7 L*, similar to a
+ * flat-out-of-the-box "one dark region" read) that the sidebar all but
+ * merged into the content column, and vitepress's own `--vp-c-divider` /
+ * `--vp-c-border` (unchanged, fixed hex values) nearly vanished against
+ * the lightened sidebar/code surface — a real risk called out up front:
+ * a near-black base has no "pure black" anchor the way light mode has a
+ * pure-white one, so an equivalent L* gap reads as far less separated.
+ * Fixed by widening the dark ramp (content/soft/sidebar/elv spread over
+ * ~7–20 L*, a ~10 L* content→sidebar step instead of ~7) and *retuning
+ * `--vp-c-divider`/`--vp-c-border` too* — still a variables-only change,
+ * just extending it to the two border tokens the brief's "and friends"
+ * covers — so their contrast against the new sidebar surface (1.38:1 /
+ * 1.73:1) lands back at vitepress's own shipped dark-mode baseline
+ * (1.34:1 / 1.71:1 against its default `--vp-c-bg-alt`), instead of
+ * degrading to 1.06:1 / 1.35:1. Light mode was left alone (already the
+ * quality bar this was tuned to match); its divider contrast against the
+ * new faint sidebar tint (1.10:1) is within noise of its own original
+ * (1.20:1 against vitepress's default `--vp-c-bg-alt`).
+ *
+ * Contrast (WCAG relative luminance), body text on the new content bg:
+ *   dark  `--vp-c-text-1` #dfdfd6 on #131619  → 13.5:1
+ *         `--vp-c-text-2` #98989f on #131619  →  6.3:1
+ *   light `--vp-c-text-1` #3c3c43 on #ffffff  → 10.9:1 (unchanged, still white)
+ * On the retuned sidebar/code surface (`--vp-c-bg-alt`):
+ *   dark  #dfdfd6 on #252b30 → 10.7:1 | #98989f on #252b30 → 5.0:1
+ *   light #3c3c43 on #ecedee →  9.3:1 | #67676c on #ecedee → 4.8:1
+ * All clear 4.5:1 with wide margin. `--vp-c-text-3` (placeholders/carets,
+ * not body text) sits ~2.5–3.4:1 in both modes — the same as vitepress's
+ * own unmodified defaults, not a regression this change introduced.
+ */
+:root {
+    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 5%, white);
+    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 9%, white);
+}
+
+.dark {
+    /*
+     * The reading surface sits at roughly vitepress's own dark weight
+     * (#1b1b1f), in the slate family rather than below it. Mixed darker than
+     * this (an earlier 40% pass, #131619) the content area reads as
+     * near-black and the page sinks into its own chrome. The steps above it
+     * keep every boundary perceivable.
+     */
+    --vp-c-bg: color-mix(in srgb, var(--au-dark-bg) 55%, black);
+    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 68%, black);
+    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 86%, black);
+    --vp-c-bg-elv: color-mix(in srgb, var(--au-dark-bg) 94%, black);
+
+    /* Lightened past the raw slate (mixed toward white, not black) so
+     * group dividers and input/tab outlines still read as a distinct,
+     * slightly-brighter line rather than blending into the surfaces
+     * above — see the contrast numbers in the comment above. */
+    --vp-c-divider: color-mix(in srgb, var(--au-dark-bg) 95%, white);
+    --vp-c-border: color-mix(in srgb, var(--au-dark-bg) 88%, white);
 }
 
 /* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
-.Layout:has(.au-marketing) .VPContent {
+.Layout.au-home .VPContent {
     padding: 0 !important;
 }
 
@@ -46,64 +428,95 @@
     margin: 0 auto;
 }
 
-.au-section {
-    padding: var(--au-space-section) 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.au-section--alt {
-    background: var(--au-color-bg-soft);
-    max-width: none;
-}
-
-.au-section--alt > .au-section-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-    .au-section {
-        padding: 2.5rem 1.25rem;
+/*
+ * Landing page chrome (`pageClass: au-home`): the nav sits transparently on
+ * the dark hero while scrolled to the top (`.VPNavBar.top`), and the hero
+ * extends under the fixed nav (≥ 960px, VitePress's own breakpoint for
+ * making the nav fixed — do not approximate it with a Tailwind variant).
+ */
+@media (min-width: 960px) {
+    .Layout.au-home .au-hero {
+        padding-top: calc(var(--vp-nav-height) + 5rem);
     }
 }
 
-/* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
-.au-card-window {
-    background: var(--au-color-bg-alt);
-    border: 1px solid var(--au-color-divider);
-    border-radius: var(--au-radius-lg);
-    box-shadow: var(--au-shadow-card);
-    overflow: hidden;
+/* Below 960px the nav is not fixed and sits above the hero; it needs the same
+ * dark background, or a light strip floats over a dark page. */
+@media (max-width: 959px) {
+    .Layout.au-home .VPNav {
+        background-color: var(--au-dark-bg);
+    }
 }
 
-.au-card-window__chrome {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.75rem 1rem;
-    background: var(--au-color-bg-soft);
-    border-bottom: 1px solid var(--au-color-divider);
+.Layout.au-home .VPNavBar.top:not(.screen-open) {
+    --vp-nav-bg-color: transparent;
+    --vp-c-gutter: transparent;
 }
 
-.au-card-window__title {
-    margin-left: 0.75rem;
-    font-family: var(--vp-font-family-mono, ui-monospace, monospace);
-    font-size: 0.8rem;
-    color: var(--au-color-text-soft);
+/* Re-scoped to the bar's own items only — setting these on `.VPNavBar` itself
+ * looks identical at the top of the page and then paints an open flyout
+ * dropdown's text light-on-white. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) :is(
+    .VPNavBarTitle,
+    .VPNavBarMenu,
+    .VPNavBarSearch,
+    .VPNavBarAppearance,
+    .VPNavBarSocialLinks,
+    .VPNavBarHamburger
+),
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarExtra > .button {
+    --vp-c-text-1: var(--au-dark-fg);
+    --vp-c-text-2: var(--au-dark-fg-muted);
+    --vp-c-brand-1: var(--au-night-accent-1);
+    --vp-c-divider: var(--au-dark-border);
+    --vp-c-bg-alt: rgb(255 255 255 / 0.06);
+    --vp-input-border-color: var(--au-dark-border);
+    --vp-input-switch-bg-color: rgb(255 255 255 / 0.08);
 }
 
-.au-card-window__body {
-    padding: 1.5rem;
+/* `VPFlyout:hover` (vitepress's own, unlayered) sets a literal, already-
+ * resolved `color` on the flyout root itself — not a custom property, so the
+ * `.VPMenu` reset below cannot touch it. Since `VPFlyout` opens on
+ * `@mouseenter`, `:hover` is true for the whole time a mouse user has
+ * Guide/SDKs/About or the narrow-width "extra" menu open, and that resolved
+ * color (the rescoped `--vp-c-brand-1` above) inherits straight into the
+ * popup. Cancel it back to normal inheritance at the source: nothing between
+ * here and `<body>` sets `color` explicitly, so this restores the same,
+ * real, mode-following color the non-hover state already has. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarMenuGroup:hover,
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarExtra:hover {
+    color: inherit;
 }
 
-.au-dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    display: inline-block;
+/* The flyout trap: `.VPMenu` (Guide/SDKs/About dropdowns, the narrow-width
+ * "extra" overflow menu) renders as a normal DOM descendant of the bar items
+ * above, not a portal, so it would otherwise inherit their dark-on-hero text
+ * colors onto its own always-opaque, normal-theme popup. `initial` breaks
+ * the custom-property inheritance chain here, so `color: var(--vp-c-text-1)`
+ * etc. inside the popup fall back to the real (unscoped) computed value. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPMenu {
+    --vp-c-text-1: initial;
+    --vp-c-text-2: initial;
+    --vp-c-brand-1: initial;
+    --vp-c-divider: initial;
+    --vp-c-bg-alt: initial;
 }
 
-.au-dot--r { background: #ff5f57; }
-.au-dot--y { background: #febc2e; }
-.au-dot--g { background: #28c840; }
+/*
+ * `.au-footer` runs full width and paints above the fixed desktop sidebar
+ * (`--vp-z-index-sidebar` is 25 from 960px up; the footer is 26 — see
+ * `.au-footer` above), so at the bottom of a long docs page it covers the
+ * sidebar's lowest ~300px. The sidebar scrolls independently
+ * (`.VPSidebar { overflow-y: auto }`), so give its nav enough bottom
+ * padding that every link — including the last one — can still be
+ * scrolled clear of the footer band, even on a short sidebar that would
+ * not otherwise overflow (the extra padding sits below the fold and is
+ * never seen there). Scoped to >= 960px, where the sidebar is
+ * `position: fixed`; below that it is the mobile drawer, which already
+ * sits above the footer (z-index 60), so it is left untouched.
+ */
+@media (min-width: 960px) {
+    .VPSidebar .nav {
+        padding-bottom: 24rem;
+    }
+}
