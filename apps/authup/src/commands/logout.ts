@@ -68,7 +68,9 @@ export function defineCLILogoutCommand(context: HostCommandContext = {}) {
                 try {
                     await storage.remove(host);
                 } catch {
-                    writeNotice(`Could not remove the keychain entry for ${host}; remove it by hand (service authup). The tokens are revoked and the host is forgotten.`);
+                    writeNotice(entry.storage === 'keychain' ?
+                        `Could not remove the keychain entry for ${host}; remove it by hand (service authup). The tokens are revoked and the host is forgotten.` :
+                        `Could not remove the stored tokens for ${host}. They are revoked and the host is forgotten.`);
                 }
 
                 const latest = await store.read();
