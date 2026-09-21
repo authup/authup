@@ -122,7 +122,9 @@ Apps:
   server-admin-console → client-admin-console (RUNTIME, same shape), kit, server-config-kit,
                       server-console-kit (+ the same routup set)
   server-auth-console → client-auth-console (RUNTIME: the SSR bundle it renders), core-http-kit (it
-                      calls the API anonymously), errors, kit, server-config-kit, server-console-kit
+                      calls the API anonymously), errors, kit, server-config, server-config-kit,
+                      server-console-kit, specs (the OAuth2UIColorMode the `ui_color_mode` hint is
+                      narrowed against, which the realm's discovery document advertises)
                       (+ locter, routup, @routup/assets, @routup/basic, zod)
                       (NOT server-core, in any of the three: a console reaching into it would drag the
                        native crypto bindings, winston and redis into a static file server, and

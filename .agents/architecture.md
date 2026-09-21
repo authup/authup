@@ -4919,10 +4919,14 @@ either and a visitor arriving from it lands in the browser default. These two
 carry the preference across instead. `ui_locales` is OIDC Core 3.1.2.1 (a
 space-delimited BCP47 list, most preferred first); `ui_color_mode` is authup's
 own, `light|dark|system`, SINGULAR because a color mode has nothing to
-negotiate. Both are mounted in `OAuth2AuthorizationCodeRequestValidator`, so
-they ride the code blob and survive the rebuild `buildHostedAuthorizeURL`
-makes after a federated round-trip; the page GET's verbatim query hop carries
-them to every other hosted page. Discovery advertises both,
+negotiate. Both are mounted in `OAuth2AuthorizationCodeRequestValidator`, and
+that mount is what carries them across a FEDERATED round-trip: `authorize-out`
+stores the VALIDATED code request on the authorization state, and the callback
+re-emits it key by key through `buildHostedAuthorizeURL`, so an unmounted key
+would have been stripped there. They are deliberately NOT on the code blob:
+`OAuth2AuthorizationCodeIssuer` copies an explicit field list onto
+`OAuth2AuthorizationCode`, and nothing after redemption renders a page. The
+page GET's verbatim query hop carries them to every other hosted page. Discovery advertises both,
 `ui_locales_supported` from `LOCALE_CODES` and `ui_color_modes_supported` from
 `OAuth2UIColorMode`; the second is not an OIDC key (Discovery 3 permits extra
 metadata) and is the only machine-readable way an RP learns the parameter
