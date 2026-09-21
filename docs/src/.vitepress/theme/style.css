@@ -339,6 +339,78 @@
     --vp-c-brand-soft: color-mix(in srgb, var(--au-color-accent-a) 16%, transparent);
 }
 
+/*
+ * Docs chrome harmony: content, sidebar and nav were three unrelated darks
+ * (vitepress default `--vp-c-bg` #1b1b1f, `--vp-c-bg-alt` #161618 — the
+ * sidebar, via `--vp-sidebar-bg-color: var(--vp-c-bg-alt)` — and the
+ * fixed-dark footer/hero slate `--au-dark-bg` #30373e), with the footer
+ * reading *lighter* than the page it sits under. Retuned so every surface
+ * is a member of the same slate family as the footer (Authup's own
+ * `--authup-slate-900`, `packages/client-web-theme`), not the footer
+ * itself: `color-mix` steps of `--au-dark-bg` toward black (dark mode) or
+ * white (light mode) instead of picking new hues. The footer/hero stay on
+ * the raw, unmixed slate (unchanged) — the brightest, most saturated member
+ * of the family, with content the deepest and the sidebar a visible step
+ * above it, so scrolling from content into the footer band reads as one
+ * warm-neutral ramp rather than a seam.
+ *
+ * Light mode keeps the content area genuinely white (`--vp-c-bg`,
+ * `--vp-c-bg-elv` untouched) — only `-alt`/`-soft` (sidebar, code blocks,
+ * inputs) get a faint tint, per the brief. `--vp-sidebar-bg-color` is left
+ * to its vitepress default (`var(--vp-c-bg-alt)`): custom properties
+ * resolve live, so it already follows `--vp-c-bg-alt` below without a
+ * redundant redeclaration.
+ *
+ * Dark mode needed more than a straight re-hue: an early pass mixed the
+ * surfaces close enough together (content/sidebar ~7 L*, similar to a
+ * flat-out-of-the-box "one dark region" read) that the sidebar all but
+ * merged into the content column, and vitepress's own `--vp-c-divider` /
+ * `--vp-c-border` (unchanged, fixed hex values) nearly vanished against
+ * the lightened sidebar/code surface — a real risk called out up front:
+ * a near-black base has no "pure black" anchor the way light mode has a
+ * pure-white one, so an equivalent L* gap reads as far less separated.
+ * Fixed by widening the dark ramp (content/soft/sidebar/elv spread over
+ * ~7–20 L*, a ~10 L* content→sidebar step instead of ~7) and *retuning
+ * `--vp-c-divider`/`--vp-c-border` too* — still a variables-only change,
+ * just extending it to the two border tokens the brief's "and friends"
+ * covers — so their contrast against the new sidebar surface (1.38:1 /
+ * 1.73:1) lands back at vitepress's own shipped dark-mode baseline
+ * (1.34:1 / 1.71:1 against its default `--vp-c-bg-alt`), instead of
+ * degrading to 1.06:1 / 1.35:1. Light mode was left alone (already the
+ * quality bar this was tuned to match); its divider contrast against the
+ * new faint sidebar tint (1.10:1) is within noise of its own original
+ * (1.20:1 against vitepress's default `--vp-c-bg-alt`).
+ *
+ * Contrast (WCAG relative luminance), body text on the new content bg:
+ *   dark  `--vp-c-text-1` #dfdfd6 on #131619  → 13.5:1
+ *         `--vp-c-text-2` #98989f on #131619  →  6.3:1
+ *   light `--vp-c-text-1` #3c3c43 on #ffffff  → 10.9:1 (unchanged, still white)
+ * On the retuned sidebar/code surface (`--vp-c-bg-alt`):
+ *   dark  #dfdfd6 on #252b30 → 10.7:1 | #98989f on #252b30 → 5.0:1
+ *   light #3c3c43 on #ecedee →  9.3:1 | #67676c on #ecedee → 4.8:1
+ * All clear 4.5:1 with wide margin. `--vp-c-text-3` (placeholders/carets,
+ * not body text) sits ~2.5–3.4:1 in both modes — the same as vitepress's
+ * own unmodified defaults, not a regression this change introduced.
+ */
+:root {
+    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 5%, white);
+    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 9%, white);
+}
+
+.dark {
+    --vp-c-bg: color-mix(in srgb, var(--au-dark-bg) 40%, black);
+    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 55%, black);
+    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 78%, black);
+    --vp-c-bg-elv: color-mix(in srgb, var(--au-dark-bg) 88%, black);
+
+    /* Lightened past the raw slate (mixed toward white, not black) so
+     * group dividers and input/tab outlines still read as a distinct,
+     * slightly-brighter line rather than blending into the surfaces
+     * above — see the contrast numbers in the comment above. */
+    --vp-c-divider: color-mix(in srgb, var(--au-dark-bg) 95%, white);
+    --vp-c-border: color-mix(in srgb, var(--au-dark-bg) 88%, white);
+}
+
 /* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
 .Layout.au-home .VPContent {
     padding: 0 !important;
