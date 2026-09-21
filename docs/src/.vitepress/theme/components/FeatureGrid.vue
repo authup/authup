@@ -1,10 +1,11 @@
 <template>
     <section class="au-features au-section vp-raw">
         <header class="mb-10 text-center">
-            <h2 class="mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--au-color-text)]">
+            <span class="au-eyebrow">Features</span>
+            <h2 class="au-heading">
                 What you get
             </h2>
-            <p class="text-[1.05rem] text-[var(--au-color-text-muted)]">
+            <p class="au-lede">
                 A complete identity and access toolkit you can deploy as a service or embed as libraries.
             </p>
         </header>
@@ -13,7 +14,7 @@
             <article
                 v-for="feature in features"
                 :key="feature.title"
-                class="rounded-[var(--au-radius)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg)] p-6 transition-[transform,border-color,box-shadow] duration-[120ms] ease-out hover:-translate-y-0.5 hover:border-[var(--au-color-primary)] hover:shadow-[var(--au-shadow-card)]"
+                class="au-card au-card-interactive"
             >
                 <div
                     class="mb-3 text-[1.75rem] leading-none"

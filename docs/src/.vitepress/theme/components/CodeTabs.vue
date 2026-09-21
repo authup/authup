@@ -1,10 +1,11 @@
 <template>
     <section class="au-section vp-raw">
         <header class="mb-8 text-center">
-            <h2 class="mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--au-color-text)]">
+            <span class="au-eyebrow">Quick Start</span>
+            <h2 class="au-heading">
                 From zero to issuing tokens in three steps
             </h2>
-            <p class="mx-auto max-w-[56ch] text-[1.05rem] text-[var(--au-color-text-muted)]">
+            <p class="au-lede mx-auto max-w-[56ch]">
                 Pull the image, point it at your database, and issue your first access token.
             </p>
         </header>

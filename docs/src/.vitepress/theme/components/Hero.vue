@@ -1,24 +1,25 @@
 <template>
-    <section class="au-hero au-section vp-raw pt-20 pb-12">
-        <div class="grid grid-cols-1 items-center gap-12 vp:grid-cols-[1.05fr_1fr] vp:gap-16">
-            <div>
-                <h1 class="mb-5 leading-none font-extrabold tracking-[-0.03em] text-[clamp(3rem,7vw,4.75rem)] bg-[linear-gradient(135deg,var(--au-color-primary)_0%,var(--au-color-accent-a)_100%)] bg-clip-text text-transparent">
-                    Authup
+    <header class="au-section au-section--alt au-night au-hero vp-raw pt-20 pb-16">
+        <div class="au-section-inner">
+            <div class="max-w-[640px]">
+                <span class="au-eyebrow text-night-accent-1">Authentication &amp; Authorization</span>
+                <h1 class="mb-5 leading-[1.05] font-extrabold tracking-[-0.03em] text-[clamp(2.75rem,6.5vw,4.5rem)]">
+                    OAuth2 &amp; OpenID Connect identity and
+                    <span class="au-gradient-text">access management</span>
                 </h1>
-                <p class="mb-8 max-w-[36ch] text-lg leading-[1.55] text-[var(--au-color-text-muted)]">
-                    OAuth2 &amp; OpenID Connect identity and access management
-                    with multi-realm tenancy and declarative, isomorphic permissions
-                    you can share between API, UI, and microservices.
+                <p class="mb-8 max-w-[46ch] text-lg leading-[1.55] text-night-fg-muted">
+                    With multi-realm tenancy and declarative, isomorphic permissions you can share between
+                    API, UI, and microservices.
                 </p>
                 <div class="flex flex-wrap gap-3">
                     <a
-                        class="inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-transparent bg-[var(--au-color-primary)] px-5 py-[0.65rem] text-[0.95rem] font-semibold text-white no-underline transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:bg-[var(--au-color-primary-deep)]"
+                        :class="primaryButtonClass"
                         href="/getting-started/"
                     >
                         Get Started
                     </a>
                     <a
-                        class="inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-transparent px-5 py-[0.65rem] text-[0.95rem] font-semibold text-[var(--au-color-text)] no-underline transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:border-[var(--au-color-primary)] hover:text-[var(--au-color-primary)]"
+                        :class="secondaryButtonClass"
                         href="https://github.com/authup/authup"
                         target="_blank"
                         rel="noopener"
@@ -28,64 +29,56 @@
                 </div>
             </div>
 
-            <div>
-                <div class="au-card-window">
-                    <div class="au-card-window__chrome">
-                        <span class="au-dot au-dot--r" />
-                        <span class="au-dot au-dot--y" />
-                        <span class="au-dot au-dot--g" />
-                        <span class="au-card-window__title">Authup</span>
-                    </div>
-
-                    <div class="relative aspect-[16/10] overflow-hidden bg-[var(--au-color-bg)]">
-                        <img
-                            v-show="imageLoaded"
-                            class="absolute inset-0 h-full w-full object-cover object-left-top"
-                            :src="imageSrc"
-                            alt="Authup admin UI"
-                            loading="eager"
-                            @load="imageLoaded = true"
-                            @error="imageLoaded = false"
-                        >
-                        <div
-                            v-if="!imageLoaded"
-                            class="absolute inset-0 grid grid-cols-[32%_1fr] gap-px bg-[var(--au-color-divider)]"
-                            aria-hidden="true"
-                        >
-                            <div class="flex flex-col gap-[0.65rem] bg-[var(--au-color-bg)] px-[0.85rem] py-4">
-                                <div class="mb-[0.4rem] h-4 w-3/5 rounded-[4px] bg-[color-mix(in_srgb,var(--au-color-primary)_35%,var(--au-color-divider))]" />
-                                <div class="h-[0.7rem] w-[85%] rounded-[3px] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[0.7rem] w-[85%] rounded-[3px] border border-[color-mix(in_srgb,var(--au-color-primary)_35%,transparent)] bg-[color-mix(in_srgb,var(--au-color-primary)_22%,transparent)]" />
-                                <div class="h-[0.7rem] w-[85%] rounded-[3px] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[0.7rem] w-[85%] rounded-[3px] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[0.7rem] w-[85%] rounded-[3px] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                            </div>
-                            <div class="flex flex-col gap-[0.65rem] bg-[var(--au-color-bg)] px-[0.85rem] py-4">
-                                <div class="mb-[0.4rem] h-[0.7rem] w-[45%] rounded-[3px] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[1.4rem] rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[1.4rem] rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[1.4rem] rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[1.4rem] rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                                <div class="h-[1.4rem] rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)]" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div
+                class="mt-16 flex items-end gap-3 md:mt-20 md:gap-4"
+                aria-hidden="true"
+            >
+                <span
+                    v-for="(glyph, index) in keyholes"
+                    :key="index"
+                    class="au-keyhole au-keyhole-pulse"
+                    :class="glyph.colorClass"
+                    :style="{ '--au-keyhole-opacity': glyph.opacity, '--au-keyhole-delay': glyph.delay }"
+                />
             </div>
         </div>
-    </section>
+    </header>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
+
+// The hero's motif: a quiet row of "keyhole" glyphs (see the shape rules for
+// `.au-keyhole` in style.css), echoing the circle-over-body mark in the
+// Authup logo instead of a stock illustration. Mostly the muted primary
+// tone, with two accent glyphs standing out — a rhythm, not a chart.
+const KEYHOLES = [
+    { colorClass: 'text-night-accent-1', opacity: 0.35, delay: '0s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.55, delay: '-0.6s' },
+    { colorClass: 'text-night-accent-3', opacity: 0.5, delay: '-1.2s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.8, delay: '-0.3s' },
+    { colorClass: 'text-night-accent-2', opacity: 1, delay: '-1.8s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.8, delay: '-0.9s' },
+    { colorClass: 'text-night-accent-3', opacity: 0.5, delay: '-1.5s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.55, delay: '-0.2s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.35, delay: '-1s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.5, delay: '-0.7s' },
+    { colorClass: 'text-night-accent-3', opacity: 0.4, delay: '-1.4s' },
+    { colorClass: 'text-night-accent-1', opacity: 0.3, delay: '-0.4s' },
+];
+
+const PRIMARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-transparent bg-[var(--au-color-primary)] px-5 py-[0.65rem] text-[0.95rem] font-semibold text-white no-underline shadow-[0_8px_24px_-8px_rgb(99_102_241)] transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:bg-[var(--au-night-accent-1)]';
+
+const SECONDARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-white/20 bg-white/5 px-5 py-[0.65rem] text-[0.95rem] font-semibold text-night-fg no-underline transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:border-white/40';
 
 export default defineComponent({
     name: 'AuthupHero',
     setup() {
-        const imageLoaded = ref(false);
-        const imageSrc = '/hero-admin.png';
-
-        return { imageLoaded, imageSrc };
+        return {
+            keyholes: KEYHOLES,
+            primaryButtonClass: PRIMARY_BUTTON_CLASS,
+            secondaryButtonClass: SECONDARY_BUTTON_CLASS,
+        };
     },
 });
 </script>

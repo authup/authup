@@ -2,10 +2,11 @@
     <section class="au-section au-section--alt vp-raw">
         <div class="au-section-inner">
             <header class="mb-10 text-center">
-                <h2 class="mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--au-color-text)]">
+                <span class="au-eyebrow">Deployment</span>
+                <h2 class="au-heading">
                     Pick your deployment
                 </h2>
-                <p class="mx-auto max-w-[56ch] text-[1.05rem] text-[var(--au-color-text-muted)]">
+                <p class="au-lede mx-auto max-w-[56ch]">
                     Run Authup the way that fits your stack — from a single Docker container to a clustered, externally-backed deployment.
                 </p>
             </header>
@@ -14,7 +15,7 @@
                 <a
                     v-for="target in targets"
                     :key="target.title"
-                    class="group relative flex flex-col overflow-hidden rounded-[var(--au-radius)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg)] pt-7 px-6 pb-6 text-inherit no-underline transition-[transform,border-color,box-shadow] duration-[120ms] ease-out hover:-translate-y-0.5 hover:border-[var(--au-target-accent)] hover:shadow-[var(--au-shadow-card-hover)]"
+                    :class="targetCardClass"
                     :href="target.href"
                     :style="{ '--au-target-accent': target.accent }"
                 >
@@ -38,7 +39,9 @@
                             <span>{{ bullet }}</span>
                         </li>
                     </ul>
-                    <span class="text-[0.92rem] font-semibold text-[var(--au-target-accent)] transition-transform duration-[120ms] ease-out group-hover:translate-x-[2px]">Read more →</span>
+                    <span class="text-[0.92rem] font-semibold text-[var(--au-target-accent)] transition-transform duration-[120ms] ease-out group-hover:translate-x-[2px]">
+                        Read more<span aria-hidden="true"> →</span>
+                    </span>
                 </a>
             </div>
         </div>
@@ -55,6 +58,8 @@ type Target = {
     href: string,
     accent: string,
 };
+
+const TARGET_CARD_CLASS = 'group relative flex flex-col overflow-hidden rounded-[var(--au-radius)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg)] pt-7 px-6 pb-6 text-inherit no-underline transition-[transform,border-color,box-shadow] duration-[120ms] ease-out hover:-translate-y-0.5 hover:border-[var(--au-target-accent)] hover:shadow-[var(--au-shadow-card-hover)]';
 
 export default defineComponent({
     name: 'AuthupDeploymentShowcase',
@@ -95,7 +100,7 @@ export default defineComponent({
             },
         ];
 
-        return { targets };
+        return { targets, targetCardClass: TARGET_CARD_CLASS };
     },
 });
 </script>

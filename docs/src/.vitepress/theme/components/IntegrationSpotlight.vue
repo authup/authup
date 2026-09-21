@@ -2,7 +2,7 @@
     <section class="au-section au-section--alt vp-raw">
         <div class="au-section-inner grid grid-cols-1 items-center gap-10 vp:grid-cols-[1fr_1.1fr] vp:gap-14">
             <div>
-                <span class="mb-3 inline-block text-[0.78rem] font-bold tracking-[0.08em] text-[var(--au-color-primary)] uppercase">Flagship deployment</span>
+                <span class="au-eyebrow">Flagship deployment</span>
                 <h2 class="mb-4 text-[clamp(1.6rem,3vw,2.1rem)] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--au-color-text)]">
                     One docker-compose.yml, full stack ready
                 </h2>
@@ -38,7 +38,7 @@
                     class="inline-block font-semibold text-[var(--au-color-primary)] no-underline transition-transform duration-[120ms] ease-out hover:translate-x-[3px]"
                     href="/guide/deployment/docker-compose"
                 >
-                    Read the Docker Compose guide →
+                    Read the Docker Compose guide<span aria-hidden="true"> →</span>
                 </a>
             </div>
 

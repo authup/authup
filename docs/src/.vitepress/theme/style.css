@@ -21,13 +21,17 @@
 @theme inline {
     --font-sans: var(--vp-font-family-base);
 
-    /* Fixed-dark surfaces (e.g. a hero or footer) that ignore the color mode.
-     * Not used by any component yet — groundwork for the redesign that
-     * follows this task. */
+    /* Fixed-dark surfaces that ignore the color mode: the hero and footer. */
     --color-night: var(--au-dark-bg);
     --color-night-fg: var(--au-dark-fg);
     --color-night-fg-muted: var(--au-dark-fg-muted);
     --color-night-border: var(--au-dark-border);
+
+    /* Accent tones lightened for legibility on the fixed-dark surfaces above,
+     * derived from the existing --au-color-accent-* tokens (see below). */
+    --color-night-accent-1: var(--au-night-accent-1);
+    --color-night-accent-2: var(--au-night-accent-2);
+    --color-night-accent-3: var(--au-night-accent-3);
 }
 
 /*
@@ -74,12 +78,23 @@
         --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
         --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
 
-        /* Fixed-dark surface tokens — groundwork for the redesign that
-         * follows this task, not consumed by any component yet. */
+        /* Fixed-dark surface tokens: hero and footer stay dark in both color modes. */
         --au-dark-bg: #0b1120;
         --au-dark-fg: #eef1fa;
         --au-dark-fg-muted: #aab2c8;
         --au-dark-border: rgb(255 255 255 / 0.12);
+
+        /* Accent tones lightened toward white, for text/icons placed directly
+         * on the fixed-dark surfaces above (the flat accent hex values read
+         * fine on card borders but are too low-contrast as small text on
+         * near-black). Derived from the accent tokens, not new hues. */
+        --au-night-accent-1: color-mix(in srgb, var(--au-color-accent-a) 55%, white);
+        --au-night-accent-2: color-mix(in srgb, var(--au-color-accent-b) 55%, white);
+        --au-night-accent-3: color-mix(in srgb, var(--au-color-accent-c) 55%, white);
+
+        /* Hero glow, mixed from the same accent tokens. */
+        --au-glow-1: color-mix(in srgb, var(--au-color-accent-a) 40%, transparent);
+        --au-glow-2: color-mix(in srgb, var(--au-color-accent-b) 20%, transparent);
     }
 
     .dark {
@@ -122,6 +137,18 @@
         }
     }
 
+    /* Centered content column, reused outside an `.au-section` (the footer's
+     * two stacked rows). Not `container`: that class belongs to VitePress. */
+    .au-wrap {
+        @apply mx-auto w-full max-w-[1200px] px-6;
+    }
+
+    @media (max-width: 768px) {
+        .au-wrap {
+            @apply px-5;
+        }
+    }
+
     /* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
     .au-card-window {
         @apply overflow-hidden rounded-[var(--au-radius-lg)] border;
@@ -149,6 +176,148 @@
     .au-dot--r { background: #ff5f57; }
     .au-dot--y { background: #febc2e; }
     .au-dot--g { background: #28c840; }
+
+    /*
+     * Section rhythm shared by every landing-page section: eyebrow + heading
+     * + lede pattern, and the card styles the feature/deployment grids use.
+     */
+    .au-eyebrow {
+        @apply mb-3 inline-block text-[0.78rem] font-bold tracking-[0.08em] uppercase;
+        color: var(--au-color-primary);
+    }
+
+    .au-heading {
+        @apply mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em];
+        color: var(--au-color-text);
+    }
+
+    .au-lede {
+        @apply text-[1.05rem];
+        color: var(--au-color-text-muted);
+    }
+
+    .au-card {
+        @apply rounded-[var(--au-radius)] border p-6;
+        border-color: var(--au-color-divider);
+        background: var(--au-color-bg);
+    }
+
+    .au-card-interactive {
+        @apply transition-[transform,border-color,box-shadow] duration-[120ms] ease-out
+            hover:-translate-y-0.5 hover:border-[var(--au-color-primary)] hover:shadow-[var(--au-shadow-card)];
+    }
+
+    /* Fixed-dark surface with a glow and a faint grid: the hero. */
+    .au-night {
+        @apply relative overflow-hidden bg-night text-night-fg;
+    }
+
+    .au-night::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(640px 420px at 80% 0%, var(--au-glow-1), transparent 70%),
+            radial-gradient(520px 360px at 100% 100%, var(--au-glow-2), transparent 70%);
+    }
+
+    .au-night::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.5;
+        background-image:
+            linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(circle at 74% 18%, #000 15%, transparent 70%);
+    }
+
+    .au-night > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Accent gradient for the highlighted phrase in the hero headline. */
+    .au-gradient-text {
+        background-image: linear-gradient(90deg, var(--au-night-accent-1), var(--au-night-accent-2));
+        background-clip: text;
+        color: transparent;
+    }
+
+    /*
+     * The hero's own motif: a small "keyhole" glyph built from the two shapes
+     * in the Authup mark itself (apps/client-admin-console/src/components/svg/Logo.svg
+     * — a circle over a tapered body), repeated as a quiet rhythm rather than
+     * reproduced as an image. Pure CSS: a circle pseudo-element over a
+     * clip-path pseudo-element, colored with `currentColor`.
+     */
+    .au-keyhole {
+        @apply relative inline-block h-[1.5rem] w-[0.85rem];
+    }
+
+    .au-keyhole::before,
+    .au-keyhole::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        translate: -50% 0;
+        background: currentColor;
+    }
+
+    .au-keyhole::before {
+        top: 0;
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+    }
+
+    .au-keyhole::after {
+        bottom: 0;
+        width: 0.46rem;
+        height: 0.8rem;
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+
+    .au-keyhole-pulse {
+        animation: au-keyhole-pulse 3.4s ease-in-out infinite;
+        animation-delay: var(--au-keyhole-delay, 0s);
+    }
+
+    @keyframes au-keyhole-pulse {
+        0%,
+        100% {
+            opacity: var(--au-keyhole-opacity, 1);
+        }
+
+        50% {
+            opacity: calc(var(--au-keyhole-opacity, 1) * 0.4);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .au-keyhole-pulse {
+            animation: none;
+        }
+    }
+
+    /*
+     * Site-wide footer: fixed-dark surface, full width on every page — it
+     * does not dodge the fixed sidebar with left padding (that shortened the
+     * dark band on a docs page); instead it paints above the sidebar's own
+     * lower portion once the page is scrolled to the bottom. `.VPSidebar` is
+     * `position: fixed`, with `z-index: var(--vp-z-index-sidebar)` — 25 at
+     * >= 960px (a fixed column) and 60 below it (a drawer). `26` sits above
+     * the desktop value, so the footer wins there, and below the mobile
+     * drawer's, so an open drawer still correctly covers the footer.
+     * `var(--vp-z-index-footer)` (10) is too low for the desktop case.
+     */
+    .au-footer {
+        @apply relative overflow-hidden bg-night text-night-fg-muted;
+        z-index: 26;
+    }
 }
 
 /*
@@ -157,11 +326,71 @@
  */
 
 /* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
-.Layout:has(.au-marketing) .VPContent {
+.Layout.au-home .VPContent {
     padding: 0 !important;
 }
 
 .au-marketing {
     width: 100%;
     margin: 0 auto;
+}
+
+/*
+ * Landing page chrome (`pageClass: au-home`): the nav sits transparently on
+ * the dark hero while scrolled to the top (`.VPNavBar.top`), and the hero
+ * extends under the fixed nav (≥ 960px, VitePress's own breakpoint for
+ * making the nav fixed — do not approximate it with a Tailwind variant).
+ */
+@media (min-width: 960px) {
+    .Layout.au-home .au-hero {
+        padding-top: calc(var(--vp-nav-height) + 5rem);
+    }
+}
+
+/* Below 960px the nav is not fixed and sits above the hero; it needs the same
+ * dark background, or a light strip floats over a dark page. */
+@media (max-width: 959px) {
+    .Layout.au-home .VPNav {
+        background-color: var(--au-dark-bg);
+    }
+}
+
+.Layout.au-home .VPNavBar.top:not(.screen-open) {
+    --vp-nav-bg-color: transparent;
+    --vp-c-gutter: transparent;
+}
+
+/* Re-scoped to the bar's own items only — setting these on `.VPNavBar` itself
+ * looks identical at the top of the page and then paints an open flyout
+ * dropdown's text light-on-white. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) :is(
+    .VPNavBarTitle,
+    .VPNavBarMenu,
+    .VPNavBarSearch,
+    .VPNavBarAppearance,
+    .VPNavBarSocialLinks,
+    .VPNavBarHamburger
+),
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPNavBarExtra > .button {
+    --vp-c-text-1: var(--au-dark-fg);
+    --vp-c-text-2: var(--au-dark-fg-muted);
+    --vp-c-brand-1: var(--au-night-accent-1);
+    --vp-c-divider: var(--au-dark-border);
+    --vp-c-bg-alt: rgb(255 255 255 / 0.06);
+    --vp-input-border-color: var(--au-dark-border);
+    --vp-input-switch-bg-color: rgb(255 255 255 / 0.08);
+}
+
+/* The flyout trap: `.VPMenu` (Guide/SDKs/About dropdowns, the narrow-width
+ * "extra" overflow menu) renders as a normal DOM descendant of the bar items
+ * above, not a portal, so it would otherwise inherit their dark-on-hero text
+ * colors onto its own always-opaque, normal-theme popup. `initial` breaks
+ * the custom-property inheritance chain here, so `color: var(--vp-c-text-1)`
+ * etc. inside the popup fall back to the real (unscoped) computed value. */
+.Layout.au-home .VPNavBar.top:not(.screen-open) .VPMenu {
+    --vp-c-text-1: initial;
+    --vp-c-text-2: initial;
+    --vp-c-brand-1: initial;
+    --vp-c-divider: initial;
+    --vp-c-bg-alt: initial;
 }

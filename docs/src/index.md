@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Authup
+pageClass: au-home
 sidebar: false
 aside: false
 ---
