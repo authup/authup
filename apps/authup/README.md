@@ -80,7 +80,7 @@ One command per entity under `api` then reads and manages records.
 
 ```shell
 authup login --server https://auth.example.com --client cli --realm master
-authup api user list --filter 'name=~ali' --sort -createdAt --limit 10
+authup api user list --filter 'name=~ali~' --sort -createdAt --limit 10
 authup whoami
 authup logout
 ```

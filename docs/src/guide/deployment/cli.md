@@ -64,7 +64,7 @@ Each carries the verbs its API has: `list`, `get <id>`, `create`,
 names, which follow the API, apart from the operator commands next to them.
 
 ```shell
-authup api user list --filter 'name=~ali&realm.name=master' --sort -createdAt --limit 10
+authup api user list --filter 'name=~ali~&realm.name=master' --sort -createdAt --limit 10
 authup api user get 3f2a... --include realm
 authup api user create --data '{"name":"alice","realmId":"..."}'
 authup api user update 3f2a... --data @alice.json
@@ -72,8 +72,10 @@ authup api user delete 3f2a...
 ```
 
 `--filter`, `--sort`, `--fields` and `--include` take the values the
-[API query language](../development/api-query-language.md) documents; several
-filter conditions ride one `--filter`, joined by `&`. `--data` holds a JSON
+[API query language](../development/api-query-language.md) documents, so a
+value carries its own operator: `name=alice` is exact, `name=ali~` starts
+with, `name=~ali` ends with and `name=~ali~` contains. Several filter
+conditions ride one `--filter`, joined by `&`. `--data` holds a JSON
 object inline, `@<path>` reads a file, `@-` reads stdin. The response body is
 printed as JSON, so `authup api user list | jq '.data[].name'` composes. The
 signed-in user's permissions govern every call, as they do in the consoles.

@@ -105,29 +105,50 @@ describe('runDeviceLogin', () => {
             realm_name: 'master',
             scope: 'global openid',
         });
+        // the realm hint rides the poll too: without it the server resolves
+        // the client NAME in the master realm and the redemption answers
+        // invalid_grant for a client that lives anywhere else
         expect(forms[1]).toEqual({
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
             client_id: 'cli',
             device_code: 'secret-device',
+            realm_name: 'master',
         });
         expect(notices.join('')).toContain(device.verification_uri_complete);
         expect(notices.join('')).toContain('BCDF-GHJK');
         expect(notices.join('')).not.toContain('secret-');
     });
 
-    it('sends a uuid realm as realm_id', async () => {
+    it('sends a uuid realm as realm_id on both calls', async () => {
+        const realmId = '5f7d6f4e-2a5f-4a1e-9f1a-0c1d2e3f4a5b';
+        const forms : Record<string, string>[] = [];
         const transport = createHostTransport({
             'POST /device_authorization': (_request, form) => {
-                expect(form).toEqual({ client_id: 'cli', realm_id: '5f7d6f4e-2a5f-4a1e-9f1a-0c1d2e3f4a5b' });
+                forms.push(form);
                 return { body: device };
             },
-            'POST /token': () => ({ body: grant }),
+            'POST /token': (_request, form) => {
+                forms.push(form);
+                return { body: grant };
+            },
         });
 
-        await runDeviceLogin(new Client({ baseURL: host, transport }), {
-            clientId: 'cli',
-            realm: '5f7d6f4e-2a5f-4a1e-9f1a-0c1d2e3f4a5b',
+        await runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli', realm: realmId });
+
+        expect(forms[0]).toEqual({ client_id: 'cli', realm_id: realmId });
+        expect(forms[1]).toEqual({
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+            client_id: 'cli',
+            device_code: 'secret-device',
+            realm_id: realmId,
         });
+    });
+
+    it('names the missing grant when the server has no device endpoint', async () => {
+        const transport = createHostTransport({});
+
+        await expect(runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli' }))
+            .rejects.toThrow(/does not offer the device authorization grant/);
     });
 
     it.each([

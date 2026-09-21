@@ -30,7 +30,7 @@ type EntityAPI = EntityAPIDispatch<{ id: string } & Record<string, any>>;
 const QUERY_ARGS = {
     filter: {
         type: 'string',
-        description: 'Conditions in the API query language, joined by &: name=~ali&realm.name=master',
+        description: 'Conditions in the API query language, joined by &: name=~ali~&realm.name=master',
     },
     sort: {
         type: 'string',

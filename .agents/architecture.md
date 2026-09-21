@@ -4088,7 +4088,12 @@ authorization grant against an OPERATOR-SUPPLIED client (`--client <id|name>`,
 `--realm` for a name; both remembered per server in
 `$XDG_CONFIG_HOME/authup/hosts.json`), never a provisioned one: the client's
 `accessPolicyId` is the operator's admission control for the CLI, and a client
-authup stamped into every realm would sit outside it. The tokens go into the
+authup stamped into every realm would sit outside it. The realm hint rides
+BOTH calls of that grant, the device request and every `/token` poll: a client
+NAME resolves within the realm a request names and within master when it names
+none, so a poll that drops the hint resolves a name outside master onto
+another realm's client, which mismatches the device code's own and answers
+`invalid_grant` (verified against a live deployment). The tokens go into the
 OS keychain (`@napi-rs/keyring`, an optional dependency imported lazily, Linux
 pinned to Secret Service) unless `login --insecure-storage` put them into the
 hosts file; the choice is recorded on the host entry, no other command takes a
@@ -4124,8 +4129,14 @@ conditions ride one `--filter` joined by `&`, because citty parses with
 `util.parseArgs` and no `multiple`, so a repeated flag keeps its last value.
 Output is the response body as JSON; errors are rendered once
 (`describeHostError`: `code: message` plus validation issue paths for an
-`AuthupError` body, the server's own `message` for another JSON body, hapic's
-status, method and URL otherwise; never a raw body, a `cause` or a bearer).
+`AuthupError` body, else the status with the method and url, plus the
+`message` another JSON body carries; never a raw body, a `cause` or a
+bearer). The anchor on the request is load-bearing rather than decorative:
+the kit `Client` overwrites a hapic error's message with `response.data
+.message`, so a server answering `{"message":"Not Found"}` left the operator
+with those two words. What the command throws renders as that text ALONE,
+through a `nodejs.util.inspect.custom` hook, because citty prints a thrown
+error with `console.error`, which otherwise dumps the stack at an operator.
 Rejected: a provisioned `cli`
 system client (admission control), a raw `api <path>` passthrough and a
 hand-listed resource set (both are a curl wrapper next to a typed client),
