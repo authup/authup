@@ -398,10 +398,17 @@
 }
 
 .dark {
-    --vp-c-bg: color-mix(in srgb, var(--au-dark-bg) 40%, black);
-    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 55%, black);
-    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 78%, black);
-    --vp-c-bg-elv: color-mix(in srgb, var(--au-dark-bg) 88%, black);
+    /*
+     * The reading surface sits at roughly vitepress's own dark weight
+     * (#1b1b1f), in the slate family rather than below it. Mixed darker than
+     * this (an earlier 40% pass, #131619) the content area reads as
+     * near-black and the page sinks into its own chrome. The steps above it
+     * keep every boundary perceivable.
+     */
+    --vp-c-bg: color-mix(in srgb, var(--au-dark-bg) 55%, black);
+    --vp-c-bg-soft: color-mix(in srgb, var(--au-dark-bg) 68%, black);
+    --vp-c-bg-alt: color-mix(in srgb, var(--au-dark-bg) 86%, black);
+    --vp-c-bg-elv: color-mix(in srgb, var(--au-dark-bg) 94%, black);
 
     /* Lightened past the raw slate (mixed toward white, not black) so
      * group dividers and input/tab outlines still read as a distinct,
