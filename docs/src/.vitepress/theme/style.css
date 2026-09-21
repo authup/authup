@@ -61,9 +61,14 @@
         --au-color-success: #10b981;
         --au-color-danger: #ef4444;
         --au-color-warning: #f59e0b;
-        --au-color-accent-a: #6366f1;
-        --au-color-accent-b: #ec4899;
-        --au-color-accent-c: #14b8a6;
+
+        /* Authup's own brand accents (packages/client-web-theme/assets/css/
+         * index.css: --authup-periwinkle/-rose/-green) — periwinkle doubles
+         * as the primary/brand color there too. Replaces the old marketing
+         * page's indigo/pink/teal trio, which was never an Authup color. */
+        --au-color-accent-a: #6d7fcc;
+        --au-color-accent-b: #cc8181;
+        --au-color-accent-c: #4f9d6b;
 
         --au-radius-sm: 6px;
         --au-radius: 12px;
@@ -78,8 +83,12 @@
         --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
         --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
 
-        /* Fixed-dark surface tokens: hero and footer stay dark in both color modes. */
-        --au-dark-bg: #0b1120;
+        /* Fixed-dark surface tokens: hero and footer stay dark in both color
+         * modes. `--au-dark-bg` is Authup's own console chrome color
+         * (`--authup-slate-900`, "header / sidebar / footer chrome") — a
+         * warm neutral, not the navy of the reference site this started
+         * from. */
+        --au-dark-bg: #30373e;
         --au-dark-fg: #eef1fa;
         --au-dark-fg-muted: #aab2c8;
         --au-dark-border: rgb(255 255 255 / 0.12);
@@ -87,7 +96,10 @@
         /* Accent tones lightened toward white, for text/icons placed directly
          * on the fixed-dark surfaces above (the flat accent hex values read
          * fine on card borders but are too low-contrast as small text on
-         * near-black). Derived from the accent tokens, not new hues. */
+         * near-black). Derived from the accent tokens, not new hues. Still
+         * clears 4.5:1 against the slate surface above (measured ~6.2–6.9:1
+         * per accent — see the redesign report) at the same 55% mix used
+         * against the previous, darker navy surface. */
         --au-night-accent-1: color-mix(in srgb, var(--au-color-accent-a) 55%, white);
         --au-night-accent-2: color-mix(in srgb, var(--au-color-accent-b) 55%, white);
         --au-night-accent-3: color-mix(in srgb, var(--au-color-accent-c) 55%, white);
@@ -324,6 +336,33 @@
  * Unlayered: VitePress defines its variables and component styles unlayered,
  * so overrides of them must stay outside of any @layer to win.
  */
+
+/*
+ * Site-wide brand color: Authup's own periwinkle, not VitePress's default
+ * indigo — so links, active nav items and focus rings match the admin
+ * console. Raw periwinkle (`--au-color-accent-a`) reads fine as a hover
+ * shade or a border, but is only ~3.8:1 on a white page background, short
+ * of the 4.5:1 body-text needs — darkened here for the light-mode default,
+ * mirroring how vitepress's own indigo default is darkened for light mode
+ * and lightened for dark (`vars.css`: `--vp-c-indigo-1` is `#3451b2` light,
+ * `#a8b1ff` dark, not the same hex both ways).
+ */
+:root {
+    --vp-c-brand-1: color-mix(in srgb, var(--au-color-accent-a) 78%, black);
+    --vp-c-brand-2: var(--au-color-accent-a);
+    --vp-c-brand-3: color-mix(in srgb, var(--au-color-accent-a) 65%, black);
+    --vp-c-brand-soft: color-mix(in srgb, var(--au-color-accent-a) 14%, transparent);
+}
+
+.dark {
+    /* Reuses the same lightened periwinkle already verified legible on the
+     * fixed-dark hero/footer surface — also comfortably clears 4.5:1 on
+     * vitepress's (darker) default dark page background. */
+    --vp-c-brand-1: var(--au-night-accent-1);
+    --vp-c-brand-2: var(--au-color-accent-a);
+    --vp-c-brand-3: color-mix(in srgb, var(--au-color-accent-a) 65%, black);
+    --vp-c-brand-soft: color-mix(in srgb, var(--au-color-accent-a) 16%, transparent);
+}
 
 /* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
 .Layout.au-home .VPContent {
