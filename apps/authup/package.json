@@ -72,7 +72,7 @@
         "reflect-metadata": "^0.2.2",
         "routup": "^6.1.0",
         "validup": "^2.0.1",
-        "zod": "^4.5.4"
+        "zod": "^4.6.5"
     },
     "publishConfig": {
         "access": "public"
@@ -84,7 +84,7 @@
         "cross-env": "^10.1.0",
         "get-port-please": "^3.2.0",
         "ts-node": "^10.8.2",
-        "vite": "^8.2.2",
+        "vite": "^8.3.0",
         "vitest": "^4.0.18"
     },
     "optionalDependencies": {

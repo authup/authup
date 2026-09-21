@@ -3530,6 +3530,19 @@ memoized closure behind the structural `getFor` the binding evaluator takes: two
 reads plus one grant load, and the rest is in memory. Only GLOBAL definitions are
 evaluated, because that is what every gate in this process evaluates.
 
+**A failed GRANT LOAD is re-raised, never answered as a denial.** It is the one
+failure a verdict cannot be derived from, and it is invisible to a classifier:
+`PolicyEngine.evaluate` turns every evaluator throw into issues and
+`PermissionEvaluator` re-raises those as a `PermissionError`, so an
+`isPermissionError` guard around the evaluation cannot tell a rejected read from a
+denial and a cache or database hiccup answered `200 []`. That reads as
+authoritative, and the kit memoizes the answer by the introspection's subject,
+scope and grants, none of which such a failure moves, so one bad read gated a
+console closed for the rest of the document's life. The rejection is therefore kept
+on the memoized promise and re-raised at the first pair that hits it, which is what
+lets a caller retry: the kit clears its memo on a rejection and asks again on the
+next resolve. An anonymous caller never reaches the load at all, so it is unaffected.
+
 **The bag carries everything the route actually knows**, so a policy anywhere in the tree
 decides on the same data a request would give it, not only the `permissionBinding` child:
 `PERMISSION_BINDING` (set by `PermissionEvaluator` from its own provider), `REALM_MATCH`
@@ -5055,7 +5068,13 @@ must be an `OAuth2UIColorMode`. `create` additionally drops a body-supplied
 `user` object before anything reads it: with no `userId` to resolve it from,
 `validateJoinColumns` keeps such an object verbatim, and its `realmId` would
 gate `USER_UPDATE` against a realm of the caller's choosing, which is one
-realm's admin writing another realm's user's claim. Every other attribute
+realm's admin writing another realm's user's claim. Only its ID is taken,
+never the object: reduced to that, the realm comes from the row the
+join-column validation loads, and an explicit `userId` alongside it wins.
+Ignoring the object outright is not an option, since the drop would leave no
+target at all: `isSelfTarget` turns true and the row lands on the CALLER with
+a `201`, an owner silently swapped for another. An object naming no id is
+refused for the same reason. Every other attribute
 name keeps taking any string, and nothing else about the rows is special: a
 user writes their own under `USER_SELF_MANAGE` (neither name is in the
 denylist and neither is a `User` column), an admin under `USER_UPDATE`. A

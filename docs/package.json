@@ -27,6 +27,6 @@
         "@tailwindcss/vite": "^4.3.3",
         "tailwindcss": "^4.3.3",
         "vitepress": "^1.6.3",
-        "vue": "^3.5.42"
+        "vue": "^3.5.43"
     }
 }
