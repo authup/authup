@@ -3441,8 +3441,18 @@ another load is in flight, which is the ordinary case here (the scope
 settles while the list is still fetching what it mounted with), so the
 manager exposes `busy` next to `load` and `data`: a caller waits for idle
 and then asks once, rather than asking and comparing `data` afterwards,
-which cannot tell its own load from the one already running. Both rules are
-what make `?path=` reach the server at all; the folder scope hit all of it.
+which cannot tell its own load from the one already running. That wait
+carries no deadline, because any ceiling answers a folder with every row in
+the realm whenever the first load outlasts it; it ends on the two states
+that exist instead, `load` clearing `busy` in a `finally` and an unmounted
+page handing back no collection, and a newer scope supersedes an older wait
+so a stale folder can never be the query that lands. The third rule is that
+a scope still being RESOLVED contributes no filter at all, where one that
+resolved to nothing contributes the empty id list: rapiq encodes an empty
+`in` as a constant false, so publishing it while the lookup is out makes
+every load taken in that window list nothing, and the selection is known one
+tick before its ids on every folder change. All three are what make
+`?path=` reach the server at all; the folder scope hit each of them.
 
 **The control that picks the folder is a TREE, and it carries a second budget
 of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the

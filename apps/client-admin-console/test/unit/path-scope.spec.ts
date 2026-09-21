@@ -230,16 +230,12 @@ describe('src/composables/path-scope -> buildPathCollectionFilters', () => {
  * shape the kit collection exposes (`load` plus the `busy` flag that says
  * whether a `load` would be taken at all).
  */
-function createCollection(options: { busyRounds?: number, alwaysBusy?: boolean } = {}) {
+function createCollection(options: { busyRounds?: number } = {}) {
     let busyRounds = options.busyRounds ?? 0;
 
     const collection = {
         calls: 0,
         get busy() {
-            if (options.alwaysBusy) {
-                return true;
-            }
-
             if (busyRounds > 0) {
                 busyRounds -= 1;
                 return true;
@@ -276,12 +272,36 @@ describe('src/composables/path-scope -> reloadCollection', () => {
         expect(collection.calls).toBe(1);
     });
 
-    it('should give up rather than wait forever', async () => {
-        const collection = createCollection({ alwaysBusy: true });
+    // The wait has no deadline, so the one thing that must end it is the
+    // page going away: an unmounted collection hands back null and the
+    // wait stops there rather than polling a page nobody is looking at.
+    it('should stop waiting once the collection is gone', async () => {
+        const collection = createCollection({ busyRounds: 10 });
+        let mounted = true;
 
-        await reloadCollection(() => collection);
+        const reload = reloadCollection(() => (mounted ? collection : null));
+
+        mounted = false;
+
+        await reload;
 
         expect(collection.calls).toBe(0);
+    });
+
+    // A folder switched while the first one is still waiting: the older
+    // wait must abandon, or the list reloads twice and the stale one could
+    // be the request that lands.
+    it('should let a newer reload supersede one that is still waiting', async () => {
+        const first = createCollection({ busyRounds: 4 });
+        const second = createCollection();
+
+        const stale = reloadCollection(() => first);
+        const current = reloadCollection(() => second);
+
+        await Promise.all([stale, current]);
+
+        expect(first.calls).toBe(0);
+        expect(second.calls).toBe(1);
     });
 
     it('should do nothing without a collection', async () => {

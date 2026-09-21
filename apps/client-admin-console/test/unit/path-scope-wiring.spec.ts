@@ -118,11 +118,12 @@ describe('src/composables/path-scope -> usePathScope', () => {
         expect(scope.pending.value).toBe(false);
     });
 
-    // The store hydrates the managed realm after the first paint, so a
-    // `?path=` link is read before the realm it lives in is known. An empty
-    // id list published there is a CONSTANT-FALSE filter, and the load it
-    // triggers races the settled scope's own reload, which is how a folder
-    // that holds rows ended up listing none of them.
+    // Unresolved and empty are opposites that look alike: an empty id
+    // list is a CONSTANT-FALSE filter, so a scope publishing one before its
+    // lookup answered makes every load taken in that window list nothing.
+    // The console normally knows its realm before a page mounts (the routing
+    // guard awaits `store.resolve()`), so this pins the composable's own
+    // contract rather than a state the console routinely enters.
     it('should hold a folder unresolved until the realm is known', async () => {
         const scoped = await mountScope('sales', false);
 

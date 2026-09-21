@@ -53,7 +53,7 @@
  * consumes (`--vc-tree-gap`, `--vc-tree-row-inset`, `--vc-tree-trigger-size`).
  * Without this import a tree renders flat, with every level at the margin.
  */
-@import "@vuecs/tree/style.css";
+@import "@vuecs/tree/style.css" layer(components);
 
 /* ------------------------------------------------------------------
    Kit-component styles

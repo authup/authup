@@ -81,10 +81,15 @@ export default defineComponent({
         // navigation, so leaving `?path=` behind (the section crumb, the
         // sidebar entry) would otherwise leave the list narrowed while the
         // URL and the breadcrumb say it is not.
-        const collection = ref<{ load: ListLoadFn, data: Path[] } | null>(null);
+        //
+        // Post flush, because a prop only carries its new value once the
+        // parent has re-rendered: a pre-flush reload composes the query
+        // this page held BEFORE the navigation, which is the very state
+        // the reload exists to leave behind.
+        const collection = ref<{ load: ListLoadFn, busy: boolean } | null>(null);
         watch(query, () => {
             reloadCollection(() => collection.value);
-        });
+        }, { flush: 'post' });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PATH_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PATH_DELETE });

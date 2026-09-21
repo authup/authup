@@ -101,6 +101,7 @@ describe('createCLIEntryPointCommand', () => {
             'identity-provider-account',
             'identity-provider-role-mapping',
             'key',
+            'path',
             'permission',
             'permission-policy',
             'policy',

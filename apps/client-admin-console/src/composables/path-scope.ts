@@ -112,17 +112,21 @@ export async function collectPathPages(
     };
 }
 
-/** How many times a refused reload is re-offered before it gives up. */
-export const RELOAD_ATTEMPTS = 3;
-
-/** How long to wait before re-offering one. */
-const RELOAD_RETRY_INTERVAL = 150;
+/** How long to wait before looking at a busy collection again. */
+const RELOAD_POLL_INTERVAL = 50;
 
 /** The part of a collection's exposed surface a reload needs. */
 export type ReloadableCollection = {
     load: ListLoadFn,
     busy?: boolean
 };
+
+/**
+ * Which reload is the current one. A newer scope supersedes an older one
+ * that is still waiting, so a stale folder can never be the query that
+ * lands.
+ */
+let reloadGeneration = 0;
 
 /**
  * Reload a collection whose BASE query changed.
@@ -135,15 +139,25 @@ export type ReloadableCollection = {
  * for the collection to go idle and only then asks, rather than asking and
  * guessing afterwards whether it was taken.
  *
- * The wait is capped: a collection that never goes idle would otherwise
- * hold this forever, and one that reloads late is a worse answer than one
- * that does not reload at all only when the rows have already changed
- * underneath. A refused offer costs nothing; an idle one costs a request.
+ * The wait is NOT capped, because a deadline is a way to answer a folder
+ * with every row in the realm: whatever the ceiling, a first load slower
+ * than it leaves the narrowed query unsent while the address bar and the
+ * tree both say a folder is selected. It terminates on the two states that
+ * exist instead — `load` clears `busy` in a `finally`, so a collection
+ * that is busy becomes idle, and an unmounted page hands back no collection
+ * at all.
  */
 export async function reloadCollection(
     get: () => ReloadableCollection | null,
 ) : Promise<void> {
-    for (let attempt = 0; attempt < RELOAD_ATTEMPTS; attempt += 1) {
+    reloadGeneration += 1;
+    const generation = reloadGeneration;
+
+    for (;;) {
+        if (generation !== reloadGeneration) {
+            return;
+        }
+
         const collection = get();
         if (!collection) {
             return;
@@ -157,7 +171,7 @@ export async function reloadCollection(
         }
 
         await new Promise((resolve) => {
-            setTimeout(resolve, RELOAD_RETRY_INTERVAL);
+            setTimeout(resolve, RELOAD_POLL_INTERVAL);
         });
     }
 }
@@ -345,14 +359,13 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         }
 
         if (!realmId) {
-            // A folder is named but the realm holding it is not known yet:
-            // the store hydrates the managed realm after the first paint,
-            // so this is the ordinary first pass of a `?path=` link. The
-            // scope is UNRESOLVED, not empty. Publishing the empty id list
-            // here would hand the page `in(pathId)`, a constant false, and
-            // the load that triggers then races the settled scope's own
-            // reload, which is how a folder holding rows listed none of
-            // them. The watcher re-runs when the realm arrives.
+            // Defensive rather than ordinary: the routing guard awaits
+            // `store.resolve()` before a page mounts and the session commit
+            // writes the managed realm synchronously, so a mounted page
+            // knows its realm. A realm missing anyway leaves the scope
+            // UNRESOLVED rather than empty, since the empty id list is a
+            // constant-false filter and the load taken in that window would
+            // list nothing. The watcher re-runs when the realm arrives.
             pending.value = true;
             return;
         }
