@@ -314,9 +314,11 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 A user's language and color mode are account-level preferences, stored as two
 user attributes named `locale` and `colorMode`, and served as claims: `locale`
 is the OIDC standard claim (Core 5.1), `color_mode` is Authup's own, `light`,
-`dark` or `system`. Both appear on the `id_token`, the access token,
-`/userinfo` and both introspection routes. A user without the attribute gets
-no claim, not a `null`.
+`dark` or `system`. Both appear on the `id_token` and on both introspection
+routes. A user without the attribute gets no claim, not a `null`. The access
+token carries neither, and `/userinfo` serves the user record with its
+attributes flattened under their own names, so it answers `locale` and
+`colorMode` rather than the claim names.
 
 Like every claim, the value in a token is the one at issuance. Introspection
 rebuilds the claims from the row on every call, so **`POST /token/introspect`
@@ -325,9 +327,9 @@ what an application should read when it wants to follow a change the user made
 elsewhere.
 
 The two rows are ordinary user attributes: a user writes their own under
-`user_self_manage`, an administrator under `user_update`, and a provisioning
-file can declare them. What makes them reserved is that their value is checked
-(a BCP47 tag; one of the three color modes) and that Authup's own consoles and
+`user_self_manage`, an administrator under `user_update`. What makes them
+reserved is that their value is checked (a BCP47 tag of at most 35
+characters; one of the three color modes) and that Authup's own consoles and
 `@authup/client-web-kit` seed the browser from them and write a switcher change
 back, so a preference made in one application is the one every application
 opens in.

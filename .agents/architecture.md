@@ -5025,28 +5025,44 @@ columns.** `OAuth2OpenIDClaimsBuilder.userMap` maps the two names like any
 column, because the identity read (`UserIdentityRepository.find`) already
 ends in `extendOneWithEA`, so a row is an own property on the object the
 builder receives and an absent row is an absent claim (the #3518 rule, never
-`null`). They land on the id_token, the access token, `/userinfo` and both
-introspection routes with no further wiring. A token's copy is frozen at
+`null`). They land on the id_token and on both introspection routes with no
+further wiring, and nowhere else: the access token issuer never runs the
+claims builder, and `/userinfo` serves the flattened record under the
+ATTRIBUTE names (`colorMode`, not `color_mode`). A token's copy is frozen at
 issuance like every claim; **introspection rebuilds the claims from the row
 on every call and answers the CURRENT value**, and that is the reader the
-kit uses. The by-id identity read is query-cached for 60s, and the
-user-attribute subscriber drops that key on write, so a change is visible on
-the very next introspection (pinned end to end in `introspect.spec.ts`,
-which introspects, writes, and introspects again).
+kit uses. The by-id identity read is query-cached for 60s, but that cache
+holds the user ROW alone: `extendOneWithEA` re-reads the attribute rows
+uncached on every identity read, which is why a change is visible on the
+very next introspection (pinned end to end in `introspect.spec.ts`, which
+introspects, writes, and introspects again). The user-attribute subscriber's
+own invalidation (`USER_OWNED_ATTRIBUTES`) drops a key nothing writes, so
+do not lean on it: caching the attribute read under that prefix is what
+would break the guarantee.
 
 **The one server-side rule is value validation, and it is per NAME.**
 `assertPreferenceValue` (`core/entities/user-attribute/preferences.ts`) runs
-in `UserAttributeService.create` and, for a value-only `update`, against the
-ROW's name, so a reserved row cannot be fed junk by a body that omits the
-name. `locale` is checked for BCP47 SHAPE only and never narrowed to a catalog
-authup has, since the attribute is the user's preference for every RP that
-reads the claim; `colorMode` must be an `OAuth2UIColorMode`. Every other
-attribute name keeps taking any string, and nothing else about the rows is
-special: a user writes their own under `USER_SELF_MANAGE` (neither name is in
-the denylist and neither is a `User` column), an admin under `USER_UPDATE`, a
-provisioning file can declare them. A keyed upsert route was considered and
-not added: the kit does find-then-write, two requests that only ever run when
-a switcher moves.
+in `UserAttributeService.create` and in `update` over the PAIR the row will
+hold (`data.name ?? entity.name`, `data.value ?? entity.value`), so a
+reserved row cannot be fed junk by a body that omits the name and an
+unchecked row cannot be renamed into a reserved one to slip its value past.
+`locale` is checked for BCP47 SHAPE and never narrowed to a catalog authup
+has, since the attribute is the user's preference for every RP that reads the
+claim, but it is BOUNDED (subtags of at most 8 characters, 35 characters in
+all, `LOCALE_MAX_LENGTH`), because the value rides every signed token of the
+subject and the attribute `value` column is unbounded `text`; `colorMode`
+must be an `OAuth2UIColorMode`. `create` additionally drops a body-supplied
+`user` object before anything reads it: with no `userId` to resolve it from,
+`validateJoinColumns` keeps such an object verbatim, and its `realmId` would
+gate `USER_UPDATE` against a realm of the caller's choosing, which is one
+realm's admin writing another realm's user's claim. Every other attribute
+name keeps taking any string, and nothing else about the rows is special: a
+user writes their own under `USER_SELF_MANAGE` (neither name is in the
+denylist and neither is a `User` column), an admin under `USER_UPDATE`. A
+provisioning file cannot declare them: the user provisioning entity carries
+`User` COLUMNS only and no synchronizer writes attribute rows. A keyed upsert
+route was considered and not added: the kit does find-then-write, two
+requests that only ever run when a switcher moves.
 
 **Not columns, and not the token alone.** Columns would buy filterability
 nobody needs for a theme at the price of a migration and two more fields on an
@@ -5061,20 +5077,33 @@ which stays session state and never becomes a second source for a value
 vuecs owns. `seed(introspection)` runs inside the synchronous `commitSession`,
 right after `setUser`, on the bearer and cookie-mode paths alike: a claim
 present assigns the ref (account wins); no claim plus an explicit ref value
-(never the `auto` / `system` sentinel) enqueues a bootstrap write for a user
-subject. A `watch` per ref debounces 300ms and then writes whatever the ref
-holds NOW (find by `filter[userId]`+`filter[name]`, both allowed and
-index-leading on the attribute schema, then `update` or `create`), chained
-per preference so two writes never both create, and answers a failure with
-one `console.warn` and nothing else. Two guards are load-bearing. The loop
-guard is `known`, the value the account holds as far as this instance knows:
-a seed sets it BEFORE assigning the ref, so the watcher sees `value ===
-known` and returns, and it is cleared on `cleanup()` and on a subject change
-so a shared browser leaks nothing. And a pending change OUTRANKS a concurrent
-commit: `seed` skips a preference whose timer is armed or whose write is in
-flight, because the cookie-mode consoles revalidate on every navigation and a
-toggle followed by a click inside the window would otherwise be seeded back
-to the old value (pinned in `preferences.spec.ts`).
+(never the `auto` / `system` sentinel, never a value the account already
+refused) enqueues a bootstrap write for a user subject. A `watch` per ref
+debounces 300ms and then writes whatever the ref holds NOW (find by
+`filter[userId]`+`filter[name]`, both allowed and index-leading on the
+attribute schema, then `update` or `create`), chained per preference so two
+writes never both create, and answers a failure with one `console.warn` and
+nothing else. A ref moved back to its sentinel DELETES the row rather than
+writing the sentinel: the account then holds nothing, which is what the
+sentinel means, and `auto` is no BCP47 tag the server would take. Three
+guards are load-bearing. The loop guard is `known`, the value the account
+holds as far as this instance knows: a seed sets it BEFORE assigning the ref,
+so the watcher sees `value === known` and returns. A pending change OUTRANKS
+a concurrent commit: `seed` skips a preference whose timer is armed or whose
+write is in flight, because the cookie-mode consoles revalidate on every
+navigation and a toggle followed by a click inside the window would otherwise
+be seeded back to the old value. And every timer, write and memo belongs to
+the SUBJECT it was made for: the watcher captures the signed-in user at
+change time and the timer refuses to fire for another, and a subject change
+(a second tab signing the shared console session in as someone else, which
+commits with no `cleanup()`) bumps a generation that clears the timers and
+`known`, zeroes `pending` so the new subject's seed is not skipped behind the
+previous one's write, and makes that write's completion touch nothing when it
+lands. Without it the previous user's debounced toggle was written onto
+whoever was signed in when the timer fired. A failed write records the value
+under `failed`, so the bootstrap does not repeat the same refused GET + POST
+pair on every navigation, while a change the user makes still goes up. All of
+it is pinned in `preferences.spec.ts`.
 
 **`createCookieRef` hands out ONE ref per cookie name and document** (client
 only; a server render gets a fresh ref seeded by `initial`, since there is no

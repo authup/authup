@@ -16,8 +16,8 @@ import {
     CLIENT_ADMIN_CONSOLE_NAME,
     PermissionName,
     REALM_MASTER_NAME,
-    UserAttributeName, 
-    buildUserFakeEmail, 
+    UserAttributeName,
+    buildUserFakeEmail,
 } from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
@@ -219,9 +219,9 @@ describe('token-introspect', () => {
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
         const { data: role } = await suite.client.role.create(createFakeRole());
         await suite.client.rolePermission.create({
-            roleId: role.id, 
-            permissionId: permission.id, 
-            policyId: policy.id, 
+            roleId: role.id,
+            permissionId: permission.id,
+            policyId: policy.id,
         });
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
@@ -250,9 +250,9 @@ describe('token-introspect', () => {
         const { data: policy } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
         const { data: role } = await suite.client.role.create(createFakeRole());
         await suite.client.rolePermission.create({
-            roleId: role.id, 
-            permissionId: permission.id, 
-            policyId: policy.id, 
+            roleId: role.id,
+            permissionId: permission.id,
+            policyId: policy.id,
         });
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
@@ -277,9 +277,9 @@ describe('token-introspect', () => {
     // The account-level UI preference: two reserved user attributes, served
     // as the `locale` / `color_mode` claims. Introspection rebuilds the
     // claims from the row on every call, so it answers the CURRENT value
-    // even though the admin's identity read is query-cached (the attribute
-    // subscriber drops that key on write) and even though the token was
-    // minted before the rows existed.
+    // even though the token was minted before the rows existed: the admin's
+    // identity read is query-cached, but that cache holds the user row alone
+    // and `extendOneWithEA` re-reads the attribute rows on every read.
     it('should carry the current locale and color_mode preference for a live token', async () => {
         const { data: admin } = await suite.client.user.getOne('admin');
 
@@ -396,9 +396,9 @@ describe('token-introspect', () => {
         // before it became a JWTError.
         const header = Buffer
             .from(JSON.stringify({
-                alg: 'RS256', 
-                typ: 'JWT', 
-                kid: '6b0f4a5c-0d2e-4f1a-9c3b-8e7d6f5a4b3c', 
+                alg: 'RS256',
+                typ: 'JWT',
+                kid: '6b0f4a5c-0d2e-4f1a-9c3b-8e7d6f5a4b3c',
             }))
             .toString('base64url');
         const body = Buffer

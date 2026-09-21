@@ -65,7 +65,9 @@ on. The value travels as the `locale` and `color_mode` claims; see
 Before the first sign-in on a browser, the pages use what that browser holds,
 or the `ui_locales` / `ui_color_mode` hint the application sent. The first
 sign-in adopts an explicit browser choice as the account's initial value if the
-account has none yet, so nobody loses a preference to an empty account.
+account has none yet, so nobody loses a preference to an empty account. Setting
+a switcher back to automatic removes the account's value, so every device
+falls back to its own default again.
 
 ## Connected accounts
 
