@@ -396,3 +396,14 @@ locale plugin (enabled by default; `name: 'vuecs-locale'`,
   vuecs already persists + resolves. Do **not** re-add a
   `config: { locale: injectTranslatorLocale() }` feed in the consumer
   `app.use(vuecs, ...)`: the locale plugin owns `Config['locale']`.
+- **The ACCOUNT half rides the same refs, never a copy.** The kit store's
+  `preferences: { locale?, colorMode? }` install option takes the app's own
+  cookie-backed refs and pipes the account's `locale` / `color_mode` claims
+  INTO them on every session commit and a switcher change OUT of them onto
+  the user's attributes; vuecs stays the owner of the live value. The three
+  consoles pass `createCookieRef(LOCALE_COOKIE, ...)` and
+  `createCookieRef(COLOR_MODE_COOKIE, ...)`, which hands out ONE ref per
+  cookie name and document, so every `createColorMode()` in a layout is the
+  same value the store seeds. The Nuxt plugin registers its own same-name
+  `useCookie` refs, kept in step by Nuxt's per-name `BroadcastChannel`. See
+  architecture.md → *The account-level UI preference*.

@@ -5054,6 +5054,55 @@ already wide `User`. A claim in the token alone was rejected outright: signed
 at issuance, it is wrong from the moment the user changes it until the next
 refresh, which is what makes introspection the reader.
 
+**The kit half is one store option and one module** (`install(app, {
+preferences: { locale?, colorMode? } })`, `core/store/preferences.ts`). The
+app hands the store its two REFS once; nothing is copied into the store,
+which stays session state and never becomes a second source for a value
+vuecs owns. `seed(introspection)` runs inside the synchronous `commitSession`,
+right after `setUser`, on the bearer and cookie-mode paths alike: a claim
+present assigns the ref (account wins); no claim plus an explicit ref value
+(never the `auto` / `system` sentinel) enqueues a bootstrap write for a user
+subject. A `watch` per ref debounces 300ms and then writes whatever the ref
+holds NOW (find by `filter[userId]`+`filter[name]`, both allowed and
+index-leading on the attribute schema, then `update` or `create`), chained
+per preference so two writes never both create, and answers a failure with
+one `console.warn` and nothing else. Two guards are load-bearing. The loop
+guard is `known`, the value the account holds as far as this instance knows:
+a seed sets it BEFORE assigning the ref, so the watcher sees `value ===
+known` and returns, and it is cleared on `cleanup()` and on a subject change
+so a shared browser leaks nothing. And a pending change OUTRANKS a concurrent
+commit: `seed` skips a preference whose timer is armed or whose write is in
+flight, because the cookie-mode consoles revalidate on every navigation and a
+toggle followed by a click inside the window would otherwise be seeded back
+to the old value (pinned in `preferences.spec.ts`).
+
+**`createCookieRef` hands out ONE ref per cookie name and document** (client
+only; a server render gets a fresh ref seeded by `initial`, since there is no
+document and no sharing). The admin console carries three
+`createColorMode()` instances (`App.vue`, `header.vue`, `layouts/auth.vue`)
+and the toggle lives in the last two, so a ref created in `main.ts` alone
+would never see a toggle and a seed would never reach the icon; sharing by
+name makes them one value with no SFC touched. The cost is that a second
+client-side caller's `initial` is ignored, which no caller passes differently.
+
+**The Nuxt plugin registers both refs itself, client-only, so hub needs no
+code**, and the reason it can is a Nuxt fact worth keeping: every `useCookie`
+ref of one name posts its writes on a `BroadcastChannel` per cookie name (the
+Cookie Store change event under that experimental flag), and every other ref
+of that name adopts them. So a plain `useCookie(LOCALE_COOKIE)` /
+`useCookie(COLOR_MODE_COOKIE)` in the kit plugin, wrapped in a `computed`
+bridge (null → sentinel) and written with the host's own cookie attributes
+(`runtimeConfig.public.vuecs.cookie` / `localeCookie`), IS in step with
+`@vuecs/nuxt`'s `useColorMode()` and the `vuecs-locale` plugin's ref without
+either being reachable from here. `useLocaleManager()` was deliberately not
+used: that plugin is `enforce: 'post'`, so the manager does not exist when
+`authup:kit` runs, and "when present" would have meant never. Client-only
+because Nuxt's SERVER cookie refs are plain refs off the request header whose
+writes land as `Set-Cookie` at `app:rendered`, so a server-side seed would
+reach nothing but a header while the render used the stale value, a hydration
+mismatch on the one visit where cookie and account differ; the client's own
+resolve seeds right after hydration instead.
+
 ### OIDC prompt surface & id_token claims
 
 `/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`
