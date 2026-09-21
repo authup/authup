@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* account-level locale and color mode preference ([#3622](https://github.com/authup/authup/issues/3622)) ([66b147c](https://github.com/authup/authup/commit/66b147ca95dd362b232a5806b5f7f181b576b02b))
+* **client-web-kit:** default the UI hints from the preference cookies ([#3621](https://github.com/authup/authup/issues/3621)) ([d734681](https://github.com/authup/authup/commit/d734681829229c8562aff964ad9b8055fd8fc5e1))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* identity-provider login on the device page, bounded lookup forgiveness, access-policy deny rows ([#3610](https://github.com/authup/authup/issues/3610)) ([045583a](https://github.com/authup/authup/commit/045583aeecd295e79a27c18cbaef89ed906998e6))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/client-web-theme bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/i18n bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

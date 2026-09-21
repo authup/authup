@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* account-level locale and color mode preference ([#3622](https://github.com/authup/authup/issues/3622)) ([66b147c](https://github.com/authup/authup/commit/66b147ca95dd362b232a5806b5f7f181b576b02b))
+* **authup:** sign the CLI in through the device grant and manage entities over the typed client ([#3614](https://github.com/authup/authup/issues/3614)) ([9647056](https://github.com/authup/authup/commit/9647056f44ad48388891726138c32e6c4d7ea405))
+* batch permission check at POST /authorization/check ([#3603](https://github.com/authup/authup/issues/3603)) ([57eb8d4](https://github.com/authup/authup/commit/57eb8d4dde731098ce76f88e794c0caead6618b3))
+* carry the RP's language and color mode into the hosted pages ([#3620](https://github.com/authup/authup/issues/3620)) ([31817c5](https://github.com/authup/authup/commit/31817c5abd9c7b13b2933f03d19625712d746a6c))
+* **client-web-kit:** default the UI hints from the preference cookies ([#3621](https://github.com/authup/authup/issues/3621)) ([d734681](https://github.com/authup/authup/commit/d734681829229c8562aff964ad9b8055fd8fc5e1))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* expose complete authorization through introspection ([#3584](https://github.com/authup/authup/issues/3584)) ([3240951](https://github.com/authup/authup/commit/32409512c342f7e0cfd9a70eb638b5c9023da571))
+* gate consoles on POST /authorization/check ([#3617](https://github.com/authup/authup/issues/3617)) ([146bb23](https://github.com/authup/authup/commit/146bb2316143924465a88a14e0a4748700486bbf))
+* identity-provider login on the device page, bounded lookup forgiveness, access-policy deny rows ([#3610](https://github.com/authup/authup/issues/3610)) ([045583a](https://github.com/authup/authup/commit/045583aeecd295e79a27c18cbaef89ed906998e6))
+* serve the authorization catalog at GET /authorization and the identity's grants on introspection ([#3588](https://github.com/authup/authup/issues/3588)) ([bd9b7d0](https://github.com/authup/authup/commit/bd9b7d03cf16de5fb4fbb3b866970e53de0a2416))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+* ensure consistent version for release ([6c4868d](https://github.com/authup/authup/commit/6c4868d7fc634c4b39710965cc536f80a1be1f1a))
+* narrow a user's client-owned grants to the token's client ([#3606](https://github.com/authup/authup/issues/3606)) ([5efbd46](https://github.com/authup/authup/commit/5efbd464f638bf23d441fd7ebece74a0342d69da))
+* reorganize device http controllers ([fdfc3ba](https://github.com/authup/authup/commit/fdfc3badce6a3069a5cade8a670aa4e598aa6a57))
+* **server-core:** check all permissions of client-owned roles ([#3612](https://github.com/authup/authup/issues/3612)) ([0782658](https://github.com/authup/authup/commit/078265854239e97581d00a843e34b17a9f48301d))
+* **server-core:** gate the global-capable entity reads by realm reach ([#3593](https://github.com/authup/authup/issues/3593)) ([3dcd690](https://github.com/authup/authup/commit/3dcd69037e096a64d176cf8c255d6a636cdccabc))
+* **server-core:** gate the identity-provider-account read with the compiled WHERE ([#3602](https://github.com/authup/authup/issues/3602)) ([2f12476](https://github.com/authup/authup/commit/2f124762f69f7d75608a5ca08cc7539d9f6cd971))
+* **server-core:** raise a failed grant load and take the attribute owner from the relation id ([#3628](https://github.com/authup/authup/issues/3628)) ([9fd027b](https://github.com/authup/authup/commit/9fd027b7176ac11b7b18337d872da0cb3d6eb01f))
+* **server-core:** realm-gate the junction reads, count the device deny, state the post contract ([#3598](https://github.com/authup/authup/issues/3598)) ([32a4fbf](https://github.com/authup/authup/commit/32a4fbfd99471be43d0e03df7205f13838f4aea0))
+* **server-core:** refuse a bearer issued to a client on POST /authorize and device approve ([#3611](https://github.com/authup/authup/issues/3611)) ([3755fac](https://github.com/authup/authup/commit/3755fac54fab80cf48c1cd8ce6e423ce3c12c423))
+* **server-core:** scope the check routes to the caller, and gate checks for other subjects behind permission_check ([#3605](https://github.com/authup/authup/issues/3605)) ([7e1d06d](https://github.com/authup/authup/commit/7e1d06dae16c8f6b1a237f39fdab6a46a2c1ff06))
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

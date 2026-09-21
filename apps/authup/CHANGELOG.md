@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* **authup:** sign the CLI in through the device grant and manage entities over the typed client ([#3614](https://github.com/authup/authup/issues/3614)) ([9647056](https://github.com/authup/authup/commit/9647056f44ad48388891726138c32e6c4d7ea405))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-account-console bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-admin-console bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-auth-console bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-config bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-config-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-console-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-core bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
