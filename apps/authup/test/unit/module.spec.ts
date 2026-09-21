@@ -73,8 +73,50 @@ describe('createCLIEntryPointCommand', () => {
     it('carries the authup meta and every command', async () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
-        expect(Object.keys(command.subCommands ?? {}).sort())
-            .toEqual(['config', 'dev', 'healthcheck', 'migration', 'start']);
+        expect(Object.keys(command.subCommands ?? {}).sort()).toEqual([
+            'api',
+            'config',
+            'dev',
+            'healthcheck',
+            'login',
+            'logout',
+            'migration',
+            'start',
+            'whoami',
+        ]);
+    });
+
+    it('groups the derived entity commands under api, apart from the operator commands', async () => {
+        const command = await createCLIEntryPointCommand();
+        const api = await resolveSubCommand(command, 'api');
+
+        expect(Object.keys(api.subCommands ?? {}).sort()).toEqual([
+            'client',
+            'client-permission',
+            'client-role',
+            'client-scope',
+            'consent',
+            'event',
+            'identity-provider',
+            'identity-provider-account',
+            'identity-provider-role-mapping',
+            'key',
+            'permission',
+            'permission-policy',
+            'policy',
+            'realm',
+            'role',
+            'role-attribute',
+            'role-permission',
+            'scope',
+            'session',
+            'session-token',
+            'trust-anchor',
+            'user',
+            'user-attribute',
+            'user-permission',
+            'user-role',
+        ]);
     });
 
     it('refuses a stray positional on dev but leaves the roles and the migration operation alone', async () => {
@@ -88,6 +130,8 @@ describe('createCLIEntryPointCommand', () => {
             ['start', 'worker'],
             ['start', 'console', 'admin'],
             ['migration', 'run'],
+            ['api', 'user', 'list'],
+            ['login'],
         ]) {
             expect(() => command.setup?.(createSetupContext(command, positionals)))
                 .not.toThrow();

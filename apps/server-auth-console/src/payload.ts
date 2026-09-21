@@ -8,6 +8,7 @@
 import type { AuthorizeInfo, StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import { Client } from '@authup/core-http-kit';
 import { isUUID } from '@authup/kit';
+import { OAuth2UIColorMode } from '@authup/specs';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from './redirect';
@@ -155,6 +156,50 @@ export function buildWorkflowPageData(
     }
 
     return data;
+}
+
+/**
+ * The RP's own UI language, from the OIDC Core section 3.1.2.1 `ui_locales`
+ * parameter: a space-separated list of BCP47 tags in preference order.
+ *
+ * It rides the authorization request, so it survives the page GET's hop and
+ * the rebuild a federated round-trip makes from the stored code request. The
+ * four workflow pages take it straight from their own query, since an RP
+ * linking to one can say the same thing there.
+ */
+export function readUILocalesHint(event: IAppEvent) : string | undefined {
+    const { ui_locales: uiLocales } = useRequestQuery(event);
+    if (typeof uiLocales !== 'string') {
+        return undefined;
+    }
+
+    // ponytail: the first well-formed tag wins, and it is NOT narrowed to a
+    // locale authup has a catalog for. That is the latitude the navigator
+    // path already takes -- a `de-CH` visitor is stamped `lang="de-CH"` and
+    // reads the `de` catalog. Narrow here (matchLocale over LOCALES) if the
+    // lang attribute ever has to name only an authored locale, which costs
+    // this service a dependency on @authup/i18n.
+    return uiLocales
+        .split(' ')
+        .find((tag) => /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$/.test(tag));
+}
+
+/**
+ * The color mode the RP renders in, from authup's own `ui_color_mode`. One
+ * value rather than a list, since there is nothing to negotiate.
+ *
+ * Checked against the enum rather than local literals because the realm's
+ * discovery document ADVERTISES that same set as
+ * `ui_color_modes_supported`: a second spelling here would let the pages and
+ * the document disagree about what the deployment accepts.
+ */
+export function readUIColorModeHint(event: IAppEvent) : string | undefined {
+    const { ui_color_mode: uiColorMode } = useRequestQuery(event);
+
+    return typeof uiColorMode === 'string' &&
+        (Object.values(OAuth2UIColorMode) as string[]).includes(uiColorMode) ?
+        uiColorMode :
+        undefined;
 }
 
 /**

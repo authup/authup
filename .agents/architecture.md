@@ -2453,13 +2453,11 @@ rather than trusted until `exp`.
 - **Cookie mode needs no bearer for permission checks.** Of the three
   surfaces that read `accessToken`, only `usePermissionCheck` matters, and
   its evaluator is not token-derived: the store commits the evaluator built
-  from the authorization document it fetches after the introspection
-  (`GET /authorization`, with the staged bearer in bearer mode and with the
-  session cookie in cookie mode). A 404 there, or a 403 for a user holding
-  none of `PERMISSION_READ`, `PERMISSION_UPDATE` or `PERMISSION_DELETE`, the
-  three the catalog is gated on, sends it to `POST /authorization/check`
-  instead, and the name-only memory provider is the last rung, for a server
-  serving neither route. The recompute WATCH keys on
+  from the verdicts it fetches after the introspection
+  (`POST /authorization/check`, with the staged bearer in bearer mode and
+  with the session cookie in cookie mode). A 404 there means a server that
+  predates the route, and the name-only memory provider is the fallback. The
+  recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
   both modes (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
@@ -3535,18 +3533,31 @@ junction reach is `own`, which excludes the global rows every built-in definitio
 every permission is bound to the global `system.default`, so a grant held at the default
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
-read as authoritative where the refusal is what sends a console to the batch check below. Two rules follow. A resource server
-reads the catalog with its OWN client credential, holding `PERMISSION_READ` through one
-`client-permission` row: the document is identity-free, so the end user's bearer is the
-wrong credential for it, and a resource server must fail closed when it has no catalog.
-A console whose signed-in user lacks the family is answered 403 and reads
-`POST /authorization/check` instead (below), which is authoritative where the name-only
-view it replaces is merely coarse. The name-only view survives as the last rung, for a
-server predating both routes. **It is COARSER than either, not equivalent to them**: it
-gates on the entry names alone, ignoring realm reach and junction policies, so a check
-the catalog path denies passes there. It is kept because a console's gating is advisory
-(the server enforces every decision) and it is the gating every console user had before
-the catalog existed. A resource server never takes it. A
+read as authoritative where the refusal is what sends a caller to the batch check below.
+**Who reads which route is decided by the KIND of caller, never by what its actor
+happens to hold.** A resource server reads the catalog with its OWN client credential,
+holding `PERMISSION_READ` through one `client-permission` row: the document is
+identity-free, so the end user's bearer is the wrong credential for it, and a resource
+server must fail closed when it has no catalog. A browser client reads
+`POST /authorization/check` (below) and does not ask for the catalog at all, which is
+what `@authup/client-web-kit`'s store does: it is a public client acting AS the actor,
+so the catalog's gate is structurally unsatisfiable for it, and asking anyway made the
+source depend on whether the signed-in user held the permission family, so one console
+control was gated by local policy trees for an administrator and by server verdicts for
+everyone else. Nothing is lost by the verdicts: every question a console asks is a
+name-only `preEvaluateOneOf`, which they answer at least as precisely, having been
+evaluated against the identity's own realm and the global rows where a realm-less
+pre-gate through the catalog neutral-passes reach. **The store does not consult the
+catalog at all, not even as a fallback.** Both routes shipped in the same release, so no
+deployment serves one without the other, and since the check answers every caller a
+fallback behind it could never be reached — it would be an unreachable second code path
+carrying the whole stale-catalog refetch machinery. The name-only view is the one rung
+below, for a server predating both.
+**It is COARSER than either, not equivalent to them**: it gates on the entry names
+alone, ignoring realm reach and junction policies, so a check the catalog path denies
+passes there. It is kept because a console's gating is advisory (the server enforces
+every decision) and it is the gating every console user had before either route existed.
+A resource server never takes it. A
 tree node is the OUTPUT of its type's access validator (`projectAuthorizationPolicy`), so
 entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
@@ -3622,11 +3633,29 @@ to be gated on. Serving that case by publishing every policy predicate to anyone
 reach the server is the wrong trade, so the route answers VERDICTS instead (#3600). It
 discloses strictly less than the caller form of `POST /permissions/:id/check`, ungated too, discloses
 one name at a time: answers about the caller's own authorization, no definition, no
-policy configuration, and no realm key the caller did not itself supply. Hence
-`ForceLoggedIn` with no permission gate, next to the gated catalog on the same
+policy configuration, and no realm key the caller did not itself supply. Hence no
+permission gate and **no login gate either**, next to the gated catalog on the same
 `:id`-free controller (`POST /permissions/check` would be shadowed by
 `POST /permissions/:id`, and `check` is a legal permission name: the `/roles/schema`
 collision).
+
+**ANONYMOUS is a caller class here, not a hole.** A definition whose policy layer reads
+no identity — a `date` or `time` window, or no policy at all — is one anybody may
+attempt, so "may I" has an answer before anyone signs in and a login gate would only
+withhold it. Everything identity-bound denies by itself:
+`IdentityPermissionBindingPolicyEvaluator` deliberately omits IDENTITY from its
+`requires`, so a missing one is a settled `DATA_MISSING` deny rather than a pending
+permit, and it returns before reaching the grant load, so `grants` is never called for
+an anonymous caller. `resolveRealms` needs no special case either — a realm-less caller
+resolves `own` to nothing and `ownOrNull` to the global rows alone, which is the reach
+`realmScopeMatches` already grants such an identity. A default deployment therefore
+answers an anonymous caller an EMPTY set, because `PermissionService.create` binds the
+global `system.default` to every permission it creates (unconditionally — the
+`permissionsDefaultPolicyAssignment` flag governs only the boot backfill), so reaching
+the anonymous case at all means declaring the permission in a provisioning file with its
+own policies, or unbinding `system.default` from it afterwards. What bounds an
+unauthenticated caller's cost is the body caps plus the rate-limit middleware's
+anonymous bucket, the pair every other anonymous route here rests on.
 
 Body `{ names?, realms? }`, both optional, and an empty body is the point: a caller that
 names nothing asks about every definition, so it never maintains a list in step with its
@@ -3692,45 +3721,38 @@ consumer has to as well), an array needs every member, and anything else denies.
 name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
 a name it does not hold.
 
-The kit reads it at `realms: 'ownOrNull'` when `loadCatalog` answers null, memoized by the
-subject, scope and grants of the introspection it was fetched for (below). One visible
+The kit reads it at `realms: 'ownOrNull'` as its ONLY authorization source, memoized by
+the subject, scope and grants of the introspection it was fetched for (below). One visible
 behaviour change: a bare name is the union of the requested realms, so a
 `realmScope: none` grant stops passing, where a realm-less pre-gate neutral-passes reach
 and lets it enable a control it can never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
 rests on the permission universe being enumerable, and policy names are operator-created
 and unbounded, so a no-subset form there would have no defensible default.
 
-The kit store memoizes ONE catalog per signed-in session: fetched on first use during
-staging and cleared by `cleanup()`, since the gate is per credential (a user without the
-permission family is refused where the next one is not), so a logout and a later login
-fetch anew while a revalidation of the same session reuses the memo. A `403` and a `404`
-alike memoize as null, which sends the store to `POST /authorization/check`, and only a
-server answering 404 there too lands on the name-only view. **That answer has a memo of
-its own, keyed by the introspection's own authorization inputs** rather than by the
-credential: the subject, the token's `scope` and the grant list, compared by value. The
-catalog path recomputes from the grants each introspection reports, so a memo cleared
-only by `cleanup()` would be staler than the path it substitutes for, and a role bound or
-removed mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
+**The kit store reads this route and nothing else**, because it is always a browser
+client acting as the actor and this is the route built for that caller. The answer is
+memoized **keyed by the introspection's own authorization inputs** rather than by the
+credential: the subject, the token's `scope` and the grant list, compared by value. It
+recomputes from the grants each introspection reports, so a memo cleared only by
+`cleanup()` would be stale in a way the answer is not, and a role bound or removed
+mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
 revalidates on every navigation, so that window is the whole document's life). Keyed on
 the inputs, it refetches exactly when they move and asks once when they do not; the
-comparison can only over-refetch, never reuse an answer whose inputs changed. Any other
-fetch failure rejects and clears the memo so the next resolve retries. During
+comparison can only over-refetch, never reuse an answer whose inputs changed. A `404`
+memoizes as null and lands on the name-only view — the route carries no gate a caller
+can fail, so 404 means the server predates it. Any other fetch failure rejects and
+clears the memo so the next resolve retries. During
 session staging, after the introspection and before `commitSession`, for bearer and cookie
 sessions alike, it builds the evaluator from that catalog plus the identity and the grants
 of the introspection it already ran (an introspection naming no `user` or `client` subject
-fails like a failed introspection), refetching the catalog once on a stale error
-(`isAuthorizationCatalogStaleError`, never `instanceof`, since a consumer tree may resolve
-two copies of the package; only the copy just found stale is discarded, compared by
-promise identity, so a concurrent build that stored a fresh one is not thrown away).
-**A build that still fails commits a DENY-ALL evaluator and never rejects**: the
+fails like a failed introspection).
+**A build that fails commits a DENY-ALL evaluator and never rejects**: the
 credential is valid and only the authorization data is not, while a rejection here
 reverts the staged session, revokes its grant and reaches the console guards as a logout.
-That covers a second stale answer, which a routine permission delete or rename makes
-reachable for as long as the junction query cache lives (the grant list rides that 60 s
-cache, the catalog rides none, so the two disagree in the direction "the grants name a
-permission the fresh catalog lacks"), and a catalog the consumer cannot build from at
-all. A failure to FETCH the catalog still rejects, since nothing is known about it, and
-the next resolve retries. The result is committed into ONE stable
+A failure to FETCH still rejects, since nothing is known about the answer, and
+the next resolve retries. `createAuthorizationEvaluator` and
+`isAuthorizationCatalogStaleError` stay exported for a resource server building from the
+catalog; the kit store calls neither. The result is committed into ONE stable
 `StorePermissionEvaluator` (consumers hold on to `store.permissionEvaluator`, so a commit
 swaps what it delegates to). `usePermissionCheck` and the routing guards call
 `preEvaluateOneOf`; a check carrying `realmMatch` settles reach per row, one without keeps
@@ -3747,17 +3769,20 @@ nothing: it is first-party, and making it global-only would stop the served cons
 Basic from binding client-owned permissions, which admin and realm_admin hold through
 auto-assignment. A bearer-mode admin console (standalone-hosted, or its vite dev server)
 holds `admin-console` tokens and IS narrowed. The system console clients are deliberately
-not exempted: they are public and auto-consenting, so with the `POST /authorize` residual
-below an exemption would hand any application un-narrowed grants. Client subjects and the
-role side of `isSuperset` (`getForRole`'s equality) are unchanged.
+not exempted: they are public and auto-consenting, so an exemption would hand any origin
+that reaches one un-narrowed grants. Client subjects resolve their full grants. The role
+side of `isSuperset` also includes every permission the role carries, regardless of client
+ownership (#3607).
 
 **The narrowing is a property of the token, resolved once.** `getForToken(token)`
 (`IdentityPermissionProvider`) is the one place it happens: from the token's `sub`,
 `sub_kind` and `client_id` it loads the user's roles, drops those owned by another
 client, loads their permissions, and drops every permission owned by another client. It
 is a DISJUNCTION (unowned OR the token's client): an equality drops every global grant,
-which already regressed introspection once. `getFor(identity)` stays unnarrowed; nothing
-passes the client alongside the subject. Everything else reads that one grant set:
+which already regressed introspection once. `getFor(identity)` accepts only the subject's
+`type` and `id` and returns its full assignments. It passes only those fields to the role
+provider, so identity metadata cannot narrow the result. Client applicability is applied
+separately by `getForToken`. Everything else reads that one grant set:
 
 - **evaluation**: the authorization middleware composes the request's evaluator per
   request, over an engine whose grant source is `createGrantsResolver`: the request's own
@@ -3785,12 +3810,11 @@ than guarded:
 
 - the application access-policy engine (`OAuth2AccessPolicyEvaluator`) still holds the
   bare provider; it evaluates with IDENTITY data only, so it never reads grants;
-- assigning a client-owned role checks none of the GLOBAL permissions it carries:
-  `getForRole` keeps only the permissions owned by the role's own client, an empty child
-  passes `isSuperset`, so an actor holding only `USER_ROLE_CREATE` can assign itself an
-  owned role carrying any global permission. This predates the token narrowing (#3607);
-- `POST /authorize` and device approve accept any user bearer, so a holder of a Y token
-  can mint an X token for a public client X (#3608);
+- the served consoles authenticate with the session cookie, which sets an identity but no
+  token payload, so `createGrantsResolver` falls through to `getFor` and nothing is narrowed
+  inside them: a console user's grants owned by ANY client apply. That is the fail-open above
+  read from the other side, and it is deliberate — narrowing it would stop the consoles and
+  Basic binding client-owned permissions at all;
 - an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
@@ -3865,7 +3889,7 @@ expressed via a `policyId` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies that one grant list covers another: the service passes the actor's grants as `parent` (as its request resolved them through `getActorGrants`, so a token's grants are narrowed to its client) and the target role's grants, loaded through `getFor`, as `child`. It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
+When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies that one grant list covers another: the service passes the actor's grants as `parent` (as its request resolved them through `getActorGrants`, so a token's grants are narrowed to its client) and the target role's full grants, loaded through `getFor({ type: 'role', id })`, as `child`. `getForRole` returns every binding without filtering by the role's client ownership (#3607). It is **disjunction-aware and policy-aware** — there is no lossy collapse (#3158):
 
 1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
 2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
@@ -4243,6 +4267,68 @@ it is SERVED at `<publicUrl>/console/admin` (by
 `@authup/server-admin-console`, see *Admin Console*). Same-ORIGIN is what lets cookie mode apply
 the account console's cookie credential to it with no BFF, and that is a
 property of the URL rather than of which process answers it.
+
+**CLI sign-in (`authup login`, #3592).** The operator binary is also a client
+of a deployment, over `apps/authup/src/host/`. `login` runs the device
+authorization grant against an OPERATOR-SUPPLIED client (`--client <id|name>`,
+`--realm` for a name; both remembered per server in
+`$XDG_CONFIG_HOME/authup/hosts.json`), never a provisioned one: the client's
+`accessPolicyId` is the operator's admission control for the CLI, and a client
+authup stamped into every realm would sit outside it. The realm hint rides
+BOTH calls of that grant, the device request and every `/token` poll: a client
+NAME resolves within the realm a request names and within master when it names
+none, so a poll that drops the hint resolves a name outside master onto
+another realm's client, which mismatches the device code's own and answers
+`invalid_grant` (verified against a live deployment). The tokens go into the
+OS keychain (`@napi-rs/keyring`, an optional dependency imported lazily, Linux
+pinned to Secret Service) unless `login --insecure-storage` put them into the
+hosts file; the choice is recorded on the host entry, no other command takes a
+storage flag, and a keychain failure is an error rather than a fallback (the
+`gh` shape). Plain `http:` is refused for a non-loopback host. Every command
+that talks to a host builds its `Client` through `createHostClient`, which
+attaches core-http-kit's `ClientAuthenticationHook` (`timer: false`) with a
+creator that refreshes under a lock file (`hosts.lock`, stale after 30 s) and
+re-reads the store first, adopting a rotation another process saved instead of
+replaying the refresh token into strict rotation's family revoke; the refresh
+grant itself runs on a second, hook-less `Client`, since a 401 at `/token`
+would otherwise re-enter the hook's own in-flight refresh promise. `logout`
+revokes both tokens at `POST /token/revoke` and forgets the host, and
+deliberately never calls `DELETE /sessions/@me`: the device grant's tokens
+ride the approving browser's `auth_sessions` row. `whoami` reads
+`GET /sessions/@me/introspect`, which describes the request's own bearer, so a
+refresh-and-replay describes the renewed token. The entity commands are
+DERIVED and sit under ONE `api` group (`authup api realm list`): a derived
+noun set is curated by nobody against the operator vocabulary, so at the root
+a new kit sub-API or a new operator command (an `authup key ...`) would
+collide, and a precedence rule only turns that into a noun that silently
+stops working; the group is what keeps the two vocabularies apart.
+`defineCLIEntityCommands` walks `EntityType`, skips `userAuthenticator`
+(its client API is nested under a user, which is why `EntityTypeMap`
+deliberately omits it) and keeps every other value `pickEntityAPI` resolves on
+a `Client`, names the command in kebab-case and gives it the verbs its
+dispatch has (`list`/`get`/`create`/`update`/`delete` over
+`getMany`/`getOne`/`create`/`update`/`delete`), so an entity-shaped sub-API
+added to the kit is a command with no CLI edit. Query flags are the URL
+parameters the server documents, assembled and decoded through
+`@rapiq/codec-url` into the `IQuery` the typed APIs accept; several filter
+conditions ride one `--filter` joined by `&`, because citty parses with
+`util.parseArgs` and no `multiple`, so a repeated flag keeps its last value.
+Output is the response body as JSON; errors are rendered once
+(`describeHostError`: `code: message` plus validation issue paths for an
+`AuthupError` body, else the status with the method and url, plus the
+`message` another JSON body carries; never a raw body, a `cause` or a
+bearer). The anchor on the request is load-bearing rather than decorative:
+the kit `Client` overwrites a hapic error's message with `response.data
+.message`, so a server answering `{"message":"Not Found"}` left the operator
+with those two words. What the command throws renders as that text ALONE,
+through a `nodejs.util.inspect.custom` hook, because citty prints a thrown
+error with `console.error`, which otherwise dumps the stack at an operator.
+Rejected: a provisioned `cli`
+system client (admission control), a raw `api <path>` passthrough and a
+hand-listed resource set (both are a curl wrapper next to a typed client),
+keychain-first with a silent file fallback (a downgrade nobody sees), and
+entity nouns at the root of the CLI (gh's root nouns are a hand-curated set;
+this one is derived).
 
 **Process topology: one binary, one listener verb, several roles.** The
 batteries-included container runs `start`, which is `authup start`:
@@ -4944,6 +5030,39 @@ mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
 call `DELETE /sessions/@me` (that endpoint remains the session-management API for
 revoking a specific session from the sessions UI).
 
+### Only the user at the authorization server may authorize an application
+
+The realm binding above asks WHOSE identity is authorizing; this asks WHICH credential
+presented it. `POST /authorize` and `POST /device_authorization/approve` refuse a bearer
+that carries a `client_id` (`assertTokenMayAuthorize`,
+`adapters/http/request/helpers/token.ts`, `login_required` / 400). It is the FIRST statement
+of `HTTPOAuth2Authorizer.authorizeWithRequest`, so a refused request resolves no client and
+reads no scope, and it sits in `DeviceAuthorizationController.approve` ahead of the service
+call for the same reason. Only the user AT the authorization server may authorize an
+application, and their token there carries no client: the hosted password login sends none
+(`store.login` has one call site and `StoreLoginContext` has no client field, and the form
+deliberately forwards only `codeRequest.realm_id`, never its `client_id`), the MFA-ticket
+completion inherits that, and the federated handoff's issue payload has no such key at all.
+Basic carries no token, so a session-less authorize is unaffected.
+
+Without it a holder of a token issued to client Y mints a code, and then a token, for a
+public client X, which turns the X-owned grants the #3597 narrowing withholds from Y back
+on (#3608) — for a `builtIn` client with no consent step and, since the POST answers with
+the redirect URL in its body, with no browser at all. **This is the bearer half of the
+refusal `isOAuth2IssuancePath` already makes for the console cookie**, which is denied on
+this same surface for the same reason, and it is deliberately not an equality check against
+the client being authorized. A client re-authorizing ITSELF gains no grant it does not hold,
+but it does gain scope and lifetime: `resolveGrantedScope` admits any request asking for
+`global` whatever the client has bound, the server records consent rather than gating on it,
+and the code exchange answers with a fresh refresh chain — so equality would leave an
+application able to widen its own 15-minute `openid` token into a 3-day `global` one, past
+the consent the user gave, unattended. Refusing outright also needs nothing but the request,
+where a comparison needs the resolved client, which on the device path only core knows.
+
+`lookup` and `deny` keep taking any user bearer: both need the `user_code`, and neither
+mints anything. `HTTPOAuth2IdentityGrantType` is unregistered but mints a grant straight
+from the request identity, so wiring it means calling the assert there too.
+
 ### Response types — code only
 
 `response_type=code` is the **only** supported response type (OAuth 2.1
@@ -4977,6 +5096,205 @@ well, so `https://u:p@app/**` would silently accept the bare origin while
 reading as if it required credentials; refusing it makes the registration say
 what it matches. Custom-scheme and unparsable values keep their previous
 handling (verbatim match, and mismatch).
+
+### The two UI hints: `ui_locales` and `ui_color_mode`
+
+The consoles keep the visitor's language and color mode in the host-only
+`vc-locale` and `vc-color-mode` cookies, so an RP on a sibling host cannot see
+either and a visitor arriving from it lands in the browser default. These two
+carry the preference across instead. `ui_locales` is OIDC Core 3.1.2.1 (a
+space-delimited BCP47 list, most preferred first); `ui_color_mode` is authup's
+own, `light|dark|system`, SINGULAR because a color mode has nothing to
+negotiate. Both are mounted in `OAuth2AuthorizationCodeRequestValidator`, and
+that mount is what carries them across a FEDERATED round-trip: `authorize-out`
+stores the VALIDATED code request on the authorization state, and the callback
+re-emits it key by key through `buildHostedAuthorizeURL`, so an unmounted key
+would have been stripped there. They are deliberately NOT on the code blob:
+`OAuth2AuthorizationCodeIssuer` copies an explicit field list onto
+`OAuth2AuthorizationCode`, and nothing after redemption renders a page. The
+page GET's verbatim query hop carries them to every other hosted page. Discovery advertises both,
+`ui_locales_supported` from `LOCALE_CODES` and `ui_color_modes_supported` from
+`OAuth2UIColorMode`; the second is not an OIDC key (Discovery 3 permits extra
+metadata) and is the only machine-readable way an RP learns the parameter
+exists at all. That enum is why `readUIColorModeHint` narrows against
+`@authup/specs` rather than local literals: the document ADVERTISES the set,
+so a second spelling would let the pages and the document disagree about what
+the deployment accepts.
+
+**`buildAuthorizeURL` DEFAULTS both from the two cookies** (`LOCALE_COOKIE` /
+`COLOR_MODE_COOKIE` in the kit's `core/cookie.ts`, which is now where both
+names and both no-choice sentinels are spelled), so a kit consumer sends them
+without wiring anything and one that forgot could not silently drop the
+visitor into the IdP's browser default. The sentinels are skipped, since
+`auto` and `system` resolve from the same browser on both sides; `uiLocales` /
+`uiColorMode` override, and `''` opts out, the `prompt` convention in the same
+function. Read from the COOKIE rather than from `@vuecs/locale`'s manager
+because this is a plain function a router guard calls, with no component
+instance to inject from — and deliberately not held in the kit's auth store,
+which is session state, and would make a second source of truth for a value
+vuecs owns (structure.md → *Locale ownership*).
+
+**They SEED, and only while the visitor has chosen nothing here.**
+`readUILocalesHint` / `readUIColorModeHint` (auth console service) are applied
+in `render.ts` over `readUIClientPreferences`, each guarded on its cookie's
+own no-choice sentinel: `auto` for the locale (`@vuecs/locale` never writes
+the resolved value back, so a tag there can only have come from the switcher)
+and `system` for the color mode (`AColorModeSwitcher` is a binary toggle, so
+it only ever writes `light` or `dark`). The switcher therefore stays the last
+word and cannot be undone by the next authorize request. Nothing is persisted:
+the ref starts at the seeded value and `createCookieRef`'s watch fires on
+change alone. Because the seed lands in `preferences`, the SSR `<html>` stamp
+and the hydration payload agree for free.
+
+**The claim route was considered and does not fit.** `locale` is the OIDC
+standard claim (Core 5.1) and there is no standard claim for a color mode, but
+the pages that lose the preference — `/authorize`, register, activate, the two
+password pages, `/device` — are ANONYMOUS, so there is no token and no
+introspection to read a claim from. A claim is also per identity, where a
+theme is per browser. A shared cookie `Domain` was the other candidate: it
+covers both halves and both directions, but it needs a configuration key on
+authup AND the matching write on the sibling, and a single host-only write on
+either side shadows the widened record (a shadowed read takes the older one,
+RFC 6265 5.4) and freezes the preference with nothing to point at.
+`ui_locales` is unnarrowed on purpose: a tag authup has no catalog for is
+stamped into `lang` and renders the fallback catalog, the latitude the
+navigator-language path already takes.
+
+**Neither is validated by VALUE in the code-request validator**, only by
+shape: `ui_color_mode` is a bounded string rather than an enum of the three,
+because the validator's job is refusing a malformed request while unknown
+values are the consumer's to ignore, which is why `prompt` and `acr_values`
+tolerate tokens they do not know. A cosmetic hint must never be able to 400 a
+login, so the closed set is applied where the page renders it
+(`readUIColorModeHint`), and a malformed `ui_locales` LIST is still an
+`invalid_request` the way a malformed `max_age` is.
+
+### The account-level UI preference: `locale` and `color_mode`
+
+The hints above answer "what is this visitor reading right now" for an
+anonymous page. This answers "what did this ACCOUNT choose": two reserved
+user attributes, `UserAttributeName.LOCALE` (`locale`) and
+`UserAttributeName.COLOR_MODE` (`colorMode`), served as the `locale` claim
+(OIDC Core 5.1) and authup's own `color_mode` (bare snake_case like
+`realm_id` / `sub_kind`, and deliberately NOT `ui_color_mode`, which is the
+hint). The browser cookie is a per-browser CACHE of the account value, not an
+independent opinion: the kit seeds the cookie-backed refs from the
+introspection on every `resolve()` (account wins), writes a switcher change
+back to the attribute, and on a first sign-in whose account holds nothing
+bootstraps an explicit browser value UPWARD, so the rollout demotes nobody to
+"unset". Three sources, one rule, no fight.
+
+**The claims cost nothing on the server, which is why attributes and not
+columns.** `OAuth2OpenIDClaimsBuilder.userMap` maps the two names like any
+column, because the identity read (`UserIdentityRepository.find`) already
+ends in `extendOneWithEA`, so a row is an own property on the object the
+builder receives and an absent row is an absent claim (the #3518 rule, never
+`null`). They land on the id_token and on both introspection routes with no
+further wiring, and nowhere else: the access token issuer never runs the
+claims builder, and `/userinfo` serves the flattened record under the
+ATTRIBUTE names (`colorMode`, not `color_mode`). A token's copy is frozen at
+issuance like every claim; **introspection rebuilds the claims from the row
+on every call and answers the CURRENT value**, and that is the reader the
+kit uses. The by-id identity read is query-cached for 60s, but that cache
+holds the user ROW alone: `extendOneWithEA` re-reads the attribute rows
+uncached on every identity read, which is why a change is visible on the
+very next introspection (pinned end to end in `introspect.spec.ts`, which
+introspects, writes, and introspects again). The user-attribute subscriber's
+own invalidation (`USER_OWNED_ATTRIBUTES`) drops a key nothing writes, so
+do not lean on it: caching the attribute read under that prefix is what
+would break the guarantee.
+
+**The one server-side rule is value validation, and it is per NAME.**
+`assertPreferenceValue` (`core/entities/user-attribute/preferences.ts`) runs
+in `UserAttributeService.create` and in `update` over the PAIR the row will
+hold (`data.name ?? entity.name`, `data.value ?? entity.value`), so a
+reserved row cannot be fed junk by a body that omits the name and an
+unchecked row cannot be renamed into a reserved one to slip its value past.
+`locale` is checked for BCP47 SHAPE and never narrowed to a catalog authup
+has, since the attribute is the user's preference for every RP that reads the
+claim, but it is BOUNDED (subtags of at most 8 characters, 35 characters in
+all, `LOCALE_MAX_LENGTH`), because the value rides every signed token of the
+subject and the attribute `value` column is unbounded `text`; `colorMode`
+must be an `OAuth2UIColorMode`. `create` additionally drops a body-supplied
+`user` object before anything reads it: with no `userId` to resolve it from,
+`validateJoinColumns` keeps such an object verbatim, and its `realmId` would
+gate `USER_UPDATE` against a realm of the caller's choosing, which is one
+realm's admin writing another realm's user's claim. Every other attribute
+name keeps taking any string, and nothing else about the rows is special: a
+user writes their own under `USER_SELF_MANAGE` (neither name is in the
+denylist and neither is a `User` column), an admin under `USER_UPDATE`. A
+provisioning file cannot declare them: the user provisioning entity carries
+`User` COLUMNS only and no synchronizer writes attribute rows. A keyed upsert
+route was considered and not added: the kit does find-then-write, two
+requests that only ever run when a switcher moves.
+
+**Not columns, and not the token alone.** Columns would buy filterability
+nobody needs for a theme at the price of a migration and two more fields on an
+already wide `User`. A claim in the token alone was rejected outright: signed
+at issuance, it is wrong from the moment the user changes it until the next
+refresh, which is what makes introspection the reader.
+
+**The kit half is one store option and one module** (`install(app, {
+preferences: { locale?, colorMode? } })`, `core/store/preferences.ts`). The
+app hands the store its two REFS once; nothing is copied into the store,
+which stays session state and never becomes a second source for a value
+vuecs owns. `seed(introspection)` runs inside the synchronous `commitSession`,
+right after `setUser`, on the bearer and cookie-mode paths alike: a claim
+present assigns the ref (account wins); no claim plus an explicit ref value
+(never the `auto` / `system` sentinel, never a value the account already
+refused) enqueues a bootstrap write for a user subject. A `watch` per ref
+debounces 300ms and then writes whatever the ref holds NOW (find by
+`filter[userId]`+`filter[name]`, both allowed and index-leading on the
+attribute schema, then `update` or `create`), chained per preference so two
+writes never both create, and answers a failure with one `console.warn` and
+nothing else. A ref moved back to its sentinel DELETES the row rather than
+writing the sentinel: the account then holds nothing, which is what the
+sentinel means, and `auto` is no BCP47 tag the server would take. Three
+guards are load-bearing. The loop guard is `known`, the value the account
+holds as far as this instance knows: a seed sets it BEFORE assigning the ref,
+so the watcher sees `value === known` and returns. A pending change OUTRANKS
+a concurrent commit: `seed` skips a preference whose timer is armed or whose
+write is in flight, because the cookie-mode consoles revalidate on every
+navigation and a toggle followed by a click inside the window would otherwise
+be seeded back to the old value. And every timer, write and memo belongs to
+the SUBJECT it was made for: the watcher captures the signed-in user at
+change time and the timer refuses to fire for another, and a subject change
+(a second tab signing the shared console session in as someone else, which
+commits with no `cleanup()`) bumps a generation that clears the timers and
+`known`, zeroes `pending` so the new subject's seed is not skipped behind the
+previous one's write, and makes that write's completion touch nothing when it
+lands. Without it the previous user's debounced toggle was written onto
+whoever was signed in when the timer fired. A failed write records the value
+under `failed`, so the bootstrap does not repeat the same refused GET + POST
+pair on every navigation, while a change the user makes still goes up. All of
+it is pinned in `preferences.spec.ts`.
+
+**`createCookieRef` hands out ONE ref per cookie name and document** (client
+only; a server render gets a fresh ref seeded by `initial`, since there is no
+document and no sharing). The admin console carries three
+`createColorMode()` instances (`App.vue`, `header.vue`, `layouts/auth.vue`)
+and the toggle lives in the last two, so a ref created in `main.ts` alone
+would never see a toggle and a seed would never reach the icon; sharing by
+name makes them one value with no SFC touched. The cost is that a second
+client-side caller's `initial` is ignored, which no caller passes differently.
+
+**The Nuxt plugin registers both refs itself, client-only, so hub needs no
+code**, and the reason it can is a Nuxt fact worth keeping: every `useCookie`
+ref of one name posts its writes on a `BroadcastChannel` per cookie name (the
+Cookie Store change event under that experimental flag), and every other ref
+of that name adopts them. So a plain `useCookie(LOCALE_COOKIE)` /
+`useCookie(COLOR_MODE_COOKIE)` in the kit plugin, wrapped in a `computed`
+bridge (null → sentinel) and written with the host's own cookie attributes
+(`runtimeConfig.public.vuecs.cookie` / `localeCookie`), IS in step with
+`@vuecs/nuxt`'s `useColorMode()` and the `vuecs-locale` plugin's ref without
+either being reachable from here. `useLocaleManager()` was deliberately not
+used: that plugin is `enforce: 'post'`, so the manager does not exist when
+`authup:kit` runs, and "when present" would have meant never. Client-only
+because Nuxt's SERVER cookie refs are plain refs off the request header whose
+writes land as `Set-Cookie` at `app:rendered`, so a server-side seed would
+reach nothing but a header while the render used the stale value, a hydration
+mismatch on the one visit where cookie and account differ; the client's own
+resolve seeds right after hydration instead.
 
 ### OIDC prompt surface & id_token claims
 
@@ -5614,6 +5932,7 @@ no table, no migration, no config key, no new `EventName`, no new metric.
 | §5.5 session spying | `device_code` never enters a browser; the page handles `user_code` only, in JSON POST bodies; `/device_authorization` is in `OAUTH2_ISSUANCE_PATHS` (prefix match), so the console session cookie cannot become a device token | `issuance.ts` |
 | §3.5 polling abuse | `slow_down` enforced with a per-`device_code` set-if-absent key over a FIXED 5 s window; a refused poll leaves the standing window | `touchPoll` |
 | confused deputy across realms | approver `identity.data.realmId === blob.realm_id` at lookup, approve and deny (`login_required`, no identity data); at redemption `blob.client_id === client.id` and `blob.realm_id === client.realmId` (`invalid_grant`, byte-identical to "unknown") | `resolve`, verifier step 2 |
+| confused deputy across clients | the approval refuses a bearer carrying a `client_id`, so an application holding a user's token cannot approve a device for another client and collect its grants (#3608); `lookup` and `deny` are exempt, since both need the `user_code` and neither mints | `assertTokenMayAuthorize` |
 
 **Accepted residual oracle.** A foreign-realm user holding a VALID code receives
 `login_required` (the realm-mismatch card) while an invalid code receives the neutral error,

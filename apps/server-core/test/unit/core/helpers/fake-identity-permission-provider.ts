@@ -6,10 +6,11 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
+import type { PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
+    IdentityPermissionSubject,
     IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
@@ -47,11 +48,11 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
      */
     public delegatedGrants: PermissionPolicyBinding[][] = [];
 
-    public getForCalls: IdentityPolicyData[] = [];
+    public getForCalls: IdentityPermissionSubject[] = [];
 
     public getForTokenCalls: IdentityToken[] = [];
 
-    async getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
+    async getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]> {
         this.getForCalls.push(identity);
         return this.bindings;
     }

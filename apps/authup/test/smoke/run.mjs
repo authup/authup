@@ -705,7 +705,7 @@ async function executePackedScenario() {
         const packStartedAt = Date.now();
         const packArgs = [
             'pack',
-            '--pack-destination', 
+            '--pack-destination',
             packDirectory,
             ...workspaces.flatMap((workspace) => ['-w', workspace]),
         ];

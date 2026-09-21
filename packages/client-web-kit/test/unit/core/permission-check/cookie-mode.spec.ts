@@ -17,7 +17,7 @@ import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../..
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
-    buildAuthorizationCatalog,
+    buildAuthorizationCheck,
     buildAuthorizationGrants,
 } from '../../../utils/authorization';
 
@@ -43,7 +43,7 @@ describe('core/permission-check (cookie mode)', () => {
                     scope: 'global openid',
                     permissions: buildAuthorizationGrants(),
                 }),
-                'GET /authorization': () => buildAuthorizationCatalog(),
+                'POST /authorization/check': () => buildAuthorizationCheck(),
             },
         });
 

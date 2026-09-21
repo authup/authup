@@ -5,7 +5,80 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.64)
+## Next release (after v1.0.0-beta.65)
+
+### The consoles gate on `POST /authorization/check` alone
+
+`@authup/client-web-kit`'s store no longer requests `GET /authorization`. It is a browser
+client acting as the actor, so it asks the route built for that caller and builds its
+permission evaluator from the verdicts.
+
+Two things follow. A console user no longer needs `permission_read` (or `_update` /
+`_delete`) for the console's own gating to work, so a grant handed out only for that can
+be withdrawn. And gating is now the same upper bound for every user: an administrator
+previously got locally evaluated policy trees while everyone else got these verdicts, so
+a control that a junction policy will refuse per row can appear enabled where it used to
+appear disabled. The server was, and remains, the enforcement point.
+
+One case is worth calling out if you bind `date` or `time` policies. Those are settled when
+the console fetches its verdicts, and it keeps that answer for the life of the page, so
+gating no longer follows the window: a grant restricted to 08:00 to 16:00 goes on showing
+the 15:59 answer until the tab is reloaded or the user signs out and in. An administrator
+previously had the policy trees in the browser and got them re-evaluated on every check.
+Only the rendering is affected, since the server settles the same policies afresh on every
+request and refuses an action taken outside the window either way. Tracked in
+[#3618](https://github.com/authup/authup/issues/3618).
+
+`GET /authorization` itself is unchanged, and stays the right route for a resource server
+reading the catalog once with its own client credential.
+
+### `POST /authorization/check` no longer requires a login
+
+The route answers verdicts about the caller's own authorization, so a caller with no
+identity is now a caller like any other rather than a `401`: it is told which permissions
+it may attempt, which is none of the identity-bound ones.
+
+Nothing is disclosed that was not already an answer this route gives. Everything bound to
+the built-in `system.default` policy denies without an identity, so a default deployment
+answers an anonymous caller an **empty set**. A permission passes only when its whole
+policy layer reads no identity — a `date` or `time` window, or no policy at all — which
+is a permission anybody may attempt by construction.
+
+No action is required. If you relied on the `401` as a coarse "is anyone signed in"
+probe, use `GET /sessions/@me/introspect` or `POST /token/introspect` instead. To reach
+the anonymous case deliberately, note that `POST /permissions` binds `system.default` to
+every permission it creates: declare the permission in a provisioning file with its own
+policies, or delete its `system.default` binding through `DELETE /permission-policies/:id`
+afterwards.
+
+`GET /authorization` is unchanged and still gated on `permission_read` /
+`permission_update` / `permission_delete`.
+
+### Only a token without a client may authorize an application
+
+`POST /authorize` and `POST /device_authorization/approve` now refuse a bearer that was
+issued to a client, with `login_required` (HTTP 400). Only the user at the authorization
+server may authorize an application, and the token they hold there carries no client.
+
+Nothing in a normal deployment sends one. The hosted login pages authenticate with a
+password grant that names no client, the second-factor completion and the identity-provider
+handoff inherit that, and the served consoles start their login by navigating the browser to
+`/authorize` rather than posting their own token. HTTP Basic authentication carries no token
+and is unaffected, and `POST /device_authorization/lookup` and `/deny` still accept any user
+bearer.
+
+Check before upgrading: an integration that obtains a user token with `grant_type=password`
+plus its own `client_id` and then posts `/authorize` or approves a device with it. Post those
+requests with a token minted without `client_id`, or send the user through the hosted
+`/authorize` page. Before this change such a token could obtain an authorization code for a
+*different* application and pick up that application's client-owned grants for the user.
+
+One shared-origin deployment can notice this as an extra sign-in prompt: an application that
+embeds `@authup/client-web-kit` on the same origin as the hosted auth pages, under a wider
+cookie path, writes the session cookies the hosted page reads, so that page can pick up the
+application's own token and then asks the visitor to sign in once. That is the same collision
+[`cookiePrefix`](../../sdks/javascript/client-web-nuxt/index.md) already exists for — give the
+embedding application its own cookie namespace.
 
 ### A user's client-owned grants apply only through that client's tokens
 
@@ -153,6 +226,8 @@ rebuild it against the current contract. A split deployment needs no new proxy r
 `/device` and `/device_authorization` sit outside `/console` and land on the
 API set, and `/console/auth/device` follows the console rule (see
 [Console Replicas](./console-replicas.md#routing)).
+
+## v1.0.0-beta.65 (was: next release after v1.0.0-beta.64)
 
 ### Identity-provider secrets are encrypted at rest
 

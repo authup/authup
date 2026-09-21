@@ -64,6 +64,20 @@ export enum OAuth2AuthorizationPrompt {
 }
 
 /**
+ * `ui_color_mode` values: authup's own companion to the OIDC `ui_locales`
+ * request parameter, advertised as `ui_color_modes_supported`.
+ *
+ * One value rather than a preference list, since a color mode has nothing to
+ * negotiate. `system` means the visitor's device decides, which is also what
+ * the hosted pages fall back to.
+ */
+export enum OAuth2UIColorMode {
+    LIGHT = 'light',
+    DARK = 'dark',
+    SYSTEM = 'system',
+}
+
+/**
  * @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
  */
 export enum OAuth2ErrorCode {

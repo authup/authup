@@ -159,7 +159,6 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                 await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: validated.roleId,
-                    clientId: validated.role.clientId,
                 }),
             );
             if (!hasPermissions) {
@@ -210,7 +209,6 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                 await this.identityPermissionProvider.getFor({
                     type: 'role',
                     id: role.id,
-                    clientId: role.clientId,
                 }),
             );
             if (!hasPermissions) {

@@ -6,6 +6,10 @@
  */
 
 import {
+    COLOR_MODE_COOKIE,
+    COLOR_MODE_UNSET,
+    LOCALE_COOKIE,
+    LOCALE_UNSET,
     buildVuecsInstallOptions,
     createCookieRef,
     injectStore,
@@ -143,11 +147,18 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // the cookie into `payload.config.locale`; `installLocale` resolves
     // `auto` against the browser language and bridges the resolved value
     // into vuecs's `Config['locale']` (timeago & friends).
-    const localeSource = createCookieRef('vc-locale', payload?.config?.locale, 'auto');
+    const localeSource = createCookieRef(LOCALE_COOKIE, payload?.config?.locale, LOCALE_UNSET);
     const localeHandles = installLocale(app, {
         source: localeSource,
         navigatorLanguage: ref(typeof navigator !== 'undefined' ? navigator.language : undefined),
     });
+
+    // Seeded like the locale, and in the browser the same ref App.vue's
+    // `createColorMode()` gets (one per cookie name and document), so a
+    // login on these pages lands the account's mode on the toggle and a
+    // toggle lands on the account. Server-side both are per-render refs
+    // nothing seeds: the store never resolves a session there.
+    const colorModeSource = createCookieRef(COLOR_MODE_COOKIE, payload?.config?.colorMode, COLOR_MODE_UNSET);
 
     // Bucket for the SSR to client handoff: filled while rendering and
     // serialized with the rest of the payload afterwards (see server.ts),
@@ -177,6 +188,10 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         // strict refresh rotation escalates the shared refresh token into
         // family revocation. A path-less baseURL keeps the root path.
         cookiePath: basePath || '/',
+        preferences: {
+            locale: localeSource,
+            colorMode: colorModeSource,
+        },
         hydrationStore: {
             get: <T>(key: string) => hydration[key] as T | undefined,
             set: (key: string, value: unknown) => {

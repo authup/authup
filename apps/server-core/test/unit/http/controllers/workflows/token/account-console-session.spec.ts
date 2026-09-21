@@ -196,10 +196,12 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         expect(decodeJwtPayload(adminGrant.access_token).session_id).toEqual(sessionId);
 
         // 2) opening /console/account: the session's client is not `account-console`,
-        //    so the console re-mints against its own client silently. The
-        //    bearer is the one the shared IdP-origin cookie jar holds.
+        //    so the console re-mints against its own client silently. The kick is
+        //    a NAVIGATION, so the consent POST rides the hosted page's own
+        //    bearer — the clientless login of step 1, never the admin console's
+        //    token, which may not authorize another application (#3608).
         const accountGrant = await authorizeAndExchange(
-            bearerFor(adminGrant.access_token),
+            bearerFor(login.access_token),
             accountConsole,
             '/console/account',
             OAuth2AuthorizationPrompt.NONE,

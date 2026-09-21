@@ -36,6 +36,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             httpClient: options.httpClient,
             dispatcher: storeDispatcher,
             cookieSession: options.cookieSession,
+            preferences: options.preferences,
         }),
     );
     const store = storeFactory(options.pinia);

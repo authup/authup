@@ -7,5 +7,9 @@
 
 export * from './config.ts';
 export * from './dev.ts';
+export * from './entity/index.ts';
 export * from './healthcheck.ts';
+export * from './login.ts';
+export * from './logout.ts';
 export * from './start.ts';
+export * from './whoami.ts';

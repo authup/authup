@@ -19,7 +19,8 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { OAuth2AuthorizationResponseType } from '@authup/specs';
+import { OAuth2AuthorizationResponseType, OAuth2UIColorMode } from '@authup/specs';
+import { LOCALE_CODES } from '@authup/i18n';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
 import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
@@ -66,6 +67,25 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeDefined();
         expect(url.searchParams.get('id_token')).toBeFalsy();
+    });
+
+    // The two UI hints are cosmetic, so a value the server does not know must
+    // never fail a login: the page ignores it, the way `prompt` ignores an
+    // unknown token. Only the SHAPE is refused.
+    it.each([
+        [{ ui_color_mode: 'dark' }],
+        [{ ui_color_mode: 'purple' }],
+        [{ ui_locales: 'fr-CA fr' }],
+    ])('should authorize with the UI hint %o', async (hint) => {
+        const response = await suite.client
+            .authorize
+            .confirm({
+                ...payload,
+                response_type: `${OAuth2AuthorizationResponseType.CODE}`,
+                ...hint,
+            });
+
+        expect(new URL(response.url).searchParams.get('code')).toBeDefined();
     });
 
     // OAuth 2.1 posture: the authorization endpoint issues codes only — the
@@ -187,5 +207,20 @@ describe('src/http/controllers/token', () => {
         const body = await configuration.json() as { response_types_supported: string[] };
 
         expect(body.response_types_supported).toEqual([OAuth2AuthorizationResponseType.CODE]);
+    });
+
+    // The document advertises what the hosted pages accept, so the two have
+    // to be read from one vocabulary: an RP that trusts `ui_color_modes_
+    // supported` and sends a value the page then drops would have been told
+    // the wrong thing.
+    it('should advertise the UI hint vocabularies in discovery', async () => {
+        const configuration = await fetch(`${suite.baseURL}/realms/master/.well-known/openid-configuration`);
+        const body = await configuration.json() as {
+            ui_locales_supported: string[],
+            ui_color_modes_supported: string[],
+        };
+
+        expect(body.ui_locales_supported).toEqual([...LOCALE_CODES]);
+        expect(body.ui_color_modes_supported).toEqual(Object.values(OAuth2UIColorMode));
     });
 });

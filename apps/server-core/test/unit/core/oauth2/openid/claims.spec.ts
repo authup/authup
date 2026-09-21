@@ -37,6 +37,30 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         });
     });
 
+    // The two reserved attributes reach the builder flattened onto the user
+    // by extendOneWithEA. An absent row is an absent own property, so the
+    // claim is omitted rather than answered as null (the #3518 rule).
+    describe('fromUser preferences', () => {
+        it('should serve the two reserved attributes as locale and color_mode', () => {
+            // the rows land on the user object exactly this way: as own
+            // properties the entity type never declared
+            const result = builder.fromUser(Object.assign({ name: 'test-user' } as User, {
+                locale: 'fr-CA',
+                colorMode: 'dark',
+            }));
+
+            expect(result.locale).toBe('fr-CA');
+            expect(result.color_mode).toBe('dark');
+        });
+
+        it('should omit both when the user holds neither row', () => {
+            const result = builder.fromUser({ name: 'test-user' } as User);
+
+            expect(result).not.toHaveProperty('locale');
+            expect(result).not.toHaveProperty('color_mode');
+        });
+    });
+
     describe('fromClient', () => {
         it('should map name to name, nickname, and preferred_username', () => {
             const client = { name: 'my-client' } as Client;

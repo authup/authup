@@ -16,12 +16,14 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
+import { LOCALE_CODES } from '@authup/i18n';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     OAuth2AuthenticationContextClass,
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2TokenGrant,
+    OAuth2UIColorMode,
 } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
@@ -174,6 +176,17 @@ export class RealmController {
                 OAuth2AuthenticationContextClass.PASSWORD,
                 OAuth2AuthenticationContextClass.MFA,
             ],
+
+            // What the hosted pages are authored in, so an RP knows which
+            // `ui_locales` are worth sending. A tag outside this list is not
+            // refused, it simply renders in the fallback catalog.
+            ui_locales_supported: [...LOCALE_CODES],
+
+            // authup's own, next to it: not an OIDC key, and the only way an
+            // RP discovers that `ui_color_mode` is accepted here. A value
+            // outside the list is ignored rather than refused, the rule the
+            // prompt values follow.
+            ui_color_modes_supported: Object.values(OAuth2UIColorMode),
 
             subject_types_supported: [
                 'public',

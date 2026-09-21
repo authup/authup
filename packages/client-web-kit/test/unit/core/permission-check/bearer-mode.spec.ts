@@ -19,7 +19,7 @@ import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../..
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
-    buildAuthorizationCatalog,
+    buildAuthorizationCheck,
     buildAuthorizationGrants,
 } from '../../../utils/authorization';
 
@@ -48,7 +48,7 @@ describe('core/permission-check (bearer mode)', () => {
                     realm_name: 'master',
                     permissions: buildAuthorizationGrants(),
                 }),
-                'GET /authorization': () => buildAuthorizationCatalog(),
+                'POST /authorization/check': () => buildAuthorizationCheck(),
                 'POST /token/revoke': () => ({}),
             },
         });

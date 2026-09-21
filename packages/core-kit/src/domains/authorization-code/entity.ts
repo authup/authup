@@ -93,4 +93,22 @@ export type OAuth2AuthorizationCodeRequest = {
      * a step-up trigger.
      */
     acr_values?: string,
+    /**
+     * OIDC Core §3.1.2.1: space-delimited BCP47 tags, most preferred first,
+     * naming the language the RP renders in. It seeds the hosted pages while
+     * the visitor has made no language choice on the IdP origin itself.
+     *
+     * Part of the request rather than a query parameter the pages peek at, so
+     * it survives the rebuild the federated callback makes from the stored
+     * code request.
+     */
+    ui_locales?: string,
+    /**
+     * The color mode the RP renders in: `light`, `dark` or `system`.
+     *
+     * authup's own, next to `ui_locales` and read the same way. OIDC defines
+     * nothing for it, and there is nothing to negotiate either, so it is one
+     * value rather than a preference list.
+     */
+    ui_color_mode?: string,
 };
