@@ -280,7 +280,7 @@ One parameter is Authup's own, next to `ui_locales` and read the same way:
 
 | Parameter | Description |
 |---|---|
-| `ui_color_mode` | `light`, `dark` or `system`. Opens the hosted pages in the color mode your application renders in. One value rather than a list, since there is nothing to negotiate. OIDC defines nothing for this. |
+| `ui_color_mode` | `light`, `dark` or `system`. Opens the hosted pages in the color mode your application renders in. One value rather than a list, since there is nothing to negotiate. OIDC defines nothing for this, so the accepted values are advertised as `ui_color_modes_supported`. |
 
 Both are **hints, not settings**. They seed the page only while the visitor has
 made no choice on the Authup origin itself: once they use the language or
@@ -306,7 +306,7 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 #### Discovery
 
-Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `ui_locales_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `ui_locales_supported`, `ui_color_modes_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
 
 `grant_types_supported` lists the five grants Authup implements: `authorization_code`, `client_credentials`, `password`, `refresh_token` and `urn:ietf:params:oauth:grant-type:device_code`. It describes the server, not a client: each client's own `grantTypes` allowlist decides what that client may use. With `mtlsPublicUrl` set, `mtls_endpoint_aliases` carries `device_authorization_endpoint` next to the token endpoint alias, because a `tls` client authenticates at the device endpoint exactly as it does at `/token`.
 

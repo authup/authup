@@ -4922,10 +4922,14 @@ own, `light|dark|system`, SINGULAR because a color mode has nothing to
 negotiate. Both are mounted in `OAuth2AuthorizationCodeRequestValidator`, so
 they ride the code blob and survive the rebuild `buildHostedAuthorizeURL`
 makes after a federated round-trip; the page GET's verbatim query hop carries
-them to every other hosted page. `ui_locales_supported` advertises
-`LOCALE_CODES`; the color mode gets no discovery key, since its three values
-are not something an RP has to discover. `buildAuthorizeURL` takes
-`uiLocales` / `uiColorMode`.
+them to every other hosted page. Discovery advertises both,
+`ui_locales_supported` from `LOCALE_CODES` and `ui_color_modes_supported` from
+`OAuth2UIColorMode`; the second is not an OIDC key (Discovery 3 permits extra
+metadata) and is the only machine-readable way an RP learns the parameter
+exists at all. That enum is why `readUIColorModeHint` narrows against
+`@authup/specs` rather than local literals: the document ADVERTISES the set,
+so a second spelling would let the pages and the document disagree about what
+the deployment accepts. `buildAuthorizeURL` takes `uiLocales` / `uiColorMode`.
 
 **They SEED, and only while the visitor has chosen nothing here.**
 `readUILocalesHint` / `readUIColorModeHint` (auth console service) are applied

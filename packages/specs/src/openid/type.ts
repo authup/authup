@@ -104,6 +104,13 @@ export type OpenIDProviderMetadata = {
     ui_locales_supported?: string[],
 
     /**
+     * authup's own: the `ui_color_mode` values the OP's pages render. Not an
+     * OIDC key, and the only machine-readable way an RP learns the OP takes
+     * that parameter at all (OIDC Discovery §3 permits additional metadata).
+     */
+    ui_color_modes_supported?: string[],
+
+    /**
      * OIDC RP-Initiated Logout 1.0 — the OP's end-session (logout) endpoint.
      */
     end_session_endpoint?: string,

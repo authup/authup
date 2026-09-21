@@ -6,6 +6,7 @@
  */
 
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
+import type { OAuth2UIColorMode } from '@authup/specs';
 
 const STORAGE_KEY = 'authup.authorization-request';
 
@@ -89,11 +90,12 @@ export type BuildAuthorizeURLContext = {
      */
     uiLocales?: string,
     /**
-     * authup's `ui_color_mode`: `light`, `dark` or `system`. Same rule as
-     * `uiLocales` — it opens the hosted pages in the mode this app renders
-     * in, and a mode the visitor toggled on the IdP origin still wins.
+     * authup's `ui_color_mode`: opens the hosted pages in the mode this app
+     * renders in. Same rule as `uiLocales`, and a mode the visitor toggled on
+     * the IdP origin still wins. Advertised per realm as
+     * `ui_color_modes_supported`.
      */
-    uiColorMode?: string
+    uiColorMode?: `${OAuth2UIColorMode}`
 };
 
 export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {

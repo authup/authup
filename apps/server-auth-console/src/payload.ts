@@ -8,6 +8,7 @@
 import type { AuthorizeInfo, StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import { Client } from '@authup/core-http-kit';
 import { isUUID } from '@authup/kit';
+import { OAuth2UIColorMode } from '@authup/specs';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from './redirect';
@@ -185,13 +186,18 @@ export function readUILocalesHint(event: IAppEvent) : string | undefined {
 
 /**
  * The color mode the RP renders in, from authup's own `ui_color_mode`. One
- * value rather than a list, since there is nothing to negotiate, and checked
- * against the closed set so nothing else reaches the payload.
+ * value rather than a list, since there is nothing to negotiate.
+ *
+ * Checked against the enum rather than local literals because the realm's
+ * discovery document ADVERTISES that same set as
+ * `ui_color_modes_supported`: a second spelling here would let the pages and
+ * the document disagree about what the deployment accepts.
  */
 export function readUIColorModeHint(event: IAppEvent) : string | undefined {
     const { ui_color_mode: uiColorMode } = useRequestQuery(event);
 
-    return uiColorMode === 'light' || uiColorMode === 'dark' || uiColorMode === 'system' ?
+    return typeof uiColorMode === 'string' &&
+        (Object.values(OAuth2UIColorMode) as string[]).includes(uiColorMode) ?
         uiColorMode :
         undefined;
 }

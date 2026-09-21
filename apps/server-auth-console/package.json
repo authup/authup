@@ -58,6 +58,7 @@
         "@authup/server-config": "^1.0.0-beta.65",
         "@authup/server-config-kit": "^1.0.0-beta.65",
         "@authup/server-console-kit": "^1.0.0-beta.65",
+        "@authup/specs": "^1.0.0-beta.65",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.0",
         "locter": "^4.1.1",
