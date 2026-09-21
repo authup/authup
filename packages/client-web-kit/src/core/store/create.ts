@@ -708,7 +708,19 @@ export function createStore(context: StoreCreateContext) {
             };
 
             if (!realmManagement.value) {
-                setRealmManagement(realm.value);
+                // Direct write for the same reason, one rung further: routing
+                // this through setRealmManagement() emits
+                // REALM_MANAGEMENT_UPDATED, which persists a cookie holding a
+                // value every reader already derives (realmManagementId and
+                // realmManagementName fall back to the session realm). That
+                // copy then outlives the realm it names (a deleted realm, or a
+                // recreated development database), installStore seeds the dead
+                // id back on the next load, and it OUTRANKS the live session
+                // realm. Every realm-scoped console page then filters on a
+                // realm that does not exist, the server answers 200 with no
+                // rows, and the page renders empty with no error anywhere.
+                // Only an explicit setRealmManagement reaches the cookie.
+                realmManagement.value = pickRealm(realm.value);
             }
         }
 

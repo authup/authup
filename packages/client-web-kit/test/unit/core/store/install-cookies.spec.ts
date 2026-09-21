@@ -152,7 +152,7 @@ describe('core/store/install-cookies', () => {
         expect(accessTokenEcho!.options.maxAge!).toBeGreaterThan(0);
     });
 
-    it('persists cookies on login — except the realm cookie (introspection bypasses setRealm) and the user record', async () => {
+    it('persists cookies on login, except the two realm cookies (introspection bypasses both setters) and the user record', async () => {
         const { store, setCalls } = buildApp();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -162,16 +162,18 @@ describe('core/store/install-cookies', () => {
         expect(keys).toContain(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
         expect(keys).toContain(CookieName.REFRESH_TOKEN);
         expect(keys).toContain(CookieName.ID_TOKEN);
-        expect(keys).toContain(CookieName.REALM_MANAGEMENT);
 
         // the user record never reaches the jar, but the store still holds it
         expect(keys).not.toContain(CookieName.USER);
         expect(store.user).toMatchObject({ id: 'user-1' });
 
-        // realm.value is written directly during introspection — REALM_UPDATED
-        // never fires, so the realm cookie is never persisted
+        // realm.value and the derived realmManagement.value are written
+        // directly during introspection, so neither *_UPDATED event fires and
+        // neither realm cookie is persisted
         expect(keys).not.toContain(CookieName.REALM);
+        expect(keys).not.toContain(CookieName.REALM_MANAGEMENT);
         expect(store.realm).toMatchObject({ id: 'realm-1' });
+        expect(store.realmManagement).toMatchObject({ id: 'realm-1' });
 
         // the access-token cookie rides the grant-derived expire date
         const accessTokenCall = setCalls.find((call) => call.key === CookieName.ACCESS_TOKEN);
@@ -179,6 +181,41 @@ describe('core/store/install-cookies', () => {
         expect(accessTokenCall!.options.maxAge).toBeTypeOf('number');
         expect(accessTokenCall!.options.maxAge!).toBeGreaterThan(0);
         expect(accessTokenCall!.options.maxAge!).toBeLessThanOrEqual(3600);
+    });
+
+    // The session-derived realm management value is what `realmManagementId`
+    // and `realmManagementName` already fall back to, so persisting it stores
+    // nothing a reader cannot derive, and the copy then outlives the realm it
+    // names. A deleted realm, or a recreated development database, leaves a
+    // cookie pointing at a realm id that no longer exists; installStore seeds
+    // it back on the next load and every console collection filters on it, so
+    // the server answers 200 with no rows and the console renders empty with
+    // no error anywhere. Same hazard the realm cookie above is spared.
+    it('does not persist the session-derived realm management value', async () => {
+        const { store, setCalls } = buildApp();
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(setCalls.map((call) => call.key)).not.toContain(CookieName.REALM_MANAGEMENT);
+
+        // still derived for the consumers that render it (the admin console
+        // sidebar reads the object, the collection pages read the id)
+        expect(store.realmManagement).toMatchObject({ id: 'realm-1' });
+        expect(store.realmManagementId).toEqual('realm-1');
+    });
+
+    // An explicit pick is a preference the admin made, so it is the one realm
+    // management value that survives a reload.
+    it('persists a realm management value the caller chose explicitly', async () => {
+        const { store, setCalls } = buildApp();
+
+        await store.login({ name: 'admin', password: 'start123' });
+        setCalls.length = 0;
+
+        store.setRealmManagement({ id: 'realm-2', name: 'other' });
+
+        expect(setCalls.map((call) => call.key)).toContain(CookieName.REALM_MANAGEMENT);
+        expect(store.realmManagementId).toEqual('realm-2');
     });
 
     it('narrows a whole realm row to its id, name and display name before it reaches the realm cookie', () => {

@@ -110,18 +110,26 @@ describe('core/store/lifecycle', () => {
             StoreDispatcherEventName.ID_TOKEN_UPDATED,
             // introspection exp overwrites the grant-derived expire date
             StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
-            StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
+            // no REALM_MANAGEMENT_UPDATED here: the commit derives the value
+            // from the session realm and writes it directly, exactly as it
+            // does for realm.value, so the cookie listener never persists a
+            // realm the session already carries
             StoreDispatcherEventName.USER_UPDATED,
             StoreDispatcherEventName.LOGGED_IN,
         ]);
 
         // introspection writes realm.value directly, bypassing setRealm —
         // REALM_UPDATED only ever fires as the cleanup unset, never with a
-        // non-null value
+        // non-null value. The derived realm management value follows the same
+        // rule, so a session commit never persists either realm cookie.
         expect(
             events.filter((event) => event === StoreDispatcherEventName.REALM_UPDATED),
         ).toHaveLength(1);
+        expect(
+            events.filter((event) => event === StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED),
+        ).toHaveLength(1);
         expect(store.realmId.value).toEqual('realm-1');
+        expect(store.realmManagementId.value).toEqual('realm-1');
     });
 
     it('leaves LOGGING_IN dangling when the password grant fails', async () => {

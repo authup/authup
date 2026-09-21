@@ -8088,8 +8088,9 @@ by server-core they hold no token cookies at all (cookie mode). `localStorage`
 cannot replace any of this, because the server never sees it.
 
 Persisted: the three tokens, the access-token expire date, and
-`realm_management`. Everything else is derived by `resolve()`, which
-introspects on every store instantiation regardless.
+`realm_management`, that last one **only when a caller picked it**, never the
+copy `commitSession` derives from the session realm. Everything else is derived
+by `resolve()`, which introspects on every store instantiation regardless.
 
 **A session is only committed for a token the endpoint reports as
 `active`.** The introspection answers 200 with the full payload for a token it
@@ -8234,6 +8235,26 @@ Status is unaffected by any of this. `AUTHENTICATED` requires realm AND user,
 and the realm has not been cookie-persisted since #3218 (`commitSession`
 assigns `realm.value` directly, so `REALM_UPDATED` never fires), so a cookie
 restore has always reported `RESTORING` until `resolve()` settles.
+
+**`realmManagement` follows the same direct-write rule, for a sharper reason:
+the derived copy is the one value on the store that can outlive what it names.**
+`commitSession` fills it from the session realm when it is empty, and that is
+exactly what `realmManagementId` / `realmManagementName` already fall back to,
+so persisting it stores nothing a reader cannot derive. What it does store is a
+realm id with no expiry. Delete that realm, or recreate a development database,
+and `installStore` seeds the dead id back on the next load, where
+`realmManagement` OUTRANKS the live session realm. Every realm-scoped console
+page builds `filter: { realmId: [realmManagementId ?? null, null] }`, so all 18
+of them then filter on a realm that does not exist; the server answers `200`
+with `total: 0`, which the kit collection renders as its ordinary "no entries"
+state. Nothing reports an error anywhere, so the console reads as an empty
+deployment. A commit therefore assigns `realmManagement.value` directly the way
+it assigns `realm.value`, and only an explicit `setRealmManagement` (the
+`/realms` page's realm picker) emits `REALM_MANAGEMENT_UPDATED` and reaches the
+cookie. **Residual:** a realm the admin picked explicitly and that is deleted
+afterwards still strands the console the same way. Healing that needs a server
+round-trip (`GET /realms/:id`) the store does not make; a logout clears the
+cookie, since `cleanup()` still unsets it.
 
 ### Post-login destination — the `redirect` round-trip
 
