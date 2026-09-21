@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* account-level locale and color mode preference ([#3622](https://github.com/authup/authup/issues/3622)) ([66b147c](https://github.com/authup/authup/commit/66b147ca95dd362b232a5806b5f7f181b576b02b))
+* **client-web-kit:** default the UI hints from the preference cookies ([#3621](https://github.com/authup/authup/issues/3621)) ([d734681](https://github.com/authup/authup/commit/d734681829229c8562aff964ad9b8055fd8fc5e1))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+* ensure consistent version for release ([6c4868d](https://github.com/authup/authup/commit/6c4868d7fc634c4b39710965cc536f80a1be1f1a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/client-web-theme bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-http-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/i18n bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

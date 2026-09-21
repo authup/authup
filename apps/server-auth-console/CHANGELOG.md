@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* carry the RP's language and color mode into the hosted pages ([#3620](https://github.com/authup/authup/issues/3620)) ([31817c5](https://github.com/authup/authup/commit/31817c5abd9c7b13b2933f03d19625712d746a6c))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* identity-provider login on the device page, bounded lookup forgiveness, access-policy deny rows ([#3610](https://github.com/authup/authup/issues/3610)) ([045583a](https://github.com/authup/authup/commit/045583aeecd295e79a27c18cbaef89ed906998e6))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-http-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-config bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-config-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/server-console-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

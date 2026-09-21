@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* account-level locale and color mode preference ([#3622](https://github.com/authup/authup/issues/3622)) ([66b147c](https://github.com/authup/authup/commit/66b147ca95dd362b232a5806b5f7f181b576b02b))
+* carry the RP's language and color mode into the hosted pages ([#3620](https://github.com/authup/authup/issues/3620)) ([31817c5](https://github.com/authup/authup/commit/31817c5abd9c7b13b2933f03d19625712d746a6c))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+* **server-core:** scope the check routes to the caller, and gate checks for other subjects behind permission_check ([#3605](https://github.com/authup/authup/issues/3605)) ([7e1d06d](https://github.com/authup/authup/commit/7e1d06dae16c8f6b1a237f39fdab6a46a2c1ff06))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
