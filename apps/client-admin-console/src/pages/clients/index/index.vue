@@ -84,13 +84,21 @@ export default defineComponent({
         // emptied and refilled on every selection, and a deep link's
         // initial load is held back until the first resolution settles;
         // `reloadCollection` covers a list that is busy when one lands.
-        const collection = ref<{ load: ListLoadFn, data: Client[] } | null>(null);
+        const collection = ref<{ load: ListLoadFn, busy: boolean } | null>(null);
         watch(pathScope.filters, () => {
             if (pathScope.pending.value) {
                 return;
             }
 
             reloadCollection(() => collection.value);
+        }, {
+            // POST flush, and this is the whole reason the reload works: the
+            // collection reads its base query off its own `query` PROP, and a
+            // prop is only updated when the parent re-renders. A pre-flush
+            // watcher runs before that render, so the reload it issues
+            // composes the query the page held BEFORE the folder resolved and
+            // the list comes back unnarrowed.
+            flush: 'post',
         });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });

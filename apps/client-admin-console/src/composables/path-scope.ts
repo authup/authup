@@ -121,7 +121,7 @@ const RELOAD_RETRY_INTERVAL = 150;
 /** The part of a collection's exposed surface a reload needs. */
 export type ReloadableCollection = {
     load: ListLoadFn,
-    data: readonly unknown[]
+    busy?: boolean
 };
 
 /**
@@ -129,14 +129,16 @@ export type ReloadableCollection = {
  *
  * The collection reads that query on every load but does not watch the
  * prop, so a page that narrows its own query has to ask for the reload.
- * The ask can be refused: `load` is a silent no-op while another load is in
- * flight, and the collection exposes no busy flag to wait on. What it does
- * expose is `data`, which a completed load reassigns, so a refusal is
- * re-offered until the rows change.
+ * The ask is REFUSED while another load is in flight (`load` is a silent
+ * no-op then), which is the ordinary case here: the scope settles while the
+ * list is still fetching the rows it was mounted with. So the reload waits
+ * for the collection to go idle and only then asks, rather than asking and
+ * guessing afterwards whether it was taken.
  *
- * The attempts are capped because a load that RAN and failed also leaves
- * the rows untouched and cannot be told apart from a refusal here. A
- * refused offer costs nothing, and an idle collection costs one request.
+ * The wait is capped: a collection that never goes idle would otherwise
+ * hold this forever, and one that reloads late is a worse answer than one
+ * that does not reload at all only when the rows have already changed
+ * underneath. A refused offer costs nothing; an idle one costs a request.
  */
 export async function reloadCollection(
     get: () => ReloadableCollection | null,
@@ -147,13 +149,10 @@ export async function reloadCollection(
             return;
         }
 
-        const rows = collection.data;
-
-        // Back to the first page: the narrowed set is shorter, so the
-        // retained offset would ask for rows past its end.
-        await collection.load({ pagination: { offset: 0 } });
-
-        if (get()?.data !== rows) {
+        if (!collection.busy) {
+            // Back to the first page: the narrowed set is shorter, so the
+            // retained offset would ask for rows past its end.
+            await collection.load({ pagination: { offset: 0 } });
             return;
         }
 
@@ -336,10 +335,25 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         const { value } = path;
         const realmId = toValue(context.realmId);
 
-        if (!value || !realmId) {
+        if (!value) {
+            // no folder in the route: the page is unscoped, which is a
+            // settled answer rather than a pending one
             pending.value = false;
             truncated.value = false;
             paths.value = [];
+            return;
+        }
+
+        if (!realmId) {
+            // A folder is named but the realm holding it is not known yet:
+            // the store hydrates the managed realm after the first paint,
+            // so this is the ordinary first pass of a `?path=` link. The
+            // scope is UNRESOLVED, not empty. Publishing the empty id list
+            // here would hand the page `in(pathId)`, a constant false, and
+            // the load that triggers then races the settled scope's own
+            // reload, which is how a folder holding rows listed none of
+            // them. The watcher re-runs when the realm arrives.
+            pending.value = true;
             return;
         }
 
@@ -407,7 +421,15 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         optionsTruncated,
         pending,
         truncated,
-        filters: computed(() => buildPathScopeFilters(path.value, paths.value, truncated.value)),
+        // A scope still being resolved contributes NOTHING, where a scope
+        // that resolved to nothing contributes the empty id list. The two
+        // look alike and are opposites: the empty list is a constant-false
+        // filter, so publishing it before the lookup has answered would
+        // make every load taken in that window list nothing, and the page
+        // holds its own load while `pending` is set anyway.
+        filters: computed(() => (pending.value ?
+            {} :
+            buildPathScopeFilters(path.value, paths.value, truncated.value))),
         select,
     };
 }

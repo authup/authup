@@ -14,7 +14,6 @@ import {
     PATH_SCOPE_LIMIT,
     PATH_SCOPE_PAGE_LIMIT,
     PATH_TREE_LIMIT,
-    RELOAD_ATTEMPTS,
     buildPathCollectionFilters,
     buildPathScopeFilters,
     collectPathPages,
@@ -226,25 +225,30 @@ describe('src/composables/path-scope -> buildPathCollectionFilters', () => {
  * another load is in flight (silently, like the real one), and a completed
  * load reassigns `data`.
  */
-function createCollection(options: { refusals?: number, failing?: boolean } = {}) {
-    let refusals = options.refusals ?? 0;
+/**
+ * A collection that is busy for `busyRounds` polls before it goes idle, the
+ * shape the kit collection exposes (`load` plus the `busy` flag that says
+ * whether a `load` would be taken at all).
+ */
+function createCollection(options: { busyRounds?: number, alwaysBusy?: boolean } = {}) {
+    let busyRounds = options.busyRounds ?? 0;
 
     const collection = {
         calls: 0,
-        data: [] as unknown[],
+        get busy() {
+            if (options.alwaysBusy) {
+                return true;
+            }
+
+            if (busyRounds > 0) {
+                busyRounds -= 1;
+                return true;
+            }
+
+            return false;
+        },
         async load() {
             collection.calls += 1;
-
-            if (refusals > 0) {
-                refusals -= 1;
-                return;
-            }
-
-            if (options.failing) {
-                return;
-            }
-
-            collection.data = [];
         },
     };
 
@@ -260,22 +264,24 @@ describe('src/composables/path-scope -> reloadCollection', () => {
         expect(collection.calls).toBe(1);
     });
 
-    it('should re-offer a reload the collection refused', async () => {
-        const collection = createCollection({ refusals: 2 });
+    // The ordinary case: the folder settles while the list is still
+    // fetching the rows it mounted with, and a `load` issued then is
+    // silently dropped. Waiting for idle is what makes the narrowed query
+    // actually reach the server.
+    it('should wait for a busy collection and then ask exactly once', async () => {
+        const collection = createCollection({ busyRounds: 2 });
 
         await reloadCollection(() => collection);
 
-        expect(collection.calls).toBe(3);
+        expect(collection.calls).toBe(1);
     });
 
-    // A load that ran and failed leaves the rows untouched too, which reads
-    // exactly like a refusal from here, so the attempts are capped.
-    it('should give up rather than ask forever', async () => {
-        const collection = createCollection({ failing: true });
+    it('should give up rather than wait forever', async () => {
+        const collection = createCollection({ alwaysBusy: true });
 
         await reloadCollection(() => collection);
 
-        expect(collection.calls).toBe(RELOAD_ATTEMPTS);
+        expect(collection.calls).toBe(0);
     });
 
     it('should do nothing without a collection', async () => {
