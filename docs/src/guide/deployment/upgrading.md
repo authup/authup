@@ -20,6 +20,15 @@ previously got locally evaluated policy trees while everyone else got these verd
 a control that a junction policy will refuse per row can appear enabled where it used to
 appear disabled. The server was, and remains, the enforcement point.
 
+One case is worth calling out if you bind `date` or `time` policies. Those are settled when
+the console fetches its verdicts, and it keeps that answer for the life of the page, so
+gating no longer follows the window: a grant restricted to 08:00 to 16:00 goes on showing
+the 15:59 answer until the tab is reloaded or the user signs out and in. An administrator
+previously had the policy trees in the browser and got them re-evaluated on every check.
+Only the rendering is affected, since the server settles the same policies afresh on every
+request and refuses an action taken outside the window either way. Tracked in
+[#3618](https://github.com/authup/authup/issues/3618).
+
 `GET /authorization` itself is unchanged, and stays the right route for a resource server
 reading the catalog once with its own client credential.
 
