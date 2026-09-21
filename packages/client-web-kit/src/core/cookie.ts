@@ -69,13 +69,31 @@ export function readPreferenceCookie(name: string, unset: string) : string | und
     return value && value !== unset ? value : undefined;
 }
 
-export function createCookieRef(name: string, initial?: string, fallback = '') : Ref<string> {
-    const source = ref(initial || readCookie(name) || fallback);
+/**
+ * One ref per cookie name and document, the way Nuxt keeps every `useCookie`
+ * ref of one name in step: the color-mode toggle in a layout, the
+ * `createColorMode()` in `App.vue` and the ref the auth store seeds from the
+ * account are then one value, so a toggle anywhere reaches the store and a
+ * seed reaches every toggle. The second caller's `initial` is the cookie the
+ * first one already read. Server-side there is no document and no sharing:
+ * each render seeds its own ref through `initial`.
+ */
+const refs = new Map<string, Ref<string>>();
 
-    if (typeof document !== 'undefined') {
+export function createCookieRef(name: string, initial?: string, fallback = '') : Ref<string> {
+    if (typeof document === 'undefined') {
+        return ref(initial || fallback);
+    }
+
+    let source = refs.get(name);
+    if (!source) {
+        source = ref(initial || readCookie(name) || fallback);
+
         watch(source, (value) => {
             document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax`;
         });
+
+        refs.set(name, source);
     }
 
     return source;

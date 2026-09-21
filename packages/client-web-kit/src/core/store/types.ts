@@ -15,12 +15,37 @@ import type {
 } from 'pinia';
 import type { Realm, User } from '@authup/core-kit';
 import type { IClient } from '@authup/core-http-kit';
+import type { Ref } from 'vue';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
 import type { StoreDispatcher } from './dispatcher';
 
 export type RealmMinimal = Pick<Realm, 'id' | 'name'> & Partial<Pick<Realm, 'displayName'>>;
 export type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;
+
+/**
+ * The two UI preferences an account holds, as the refs the app already owns:
+ * the `vc-locale` source `@vuecs/locale` reads (a BCP47 tag or `auto`) and
+ * the `vc-color-mode` source (`light`, `dark` or `system`). The store seeds
+ * them from the `locale` / `color_mode` introspection claims on every
+ * session commit, writes an explicit browser value up once when the account
+ * holds none, and writes a change back to the user's `locale` / `colorMode`
+ * attribute. Either may be left out; with neither, nothing of that runs.
+ */
+export type StorePreferences = {
+    locale?: Ref<string>,
+    colorMode?: Ref<string>
+};
+
+export type StorePreferenceSyncContext = {
+    client: IClient,
+    preferences: StorePreferences,
+    /**
+     * The signed-in user's id, or nothing: a change is written for nobody
+     * else, and a client subject has no attributes to write to.
+     */
+    userId: () => string | undefined
+};
 
 type StoreData = ReturnType<typeof createStore>;
 export type Store = BaseStore<
@@ -45,7 +70,8 @@ export type StoreCreateContext = {
      * Authenticate on the server-issued session cookie instead of a token
      * pair (plan 088). See the install option of the same name.
      */
-    cookieSession?: boolean
+    cookieSession?: boolean,
+    preferences?: StorePreferences
 };
 
 export type StoreLoginContext = {
@@ -92,6 +118,10 @@ export type StoreInstallOptions = {
      * `DELETE /sessions/@me`.
      */
     cookieSession?: boolean,
+    /**
+     * The account-level UI preferences, see {@link StorePreferences}.
+     */
+    preferences?: StorePreferences,
     pinia?: Pinia
 };
 

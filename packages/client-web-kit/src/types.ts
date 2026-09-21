@@ -8,6 +8,7 @@
 import type { IClient } from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
 import type { HydrationStore } from './core/hydration';
+import type { StorePreferences } from './core/store';
 import type {
     AAttributeNamesPolicyForm,
     AClient,
@@ -123,6 +124,13 @@ export type Options = {
      * store install option of the same name.
      */
     cookieSession?: boolean,
+
+    /**
+     * The account-level UI preferences, as the refs the app owns: the store
+     * seeds them from the session and writes a change back. See the store
+     * install option of the same name.
+     */
+    preferences?: StorePreferences,
 
     pinia?: Pinia,
     isServer?: boolean,

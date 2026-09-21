@@ -300,16 +300,39 @@ nothing while they have picked nothing, since `auto` and `system` resolve to
 the same browser on both sides. Pass `uiLocales` / `uiColorMode` to override
 either, or `''` to opt out.
 
-::: tip Cookies, not claims
-The two preferences live in the `vc-locale` and `vc-color-mode` cookies, which
-are host-only. An application on a sibling host therefore cannot see what the
-visitor picked on the Authup pages, and vice versa. These two parameters are
-how the preference travels. A stored claim would not help here: the pages that
-lose it (`/authorize`, register, password recovery, device verification) are
-anonymous, so there is no token to read one from.
+::: tip Hints reach the anonymous pages; the claims below do not
+The pages these hints are for (`/authorize`, register, password recovery,
+device verification) are anonymous, so there is no token to read a preference
+from. The `locale` and `color_mode` claims cover everything after sign-in; the
+hints cover the first page. Send both.
 :::
 
 The resulting `id_token` includes the OIDC `auth_time` (the real authentication time) and `sid` (session id) claims.
+
+#### The `locale` and `color_mode` claims
+
+A user's language and color mode are account-level preferences, stored as two
+user attributes named `locale` and `colorMode`, and served as claims: `locale`
+is the OIDC standard claim (Core 5.1), `color_mode` is Authup's own, `light`,
+`dark` or `system`. Both appear on the `id_token` and on both introspection
+routes. A user without the attribute gets no claim, not a `null`. The access
+token carries neither, and `/userinfo` serves the user record with its
+attributes flattened under their own names, so it answers `locale` and
+`colorMode` rather than the claim names.
+
+Like every claim, the value in a token is the one at issuance. Introspection
+rebuilds the claims from the row on every call, so **`POST /token/introspect`
+and `GET /sessions/@me/introspect` answer the current preference**, which is
+what an application should read when it wants to follow a change the user made
+elsewhere.
+
+The two rows are ordinary user attributes: a user writes their own under
+`user_self_manage`, an administrator under `user_update`. What makes them
+reserved is that their value is checked (a BCP47 tag of at most 35
+characters; one of the three color modes) and that Authup's own consoles and
+`@authup/client-web-kit` seed the browser from them and write a switcher change
+back, so a preference made in one application is the one every application
+opens in.
 
 #### Discovery
 

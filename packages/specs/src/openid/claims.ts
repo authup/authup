@@ -72,7 +72,22 @@ export type OpenIDClaims = {
 
     zoneinfo?: string,
 
+    /**
+     * OIDC Core 5.1: the end user's locale, a BCP47 tag. Authup sources it
+     * from the `locale` user attribute the account console and the kit
+     * write; frozen at issuance in a token like every claim here, current
+     * on introspection, which rebuilds the claims from the row.
+     */
     locale?: string,
+
+    /**
+     * Authup's own, next to `locale` and sourced the same way (the
+     * `colorMode` user attribute): `light`, `dark` or `system`. OIDC defines
+     * no theme claim. Bare snake_case like the other authup claims
+     * (`realm_id`, `sub_kind`), and NOT `ui_color_mode`, which is the request
+     * hint an RP sends, not the account's stored value.
+     */
+    color_mode?: string,
 
     /**
      * UTC Date in seconds

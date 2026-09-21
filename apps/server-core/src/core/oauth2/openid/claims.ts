@@ -6,10 +6,11 @@
  */
 
 import type {
-    Client, 
-    Identity, 
+    Client,
+    Identity,
     User,
 } from '@authup/core-kit';
+import { UserAttributeName } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { OpenIDClaims, OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
@@ -68,6 +69,16 @@ export class OAuth2OpenIDClaimsBuilder {
 
         email: 'email',
         email_verified: 'emailVerified',
+
+        // The two reserved user attributes (`UserAttributeName`), flattened
+        // onto the entity by `extendOneWithEA` on the identity read. An
+        // absent row is an absent own property, so the claim is omitted, the
+        // OIDC shape for "not available". Introspection rebuilds the claims
+        // from the row on every call and therefore answers the CURRENT
+        // value; a token carries the value at issuance, like every claim
+        // here.
+        locale: UserAttributeName.LOCALE,
+        color_mode: UserAttributeName.COLOR_MODE,
     };
 
     /**
