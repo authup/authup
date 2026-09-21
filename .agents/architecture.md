@@ -4106,7 +4106,12 @@ deliberately never calls `DELETE /sessions/@me`: the device grant's tokens
 ride the approving browser's `auth_sessions` row. `whoami` reads
 `GET /sessions/@me/introspect`, which describes the request's own bearer, so a
 refresh-and-replay describes the renewed token. The entity commands are
-DERIVED: `defineCLIEntityCommands` walks `EntityType`, skips `userAuthenticator`
+DERIVED and sit under ONE `api` group (`authup api realm list`): a derived
+noun set is curated by nobody against the operator vocabulary, so at the root
+a new kit sub-API or a new operator command (an `authup key ...`) would
+collide, and a precedence rule only turns that into a noun that silently
+stops working; the group is what keeps the two vocabularies apart.
+`defineCLIEntityCommands` walks `EntityType`, skips `userAuthenticator`
 (its client API is nested under a user, which is why `EntityTypeMap`
 deliberately omits it) and keeps every other value `pickEntityAPI` resolves on
 a `Client`, names the command in kebab-case and gives it the verbs its
@@ -4124,7 +4129,9 @@ status, method and URL otherwise; never a raw body, a `cause` or a bearer).
 Rejected: a provisioned `cli`
 system client (admission control), a raw `api <path>` passthrough and a
 hand-listed resource set (both are a curl wrapper next to a typed client),
-keychain-first with a silent file fallback (a downgrade nobody sees).
+keychain-first with a silent file fallback (a downgrade nobody sees), and
+entity nouns at the root of the CLI (gh's root nouns are a hand-curated set;
+this one is derived).
 
 **Process topology: one binary, one listener verb, several roles.** The
 batteries-included container runs `start`, which is `authup start`:

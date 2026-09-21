@@ -181,5 +181,5 @@ development tool that exists only in server-core's dev CLI
 (`npm run cli -w apps/server-core -- migration generate`).
 
 The binary is a client of the deployment too: `authup login` signs it in
-through the device grant and `authup user list`, `authup role get <id>` and
+through the device grant and `authup api user list`, `authup api role get <id>` and
 their siblings read and manage records. See [Sign-in and entity commands](./cli.md).

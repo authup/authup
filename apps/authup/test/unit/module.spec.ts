@@ -74,22 +74,33 @@ describe('createCLIEntryPointCommand', () => {
         const command = await createCLIEntryPointCommand();
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort()).toEqual([
+            'api',
+            'config',
+            'dev',
+            'healthcheck',
+            'login',
+            'logout',
+            'migration',
+            'start',
+            'whoami',
+        ]);
+    });
+
+    it('groups the derived entity commands under api, apart from the operator commands', async () => {
+        const command = await createCLIEntryPointCommand();
+        const api = await resolveSubCommand(command, 'api');
+
+        expect(Object.keys(api.subCommands ?? {}).sort()).toEqual([
             'client',
             'client-permission',
             'client-role',
             'client-scope',
-            'config',
             'consent',
-            'dev',
             'event',
-            'healthcheck',
             'identity-provider',
             'identity-provider-account',
             'identity-provider-role-mapping',
             'key',
-            'login',
-            'logout',
-            'migration',
             'permission',
             'permission-policy',
             'policy',
@@ -100,13 +111,11 @@ describe('createCLIEntryPointCommand', () => {
             'scope',
             'session',
             'session-token',
-            'start',
             'trust-anchor',
             'user',
             'user-attribute',
             'user-permission',
             'user-role',
-            'whoami',
         ]);
     });
 
@@ -121,7 +130,7 @@ describe('createCLIEntryPointCommand', () => {
             ['start', 'worker'],
             ['start', 'console', 'admin'],
             ['migration', 'run'],
-            ['user', 'list'],
+            ['api', 'user', 'list'],
             ['login'],
         ]) {
             expect(() => command.setup?.(createSetupContext(command, positionals)))

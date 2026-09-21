@@ -13,7 +13,6 @@ import {
     defineCLIMigrationCommand,
 } from '@authup/server-core';
 import { defineCommand } from 'citty';
-import type { CommandDef } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PACKAGE_PATH } from './path.ts';
@@ -39,40 +38,40 @@ export async function createCLIEntryPointCommand() {
     // reads its own selection of the document.
     const configFs : ConfigReadFsOptions = {};
 
-    const subCommands : Record<string, CommandDef<any>> = {
-        config: defineCLIConfigCommand(configFs),
-        healthcheck: defineCLIHealthCheckCommand(configFs),
-        migration: defineCLIMigrationCommand(configFs),
-
-        // One listener verb with a positional role: bare for the
-        // single container, `core`, `worker` or `console [name]` for
-        // the split deployment.
-        start: defineCLIStartCommand(configFs),
-
-        // `start`, but a console whose package resolves to a source
-        // checkout is served through vite instead of its built dist.
-        dev: defineCLIDevCommand(configFs),
-
-        // The CLI as a client of a running deployment: a sign-in through
-        // the device grant, and one command per entity the client serves.
-        login: defineCLILoginCommand(),
-        logout: defineCLILogoutCommand(),
-        whoami: defineCLIWhoamiCommand(),
-    };
-
-    // An operator command always wins a name collision with a kit sub-API,
-    // and stays ahead of the derived nouns in the usage text.
-    for (const [name, command] of Object.entries(defineCLIEntityCommands())) {
-        subCommands[name] ??= command;
-    }
-
     return defineCommand({
         meta: {
             name: pkg.name,
             version: pkg.version,
             description: pkg.description,
         },
-        subCommands,
+        subCommands: {
+            config: defineCLIConfigCommand(configFs),
+            healthcheck: defineCLIHealthCheckCommand(configFs),
+            migration: defineCLIMigrationCommand(configFs),
+
+            // One listener verb with a positional role: bare for the
+            // single container, `core`, `worker` or `console [name]` for
+            // the split deployment.
+            start: defineCLIStartCommand(configFs),
+
+            // `start`, but a console whose package resolves to a source
+            // checkout is served through vite instead of its built dist.
+            dev: defineCLIDevCommand(configFs),
+
+            // The CLI as a client of a running deployment: a sign-in through
+            // the device grant, and the entity commands under one group, so
+            // the derived nouns can never collide with an operator command.
+            login: defineCLILoginCommand(),
+            logout: defineCLILogoutCommand(),
+            whoami: defineCLIWhoamiCommand(),
+            api: defineCommand({
+                meta: {
+                    name: 'api',
+                    description: 'Read and manage the records of a signed-in server, one command per entity.',
+                },
+                subCommands: defineCLIEntityCommands(),
+            }),
+        },
         args: {
             ...CLI_CONFIG_ARGS,
             // Declared on `start` as well: citty parses an undeclared flag as

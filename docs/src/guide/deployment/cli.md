@@ -50,7 +50,7 @@ and the storage, plus which server is current.
 
 ## Entity commands
 
-Every entity the API serves is a command, named in kebab-case: `user`,
+Every entity the API serves is a command under `api`, named in kebab-case: `user`,
 `client`, `realm`, `role`, `permission`, `policy`, `scope`, `key`,
 `trust-anchor`, `session`, `session-token`, `event`, `consent`,
 `identity-provider`, `identity-provider-account`,
@@ -60,21 +60,22 @@ Every entity the API serves is a command, named in kebab-case: `user`,
 Each carries the verbs its API has: `list`, `get <id>`, `create`,
 `update <id>`, `delete <id>`. A session cannot be created here and a
 `user-role` binding cannot be updated, because the API has no such call;
-`authup <entity> --help` lists what exists.
+`authup api <entity> --help` lists what exists. The group keeps the entity
+names, which follow the API, apart from the operator commands next to them.
 
 ```shell
-authup user list --filter 'name=~ali&realm.name=master' --sort -createdAt --limit 10
-authup user get 3f2a... --include realm
-authup user create --data '{"name":"alice","realmId":"..."}'
-authup user update 3f2a... --data @alice.json
-authup user delete 3f2a...
+authup api user list --filter 'name=~ali&realm.name=master' --sort -createdAt --limit 10
+authup api user get 3f2a... --include realm
+authup api user create --data '{"name":"alice","realmId":"..."}'
+authup api user update 3f2a... --data @alice.json
+authup api user delete 3f2a...
 ```
 
 `--filter`, `--sort`, `--fields` and `--include` take the values the
 [API query language](../development/api-query-language.md) documents; several
 filter conditions ride one `--filter`, joined by `&`. `--data` holds a JSON
 object inline, `@<path>` reads a file, `@-` reads stdin. The response body is
-printed as JSON, so `authup user list | jq '.data[].name'` composes. The
+printed as JSON, so `authup api user list | jq '.data[].name'` composes. The
 signed-in user's permissions govern every call, as they do in the consoles.
 
 ## Who am I, and signing out

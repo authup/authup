@@ -184,9 +184,10 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
 }
 
 /**
- * One root command per entity-shaped API the client serves, and one verb per
- * dispatch method: the kit's registry is the source, so a sub-API added
- * there in the entity shape shows up here with no edit.
+ * One command per entity-shaped API the client serves, mounted under the
+ * `api` group, and one verb per dispatch method: the kit's registry is the
+ * source, so a sub-API added there in the entity shape shows up here with
+ * no edit.
  */
 export function defineCLIEntityCommands(context: HostCommandContext = {}) : Record<string, CommandDef> {
     const probe = new Client();

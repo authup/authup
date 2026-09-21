@@ -76,11 +76,11 @@ The binary is a client of a running deployment too. `login` signs it in
 through the device authorization grant against a public client that lists
 `urn:ietf:params:oauth:grant-type:device_code`; the tokens go into the OS
 keychain (`--insecure-storage` keeps them in `~/.config/authup/hosts.json`).
-One command per entity then reads and manages records.
+One command per entity under `api` then reads and manages records.
 
 ```shell
 authup login --server https://auth.example.com --client cli --realm master
-authup user list --filter 'name=~ali' --sort -createdAt --limit 10
+authup api user list --filter 'name=~ali' --sort -createdAt --limit 10
 authup whoami
 authup logout
 ```
