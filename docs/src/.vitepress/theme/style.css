@@ -1,40 +1,160 @@
-/* Design tokens — bind marketing components to VitePress's CSS vars so light/dark mode and brand changes propagate. */
-:root {
-    --au-color-bg: var(--vp-c-bg);
-    --au-color-bg-soft: var(--vp-c-bg-soft);
-    --au-color-bg-alt: var(--vp-c-bg-alt);
-    --au-color-text: var(--vp-c-text-1);
-    --au-color-text-muted: var(--vp-c-text-2);
-    --au-color-text-soft: var(--vp-c-text-3);
-    --au-color-divider: var(--vp-c-divider);
-    --au-color-primary: var(--vp-c-brand-1);
-    --au-color-primary-soft: var(--vp-c-brand-2);
-    --au-color-primary-deep: var(--vp-c-brand-3);
-    --au-color-success: #10b981;
-    --au-color-danger: #ef4444;
-    --au-color-warning: #f59e0b;
-    --au-color-accent-a: #6366f1;
-    --au-color-accent-b: #ec4899;
-    --au-color-accent-c: #14b8a6;
+/*
+ * Tailwind v4 entry.
+ *
+ * VitePress ships its base and doc styles unlayered, so they would win over
+ * every Tailwind utility. The marketing components therefore render inside a
+ * `.vp-raw` wrapper, which `postcssIsolateStyles()` (see config.mjs) excludes
+ * from those styles.
+ */
+@layer theme, base, components, utilities;
 
-    --au-radius-sm: 6px;
-    --au-radius: 12px;
-    --au-radius-lg: 18px;
+@import "tailwindcss" source(none);
 
-    --au-space-tight: 0.75rem;
-    --au-space: 1.25rem;
-    --au-space-loose: 2rem;
-    --au-space-section: 4rem;
+/* VitePress toggles `.dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
 
-    --au-transition: 120ms ease-out;
-    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
-    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+/* Tailwind only generates classes it can see; the marketing components are
+ * the only directory that uses utilities. Unlike some sibling VitePress
+ * sites, `components/` here lives inside `theme/`, next to this file. */
+@source "./components";
+
+@theme inline {
+    --font-sans: var(--vp-font-family-base);
+
+    /* Fixed-dark surfaces (e.g. a hero or footer) that ignore the color mode.
+     * Not used by any component yet — groundwork for the redesign that
+     * follows this task. */
+    --color-night: var(--au-dark-bg);
+    --color-night-fg: var(--au-dark-fg);
+    --color-night-fg-muted: var(--au-dark-fg-muted);
+    --color-night-border: var(--au-dark-border);
 }
 
-.dark {
-    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
-    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px rgba(0, 0, 0, 0.4);
+/*
+ * Named breakpoint at VitePress's own 960px layout breakpoint (nav becomes
+ * fixed, sidebar appears). Defined here rather than used as an arbitrary
+ * `min-[960px]:` variant: arbitrary min-width variants can be emitted before
+ * `md:` in the generated stylesheet, which silently breaks ordering when both
+ * touch the same property.
+ */
+@theme {
+    --breakpoint-vp: 960px;
 }
+
+@layer base {
+    /* Design tokens — bind marketing components to VitePress's CSS vars so light/dark mode and brand changes propagate. */
+    :root {
+        --au-color-bg: var(--vp-c-bg);
+        --au-color-bg-soft: var(--vp-c-bg-soft);
+        --au-color-bg-alt: var(--vp-c-bg-alt);
+        --au-color-text: var(--vp-c-text-1);
+        --au-color-text-muted: var(--vp-c-text-2);
+        --au-color-text-soft: var(--vp-c-text-3);
+        --au-color-divider: var(--vp-c-divider);
+        --au-color-primary: var(--vp-c-brand-1);
+        --au-color-primary-soft: var(--vp-c-brand-2);
+        --au-color-primary-deep: var(--vp-c-brand-3);
+        --au-color-success: #10b981;
+        --au-color-danger: #ef4444;
+        --au-color-warning: #f59e0b;
+        --au-color-accent-a: #6366f1;
+        --au-color-accent-b: #ec4899;
+        --au-color-accent-c: #14b8a6;
+
+        --au-radius-sm: 6px;
+        --au-radius: 12px;
+        --au-radius-lg: 18px;
+
+        --au-space-tight: 0.75rem;
+        --au-space: 1.25rem;
+        --au-space-loose: 2rem;
+        --au-space-section: 4rem;
+
+        --au-transition: 120ms ease-out;
+        --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+        --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+
+        /* Fixed-dark surface tokens — groundwork for the redesign that
+         * follows this task, not consumed by any component yet. */
+        --au-dark-bg: #0b1120;
+        --au-dark-fg: #eef1fa;
+        --au-dark-fg-muted: #aab2c8;
+        --au-dark-border: rgb(255 255 255 / 0.12);
+    }
+
+    .dark {
+        --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
+        --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Tailwind's preflight resets headings to inherit; restore a scale inside
+     * the isolated `.vp-raw` subtrees. */
+    .vp-raw :where(h1, h2, h3, h4, h5, h6) {
+        @apply mb-2 leading-tight font-medium;
+    }
+
+    .vp-raw h1 { @apply text-4xl; }
+    .vp-raw h2 { @apply text-3xl; }
+    .vp-raw h3 { @apply text-2xl; }
+
+    .vp-raw :where(b, strong) {
+        @apply font-semibold;
+    }
+}
+
+@layer components {
+    .au-section {
+        @apply mx-auto max-w-[1200px] px-6 py-16;
+    }
+
+    .au-section--alt {
+        @apply max-w-none;
+        background: var(--au-color-bg-soft);
+    }
+
+    .au-section--alt > .au-section-inner {
+        @apply mx-auto max-w-[1200px];
+    }
+
+    @media (max-width: 768px) {
+        .au-section {
+            @apply px-5 py-10;
+        }
+    }
+
+    /* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
+    .au-card-window {
+        @apply overflow-hidden rounded-[var(--au-radius-lg)] border;
+        background: var(--au-color-bg-alt);
+        border-color: var(--au-color-divider);
+        box-shadow: var(--au-shadow-card);
+    }
+
+    .au-card-window__chrome {
+        @apply flex items-center gap-[0.4rem] px-4 py-3;
+        background: var(--au-color-bg-soft);
+        border-bottom: 1px solid var(--au-color-divider);
+    }
+
+    .au-card-window__title {
+        @apply ml-3 text-[0.8rem];
+        font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+        color: var(--au-color-text-soft);
+    }
+
+    .au-dot {
+        @apply inline-block h-[11px] w-[11px] rounded-full;
+    }
+
+    .au-dot--r { background: #ff5f57; }
+    .au-dot--y { background: #febc2e; }
+    .au-dot--g { background: #28c840; }
+}
+
+/*
+ * Unlayered: VitePress defines its variables and component styles unlayered,
+ * so overrides of them must stay outside of any @layer to win.
+ */
 
 /* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
 .Layout:has(.au-marketing) .VPContent {
@@ -45,65 +165,3 @@
     width: 100%;
     margin: 0 auto;
 }
-
-.au-section {
-    padding: var(--au-space-section) 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.au-section--alt {
-    background: var(--au-color-bg-soft);
-    max-width: none;
-}
-
-.au-section--alt > .au-section-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-    .au-section {
-        padding: 2.5rem 1.25rem;
-    }
-}
-
-/* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
-.au-card-window {
-    background: var(--au-color-bg-alt);
-    border: 1px solid var(--au-color-divider);
-    border-radius: var(--au-radius-lg);
-    box-shadow: var(--au-shadow-card);
-    overflow: hidden;
-}
-
-.au-card-window__chrome {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.75rem 1rem;
-    background: var(--au-color-bg-soft);
-    border-bottom: 1px solid var(--au-color-divider);
-}
-
-.au-card-window__title {
-    margin-left: 0.75rem;
-    font-family: var(--vp-font-family-mono, ui-monospace, monospace);
-    font-size: 0.8rem;
-    color: var(--au-color-text-soft);
-}
-
-.au-card-window__body {
-    padding: 1.5rem;
-}
-
-.au-dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.au-dot--r { background: #ff5f57; }
-.au-dot--y { background: #febc2e; }
-.au-dot--g { background: #28c840; }

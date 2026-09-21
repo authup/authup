@@ -1,35 +1,42 @@
 <template>
-    <section class="au-section">
-        <header class="au-codetabs__header">
-            <h2 class="au-codetabs__title">From zero to issuing tokens in three steps</h2>
-            <p class="au-codetabs__subtitle">
+    <section class="au-section vp-raw">
+        <header class="mb-8 text-center">
+            <h2 class="mb-2 text-[clamp(1.75rem,3.5vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--au-color-text)]">
+                From zero to issuing tokens in three steps
+            </h2>
+            <p class="mx-auto max-w-[56ch] text-[1.05rem] text-[var(--au-color-text-muted)]">
                 Pull the image, point it at your database, and issue your first access token.
             </p>
         </header>
 
-        <div class="au-codetabs">
-            <div class="au-codetabs__tabs" role="tablist">
+        <div class="overflow-hidden rounded-[var(--au-radius)] border border-[var(--au-color-divider)] bg-[var(--au-color-bg-alt)] shadow-[var(--au-shadow-card)]">
+            <div
+                class="flex items-center gap-1 border-b border-[var(--au-color-divider)] bg-[var(--au-color-bg-soft)] py-2 pr-2 pl-3"
+                role="tablist"
+            >
                 <button
                     v-for="tab in tabs"
                     :key="tab.id"
                     type="button"
                     role="tab"
                     :aria-selected="active === tab.id"
-                    class="au-codetabs__tab"
-                    :class="{ 'au-codetabs__tab--active': active === tab.id }"
+                    class="cursor-pointer appearance-none rounded-[var(--au-radius-sm)] border-none bg-transparent px-[0.85rem] py-[0.4rem] text-[0.88rem] font-semibold transition-[background,color] duration-[120ms] ease-out"
+                    :class="active === tab.id
+                        ? 'bg-[var(--au-color-bg)] text-[var(--au-color-primary)]'
+                        : 'text-[var(--au-color-text-muted)] hover:bg-[var(--au-color-bg)] hover:text-[var(--au-color-text)]'"
                     @click="active = tab.id"
                 >
                     {{ tab.label }}
                 </button>
                 <button
                     type="button"
-                    class="au-codetabs__copy"
+                    class="ml-auto cursor-pointer appearance-none rounded-[var(--au-radius-sm)] border border-[var(--au-color-divider)] bg-transparent px-[0.7rem] py-[0.35rem] text-[0.8rem] font-semibold text-[var(--au-color-text-muted)] transition-[border-color,color] duration-[120ms] ease-out hover:border-[var(--au-color-primary)] hover:text-[var(--au-color-primary)]"
                     @click="copy"
                 >
                     {{ copied ? 'Copied' : 'Copy' }}
                 </button>
             </div>
-            <pre class="au-codetabs__pre"><code>{{ currentSnippet }}</code></pre>
+            <pre class="m-0 overflow-x-auto bg-[var(--au-color-bg-alt)] px-6 py-5"><code class="whitespace-pre bg-transparent p-0 font-[var(--vp-font-family-mono,ui-monospace,SFMono-Regular,Menlo,monospace)] text-[0.88rem] leading-[1.6] text-[var(--au-color-text)]">{{ currentSnippet }}</code></pre>
         </div>
     </section>
 </template>
@@ -118,101 +125,3 @@ curl https://auth.example.com/users \\
     },
 });
 </script>
-
-<style scoped>
-.au-codetabs__header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.au-codetabs__title {
-    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 0.5rem;
-    color: var(--au-color-text);
-}
-
-.au-codetabs__subtitle {
-    margin: 0 auto;
-    max-width: 56ch;
-    color: var(--au-color-text-muted);
-    font-size: 1.05rem;
-}
-
-.au-codetabs {
-    background: var(--au-color-bg-alt);
-    border: 1px solid var(--au-color-divider);
-    border-radius: var(--au-radius);
-    overflow: hidden;
-    box-shadow: var(--au-shadow-card);
-}
-
-.au-codetabs__tabs {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 0.5rem 0.5rem 0.75rem;
-    background: var(--au-color-bg-soft);
-    border-bottom: 1px solid var(--au-color-divider);
-}
-
-.au-codetabs__tab {
-    appearance: none;
-    background: transparent;
-    border: none;
-    padding: 0.4rem 0.85rem;
-    border-radius: var(--au-radius-sm);
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--au-color-text-muted);
-    cursor: pointer;
-    transition: background var(--au-transition), color var(--au-transition);
-}
-
-.au-codetabs__tab:hover {
-    color: var(--au-color-text);
-    background: var(--au-color-bg);
-}
-
-.au-codetabs__tab--active {
-    color: var(--au-color-primary);
-    background: var(--au-color-bg);
-}
-
-.au-codetabs__copy {
-    margin-left: auto;
-    appearance: none;
-    background: transparent;
-    border: 1px solid var(--au-color-divider);
-    padding: 0.35rem 0.7rem;
-    border-radius: var(--au-radius-sm);
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--au-color-text-muted);
-    cursor: pointer;
-    transition: border-color var(--au-transition), color var(--au-transition);
-}
-
-.au-codetabs__copy:hover {
-    border-color: var(--au-color-primary);
-    color: var(--au-color-primary);
-}
-
-.au-codetabs__pre {
-    margin: 0;
-    padding: 1.25rem 1.5rem;
-    overflow-x: auto;
-    background: var(--au-color-bg-alt);
-}
-
-.au-codetabs__pre code {
-    font-family: var(--vp-font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: var(--au-color-text);
-    background: transparent;
-    padding: 0;
-    white-space: pre;
-}
-</style>
