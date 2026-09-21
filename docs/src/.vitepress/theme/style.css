@@ -107,6 +107,16 @@
         /* Hero glow, mixed from the same accent tokens. */
         --au-glow-1: color-mix(in srgb, var(--au-color-accent-a) 40%, transparent);
         --au-glow-2: color-mix(in srgb, var(--au-color-accent-b) 20%, transparent);
+
+        /* Fixed-dark card surface for framed content on the night band (the
+         * hero's quick-start card) — one step lighter than `--au-dark-bg` so
+         * it reads as its own surface. Opaque, not translucent, so it paints
+         * the same regardless of what's behind it (including the hero's own
+         * glow); a `rgb(255 255 255 / x%)` overlay would pick up that glow
+         * and drift out of the range measured here. Measured against this
+         * exact color: --au-dark-fg 8.9:1, --au-dark-fg-muted 4.7:1,
+         * --au-night-accent-1 5.2:1 — all clear 4.5:1. */
+        --au-dark-card-bg: color-mix(in srgb, var(--au-dark-bg) 94%, white);
     }
 
     .dark {
@@ -188,6 +198,27 @@
     .au-dot--r { background: #ff5f57; }
     .au-dot--y { background: #febc2e; }
     .au-dot--g { background: #28c840; }
+
+    /*
+     * Fixed-dark variant of `.au-card-window`, for framed content placed on
+     * the always-dark hero band (`.au-night`) instead of a mode-following
+     * section — the base tokens above (`--au-color-bg-alt`,
+     * `--au-color-divider`, `--au-color-text-soft`) follow VitePress's color
+     * mode, which the night surface deliberately does not.
+     */
+    .au-card-window--night {
+        background: var(--au-dark-card-bg);
+        border-color: var(--au-dark-border);
+    }
+
+    .au-card-window--night .au-card-window__chrome {
+        background: transparent;
+        border-bottom-color: var(--au-dark-border);
+    }
+
+    .au-card-window--night .au-card-window__title {
+        color: var(--au-dark-fg-muted);
+    }
 
     /*
      * Section rhythm shared by every landing-page section: eyebrow + heading
