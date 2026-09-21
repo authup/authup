@@ -19,6 +19,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Documentation](#documentation)
 - [Usage](#usage)
 - [Commands](#commands)
+- [Sign-in and entity commands](#sign-in-and-entity-commands)
 - [Configuration](#configuration)
 - [License](#license)
 
@@ -68,6 +69,23 @@ name. The retired `--worker` flag is refused as well, with a message naming
 
 `authup dev` is the EXPERIMENTAL development variant of `start`; see the
 documentation.
+
+## Sign-in and entity commands
+
+The binary is a client of a running deployment too. `login` signs it in
+through the device authorization grant against a public client that lists
+`urn:ietf:params:oauth:grant-type:device_code`; the tokens go into the OS
+keychain (`--insecure-storage` keeps them in `~/.config/authup/hosts.json`).
+One command per entity under `api` then reads and manages records.
+
+```shell
+authup login --server https://auth.example.com --client cli --realm master
+authup api user list --filter 'name=~ali~' --sort -createdAt --limit 10
+authup whoami
+authup logout
+```
+
+See [Sign-in and entity commands](https://authup.org/guide/deployment/cli.html).
 
 ## Configuration
 

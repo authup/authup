@@ -445,6 +445,10 @@ whoever gets a person to type a code approves that device (RFC 8628 §5.4), so
 no client carries that surface unless an administrator asked for it. A
 deployment that lists the URN on no client has the grant off.
 
+The `authup` CLI is one such device: `authup login --client <id>` runs this
+flow against a client the operator lists the URN on (see
+[Sign-in and entity commands](../deployment/cli.md)).
+
 #### Request
 
 `POST /device_authorization` is form-encoded and takes the client credentials

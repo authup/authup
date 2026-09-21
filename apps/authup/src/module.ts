@@ -19,8 +19,12 @@ import { PACKAGE_PATH } from './path.ts';
 import {
     defineCLIConfigCommand,
     defineCLIDevCommand,
+    defineCLIEntityCommands,
     defineCLIHealthCheckCommand,
+    defineCLILoginCommand,
+    defineCLILogoutCommand,
     defineCLIStartCommand,
+    defineCLIWhoamiCommand,
 } from './commands/index.ts';
 
 export async function createCLIEntryPointCommand() {
@@ -53,6 +57,20 @@ export async function createCLIEntryPointCommand() {
             // `start`, but a console whose package resolves to a source
             // checkout is served through vite instead of its built dist.
             dev: defineCLIDevCommand(configFs),
+
+            // The CLI as a client of a running deployment: a sign-in through
+            // the device grant, and the entity commands under one group, so
+            // the derived nouns can never collide with an operator command.
+            login: defineCLILoginCommand(),
+            logout: defineCLILogoutCommand(),
+            whoami: defineCLIWhoamiCommand(),
+            api: defineCommand({
+                meta: {
+                    name: 'api',
+                    description: 'Read and manage the records of a signed-in server, one command per entity.',
+                },
+                subCommands: defineCLIEntityCommands(),
+            }),
         },
         args: {
             ...CLI_CONFIG_ARGS,

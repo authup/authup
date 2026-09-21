@@ -253,7 +253,11 @@ export default defineConfig({
                         },
                         {
                             text: 'Docker Compose',
-                            link: '/guide/deployment/docker-compose', 
+                            link: '/guide/deployment/docker-compose',
+                        },
+                        {
+                            text: 'CLI: sign-in and entity commands',
+                            link: '/guide/deployment/cli',
                         },
                     ],
                 },
