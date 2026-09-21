@@ -136,6 +136,31 @@ describe('core/authorization/check', () => {
         ]);
     });
 
+    /**
+     * The grant load is the one failure a verdict cannot be derived from, and
+     * it is indistinguishable from a denial by the time it reaches the loop:
+     * `PolicyEngine.evaluate` flattens every evaluator throw into issues and
+     * `PermissionEvaluator` re-raises those as a `PermissionError`. Answered as
+     * one it becomes an authoritative empty set under a 200, which the kit
+     * memoizes by the introspection's subject, scope and grants -- none of
+     * which a database hiccup moves -- so one bad read gates a console closed
+     * for the rest of the document's life.
+     */
+    it('raises a failed grant load rather than answering an empty verdict set', async () => {
+        const ctx = setup(
+            [definition('user_update'), definition('user_read')],
+            [grant('user_update', RealmScope.OWN_OR_NULL)],
+        );
+
+        const error = new Error('ECONNREFUSED: the database is down');
+
+        await expect(buildAuthorizationCheck(ctx, {
+            identity,
+            grants: () => Promise.reject(error),
+            decorate: decorateWith(identity),
+        })).rejects.toThrow(error);
+    });
+
     it('answers the own realm alone for an own grant', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 

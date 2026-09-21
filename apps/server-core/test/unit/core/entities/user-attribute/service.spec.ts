@@ -20,7 +20,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, ValidationError } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
 import { 
@@ -265,20 +265,77 @@ describe('core/entities/user-attribute/service', () => {
         // `userId` the join-column validation has nothing to resolve it from
         // and would keep it verbatim, so its `realmId` would gate USER_UPDATE
         // against a realm of the caller's choosing.
-        it('should ignore a caller-supplied user object', async () => {
-            const actorId = randomUUID();
-            const actorRealmId = randomUUID();
-            const actor = createUserActor(actorId, actorRealmId);
+        // Only the id is taken: the object's own `realmId` must never reach the
+        // gate, so the realm comes from the row the join-column validation
+        // loads. Ignoring the object outright is NOT an option -- that leaves
+        // no target, which turns the self branch true and writes the row onto
+        // the CALLER under a 201.
+        it('should take the owner id from a caller-supplied user object and the realm from the row', async () => {
+            const actor = createUserActor(randomUUID(), randomUUID());
+            const targetId = randomUUID();
+            const targetRealmId = randomUUID();
+            userRealms.set(targetId, targetRealmId);
 
             const result = await service.create({
                 name: 'locale',
                 value: 'de',
-                user: { id: randomUUID(), realmId: randomUUID() },
+                user: {
+                    id: targetId,
+                    realmId: randomUUID(),
+                },
             }, actor);
 
-            expect(result.userId).toBe(actorId);
-            expect(result.realmId).toBe(actorRealmId);
-            expect(actor.permissionEvaluator.evaluateCalls[0].data?.get(BuiltInPolicyType.REALM_MATCH)).toBe(actorRealmId);
+            expect(result.userId).toBe(targetId);
+            expect(result.realmId).toBe(targetRealmId);
+            expect(actor.permissionEvaluator.evaluateCalls[0].data?.get(BuiltInPolicyType.REALM_MATCH)).toBe(targetRealmId);
+        });
+
+        it('should let an explicit userId win over the user object', async () => {
+            const actor = createUserActor(randomUUID(), randomUUID());
+            const targetId = randomUUID();
+            const targetRealmId = randomUUID();
+            userRealms.set(targetId, targetRealmId);
+
+            const result = await service.create({
+                name: 'locale',
+                value: 'de',
+                userId: targetId,
+                user: { id: randomUUID() },
+            }, actor);
+
+            expect(result.userId).toBe(targetId);
+            expect(result.realmId).toBe(targetRealmId);
+        });
+
+        // Saying `user` at all has to mean naming one, or the drop lands the
+        // row on the caller with no sign that the named owner was lost.
+        it('should refuse a user object that names no id', async () => {
+            const actor = createUserActor(randomUUID(), randomUUID());
+
+            await expect(service.create({
+                name: 'locale',
+                value: 'de',
+                user: { realmId: randomUUID() },
+            }, actor)).rejects.toThrow(ValidationError);
+
+            expect(actor.permissionEvaluator.evaluateCalls).toHaveLength(0);
+        });
+
+        it('should keep taking the owner from userId, with the realm of the stored row', async () => {
+            const actor = createUserActor(randomUUID(), randomUUID());
+            const targetId = randomUUID();
+            const targetRealmId = randomUUID();
+            userRealms.set(targetId, targetRealmId);
+
+            const result = await service.create({
+                name: 'locale',
+                value: 'de',
+                userId: targetId,
+            }, actor);
+
+            expect(result.userId).toBe(targetId);
+            expect(result.realmId).toBe(targetRealmId);
+            expect(actor.permissionEvaluator.evaluateCalls[0].data?.get(BuiltInPolicyType.REALM_MATCH)).toBe(targetRealmId);
         });
 
         it('should default userId from actor identity when no user provided', async () => {
@@ -339,7 +396,7 @@ describe('core/entities/user-attribute/service', () => {
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
-        it('should treat data.user.id as target user for self-create detection', async () => {
+        it('should take the self-manage path when userId names the actor', async () => {
             const userId = randomUUID();
             const realmId = randomUUID();
             const actor = createUserActor(userId, realmId);
@@ -352,10 +409,7 @@ describe('core/entities/user-attribute/service', () => {
             await service.create({
                 name: 'theme',
                 value: 'dark',
-                user: {
-                    id: userId,
-                    realmId,
-                },
+                userId,
             }, actor);
 
             const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
