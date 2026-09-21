@@ -95,11 +95,17 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
     const store = injectStore(pinia, app);
 
     return {
-        store, 
-        httpClient, 
-        setCalls, 
+        store,
+        httpClient,
+        setCalls,
         unsetCalls,
+        jar,
     };
+}
+
+// What the browser would still hold for the next document load.
+function reload(jar: Map<string, unknown>) {
+    return buildApp(Object.fromEntries(jar));
 }
 
 describe('core/store/install-cookies', () => {
@@ -216,6 +222,48 @@ describe('core/store/install-cookies', () => {
 
         expect(setCalls.map((call) => call.key)).toContain(CookieName.REALM_MANAGEMENT);
         expect(store.realmManagementId).toEqual('realm-2');
+    });
+
+    // The property the cookie exists for. A pick is the admin's preference, so
+    // it has to survive the reload, and it does: the cookie is still written,
+    // still seeded at install (synchronously, before any network call), and
+    // commitSession leaves a seeded value alone.
+    it('keeps an explicitly picked realm across a page refresh', async () => {
+        const first = buildApp();
+
+        await first.store.login({ name: 'admin', password: 'start123' });
+        first.store.setRealmManagement({ id: 'realm-2', name: 'other' });
+
+        // the pick is what the jar carries into the next load
+        expect(first.jar.get(CookieName.REALM_MANAGEMENT)).toMatchObject({ id: 'realm-2' });
+
+        const second = reload(first.jar);
+
+        expect(second.store.realmManagementId).toEqual('realm-2');
+
+        await second.store.resolve();
+
+        expect(second.store.realmManagementId).toEqual('realm-2');
+    });
+
+    // And the unpicked value survives too, by re-derivation rather than by
+    // storage: commitSession fills it from the session realm every time. That
+    // is why dropping it from the jar costs a reader nothing, and why the
+    // stored copy was only ever able to disagree with the session.
+    it('re-derives the realm across a page refresh when nothing was picked', async () => {
+        const first = buildApp();
+
+        await first.store.login({ name: 'admin', password: 'start123' });
+        expect(first.store.realmManagementId).toEqual('realm-1');
+
+        // nothing about the realm rides the jar into the next load
+        expect(first.jar.has(CookieName.REALM_MANAGEMENT)).toBe(false);
+        expect(first.jar.has(CookieName.REALM)).toBe(false);
+
+        const second = reload(first.jar);
+        await second.store.resolve();
+
+        expect(second.store.realmManagementId).toEqual('realm-1');
     });
 
     it('narrows a whole realm row to its id, name and display name before it reaches the realm cookie', () => {
