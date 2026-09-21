@@ -53,9 +53,21 @@ function createUserActor(userId: string, realmId?: string): FakeActorContext {
 describe('core/entities/user-attribute/service', () => {
     let repository: FakeEntityRepository<UserAttribute>;
     let service: UserAttributeService;
+    // The realm each known user lives in: what the join-column validation
+    // loads onto `data.user` from `data.userId`, and nothing else.
+    let userRealms: Map<string, string>;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserAttribute>();
+        userRealms = new Map();
+        repository.onValidateJoinColumns((data: Record<string, any>) => {
+            if (data.userId) {
+                data.user = {
+                    id: data.userId,
+                    realmId: userRealms.get(data.userId) ?? randomUUID(),
+                };
+            }
+        });
         service = new UserAttributeService({ repository });
     });
 
@@ -202,6 +214,7 @@ describe('core/entities/user-attribute/service', () => {
         it.each([
             ['locale', 'fr-CA'],
             ['locale', 'de'],
+            ['locale', 'zh-Hant-CN'],
             ['colorMode', 'dark'],
             ['colorMode', 'system'],
             ['theme', 'anything at all'],
@@ -210,7 +223,6 @@ describe('core/entities/user-attribute/service', () => {
                 name,
                 value,
                 userId: randomUUID(),
-                user: { realmId: randomUUID() },
             }, createAllowAllActor());
 
             expect(result.value).toBe(value);
@@ -220,6 +232,11 @@ describe('core/entities/user-attribute/service', () => {
             ['locale', 'banana!'],
             ['locale', 'f'],
             ['locale', 42],
+            // a subtag longer than the eight characters BCP47 allows, and a
+            // tag longer than the 35 characters a buffer is sized for: both
+            // would ride every signed token of the subject
+            ['locale', `en-${'a'.repeat(9)}`],
+            ['locale', `en${'-abcdefgh'.repeat(4)}`],
             ['colorMode', 'purple'],
             ['colorMode', 'DARK'],
         ])('should refuse %s = %s', async (name, value) => {
@@ -227,23 +244,41 @@ describe('core/entities/user-attribute/service', () => {
                 name,
                 value,
                 userId: randomUUID(),
-                user: { realmId: randomUUID() },
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should create entity with user from join data', async () => {
             const userRealmId = randomUUID();
             const userId = randomUUID();
-            const data = {
+            userRealms.set(userId, userRealmId);
+
+            const result = await service.create({
                 name: 'new-attr',
                 value: 'val',
                 userId,
-                user: { realmId: userRealmId },
-            };
-
-            const result = await service.create(data, createAllowAllActor());
+            }, createAllowAllActor());
             expect(result.id).toBeDefined();
             expect(result.realmId).toBe(userRealmId);
+        });
+
+        // A body-supplied `user` object is never the owner: without a
+        // `userId` the join-column validation has nothing to resolve it from
+        // and would keep it verbatim, so its `realmId` would gate USER_UPDATE
+        // against a realm of the caller's choosing.
+        it('should ignore a caller-supplied user object', async () => {
+            const actorId = randomUUID();
+            const actorRealmId = randomUUID();
+            const actor = createUserActor(actorId, actorRealmId);
+
+            const result = await service.create({
+                name: 'locale',
+                value: 'de',
+                user: { id: randomUUID(), realmId: randomUUID() },
+            }, actor);
+
+            expect(result.userId).toBe(actorId);
+            expect(result.realmId).toBe(actorRealmId);
+            expect(actor.permissionEvaluator.evaluateCalls[0].data?.get(BuiltInPolicyType.REALM_MATCH)).toBe(actorRealmId);
         });
 
         it('should default userId from actor identity when no user provided', async () => {
@@ -389,6 +424,27 @@ describe('core/entities/user-attribute/service', () => {
             const result = await service.update(entity.id, { value: 'fr' }, createAllowAllActor());
 
             expect(result.value).toBe('fr');
+        });
+
+        // A rename is checked against the value the row will hold, so an
+        // unchecked row cannot be renamed into a reserved one to slip its
+        // value past the check.
+        it('should refuse renaming an unchecked row into a reserved name when its value fails', async () => {
+            const entity = repository.create(createFakeUserAttribute({ name: 'theme', value: 'purple' }));
+            await repository.save(entity);
+
+            await expect(service.update(entity.id, { name: 'colorMode' }, createAllowAllActor()))
+                .rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should check a rename against the value it carries along', async () => {
+            const entity = repository.create(createFakeUserAttribute({ name: 'theme', value: 'purple' }));
+            await repository.save(entity);
+
+            await expect(service.update(entity.id, { name: 'colorMode', value: 'dark' }, createAllowAllActor()))
+                .resolves.toMatchObject({ name: 'colorMode', value: 'dark' });
+            await expect(service.update(entity.id, { name: 'locale', value: 'dark' }, createAllowAllActor()))
+                .rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should update an existing attribute', async () => {

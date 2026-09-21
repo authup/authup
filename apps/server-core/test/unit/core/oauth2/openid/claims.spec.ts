@@ -42,11 +42,12 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
     // claim is omitted rather than answered as null (the #3518 rule).
     describe('fromUser preferences', () => {
         it('should serve the two reserved attributes as locale and color_mode', () => {
-            const result = builder.fromUser({
-                name: 'test-user',
+            // the rows land on the user object exactly this way: as own
+            // properties the entity type never declared
+            const result = builder.fromUser(Object.assign({ name: 'test-user' } as User, {
                 locale: 'fr-CA',
                 colorMode: 'dark',
-            } as User);
+            }));
 
             expect(result.locale).toBe('fr-CA');
             expect(result.color_mode).toBe('dark');

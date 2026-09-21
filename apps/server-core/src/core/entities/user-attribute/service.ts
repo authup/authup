@@ -126,8 +126,13 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        const targetUserId: string | undefined = data.userId ||
-            (data.user && data.user.id);
+        // The owner is `userId`, never a body-supplied relation object: with
+        // no join column to resolve it from, `validateJoinColumns` keeps such
+        // an object verbatim, and its `realmId` would then gate USER_UPDATE
+        // against a realm of the caller's choosing.
+        delete data.user;
+
+        const targetUserId: string | undefined = data.userId;
 
         const isSelfTarget = !!actor.identity &&
             actor.identity.type === 'user' &&
@@ -199,10 +204,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new EntityNotFoundError();
         }
 
-        // The row's own name governs a value-only update: a reserved row
-        // cannot be renamed into an unchecked one to slip a value past.
-        if (typeof data.value !== 'undefined') {
-            assertPreferenceValue(data.name ?? entity.name, data.value);
+        // The pair the row will hold is what is checked: a value-only update
+        // is checked against the row's own name, and a rename is checked
+        // against the value it carries along or the row's current one, so an
+        // unchecked row cannot be renamed into a reserved one either.
+        if (typeof data.name !== 'undefined' || typeof data.value !== 'undefined') {
+            assertPreferenceValue(data.name ?? entity.name, data.value ?? entity.value);
         }
 
         const isSelfTarget = !!actor.identity &&
