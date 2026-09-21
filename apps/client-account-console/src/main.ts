@@ -267,4 +267,3 @@ app.use(installTimeago, {
 router.isReady().then(() => {
     app.mount('#app');
 });
-

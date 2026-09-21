@@ -159,3 +159,4 @@ router.isReady()
         console.error(error);
         app.mount('#root');
     });
+
