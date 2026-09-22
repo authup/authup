@@ -5,6 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Container } from 'validup';
+
+/**
+ * A policy type's configuration validator, keyed by the type it validates.
+ */
+export type PolicyValidators = Record<string, Container<Record<string, any>>>;
+
 export type BasePolicy<T extends string = string> = {
     /**
      * Type describing the policy.

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PolicyValidators } from '@authup/access';
 import type { Identity, IdentityType } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenPermission, OpenIDTokenPayload } from '@authup/specs';
@@ -15,6 +16,12 @@ export type OAuth2IntrospectionSubjectContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
     logger?: Logger,
+    /**
+     * The registry a grant's junction tree must project with, the one the
+     * authorization catalog is built with (`AuthorizationCatalogBuilderContext`),
+     * so a grant is dropped here exactly when its tree is missing there.
+     */
+    validators?: PolicyValidators,
 };
 
 export type OAuth2IntrospectionSubjectInput = {

@@ -68,7 +68,7 @@ export async function resolveIntrospectionSubject(
         try {
             for (const policy of binding.policies ?? []) {
                 policies.push(readPolicyId(policy));
-                await projectAuthorizationPolicy(policy);
+                await projectAuthorizationPolicy(policy, ctx.validators);
             }
         } catch (e) {
             ctx.logger?.warn(

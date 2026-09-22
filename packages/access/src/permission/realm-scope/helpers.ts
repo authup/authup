@@ -89,7 +89,7 @@ function matchesSingle(
  */
 export function realmScopeMatches(
     scope: `${RealmScope}` | null | undefined,
-    resourceRealmId: string | string[] | null | undefined,
+    resourceRealmId: string | Array<string | null> | null | undefined,
     identityRealmId: string | null | undefined,
     identityRealmName?: string | null,
 ): boolean {
