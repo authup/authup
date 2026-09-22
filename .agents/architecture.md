@@ -449,7 +449,18 @@ usable at the service level and nothing in core depends on TypeORM:
   `sessionToken.expiresAt`, `userAuthenticator.lastUsedAt`), which are
   written with `toISOString()` and compare as plain strings on every
   dialect. `event.createdAt` predates this and stays filterable,
-  carrying the same caveat. Sorting is unaffected: it compares the
+  carrying the same caveat. **rapiq 2.3.0 changed the half of this that
+  is the adapter's** (tada5hi/rapiq#939, filed from the event stats read):
+  the typeorm adapter now binds a date operand in the column's storage form
+  (a UTC wall-clock string for a zone-less `datetime` / `timestamp`), so the
+  sqlite inversion is gone and a malformed date is refused at the adapter
+  (`AdapterError`, `KEY_VALUE_INVALID`) rather than reaching the driver. The
+  stats window rides that binding as an appended `createdAt` range. The
+  allow-list rule above still stands until #3639 re-measures the surface
+  under all three dialects in `query-surface.spec.ts`, settles the equality
+  contract (a precision question the binding does not answer) and maps the
+  `AdapterError` onto 400 in `sanitizeError`. Sorting is unaffected: it
+  compares the
   column against itself. Pinned by
   `test/unit/http/controllers/entities/query-surface.spec.ts`, which
   EXECUTES the surface (decoding only proves a query is legal, not
@@ -3425,11 +3436,13 @@ error, while 400 ids encode to more than node's default 16 KB header budget and
 could not be sent at all. Past either bound the console scopes NOTHING and says
 so, since fail-soft on a user-facing filter is a wrong answer rather than a
 narrower one, and a failed request is no better an answer than a short list. The prefix
-filter on `auth_paths.path` itself is a scan on
-postgres and mysql, since `@rapiq/adapter-sql` lowers an anchored `startsWith`
-to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);
-the declaration makes that filter legal, not fast, and the folder table is small
-enough for that to be the accepted trade.
+filter on `auth_paths.path` itself is a scan on postgres and mysql: since
+rapiq 2.3.0 (tada5hi/rapiq#934, closed by #937) `@rapiq/adapter-sql` lowers an
+anchored `startsWith` to `LIKE ... ESCAPE '!'` over `lower(column)` on every
+dialect, which a btree index would serve only through a
+`lower(path) text_pattern_ops` expression index that no migration declares;
+the declaration makes that filter legal, not fast, and the folder table is
+small enough for that to be the accepted trade.
 
 **A page that narrows a collection's BASE query must reload it post flush,
 and the collection has to say whether it took the ask.** The manager reads
@@ -8151,7 +8164,78 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Admin UI:** `apps/client-admin-console/src/pages/events/` — a read-only list page
+- **Dashboard statistics:** `GET /events/stats` (+ `/realms/:realmId/events/stats`,
+  declared BEFORE the record read so `stats` never reaches a uuid compare)
+  answers grouped counts per `(bucket, scope, name)` over a window: the
+  query-time half of plan 097, stage 1, with no schema change and no worker
+  (`EventStatsService`, `core/entities/event/stats.ts`, built by the HTTP
+  controller factory because the cache lives in a module the database module
+  does not depend on). The rows to count are an ordinary rapiq `filter[...]`
+  decoded through the event schema with `parameters: ['filters']` (the
+  bulk-revoke shape; the route carries `@DQuerySchema(EntityType.EVENT,
+  'filters')` and answers the filters vocabulary under `meta.schema` through
+  `FILTERS_QUERY_PARAMETERS`), so the console's realm scope is the list's own
+  `filter[realmId]=<id>,null` and "logins only" or "one client" is a filter
+  rather than a group dimension. Two parameters are NOT filters and are the
+  fallback for tada5hi/rapiq#938 (an aggregation parameter with a bucket
+  function): `granularity` (`hour` | `day`, default `day`) is a GROUP BY, and
+  `days` (default 30) names the window. The window itself is HALF-OPEN and
+  holds exactly `days` times the buckets per day bucket starts: `from` is the
+  bucket holding `now` minus that many widths less one, `to` is `now`, and
+  the service appends `gte('createdAt', from)` and `lt('createdAt', to)` onto
+  the IR like any other condition, so a consumer zero-fills between the two
+  and a future-dated row never lands past `to`. That ride is what rapiq
+  2.3.0 bought (tada5hi/rapiq#939, filed from here): the typeorm adapter
+  binds a date operand in the column's storage form, where a raw ISO string
+  compared wrong on sqlite (the stored `'YYYY-MM-DD HH:MM:SS'` sorts below
+  any ISO literal on the `' '` vs `'T'` byte). The ceiling is
+  `EVENT_STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it).
+  **The gate is the list's, minus its per-row loop.**
+  No `EVENT_READ` counts own rows only; `compile(EVENT_READ)` lowers `allow` /
+  `conditional` (OR'd with ownership, through the same `applyQuery` the list
+  uses, which applies nothing but the WHERE for a filters-only IR) / `deny`
+  onto the grouped builder; and `post` fails CLOSED to own rows, since a
+  grouped count has no row to evaluate and the alternative is over-disclosure.
+  The bucket expression is the one per-dialect string in the repository
+  (`to_char` / `DATE_FORMAT` / `strftime`, normalized back to an ISO instant),
+  riding the `(realm_id, created_at)` index. Answers are cached in `ICache`
+  for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm, the
+  validated parameters, `queryCodec.encode` of the LOWERED query (taken
+  BEFORE the window is appended, since `to` moves with every request) and
+  the owner constraint. The whole gate therefore runs before the lookup, and
+  what it produced is in the key: reach is a property of the REQUEST (a
+  token narrowed to its client, a bearer without `global`), not of the
+  identity, so two requests by one identity can lower to different queries
+  and a restricted one must never read the broad one's answer; two
+  spellings of one filter still share an answer, since the key is the
+  decoded IR rather than the wire record.
+  `meta.enabled` mirrors `eventLogEnabled`, which is how the console learns
+  the log is off without that fact being published on the anonymous `GET /`.
+  Typed client: `client.event.getStats({ filters?, granularity?, days? })`,
+  answering `EventStatsResponse` (`{ data: EventStatsBucket[], meta }`, not
+  the entity envelope: a bucket is not an entity). Pinned by
+  `test/unit/core/entities/event/stats.spec.ts` (the gate matrix on the
+  fakes, the ceiling, the cache keys) and
+  `test/unit/http/controllers/entities/event-stats.spec.ts` (day and hour
+  buckets on a real database, the realm filter, both mounts, the own-rows
+  scope, a disallowed filter key, `enabled: false`); the dialect expressions
+  are what the mysql/psql runs exercise.
+- **Admin UI:** the landing page `apps/client-admin-console/src/pages/index.vue`
+  is the dashboard over that read, scoped by the header realm switcher like
+  every list page (`filters: { realmId: [<realm>, null] }`), with a 24h / 7d /
+  30d / 90d switch (`hour` for 24h, `day` otherwise), four tiles (logins,
+  failed logins, authorizations, all events), a stacked column chart of
+  `login` vs `loginFailed` per bucket
+  (`components/dashboard/EventVolumeChart.vue`, chart.js through vue-chartjs,
+  the portal precedent; the series are painted with the theme's
+  `--vc-color-primary-600` and `--vc-color-error-600`, read off the document
+  root and re-read on the colour-mode flip since a canvas cannot read css;
+  green was rejected by the palette validator for deuteranopia) and a ranked
+  `(scope, name)` list linking to `/events`. `meta.enabled === false` renders
+  a warning alert in place of the charts. The pure helpers (bucket axis,
+  zero-fill, totals, ranking) live in `components/dashboard/stats.ts` and are
+  pinned by `test/unit/dashboard-stats.spec.ts`. The Events section keeps its
+  list and detail pages: `apps/client-admin-console/src/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,

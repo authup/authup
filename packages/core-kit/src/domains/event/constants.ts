@@ -40,6 +40,14 @@ export enum EventScope {
     ENTITY = 'entity',
 }
 
+/**
+ * The time bucket a grouped event count is reported in.
+ */
+export enum EventStatsGranularity {
+    HOUR = 'hour',
+    DAY = 'day',
+}
+
 export enum EventRefType {
     SESSION = 'session',
     USER = 'user',

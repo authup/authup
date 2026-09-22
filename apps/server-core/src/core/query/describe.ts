@@ -24,6 +24,16 @@ export const RECORD_QUERY_PARAMETERS: `${Parameter}`[] = [
     Parameter.RELATIONS,
 ];
 
+/**
+ * What a read that takes a filter and nothing else decodes: the two bulk
+ * revokes and the event stats. Declared once for the same reason as the
+ * record subset: the `@DQuerySchema('filters')` marker, the OpenAPI shape map
+ * and the `meta.schema` a route answers must name one list.
+ */
+export const FILTERS_QUERY_PARAMETERS: `${Parameter}`[] = [
+    Parameter.FILTERS,
+];
+
 const cache = new WeakMap<Schema<any>, Map<string, SchemaDescription>>();
 
 function deepFreeze<T>(input: T) : T {

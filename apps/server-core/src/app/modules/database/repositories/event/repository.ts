@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Event } from '@authup/core-kit';
+import type { Event, EventStatsGranularity } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
-import type { Repository } from 'typeorm';
+import type { DatabaseType, Repository } from 'typeorm';
 import { EntityManager, LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
+    EventCountGroupedOptions,
+    EventCountGroupedRow,
     EventCountRecentFilter,
     EventDeleteExpiredOptions,
     EventFindManyOptions,
@@ -181,6 +183,54 @@ export class EventRepositoryAdapter implements IEventRepository {
         return qb.getCount();
     }
 
+    async countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]> {
+        const qb = this.repository.createQueryBuilder('event');
+
+        // the client filter, the compiled reach and the window ride the
+        // query and lower through the same adapter the list uses; only the
+        // route realm and the owner are hand-bound, as findMany binds them
+        applyQuery(qb, query);
+
+        const bucket = buildBucketExpression(
+            this.repository.manager.connection.options.type,
+            options.granularity,
+        );
+
+        qb.select(bucket, 'bucket')
+            .addSelect('event.scope', 'scope')
+            .addSelect('event.name', 'name')
+            .addSelect('COUNT(*)', 'count')
+            .groupBy('bucket')
+            .addGroupBy('event.scope')
+            .addGroupBy('event.name')
+            .orderBy('bucket', 'ASC');
+
+        if (options.realmId) {
+            qb.andWhere('event.realmId = :routeRealmId', { routeRealmId: options.realmId });
+        }
+
+        if (options.owner) {
+            qb.andWhere('event.actorId = :ownerActorId AND event.actorType = :ownerActorType', {
+                ownerActorId: options.owner.actorId,
+                ownerActorType: options.owner.actorType,
+            });
+        }
+
+        const rows = await qb.getRawMany<{
+            bucket: string,
+            scope: Event['scope'],
+            name: Event['name'],
+            count: string | number,
+        }>();
+
+        return rows.map((row) => ({
+            bucket: toBucketInstant(row.bucket, options.granularity),
+            scope: row.scope,
+            name: row.name,
+            count: Number(row.count),
+        }));
+    }
+
     async deleteExpired(now: string, options: EventDeleteExpiredOptions = {}): Promise<number> {
         return deleteInBatches(
             this.repository,
@@ -191,4 +241,33 @@ export class EventRepositoryAdapter implements IEventRepository {
             resolveSweepBatchSize(options.batchSize, EVENT_RETENTION_SWEEP_BATCH_SIZE),
         );
     }
+}
+
+/**
+ * The bucket start as the dialect's own string form (`2026-09-22T10` for an
+ * hour, `2026-09-22` for a day), grouped on and turned back into an ISO
+ * instant by `toBucketInstant`. Each dialect renders its stored wall clock
+ * (assumed UTC, as `countRecent` assumes it) without converting it.
+ *
+ * ponytail: the one place a per-dialect expression lives; a rapiq group/
+ * aggregate parameter with a bucket function (tada5hi/rapiq#938) is the
+ * upgrade that moves it into the adapter.
+ */
+function buildBucketExpression(type: DatabaseType, granularity: `${EventStatsGranularity}`): string {
+    const hourly = granularity === 'hour';
+
+    switch (type) {
+        case 'postgres':
+            return `to_char(event.createdAt, '${hourly ? 'YYYY-MM-DD"T"HH24' : 'YYYY-MM-DD'}')`;
+        case 'mysql':
+            return `DATE_FORMAT(event.createdAt, '${hourly ? '%Y-%m-%dT%H' : '%Y-%m-%d'}')`;
+        default:
+            return `strftime('${hourly ? '%Y-%m-%dT%H' : '%Y-%m-%d'}', event.createdAt)`;
+    }
+}
+
+function toBucketInstant(bucket: string, granularity: `${EventStatsGranularity}`): string {
+    return granularity === 'hour' ?
+        `${bucket}:00:00.000Z` :
+        `${bucket}T00:00:00.000Z`;
 }

@@ -6,11 +6,13 @@
  */
 
 import type {
-    Event, 
-    EventName, 
-    EventScope, 
+    Event,
+    EventName,
+    EventScope,
+    EventStatsGranularity,
     IdentityType,
 } from '@authup/core-kit';
+import type { EventStatsBucket, EventStatsMeta } from '@authup/core-http-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IQuery } from '@rapiq/core';
 
@@ -50,6 +52,34 @@ export type EventCountRecentFilter = {
     since: string,
 };
 
+export type EventCountGroupedRow = EventStatsBucket;
+
+export type EventCountGroupedOptions = {
+    granularity: `${EventStatsGranularity}`,
+    /**
+     * The route realm, a mandatory constraint like findMany's.
+     */
+    realmId?: string,
+    /**
+     * Mandatory owner constraint (self-service scope), like findMany's.
+     */
+    owner?: EventOwner,
+};
+
+export type EventStatsParameters = {
+    granularity?: `${EventStatsGranularity}`,
+    days?: number,
+};
+
+/**
+ * What the stats service answers; the controller adds the schema
+ * description to the meta on its way out.
+ */
+export type EventStatsResult = {
+    data: EventStatsBucket[],
+    meta: Omit<EventStatsMeta, 'schema'>,
+};
+
 export type EventSaveOptions = {
     /**
      * The transaction the row rides, as the opaque handle the domain event
@@ -72,6 +102,16 @@ export interface IEventRepository {
     findOneById(id: string): Promise<Event | null>;
 
     countRecent(filter: EventCountRecentFilter): Promise<number>;
+
+    /**
+     * Grouped counts per (bucket, scope, name) over the rows the query's
+     * filters reach; the dashboard's read. The query carries the client
+     * filter, the compiled reach and the half-open window on `createdAt`,
+     * which the adapter binds in the column's storage form since rapiq
+     * 2.3.0; only the route realm and the owner are hand-bound, as findMany
+     * binds them.
+     */
+    countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]>;
 
     /**
      * Retention sweep: drop every expiring row whose expiresAt lies before
@@ -185,4 +225,20 @@ export interface IEventService {
      * Read a single audit event. Own rows need no permission.
      */
     getOne(id: string, actor: ActorContext, options?: EventServiceReadOptions): Promise<Event>;
+}
+
+export interface IEventStatsService {
+    /**
+     * Grouped counts over a window, the dashboard's read. The query's
+     * `filter` decodes through the event schema like the collection read's;
+     * `granularity` and `days` are its own. Scoped like getMany: an actor
+     * without EVENT_READ counts its own rows, an actor with it counts every
+     * row its realm reach lowers to; a reach that does not lower counts own
+     * rows only. Served from the cache within its ttl.
+     */
+    getMany(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options?: EventServiceReadOptions,
+    ): Promise<EventStatsResult>;
 }
