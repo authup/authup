@@ -456,11 +456,11 @@ usable at the service level and nothing in core depends on TypeORM:
   sqlite inversion is gone and a malformed date is refused at the adapter
   (`AdapterError`, `KEY_VALUE_INVALID`) rather than reaching the driver. The
   stats window rides that binding as an appended `createdAt` range. The
-  allow-list rule above still stands until the surface is re-measured under
-  all three dialects, which is `query-surface.spec.ts`'s job: equality
-  against the value the API returned is a precision question the binding
-  does not answer, and the `AdapterError` needs its own `sanitizeError`
-  mapping before it can be a 400. Sorting is unaffected: it compares the
+  allow-list rule above still stands until #3639 re-measures the surface
+  under all three dialects in `query-surface.spec.ts`, settles the equality
+  contract (a precision question the binding does not answer) and maps the
+  `AdapterError` onto 400 in `sanitizeError`. Sorting is unaffected: it
+  compares the
   column against itself. Pinned by
   `test/unit/http/controllers/entities/query-surface.spec.ts`, which
   EXECUTES the surface (decoding only proves a query is legal, not
