@@ -57,6 +57,8 @@ function mountStats(handler: Handler, window: EntityStatsWindowEntry = ENTITY_ST
 
     const realmId = ref<string | null>(REALM_ID);
     const windowRef = ref<EntityStatsWindowEntry>(window);
+    const paused = ref(false);
+    const tick = ref(0);
     let stats : EntityStats | undefined;
 
     const component = defineComponent({
@@ -67,8 +69,10 @@ function mountStats(handler: Handler, window: EntityStatsWindowEntry = ENTITY_ST
 
                     return handler(query);
                 },
-                filters: () => ({ realmId: [realmId.value, null] }),
+                // `tick` recomputes an EQUAL filter object on demand
+                filters: () => ({ realmId: [realmId.value, null], ...(tick.value < 0 ? { name: 'never' } : {}) }),
                 window: windowRef,
+                paused,
                 onError: (e) => {
                     errors.push(e);
                 },
@@ -84,6 +88,8 @@ function mountStats(handler: Handler, window: EntityStatsWindowEntry = ENTITY_ST
         stats: stats as EntityStats,
         realmId,
         window: windowRef,
+        paused,
+        tick,
         queries,
         errors,
     };
@@ -252,5 +258,65 @@ describe('src/composables/entity-stats', () => {
 
         expect(stats.forbidden.value).toBe(false);
         expect(stats.response.value?.data[0].count).toEqual(5);
+    });
+
+    it('does not reload for an equal filter recomputed as a new object', async () => {
+        const { tick, queries } = mountStats((query) => answer(query, 3));
+        await flushPromises();
+
+        tick.value += 1;
+        await flushPromises();
+
+        expect(queries).toHaveLength(1);
+    });
+
+    it('waits while paused and loads the settled scope once resumed', async () => {
+        const {
+            stats, 
+            realmId, 
+            paused, 
+            queries, 
+        } = mountStats((query) => answer(query, 3));
+        await flushPromises();
+
+        paused.value = true;
+        realmId.value = null;
+        await flushPromises();
+        realmId.value = OTHER_REALM_ID;
+        await flushPromises();
+
+        expect(queries).toHaveLength(1);
+        expect(stats.response.value).not.toBeNull();
+
+        paused.value = false;
+        await flushPromises();
+
+        expect(queries).toHaveLength(2);
+        expect(queries[1].filters).toEqual({ realmId: [OTHER_REALM_ID, null] });
+    });
+
+    it('keeps the previous answer up while a new scope loads', async () => {
+        let release : (() => void) | undefined;
+        const { stats, realmId } = mountStats((query) => {
+            if (query.filters && (query.filters as { realmId: unknown[] }).realmId[0] === OTHER_REALM_ID) {
+                return new Promise((resolve) => {
+                    release = () => resolve(answer(query, 9));
+                });
+            }
+
+            return answer(query, 3);
+        });
+        await flushPromises();
+
+        realmId.value = OTHER_REALM_ID;
+        await flushPromises();
+
+        expect(stats.busy.value).toBe(true);
+        expect(stats.response.value?.meta.total).toEqual(3);
+
+        release!();
+        await flushPromises();
+
+        expect(stats.response.value?.meta.total).toEqual(9);
     });
 });

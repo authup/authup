@@ -7,7 +7,13 @@
 
 import { randomUUID } from 'node:crypto';
 import type { ICondition, IQuery } from '@rapiq/core';
-import { FilterCompoundOperator, isFilter, isFilters } from '@rapiq/core';
+import {
+    FilterCompoundOperator,
+    Query,
+    isFilter,
+    isFilters,
+} from '@rapiq/core';
+import { applyQuery } from '@rapiq/adapter-memory';
 import type { Session } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -65,8 +71,7 @@ export class FakeSessionRepository implements ISessionRepository {
         query: IQuery,
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
-        let data = this.sessions.values().toArray()
-            .filter((session) => this.matchesCondition(session, query.filters));
+        let { data } = applyQuery(new Query({ filters: query.filters }), this.sessions.values().toArray());
         if (options.owner) {
             data = data.filter((s) => this.ownedBy(s, options.owner!));
         }

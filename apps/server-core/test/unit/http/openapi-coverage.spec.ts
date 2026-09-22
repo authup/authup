@@ -161,7 +161,7 @@ describe('openapi query surface coverage', () => {
                     end: number, 
                     described: boolean 
                 }[] = [];
-                const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record|filters)'\)$/gm;
+                const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record|filters|stats)'\)$/gm;
 
                 let marker = markers.exec(source);
                 while (marker !== null) {

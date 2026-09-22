@@ -61,7 +61,7 @@ export class RoleController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.ROLE, 'filters')
+    @DQuerySchema(EntityType.ROLE, 'stats')
     @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,

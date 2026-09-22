@@ -7,7 +7,7 @@
 
 import { extractErrorContext } from '@authup/client-web-kit';
 import type { EntityStatsMeta, EntityStatsQuery } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
+import { StatsGranularity, buildQueryString } from '@authup/core-http-kit';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { ref, toValue, watch } from 'vue';
 
@@ -59,6 +59,12 @@ export type EntityStatsOptions<R extends EntityStatsResponseLike = EntityStatsRe
      */
     window: MaybeRefOrGetter<EntityStatsWindowEntry>,
     /**
+     * While true, a scope change waits instead of reloading: a caller whose
+     * filters are still being resolved (a folder scope looking up its
+     * subtree) would otherwise count the unresolved, wider scope first.
+     */
+    paused?: MaybeRefOrGetter<boolean>,
+    /**
      * Called for a failed read the caller should surface. A 403 is not one
      * of them: it sets `forbidden` instead, since a control the actor may
      * not see hides itself rather than complaining.
@@ -93,10 +99,21 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
     const busy = ref(false);
     const forbidden = ref(false);
     let generation = 0;
+    // the scope the held answer belongs to, and the one last requested
+    let answered : string | undefined;
+    let requested : string | undefined;
+
+    const buildScope = () => {
+        const { days, granularity } = toValue(options.window);
+
+        return `${buildQueryString({ filters: toValue(options.filters) })}|${granularity}|${days}`;
+    };
 
     const load = async () => {
         generation += 1;
         const current = generation;
+        const scope = buildScope();
+        requested = scope;
         busy.value = true;
 
         try {
@@ -109,6 +126,7 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
 
             if (current === generation) {
                 response.value = next;
+                answered = scope;
                 forbidden.value = false;
             }
         } catch (e) {
@@ -116,8 +134,13 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
                 return;
             }
 
-            if (extractErrorContext(e).status === 403) {
+            // an answer of another scope must not stay up under the new one
+            if (answered !== scope) {
                 response.value = null;
+                answered = undefined;
+            }
+
+            if (extractErrorContext(e).status === 403) {
                 forbidden.value = true;
                 return;
             }
@@ -132,13 +155,21 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
         }
     };
 
-    // a changed scope drops the answer of the previous one first: a failed
-    // reload must not leave the old realm's or window's numbers under the
-    // new label. A manual reload of the same scope keeps its answer.
-    watch([() => toValue(options.filters), () => toValue(options.window)], () => {
-        response.value = null;
-        return load();
-    }, { immediate: true });
+    // Reloads follow the ENCODED scope, not object identity: a page that
+    // recomputes an equal filter must not refetch. While a scope changes the
+    // previous answer stays up (a caller dims it on `busy`) instead of the
+    // control collapsing, and a failed read of the new scope drops it.
+    watch(
+        [buildScope, () => toValue(options.paused) === true],
+        ([scope, paused]) => {
+            if (paused || scope === requested) {
+                return undefined;
+            }
+
+            return load();
+        },
+        { immediate: true },
+    );
 
     return {
         response,

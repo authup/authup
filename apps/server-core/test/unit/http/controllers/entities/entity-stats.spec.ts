@@ -16,7 +16,9 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
+import { BuiltInPolicyType } from '@authup/access';
 import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
 
@@ -132,5 +134,25 @@ describe('src/http/controllers/entities/* (@stats)', () => {
         const response = await httpRequest(suite, 'GET', '/realms/@stats');
 
         expect(response.status).toEqual(200);
+    });
+
+    it('counts a row once however many to-many join rows its filter matches', async () => {
+        const name = `composite-${Date.now()}`;
+        await suite.client.policy.createBuiltIn({
+            name,
+            type: BuiltInPolicyType.COMPOSITE,
+            invert: false,
+            children: [
+                createFakeTimePolicy(),
+                createFakeTimePolicy(),
+                createFakeTimePolicy(),
+            ],
+        });
+
+        const { status, body } = await read(`/policies/@stats?filter[name]=${name}&filter[children.type]=${BuiltInPolicyType.TIME}`);
+
+        expect(status).toEqual(200);
+        expect(body.meta.total).toEqual(1);
+        expect(body.data.reduce((sum, row) => sum + row.count, 0)).toEqual(1);
     });
 });

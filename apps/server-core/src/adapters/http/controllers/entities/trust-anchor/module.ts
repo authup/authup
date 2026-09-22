@@ -63,7 +63,7 @@ export class TrustAnchorController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.TRUST_ANCHOR, 'filters')
+    @DQuerySchema(EntityType.TRUST_ANCHOR, 'stats')
     @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,

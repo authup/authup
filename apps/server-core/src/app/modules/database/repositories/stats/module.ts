@@ -20,8 +20,8 @@ import { applyQuery } from '../query.ts';
 /**
  * Grouped counts over any entity table. The filter, the reach and the window
  * ride the query and lower through the same adapter the list uses, so no
- * per-entity code is needed; the relation filters a schema allows are all
- * to-one, so a join never multiplies the rows counted.
+ * per-entity code is needed. Rows are counted DISTINCT by id: a filter
+ * through a to-many relation (`policy.children`) joins one row per match.
  */
 export class EntityStatsRepositoryAdapter<T extends ObjectLiteral> implements IEntityStatsRepository {
     private readonly repository: Repository<T>;
@@ -51,7 +51,7 @@ export class EntityStatsRepositoryAdapter<T extends ObjectLiteral> implements IE
             qb.addSelect(`${this.alias}.${key}`, key);
         }
 
-        qb.addSelect('COUNT(*)', 'count')
+        qb.addSelect(`COUNT(DISTINCT ${this.alias}.id)`, 'count')
             .groupBy('bucket');
         for (const key of options.groupBy) {
             qb.addGroupBy(`${this.alias}.${key}`);

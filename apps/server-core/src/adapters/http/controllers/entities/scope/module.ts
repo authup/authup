@@ -61,7 +61,7 @@ export class ScopeController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.SCOPE, 'filters')
+    @DQuerySchema(EntityType.SCOPE, 'stats')
     @DGet('/@stats', [])
     async getStats(
         @DContext() event: IAppEvent,

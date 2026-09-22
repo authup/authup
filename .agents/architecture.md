@@ -815,15 +815,23 @@ Composite statistics that span entities (distinct active users) get a root
   reaches. A `post` verdict (a reach that does not lower) runs the list's
   per-row loop, while the statistic narrows to the ownership term or to
   nothing (`narrowReadScope`): a grouped count has no row to evaluate, and
-  failing closed cannot over-disclose. Three lists carry no compile: clients
+  failing closed cannot over-disclose. The price is that a reader whose
+  grant carries a non-lowering policy sees a full list next to a statistic of 0 on the
+  seven entities without an ownership term (role, scope, permission, policy,
+  key, trust anchor, path). Moving the gate into `scopeRead` also moved the
+  decode ahead of the pre-gate in the services that pre-gated first, so an
+  unpermitted caller sending a malformed filter now gets 400 rather than 403;
+  the vocabulary is public (`/docs/openapi.json`), so nothing is disclosed.
+  Three lists carry no compile: clients
   pre-gate only (`compile: false`; the secret is field-gated), realms and
   identity providers are anonymous (no `scope`).
 - **Filters and window.** The rows to count are an ordinary rapiq
   `filter[...]` decoded through the entity schema with `parameters:
-  ['filters']` (the route carries `@DQuerySchema(<type>, 'filters')` and
-  passes `describeQuerySchema(<schema>, FILTERS_QUERY_PARAMETERS)` into
-  `serveEntityStats`, so the OpenAPI coverage guard still checks marker and
-  schema name the same entity). `granularity` (`hour` | `day`, default `day`)
+  ['filters']` (the route carries `@DQuerySchema(<type>, 'stats')`, whose
+  shape contributes the filter plus `granularity` and `days` to the OpenAPI
+  document, and passes `describeQuerySchema(<schema>, FILTERS_QUERY_PARAMETERS)`
+  into `serveEntityStats`, so the OpenAPI coverage guard still checks marker
+  and schema name the same entity). `granularity` (`hour` | `day`, default `day`)
   is a GROUP BY and `days` (default 30) names the window; both stay outside
   rapiq until tada5hi/rapiq#938 (an aggregation parameter with a bucket
   function) lands. The window is HALF-OPEN and holds exactly `days` times the
@@ -832,15 +840,21 @@ Composite statistics that span entities (distinct active users) get a root
   tada5hi/rapiq#939), so a consumer zero-fills between `from` and `to`. The
   ceiling is `STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it). The
   route realm (`/realms/:realmId/...`) is appended as a condition on the
-  definition's realm column.
+  definition's realm column. That makes a statistic under a realm mount
+  NARROWER than its list for the lists that ignore the route realm on read
+  (user, session, permission, policy, client, identity provider, a
+  pre-existing quirk of theirs): the strip never uses the realm mount, and
+  narrower cannot disclose.
 - **`meta.total`** counts every row the filter and the gate admit, regardless
-  of the window (a second, plain COUNT). "Active sessions" is therefore the
+  of the window, cached under the scope alone (`<key>:total`), so switching
+  the window reuses it instead of counting a table like `auth_events` again. "Active sessions" is therefore the
   total under `filter[expiresAt]=>now`, no statistic of its own.
 - **One bucket expression.** The per-dialect string (`to_char` /
   `DATE_FORMAT` / `strftime`, normalized back to an ISO instant) lives in the
-  adapter; all 13 date columns are `@CreateDateColumn`s. A relation filter a
-  schema allows is always to-one, so its join never multiplies the rows
-  counted.
+  adapter; all 13 date columns are `@CreateDateColumn`s. Buckets count
+  `DISTINCT id`: a filter through a to-many relation (`policy.children`) joins
+  one row per match, and a plain `COUNT(*)` counted a composite policy once
+  per matching child.
 - **Cache.** `ICache`, `STATS_CACHE_TTL` (60s), keyed by the statistic, the
   actor, the parameters and `queryCodec.encode` of the LOWERED query (taken
   BEFORE the window is appended, since `to` moves with every request). The
@@ -8306,9 +8320,17 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   root): 30 daily CSS bars (no chart.js) over the list's own base filters,
   the realm scope and the users/clients folder, never the search text, hidden
   on a 403 and silent on failure. `useEntityStats`
-  (`composables/entity-stats.ts`) is the shared read (a changed scope drops the
-  previous answer first, a stale answer is dropped, a 403 raises `forbidden`
-  instead of calling `onError`), `useEventStats` its event wrapper. The pure
+  (`composables/entity-stats.ts`) is the shared read. It reloads on the
+  ENCODED scope (`buildQueryString` of the filters plus the window), never on
+  object identity, so a page recomputing an equal filter does not refetch; it
+  waits while `paused` (the users/clients strip passes the folder scope's
+  `pending`, which otherwise answered the realm-wide count first under a
+  selected folder); it keeps the previous answer up, dimmed on `busy`, while a
+  new scope loads and drops it only when that read fails; it drops a stale
+  answer; and a 403 raises `forbidden` instead of calling `onError`. Tiles
+  render only once answered (never a fabricated 0) and pass no `onError`, so
+  an unreachable API toasts once, from the event read. `useEventStats` is its
+  event wrapper. The pure
   helpers (bucket axis, zero-fill, totals, ranking) live in
   `components/dashboard/stats.ts` and are pinned by
   `test/unit/dashboard-stats.spec.ts`, the composable by

@@ -569,4 +569,18 @@ describe('EntityStatsService', () => {
         expect(data).toHaveLength(0);
         expect(other.countGroupedCalls).toHaveLength(1);
     });
+
+    it('computes the window-independent total once for every window over one scope', async () => {
+        seed();
+
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+
+        const daily = await service.getMany({ days: 7 }, actor);
+        const hourly = await service.getMany({ days: 1, granularity: 'hour' }, actor);
+
+        expect(repository.countGroupedCalls).toHaveLength(2);
+        expect(repository.countCalls).toHaveLength(1);
+        expect(hourly.meta.total).toEqual(daily.meta.total);
+    });
 });

@@ -56,7 +56,7 @@ export class EventController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.EVENT, 'filters')
+    @DQuerySchema(EntityType.EVENT, 'stats')
     @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,

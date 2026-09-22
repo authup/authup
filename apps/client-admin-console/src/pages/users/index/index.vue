@@ -247,6 +247,7 @@ export default defineComponent({
                     <EntityStatsStrip
                         :load="loadStats"
                         :filters="query.filters"
+                        :paused="pathScopePending"
                     />
                     <ATitle />
                     <ASearch

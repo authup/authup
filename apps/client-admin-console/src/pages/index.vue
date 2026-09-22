@@ -180,10 +180,17 @@ export default defineComponent({
         // A getter rather than a computed, so `now` is taken at every load
         // instead of once per realm: a session that lapsed since the page
         // opened must stop counting as active on the next window switch.
-        const activeSessionFilters = () : EntityStatsQuery['filters'] => and(
-            inArray('realmId', [realmManagementId.value ?? null, null]),
-            gt('expiresAt', new Date().toISOString()),
-        );
+        // Truncated to the minute, since the server caches a statistic by its
+        // lowered query and a millisecond instant would never hit it twice.
+        const activeSessionFilters = () : EntityStatsQuery['filters'] => {
+            const now = new Date();
+            now.setUTCSeconds(0, 0);
+
+            return and(
+                inArray('realmId', [realmManagementId.value ?? null, null]),
+                gt('expiresAt', now.toISOString()),
+            );
+        };
 
         const useWindowGrowth = (count: ComputedRef<number>) : Ref<string> => {
             const formatted = computed(() => numberFormat.value.format(count.value));
@@ -224,11 +231,13 @@ export default defineComponent({
                 growth?: (count: ComputedRef<number>) => Ref<string>,
             } = {},
         ) : EntityTile => {
+            // No `onError`: a tile whose read fails stays hidden, and the
+            // event read below already toasts an unreachable API once rather
+            // than seven times.
             const stats = useEntityStats({
                 load,
                 filters: options.filters ?? realmFilters,
                 window: windowEntry,
-                onError: (e) => errorToast.show(e),
             });
             const count = computed(() => (stats.response.value ? sumStats(stats.response.value.data) : 0));
 
@@ -285,8 +294,11 @@ export default defineComponent({
         const renderGroup = (key: string, title: string, tiles: EntityTile[]) : EntityTileGroup => ({
             key,
             title,
+            // A tile renders once it has an answer: never a fabricated 0
+            // while loading or after a failure, and a refused (403) read never
+            // shows at all. A reload keeps the previous answer up, dimmed.
             tiles: tiles
-                .filter((tile) => !tile.stats.forbidden.value)
+                .filter((tile) => !tile.stats.forbidden.value && tile.stats.response.value !== null)
                 .map((tile) => ({
                     key: tile.key,
                     label: tile.label.value,

@@ -11,7 +11,9 @@
  * full vocabulary, a record read only `RECORD_QUERY_PARAMETERS`, and a
  * `filters` read only the filter tree, which is the bulk-revoke shape
  * (`DELETE /sessions`, `DELETE /session-tokens`) where the filter is what
- * discriminates a self-service call from an administrative one.
+ * discriminates a self-service call from an administrative one. A `stats`
+ * read (`GET /<collection>/@stats`) decodes the filter tree too, and
+ * additionally takes `granularity` and `days`.
  *
  * The shape is named rather than the parameter list spelled out,
  * because `@trapi/metadata` cannot fold an IMPORTED constant into a
@@ -20,4 +22,4 @@
  * to nothing. Naming the shape keeps that list declared exactly once:
  * `trapi.config.ts` imports it and maps this value onto it.
  */
-export type QuerySchemaShape = 'collection' | 'record' | 'filters';
+export type QuerySchemaShape = 'collection' | 'record' | 'filters' | 'stats';

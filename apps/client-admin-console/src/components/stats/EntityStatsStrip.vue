@@ -46,18 +46,32 @@ export default defineComponent({
             type: Object as PropType<EntityStatsQuery['filters']>,
             default: undefined,
         },
+        /**
+         * The list's scope is still being resolved (a folder looking up its
+         * subtree): hold the current answer instead of counting the wider,
+         * unresolved scope first.
+         */
+        paused: {
+            type: Boolean,
+            default: false,
+        },
     },
     setup(props) {
         const locale = injectTranslatorLocale();
 
-        const { response, forbidden } = useEntityStats({
+        const {
+            response, 
+            forbidden, 
+            busy, 
+        } = useEntityStats({
             load: (query) => props.load(query),
             filters: () => props.filters,
+            paused: () => props.paused,
             window: STRIP_WINDOW,
         });
 
         const numberFormat = computed(() => new Intl.NumberFormat(locale.value));
-        const titleFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }));
+        const titleFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeZone: 'UTC' }));
 
         const axis = computed(() => (response.value ? buildBucketAxis(response.value.meta) : []));
         const values = computed(() => (response.value ? alignStats(response.value.data, axis.value) : []));
@@ -100,6 +114,7 @@ export default defineComponent({
         const visible = computed(() => response.value !== null && !forbidden.value);
 
         return {
+            busy,
             bars,
             label,
             summary,
@@ -113,7 +128,8 @@ export default defineComponent({
         v-if="visible"
         role="img"
         :aria-label="summary"
-        class="mb-3 flex items-center gap-3 rounded-lg border border-border bg-bg-elevated px-3 py-2"
+        class="mb-3 flex items-center gap-3 rounded-lg border border-border bg-bg-elevated px-3 py-2 transition-opacity"
+        :class="{ 'opacity-60': busy }"
     >
         <span
             class="shrink-0 text-sm text-fg-muted tabular-nums"

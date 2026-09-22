@@ -9,6 +9,7 @@ import { StatsGranularity } from '@authup/core-http-kit';
 import { ValidationError } from '@authup/errors';
 import type { ActorContext, ICache } from '@authup/server-kit';
 import { eq, gte, lt } from '@rapiq/core';
+import type { IQuery } from '@rapiq/core';
 import { appendQueryConditions, decodeQuery, queryCodec } from '../query/module.ts';
 import { narrowReadScope } from '../query/scope.ts';
 import { STATS_CACHE_TTL, STATS_DAYS_DEFAULT, STATS_MAX_BUCKETS } from './constants.ts';
@@ -81,14 +82,13 @@ export class EntityStatsService<
 
         // the encoded query is the lowered one, not the wire record: two
         // spellings of one filter share an answer, two reaches do not
-        const key = [
+        const scope = [
             'stats',
             this.definition.type,
             actor.identity ? `${actor.identity.type}:${actor.identity.data.id}` : 'anonymous',
-            granularity,
-            days,
             queryCodec.encode(scoped) ?? '',
-        ].join(':');
+        ];
+        const key = [...scope, granularity, days].join(':');
 
         const cached = await this.cache.get<EntityStatsResult<G, M>>(key);
         if (cached) {
@@ -115,7 +115,7 @@ export class EntityStatsService<
                     groupBy: this.definition.groupBy ?? [],
                 },
             ),
-            this.definition.repository.count(scoped),
+            this.countTotal(scope.join(':'), scoped),
         ]);
 
         const result = {
@@ -133,6 +133,24 @@ export class EntityStatsService<
         await this.cache.set(key, result, { ttl: STATS_CACHE_TTL });
 
         return result;
+    }
+
+    /**
+     * The total ignores the window, so it is cached under the scope alone:
+     * switching the window reuses it instead of counting a table like
+     * auth_events again.
+     */
+    protected async countTotal(key: string, query: IQuery): Promise<number> {
+        const totalKey = `${key}:total`;
+        const cached = await this.cache.get<number>(totalKey);
+        if (typeof cached === 'number') {
+            return cached;
+        }
+
+        const total = await this.definition.repository.count(query);
+        await this.cache.set(totalKey, total, { ttl: STATS_CACHE_TTL });
+
+        return total;
     }
 }
 

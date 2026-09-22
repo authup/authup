@@ -165,7 +165,7 @@ export class IdentityProviderController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'filters')
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'stats')
     @DGet('/@stats', [])
     async getStats(
         @DContext() event: IAppEvent,

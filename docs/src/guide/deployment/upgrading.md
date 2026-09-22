@@ -19,6 +19,12 @@ response body and `QUERY_SCHEMA_DISCOVERY_ENABLED`. On the typed client,
 time. The user authenticator has no facet (its collection is nested under a
 user); `GET /schemas` still describes it.
 
+Two type-level changes in `@authup/core-http-kit` follow from it. The exported
+`SchemaRecordResponse` is gone; `EntitySchemaResponse` has the same shape. And
+every entity API interface now declares `getSchema()`, the thirteen with a
+statistic also `getStats()`, so code that implements `IUserAPI` and its
+siblings by hand (a hand-written fake client, say) adds the two methods.
+
 ### `@authup/client-web-kit` peers on `@vuecs/tree`, and the `@vuecs/*` floors rise
 
 The folder pane beside the users and clients tables renders `@vuecs/tree`, so the

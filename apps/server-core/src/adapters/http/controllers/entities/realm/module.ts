@@ -89,7 +89,7 @@ export class RealmController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.REALM, 'filters')
+    @DQuerySchema(EntityType.REALM, 'stats')
     @DGet('/@stats', [])
     async getStats(
         @DContext() event: IAppEvent,

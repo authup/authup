@@ -63,7 +63,7 @@ export class KeyController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.KEY, 'filters')
+    @DQuerySchema(EntityType.KEY, 'stats')
     @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,

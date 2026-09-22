@@ -76,7 +76,7 @@ export class PermissionController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.PERMISSION, 'filters')
+    @DQuerySchema(EntityType.PERMISSION, 'stats')
     @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,

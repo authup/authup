@@ -77,7 +77,7 @@ export class ClientController {
      * Declared before the record read on purpose: `/:id` would otherwise
      * take the `@stats` segment as an id.
      */
-    @DQuerySchema(EntityType.CLIENT, 'filters')
+    @DQuerySchema(EntityType.CLIENT, 'stats')
     @DGet('/@stats', [])
     async getStats(
         @DContext() event: IAppEvent,
