@@ -11,16 +11,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import type { IPolicyEvaluator } from '@authup/access';
-import {
-    AUTHORIZATION_POLICY_WITHHELD_TYPE,
-    BuiltInPolicyType,
-    PolicyData,
-    PolicyDefaultEvaluators,
-    PolicyDefaultValidators,
-    createAuthorizationEvaluator,
-} from '@authup/access';
-import { Container } from 'validup';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from '@authup/access';
 import { createNoopLogger } from '@authup/server-kit';
 import { buildAuthorizationCatalog } from '../../../../src/core/authorization/module.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
@@ -251,33 +242,6 @@ describe('core/authorization/module', () => {
         expect(ctx.warn).toHaveBeenCalledTimes(1);
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('read');
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('policy-custom');
-    });
-
-    // #3635: a type the server registers travels, and a consumer registering
-    // the same validator and evaluator decides the definition from it.
-    it('carries a custom type its validator registry names, through to a consumer verdict', async () => {
-        const validators = { ...PolicyDefaultValidators, myType: new Container<Record<string, any>>() };
-        const passing : IPolicyEvaluator = { evaluate: async () => ({ success: true }) };
-        const ctx = { ...setup(), validators };
-        ctx.catalogRepository.setDefinitions([[globalPermission('read'), [custom]]]);
-
-        const catalog = await build(ctx);
-        expect(catalog.permissions[0]!.policies).toEqual(['policy-custom']);
-        expect(catalog.policies['policy-custom']).toEqual({ type: 'myType' });
-        expect(ctx.warn).not.toHaveBeenCalled();
-
-        const consumer = (evaluators?: Record<string, IPolicyEvaluator>) => createAuthorizationEvaluator(
-            { catalog: JSON.parse(JSON.stringify(catalog)) },
-            { validators, evaluators },
-        );
-        const data = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
-
-        const registered = await consumer({ ...PolicyDefaultEvaluators, myType: passing });
-        await expect(registered.evaluate({ name: 'read', data })).resolves.toBeUndefined();
-
-        // projected but not evaluable: the consumer denies, like the server would
-        const unregistered = await consumer();
-        await expect(unregistered.evaluate({ name: 'read', data })).rejects.toThrow();
     });
 
     it('projects a policy whose id is named constructor', async () => {

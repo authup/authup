@@ -148,7 +148,7 @@ export async function buildAuthorizationCatalog(
 
                 projected.push([
                     id,
-                    Object.hasOwn(policies, id) ? policies[id]! : await projectAuthorizationPolicy(tree, ctx.validators),
+                    Object.hasOwn(policies, id) ? policies[id]! : await projectAuthorizationPolicy(tree),
                 ]);
             } catch (e) {
                 return {

@@ -12,7 +12,6 @@ import type {
     IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
-    PolicyValidators,
 } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
 
@@ -44,17 +43,6 @@ export interface IAuthorizationCatalogRepository {
 export type AuthorizationCatalogBuilderContext = {
     catalogRepository: IAuthorizationCatalogRepository,
     logger?: Logger,
-    /**
-     * The policy types a tree may carry onto the wire, `PolicyDefaultValidators`
-     * when omitted (#3635). It has to name exactly the types the evaluating
-     * engines hold: a type projected here but unknown to the engine travels
-     * as a tree the server itself denies.
-     *
-     * ponytail: server-core registers no custom policy type, so every factory
-     * leaves this at the default; an embedder that registers an evaluator
-     * passes its validator here and on the introspection context.
-     */
-    validators?: PolicyValidators,
 };
 
 /**

@@ -3652,11 +3652,14 @@ data condition. **The policy type set is open on both sides (#3635)**, since
 (and the withheld node whatever it names), and
 `createAuthorizationEvaluator(input, { validators?, evaluators? })` takes both registries,
 replacing the defaults rather than merging, so a caller spreads them. The binding evaluator
-is always the consumer's own. A custom type therefore needs its validator on the server
-(`AuthorizationCatalogBuilderContext.validators`, and the introspection context's, so a
-grant is dropped exactly when its tree is missing from the catalog) and both registries on
-the consumer; a validator without the evaluator projects the tree and then denies it.
-server-core registers no custom type, so its factories leave both at the default. Writing
+is always the consumer's own; a validator without the evaluator projects the tree and then
+denies it. **server-core's own type set stays closed**: every engine it builds starts from
+`PolicyDefaultEvaluators` and nothing registers another type, so its catalog builder and
+introspection project with the defaults and a custom-type tree still travels as
+`policies: null`, which is exactly what the server itself decides for it. Opening it means
+one registry pair every engine construction, the catalog builder and the introspection
+read together; a validator seam on the builder alone would publish trees the server
+denies. Writing
 a non-built-in `type` through `POST /policies` is still accepted and evaluates as
 `POLICY_EVALUATOR_NOT_FOUND` wherever it is bound: rejecting it would pin the write path to
 one static registry while the engines are built per request, which is the closed set this

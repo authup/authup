@@ -103,6 +103,15 @@ describe('permission/authorization/policy', () => {
             decisionStrategy: 'unanimous',
             children: [{ type: 'weekday', weekday: 1 }],
         });
+        // a short type name nests like a long one: the composite's own child
+        // check must not be narrower than the head the node is projected with
+        expect(await projectAuthorizationPolicy({
+            type: 'composite',
+            children: [{ type: 'ip' }],
+        }, { ...validators, ip: new Container<Record<string, any>>() })).toEqual({
+            type: 'composite',
+            children: [{ type: 'ip' }],
+        });
         await expect(projectAuthorizationPolicy({ type: 'weekday', weekday: 9 }, validators)).rejects.toThrow();
         // the default registry still refuses it
         await expect(projectAuthorizationPolicy({ type: 'weekday', weekday: 3 })).rejects.toThrow();
