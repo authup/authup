@@ -14,7 +14,12 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { defineQuery } from '@rapiq/core';
+import {
+    and,
+    defineQuery,
+    inArray,
+    not,
+} from '@rapiq/core';
 import { useValidup } from '@validup/vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
@@ -28,6 +33,7 @@ import {
 } from 'vue';
 import {
     assignFormProperties,
+    buildPathScopeCondition,
     injectStore,
     storeToRefs,
     useTranslations,
@@ -113,8 +119,19 @@ export default defineComponent({
             '');
 
         // A folder lives in one realm, so the parent may only be picked from
-        // that realm's tree.
-        const parentQuery = computed(() => defineQuery<Path>({ filters: { realmId: [resolvedRealmId.value] } }));
+        // that realm's tree. An existing folder can hang under neither
+        // itself nor its own subtree, so neither is offered: a row the
+        // server would refuse must not be selectable at all (#3632).
+        const parentQuery = computed(() => {
+            const realm = inArray('realmId', [resolvedRealmId.value]);
+            const self = manager.data.value;
+
+            return defineQuery<Path>({
+                filters: self ?
+                    and(realm, not(buildPathScopeCondition(self.path))) :
+                    realm,
+            });
+        });
 
         const updatedAt = useUpdatedAt(() => props.entity);
 

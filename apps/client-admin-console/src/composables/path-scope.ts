@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListLoadFn } from '@authup/client-web-kit';
+import type { EntityListQueryInput, ListLoadFn } from '@authup/client-web-kit';
 import { buildPathScopeCondition, injectHTTPClient } from '@authup/client-web-kit';
 import type { Path } from '@authup/core-kit';
+import type { ObjectLiteral } from '@authup/kit';
 import type { ICondition } from '@rapiq/core';
 import { and, defineQuery, eq } from '@rapiq/core';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
@@ -116,8 +117,8 @@ export async function collectPathPages(
 const RELOAD_POLL_INTERVAL = 50;
 
 /** The part of a collection's exposed surface a reload needs. */
-export type ReloadableCollection = {
-    load: ListLoadFn,
+export type ReloadableCollection<T extends ObjectLiteral = ObjectLiteral> = {
+    load: ListLoadFn<EntityListQueryInput<T>>,
     busy?: boolean
 };
 
@@ -147,8 +148,8 @@ let reloadGeneration = 0;
  * that is busy becomes idle, and an unmounted page hands back no collection
  * at all.
  */
-export async function reloadCollection(
-    get: () => ReloadableCollection | null,
+export async function reloadCollection<T extends ObjectLiteral>(
+    get: () => ReloadableCollection<T> | null,
 ) : Promise<void> {
     reloadGeneration += 1;
     const generation = reloadGeneration;
@@ -184,7 +185,14 @@ export type PathScopeContext = {
      * `PATH_READ`: without it there is no folder to scope by, so the scope
      * reads as absent and no folder request is made.
      */
-    enabled?: MaybeRefOrGetter<boolean>
+    enabled?: MaybeRefOrGetter<boolean>,
+    /**
+     * Whether `enabled` is the settled verdict rather than the permission
+     * check's fail-closed default. While it is not, a folder in the route
+     * reads as pending, so a deep link holds its first load instead of
+     * listing every row for one request (#3632).
+     */
+    settled?: MaybeRefOrGetter<boolean>
 };
 
 export type PathScope = {
@@ -198,8 +206,26 @@ export type PathScope = {
      * a folder may be missing rather than let it read as absent.
      */
     optionsTruncated: Ref<boolean>,
-    /** True while the folder named by `path` is being resolved. */
-    pending: Ref<boolean>,
+    /**
+     * True while the folder named by the route is being resolved, or while
+     * the permission check that decides whether it is resolved at all has
+     * not settled yet.
+     */
+    pending: ComputedRef<boolean>,
+    /**
+     * True when the folder lookup failed. The scope then lists nothing
+     * (fail-closed), so the page has to say why rather than let it read as
+     * an empty folder, and can offer {@see PathScope.retry}.
+     */
+    failed: Ref<boolean>,
+    /**
+     * True when the lookup answered but the named folder does not exist
+     * (renamed, moved or deleted since the link was made). It lists nothing
+     * as well, for the same reason.
+     */
+    missing: Ref<boolean>,
+    /** Repeat the folder lookup, the answer to a failed one. */
+    retry: () => void,
     /**
      * True when the subtree outgrew {@see PATH_SCOPE_PAGE_LIMIT} pages. The
      * scope then narrows NOTHING, so a page that renders the list has to say
@@ -215,13 +241,18 @@ export type PathScope = {
 /**
  * The `?path=` value. An absent, empty or repeated parameter reads as no
  * scope: a folder is one value, and a page with two of them has no folder.
+ * A path is stored in canonical form (lowercase, trimmed segments), so a
+ * hand-typed `?path=Sales` is canonicalized before it is compared or sent:
+ * otherwise it misses on a case-sensitive dialect and the "folder no longer
+ * exists" notice stands over a folder that does (#3632).
  */
 export function readPathScopeQuery(value: unknown) : string | null {
-    if (typeof value !== 'string' || value.length === 0) {
+    if (typeof value !== 'string') {
         return null;
     }
 
-    return value;
+    const path = value.trim().toLowerCase();
+    return path.length > 0 ? path : null;
 }
 
 /**
@@ -302,14 +333,30 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
     const paths = ref<Path[]>([]);
     const options = ref<Path[]>([]);
     const optionsTruncated = ref<boolean>(false);
-    const pending = ref<boolean>(false);
+    const settled = () => toValue(context.settled ?? true);
+    const resolving = ref<boolean>(false);
+    const failed = ref<boolean>(false);
+    const missing = ref<boolean>(false);
     const truncated = ref<boolean>(false);
 
+    // A folder in the route is pending until the permission check has
+    // settled too: `path` reads null while `enabled` is still at its
+    // fail-closed default, which is indistinguishable from "no folder" and
+    // would let the first load list every row. A check that settles
+    // negative clears it, and the page then lists what it always would.
+    const pending = computed(() => resolving.value || (
+        !settled() &&
+        readPathScopeQuery(route.query[PATH_SCOPE_QUERY_KEY]) !== null
+    ));
+
     // Two rapid selections leave two lookups in flight, and the slower one
-    // must not overwrite the newer folder's ids.
+    // must not overwrite the newer folder's ids. The pane gets the same
+    // guard, so a realm change cannot leave the older realm's tree behind.
     let generation = 0;
+    let optionsGeneration = 0;
 
     const loadOptions = async () => {
+        const current = ++optionsGeneration;
         const realmId = toValue(context.realmId);
         if (!realmId || !enabled()) {
             options.value = [];
@@ -334,9 +381,17 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
                 PATH_TREE_LIMIT,
             );
 
+            if (current !== optionsGeneration) {
+                return;
+            }
+
             options.value = collected.data;
             optionsTruncated.value = collected.truncated;
         } catch {
+            if (current !== optionsGeneration) {
+                return;
+            }
+
             // The control degrades to the unscoped entry. A folder list
             // that could not be read must not take the page down with it.
             options.value = [];
@@ -352,7 +407,9 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         if (!value) {
             // no folder in the route: the page is unscoped, which is a
             // settled answer rather than a pending one
-            pending.value = false;
+            resolving.value = false;
+            failed.value = false;
+            missing.value = false;
             truncated.value = false;
             paths.value = [];
             return;
@@ -366,14 +423,18 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
             // UNRESOLVED rather than empty, since the empty id list is a
             // constant-false filter and the load taken in that window would
             // list nothing. The watcher re-runs when the realm arrives.
-            pending.value = true;
+            resolving.value = true;
             return;
         }
 
-        pending.value = true;
+        // a notice about the previous lookup must not stand over this one
+        resolving.value = true;
+        failed.value = false;
+        missing.value = false;
 
         let resolved : Path[];
         let overflowed = false;
+        let failure = false;
         try {
             const collected = await collectPathPages((offset) => httpClient.path.getMany(defineQuery<Path>({
                 filters: and(eq('realmId', realmId), buildPathScopeCondition(value)),
@@ -391,6 +452,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
             // Falling back to the unscoped list would show rows the visitor
             // asked to be shielded from.
             resolved = [];
+            failure = true;
         }
 
         if (current !== generation) {
@@ -401,7 +463,11 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         // watcher sees a settled scope whatever order it runs in. The ids
         // are always a fresh array, so that watcher fires on every outcome:
         // a lookup that answered nothing still has to let the list load.
-        pending.value = false;
+        resolving.value = false;
+        failed.value = failure;
+        // A subtree lookup always carries the folder itself, so an answer
+        // without it names a folder that is gone.
+        missing.value = !failure && resolved.every((entry) => entry.path !== value);
         truncated.value = overflowed;
         paths.value = resolved;
     };
@@ -433,6 +499,11 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         options,
         optionsTruncated,
         pending,
+        failed,
+        missing,
+        retry: () => {
+            resolve();
+        },
         truncated,
         // A scope still being resolved contributes NOTHING, where a scope
         // that resolved to nothing contributes the empty id list. The two

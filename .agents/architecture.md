@@ -3436,8 +3436,12 @@ declaration of its own), synchronized before the realm's clients and users like
 its scopes; a user or client entry names one folder under `relations.path`,
 which the user and client synchronizers resolve through `ensurePath` as well,
 so a file may reference `sales/berlin` without declaring it under `paths` and
-the `paths` list is what gives a folder a display name or a description. A
-wildcard realm entry seeds one folder set into every realm.
+the `paths` list is what gives a folder a display name or a description. The
+folder is resolved only on the branch that writes the row, so `createOnly` over
+an existing row creates no folder chain, and under `merge` a declared
+`relations.path` rides the merge even when the strategy's `attributes` list
+names no `pathId`, since declaring it is the ask (#3632). A wildcard realm
+entry seeds one folder set into every realm.
 
 **Listing rows by folder is an `IN` over ids, never a relation traversal.** The
 console resolves the subtree on the paths table (`GET /paths` with the
@@ -3479,8 +3483,22 @@ a scope still being RESOLVED contributes no filter at all, where one that
 resolved to nothing contributes the empty id list: rapiq encodes an empty
 `in` as a constant false, so publishing it while the lookup is out makes
 every load taken in that window list nothing, and the selection is known one
-tick before its ids on every folder change. All three are what make
-`?path=` reach the server at all; the folder scope hit each of them.
+tick before its ids on every folder change. The fourth is that a folder in
+the route counts as pending until the `PATH_READ` check has SETTLED (the
+kit's `usePermissionCheckState`, whose `settled` flag is what tells a denial
+from the fail-closed default), since `path` reads null until then and the
+page's first load would otherwise list every row in the realm (#3632). All
+four are what make `?path=` reach the server at all; the folder scope hit
+each of them.
+A lookup that fails, and one that answers without the named folder (it was
+renamed, moved or deleted), stay fail-closed and list nothing, but the scope
+reports them as `failed` (with a `retry`) and `missing` so the page renders a
+notice instead of what reads as an empty folder; both clear when the next
+lookup starts rather than when it lands. The pane's own lookup carries
+the same generation guard as the scope's, and the parent picker of an
+existing folder leaves out the folder and its subtree
+(`not(<scope condition>)`), so a parent the server would refuse is never
+offered.
 
 **The control that picks the folder is a TREE, and it carries a second budget
 of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the

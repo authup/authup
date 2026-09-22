@@ -9,6 +9,14 @@ import type { Path, Realm } from '@authup/core-kit';
 import { ROLE_REALM_ADMIN_NAME } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
+    and,
+    eq,
+    inArray,
+    not,
+    or,
+    startsWith,
+} from '@rapiq/core';
+import {
     afterAll,
     beforeAll,
     describe,
@@ -163,6 +171,34 @@ describe('src/http/controllers/path', () => {
             () => suite.client.get('paths/marketing/berlin'),
             { status: 404 },
         );
+    });
+
+    // The flat mount carries no realm, so the name resolves across realms:
+    // a name unique to this spec is what makes the answer unambiguous.
+    it('should resolve a folder by its full path on the flat mount', async () => {
+        const { data: folder } = await suite.client.path.create({
+            name: 'flat-read-3632',
+            realmId: realm.id,
+        });
+
+        const response = await suite.client.get('paths/flat-read-3632');
+        expect(response.data.data.id).toEqual(folder.id);
+    });
+
+    // The shape the parent picker of an existing folder sends (#3632): the
+    // folder's own subtree is excluded, so a refused parent is never offered.
+    it('should list the candidate parents of a folder without its subtree', async () => {
+        const { data } = await suite.client.path.getMany({
+            filters: and(
+                inArray('realmId', [realm.id]),
+                not(or(eq('path', 'marketing'), startsWith('path', 'marketing/'))),
+            ),
+        });
+
+        const paths = data.map((entry) => entry.path);
+        expect(paths).not.toContain('marketing');
+        expect(paths).not.toContain('marketing/berlin');
+        expect(paths).toContain('flat-read-3632');
     });
 
     it('should keep a sibling out of the descendant rewrite when a name carries an underscore', async () => {
