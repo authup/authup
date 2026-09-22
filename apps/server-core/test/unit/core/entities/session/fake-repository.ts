@@ -6,14 +6,9 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { ICondition, IQuery } from '@rapiq/core';
-import {
-    FilterCompoundOperator,
-    Query,
-    isFilter,
-    isFilters,
-} from '@rapiq/core';
-import { applyQuery } from '@rapiq/adapter-memory';
+import type { IQuery } from '@rapiq/core';
+import { Query } from '@rapiq/core';
+import { applyQuery, compileFilters } from '@rapiq/adapter-memory';
 import type { Session } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -21,7 +16,6 @@ import type {
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../../src/core/index.ts';
-import { SESSION_FILTER_KEYS } from '../../../../../src/core/index.ts';
 
 export class FakeSessionRepository implements ISessionRepository {
     public removeCalls: Session[] = [];
@@ -91,31 +85,11 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     async findAllByQuery(query: IQuery): Promise<Session[]> {
+        // the real filter semantics: the in-memory adapter evaluates the
+        // same IR the typeorm adapter lowers to SQL
+        const predicate = compileFilters(query.filters);
         return this.sessions.values().toArray()
-            .filter((session) => this.matchesCondition(session, query.filters));
-    }
-
-    private matchesCondition(session: Session, condition: ICondition): boolean {
-        if (isFilters(condition)) {
-            if (condition.value.length === 0) {
-                return true;
-            }
-            if (condition.operator === FilterCompoundOperator.OR) {
-                return condition.value.some((child) => this.matchesCondition(session, child));
-            }
-            return condition.value.every((child) => this.matchesCondition(session, child));
-        }
-
-        if (isFilter(condition)) {
-            if (!(SESSION_FILTER_KEYS as readonly string[]).includes(condition.field)) {
-                // out-of-allowlist key → the schema-bound decode drops it
-                return true;
-            }
-            const values = Array.isArray(condition.value) ? condition.value : [condition.value];
-            return values.map(String).includes(String((session as any)[condition.field]));
-        }
-
-        return true;
+            .filter((session) => predicate(session));
     }
 
     async save(input: Partial<Session>): Promise<Session> {

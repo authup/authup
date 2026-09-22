@@ -134,6 +134,7 @@ export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
         // accept Schema<ObjectLiteral>, so collapse the variance here.
         schema: options.schema as Schema<any> | string,
         parameters: options.parameters,
+        throwOnFailure: options.throwOnFailure,
         context: { actor: options.actor } satisfies QueryDecodeContext,
     });
 

@@ -23,7 +23,7 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionManager, ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
@@ -169,7 +169,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             return this.deleteManyByQuery(actor, options.query!);
         }
 
-        return this.deleteManyForSelf(actor, options.currentSessionId);
+        return this.deleteManyForSelf(actor, options.currentSessionId, options.query);
     }
 
     /**
@@ -221,20 +221,64 @@ export class SessionService extends AbstractEntityService implements ISessionSer
      */
     protected static queryCodec = createURLCodec();
 
+    /**
+     * Revoke the actor's own sessions except the current one, narrowed by
+     * whatever filter the request carries (#3642). The filter is decoded
+     * strictly and the owner scope is appended rather than trusted from it,
+     * so "log out my devices unseen since X" revokes exactly those, and a
+     * filter the schema would drop answers 400 instead of widening the
+     * revoke to every other session.
+     */
     protected async deleteManyForSelf(
         actor: ActorContext,
         currentSessionId?: string,
+        query?: Record<string, any>,
     ): Promise<SessionDeleteManyResult> {
-        const sessions = await this.repository.findAllByOwner({
+        const owner = {
             sub: actor.identity!.data.id,
             subKind: actor.identity!.type,
-        });
+        };
+
+        let sessions: Session[];
+        if (this.hasFilter(query)) {
+            const parsed = await decodeQuery(query, {
+                schema: sessionSchema,
+                parameters: ['filters'],
+                actor,
+                throwOnFailure: true,
+            });
+
+            sessions = await this.repository.findAllByQuery(appendQueryConditions(
+                parsed,
+                eq('sub', owner.sub),
+                eq('subKind', owner.subKind),
+            ));
+        } else {
+            sessions = await this.repository.findAllByOwner(owner);
+        }
 
         const toRevoke = sessions.filter((session) => !currentSessionId || session.id !== currentSessionId);
 
         await this.revokeAll(toRevoke);
 
         return { count: toRevoke.length };
+    }
+
+    /**
+     * Whether the request carries a filter at all, in either dialect. The
+     * schema-bound decode is what judges it; this only decides whether one
+     * is needed.
+     */
+    protected hasFilter(query?: Record<string, any>): boolean {
+        if (!isObject(query) || typeof query.filter === 'undefined') {
+            return false;
+        }
+
+        if (typeof query.filter === 'string') {
+            return query.filter.length > 0;
+        }
+
+        return !isObject(query.filter) || Object.keys(query.filter).length > 0;
     }
 
     protected async deleteManyByQuery(
@@ -246,9 +290,10 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         const sessions = await this.repository.findAllByQuery(
             await decodeQuery(query, {
-                schema: sessionSchema, 
-                parameters: ['filters'], 
-                actor, 
+                schema: sessionSchema,
+                parameters: ['filters'],
+                actor,
+                throwOnFailure: true,
             }),
         );
 

@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType } from '@authup/access';
-import { eq } from '@rapiq/core';
+import { eq, isParseError } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import type { Session, User } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
@@ -270,16 +270,67 @@ describe('SessionService', () => {
             expect(revoke.mock.calls.map(([id]) => id).sort()).toEqual([s1.id, s2.id].sort());
         });
 
-        it('needs no permission (self-service) even with an empty/unrecognized filter', async () => {
+        it('narrows the self-service revoke by a non-target filter (#3642)', async () => {
+            const stale = repository.seed({
+                sub: userId, 
+                subKind: IdentityType.USER, 
+                userId, 
+                realmId, 
+                seenAt: '2026-01-01T00:00:00.000Z',
+            });
+            const fresh = repository.seed({
+                sub: userId, 
+                subKind: IdentityType.USER, 
+                userId, 
+                realmId, 
+                seenAt: '2026-09-01T00:00:00.000Z',
+            });
+            const current = repository.seed({
+                sub: userId, 
+                subKind: IdentityType.USER, 
+                userId, 
+                realmId, 
+                seenAt: '2026-01-01T00:00:00.000Z',
+            });
+            const foreign = repository.seed({
+                sub: otherUserId, 
+                subKind: IdentityType.USER, 
+                userId: otherUserId, 
+                realmId, 
+                seenAt: '2026-01-01T00:00:00.000Z',
+            });
+
+            const actor = makeActor({ allow: false });
+            const { count } = await service.deleteMany(actor, {
+                query: { filter: { seenAt: '<2026-06-01T00:00:00.000Z' } },
+                currentSessionId: current.id,
+            });
+
+            expect(count).toEqual(1);
+            expect(repository.removeCalls.map((s) => s.id)).toEqual([stale.id]);
+            expect(await repository.findOneById(fresh.id)).not.toBeNull();
+            expect(await repository.findOneById(foreign.id)).not.toBeNull();
+        });
+
+        it('refuses a filter the schema would drop instead of revoking everything', async () => {
+            seedOwn();
+            seedOwn();
+
+            const actor = makeActor({ allow: false });
+            const error = await service.deleteMany(actor, { query: { filter: { foobar: 'x' } } }).catch((e) => e);
+
+            expect(isParseError(error)).toBe(true);
+            expect(repository.removeCalls).toHaveLength(0);
+        });
+
+        it('treats an empty filter as no filter', async () => {
             seedOwn();
             seedOther();
 
-            // an unrecognized filter key must NOT trigger an admin mass-delete;
-            // it falls through to the self path (deny-all actor still succeeds).
             const actor = makeActor({ allow: false });
-            const { count } = await service.deleteMany(actor, { query: { filter: { foobar: 'x' } } });
+            const { count } = await service.deleteMany(actor, { query: { filter: {} } });
 
-            expect(count).toEqual(1); // only the actor's own session
+            expect(count).toEqual(1);
         });
 
         it('throws for an identity-less actor', async () => {
@@ -292,6 +343,16 @@ describe('SessionService', () => {
         function adminQuery(userIds: string | string[]): Record<string, any> {
             return { filter: { userId: Array.isArray(userIds) ? userIds.join(',') : userIds } };
         }
+
+        it('refuses a target filter carrying a key the schema would drop', async () => {
+            seedOther();
+
+            const actor = makeActor({ allow: true });
+            const error = await service.deleteMany(actor, { query: { filter: { userId: otherUserId, foobar: 'x' } } }).catch((e) => e);
+
+            expect(isParseError(error)).toBe(true);
+            expect(repository.removeCalls).toHaveLength(0);
+        });
 
         it('revokes every session matching filter[userId]', async () => {
             const s1 = seedOther();

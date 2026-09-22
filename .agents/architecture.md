@@ -7324,11 +7324,15 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   carries a **recognized target filter** (`SESSION_FILTER_KEYS` = `id`, `sub`,
   `subKind`, `userId`, `clientId`, `realmId`; the same
   vocabulary `getMany` filters on):
-  - **No target filter →** self-service: revoke every own session except the
-    current one ("log out my other devices"). No permission; the current session
-    id comes from the bearer token (stashed by the authorization middleware via
-    `setRequestSessionId`), never from the client. An **unrecognized/empty**
-    filter falls through here too — a typo can never trigger a mass delete.
+  - **No target filter →** self-service: revoke the actor's own sessions
+    except the current one ("log out my other devices"), narrowed by any
+    other filter the call carries (`?filter[seenAt]=<...` revokes only the
+    devices unseen since then, #3642). No permission; the owner scope is
+    APPENDED to the decoded filter (`appendQueryConditions`), so no
+    `or(...)` of non-target leaves can reach another subject, and the
+    current session id comes from the bearer token (stashed by the
+    authorization middleware via `setRequestSessionId`), never from the
+    client. A call with no filter at all takes `findAllByOwner`.
   - **A target filter (e.g. `?filter[userId]=<uuid>`, comma-list for several
     subjects, or `?filter[realmId]=…`) →** admin force-logout:
     `SessionService.deleteManyByQuery` loads **every** matching session
@@ -7339,8 +7343,18 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
     breadth **cannot escalate** — the actor only deletes what it is already
     authorized to delete, so a `realm_admin` in realm A silently drops a target's
     realm-B sessions, and `filter[realmId]` is bounded to its reach.
+  **Both paths decode STRICTLY** (`decodeQuery(..., { throwOnFailure: true })`,
+  as `DELETE /session-tokens` does): a leaf the schema would drop (an unknown
+  key, a relation the gate prunes) answers 400 instead of vanishing, because
+  on a destructive selection a dropped leaf WIDENS the revoke; the same
+  holds for a malformed value and an empty target value. Only the FLAT keys
+  of `SESSION_FILTER_KEYS` select the admin path: a relation-qualified
+  `filter[user.id]` stays on the self path, where the appended owner scope
+  makes it narrow the caller's own sessions only. That also
+  covers the one gap the schemaless `hasTargetFilter` cannot see, a target
+  leaf the schema decode drops, which would leave the admin revoke unscoped.
   A non-admin sending a target filter (even its own `userId`) takes the admin
-  path and gets `403`; self-service is the no-filter call. Typed client mirrors
+  path and gets `403`; self-service is any call without one. Typed client mirrors
   `getMany`: `client.session.deleteMany(data?: BuildInput<Session>)` — `deleteMany()`
   (self) / `deleteMany({ filter: { userId } })` (admin).
 

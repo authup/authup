@@ -48,14 +48,17 @@ export interface ISessionService extends IReadScoper {
     /**
      * Bulk revoke.
      *
-     * - **No recognized target filter** → self-service: revoke every session of
-     *   the actor except the current one ("log out my other devices"). No
-     *   permission required.
+     * - **No recognized target filter** → self-service: revoke the actor's own
+     *   sessions except the current one ("log out my other devices"), narrowed
+     *   by any other filter the query carries. No permission required.
      * - **A recognized target filter** (`SESSION_FILTER_KEYS`, e.g.
      *   `filter[userId]`, `filter[realmId]`) → admin "force-logout": revoke
      *   every matching session. Requires `SESSION_DELETE`, and each session is
      *   additionally realm-matched (drop-unauthorized), so a `realm_admin` only
      *   revokes sessions in its reach and filter breadth cannot escalate.
+     *
+     * Both paths decode the filter strictly: a key the schema would drop
+     * rejects the call rather than widening it.
      */
     deleteMany(actor: ActorContext, options?: SessionDeleteManyOptions): Promise<SessionDeleteManyResult>;
 }

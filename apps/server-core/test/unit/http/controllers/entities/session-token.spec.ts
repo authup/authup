@@ -375,6 +375,24 @@ describe('src/http/controllers/session-token', () => {
         }
     });
 
+    it('refuses a bulk revoke carrying a key the schema would drop (#3642)', async () => {
+        const { sessionId } = await buildTwoAppSession();
+
+        const response = await httpRequest(
+            suite,
+            'DELETE',
+            `/session-tokens?filter[sessionId]=${sessionId}&filter[foobar]=x`,
+            { headers: admin },
+        );
+        expect(response.status).toEqual(400);
+
+        const untouched = await suite.dataSource
+            .getRepository(SessionTokenEntity)
+            .find({ where: { sessionId } });
+        expect(untouched.length).toBeGreaterThan(0);
+        expect(untouched.every((row) => row.revokedAt === null)).toBe(true);
+    });
+
     it('rejects a bulk revoke that carries no target filter', async () => {
         // No self-service fallback here, unlike DELETE /sessions, so an
         // unscoped call must fail loudly rather than revoke everything.
