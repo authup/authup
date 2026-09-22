@@ -10,6 +10,7 @@ import type { Consent } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { CONSENT_FILTER_KEYS } from './types.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { realm: EntityType.REALM };
 
@@ -46,7 +47,11 @@ export const consentSchema = defineSchema<Consent>({
             'updatedAt',
         ],
     },
-    filters: { allowed: [...CONSENT_FILTER_KEYS, 'userId'], indexed: true },
+    filters: {
+        allowed: [...CONSENT_FILTER_KEYS, 'userId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['createdAt', 'updatedAt', 'scope'], indexed: true },
     pagination: { maxLimit: 50 },

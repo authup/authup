@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { role: EntityType.ROLE, provider: EntityType.IDENTITY_PROVIDER };
 
@@ -39,7 +40,11 @@ export const identityProviderRoleMappingSchema = defineSchema<IdentityProviderRo
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'providerId', 'id', 'providerRealmId', 'roleRealmId'], indexed: true },
+    filters: {
+        allowed: ['roleId', 'providerId', 'id', 'providerRealmId', 'roleRealmId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['role', 'provider'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

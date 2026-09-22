@@ -8,6 +8,7 @@
 import { defineSchema } from '@rapiq/core';
 import type { Event } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 export const eventSchema = defineSchema<Event>({
     name: EntityType.EVENT,
@@ -69,6 +70,7 @@ export const eventSchema = defineSchema<Event>({
             'createdAt',
         ],
         indexed: true,
+        validate: createTimestampFiltersGate(),
     },
     relations: { allowed: [] },
     sorts: { allowed: ['createdAt'], indexed: true },

@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { UserAuthenticator } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { user: EntityType.USER, realm: EntityType.REALM };
 
@@ -37,7 +38,11 @@ export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
             'realmId',
         ],
     },
-    filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId', 'lastUsedAt'], indexed: true },
+    filters: {
+        allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId', 'lastUsedAt', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'], indexed: true },
     pagination: { maxLimit: 50 },

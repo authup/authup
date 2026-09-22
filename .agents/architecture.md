@@ -430,41 +430,56 @@ usable at the service level and nothing in core depends on TypeORM:
   readable (never a `select: false` secret, which is why `user.email`
   and the credential columns stay out), leads a real index, and
   **compares correctly once bound** (see below).
-- **`createdAt`/`updatedAt` are deliberately NOT filterable**, despite
-  being indexed, sortable and the most obvious thing an integration
-  would ask for. They are `@CreateDateColumn`/`@UpdateDateColumn`
-  timestamps carrying `dateToISOStringTransformer`, and a transformer
-  applies on read but NOT to a WHERE bind, so the ISO string a client
-  sends is compared against the driver's native storage format.
-  Measured across all three dialects: on **sqlite** the comparison
-  INVERTS (a row created now does not match `> 1h ago`, and does match
-  `< 1h ago`, because the stored `'2026-08-12 10:16:44'` sorts below
-  any `'...T...Z'` string on the `' '` vs `'T'` byte); on **postgres
-  and mysql** range comparison is correct but equality against the
-  exact value the API returned still matches nothing
-  (precision/format), and a malformed date reaches the driver and
-  surfaces as a **500**. A filter that silently returns the wrong rows
-  is worse than one that does not exist, so the surface stops at the
-  `varchar(28)` ISO columns (`session.expiresAt`/`seenAt`,
-  `sessionToken.expiresAt`, `userAuthenticator.lastUsedAt`), which are
-  written with `toISOString()` and compare as plain strings on every
-  dialect. `event.createdAt` predates this and stays filterable,
-  carrying the same caveat. **rapiq 2.3.0 changed the half of this that
-  is the adapter's** (tada5hi/rapiq#939, filed from the event stats read):
-  the typeorm adapter now binds a date operand in the column's storage form
-  (a UTC wall-clock string for a zone-less `datetime` / `timestamp`), so the
-  sqlite inversion is gone and a malformed date is refused at the adapter
-  (`AdapterError`, `KEY_VALUE_INVALID`) rather than reaching the driver. The
-  stats window rides that binding as an appended `createdAt` range. The
-  allow-list rule above still stands until #3639 re-measures the surface
-  under all three dialects in `query-surface.spec.ts`, settles the equality
-  contract (a precision question the binding does not answer) and maps the
-  `AdapterError` onto 400 in `sanitizeError`. Sorting is unaffected: it
-  compares the
-  column against itself. Pinned by
-  `test/unit/http/controllers/entities/query-surface.spec.ts`, which
-  EXECUTES the surface (decoding only proves a query is legal, not
-  that it binds correctly) and runs under all three dialects.
+- **`createdAt`/`updatedAt` are filterable under the RANGE operators
+  only** (#3639), on every schema that carries them (`event` and
+  `sessionToken` carry `createdAt` alone). They are
+  `@CreateDateColumn`/`@UpdateDateColumn` timestamps whose
+  `dateToISOStringTransformer` applies on read but not to a WHERE bind;
+  since rapiq 2.3.0 (tada5hi/rapiq#939) the typeorm adapter binds the
+  operand in the column's storage form instead (a UTC wall-clock string
+  for a zone-less `datetime` / `timestamp`), which ends the sqlite
+  inversion the raw ISO string caused (`'2026-08-12 10:16:44'` sorts
+  below any `'...T...Z'` on the `' '` vs `'T'` byte), and refuses a
+  malformed date with `AdapterError` `KEY_VALUE_INVALID`, which
+  `sanitizeError` maps onto 400 (every other `AdapterError` code is
+  server-authored and stays a 500). Three rules sit on top:
+  - **Equality is refused, not offered.** The stored precision differs
+    by dialect (postgres `timestamp` and mysql `datetime(6)` keep
+    microseconds, sqlite's `datetime('now')` keeps seconds) while the
+    API answers milliseconds, so `eq` against a returned value matches
+    nothing, and `ne` / `in` / `nin` inherit it. `createTimestampFiltersGate`
+    (`core/query/filters.ts`, a filters `validate` hook every schema
+    declares) admits `lt` / `lte` / `gt` / `gte` on those keys, matched
+    on the LAST path segment so `filter[user.createdAt]` is held to the
+    same rule, and THROWS for anything else. It must throw rather than
+    return `undefined`: under rapiq's default dropping policy a rejected
+    leaf is removed, which widens the page to every row. rapiq folds the
+    throw into `ParseError.inputRejected`, and `sanitizeError` now
+    carries a ParseError's `issues` onto the 400 so the reason (the
+    operator rule) reaches the caller. The restriction is not part of
+    `meta.schema` (a validate hook is not described), which is why the
+    prose query docs state it.
+  - **An inclusive bound equal to a returned value is not a guaranteed
+    match.** The bound carries milliseconds: sqlite stores less, so
+    `gte(own)` excludes the row there; postgres and mysql store more, so
+    `lte(own)` excludes it there. Widen the bound by a second.
+  - **The bound is UTC, and so is the stored value, but a returned value
+    need not be.** `created_at` is stamped by the database server's clock
+    (assumed UTC, as `countRecent` assumes). On a Node host whose
+    timezone is not UTC, the postgres and mysql drivers read the
+    zone-less column back as LOCAL time, so the API answers a value
+    shifted by the host offset while filters compare against the true
+    instant. The container sets no `TZ`, so the image is unaffected; the
+    spec takes its bounds from the real clock for exactly this reason.
+  Sorting was never affected: it compares the column against itself.
+  Pinned by `test/unit/http/controllers/entities/query-surface.spec.ts`,
+  which EXECUTES the surface under all three dialects (a range in both
+  directions on root and relation-qualified keys, the three refused
+  operators, the malformed-date 400; verified to fail with the adapter's
+  date binding switched off), and by
+  `test/unit/core/query/timestamp-filters.spec.ts`, which decodes the
+  range and the refusal for every (schema, key) pair and fails when a
+  schema stops admitting `createdAt`.
 - **`fields` needs no such review — it is complete by construction.**
   `assertSchemaFieldsCoverEntity` fails the boot when any selectable
   column is missing from `fields.default` ∪ `fields.allowed`, so the

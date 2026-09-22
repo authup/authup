@@ -149,18 +149,22 @@ single value that either parses or does not, so a dropped key there would
 silently widen the result set, and a query meant to select one row would return
 the table. An unknown key inside it is rejected for the same reason.
 
-Two more rules narrow what is accepted, and both come from the underlying
-indexes:
+Two more rules narrow what is accepted:
 
 - every `AND` group of a filter needs at least one condition on an
   index-leading key, and an `or(...)` counts only when every branch has one.
-- `createdAt` and `updatedAt` are sortable but deliberately not filterable.
-  They are stored through a transformer that applies on read and not to a
-  comparison, so a filter on them would compare an ISO string against the
-  driver's own storage format and quietly return the wrong rows. The
-  `varchar(28)` ISO columns that are written as plain strings
-  (`session.expiresAt`, `sessionToken.expiresAt`) are filterable and compare
-  correctly.
+- `createdAt` and `updatedAt` accept the range operators only (`<`, `<=`,
+  `>`, `>=`, i.e. `lt`, `lte`, `gt`, `gte`). Equality (`eq`, `ne`, `in`,
+  `nin`) is refused with `400`: the database stores these timestamps at a
+  different precision than the API returns (microseconds on PostgreSQL and
+  MySQL, seconds on SQLite, milliseconds on the wire), so an equality
+  against a returned value would match nothing. For the same reason an
+  inclusive bound equal to a returned value is not guaranteed to include
+  that row; widen it by a second. A value that is not a date answers `400`.
+
+  ```text
+  GET /users?filter[createdAt]=>=2026-09-01T00:00:00.000Z
+  ```
 
 ## Discovering the vocabulary
 

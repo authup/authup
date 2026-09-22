@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { Policy } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { children: EntityType.POLICY, realm: EntityType.REALM };
 
@@ -40,7 +41,11 @@ export const policySchema = defineSchema<Policy>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'displayName', 'type', 'parentId', 'realmId', 'builtIn'], indexed: true },
+    filters: {
+        allowed: ['id', 'name', 'displayName', 'type', 'parentId', 'realmId', 'builtIn', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['children', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

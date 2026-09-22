@@ -14,7 +14,12 @@ import {
 } from '@authup/errors';
 import { isHTTPError } from '@ebec/http';
 import { isClientError } from 'hapic';
-import { CodecError, ParseError } from '@rapiq/core';
+import {
+    AdapterError,
+    CodecError,
+    ParseError,
+    ErrorCode as QueryErrorCode,
+} from '@rapiq/core';
 import { EntityRelationLookupError } from 'typeorm-extension';
 import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
@@ -26,6 +31,7 @@ import { hasOwnProperty, isObject } from '@authup/kit';
  * 2. EntityRelationLookupError         → BAD_REQUEST AuthupError
  * 3. validup Issue error               → BAD_REQUEST AuthupError carrying issues
  * 4. rapiq ParseError / CodecError     → BAD_REQUEST AuthupError (client wire query)
+ *    rapiq AdapterError (value)        → BAD_REQUEST AuthupError (unbindable operand)
  * 5. hapic ClientError                 → UPSTREAM_ERROR AuthupError (outbound call)
  * 6. foreign @ebec/http HTTPError      → AuthupError with the closest semantic code
  * 7. driver error w/ a recognised code → ENTITY_CONFLICT or STORAGE_INSUFFICIENT
@@ -57,11 +63,22 @@ export function sanitizeError(input: unknown): AuthupError {
         });
     }
 
-    if (input instanceof ParseError || input instanceof CodecError) {
+    /**
+     * `KEY_VALUE_INVALID` is the one AdapterError a client causes: an
+     * operand the adapter cannot bind to its column (a date filter whose
+     * value denotes no instant). The other AdapterError codes describe a
+     * condition the server authored, so they stay internal errors.
+     */
+    if (
+        input instanceof ParseError ||
+        input instanceof CodecError ||
+        (input instanceof AdapterError && input.code === QueryErrorCode.KEY_VALUE_INVALID)
+    ) {
         return new AuthupError({
             code: ErrorCode.BAD_REQUEST,
             message: input.message,
             stack: input.stack,
+            issues: input.issues,
         });
     }
 

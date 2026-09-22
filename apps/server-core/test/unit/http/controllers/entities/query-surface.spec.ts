@@ -12,6 +12,7 @@ import {
     it,
 } from 'vitest';
 import { PermissionName } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { createFakeRole, createFakeUser, httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -21,13 +22,20 @@ import { createTestApplication } from '../../../../app';
  * adapter and the driver, and a predicate that binds wrong returns a
  * plausible-looking empty (or complete) result set rather than an error.
  *
- * The temporal keys here are all `varchar(28)` ISO columns, written with
- * `toISOString()` and therefore compared as plain strings against an
- * identically formatted bound value — dialect-independent. The
- * `@CreateDateColumn` timestamps (createdAt/updatedAt) are deliberately
- * NOT filterable for exactly that reason: their transformer applies on
- * read but not to a WHERE bind, so comparisons are silently inverted on
- * sqlite and equality never matches on any dialect.
+ * Two kinds of temporal column are covered. The `varchar(28)` ISO columns
+ * (session `expiresAt` / `seenAt`, ...) are written with `toISOString()`
+ * and compare as plain strings. The `@CreateDateColumn` /
+ * `@UpdateDateColumn` timestamps (`createdAt` / `updatedAt`) are native
+ * date columns; since rapiq 2.3.0 the adapter binds their operand in the
+ * column's storage form (a UTC wall-clock string), and authup admits them
+ * under the range operators only (issue #3639).
+ *
+ * Timestamp bounds are taken from the REAL clock, never from a value the
+ * API returned: on a host whose timezone is not UTC, the postgres and
+ * mysql drivers read the zone-less column as local time, so the returned
+ * value is shifted while the stored one (and the bound) are UTC. The
+ * margins stay within one day, so a regression to the unconverted ISO
+ * binding (which inverts on sqlite on the `' '` vs `'T'` byte) still fails.
  *
  * Assertions are written to hold on sqlite, mysql and postgres.
  */
@@ -138,5 +146,86 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         const excludedBody = await excluded.json();
         expect(excluded.status).toEqual(200);
         expect(excludedBody.data).toHaveLength(0);
+    });
+    describe('timestamp columns', () => {
+        const margin = 5 * 60_000;
+        const past = () => encodeURIComponent(new Date(Date.now() - margin).toISOString());
+        const future = () => encodeURIComponent(new Date(Date.now() + margin).toISOString());
+
+        async function count(path: string) {
+            const response = await httpRequest(suite, 'GET', path, { headers: { Authorization: basic } });
+            expect(response.status).toEqual(200);
+            const body = await response.json();
+            return body.data.length;
+        }
+
+        it.each(['createdAt', 'updatedAt'])('should filter roles by a %s range in both directions', async (key) => {
+            const { data: role } = await suite.client.role.create(createFakeRole());
+            // pinned by id, so an empty page can only mean the predicate
+            // excluded this row, never that it sits on a later page
+            const scope = `/roles?filter[id]=${role.id}&filter[${key}]=`;
+
+            expect(await count(`${scope}${encodeURIComponent('>')}${past()}`)).toEqual(1);
+            expect(await count(`${scope}${encodeURIComponent('>=')}${past()}`)).toEqual(1);
+            expect(await count(`${scope}${encodeURIComponent('<')}${future()}`)).toEqual(1);
+            expect(await count(`${scope}${encodeURIComponent('<=')}${future()}`)).toEqual(1);
+
+            expect(await count(`${scope}${encodeURIComponent('<')}${past()}`)).toEqual(0);
+            expect(await count(`${scope}${encodeURIComponent('>')}${future()}`)).toEqual(0);
+        });
+
+        it('should filter events by a createdAt range', async () => {
+            await suite.client.role.create(createFakeRole());
+
+            const response = await httpRequest(suite, 'GET', `/events?filter[createdAt]=${encodeURIComponent('>')}${past()}`, { headers: { Authorization: basic } });
+            const body = await response.json();
+            expect(response.status).toEqual(200);
+            expect(body.meta.total).toBeGreaterThan(0);
+        });
+
+        it('should filter through a relation-qualified timestamp', async () => {
+            const { data: role } = await suite.client.role.create(createFakeRole());
+            const { data: user } = await suite.client.user.create(createFakeUser());
+            const { data: junction } = await suite.client.userRole.create({ userId: user.id, roleId: role.id });
+
+            const scope = `/user-roles?filter[id]=${junction.id}&filter[user.createdAt]=`;
+            expect(await count(`${scope}${encodeURIComponent('>')}${past()}`)).toEqual(1);
+            expect(await count(`${scope}${encodeURIComponent('<')}${past()}`)).toEqual(0);
+        });
+
+        /**
+         * The stored precision differs by dialect (microseconds on postgres
+         * and mysql, seconds on sqlite) while the API answers milliseconds,
+         * so equality against a returned value matches nothing. It is
+         * refused instead of silently answering an empty page, and the
+         * refusal names the reason.
+         */
+        it.each([
+            ['eq', (value: string) => value],
+            ['ne', (value: string) => `!${value}`],
+            ['in', (value: string) => `${value},${value}`],
+        ])('should refuse %s on a timestamp with 400', async (_operator, build) => {
+            const { data: role } = await suite.client.role.create(createFakeRole());
+
+            for (const path of [
+                `/roles?filter[createdAt]=${encodeURIComponent(build(role.createdAt))}`,
+                `/user-roles?filter[user.createdAt]=${encodeURIComponent(build(role.createdAt))}`,
+            ]) {
+                const response = await httpRequest(suite, 'GET', path, { headers: { Authorization: basic } });
+                expect(response.status).toEqual(400);
+
+                const body = await response.json();
+                expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
+                expect(body.issues.map((issue: { message: string }) => issue.message).join()).toContain('range operators');
+            }
+        });
+
+        it('should answer 400 for a date that denotes no instant', async () => {
+            const response = await httpRequest(suite, 'GET', `/roles?filter[createdAt]=${encodeURIComponent('>not-a-date')}`, { headers: { Authorization: basic } });
+            expect(response.status).toEqual(400);
+
+            const body = await response.json();
+            expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
+        });
     });
 });

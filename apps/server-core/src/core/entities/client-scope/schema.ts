@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { ClientScope } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { client: EntityType.CLIENT, scope: EntityType.SCOPE };
 
@@ -37,7 +38,11 @@ export const clientScopeSchema = defineSchema<ClientScope>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['clientId', 'scopeId', 'default', 'id', 'clientRealmId', 'scopeRealmId'], indexed: true },
+    filters: {
+        allowed: ['clientId', 'scopeId', 'default', 'id', 'clientRealmId', 'scopeRealmId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['client', 'scope'], validate: createRelationsReadGate(schemaMapping) },
     // wider than the junction siblings' id/createdAt/updatedAt on purpose:
     // every column here is already indexed and already sorts today through
