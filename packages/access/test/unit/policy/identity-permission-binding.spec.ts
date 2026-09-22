@@ -8,12 +8,13 @@
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import type { PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding, PolicyWithType } from '../../../src';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyDefaultEvaluators,
     PolicyEngine,
+    PolicyIssueCode,
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
@@ -197,5 +198,93 @@ describe('identity permission binding compilation', () => {
         expect(entity.condition).toBeDefined();
         const predicate = compileFilters(entity.condition! as IFilter | IFilters, { caseSensitive: true });
         expect(predicate({ realmId: identity.realmId })).toBeTruthy();
+    });
+});
+
+// A grant policy tree carrying a binding node re-enters this evaluator with the
+// same data, which loads the same grants and evaluates the same tree again
+// (issue #3633). The consumer side drops such a grant (`containsBindingCheck`),
+// so the server settles the term false and moves on, never recursing.
+describe('identity permission binding recursion (#3633)', () => {
+    const run = (bindings: PermissionPolicyBinding[]) => {
+        const engine = new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
+        });
+
+        return engine.evaluate(
+            definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {}),
+            definePolicyEvaluationContext({
+                data: definePolicyData({
+                    [BuiltInPolicyType.IDENTITY]: identity,
+                    [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+                }),
+            }),
+        );
+    };
+
+    it.each([
+        ['a bare binding node', definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+        ['a binding node under a composite', definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+            children: [
+                definePolicyWithType(BuiltInPolicyType.IDENTITY, {}),
+                definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {}),
+            ],
+        })],
+    ])('settles a grant whose policy carries %s false instead of recursing', async (_label, grantPolicy) => {
+        const outcome = await run([{
+            permission, 
+            realmScope: 'any', 
+            policies: [grantPolicy], 
+        }]);
+
+        expect(outcome.success).toBe(false);
+        expect(outcome.pending).toBeFalsy();
+        expect((outcome.issues ?? []).map((issue) => issue.code)).toContain(PolicyIssueCode.INVALID);
+    });
+
+    it('keeps a sibling policy-free grant passing', async () => {
+        const outcome = await run([
+            {
+                permission,
+                realmScope: 'any',
+                policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+            },
+            { permission, realmScope: 'any' },
+        ]);
+
+        expect(outcome.success).toBe(true);
+    });
+
+    // only a composite evaluates its children, and the projection the consumer
+    // walks keeps `children` on a composite alone, so a raw tree carrying them
+    // under another type is evaluated as that node alone on both sides
+    it('ignores children under a non-composite node, as the projection does', async () => {
+        // the shape a closure-table read hands over: children on whatever type
+        const raw : PolicyWithType = {
+            type: BuiltInPolicyType.IDENTITY,
+            children: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+        };
+        const outcome = await run([{
+            permission, 
+            realmScope: 'any', 
+            policies: [raw], 
+        }]);
+
+        expect(outcome.success).toBe(true);
+    });
+
+    it('settles only the grant whose composite carries a nullish child', async () => {
+        const raw : PolicyWithType = { type: BuiltInPolicyType.COMPOSITE, children: [null] };
+        const outcome = await run([
+            {
+                permission, 
+                realmScope: 'any', 
+                policies: [raw], 
+            },
+            { permission, realmScope: 'any' },
+        ]);
+
+        expect(outcome.success).toBe(true);
     });
 });

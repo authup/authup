@@ -13,6 +13,7 @@ import { aggregatePermissionPolicyBindings } from '../../../permission/helpers';
 import { RealmScope, normalizeRealmScope } from '../../../permission/realm-scope';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { PolicyEngine } from '../../engine';
+import type { PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants';
@@ -24,6 +25,23 @@ import { PermissionBindingPolicyValidator } from './validator';
 type IdentityPermissionProvider = {
     getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>,
 };
+
+function containsPermissionBinding(policy: PolicyWithType) : boolean {
+    if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {
+        return true;
+    }
+
+    // only a composite evaluates its children, and the projection a consumer
+    // walks (`containsBindingCheck`) keeps `children` on a composite alone
+    if (policy.type !== BuiltInPolicyType.COMPOSITE) {
+        return false;
+    }
+
+    const children = policy.children as unknown;
+
+    return Array.isArray(children) &&
+        children.some((child) => !!child && typeof child === 'object' && containsPermissionBinding(child));
+}
 
 export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator : PermissionBindingPolicyValidator;
@@ -178,6 +196,20 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 // Reach is the grant's only restriction — a pure condition term.
                 conditions.push(reachCondition);
                 pending = true;
+                continue;
+            }
+
+            // A grant policy carrying a binding node re-enters this evaluator with the
+            // same data, which loads the same grants and evaluates the same tree again,
+            // without bound (issue #3633). The consumer side drops such a grant
+            // (`containsBindingCheck`); the term settles false here so the two agree.
+            if (containsPermissionBinding(grant.policy)) {
+                issues.push(definePolicyIssueItem({
+                    code: PolicyIssueCode.INVALID,
+                    message: 'A grant policy must not evaluate the permission binding.',
+                    path: ctx.path,
+                }));
+
                 continue;
             }
 

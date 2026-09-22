@@ -15,6 +15,7 @@ import {
     aggregatePermissionPolicyBindings,
     buildPermissionKey,
 } from '@authup/access';
+import { InternalError } from '@authup/errors';
 import { buildCacheKey } from '@authup/server-kit';
 import type {
     DataSource,
@@ -128,8 +129,18 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
             },
             junctions
                 .filter((junction) => junction.permissionId === entity.id)
-                .map((junction) => trees[junction.policyId])
-                .filter((tree) : tree is BasePolicy => !!tree),
+                .map((junction) => {
+                    const tree = trees[junction.policyId];
+                    if (!tree) {
+                        // served without the tree, the definition evaluates as if that
+                        // restriction did not exist (issue #3634)
+                        throw new InternalError(
+                            `The policy tree ${junction.policyId} of permission ${buildPermissionKey(entity)} could not be loaded.`,
+                        );
+                    }
+
+                    return tree;
+                }),
         ]);
     }
 

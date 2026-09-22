@@ -3573,7 +3573,12 @@ entity columns never travel and the server-side projection and the consumer-side
 validation are one function. `buildAuthorizationCatalog` (`core/authorization/`) reads the
 definitions in one pass (`IAuthorizationCatalogRepository.findDefinitions`) plus every tree a
 junction row references (`findGrantPolicies`, so a grant can never name a tree the catalog
-lacks) and sorts the definitions by key. A projection failure is warned about and never
+lacks) and sorts the definitions by key. `findDefinitions` throws `InternalError`, naming
+the permission and the policy id, when a junction row names a tree it cannot load: served
+without it, the definition would evaluate as if that restriction did not exist (#3634).
+The refusal is that read's alone, since the grant junctions are `ON DELETE SET NULL` and
+their rows are cached for 60 seconds, so a deleted policy legitimately leaves a
+policy-free grant behind and a throw there would deny it for a minute. A projection failure is warned about and never
 drops a definition: one whose tree fails projection is carried with `policies: null`,
 because the definition is real and an absence in the catalog must mean exactly one thing,
 a copy older than the definition. A tree the CALLER may not read is withheld the same
@@ -3602,7 +3607,10 @@ rebuilds the server's own raw binding model, the `PermissionPolicyBinding` struc
 `PermissionDatabaseProvider` and `IIdentityPermissionProvider.getFor` produce, and runs the
 same aggregation and the same evaluators (`IdentityPermissionBindingPolicyEvaluator` in
 access is the one implementation of grant reach, pending composition and condition
-lowering), so decision parity holds by construction. **A grant naming a DEFINITION or a
+lowering), so decision parity holds by construction. That evaluator settles a grant whose
+policy tree carries a `permissionBinding` node false with an `INVALID` issue, the verdict
+the consumer's `containsBindingCheck` drop reaches as well, and that is what keeps such a
+tree from re-entering the evaluator with the same data without bound (#3633). **A grant naming a DEFINITION or a
 POLICY the catalog lacks throws `AuthorizationCatalogStaleError`**: the grants come from a
 fresh introspection while the catalog has a clock of its own, so the consumer's copy
 predates the definition (an upgrade adding `PermissionName` members, a `POST /permissions`)
