@@ -50,7 +50,7 @@ curl -X GET 'http://localhost:3000/permissions' \
 Most collections answer grouped counts of the rows created per time bucket next to
 their rows, under `GET /<collection>/@stats`: realms, clients, scopes, identity
 providers, keys, trust anchors, users, paths, roles, policies, permissions, sessions and
-events. The admin console's dashboard and the trend strip above each list read them.
+events. The admin console's dashboard and the activity boxes above each list read them.
 The rows to count are selected with the same `filter[...]` vocabulary the collection
 read takes, and the caller is gated exactly like that read;
 `granularity` (`hour` or `day`, default `day`) sets the bucket width and `days`
@@ -72,7 +72,9 @@ with zeros. The window holds exactly `days` times the buckets per day bucket sta
 last of them the bucket holding `to`, and `total` counts every row the filter admits,
 regardless of the window, so `GET /sessions/@stats?filter[expiresAt]=>2026-09-22T10:15:00.000Z`
 answers the active sessions. Events group their buckets by `scope` and `name` and add
-`enabled`, which says whether the deployment records events at all. A reader without
+`enabled`, which says whether the deployment records events at all, plus `retentionDays`
+and `entityRetentionDays`, how long security events and entity create/update/delete
+events are kept (`0` = forever), so a client never offers a window past them. A reader without
 `event_read` is answered the counts of its own rows.
 
 ```json
@@ -98,6 +100,8 @@ answers the active sessions. Events group their buckets by `scope` and `name` an
         "days": 7,
         "total": 1283,
         "enabled": true,
+        "retentionDays": 90,
+        "entityRetentionDays": 7,
         "schema": {}
     }
 }

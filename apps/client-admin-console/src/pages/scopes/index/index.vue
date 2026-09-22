@@ -25,12 +25,12 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent } from 'vue';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -130,9 +130,9 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <EntityStatsStrip
+            <EntityActivity
+                type="scope"
                 :load="loadStats"
-                :filters="query.filters"
             />
             <ATitle />
             <ASearch

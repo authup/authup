@@ -22,7 +22,6 @@ import {
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { and, gt, inArray } from '@rapiq/core';
-import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
@@ -39,22 +38,11 @@ import {
     sumStats,
 } from '../components/dashboard/stats';
 import { LayoutSection, LayoutSections } from '../config/layout';
-import type { EntityStats, EntityStatsLoadFn, EntityStatsWindow } from '../composables/entity-stats';
+import type { EntityStats, EntityStatsLoadFn } from '../composables/entity-stats';
 import { ENTITY_STATS_WINDOWS, useEntityStats } from '../composables/entity-stats';
-import { EVENT_STATS_WINDOWS, useEventStats } from '../composables/event-stats';
+import { useEventStats } from '../composables/event-stats';
+import StatsWindowSwitch from '../components/stats/StatsWindowSwitch.vue';
 import { useErrorToast } from '../composables/error';
-
-type WindowLabelKey = TranslatorTranslationAppKey.DASHBOARD_WINDOW_24H |
-    TranslatorTranslationAppKey.DASHBOARD_WINDOW_7D |
-    TranslatorTranslationAppKey.DASHBOARD_WINDOW_30D |
-    TranslatorTranslationAppKey.DASHBOARD_WINDOW_90D;
-
-const WINDOW_LABELS : Record<EntityStatsWindow, WindowLabelKey> = {
-    '24h': TranslatorTranslationAppKey.DASHBOARD_WINDOW_24H,
-    '7d': TranslatorTranslationAppKey.DASHBOARD_WINDOW_7D,
-    '30d': TranslatorTranslationAppKey.DASHBOARD_WINDOW_30D,
-    '90d': TranslatorTranslationAppKey.DASHBOARD_WINDOW_90D,
-};
 
 const RANK_LIMIT = 10;
 
@@ -95,8 +83,8 @@ type EntityTileGroup = {
 export default defineComponent({
     components: {
         EventVolumeChart,
+        StatsWindowSwitch,
         VCAlert,
-        VCButton,
         VCIcon,
         VCLink,
     },
@@ -112,11 +100,6 @@ export default defineComponent({
             [
                 { key: TranslatorTranslationAppKey.DASHBOARD },
                 { key: TranslatorTranslationAppKey.DASHBOARD_DESCRIPTION },
-                { key: TranslatorTranslationAppKey.DASHBOARD_WINDOW },
-                { key: TranslatorTranslationAppKey.DASHBOARD_WINDOW_24H },
-                { key: TranslatorTranslationAppKey.DASHBOARD_WINDOW_7D },
-                { key: TranslatorTranslationAppKey.DASHBOARD_WINDOW_30D },
-                { key: TranslatorTranslationAppKey.DASHBOARD_WINDOW_90D },
                 { key: TranslatorTranslationAppKey.DASHBOARD_IDENTITIES },
                 { key: TranslatorTranslationAppKey.DASHBOARD_CONFIGURATION },
                 { key: TranslatorTranslationAppKey.SESSIONS_ACTIVE },
@@ -171,6 +154,15 @@ export default defineComponent({
         });
 
         const windowEntry = computed(() => ENTITY_STATS_WINDOWS[window.value]);
+
+        // the event chart and ranking read security events, kept
+        // eventLogRetentionDays: a window past it is disabled, not undercounted
+        const retentionDays = computed(() => response.value?.meta.retentionDays ?? 0);
+        const retentionTitle = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.STATS_WINDOW_RETAINED,
+            data: { days: retentionDays },
+        });
         const numberFormat = computed(() => new Intl.NumberFormat(locale.value));
 
         // The realm switcher's scope, the one every list page applies: the
@@ -387,8 +379,8 @@ export default defineComponent({
             titles,
             translations,
             window,
-            windowLabels: WINDOW_LABELS,
-            windows: EVENT_STATS_WINDOWS,
+            retentionDays,
+            retentionTitle,
         };
     },
 });
@@ -407,23 +399,11 @@ export default defineComponent({
                     {{ translations.dashboardDescription }}
                 </p>
             </div>
-            <div
-                class="flex flex-wrap gap-1"
-                role="group"
-                :aria-label="translations.dashboardWindow"
-            >
-                <VCButton
-                    v-for="(_entry, key) in windows"
-                    :key="key"
-                    size="sm"
-                    :color="window === key ? 'primary' : 'neutral'"
-                    :variant="window === key ? 'solid' : 'outline'"
-                    :aria-pressed="window === key"
-                    @click="window = key"
-                >
-                    {{ translations[windowLabels[key]] }}
-                </VCButton>
-            </div>
+            <StatsWindowSwitch
+                v-model="window"
+                :max-days="retentionDays"
+                :disabled-title="retentionTitle"
+            />
         </div>
 
         <div

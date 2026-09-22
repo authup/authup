@@ -12,13 +12,15 @@ import {
     DPath,
     DTags,
 } from '@routup/decorators';
-import type { Event, EventName, EventScope } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EventStatsGroups,
+    EventStatsMetaExtra,
     EventStatsResponse,
 } from '@authup/core-http-kit';
 import type { IEntityStatsService, IEventService } from '../../../../../core/index.ts';
@@ -35,7 +37,7 @@ import { serveEntityStats } from '../stats.ts';
 
 export type EventControllerContext = {
     service: IEventService,
-    statsService: IEntityStatsService<{ scope: `${EventScope}`, name: `${EventName}` }, { enabled: boolean }>,
+    statsService: IEntityStatsService<EventStatsGroups, EventStatsMetaExtra>,
 };
 
 // Read-only surface — the log is append-only: writes happen internally via
@@ -45,7 +47,7 @@ export type EventControllerContext = {
 export class EventController {
     protected service: IEventService;
 
-    protected statsService: IEntityStatsService<{ scope: `${EventScope}`, name: `${EventName}` }, { enabled: boolean }>;
+    protected statsService: IEntityStatsService<EventStatsGroups, EventStatsMetaExtra>;
 
     constructor(ctx: EventControllerContext) {
         this.service = ctx.service;

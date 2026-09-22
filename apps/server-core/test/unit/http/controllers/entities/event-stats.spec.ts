@@ -184,6 +184,8 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.eventLogEnabled = false;
+            config.eventLogRetentionDays = 30;
+            config.eventLogEntityRetentionDays = 3;
         },
     });
 
@@ -199,5 +201,12 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         const { meta } = await suite.client.event.getStats({ days: 7 });
 
         expect(meta.enabled).toBe(false);
+    });
+
+    it('reports both retentions, so a client never offers a window past them', async () => {
+        const { meta } = await suite.client.event.getStats({ days: 7 });
+
+        expect(meta.retentionDays).toEqual(30);
+        expect(meta.entityRetentionDays).toEqual(3);
     });
 });

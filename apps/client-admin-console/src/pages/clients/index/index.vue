@@ -36,12 +36,12 @@ import {
     watch,
 } from 'vue';
 import { reloadCollection, usePathScope } from '../../../composables/path-scope';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         APagination,
         APathTree,
         ASearch,
@@ -303,10 +303,9 @@ export default defineComponent({
                 @deleted="handleDeleted"
             >
                 <template #header="props">
-                    <EntityStatsStrip
+                    <EntityActivity
+                        type="client"
                         :load="loadStats"
-                        :filters="query.filters"
-                        :paused="pathScopePending"
                     />
                     <ATitle />
                     <ASearch

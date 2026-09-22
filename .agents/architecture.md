@@ -843,8 +843,8 @@ Composite statistics that span entities (distinct active users) get a root
   definition's realm column. That makes a statistic under a realm mount
   NARROWER than its list for the lists that ignore the route realm on read
   (user, session, permission, policy, client, identity provider, a
-  pre-existing quirk of theirs): the strip never uses the realm mount, and
-  narrower cannot disclose.
+  pre-existing quirk of theirs): the console never uses the realm mount,
+  and narrower cannot disclose.
 - **`meta.total`** counts every row the filter and the gate admit, regardless
   of the window, cached under the scope alone (`<key>:total`), so switching
   the window reuses it instead of counting a table like `auth_events` again. "Active sessions" is therefore the
@@ -8314,18 +8314,30 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   the last being the session `total` under `gt('expiresAt', now)` taken per
   load; Configuration: roles, permissions, identity providers), each showing
   `meta.total` and the window's growth, linking to its list and dropped when
-  its read answers 403. Every list page renders `components/stats/EntityStatsStrip.vue`
-  as the first child of its collection's `#header` slot (not a sibling root:
-  the parent passes `@failed` through attribute fallthrough onto the single
-  root): 30 daily CSS bars (no chart.js) over the list's own base filters,
-  the realm scope and the users/clients folder, never the search text, hidden
-  on a 403 and silent on failure. `useEntityStats`
+  its read answers 403. Every entity list page but Events renders
+  `components/stats/EntityActivity.vue` as the first child of its
+  collection's `#header` slot (not a sibling root: the parent passes
+  `@failed` through attribute fallthrough onto the single root): a Total box
+  (the entity's own `@stats` total) and Created / Updated / Deleted boxes
+  counted from the entity-CRUD audit rows (`GET /events/@stats` with
+  `filter[scope]=entity&filter[refType]=<type>`, grouped by name), because
+  updates and deletions are recorded nowhere else. They follow the realm
+  switcher only, not the list's folder or search (an audit row carries its
+  owner realm and nothing else of the list's scope), the three operation
+  boxes need `event_read` (without it the event read answers own rows, so
+  they are dropped and the read stays `paused`), and a 24h / 7d / 30d / 90d
+  switch picks their window. That switch is `components/stats/StatsWindowSwitch.vue`,
+  shared with the dashboard: it disables a window longer than the retention
+  the event read reports (`meta.entityRetentionDays` on the entity page,
+  `meta.retentionDays` on the dashboard, 0 = forever), with the reason as its
+  title, instead of silently counting fewer rows than happened. Rejected: a
+  30-day trend strip of daily creation bars, which showed a shape but not the
+  operations a reader of the list asks about. `useEntityStats`
   (`composables/entity-stats.ts`) is the shared read. It reloads on the
   ENCODED scope (`buildQueryString` of the filters plus the window), never on
   object identity, so a page recomputing an equal filter does not refetch; it
-  waits while `paused` (the users/clients strip passes the folder scope's
-  `pending`, which otherwise answered the realm-wide count first under a
-  selected folder); it keeps the previous answer up, dimmed on `busy`, while a
+  waits while `paused` (the activity boxes pause their event read until
+  `event_read` is known); it keeps the previous answer up, dimmed on `busy`, while a
   new scope loads and drops it only when that read fails; it drops a stale
   answer; and a 403 raises `forbidden` instead of calling `onError`. Tiles
   render only once answered (never a fabricated 0) and pass no `onError`, so

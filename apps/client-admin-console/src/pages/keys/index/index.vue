@@ -29,7 +29,7 @@ import { useAlertDialog } from '@vuecs/overlays';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { computed, defineComponent } from 'vue';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 // VCTable deliberately stays globally registered — its generic component
@@ -37,7 +37,7 @@ import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 // (see structure.md → Table usage).
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -200,9 +200,9 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <EntityStatsStrip
+            <EntityActivity
+                type="key"
                 :load="loadStats"
-                :filters="query.filters"
             />
             <ATitle />
             <ASearch

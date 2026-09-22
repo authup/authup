@@ -273,13 +273,25 @@ export enum TranslatorTranslationAppKey {
     SESSIONS_ACTIVE = 'sessionsActive',
     /**
      * The growth a statistics read reports next to a total: the rows created
-     * inside its window. `STATS_STRIP_SUMMARY` is the spoken form of the
-     * list strip, since its bars carry no text of their own.
+     * inside its window.
      */
     STATS_NEW = 'statsNew',
     STATS_NEW_IN_DAYS = 'statsNewInDays',
     STATS_NEW_IN_HOURS = 'statsNewInHours',
-    STATS_STRIP_SUMMARY = 'statsStripSummary',
+    /**
+     * The activity boxes above an entity list: its total, and the rows the
+     * audit log saw created, updated and deleted inside the window.
+     */
+    ACTIVITY_TOTAL = 'activityTotal',
+    ACTIVITY_CREATED = 'activityCreated',
+    ACTIVITY_UPDATED = 'activityUpdated',
+    ACTIVITY_DELETED = 'activityDeleted',
+    ACTIVITY_SOURCE = 'activitySource',
+    /**
+     * Why a statistics window is disabled: the records behind it are not
+     * kept that long.
+     */
+    STATS_WINDOW_RETAINED = 'statsWindowRetained',
     SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',

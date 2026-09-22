@@ -20,12 +20,12 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -106,7 +106,11 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <EntityStatsStrip :load="loadStats" />
+            <EntityActivity
+                type="realm"
+                :load="loadStats"
+                :realm-scoped="false"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

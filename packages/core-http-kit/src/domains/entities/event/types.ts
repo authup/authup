@@ -23,21 +23,40 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 export type EventStatsQuery = EntityStatsQuery<Event>;
 
 /**
- * One grouped count: the rows of one (scope, name) inside one bucket.
+ * The keys an event bucket is grouped by next to its time bucket.
  */
-export type EventStatsBucket = EntityStatsBucket<{
+export type EventStatsGroups = {
     scope: `${EventScope}`,
     name: `${EventName}`,
-}>;
+};
 
-export type EventStatsMeta = EntityStatsMeta & {
+/**
+ * One grouped count: the rows of one (scope, name) inside one bucket.
+ */
+export type EventStatsBucket = EntityStatsBucket<EventStatsGroups>;
+
+export type EventStatsMetaExtra = {
     /**
      * Whether the deployment records events at all (`eventLogEnabled`).
      * With it off nothing new lands in the counts, and a dashboard should
      * say so rather than render a flat line.
      */
     enabled: boolean,
+    /**
+     * How long a security event is kept, in days (`eventLogRetentionDays`,
+     * 0 = forever). A window reaching past it counts fewer rows than
+     * happened.
+     */
+    retentionDays: number,
+    /**
+     * How long an entity create/update/delete event is kept, in days
+     * (`eventLogEntityRetentionDays`, 0 = forever). Updates and deletions are
+     * recorded nowhere else, so a window past it undercounts them.
+     */
+    entityRetentionDays: number,
 };
+
+export type EventStatsMeta = EntityStatsMeta & EventStatsMetaExtra;
 
 export type EventStatsResponse = {
     data: EventStatsBucket[],
@@ -49,7 +68,7 @@ export type EventStatsResponse = {
  * server-side at the emit points and pruned by the retention sweep.
  */
 export interface IEventAPI extends IEntitySchemaAPI,
-    IEntityStatsAPI<Event, { scope: `${EventScope}`, name: `${EventName}` }, { enabled: boolean }> {
+    IEntityStatsAPI<Event, EventStatsGroups, EventStatsMetaExtra> {
     getMany(data?: EntityQueryInput<Event>): Promise<EntityCollectionResponse<Event>>;
 
     getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>>;

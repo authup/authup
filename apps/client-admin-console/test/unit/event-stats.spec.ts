@@ -33,6 +33,8 @@ function answer(days: number, granularity: 'hour' | 'day', count: number): Event
             days,
             total: count,
             enabled: true,
+            retentionDays: 90,
+            entityRetentionDays: 7,
             schema: {} as EventStatsResponse['meta']['schema'],
         },
     };

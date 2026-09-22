@@ -28,12 +28,12 @@ import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { computed, defineComponent, ref } from 'vue';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         AEntityDelete,
         APagination,
         ASessions,
@@ -170,9 +170,9 @@ export default defineComponent({
         @failed="handleFailed"
     >
         <template #header="props">
-            <EntityStatsStrip
+            <EntityActivity
+                type="session"
                 :load="loadStats"
-                :filters="query.filters"
             />
             <div class="flex justify-end mb-2">
                 <VCFormSelect

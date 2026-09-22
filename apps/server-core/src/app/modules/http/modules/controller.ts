@@ -12,8 +12,6 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
-    EventName,
-    EventScope,
     Path,
     Permission,
     PermissionPolicy,
@@ -198,7 +196,7 @@ import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { LazyWildcardRealmProvisioner } from '../../provisioning/lazy-wildcard.ts';
 import { IdentityInjectionKey, UserIdentityRepository } from '../../identity/index.ts';
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
+import type { EventStatsGroups, EventStatsMetaExtra, StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
 import { CacheInjectionKey } from '../../cache/index.ts';
@@ -207,7 +205,6 @@ import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/i
 import { MetricsInjectionKey } from '../../metrics/index.ts';
 import { resolveURL } from '../../../../utils/index.ts';
 
-type EventStatsGroups = { scope: `${EventScope}`, name: `${EventName}` };
 
 export class HTTPControllerModule {
     async mount(router: IApp, container: IContainer): Promise<void> {
@@ -1163,12 +1160,16 @@ export class HTTPControllerModule {
         const service = container.resolve(DatabaseInjectionKey.EventService);
         return new EventController({
             service,
-            statsService: this.createStatsService<EventStatsGroups, { enabled: boolean }>(container, EventEntity, {
+            statsService: this.createStatsService<EventStatsGroups, EventStatsMetaExtra>(container, EventEntity, {
                 type: EntityType.EVENT,
                 schema: eventSchema,
                 scope: (query, actor) => service.scopeRead(query, actor),
                 groupBy: ['scope', 'name'],
-                meta: () => ({ enabled: config.eventLogEnabled !== false }),
+                meta: () => ({
+                    enabled: config.eventLogEnabled !== false,
+                    retentionDays: config.eventLogRetentionDays,
+                    entityRetentionDays: config.eventLogEntityRetentionDays,
+                }),
             }),
         });
     }

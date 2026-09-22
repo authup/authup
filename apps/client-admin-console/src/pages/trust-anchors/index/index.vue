@@ -26,13 +26,13 @@ import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
-import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
 import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 // VCTable deliberately stays globally registered; see structure.md → Table usage.
 export default defineComponent({
     components: {
-        EntityStatsStrip,
+        EntityActivity,
         AEntityDelete,
         APagination,
         ASearch,
@@ -127,9 +127,9 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <EntityStatsStrip
+            <EntityActivity
+                type="trustAnchor"
                 :load="loadStats"
-                :filters="query.filters"
             />
             <ATitle />
             <ASearch
