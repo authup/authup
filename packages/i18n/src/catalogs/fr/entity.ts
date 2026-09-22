@@ -16,6 +16,7 @@ export const TranslatorTranslationEntityFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Fournisseur d\'identité', other: 'Fournisseurs d\'identité' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER_ACCOUNT]: definePlural({ one: 'Compte lié', other: 'Comptes liés' }),
     [TranslatorTranslationEntityKey.KEY]: definePlural({ one: 'Clé', other: 'Clés' }),
+    [TranslatorTranslationEntityKey.PATH]: definePlural({ one: 'Chemin', other: 'Chemins' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Permission', other: 'Permissions' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Politique', other: 'Politiques' }),
     [TranslatorTranslationEntityKey.REALM]: definePlural({ one: 'Domaine', other: 'Domaines' }),

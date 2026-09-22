@@ -68,6 +68,8 @@ function createClient(overrides: Partial<Client> = {}): Client {
         updatedAt: TIMESTAMP,
         realmId: realm.id,
         realm,
+        pathId: null,
+        path: null,
         ...overrides,
     };
 }

@@ -13,6 +13,7 @@ import type {
     IUserRepository,
     IUserRoleRepository,
 } from '../../../entities/index.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 
 export type UserProvisioningSynchronizerContext = {
     userRepository: IUserRepository,
@@ -22,4 +23,10 @@ export type UserProvisioningSynchronizerContext = {
     clientRepository: IClientRepository,
     roleRepository: IRoleRepository,
     permissionRepository: IPermissionRepository,
+
+    /**
+     * Resolves the folder an entry names through `relations.path`, creating
+     * the missing chain; without it such a declaration fails the boot.
+     */
+    pathRepository?: IPathRepository,
 };

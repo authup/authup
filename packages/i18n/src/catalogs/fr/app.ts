@@ -34,6 +34,7 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.POLICY_DESCRIPTION]: 'Règles qui déterminent quand une permission s\'applique.',
     [TranslatorTranslationAppKey.EVENT_DESCRIPTION]: 'Journal d\'audit inaltérable des activités liées à la sécurité.',
     [TranslatorTranslationAppKey.SESSION_DESCRIPTION]: 'Connexions actives, avec les appareils et jetons associés.',
+    [TranslatorTranslationAppKey.PATH_DESCRIPTION]: 'Dossiers qui organisent les utilisateurs et les clients dans un domaine.',
     [TranslatorTranslationAppKey.SET_MANAGEMENT_REALM]: 'Définir comme realm de gestion',
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentation API',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Fait avec',
@@ -106,6 +107,14 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'Le compte n\'a pas pu être connecté.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Détruire la clé de chiffrement ?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Cette clé est encore référencée par {{count}} secret(s) chiffré(s). Sa suppression les rendra définitivement irrécupérables.',
+
+    [TranslatorTranslationAppKey.PATH_HINT]: 'Purement organisationnel. Un chemin n\'affecte ni permission, ni rôle, ni connexion.',
+    [TranslatorTranslationAppKey.PATH_SCOPE]: 'Chemin',
+    [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'Tous les chemins',
+    [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'Ce dossier contient trop de sous-dossiers pour restreindre la liste, donc toutes les lignes sont affichées.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'Ce royaume contient trop de dossiers pour tous les afficher, donc l\'arborescence est incomplète.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'Cette action supprime {{paths}} sous-dossiers et retire {{users}} utilisateurs et {{clients}} clients de leur dossier. Aucun utilisateur ni client n\'est supprimé. Cette action est irréversible.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'Les sous-dossiers de ce dossier sont supprimés et tous les utilisateurs et clients qui y sont classés en sont retirés. Les nombres n\'ont pas pu être lus. Cette action est irréversible.',
 
     [TranslatorTranslationAppKey.BACK_TO_APP]: 'Retour vers {{host}}',
 };

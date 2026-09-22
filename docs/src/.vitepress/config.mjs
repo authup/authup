@@ -167,6 +167,10 @@ export default defineConfig({
                             link: '/guide/user/permissions-and-policies', 
                         },
                         {
+                            text: 'Paths',
+                            link: '/guide/user/paths',
+                        },
+                        {
                             text: 'Trust Anchors',
                             link: '/guide/user/trust-anchors',
                         },

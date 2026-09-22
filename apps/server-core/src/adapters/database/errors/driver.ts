@@ -74,3 +74,25 @@ export function isForeignKeyConstraintDatabaseError(input: unknown): boolean {
     const code = getDatabaseDriverErrorCode(input);
     return typeof code === 'string' && FOREIGN_KEY_CONSTRAINT_ERROR_CODES.includes(code);
 }
+
+const TRANSIENT_LOCK_ERROR_CODES = [
+    'ER_LOCK_DEADLOCK', // mysql: the server detected a lock cycle and chose a victim
+    'ER_LOCK_WAIT_TIMEOUT', // mysql: the same contention, reported after the wait
+    '40P01', // postgres: deadlock_detected
+    '40001', // postgres: serialization_failure
+];
+
+/**
+ * True when the error is a transient lock conflict: the server aborted THIS
+ * transaction to break a cycle (or to end a wait), rolling back everything it
+ * had written.
+ *
+ * The caller decides whether a retry is sound, and it only is when the
+ * transaction body derives its writes from its own reads inside the
+ * transaction. No sqlite code is listed: `isDatabaseTypeRowLockable` refuses
+ * that driver a transaction here at all, so it takes none of these locks.
+ */
+export function isTransientLockDatabaseError(input: unknown): boolean {
+    const code = getDatabaseDriverErrorCode(input);
+    return typeof code === 'string' && TRANSIENT_LOCK_ERROR_CODES.includes(code);
+}

@@ -23,9 +23,11 @@ import {
     type Client,
     ClientAuthMethod,
     ClientTokenBindingMethod,
+    type Path,
     type Policy,
     type Realm,
 } from '@authup/core-kit';
+import { PathEntity } from '../path/index.ts';
 import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
@@ -194,6 +196,21 @@ export class ClientEntity implements Client {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
+
+    @Index()
+    @Column({
+        name: 'path_id',
+        type: 'uuid',
+        nullable: true,
+    })
+    pathId: Path['id'] | null;
+
+    @ManyToOne(() => PathEntity, {
+        onDelete: 'SET NULL',
+        nullable: true,
+    })
+    @JoinColumn({ name: 'path_id' })
+    path: Path | null;
 
     // ------------------------------------------------------------------
 

@@ -53,18 +53,18 @@
     "@authup/client-web-kit-theme": "^1.0.0-beta.66"
   },
   "devDependencies": {
-    "@vuecs/button": "^1.4.1",
-    "@vuecs/core": "^3.5.0",
-    "@vuecs/design": "^1.2.0",
-    "@vuecs/navigation": "^4.5.0",
-    "@vuecs/table": "^1.6.1",
-    "@vuecs/theme-tailwind": "^6.4.2",
+    "@vuecs/button": "^1.4.2",
+    "@vuecs/core": "^3.6.0",
+    "@vuecs/design": "^1.2.1",
+    "@vuecs/navigation": "^4.5.1",
+    "@vuecs/table": "^1.6.2",
+    "@vuecs/theme-tailwind": "^6.5.0",
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
-    "@vuecs/core": "^3.5.0",
-    "@vuecs/design": "^1.2.0",
-    "@vuecs/theme-tailwind": "^6.4.2",
+    "@vuecs/core": "^3.6.0",
+    "@vuecs/design": "^1.2.1",
+    "@vuecs/theme-tailwind": "^6.5.0",
     "tailwindcss": "^4.3.2"
   },
   "publishConfig": {

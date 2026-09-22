@@ -16,11 +16,12 @@ import {
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import { 
-    TranslatorTranslationClientKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationFieldKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { 
     assignFormProperties, 
@@ -36,6 +37,7 @@ import {
     ClientTokenBindingMethod,
     ClientValidator,
     EntityType,
+    type Path,
     type Policy,
     buildClientCertificateURI,
     getClientSecretMode,
@@ -49,6 +51,7 @@ import {
     generateName,
     generateSecret,
 } from '@authup/kit';
+import { APathPicker } from '../path';
 import { ARealmPicker } from '../realm';
 import APolicyPicker from '../policy/APolicyPicker.vue';
 import AClientSecretRotate from './AClientSecretRotate.vue';
@@ -68,6 +71,7 @@ export default defineComponent({
         AClientSecretRotate,
         AFormSubmit,
         ANameInput,
+        APathPicker,
         APolicyPicker,
         ASecretInput,
         ARealmPicker,
@@ -110,6 +114,7 @@ export default defineComponent({
             secretHashed: false,
             grantTypes: null as string | null,
             accessPolicyId: null as string | null,
+            pathId: null as string | null,
         });
 
         const manager = defineEntityManager({
@@ -310,6 +315,17 @@ export default defineComponent({
                     namespace: TranslatorTranslationNamespace.FIELD,
                     key: TranslatorTranslationFieldKey.ACCESS_POLICY,
                 },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.PATH,
+                },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.PATH_HINT },
             ],
         );
 
@@ -347,6 +363,20 @@ export default defineComponent({
 
         const policyQuery = computed(() => defineQuery<Policy>({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
 
+        // The realm the folder picker scopes to, '' while a create form has
+        // none yet. That empty value is what hides the picker: there are no
+        // global folders, so an unscoped query would ask for `realmId = ''`
+        // against a uuid column.
+        const resolvedRealmId = computed<string>(() => props.realmId ||
+            (manager.data.value ? manager.data.value.realmId : '') ||
+            form.realmId ||
+            '');
+
+        // A folder is realm bound, so the picker lists the tree of that realm.
+        // Unlike the realm picker it renders on edit too: a client is movable
+        // between folders.
+        const pathQuery = computed(() => defineQuery<Path>({ filters: { realmId: [resolvedRealmId.value] } }));
+
         const authMethodOptions = computed<FormOption[]>(() => [
             { value: ClientAuthMethod.NONE, label: translationsClient.authMethodNone },
             { value: ClientAuthMethod.SECRET, label: translationsClient.authMethodSecret },
@@ -361,6 +391,7 @@ export default defineComponent({
             ''));
 
         return {
+            translationsApp,
             translationsDefault,
             translationsClient,
             v,
@@ -381,7 +412,9 @@ export default defineComponent({
             grantTypeSelection,
             grantTypeOptions,
             setGrantTypes,
+            pathQuery,
             policyQuery,
+            resolvedRealmId,
             submit,
         };
     },
@@ -683,6 +716,30 @@ export default defineComponent({
                     />
                     <template #hint>
                         {{ translationsClient.descriptionHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
+            <!-- folders are realm bound, so the picker waits for a realm -->
+            <IFieldValidation
+                v-if="resolvedRealmId"
+                v-slot="{ value }"
+                :field="v.fields.pathId"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.path }}
+                    </template>
+                    <template #default>
+                        <APathPicker
+                            :value="v.fields.pathId.$model.value ?? ''"
+                            :query="pathQuery"
+                            @change="(input: string[]) => {
+                                v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
+                            }"
+                        />
+                    </template>
+                    <template #hint>
+                        {{ translationsApp.pathHint }}
                     </template>
                 </VCFormGroup>
             </IFieldValidation>

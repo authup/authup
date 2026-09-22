@@ -17,6 +17,7 @@ export * from './hydration';
 export * from './query';
 export * from './busy';
 export * from './oauth2';
+export * from './path';
 export * from './permission-check';
 export * from './socket-manager';
 export * from './store';

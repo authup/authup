@@ -63,6 +63,11 @@ export enum PermissionName {
     KEY_UPDATE = 'key_update',
     KEY_READ = 'key_read',
 
+    PATH_CREATE = 'path_create',
+    PATH_DELETE = 'path_delete',
+    PATH_UPDATE = 'path_update',
+    PATH_READ = 'path_read',
+
     PERMISSION_CREATE = 'permission_create',
     PERMISSION_DELETE = 'permission_delete',
     PERMISSION_UPDATE = 'permission_update',

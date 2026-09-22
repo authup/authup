@@ -20,9 +20,11 @@ import type { QueryDecodeContext } from './types.ts';
  * are managed under the permission domain.
  *
  * Absent entries are ungated: `realm` (the realm list is public — the
- * login realm chooser reads it anonymously) and `identityProvider`
+ * login realm chooser reads it anonymously), `identityProvider`
  * (the anonymous login page lists providers; its schema field
- * allow-list is the safe-DTO layer).
+ * allow-list is the safe-DTO layer) and `path` (a folder row carries
+ * organizational metadata only and no authorization semantics, so a
+ * reader of a user or client may see where it is filed).
  */
 const RELATION_TARGET_READ_GATES : Partial<Record<`${EntityType}`, PermissionName[]>> = {
     [EntityType.CLIENT]: [

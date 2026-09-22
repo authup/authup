@@ -98,6 +98,8 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
                 createdAt: '2026-01-01T00:00:00.000Z',
                 updatedAt: '2026-01-01T00:00:00.000Z',
             },
+            pathId: null,
+            path: null,
         };
 
         const session = await suite.sessionManager.create({ sub: user.id, subKind: IdentityType.USER });

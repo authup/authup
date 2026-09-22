@@ -73,6 +73,8 @@ describe('OAuth2AuthorizationCodeIssuer', () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             },
+            pathId: null,
+            path: null,
         },
     });
 

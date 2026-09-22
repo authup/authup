@@ -46,6 +46,8 @@ function createEntity() : Client {
         accessPolicy: null,
         createdAt: now,
         updatedAt: now,
+        pathId: null,
+        path: null,
         realmId: 'realm-1',
         realm: {
             id: 'realm-1',

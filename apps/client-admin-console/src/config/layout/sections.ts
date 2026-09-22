@@ -23,6 +23,7 @@ export enum LayoutSection {
     KEYS = 'keys',
     TRUST_ANCHORS = 'trust-anchors',
     USERS = 'users',
+    PATHS = 'paths',
     ROLES = 'roles',
     POLICIES = 'policies',
     PERMISSIONS = 'permissions',
@@ -126,6 +127,16 @@ export const LayoutSections : Record<`${LayoutSection}`, LayoutSectionDescriptor
         i18n: {
             namespace: TranslatorTranslationNamespace.ENTITY,
             key: TranslatorTranslationEntityKey.USER,
+            count: 2,
+        },
+    },
+    [LayoutSection.PATHS]: {
+        name: 'Paths',
+        url: '/paths',
+        icon: 'fa6-solid:folder-tree',
+        i18n: {
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.PATH,
             count: 2,
         },
     },

@@ -11,6 +11,7 @@ import { mount } from '@vue/test-utils';
 import type { Component } from 'vue';
 import vuecs from '@vuecs/core';
 import installOverlays from '@vuecs/overlays';
+import installTree from '@vuecs/tree';
 import { createPinia } from 'pinia';
 import { ALoginForm } from '../../src/components/workflows/login';
 import { install } from '../../src/module';
@@ -72,6 +73,9 @@ export function mountKitComponent(
                 // app-level Toast/AlertDialog managers (what the consumer
                 // apps get from their own installOverlays call)
                 installOverlays,
+                // `VCTree` is generic, so a component rendering it resolves
+                // it globally rather than through `components: {}`.
+                installTree,
                 [{ install }, options],
             ],
         },

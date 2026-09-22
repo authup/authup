@@ -162,6 +162,28 @@ export const routes : RouteRecordRaw[] = [
     },
 
     {
+        path: '/paths',
+        component: () => import('./pages/paths/index.vue'),
+        meta: auth(crud('path')),
+        children: [
+            { path: '', component: () => import('./pages/paths/index/index.vue') },
+            {
+                path: 'add',
+                component: () => import('./pages/paths/index/add.vue'),
+                meta: auth([PermissionName.PATH_CREATE]),
+            },
+        ],
+    },
+    {
+        path: '/paths/:id',
+        component: () => import('./pages/paths/[id].vue'),
+        meta: auth([PermissionName.PATH_UPDATE]),
+        children: [
+            { path: '', component: () => import('./pages/paths/[id]/index.vue') },
+        ],
+    },
+
+    {
         path: '/permissions',
         component: () => import('./pages/permissions/index.vue'),
         meta: auth(crud('permission')),

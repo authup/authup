@@ -34,6 +34,7 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.POLICY_DESCRIPTION]: 'Reglas que deciden cuándo se aplica un permiso.',
     [TranslatorTranslationAppKey.EVENT_DESCRIPTION]: 'Registro de auditoría inalterable de la actividad de seguridad.',
     [TranslatorTranslationAppKey.SESSION_DESCRIPTION]: 'Inicios de sesión activos, con los dispositivos y tokens asociados.',
+    [TranslatorTranslationAppKey.PATH_DESCRIPTION]: 'Carpetas que organizan usuarios y clientes dentro de un dominio.',
     [TranslatorTranslationAppKey.SET_MANAGEMENT_REALM]: 'Establecer como realm de gestión',
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentación de la API',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Hecho con',
@@ -106,6 +107,14 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'La cuenta no pudo ser conectada.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: '¿Destruir la clave de cifrado?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Esta clave todavía es referenciada por {{count}} secreto(s) cifrado(s). Eliminarla los hará permanentemente irrecuperables.',
+
+    [TranslatorTranslationAppKey.PATH_HINT]: 'Solo organizativo. Una ruta no afecta permisos, roles ni el inicio de sesión.',
+    [TranslatorTranslationAppKey.PATH_SCOPE]: 'Ruta',
+    [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'Todas las rutas',
+    [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'Esta carpeta contiene demasiadas subcarpetas para acotar la lista, por lo que se muestran todas las filas.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'Este dominio contiene demasiadas carpetas para mostrarlas todas, por lo que el árbol está incompleto.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'Esto elimina {{paths}} subcarpetas y desarchiva {{users}} usuarios y {{clients}} clientes. No se elimina ningún usuario ni cliente. Esta acción no se puede deshacer.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'Las subcarpetas de esta carpeta se eliminan y todos los usuarios y clientes archivados en ellas quedan sin carpeta. No se pudieron leer los recuentos. Esta acción no se puede deshacer.',
 
     [TranslatorTranslationAppKey.BACK_TO_APP]: 'Volver a {{host}}',
 };

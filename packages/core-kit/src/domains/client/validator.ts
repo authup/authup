@@ -274,6 +274,14 @@ export class ClientValidator extends Container<Client> {
             createValidator(z.uuid().nullable()),
         );
 
+        // Unlike realmId below, a folder is not fixed at creation: a client
+        // moves between folders, so every group may write it.
+        this.mount(
+            'pathId',
+            { optional: true },
+            createValidator(z.uuid().nullable()),
+        );
+
         // ----------------------------------------------
 
         // A client keeps the realm it was created in. UPDATE deliberately has

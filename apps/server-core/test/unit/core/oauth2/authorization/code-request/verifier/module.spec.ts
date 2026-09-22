@@ -58,6 +58,8 @@ class FakeClientRepository implements IOAuth2ClientRepository {
                 createdAt: now,
                 updatedAt: now,
             },
+            pathId: null,
+            path: null,
             ...client,
         };
         this.clients.push(entity);

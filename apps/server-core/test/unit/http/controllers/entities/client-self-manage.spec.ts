@@ -8,6 +8,7 @@
 import type { Client as ClientEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
+import { ErrorCode } from '@authup/errors';
 import {
     afterAll,
     beforeAll,
@@ -16,7 +17,7 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient } from '../../../../utils';
+import { createFakeClient, expectClientError } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('http/controllers/client (self-manage)', () => {
@@ -98,6 +99,29 @@ describe('http/controllers/client (self-manage)', () => {
         await expect(
             selfClient.client.update(entity.id, { accessPolicyId: policy.id }),
         ).rejects.toThrow();
+    });
+
+    it('should reject self-update of path_id (rejected by ATTRIBUTE_NAMES policy)', async () => {
+        // a real folder in the client's own realm, so the rejection can only
+        // come from the self-manage denylist: neither the join-column check
+        // nor the realm assert has anything to complain about
+        const { data: path } = await suite.client.path.create({
+            name: 'self-manage-client',
+            realmId: entity.realmId,
+        });
+
+        await expectClientError(
+            () => selfClient.client.update(entity.id, { pathId: path.id }),
+            {
+                // the denylist refusal is the policy evaluation failing, not
+                // an input error: a bare rejects.toThrow() would pass on a 500
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
+
+        const { data: current } = await suite.client.client.getOne(entity.id);
+        expect(current.pathId).toBeNull();
     });
 
     it('should silently strip self-update of built_in flag (not in validator schema)', async () => {

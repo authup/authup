@@ -13,6 +13,7 @@ import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AUserForm from '../../../../../src/components/entities/user/AUserForm.vue';
+import { APathPicker } from '../../../../../src/components/entities/path';
 import { AFormSubmit } from '../../../../../src/components/utility';
 import { install } from '../../../../../src/module';
 import type { Options } from '../../../../../src/types';
@@ -43,6 +44,8 @@ function createEntity() : User {
         activateHash: null,
         createdAt: now,
         updatedAt: now,
+        pathId: null,
+        path: null,
         realmId: 'realm-1',
         realm: {
             id: 'realm-1',
@@ -56,10 +59,18 @@ function createEntity() : User {
     };
 }
 
-function mountForm(entity: User, canManage: boolean) {
+function mountForm(entity: User | undefined, canManage: boolean) {
     const pinia = createPinia();
     const httpClient = createFakeClient({
         handlers: {
+            'GET /paths': () => ({
+                data: [],
+                meta: {
+                    total: 0,
+                    limit: 10,
+                    offset: 0,
+                },
+            }),
             'POST /users/:id': (request: FakeRequest) => ({
                 data: {
                     ...entity,
@@ -126,6 +137,13 @@ function findUpdateRequest(httpClient: FakeClient) : FakeRequest | undefined {
     );
 }
 
+function findPathRequests(httpClient: FakeClient) : FakeRequest[] {
+    return httpClient.requests.filter(
+        (request) => request.method === 'GET' &&
+            new URL(request.url, 'http://localhost').pathname === '/paths',
+    );
+}
+
 async function submit(entity: User, canManage: boolean) {
     const { wrapper, httpClient } = mountForm(entity, canManage);
     await flushPromises();
@@ -151,6 +169,9 @@ describe('AUserForm admin-only fields', () => {
         expect(body).not.toHaveProperty('active');
         expect(body).not.toHaveProperty('nameLocked');
         expect(body).not.toHaveProperty('emailVerified');
+        // the folder is admin owned as well, and the key has to be ABSENT
+        // rather than null for the same denies-on-presence reason
+        expect(body).not.toHaveProperty('pathId');
 
         // the self-editable fields still ride along
         expect(body).toMatchObject({
@@ -166,5 +187,34 @@ describe('AUserForm admin-only fields', () => {
         expect(body).toHaveProperty('active', true);
         expect(body).toHaveProperty('nameLocked', false);
         expect(body).toHaveProperty('emailVerified', true);
+        expect(body).toHaveProperty('pathId', null);
+    });
+});
+
+// There are no global folders, so a picker with no realm resolved would ask
+// for `realmId = ''` against a uuid column. An add form before the realm
+// picker was used is exactly that state, and it renders no folder picker.
+describe('AUserForm folder picker', () => {
+    it('renders it for the realm of the user it edits', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity(), true);
+        await flushPromises();
+
+        expect(wrapper.findComponent(APathPicker).exists()).toBe(true);
+
+        const requests = findPathRequests(httpClient);
+        expect(requests.length).toBeGreaterThan(0);
+        expect(decodeURIComponent(requests[0]!.url)).toContain('in(realmId,\'realm-1\')');
+
+        wrapper.unmount();
+    });
+
+    it('does not render or load it before a realm is known', async () => {
+        const { wrapper, httpClient } = mountForm(undefined, true);
+        await flushPromises();
+
+        expect(wrapper.findComponent(APathPicker).exists()).toBe(false);
+        expect(findPathRequests(httpClient)).toHaveLength(0);
+
+        wrapper.unmount();
     });
 });

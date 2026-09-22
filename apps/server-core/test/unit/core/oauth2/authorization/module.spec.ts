@@ -89,6 +89,8 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             },
+            pathId: null,
+            path: null,
         },
     };
 
@@ -508,6 +510,8 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
                 createdAt: now,
                 updatedAt: now,
             },
+            pathId: null,
+            path: null,
             ...data,
         };
     };

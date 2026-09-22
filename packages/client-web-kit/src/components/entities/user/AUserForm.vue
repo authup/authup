@@ -5,16 +5,22 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { User } from '@authup/core-kit';
-import { 
-    EntityType, 
-    UserValidator, 
-    buildUserFakeEmail, 
-    isUserFakeEmail, 
+import type { Path, User } from '@authup/core-kit';
+import {
+    EntityType,
+    UserValidator,
+    buildUserFakeEmail,
+    isUserFakeEmail,
 } from '@authup/core-kit';
 import { ValidatorGroup, generateName, omitRecord } from '@authup/kit';
-import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { defineQuery } from '@rapiq/core';
+import { assignFormProperties, useTranslations, useTranslationsForNamespace } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
@@ -34,6 +40,7 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
+import { APathPicker } from '../path';
 import { ARealms } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
@@ -42,10 +49,11 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 // keys, so every `v.fields.<key>` degrades to `FieldState<any> | undefined`
 // (tada5hi/validup#455). Pinning the composable to an index-signature-free
 // projection restores typed field access.
-type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName' | 'email' | 'emailVerified' | 'realmId'>;
+type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName' | 'email' | 'emailVerified' | 'pathId' | 'realmId'>;
 
 export default defineComponent({
     components: {
+        APathPicker,
         ARealms,
         AFormSubmit,
         ANameInput,
@@ -81,6 +89,7 @@ export default defineComponent({
             displayName: '',
             email: '',
             emailVerified: false,
+            pathId: null,
             realmId: '',
         });
 
@@ -111,6 +120,20 @@ export default defineComponent({
         const showRealmPicker = computed(() => props.canManage &&
             !isRealmLocked.value &&
             !isEditing.value);
+
+        // The realm the folder picker scopes to, '' while a create form has
+        // none yet. That empty value is what hides the picker: there are no
+        // global folders, so an unscoped query would ask for `realmId = ''`
+        // against a uuid column.
+        const resolvedRealmId = computed<string>(() => props.realmId ||
+            (manager.data.value ? manager.data.value.realmId : '') ||
+            form.realmId ||
+            '');
+
+        // A folder is realm bound, so the picker lists the tree of that realm.
+        // Unlike the realm picker it renders on edit too: a user is movable
+        // between folders.
+        const pathQuery = computed(() => defineQuery<Path>({ filters: { realmId: [resolvedRealmId.value] } }));
 
         function initForm() {
             if (
@@ -163,7 +186,12 @@ export default defineComponent({
                 await manager.createOrUpdate(
                     props.canManage ?
                         form :
-                        omitRecord({ ...form }, ['active', 'nameLocked', 'emailVerified']),
+                        omitRecord({ ...form }, [
+                            'active',
+                            'nameLocked',
+                            'emailVerified',
+                            'pathId',
+                        ]),
                 );
             } finally {
                 busy.value = false;
@@ -218,9 +246,20 @@ export default defineComponent({
                     key: TranslatorTranslationFieldKey.NAME, 
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DESCRIPTION,
                 },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.PATH,
+                },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.PATH_HINT },
             ],
         );
 
@@ -229,7 +268,10 @@ export default defineComponent({
             form,
             v,
             isEditing,
+            pathQuery,
+            resolvedRealmId,
             showRealmPicker,
+            translationsApp,
             translationsDefault,
             onNameChange,
             submit,
@@ -291,6 +333,32 @@ export default defineComponent({
                 </IFieldValidation>
 
                 <template v-if="$props.canManage">
+                    <!-- folders are realm bound, so the picker waits for a realm -->
+                    <template v-if="resolvedRealmId">
+                        <IFieldValidation
+                            v-slot="{ value }"
+                            :field="v.fields.pathId"
+                        >
+                            <VCFormGroup :validation="value">
+                                <template #label>
+                                    {{ translationsDefault.path }}
+                                </template>
+                                <template #default>
+                                    <APathPicker
+                                        :value="v.fields.pathId.$model.value ?? ''"
+                                        :query="pathQuery"
+                                        @change="(input: string[]) => {
+                                            v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
+                                        }"
+                                    />
+                                </template>
+                                <template #hint>
+                                    {{ translationsApp.pathHint }}
+                                </template>
+                            </VCFormGroup>
+                        </IFieldValidation>
+                    </template>
+
                     <div class="flex flex-wrap -mx-2">
                         <div class="flex-1 basis-0 px-2">
                             <VCFormSwitch

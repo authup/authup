@@ -133,6 +133,15 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
             PermissionName.USER_DELETE,
         ],
     }),
+    defineSectionNavigationItem('paths', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.PATH_READ,
+            PermissionName.PATH_CREATE,
+            PermissionName.PATH_UPDATE,
+            PermissionName.PATH_DELETE,
+        ],
+    }),
     defineSectionNavigationItem('roles', {
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [

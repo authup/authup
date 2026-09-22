@@ -34,6 +34,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.POLICY_DESCRIPTION]: 'Rules that decide when a permission applies.',
     [TranslatorTranslationAppKey.EVENT_DESCRIPTION]: 'Append-only audit trail of security relevant activity.',
     [TranslatorTranslationAppKey.SESSION_DESCRIPTION]: 'Active sign-ins, with the devices and tokens behind them.',
+    [TranslatorTranslationAppKey.PATH_DESCRIPTION]: 'Folders that organize users and clients inside a realm.',
     [TranslatorTranslationAppKey.SET_MANAGEMENT_REALM]: 'Set as management realm',
     [TranslatorTranslationAppKey.API_DOCS]: 'API Docs',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Made with',
@@ -106,6 +107,14 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'The account could not be connected.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Crypto-shred encryption key?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'This key is still referenced by {{count}} encrypted secret(s). Deleting it makes them permanently unrecoverable.',
+
+    [TranslatorTranslationAppKey.PATH_HINT]: 'Purely organizational. A path affects no permission, role or login.',
+    [TranslatorTranslationAppKey.PATH_SCOPE]: 'Path',
+    [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'All paths',
+    [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'This folder holds too many subfolders to scope the list, so every row is shown.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'This realm holds too many folders to show them all, so the tree stops short.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'This deletes {{paths}} subfolders and unfiles {{users}} users and {{clients}} clients. No user and no client is deleted. This action cannot be undone.',
+    [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'The subfolders below this folder are deleted and every user and client filed under them is unfiled. The counts could not be read. This action cannot be undone.',
 
     [TranslatorTranslationAppKey.BACK_TO_APP]: 'Back to {{host}}',
 };

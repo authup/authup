@@ -14,7 +14,9 @@ import {
     it,
 } from 'vitest';
 import type { User } from '@authup/core-kit';
+import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { UserCreatePayload } from '@authup/core-http-kit';
+import { Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { createTestApplication } from '../../../../app';
 import {
@@ -184,5 +186,55 @@ describe('src/http/controllers/user', () => {
 
         await suite.client.user.delete(user.id);
         await suite.client.realm.delete(realm.id);
+    });
+
+    // Filing yourself into another folder is admin state, so `pathId` is on
+    // the `system.user-names-self-manage` denylist like `realmId`.
+    it('should reject a self-update of path_id', async () => {
+        const knownPassword = 'self-manage-password-123';
+        const { data: user } = await suite.client.user.create({
+            ...createFakeUser(),
+            password: knownPassword,
+            active: true,
+        });
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+        });
+
+        const tokenResponse = await suite.client.token.createWithPassword({
+            username: user.name,
+            password: knownPassword,
+            realm_name: REALM_MASTER_NAME,
+        });
+
+        const selfClient = new HTTPClient({ baseURL: suite.baseURL });
+        selfClient.setAuthorizationHeader({
+            type: 'Bearer',
+            token: tokenResponse.access_token,
+        });
+
+        // a real folder in the user's own realm, so the rejection can only
+        // come from the denylist: neither the join-column check nor the realm
+        // assert has anything to complain about
+        const { data: path } = await suite.client.path.create({
+            name: 'self-manage-user',
+            realmId: user.realmId,
+        });
+
+        await expectClientError(
+            () => selfClient.user.update(user.id, { pathId: path.id }),
+            {
+                // the denylist refusal is the policy evaluation failing, not
+                // an input error: a bare rejects.toThrow() would pass on a 500
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
+
+        const { data: current } = await suite.client.user.getOne(user.id);
+        expect(current.pathId).toBeNull();
     });
 });

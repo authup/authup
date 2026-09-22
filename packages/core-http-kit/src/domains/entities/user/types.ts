@@ -20,6 +20,7 @@ type UserOptionalFields = Pick<User, 'nameLocked' |
     'password' |
     'active' |
     'realmId' |
+    'pathId' |
     'status' |
     'statusMessage'>;
 

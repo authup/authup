@@ -25,6 +25,7 @@ import {
     OAuth2DeviceAuthorizationAPI,
     OAuth2TokenAPI,
     OAuth2UserInfoAPI,
+    PathAPI,
     PermissionAPI,
     PermissionPolicyAPI,
     PolicyAPI,
@@ -77,6 +78,8 @@ export class Client extends BaseClient implements IClient {
     public readonly identityProviderRoleMapping : IdentityProviderRoleMappingAPI;
 
     public readonly key : KeyAPI;
+
+    public readonly path : PathAPI;
 
     public readonly policy: PolicyAPI;
 
@@ -166,6 +169,7 @@ export class Client extends BaseClient implements IClient {
         this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({ client: this });
 
         this.key = new KeyAPI({ client: this });
+        this.path = new PathAPI({ client: this });
         this.policy = new PolicyAPI({ client: this });
         this.permission = new PermissionAPI({ client: this });
         this.permissionPolicy = new PermissionPolicyAPI({ client: this });

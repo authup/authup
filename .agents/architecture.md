@@ -1542,9 +1542,11 @@ one into every realm would fight the system MERGE on every boot).
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
-`RealmProvisioningSynchronizer` processes per realm: scopes → clients → permissions → roles → users.
+`RealmProvisioningSynchronizer` processes per realm: scopes → paths → clients → permissions → roles → users.
 Scopes run first because they are leaf entities carrying no relations of their
-own, and a client in the same realm block may bind them via `realmScopes`.
+own, and a client in the same realm block may bind them via `realmScopes`;
+paths follow for the same reason, since a client or a user in that block may
+name one under `relations.path`.
 
 ### Concurrent boots: the provisioning lock (issue #3356)
 
@@ -2960,7 +2962,7 @@ shell references and expects JavaScript back; it is not the only guard.
 | Category | Entities | `realmId: null` allowed |
 |----------|----------|--------------------------|
 | **Global** | permission, role, scope, policy | Yes — system-level building blocks reusable across realms |
-| **Realm-bound** | client, user | No — always belong to a specific realm |
+| **Realm-bound** | client, path, user | No — always belong to a specific realm |
 | **Junction** | role-permission, user-role, etc. | Inherit realm from parent entities |
 
 **Global uniqueness is enforced by an extra index, not by the `@Unique`**
@@ -3297,6 +3299,178 @@ let `GET /realms/<unknown-uuid>/users/<name>` match a cross-realm row.
 **`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
 **The realm RECORD read carries the realm's OpenID surface as `meta.endpoints`.** `GET /realms/:id` answers `RealmRecordResponse` (`EntityRecordResponse<Realm, RealmRecordMeta>` in `@authup/core-http-kit`): `data` stays the pure `Realm` row and `meta.endpoints` is `{ issuer, openidConfiguration, jwks }`, built by `buildRealmEndpoints(baseURL, realmName)` next to `resolveURL` in `apps/server-core/src/utils/url.ts`. That helper is the ONE derivation: the discovery document's `issuer` and `jwks_uri` read the same object, so the record's issuer equals the discovery issuer by construction (the token side is pinned by `oidc-conformance.spec.ts`, `id_token.iss === discovery.issuer`). The block is built in the controller's `get` only, because URL shaping from `options.baseURL` already lives there and the service stays transport-agnostic; `add` / `edit` / `put` / `drop` keep `meta: {}` and the collection keeps `meta: { ...pagination, schema }`. A consumer wanting every realm's issuer reads each record or derives it from the documented `<publicUrl>/realms/<name>` convention. `IRealmAPI` overrides only `getOne`, so the covariant return keeps the cast-free `ClientEntityAPIRegistry` proof green and nothing advertises `endpoints.*` as filterable; `Realm`, `EntityTypeMap` and `RealmSummary` are untouched. Pinned by `realm-openid.spec.ts` (the sub-path base, all three values) and `realm.spec.ts` (the record read against `config.publicUrl`, and a re-read after a rename answering the new issuer, which is the premise the admin page's re-read rests on).
+
+### Paths (folders for users and clients)
+
+`auth_paths` is a realm-bound folder tree that users and clients are filed
+under. It is Keycloak's group model without the role mappings: `parentId` (a
+nullable self-referencing FK, `ON DELETE CASCADE`, null = a root folder),
+`name` (ONE segment in the ordinary name charset, canonicalized like every
+identifier), and `path`, the SERVER-MANAGED full slash path (`sales/berlin`,
+`varchar(255)`, unique per `(realmId, path)`), which is derived from the parent
+chain and never accepted from a caller. `realmId` is NOT NULL: a folder is
+never global. There is no `@Tree` decorator and no closure table, because the
+derived column answers every question the tree is asked: descendants are a
+prefix on `path`, ancestors are that string's own prefixes, children are
+`eq('parentId', x)` and roots are `parentId IS NULL`. Because `path` is NOT
+NULL the `(realmId, parentId, name)` tuple needs no #3559 coalesce index either:
+a duplicate segment under one parent collides on the derived path. The depth is
+capped at `PATH_MAX_DEPTH` (15), the limit MySQL imposes on nested cascading
+deletes, so a delete cannot succeed on one dialect and fail on another.
+
+**The folder carries NO authorization semantics, and `@authup/access` is
+untouched by it.** A folder grants nothing, withholds nothing and is not a reach
+axis; there is no `pathScope` enum next to `realmScope`. The escape hatch for
+folder-scoped delegation is an ordinary `ATTRIBUTES` junction policy:
+`{ pathId: { $in: [...] } }` on a `USER_*` / `CLIENT_*` grant (the row carries
+its folder reference, not the folder's path), or a `$startsWith` over the
+folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
+`$regex` must never appear in such a policy: the sqlite preset declares no
+`regexp`, so it throws and 500s every list read under the test dialect. Only a
+global admin can author one, since `applyJunctionCreateGrant` nulls a requested
+`policyId` unless the actor holds an uncapped, policy-free grant, which is the
+#3158 / #3159 / #3160 fail-closed rule and means a `sales` administrator cannot
+mint a `sales/emea` one.
+
+**`pathId` on `User` and `Client` is nullable (`ON DELETE SET NULL`), and null
+means unfiled.** It is mounted for `CREATE`, `UPDATE` and `PROVISIONING`, unlike
+`realmId`, because a row is movable between folders; the service asserts the
+folder's realm equals the row's, since `validateJoinColumns` checks existence
+only, and a mismatch is a plain `ValidationError`. It joins
+`system.user-names-self-manage` and `system.client-names-self-manage`, so a
+user cannot refile itself. Both schemas carry `pathId` in `fields.default`,
+`filters.allowed` and `indexes`, and `path` in `relations.allowed` with
+`schemaMapping.path = EntityType.PATH`. It is deliberately NOT sortable:
+ordering rows by a uuid answers nothing, and the folder a row is filed under is
+read through the relation rather than through its key.
+
+**The `path` RELATION is deliberately ungated in `RELATION_TARGET_READ_GATES`,
+like `realm`; the folder COLLECTION is not.** A folder row holds organizational
+metadata alone (name, path, display name, description), so a reader who may see
+a row may see where it is filed: that is what lets the account console render a
+user its own folder through `GET /users/@me?include=path` with no `PATH_READ`,
+and the admin list render the folder column for any reader of the list, which
+is what that ungating was granted for. `GET /paths` stays gated on the `PATH_*`
+read triple, so the console's folder TREE and the subtree lookup behind it
+are what `PATH_READ` gates, never the column.
+
+**Folder lifecycle.** Rename is `POST /paths/:id { name }` and move is
+`{ parentId }`; the new parent must sit in the same realm and must be neither
+the folder itself nor one of its descendants (a prefix test on `path`). Either
+recomputes the folder's `path` and rewrites every descendant's by prefix in ONE
+transaction, whose reads take a row lock (`lockRows`, the
+`UserRepositoryAdapter` precedent): two renames at different depths of one chain
+read different rows, so the transaction's own re-read cannot see the other and
+the unique key catches nothing, since `marketing` and `sales/munich` collide on
+no constraint. Those two take the rows in OPPOSITE orders, so the server breaks
+the cycle by aborting one side, and the adapter retries a transaction it aborted
+for a transient lock conflict (`isTransientLockDatabaseError`): the aborted
+transaction wrote nothing and the callback derives every write from its own
+locked reads, so re-running it is the whole recovery. Unretried, a parent rename
+raced against its child's answered an unmapped 500 nine times in twenty-four.
+**A create takes the same lock on its resolved parent and derives the new path
+from THAT read**, never from the unlocked resolve the gates ran on: an ancestor
+rename committing in between would otherwise store a path the row's own parent
+chain contradicts, and since nothing recomputes a stored path later the row
+stays out of the subtree prefix under both names (measured at 13 desyncs in 15
+rounds). The users and clients filed there follow by id with no write at
+all. Empty folders are legal. Delete is never refused on occupancy: the
+`CASCADE` on `parentId` removes the subtree and the `SET NULL` on `pathId`
+unfiles every occupant in the same statement, and the console reads the subtree
+plus the two occupant totals and names all three in the confirmation before it
+sends the call (a count it may not read degrades to a prompt saying so).
+
+**`ensurePath(repository, realmId, 'a/b/c')` is the one primitive** ("mkdir
+-p"): it walks the segments, creates each missing folder under the previous one
+and answers the leaf. Every caller that holds a path STRING rather than an id
+goes through it: the provisioning synchronizers (the realm's `paths` list and
+the `relations.path` of a user or client alike), and
+`IdentityProviderAccountManager.saveUser`, which files a federated user under
+`sources/<provider name>` at CREATE when no attribute mapping targets the
+folder (a mapping wins). That DEFAULT is forward-only, like `name`: a later
+login never refiles an existing user, and it is never-fail, since the folder is
+decoration and a login must not die over one. A MAPPING is the opposite on both
+counts: it re-applies on every login, like every other mapped attribute, so it
+overwrites a manual refile; it supplies a folder UUID, since nothing resolves a
+path string there; and it is checked against the user's realm in `saveUser`,
+because that write never passes through `UserService.save` and a foreign folder
+would travel on every ungated `include=path` of that realm. The walk itself
+runs in the repository transaction, so every ancestor it resolves is held for
+it and none can be renamed between that read and the insert of the child under
+it, the same desync a create is locked against. Two concurrent first logins
+still race on the `(realmId, path)` unique index for a segment neither has
+created yet, and that refusal is recovered OUTSIDE the transaction rather than
+inside it: postgres aborts the whole transaction on a failed statement, so a
+re-read there would fail too. The rolled-back walk is simply re-run, and the
+second pass reads the row the winner committed.
+
+**Provisioning** gives a realm entry `paths`, declared by full `path` plus
+`displayName` / `description` and the usual `strategy` (so a parent needs no
+declaration of its own), synchronized before the realm's clients and users like
+its scopes; a user or client entry names one folder under `relations.path`,
+which the user and client synchronizers resolve through `ensurePath` as well,
+so a file may reference `sales/berlin` without declaring it under `paths` and
+the `paths` list is what gives a folder a display name or a description. A
+wildcard realm entry seeds one folder set into every realm.
+
+**Listing rows by folder is an `IN` over ids, never a relation traversal.** The
+console resolves the subtree on the paths table (`GET /paths` with the
+sibling-safe prefix form, plus the folder itself) and filters the collection
+with `inArray('pathId', ids)`, which lowers to `IN` and uses the index on every
+dialect, where `filter[path.path]` joins `auth_paths` per read to compare a
+column the row already references by key. The subtree read is PAGED to
+`meta.total`, bounded at ten pages and at 300 ids: one page is the schema's own
+`maxLimit`, so a short id list would drop rows out of a user-facing list with no
+error, while 400 ids encode to more than node's default 16 KB header budget and
+could not be sent at all. Past either bound the console scopes NOTHING and says
+so, since fail-soft on a user-facing filter is a wrong answer rather than a
+narrower one, and a failed request is no better an answer than a short list. The prefix
+filter on `auth_paths.path` itself is a scan on
+postgres and mysql, since `@rapiq/adapter-sql` lowers an anchored `startsWith`
+to a case-insensitive regex wherever the dialect has one (tada5hi/rapiq#934);
+the declaration makes that filter legal, not fast, and the folder table is small
+enough for that to be the accepted trade.
+
+**A page that narrows a collection's BASE query must reload it post flush,
+and the collection has to say whether it took the ask.** The manager reads
+its base query off its own `query` PROP on every load, and a prop is only
+updated when the parent re-renders, so a reload issued from a pre-flush
+watcher composes the query the page held BEFORE the narrowing settled and
+the list comes back unnarrowed. `load` is additionally a silent no-op while
+another load is in flight, which is the ordinary case here (the scope
+settles while the list is still fetching what it mounted with), so the
+manager exposes `busy` next to `load` and `data`: a caller waits for idle
+and then asks once, rather than asking and comparing `data` afterwards,
+which cannot tell its own load from the one already running. That wait
+carries no deadline, because any ceiling answers a folder with every row in
+the realm whenever the first load outlasts it; it ends on the two states
+that exist instead, `load` clearing `busy` in a `finally` and an unmounted
+page handing back no collection, and a newer scope supersedes an older wait
+so a stale folder can never be the query that lands. The third rule is that
+a scope still being RESOLVED contributes no filter at all, where one that
+resolved to nothing contributes the empty id list: rapiq encodes an empty
+`in` as a constant false, so publishing it while the lookup is out makes
+every load taken in that window list nothing, and the selection is known one
+tick before its ids on every folder change. All three are what make
+`?path=` reach the server at all; the folder scope hit each of them.
+
+**The control that picks the folder is a TREE, and it carries a second budget
+of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the
+`@vuecs/tree` helper that turns the realm's flat `path` list into nodes whose
+`id` is the full path, which is what lets a selection travel into `?path=`
+unchanged. Two properties are load-bearing. The pane walks the realm's folders
+to exhaustion rather than reading one page, because a folder missing from a
+tree is a folder that cannot be reached at all, where a dropdown merely offered
+fewer entries; that walk is bounded by the ten pages alone
+(`PATH_TREE_LIMIT`), never by the 300-id budget above, which belongs to the
+`IN` the pane does not build. And the ancestors of the selected folder are
+expanded by the pane itself (`buildPathTreeExpansion`), since a `?path=` link
+names a third-level folder and nothing else, so an unexpanded chain would land
+a visitor on a selection they cannot see. `VCTree` is GENERIC, so it is
+registered globally like `VCTable` rather than in a `components: {}` block, and
+`@vuecs/tree` ships the structural CSS its theme classes set variables for
+(`--vc-tree-gap`, `--vc-tree-row-inset`), which is why the kit theme imports
+`@vuecs/tree/style.css`: without it every level renders at the margin.
 
 ## Policy-Permission Model (n:m)
 

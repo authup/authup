@@ -12,11 +12,14 @@ import type {
     UserRole,
 } from '@authup/core-kit';
 import { buildUserFakeEmail } from '@authup/core-kit';
+import { AuthupError } from '@authup/errors';
 import { pickRecord } from '@authup/kit';
 import type {
     IClientRepository,
     IUserRepository,
 } from '../../../entities/index.ts';
+import { ensurePath } from '../../../entities/path/helpers.ts';
+import type { IPathRepository } from '../../../entities/path/types.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
@@ -28,6 +31,8 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
     protected userRepository: IUserRepository;
 
     protected clientRepository: IClientRepository;
+
+    protected pathRepository?: IPathRepository;
 
     protected permissionResolver: ProvisioningEntityResolver<Permission>;
 
@@ -42,6 +47,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         this.userRepository = ctx.userRepository;
         this.clientRepository = ctx.clientRepository;
+        this.pathRepository = ctx.pathRepository;
 
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.roleResolver = new ProvisioningEntityResolver(ctx.roleRepository);
@@ -74,9 +80,11 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
+
+        await this.resolvePath(input);
 
         if (attributes) {
             switch (strategy.type) {
@@ -202,5 +210,27 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             ...input,
             attributes,
         };
+    }
+
+    /**
+     * A user is filed by the FULL path of its folder, so the chain is created
+     * on demand and only the resolved id reaches the row.
+     */
+    protected async resolvePath(input: UserProvisioningEntity): Promise<void> {
+        if (!input.relations || !input.relations.path) {
+            return;
+        }
+
+        if (!this.pathRepository) {
+            throw new AuthupError('A user path relation needs the path repository, which is not wired here.');
+        }
+
+        const entity = await ensurePath(
+            this.pathRepository,
+            input.attributes.realmId as string,
+            input.relations.path,
+        );
+
+        input.attributes.pathId = entity.id;
     }
 }

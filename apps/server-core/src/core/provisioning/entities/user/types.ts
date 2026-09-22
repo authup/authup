@@ -9,6 +9,12 @@ import type { BaseProvisioningEntity } from '../types.ts';
 
 export type UserProvisioningRelations = {
     /**
+     * File the user under the folder with this full path. The folder and its
+     * missing parents are created when the path does not exist yet.
+     */
+    path?: string,
+
+    /**
      * Assign user to specific client permissions of the same realm.
      */
     clientPermissions?: Record<string, string[]>,

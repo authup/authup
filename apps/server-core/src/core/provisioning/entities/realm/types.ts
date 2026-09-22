@@ -6,6 +6,7 @@
  */
 import type { Realm } from '@authup/core-kit';
 import type { ClientProvisioningEntity } from '../client/index.ts';
+import type { PathProvisioningEntity } from '../path';
 import type { PermissionProvisioningEntity } from '../permission';
 import type { RoleProvisioningEntity } from '../role';
 import type { ScopeProvisioningEntity } from '../scope';
@@ -21,6 +22,9 @@ export type RealmProvisioningRelations = {
     roles?: RoleProvisioningEntity[],
 
     scopes?: ScopeProvisioningEntity[],
+
+    // Folders the realm's users and clients are filed under
+    paths?: PathProvisioningEntity[],
 
     // Create Permissions for Realm
     permissions?: PermissionProvisioningEntity[],

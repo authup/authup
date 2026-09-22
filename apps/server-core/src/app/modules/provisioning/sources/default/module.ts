@@ -87,6 +87,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         // FK + lifecycle
                         'active',
                         'realmId',
+                        // Where a client is filed is an organizational
+                        // decision of whoever administers the realm.
+                        'pathId',
                         // Security-critical: a self-edit must not change the
                         // client's authentication/binding method (changing the
                         // auth method may clear its secret) or downgrade the
@@ -115,6 +118,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         'status',
                         'statusMessage',
                         'realmId',
+                        // Where a user is filed is an organizational
+                        // decision of whoever administers the realm.
+                        'pathId',
                         // A self-edit must not assert its own address is
                         // verified — that is the whole point of the claim.
                         'emailVerified',
@@ -216,6 +222,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             PermissionName.KEY_CREATE,
                             PermissionName.KEY_UPDATE,
                             PermissionName.KEY_DELETE,
+                            PermissionName.PATH_CREATE,
+                            PermissionName.PATH_UPDATE,
+                            PermissionName.PATH_DELETE,
                             PermissionName.PERMISSION_CREATE,
                             PermissionName.PERMISSION_UPDATE,
                             PermissionName.PERMISSION_DELETE,

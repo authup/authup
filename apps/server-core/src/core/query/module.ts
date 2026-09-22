@@ -23,6 +23,7 @@ import { identityProviderSchema } from '../entities/identity-provider/schema.ts'
 import { identityProviderAccountSchema } from '../entities/identity-provider-account/schema.ts';
 import { identityProviderRoleMappingSchema } from '../entities/identity-provider-role-mapping/schema.ts';
 import { keySchema } from '../entities/key/schema.ts';
+import { pathSchema } from '../entities/path/schema.ts';
 import { permissionSchema } from '../entities/permission/schema.ts';
 import { permissionPolicySchema } from '../entities/permission-policy/schema.ts';
 import { policySchema } from '../entities/policy/schema.ts';
@@ -77,6 +78,7 @@ export const schemas : Schema<any>[] = [
     identityProviderAccountSchema,
     identityProviderRoleMappingSchema,
     keySchema,
+    pathSchema,
     permissionSchema,
     permissionPolicySchema,
     policySchema,

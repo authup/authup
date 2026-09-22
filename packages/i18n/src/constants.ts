@@ -251,6 +251,7 @@ export enum TranslatorTranslationAppKey {
     POLICY_DESCRIPTION = 'policyDescription',
     EVENT_DESCRIPTION = 'eventDescription',
     SESSION_DESCRIPTION = 'sessionDescription',
+    PATH_DESCRIPTION = 'pathDescription',
     SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',
@@ -324,6 +325,14 @@ export enum TranslatorTranslationAppKey {
     IDENTITY_PROVIDER_LINK_SUCCESS = 'identityProviderLinkSuccess',
     IDENTITY_PROVIDER_LINK_FAILED = 'identityProviderLinkFailed',
 
+    PATH_HINT = 'pathHint',
+    PATH_SCOPE = 'pathScope',
+    PATH_SCOPE_ALL = 'pathScopeAll',
+    PATH_SCOPE_TRUNCATED = 'pathScopeTruncated',
+    PATH_SCOPE_INCOMPLETE = 'pathScopeIncomplete',
+    PATH_DELETE_CONFIRM_DESCRIPTION = 'pathDeleteConfirmDescription',
+    PATH_DELETE_CONFIRM_UNKNOWN = 'pathDeleteConfirmUnknown',
+
     BACK_TO_APP = 'backToApp',
 }
 
@@ -367,6 +376,7 @@ export enum TranslatorTranslationEntityKey {
     IDENTITY_PROVIDER = 'identityProvider',
     IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',
     KEY = 'key',
+    PATH = 'path',
     PERMISSION = 'permission',
     POLICY = 'policy',
     REALM = 'realm',
@@ -454,6 +464,7 @@ export enum TranslatorTranslationFieldKey {
     ACCESS_POLICY = 'accessPolicy',
     ACTOR = 'actor',
     REF = 'ref',
+    PARENT = 'parent',
     PATH = 'path',
     METHOD = 'method',
     USE = 'use',

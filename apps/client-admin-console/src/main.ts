@@ -40,6 +40,7 @@ import installOverlays from '@vuecs/overlays';
 import installPagination from '@vuecs/pagination';
 import installTable from '@vuecs/table';
 import installTimeago from '@vuecs/timeago';
+import installTree from '@vuecs/tree';
 
 import './tailwind.css';
 
@@ -146,6 +147,10 @@ app.use(installIcon);
 // Registry-only install (@vuecs/navigation 4.x): each `<VCNavItems>` owns
 // its items via `:data`.
 app.use(installNavigation);
+// `VCTree` is generic, so it cannot be registered in an Options-API
+// `components: {}` block (the `VCTable` rule): the folder pane resolves it
+// globally from here.
+app.use(installTree);
 app.use(installCountdown);
 // Every authored UI locale (en is the built-in default): relative times
 // follow the language switcher like the rest of the copy.

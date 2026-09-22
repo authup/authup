@@ -37,11 +37,12 @@ import {
 } from '@authup/server-test-kit';
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakePathRepository } from '../path/fake-repository.ts';
 import { FakeClientRepository } from './fake-repository.ts';
 import { FakeEventService } from '../../helpers/fake-event-service.ts';
 import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 import { isRealmCipherBlob } from '../../../../../src/core/key/index.ts';
-import { createFakeClient } from '../../../../utils/domains/index.ts';
+import { createFakeClient, createFakePath } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/client/service', () => {
     let repository: FakeClientRepository;
@@ -656,6 +657,86 @@ describe('core/entities/client/service', () => {
             const stored = await repository.findOneWithSecret({ id: entity.id });
             expect(stored!.secret).toEqual('keep');
             expect(stored!.secretHashed).toBe(false);
+        });
+    });
+
+    // A folder is realm-bound, and validateJoinColumns proves only that the
+    // referenced row exists, so the realm is checked here.
+    describe('path (folder)', () => {
+        let pathRepository: FakePathRepository;
+
+        beforeEach(() => {
+            pathRepository = new FakePathRepository();
+            service = new ClientService({
+                repository,
+                realmRepository,
+                cipher,
+                pathRepository,
+            });
+        });
+
+        it('should file the row under a folder of its own realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: realm.id,
+                path: 'services',
+            }));
+
+            const result = await service.create({
+                ...createFakeClient(),
+                realmId: realm.id,
+                pathId: folder.id,
+            }, createAllowAllActor());
+
+            expect(result.pathId).toBe(folder.id);
+        });
+
+        it('should refuse a folder of another realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: randomUUID(),
+                path: 'services',
+            }));
+
+            await expect(
+                service.create({
+                    ...createFakeClient(),
+                    realmId: realm.id,
+                    pathId: folder.id,
+                }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should refile on update', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: realm.id,
+                path: 'services/berlin',
+            }));
+            const entity = repository.seed(createFakeClient({ realmId: realm.id }));
+
+            const result = await service.update(
+                entity.id,
+                { pathId: folder.id },
+                createAllowAllActor(),
+            );
+
+            expect(result.pathId).toBe(folder.id);
+        });
+
+        it('should refuse a folder of another realm on update', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: randomUUID(),
+                path: 'services',
+            }));
+            const entity = repository.seed(createFakeClient({ realmId: realm.id }));
+
+            await expect(
+                service.update(entity.id, { pathId: folder.id }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+            expect((await repository.findOneById(entity.id))!.pathId).toBeUndefined();
         });
     });
 

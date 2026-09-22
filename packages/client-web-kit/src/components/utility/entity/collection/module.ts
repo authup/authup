@@ -661,6 +661,11 @@ function create<
         handleUpdated: (data: RECORD) => handlers.updated(data),
         load,
         data,
+        // `load` is a silent no-op while another load is in flight, so a
+        // caller that narrows the base query has to know whether its ask
+        // was taken. Without this it can only compare `data` afterwards,
+        // which cannot tell its own load from the one already running.
+        busy,
     });
 
     let loadOnSetup = true;

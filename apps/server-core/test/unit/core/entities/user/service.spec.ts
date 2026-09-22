@@ -31,8 +31,9 @@ import {
 } from '@authup/server-test-kit';
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakePathRepository } from '../path/fake-repository.ts';
 import { FakeUserRepository } from './fake-repository.ts';
-import { createFakeUser } from '../../../../utils/domains/index.ts';
+import { createFakePath, createFakeUser } from '../../../../utils/domains/index.ts';
 
 function createSelfActor(userId: string, userName?: string, realmId?: string): FakeActorContext {
     const rId = realmId || randomUUID();
@@ -502,6 +503,86 @@ describe('core/entities/user/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
 
             expect((await repository.findOneById(entity.id))!.realmId).toBe(realm.id);
+        });
+    });
+
+    // A folder is realm-bound, and validateJoinColumns proves only that the
+    // referenced row exists, so the realm is checked here.
+    describe('path (folder)', () => {
+        let pathRepository: FakePathRepository;
+
+        beforeEach(() => {
+            pathRepository = new FakePathRepository();
+            service = new UserService({
+                repository,
+                realmRepository,
+                pathRepository,
+            });
+        });
+
+        it('should file the row under a folder of its own realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: realm.id,
+                path: 'sales',
+            }));
+
+            const result = await service.create({
+                ...createFakeUser(),
+                realmId: realm.id,
+                pathId: folder.id,
+            }, createAllowAllActor());
+
+            expect(result.pathId).toBe(folder.id);
+        });
+
+        it('should refuse a folder of another realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: randomUUID(),
+                path: 'sales',
+            }));
+
+            await expect(
+                service.create({
+                    ...createFakeUser(),
+                    realmId: realm.id,
+                    pathId: folder.id,
+                }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should refile on update', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: realm.id,
+                path: 'sales/berlin',
+            }));
+            const entity = repository.seed(createFakeUser({ realmId: realm.id }));
+
+            const result = await service.update(
+                entity.id,
+                { pathId: folder.id },
+                createAllowAllActor(),
+            );
+
+            expect(result.pathId).toBe(folder.id);
+            expect(repository.transactionCalls).toBe(1);
+        });
+
+        it('should refuse a folder of another realm on update', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const folder = pathRepository.seed(createFakePath({
+                realmId: randomUUID(),
+                path: 'sales',
+            }));
+            const entity = repository.seed(createFakeUser({ realmId: realm.id }));
+
+            await expect(
+                service.update(entity.id, { pathId: folder.id }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+            expect((await repository.findOneById(entity.id))!.pathId).toBeUndefined();
         });
     });
 

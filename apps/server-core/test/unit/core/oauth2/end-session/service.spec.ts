@@ -61,6 +61,8 @@ const client: Client = {
     updatedAt: new Date().toISOString(),
     realmId,
     realm,
+    pathId: null,
+    path: null,
 };
 
 const realmRepository = new FakeRealmRepository();

@@ -20,7 +20,7 @@ import { computed, defineComponent, ref } from 'vue';
 import { buildRecordHeading } from '../../composables/record';
 import { LayoutSection } from '../../config/layout';
 import { useRoute, useRouter } from 'vue-router';
-import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../composables/breadcrumb';
+import { buildEntityBreadcrumb, buildPathAncestors, useSectionBreadcrumb } from '../../composables/breadcrumb';
 import { useErrorToast } from '../../composables/error';
 import { useToast } from '../../composables/toast';
 
@@ -81,7 +81,7 @@ export default defineComponent({
         try {
             entity = ref(await httpClient
                 .client
-                .getOne(route.params.id as string, { fields: ['+secret'] })
+                .getOne(route.params.id as string, { fields: ['+secret'], relations: ['path'] })
                 .then((response) => response.data));
         } catch {
             await router.replace({ path: '/clients' });
@@ -124,6 +124,7 @@ export default defineComponent({
 
         const breadcrumbItems = computed(() => buildEntityBreadcrumb({
             base: breadcrumbBase.value,
+            ancestors: buildPathAncestors(entity.value?.path),
             entity: {
                 label: heading.value.label,
                 url: `/clients/${entity.value?.id}`,

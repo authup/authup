@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { ValidatorGroup, isUUID } from '@authup/kit';
+import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { eq, inArray, or } from '@rapiq/core';
 import {
@@ -16,6 +16,7 @@ import {
 import type { User } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { IPathRepository } from '../path/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
@@ -25,6 +26,12 @@ import { userSchema } from './schema.ts';
 export type UserServiceContext = {
     repository: IUserRepository;
     realmRepository: IRealmRepository;
+    /**
+     * Optional so a caller that never writes a `pathId` needs no folder
+     * repository. A supplied `pathId` without it is refused, never accepted
+     * unchecked.
+     */
+    pathRepository?: IPathRepository;
     passwordMinLength?: number;
 };
 
@@ -33,12 +40,15 @@ export class UserService extends AbstractEntityService implements IUserService {
 
     protected realmRepository: IRealmRepository;
 
+    protected pathRepository?: IPathRepository;
+
     protected validator: UserValidator;
 
     constructor(ctx: UserServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.pathRepository = ctx.pathRepository;
         this.validator = new UserValidator({ passwordMinLength: ctx.passwordMinLength });
     }
 
@@ -256,6 +266,13 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await this.repository.validateJoinColumns(validated);
 
+        // Outside the write transaction below: this read would take a second
+        // pooled connection while that one is pinned (#3526). The create
+        // branch runs it further down, after the realm defaulting.
+        if (entity && isPropertySet(validated, 'pathId') && validated.pathId) {
+            await this.assertPathRealm(validated.pathId, entity.realmId);
+        }
+
         const credentialsService = new UserCredentialsService();
 
         if (entity) {
@@ -395,6 +412,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
         }
 
+        if (isPropertySet(validated, 'pathId') && validated.pathId) {
+            await this.assertPathRealm(validated.pathId, validated.realmId ?? null);
+        }
+
         entity = this.repository.create(validated);
 
         await actor.permissionEvaluator.evaluate({
@@ -412,6 +433,30 @@ export class UserService extends AbstractEntityService implements IUserService {
             entity,
             created: true, 
         };
+    }
+
+    // validateJoinColumns proves the folder exists, not that it sits in the
+    // row's realm. A folder is realm-bound, so a cross-realm reference is
+    // refused here, like a cross-realm parent on the folder itself.
+    protected async assertPathRealm(pathId: string, realmId: string | null): Promise<void> {
+        if (!this.pathRepository) {
+            throw new ValidationError('Paths are not available.');
+        }
+
+        const path = await this.pathRepository.findOneById(pathId);
+        if (!path) {
+            throw new ValidationError('The path does not exist.');
+        }
+
+        // a realm-less row can reach no folder at all, which is a different
+        // refusal from naming a foreign one (PathService.create's wording)
+        if (!realmId) {
+            throw new ValidationError('A path needs a realm.');
+        }
+
+        if (path.realmId !== realmId) {
+            throw new ValidationError('The path belongs to another realm.');
+        }
     }
 
     async delete(

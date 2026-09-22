@@ -7,6 +7,7 @@
 
 import type {
     Client,
+    Path,
     Realm,
     Role,
     UserPermission,
@@ -29,6 +30,7 @@ import {
 import {
     ClientEntity,
     IdentityProviderRepository,
+    PathEntity,
     RealmEntity,
     RoleEntity,
     UserPermissionEntity,
@@ -37,6 +39,7 @@ import {
 } from '../../../adapters/database/domains/index.ts';
 import {
     ClientRepositoryAdapter,
+    PathRepositoryAdapter,
     RoleRepositoryAdapter,
     UserRepositoryAdapter,
 } from '../database/repositories/index.ts';
@@ -133,11 +136,16 @@ export class IdentityModule implements IModule {
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
         const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(dataSource);
+        const pathRepository = new PathRepositoryAdapter({
+            repository: container.resolve<Repository<Path>>(PathEntity),
+            realmRepository,
+        });
 
         container.register(IdentityInjectionKey.ProviderAccountManager, {
             useFactory: (c) => new IdentityProviderAccountManager({
                 repository: providerAccountRepository,
                 userRepository,
+                pathRepository,
                 attributeMapper,
                 roleMapper,
                 permissionMapper,
