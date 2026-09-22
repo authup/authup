@@ -59,8 +59,12 @@ the "upstream candidates" below are improvements hub should adopt back**, tracke
 
 ## Shared gaps (neither has it yet)
 
-- Aggregation/statistics endpoints (counts over time, per-action) — both expose only
-  list+filter; Authentik-style dashboards would need new query surfaces.
+- Aggregation/statistics endpoints (counts over time, per-action): authup has
+  `GET /events/stats` and the admin landing-page dashboard since #3638 (rapiq
+  `filter[...]` plus `granularity`/`days`, per-dialect bucket expression,
+  cached per reach); hub's counterpart over the telemetry `events` table is
+  PrivateAIM/hub#1899, written against #3638 as the template. A grouping
+  parameter in rapiq itself is tada5hi/rapiq#938.
 - Notification rules over the event stream (authup: rejected in plan 062; hub: n/a).
 
 ## Migration hygiene (drift gate, 2026-08-10)
