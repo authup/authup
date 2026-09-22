@@ -8182,8 +8182,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   The bucket expression is the one per-dialect string in the repository
   (`to_char` / `DATE_FORMAT` / `strftime`, normalized back to an ISO instant),
   riding the `(realm_id, created_at)` index. Answers are cached in `ICache`
-  for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm and the
-  raw query, per actor because the WHERE is the actor's reach.
+  for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm, the
+  validated parameters and `queryCodec.encode` of the DECODED filter (so two
+  spellings of one query share an answer), per actor because the WHERE is the
+  actor's reach. The pre-gate runs BEFORE the lookup and only the compile
+  waits behind it: identity-less actors share one key, so a lookup first
+  would hand one actor's counts to another the gate refuses.
   `meta.enabled` mirrors `eventLogEnabled`, which is how the console learns
   the log is off without that fact being published on the anonymous `GET /`.
   Typed client: `client.event.getStats({ filters?, granularity?, days? })`,

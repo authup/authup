@@ -384,6 +384,34 @@ describe('EventStatsService', () => {
         expect(repository.countGroupedCalls).toHaveLength(6);
     });
 
+    it('shares the cache between two spellings of one query', async () => {
+        seed();
+
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+
+        await service.getMany({ days: 7, granularity: 'day' }, actor);
+        await service.getMany({ granularity: 'day', days: '7' }, actor);
+        expect(repository.countGroupedCalls).toHaveLength(1);
+
+        await service.getMany(wire({ filters: { name: EventName.LOGIN } }), actor);
+        await service.getMany({ filter: { name: EventName.LOGIN } }, actor);
+        expect(repository.countGroupedCalls).toHaveLength(2);
+    });
+
+    it('runs the gate before the cache lookup', async () => {
+        seed();
+
+        const permitted = makeActor({ allow: true, identity: false });
+        evaluatorOf(permitted).setCompileResult({ verdict: 'allow' });
+        await service.getMany({}, permitted);
+        expect(repository.countGroupedCalls).toHaveLength(1);
+
+        const refused = makeActor({ allow: false, identity: false });
+        await expect(service.getMany({}, refused)).rejects.toBeDefined();
+        expect(repository.countGroupedCalls).toHaveLength(1);
+    });
+
     it('reports a disabled event log', async () => {
         const actor = makeActor();
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });

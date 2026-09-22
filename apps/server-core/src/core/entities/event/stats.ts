@@ -15,7 +15,7 @@ import {
     or,
 } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
-import { appendQueryConditions, decodeQuery } from '../../query/module.ts';
+import { appendQueryConditions, decodeQuery, queryCodec } from '../../query/module.ts';
 import {
     EVENT_STATS_CACHE_TTL,
     EVENT_STATS_DAYS_DEFAULT,
@@ -74,22 +74,34 @@ export class EventStatsService implements IEventStatsService {
             parameters: ['filters'],
             actor,
         });
-        const { scoped, owner } = await this.resolveReach(parsed, actor);
 
-        const now = new Date();
-        const from = snapToBucket(new Date(now.getTime() - (days * DAY_IN_MS)), granularity);
+        // the gate runs before the cache lookup on purpose: identity-less
+        // actors share one key, so a lookup first would hand one actor's
+        // counts to another the gate refuses. Only the lowering waits.
+        const canReadAll = await this.assertReadable(actor);
 
+        // the key is the decoded query, not the wire record: two spellings of
+        // one filter, or the parameters in another order, share an answer
         const key = [
             'eventStats',
             actor.identity ? `${actor.identity.type}:${actor.identity.data.id}` : 'anonymous',
             options.realmId ?? '',
-            JSON.stringify(query),
+            granularity,
+            days,
+            queryCodec.encode(parsed) ?? '',
         ].join(':');
 
         const cached = await this.cache.get<EventStatsResult>(key);
         if (cached) {
             return cached;
         }
+
+        const { scoped, owner } = canReadAll ?
+            await this.lowerReach(parsed, actor) :
+            { scoped: parsed, owner: ownerOf(actor) };
+
+        const now = new Date();
+        const from = snapToBucket(new Date(now.getTime() - (days * DAY_IN_MS)), granularity);
 
         const data = await this.repository.countGrouped(scoped, {
             from,
@@ -115,24 +127,30 @@ export class EventStatsService implements IEventStatsService {
     }
 
     /**
-     * The list's gate, minus its per-row loop: a grouped count has no row to
-     * evaluate, so a reach that does not lower (`post`) counts the actor's own
-     * rows and nothing else, the direction that cannot over-disclose.
+     * The list's pre-gate: an actor without EVENT_READ may still count its
+     * own rows, an actor without an identity may not count at all.
      */
-    protected async resolveReach(parsed: IQuery, actor: ActorContext): Promise<{ scoped: IQuery, owner?: EventOwner }> {
-        const owner: EventOwner | undefined = actor.identity ?
-            { actorId: actor.identity.data.id, actorType: actor.identity.type } :
-            undefined;
-
+    protected async assertReadable(actor: ActorContext): Promise<boolean> {
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
+            return true;
         } catch (e) {
-            if (!owner) {
+            if (!actor.identity) {
                 throw e;
             }
 
-            return { scoped: parsed, owner };
+            return false;
         }
+    }
+
+    /**
+     * The list's compiled reach, minus its per-row loop: a grouped count has
+     * no row to evaluate, so a reach that does not lower (`post`) counts the
+     * actor's own rows and nothing else, the direction that cannot
+     * over-disclose.
+     */
+    protected async lowerReach(parsed: IQuery, actor: ActorContext): Promise<{ scoped: IQuery, owner?: EventOwner }> {
+        const owner = ownerOf(actor);
 
         const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.EVENT_READ });
         if (compiled.verdict === 'allow') {
@@ -158,6 +176,12 @@ export class EventStatsService implements IEventStatsService {
 
         return { scoped: appendQueryConditions(parsed, inArray('id', [])) };
     }
+}
+
+function ownerOf(actor: ActorContext): EventOwner | undefined {
+    return actor.identity ?
+        { actorId: actor.identity.data.id, actorType: actor.identity.type } :
+        undefined;
 }
 
 function snapToBucket(input: Date, granularity: `${EventStatsGranularity}`): string {
