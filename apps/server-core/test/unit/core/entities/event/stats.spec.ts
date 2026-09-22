@@ -21,10 +21,12 @@ import type { ActorContext } from '@authup/server-kit';
 import { MemoryCache } from '@authup/server-kit';
 import { eq } from '@rapiq/core';
 import {
+    afterEach,
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { EventStatsService } from '../../../../../src/core/entities/event/stats.ts';
@@ -95,12 +97,26 @@ describe('EventStatsService', () => {
     let cache: MemoryCache;
     let service: EventStatsService;
 
+    // the clock is frozen so the service and the expectations read one
+    // instant: an asynchronous step crossing an hour or day boundary would
+    // otherwise put them in different buckets
+    const NOW = '2026-09-22T10:30:00.000Z';
+
     beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date(NOW));
+
         repository = new FakeEventRepository();
         cache = new MemoryCache();
         service = new EventStatsService({ repository, cache });
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    // a row is always created before the read that counts it; with the clock
+    // frozen the default seed lands a minute before the window's open end
     function seed(data: Record<string, unknown> = {}) {
         return repository.seed({
             scope: EventScope.OAUTH2,
@@ -108,6 +124,7 @@ describe('EventStatsService', () => {
             actorType: IdentityType.USER,
             actorId: otherUserId,
             realmId,
+            createdAt: new Date(Date.now() - 60_000).toISOString(),
             ...data,
         });
     }
@@ -164,21 +181,25 @@ describe('EventStatsService', () => {
         expect(data.every((row) => row.count === 1)).toBe(true);
     });
 
-    it('snaps the window start onto a bucket boundary and reports the window', async () => {
+    it('spans exactly days times buckets per day, the last bucket holding now', async () => {
         const actor = makeActor();
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
 
-        const before = Date.now();
-        const { meta } = await service.getMany({ days: 7 }, actor);
+        const daily = await service.getMany({ days: 7 }, actor);
+        expect(daily.meta.from).toEqual('2026-09-16T00:00:00.000Z');
+        expect(daily.meta.to).toEqual(NOW);
+        expect(repository.countGroupedCalls[0].options.from).toEqual(daily.meta.from);
+        expect(repository.countGroupedCalls[0].options.to).toEqual(daily.meta.to);
 
-        expect(meta.from).toEqual(startOfUTCDay(new Date(before - (7 * DAY_IN_MS))));
-        expect(new Date(meta.to).getTime()).toBeGreaterThanOrEqual(before);
-        expect(repository.countGroupedCalls[0].options.from).toEqual(meta.from);
+        const hourly = await service.getMany({ days: 1, granularity: 'hour' }, actor);
+        expect(hourly.meta.from).toEqual('2026-09-21T11:00:00.000Z');
+        expect(hourly.meta.to).toEqual(NOW);
     });
 
-    it('leaves rows created before the window out', async () => {
+    it('leaves rows outside the half-open window out', async () => {
         seed();
         seed({ createdAt: new Date(Date.now() - (40 * DAY_IN_MS)).toISOString() });
+        seed({ createdAt: new Date(Date.now() + HOUR_IN_MS).toISOString() });
 
         const actor = makeActor();
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
@@ -397,6 +418,32 @@ describe('EventStatsService', () => {
         await service.getMany(wire({ filters: { name: EventName.LOGIN } }), actor);
         await service.getMany({ filter: { name: EventName.LOGIN } }, actor);
         expect(repository.countGroupedCalls).toHaveLength(2);
+    });
+
+    it('partitions the cache by the request\'s reach, not by the identity alone', async () => {
+        seed({ actorId: userId });
+        seed();
+
+        const broad = makeActor();
+        evaluatorOf(broad).setCompileResult({ verdict: 'allow' });
+        const { data: broadData } = await service.getMany({}, broad);
+        expect(broadData[0].count).toEqual(2);
+
+        // the same identity, on a request whose token withholds the permission
+        const restricted = makeActor({ allow: false });
+        const { data: restrictedData } = await service.getMany({}, restricted);
+        expect(restrictedData[0].count).toEqual(1);
+
+        // the same identity, on a request whose grants lower to a condition
+        const narrowed = makeActor();
+        evaluatorOf(narrowed).setCompileResult({
+            verdict: 'conditional',
+            condition: eq('realmId', otherRealmId),
+        });
+        const { data: narrowedData } = await service.getMany({}, narrowed);
+        expect(narrowedData[0].count).toEqual(1);
+
+        expect(repository.countGroupedCalls).toHaveLength(3);
     });
 
     it('runs the gate before the cache lookup', async () => {

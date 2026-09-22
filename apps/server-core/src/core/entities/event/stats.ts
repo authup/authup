@@ -32,6 +32,7 @@ import type {
     IEventStatsService,
 } from './types.ts';
 
+const HOUR_IN_MS = 3_600_000;
 const DAY_IN_MS = 86_400_000;
 
 export type EventStatsServiceContext = {
@@ -75,20 +76,25 @@ export class EventStatsService implements IEventStatsService {
             actor,
         });
 
-        // the gate runs before the cache lookup on purpose: identity-less
-        // actors share one key, so a lookup first would hand one actor's
-        // counts to another the gate refuses. Only the lowering waits.
-        const canReadAll = await this.assertReadable(actor);
+        // the whole gate runs before the cache lookup, and the key carries
+        // what it produced: reach is a property of the REQUEST (a token
+        // narrowed to its client, a bearer without `global`), not of the
+        // identity, so two requests by one identity can lower to different
+        // queries and one must never read the other's answer
+        const { scoped, owner } = await this.assertReadable(actor) ?
+            await this.lowerReach(parsed, actor) :
+            { scoped: parsed, owner: ownerOf(actor) };
 
-        // the key is the decoded query, not the wire record: two spellings of
-        // one filter, or the parameters in another order, share an answer
+        // the encoded query is the lowered one, not the wire record: two
+        // spellings of one filter share an answer, two reaches do not
         const key = [
             'eventStats',
             actor.identity ? `${actor.identity.type}:${actor.identity.data.id}` : 'anonymous',
             options.realmId ?? '',
             granularity,
             days,
-            queryCodec.encode(parsed) ?? '',
+            queryCodec.encode(scoped) ?? '',
+            owner ? `${owner.actorType}:${owner.actorId}` : '',
         ].join(':');
 
         const cached = await this.cache.get<EventStatsResult>(key);
@@ -96,15 +102,18 @@ export class EventStatsService implements IEventStatsService {
             return cached;
         }
 
-        const { scoped, owner } = canReadAll ?
-            await this.lowerReach(parsed, actor) :
-            { scoped: parsed, owner: ownerOf(actor) };
-
+        // one half-open window of exactly days * bucketsPerDay bucket
+        // starts, the last of them the bucket holding `to`
         const now = new Date();
-        const from = snapToBucket(new Date(now.getTime() - (days * DAY_IN_MS)), granularity);
+        const to = now.toISOString();
+        const width = granularity === EventStatsGranularity.HOUR ? HOUR_IN_MS : DAY_IN_MS;
+        const from = new Date(
+            new Date(snapToBucket(now, granularity)).getTime() - (((days * bucketsPerDay) - 1) * width),
+        ).toISOString();
 
         const data = await this.repository.countGrouped(scoped, {
             from,
+            to,
             granularity,
             ...(options.realmId ? { realmId: options.realmId } : {}),
             ...(owner ? { owner } : {}),
@@ -114,7 +123,7 @@ export class EventStatsService implements IEventStatsService {
             data,
             meta: {
                 from,
-                to: now.toISOString(),
+                to,
                 granularity,
                 days,
                 enabled: this.options.enabled !== false,

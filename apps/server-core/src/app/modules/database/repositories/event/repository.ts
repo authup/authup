@@ -200,6 +200,7 @@ export class EventRepositoryAdapter implements IEventRepository {
             .addSelect('event.name', 'name')
             .addSelect('COUNT(*)', 'count')
             .andWhere('event.createdAt >= :statsFrom', { statsFrom: toWallClock(options.from) })
+            .andWhere('event.createdAt < :statsTo', { statsTo: toWallClock(options.to) })
             .groupBy('bucket')
             .addGroupBy('event.scope')
             .addGroupBy('event.name')

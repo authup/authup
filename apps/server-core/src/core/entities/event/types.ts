@@ -59,6 +59,10 @@ export type EventCountGroupedOptions = {
      * Window start (iso, inclusive); rows created before it do not count.
      */
     from: string,
+    /**
+     * Window end (iso, exclusive); rows created at or after it do not count.
+     */
+    to: string,
     granularity: `${EventStatsGranularity}`,
     /**
      * The route realm, a mandatory constraint like findMany's.

@@ -62,9 +62,9 @@ curl -X GET 'http://localhost:3000/events/stats?filter[name]=login&days=7' \
 ### Response
 
 Only buckets holding rows are listed; a consumer fills the gaps between `from` and `to`
-with zeros. `from` is snapped onto a bucket boundary, and `enabled` says whether the
-deployment records events at all. A reader without `event_read` is answered the counts
-of its own rows.
+with zeros. The window holds exactly `days` times the buckets per day bucket starts, the
+last of them the bucket holding `to`, and `enabled` says whether the deployment records
+events at all. A reader without `event_read` is answered the counts of its own rows.
 
 ```json
 {
@@ -83,7 +83,7 @@ of its own rows.
         }
     ],
     "meta": {
-        "from": "2026-09-15T00:00:00.000Z",
+        "from": "2026-09-16T00:00:00.000Z",
         "to": "2026-09-22T10:15:00.000Z",
         "granularity": "day",
         "days": 7,

@@ -8171,9 +8171,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (the stored `'YYYY-MM-DD HH:MM:SS'` sorts below any ISO literal on the `' '`
   vs `'T'` byte, so the window's first day drops out; tada5hi/rapiq#939 is the
   adapter fix that would let `days` become `filter[createdAt]>=`). The
-  ceiling is `EVENT_STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it),
-  and `meta.from` is snapped onto a bucket boundary so a consumer zero-fills
-  between `from` and `to`. **The gate is the list's, minus its per-row loop.**
+  ceiling is `EVENT_STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it).
+  The window is HALF-OPEN and holds exactly `days` times the buckets per day
+  bucket starts: `from` is the bucket holding `now` minus that many widths
+  less one, `to` is `now`, and the statement binds both (`>= from`, `< to`),
+  so a consumer zero-fills between the two and a future-dated row never
+  lands past `to`. **The gate is the list's, minus its per-row loop.**
   No `EVENT_READ` counts own rows only; `compile(EVENT_READ)` lowers `allow` /
   `conditional` (OR'd with ownership, through the same `applyQuery` the list
   uses, which applies nothing but the WHERE for a filters-only IR) / `deny`
@@ -8183,11 +8186,14 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (`to_char` / `DATE_FORMAT` / `strftime`, normalized back to an ISO instant),
   riding the `(realm_id, created_at)` index. Answers are cached in `ICache`
   for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm, the
-  validated parameters and `queryCodec.encode` of the DECODED filter (so two
-  spellings of one query share an answer), per actor because the WHERE is the
-  actor's reach. The pre-gate runs BEFORE the lookup and only the compile
-  waits behind it: identity-less actors share one key, so a lookup first
-  would hand one actor's counts to another the gate refuses.
+  validated parameters, `queryCodec.encode` of the LOWERED query and the
+  owner constraint. The whole gate therefore runs before the lookup, and
+  what it produced is in the key: reach is a property of the REQUEST (a
+  token narrowed to its client, a bearer without `global`), not of the
+  identity, so two requests by one identity can lower to different queries
+  and a restricted one must never read the broad one's answer; two
+  spellings of one filter still share an answer, since the key is the
+  decoded IR rather than the wire record.
   `meta.enabled` mirrors `eventLogEnabled`, which is how the console learns
   the log is off without that fact being published on the anonymous `GET /`.
   Typed client: `client.event.getStats({ filters?, granularity?, days? })`,
