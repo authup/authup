@@ -5,7 +5,51 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.65)
+## Next release (after v1.0.0-beta.66)
+
+### `@authup/client-web-kit` peers on `@vuecs/tree`, and the `@vuecs/*` floors rise
+
+The folder pane beside the users and clients tables renders `@vuecs/tree`, so the
+kit declares it as a peer dependency (`^1.0.0`) and every other `@vuecs/*` peer
+moves up with it; `@vuecs/core` goes from `^3.5.0` to `^3.6.0`. An application
+embedding the kit installs the new peer and bumps the set, or the install fails
+on peer resolution.
+
+Two integration rules come with it, the ones `VCTable` already follows:
+
+- `VCTree` is **generic**, so it cannot go in an Options-API `components: {}`
+  block. Register it globally, `app.use(installTree)` in your bootstrap.
+- `@vuecs/tree` ships structural CSS that its theme classes only set variables
+  for. `@authup/client-web-kit-theme` imports `@vuecs/tree/style.css`, so a
+  consumer on that theme is covered. A consumer with its own theme imports it
+  itself, otherwise the indentation is gone and every level renders at the
+  margin.
+
+Authup's own consoles need no change.
+
+### Users and clients can be filed into per-realm folders
+
+`auth_paths` is a realm-bound folder tree, and `user` and `client` gain a
+nullable `pathId`. It is organization only: a folder grants nothing, withholds
+nothing, and is not a reach axis. Migration `1789930726252-Paths.ts` runs on
+both server dialects, applied by the next boot with migrations enabled or by
+`authup migration run`. **Existing users and clients come up unfiled**, so
+nothing moves on upgrade and no list changes shape.
+
+Two things to review:
+
+- The `PATH_*` permissions auto-provision like every other family, so `admin`
+  holds them in every realm and `realm_admin` in its own after the next start.
+  The folder collection at `/paths` is gated on them. The `path` **relation**
+  is not: a reader who may see a user or a client may see which folder it sits
+  in, which is what lets the account console show a person their own folder.
+- **A user an identity provider provisions is filed under
+  `sources/<provider name>` at first login**, unless an attribute mapping
+  targets the folder. This applies to new users only, never to one that
+  already exists, and a folder that cannot be created leaves the user unfiled
+  rather than failing the login.
+
+## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone
 
