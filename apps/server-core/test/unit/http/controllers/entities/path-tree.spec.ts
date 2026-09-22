@@ -228,4 +228,34 @@ describe('http/controllers/path (tree)', () => {
             { status: 400 },
         );
     });
+    // The cap is asserted on the moved folder AND on every rewritten
+    // descendant, before the first write (#3632).
+    it('enforces the depth cap on a move, for the folder and its descendants', async () => {
+        let parentId : string | null = null;
+        const chain : Path[] = [];
+
+        for (let i = 0; i < 15; i++) {
+            const entry = await create(`m${i}`, parentId);
+            chain.push(entry);
+            parentId = entry.id;
+        }
+
+        const mover = await create('mover');
+        const child = await create('child', mover.id);
+
+        // the folder itself would land at depth 16
+        await expectClientError(
+            () => suite.client.path.update(mover.id, { parentId: chain[14]!.id } as any),
+            { status: 400 },
+        );
+
+        // the folder fits at depth 15, its child would not
+        await expectClientError(
+            () => suite.client.path.update(mover.id, { parentId: chain[13]!.id } as any),
+            { status: 400 },
+        );
+
+        const { data: unchanged } = await suite.client.path.getOne(child.id);
+        expect(unchanged.path).toBe('mover/child');
+    });
 });

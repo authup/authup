@@ -165,6 +165,18 @@ describe('src/http/controllers/path', () => {
         );
     });
 
+    // The flat mount carries no realm, so the name resolves across realms:
+    // a name unique to this spec is what makes the answer unambiguous.
+    it('should resolve a folder by its full path on the flat mount', async () => {
+        const { data: folder } = await suite.client.path.create({
+            name: 'flat-read-3632',
+            realmId: realm.id,
+        });
+
+        const response = await suite.client.get('paths/flat-read-3632');
+        expect(response.data.data.id).toEqual(folder.id);
+    });
+
     it('should keep a sibling out of the descendant rewrite when a name carries an underscore', async () => {
         // `_` is a single-character LIKE wildcard AND a legal path character,
         // so a raw `LIKE 'sales_eu/%'` also matches `salesxeu/...`.
