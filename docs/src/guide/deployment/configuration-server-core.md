@@ -448,7 +448,9 @@ export default {
 
         /**
          * Persist security events (login, loginFailed, authorize,
-         * logout, refresh replay, ...) to the auth_events table.
+         * logout, refresh replay, ...) to the auth_events table. The
+         * admin console's dashboard counts these rows; with the log off
+         * it shows a notice instead.
          * env: EVENT_LOG_ENABLED
          * default: true
          */

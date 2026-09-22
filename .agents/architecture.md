@@ -8151,7 +8151,66 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Admin UI:** `apps/client-admin-console/src/pages/events/` — a read-only list page
+- **Dashboard statistics:** `GET /events/stats` (+ `/realms/:realmId/events/stats`,
+  declared BEFORE the record read so `stats` never reaches a uuid compare)
+  answers grouped counts per `(bucket, scope, name)` over a window: the
+  query-time half of plan 097, stage 1, with no schema change and no worker
+  (`EventStatsService`, `core/entities/event/stats.ts`, built by the HTTP
+  controller factory because the cache lives in a module the database module
+  does not depend on). The rows to count are an ordinary rapiq `filter[...]`
+  decoded through the event schema with `parameters: ['filters']` (the
+  bulk-revoke shape; the route carries `@DQuerySchema(EntityType.EVENT,
+  'filters')` and answers the filters vocabulary under `meta.schema` through
+  `FILTERS_QUERY_PARAMETERS`), so the console's realm scope is the list's own
+  `filter[realmId]=<id>,null` and "logins only" or "one client" is a filter
+  rather than a group dimension. Two parameters are NOT filters and are the
+  fallback for tada5hi/rapiq#938 (an aggregation parameter with a bucket
+  function): `granularity` (`hour` | `day`, default `day`) is a GROUP BY, and
+  `days` (default 30) is bound BY HAND as a UTC wall-clock literal the way
+  `countRecent` binds, because a `createdAt` filter compares wrong on sqlite
+  (the stored `'YYYY-MM-DD HH:MM:SS'` sorts below any ISO literal on the `' '`
+  vs `'T'` byte, so the window's first day drops out; tada5hi/rapiq#939 is the
+  adapter fix that would let `days` become `filter[createdAt]>=`). The
+  ceiling is `EVENT_STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it),
+  and `meta.from` is snapped onto a bucket boundary so a consumer zero-fills
+  between `from` and `to`. **The gate is the list's, minus its per-row loop.**
+  No `EVENT_READ` counts own rows only; `compile(EVENT_READ)` lowers `allow` /
+  `conditional` (OR'd with ownership, through the same `applyQuery` the list
+  uses, which applies nothing but the WHERE for a filters-only IR) / `deny`
+  onto the grouped builder; and `post` fails CLOSED to own rows, since a
+  grouped count has no row to evaluate and the alternative is over-disclosure.
+  The bucket expression is the one per-dialect string in the repository
+  (`to_char` / `DATE_FORMAT` / `strftime`, normalized back to an ISO instant),
+  riding the `(realm_id, created_at)` index. Answers are cached in `ICache`
+  for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm and the
+  raw query, per actor because the WHERE is the actor's reach.
+  `meta.enabled` mirrors `eventLogEnabled`, which is how the console learns
+  the log is off without that fact being published on the anonymous `GET /`.
+  Typed client: `client.event.getStats({ filters?, granularity?, days? })`,
+  answering `EventStatsResponse` (`{ data: EventStatsBucket[], meta }`, not
+  the entity envelope: a bucket is not an entity). Pinned by
+  `test/unit/core/entities/event/stats.spec.ts` (the gate matrix on the
+  fakes, the ceiling, the cache keys) and
+  `test/unit/http/controllers/entities/event-stats.spec.ts` (day and hour
+  buckets on a real database, the realm filter, both mounts, the own-rows
+  scope, a disallowed filter key, `enabled: false`); the dialect expressions
+  are what the mysql/psql runs exercise.
+- **Admin UI:** the landing page `apps/client-admin-console/src/pages/index.vue`
+  is the dashboard over that read, scoped by the header realm switcher like
+  every list page (`filters: { realmId: [<realm>, null] }`), with a 24h / 7d /
+  30d / 90d switch (`hour` for 24h, `day` otherwise), four tiles (logins,
+  failed logins, authorizations, all events), a stacked column chart of
+  `login` vs `loginFailed` per bucket
+  (`components/dashboard/EventVolumeChart.vue`, chart.js through vue-chartjs,
+  the portal precedent; the series are painted with the theme's
+  `--vc-color-primary-600` and `--vc-color-error-600`, read off the document
+  root and re-read on the colour-mode flip since a canvas cannot read css;
+  green was rejected by the palette validator for deuteranopia) and a ranked
+  `(scope, name)` list linking to `/events`. `meta.enabled === false` renders
+  a warning alert in place of the charts. The pure helpers (bucket axis,
+  zero-fill, totals, ranking) live in `components/dashboard/stats.ts` and are
+  pinned by `test/unit/dashboard-stats.spec.ts`. The Events section keeps its
+  list and detail pages: `apps/client-admin-console/src/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,

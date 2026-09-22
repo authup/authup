@@ -536,7 +536,15 @@ config, same-origin API derivation, the capability-AND-applicability rule
 behind `cookieSession`), `test/unit/guard.spec.ts` the routing guard (the
 login bounce with `redirect`, the three route-meta gates, the cookie-mode
 rules: `logout({ revoke: false })` on a failed or `RESTORING` resolve, never a
-code exchange). The server-side half is split by ownership now: the SERVING
+code exchange), `test/unit/event-stats.spec.ts` the dashboard's fetch
+composable against the fake client (the realm-plus-global filter, the hourly
+24h window, a reload on a realm change, a failed reload keeping the last
+answer, a stale answer dropped behind a newer request) and
+`test/unit/dashboard-stats.spec.ts` its pure helpers. A page over the kit
+client is tested this way, through a composable that takes the client as an
+argument and mounts in a bare component, because a full page mount needs the
+kit, pinia, vuecs and ilingo installed, which no console spec sets up. The
+server-side half is split by ownership now: the SERVING
 lives in each console service's suite (above), and the cookie login round-trip
 stays in server-core, as the `describe.each` over both consoles in
 `test/unit/http/controllers/workflows/account/console-session.spec.ts`. That

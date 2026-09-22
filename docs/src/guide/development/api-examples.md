@@ -45,6 +45,54 @@ curl -X GET 'http://localhost:3000/permissions' \
 }
 ```
 
+## GET Statistics
+
+Some collections answer grouped counts next to their rows. The security event log does
+(`GET /events/stats`), which is what the admin console's dashboard reads. The rows to
+count are selected with the same `filter[...]` vocabulary the collection read takes;
+`granularity` (`hour` or `day`, default `day`) sets the bucket width and `days`
+(default `30`) the window, counted back from now. The window times the buckets per day
+may not exceed 744 (31 days of hours).
+
+```shell
+curl -X GET 'http://localhost:3000/events/stats?filter[name]=login&days=7' \
+  -H 'Authorization: Bearer ***'
+```
+
+### Response
+
+Only buckets holding rows are listed; a consumer fills the gaps between `from` and `to`
+with zeros. `from` is snapped onto a bucket boundary, and `enabled` says whether the
+deployment records events at all. A reader without `event_read` is answered the counts
+of its own rows.
+
+```json
+{
+    "data": [
+        {
+            "bucket": "2026-09-21T00:00:00.000Z",
+            "scope": "oauth2",
+            "name": "login",
+            "count": 41
+        },
+        {
+            "bucket": "2026-09-22T00:00:00.000Z",
+            "scope": "oauth2",
+            "name": "login",
+            "count": 17
+        }
+    ],
+    "meta": {
+        "from": "2026-09-15T00:00:00.000Z",
+        "to": "2026-09-22T10:15:00.000Z",
+        "granularity": "day",
+        "days": 7,
+        "enabled": true,
+        "schema": {}
+    }
+}
+```
+
 ## GET Record
 
 To fetch details of a specific permission by its **id** or **name**:
