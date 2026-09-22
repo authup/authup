@@ -241,13 +241,18 @@ export type PathScope = {
 /**
  * The `?path=` value. An absent, empty or repeated parameter reads as no
  * scope: a folder is one value, and a page with two of them has no folder.
+ * A path is stored in canonical form (lowercase, trimmed segments), so a
+ * hand-typed `?path=Sales` is canonicalized before it is compared or sent:
+ * otherwise it misses on a case-sensitive dialect and the "folder no longer
+ * exists" notice stands over a folder that does (#3632).
  */
 export function readPathScopeQuery(value: unknown) : string | null {
-    if (typeof value !== 'string' || value.length === 0) {
+    if (typeof value !== 'string') {
         return null;
     }
 
-    return value;
+    const path = value.trim().toLowerCase();
+    return path.length > 0 ? path : null;
 }
 
 /**
