@@ -107,7 +107,7 @@ describe('http/controllers/user (self-manage)', () => {
         // a real folder in the user's own realm, so the rejection can only
         // come from the self-manage denylist
         const { data: path } = await suite.client.path.create({
-            name: 'self-manage-user',
+            name: `self-${entity.id}`,
             realmId: entity.realmId,
         });
 
