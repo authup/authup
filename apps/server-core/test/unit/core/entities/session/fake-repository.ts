@@ -65,7 +65,8 @@ export class FakeSessionRepository implements ISessionRepository {
         query: IQuery,
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
-        let data = this.sessions.values().toArray();
+        let data = this.sessions.values().toArray()
+            .filter((session) => this.matchesCondition(session, query.filters));
         if (options.owner) {
             data = data.filter((s) => this.ownedBy(s, options.owner!));
         }

@@ -9,10 +9,17 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { IIdentityProviderAccountAPI } from './types';
 
 export class IdentityProviderAccountAPI extends BaseAPI implements IIdentityProviderAccountAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('identity-provider-accounts/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityCollectionResponse<IdentityProviderAccount>> {
         const response = await this.client.get(`identity-provider-accounts${buildQueryString(data)}`);
 

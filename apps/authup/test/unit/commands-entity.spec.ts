@@ -20,7 +20,12 @@ import {
     it,
     vi,
 } from 'vitest';
-import { defineCLIEntityCommands, readEntityData, readEntityQuery } from '../../src/commands/entity/index.ts';
+import {
+    defineCLIEntityCommands,
+    readEntityData,
+    readEntityQuery,
+    readEntityStatsQuery,
+} from '../../src/commands/entity/index.ts';
 import { createHostStore, resolveHostsDirectory } from '../../src/host/store/index.ts';
 import { createHostTransport, createHostsDirectory } from '../utils/host.ts';
 import type { HostRoute } from '../utils/host.ts';
@@ -72,9 +77,10 @@ describe('entity commands', () => {
     it('derives the verbs from the dispatch', () => {
         const commands = defineCLIEntityCommands();
 
-        expect(verbsOf(commands.user!)).toEqual(['create', 'delete', 'get', 'list', 'update']);
-        expect(verbsOf(commands.session!)).toEqual(['delete', 'get', 'list']);
-        expect(verbsOf(commands['user-role']!)).toEqual(['create', 'delete', 'get', 'list']);
+        expect(verbsOf(commands.user!)).toEqual(['create', 'delete', 'get', 'list', 'schema', 'stats', 'update']);
+        expect(verbsOf(commands.session!)).toEqual(['delete', 'get', 'list', 'schema', 'stats']);
+        expect(verbsOf(commands['user-role']!)).toEqual(['create', 'delete', 'get', 'list', 'schema']);
+        expect(verbsOf(commands.event!)).toEqual(['get', 'list', 'schema', 'stats']);
     });
 
     describe('against a host', () => {
@@ -169,6 +175,53 @@ describe('entity commands', () => {
             expect(new URL(requests[0]!.url).pathname).toEqual('/users/u1');
         });
 
+        it('counts with the stats flags carried onto the @stats read and prints the body', async () => {
+            const body = { data: [{ bucket: '2026-09-22T00:00:00.000Z', count: 1 }], meta: { total: 1 } };
+            await run('user', ['stats', '--filter', 'realmId=r1', '--granularity', 'hour', '--days', '7'], { 'GET /users/@stats': () => ({ body }) });
+
+            const url = new URL(requests[0]!.url);
+            expect(requests[0]!.method).toEqual('GET');
+            expect(url.pathname).toEqual('/users/@stats');
+            expect(url.searchParams.get('granularity')).toEqual('hour');
+            expect(url.searchParams.get('days')).toEqual('7');
+            expect(createURLCodec().decode(url.search.slice(1))).toMatchObject({
+                filters: {
+                    operator: 'and',
+                    value: [
+                        {
+                            field: 'realmId',
+                            operator: 'eq',
+                            value: 'r1',
+                        },
+                    ],
+                },
+            });
+            expect(JSON.parse(output.join(''))).toEqual(body);
+        });
+
+        it('counts without flags against the bare @stats read', async () => {
+            await run('user', ['stats'], { 'GET /users/@stats': () => ({ body: { data: [], meta: { total: 0 } } }) });
+
+            const url = new URL(requests[0]!.url);
+            expect(url.pathname).toEqual('/users/@stats');
+            expect(url.search).toEqual('');
+        });
+
+        it('reads the query vocabulary', async () => {
+            const body = { data: { name: 'user' }, meta: { recordParameters: ['fields', 'relations'] } };
+            await run('user', ['schema'], { 'GET /users/@schema': () => ({ body }) });
+
+            expect(requests[0]!.method).toEqual('GET');
+            expect(new URL(requests[0]!.url).pathname).toEqual('/users/@schema');
+            expect(JSON.parse(output.join(''))).toEqual(body);
+        });
+
+        it('refuses a malformed stats flag before any request', async () => {
+            await expect(run('user', ['stats', '--granularity', 'week'], {})).rejects.toThrow(/--granularity must be one of hour, day/);
+            await expect(run('user', ['stats', '--days', 'seven'], {})).rejects.toThrow(/--days must be a non-negative integer/);
+            expect(requests).toEqual([]);
+        });
+
         it('creates, updates and deletes with the payload from --data', async () => {
             await run('user', ['create', '--data', '{"name":"alice"}'], { 'POST /users': () => ({ status: 201, body: { data: { id: 'u1' }, meta: {} } }) });
             await run('user', ['update', 'u1', '-d', '{"displayName":"Alice"}'], { 'POST /users/u1': () => ({ body: { data: { id: 'u1' }, meta: {} } }) });
@@ -224,6 +277,35 @@ describe('readEntityQuery', () => {
 
     it('refuses a condition without a key', () => {
         expect(() => readEntityQuery({ filter: '=alice' })).toThrow(/Invalid --filter condition/);
+    });
+});
+
+describe('readEntityStatsQuery', () => {
+    it('yields an empty query without flags', () => {
+        expect(readEntityStatsQuery({})).toEqual({});
+    });
+
+    it('decodes the filter like a list read and takes the window as a number', () => {
+        const query = readEntityStatsQuery({
+            filter: 'realmId=r1', 
+            granularity: 'day', 
+            days: '30', 
+        });
+
+        expect(query.granularity).toEqual('day');
+        expect(query.days).toEqual(30);
+        expect(query.filters).toMatchObject({
+            operator: 'and',
+            value: [{
+                field: 'realmId', 
+                operator: 'eq', 
+                value: 'r1', 
+            }],
+        });
+    });
+
+    it('refuses an unknown granularity', () => {
+        expect(() => readEntityStatsQuery({ granularity: 'week' })).toThrow(/--granularity must be one of hour, day/);
     });
 });
 

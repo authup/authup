@@ -7,6 +7,7 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 // Mirrors `KeyValidator` mounts in @authup/core-kit. Without material
@@ -26,7 +27,7 @@ export type KeyDeleteOptions = {
     force?: boolean,
 };
 
-export interface IKeyAPI {
+export interface IKeyAPI extends IEntitySchemaAPI, IEntityStatsAPI<Key> {
     getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>>;
 
     getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>>;

@@ -7,13 +7,14 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type SessionDeleteManyResponse = {
     count: number,
 };
 
-export interface ISessionAPI {
+export interface ISessionAPI extends IEntitySchemaAPI, IEntityStatsAPI<Session> {
     getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>>;
 
     getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordResponse<Session>>;

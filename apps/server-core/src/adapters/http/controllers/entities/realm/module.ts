@@ -31,18 +31,20 @@ import type { Repository } from 'typeorm';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     RealmCreatePayload,
     RealmRecordResponse,
-    RealmSavePayload,
-    RealmUpdatePayload,
+    RealmSavePayload, 
+    RealmUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IRealmService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IRealmService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    realmSchema,
+    describeQuerySchema, 
+    realmSchema, 
 } from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
@@ -50,6 +52,7 @@ import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 import { buildRealmEndpoints, resolveURL } from '../../../../../utils/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type RealmControllerOptions = {
     baseURL: string,
@@ -58,6 +61,7 @@ export type RealmControllerOptions = {
 };
 
 export type RealmControllerContext = {
+    statsService: IEntityStatsService,
     options: RealmControllerOptions,
     service: IRealmService,
     keyRepository: Repository<KeyEntity>,
@@ -72,10 +76,29 @@ export class RealmController {
 
     protected keyRepository: Repository<KeyEntity>;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: RealmControllerContext) {
+        this.statsService = ctx.statsService;
         this.options = ctx.options;
         this.service = ctx.service;
         this.keyRepository = ctx.keyRepository;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.REALM, 'filters')
+    @DGet('/@stats', [])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(realmSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.REALM, 'collection')

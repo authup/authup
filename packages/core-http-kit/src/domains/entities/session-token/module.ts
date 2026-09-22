@@ -9,10 +9,17 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { SessionToken } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { ISessionTokenAPI, SessionTokenDeleteManyResponse } from './types';
 
 export class SessionTokenAPI extends BaseAPI implements ISessionTokenAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('session-tokens/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<SessionToken>): Promise<EntityCollectionResponse<SessionToken>> {
         const response = await this.client.get(`session-tokens${buildQueryString(data)}`);
 

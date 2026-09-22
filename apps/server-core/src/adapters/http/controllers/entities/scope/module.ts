@@ -21,23 +21,27 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     ScopeCreatePayload,
-    ScopeSavePayload,
-    ScopeUpdatePayload,
+    ScopeSavePayload, 
+    ScopeUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Scope } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IScopeService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IScopeService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    scopeSchema,
+    describeQuerySchema, 
+    scopeSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type ScopeControllerContext = {
+    statsService: IEntityStatsService,
     service: IScopeService,
 };
 
@@ -46,8 +50,27 @@ export type ScopeControllerContext = {
 export class ScopeController {
     protected service: IScopeService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: ScopeControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.SCOPE, 'filters')
+    @DGet('/@stats', [])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(scopeSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.SCOPE, 'collection')

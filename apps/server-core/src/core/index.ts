@@ -18,3 +18,4 @@ export * from './ldap/index.ts';
 export * from './provisioning/index.ts';
 export * from './query/index.ts';
 export * from './security/index.ts';
+export * from './stats/index.ts';

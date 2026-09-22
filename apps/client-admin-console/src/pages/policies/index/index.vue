@@ -12,6 +12,7 @@ import {
     APolicies,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -21,9 +22,12 @@ import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
+import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityStatsStrip,
         ATitle,
         APagination,
         ASearch,
@@ -43,6 +47,9 @@ export default defineComponent({
         const { realmManagementId } = storeToRefs(store);
 
         const query = defineQuery<Policy>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.policy.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
@@ -91,6 +98,7 @@ export default defineComponent({
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -104,6 +112,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityStatsStrip
+                :load="loadStats"
+                :filters="query.filters"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

@@ -10,6 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IKeyAPI,
@@ -19,6 +21,18 @@ import type {
 } from './types';
 
 export class KeyAPI extends BaseAPI implements IKeyAPI {
+    async getStats(query: EntityStatsQuery<Key> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('keys', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('keys/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>> {
         const response = await this.client.get(`keys${buildQueryString(data)}`);
 

@@ -7,6 +7,7 @@
 
 import type { Session } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export type SessionDeleteManyResult = {
     count: number,
@@ -26,7 +27,7 @@ export type SessionDeleteManyOptions = {
     currentSessionId?: string,
 };
 
-export interface ISessionService {
+export interface ISessionService extends IReadScoper {
     /**
      * List sessions. An actor without `SESSION_READ` is scoped to its own
      * sessions (self-service); an actor with `SESSION_READ` sees every session

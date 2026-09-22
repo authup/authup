@@ -185,7 +185,7 @@ export type CoreConfig = {
 
     /**
      * Serve the query-schema discovery routes (GET /schemas and
-     * GET /schemas/:name), which report the queryable vocabulary of every
+     * GET /<collection>/@schema), which report the queryable vocabulary of every
      * registered entity to an authenticated caller. Disabling them answers
      * both with 404, though only once a caller has authenticated: the login
      * gate is middleware and runs before the flag is read, so an anonymous

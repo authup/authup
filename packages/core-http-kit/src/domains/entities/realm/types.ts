@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type {
     DomainEntityID,
     EntityRecordMeta,
@@ -38,7 +39,8 @@ export type RealmRecordMeta = EntityRecordMeta & {
 
 export type RealmRecordResponse = EntityRecordResponse<Realm, RealmRecordMeta>;
 
-export interface IRealmAPI extends IEntityAPI<Realm, RealmCreatePayload, RealmUpdatePayload> {
+export interface IRealmAPI extends IEntityAPI<Realm, RealmCreatePayload, RealmUpdatePayload>,
+    IEntitySchemaAPI, IEntityStatsAPI<Realm> {
     getOne(id: DomainEntityID<Realm>, record?: EntityQueryInput<Realm>) : Promise<RealmRecordResponse>;
 
     createOrUpdate(idOrName: string, data: RealmSavePayload) : Promise<EntityRecordResponse<Realm>>;

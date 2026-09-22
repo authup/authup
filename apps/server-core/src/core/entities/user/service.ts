@@ -8,7 +8,8 @@
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
-import { eq, inArray, or } from '@rapiq/core';
+import { eq } from '@rapiq/core';
+import type { IQuery } from '@rapiq/core';
 import {
     PermissionName,
     UserValidator,
@@ -20,7 +21,8 @@ import type { IPathRepository } from '../path/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import type { ReadScope } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
 
 export type UserServiceContext = {
@@ -52,42 +54,32 @@ export class UserService extends AbstractEntityService implements IUserService {
         this.validator = new UserValidator({ passwordMinLength: ctx.passwordMinLength });
     }
 
+    async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
+        return scopeReadQuery(query, actor, {
+            names: [
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+            ownership: actor.identity && actor.identity.type === 'user' ?
+                eq('id', actor.identity.data.id) :
+                null,
+        });
+    }
+
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<User>> {
-        const permissionNames = [
-            PermissionName.USER_READ,
-            PermissionName.USER_UPDATE,
-            PermissionName.USER_DELETE,
-        ];
-
-        await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
-
         const parsed = await decodeQuery(query, { schema: userSchema, actor });
 
-        // Compile the read permissions into a row condition (#3286 phase 3). The
-        // own row is always readable, so the self short-circuit composes as an
-        // OR-alternative — the whole gate runs as WHERE and pagination/totals
-        // stay exact. A non-expressible policy falls back to the per-row loop
-        // below.
-        const compiled = await actor.permissionEvaluator.compile({ name: permissionNames });
-        if (compiled.verdict !== 'post') {
-            const self = actor.identity && actor.identity.type === 'user' ?
-                eq('id', actor.identity.data.id) :
-                null;
-
-            let scoped = parsed;
-            if (compiled.verdict === 'deny') {
-                scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
-            } else if (compiled.verdict === 'conditional') {
-                scoped = appendQueryConditions(
-                    parsed,
-                    self ? or(self, compiled.condition) : compiled.condition,
-                );
-            }
-
-            return this.repository.findMany(scoped);
+        // the list's gate, shared with the user statistic (scopeRead): the own
+        // row is always readable, so the self term composes as an
+        // OR-alternative and the whole gate runs as WHERE. A non-expressible
+        // policy falls back to the per-row loop below.
+        const scope = await this.scopeRead(parsed, actor);
+        if (!scope.post) {
+            return this.repository.findMany(scope.query);
         }
 
         const {

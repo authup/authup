@@ -10,6 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreatePayload,
@@ -23,6 +25,18 @@ import type {
 } from './types';
 
 export class PolicyAPI extends BaseAPI implements IPolicyAPI {
+    async getStats(query: EntityStatsQuery<Policy> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('policies', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('policies/@schema');
+
+        return response.data;
+    }
+
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(data?: EntityQueryInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {

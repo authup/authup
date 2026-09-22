@@ -11,4 +11,5 @@ export * from './filters.ts';
 export * from './hash.ts';
 export * from './module.ts';
 export * from './relations.ts';
+export * from './scope.ts';
 export * from './types.ts';

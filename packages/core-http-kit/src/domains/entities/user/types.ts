@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { User } from '@authup/core-kit';
@@ -53,7 +54,8 @@ export type PasswordResetResponse = {
     resetAt: string,
 };
 
-export interface IUserAPI extends IEntityAPI<User, UserCreatePayload, UserUpdatePayload> {
+export interface IUserAPI extends IEntityAPI<User, UserCreatePayload, UserUpdatePayload>,
+    IEntitySchemaAPI, IEntityStatsAPI<User> {
     createOrUpdate(idOrName: string, data: UserSavePayload) : Promise<EntityRecordResponse<User>>;
     activate(token: string) : Promise<ActivateResponse>;
     register(data: RegisterPayload) : Promise<RegisterResponse>;

@@ -15,6 +15,7 @@ import {
     APagination,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -22,9 +23,12 @@ import {
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent } from 'vue';
+import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityStatsStrip,
         ATitle,
         APagination,
         ASearch,
@@ -45,6 +49,9 @@ export default defineComponent({
         const { realmManagementId } = storeToRefs(store);
 
         const query = defineQuery<IdentityProvider>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.identityProvider.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
@@ -109,6 +116,7 @@ export default defineComponent({
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -122,6 +130,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityStatsStrip
+                :load="loadStats"
+                :filters="query.filters"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

@@ -21,17 +21,19 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     UserCreatePayload,
-    UserSavePayload,
-    UserUpdatePayload,
+    UserSavePayload, 
+    UserUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { User } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IUserService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IUserService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    userSchema,
+    describeQuerySchema, 
+    userSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -41,8 +43,10 @@ import {
     getRequestRealmID,
 } from '../../../request/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type UserControllerContext = {
+    statsService: IEntityStatsService,
     service: IUserService,
 };
 
@@ -51,8 +55,27 @@ export type UserControllerContext = {
 export class UserController {
     protected service: IUserService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: UserControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.USER, 'filters')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(userSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.USER, 'collection')

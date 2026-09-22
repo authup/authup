@@ -174,7 +174,8 @@ against a release:
 - **`meta.schema`** on every query-capable `GET`. The response that carries the
   rows also carries what could have been asked of them.
 - **`GET /schemas`** returns every entity's description in one call, and
-  **`GET /schemas/:name`** one of them. Both are authenticated. `meta.hash`
+  **`GET /<collection>/@schema`** (`/users/@schema`) one of them. Both are
+  authenticated. `meta.hash`
   fingerprints the whole surface, so a client that cached the descriptions
   compares one value instead of diffing them, and `meta.recordParameters` names
   the subset a single-record read accepts. An operator may switch these routes

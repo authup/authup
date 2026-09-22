@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { inArray } from '@rapiq/core';
+import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -19,7 +19,8 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleRepository, IRoleService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import type { ReadScope } from '../../query/index.ts';
 import { roleSchema } from './schema.ts';
 
 export type RoleServiceContext = {
@@ -47,29 +48,23 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         this.validator = new RoleValidator();
     }
 
+    async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+    }
+
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Role>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
+        const parsed = await decodeQuery(query, { schema: roleSchema, actor });
 
-        let parsed = await decodeQuery(query, { schema: roleSchema, actor });
+        // the list's gate, shared with the entity's statistic (scopeRead):
+        // a reach that lowers runs as WHERE, so pagination and totals stay
+        // exact; a non-expressible policy falls back to the per-row loop below
+        const scope = await this.scopeRead(parsed, actor);
+        const { data: entities, meta } = await this.repository.findMany(scope.query);
 
-        // Compile the read permissions against the knowns (actor identity) into a
-        // row condition (issue #3286 phase 3): the authorization runs as WHERE, so
-        // pagination and totals stay exact. Non-expressible policies fall back to
-        // the per-row post-evaluation below.
-        const compiled = await actor.permissionEvaluator.compile({ name: PERMISSION_NAMES });
-        if (compiled.verdict === 'deny') {
-            // no row can pass — a constant-false condition keeps the meta shape
-            parsed = appendQueryConditions(parsed, inArray('id', []));
-        } else if (compiled.verdict === 'conditional') {
-            parsed = appendQueryConditions(parsed, compiled.condition);
-        }
-
-        const { data: entities, meta } = await this.repository.findMany(parsed);
-
-        if (compiled.verdict !== 'post') {
+        if (!scope.post) {
             return { data: entities, meta };
         }
 

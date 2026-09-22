@@ -31,6 +31,7 @@ function answer(days: number, granularity: 'hour' | 'day', count: number): Event
             to: '2026-09-22T10:00:00.000Z',
             granularity,
             days,
+            total: count,
             enabled: true,
             schema: {} as EventStatsResponse['meta']['schema'],
         },
@@ -45,7 +46,7 @@ function mountStats(handler: Handler) {
 
     const client = createFakeClient({
         handlers: {
-            'GET /events/stats': (request: { url: string }) => {
+            'GET /events/@stats': (request: { url: string }) => {
                 const url = decodeURIComponent(request.url);
                 requests.push(url);
 

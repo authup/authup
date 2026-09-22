@@ -12,9 +12,12 @@ import {
     expect,
     it,
 } from 'vitest';
+import { SCHEMA_COLLECTIONS } from '../../../../../src/adapters/http/controllers/workflows/schema/constants.ts';
 import { computeSchemaRegistryHash, describeQuerySchemas } from '../../../../../src/core/index.ts';
 import { createTestApplication } from '../../../../app';
 import { expectClientError, httpRequest } from '../../../../utils';
+
+const adminAuthorization = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
 
 describe('src/http/controllers/workflows/schema/*.ts', () => {
     const suite = createTestApplication();
@@ -49,40 +52,64 @@ describe('src/http/controllers/workflows/schema/*.ts', () => {
     });
 
     it('should serve the same description a collection response carries', async () => {
-        const discovered = await suite.client.schema.getOne(EntityType.ROLE);
+        const response = await httpRequest(suite, 'GET', '/roles/@schema', { headers: { Authorization: adminAuthorization } });
+        const discovered = await response.json();
         const collection = await suite.client.role.getMany();
 
+        expect(response.status).toEqual(200);
         expect(discovered.data).toEqual(collection.meta.schema);
         expect(discovered.meta.hash).toEqual(computeSchemaRegistryHash());
     });
 
+    it('should serve every mapped collection its own schema', async () => {
+        for (const [collection, name] of Object.entries(SCHEMA_COLLECTIONS)) {
+            const response = await httpRequest(suite, 'GET', `/${collection}/@schema`, { headers: { Authorization: adminAuthorization } });
+
+            expect(response.status, collection).toEqual(200);
+            expect((await response.json()).data.name, collection).toEqual(name);
+        }
+    });
+
+    it('should map every registered schema but the owner-scoped user authenticator', () => {
+        const mapped = Object.values(SCHEMA_COLLECTIONS).sort();
+        const registered = describeQuerySchemas()
+            .map((entry) => entry.name)
+            .filter((name) => name !== EntityType.USER_AUTHENTICATOR)
+            .sort();
+
+        expect(mapped).toEqual(registered);
+    });
+
+    it('should no longer serve a schema by registry name', async () => {
+        const response = await httpRequest(suite, 'GET', `/schemas/${EntityType.ROLE}`, { headers: { Authorization: adminAuthorization } });
+
+        expect(response.status).toEqual(404);
+    });
+
     it('should mark the response private and revalidated', async () => {
-        const response = await httpRequest(suite, 'GET', '/schemas', { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` } });
+        const response = await httpRequest(suite, 'GET', '/schemas', { headers: { Authorization: adminAuthorization } });
 
         expect(response.status).toEqual(200);
         expect(response.headers.get('cache-control')).toEqual('private, no-cache');
     });
 
-    it('should not serve an unknown schema name', async () => {
-        await expectClientError(
-            () => suite.client.schema.getOne('foo'),
-            { status: 404 },
-        );
+    it('should not serve an unknown collection', async () => {
+        const response = await httpRequest(suite, 'GET', '/foo/@schema', { headers: { Authorization: adminAuthorization } });
+
+        expect(response.status).toEqual(404);
     });
 
     // The record the lookup walks is a plain object literal, so an inherited
     // member must not answer as if it were a registered schema.
     it('should not serve an inherited property name', async () => {
-        await expectClientError(
-            () => suite.client.schema.getOne('constructor'),
-            { status: 404 },
-        );
+        const response = await httpRequest(suite, 'GET', '/constructor/@schema', { headers: { Authorization: adminAuthorization } });
+
+        expect(response.status).toEqual(404);
     });
 
     it('should refuse an anonymous caller', async () => {
-        const response = await httpRequest(suite, 'GET', '/schemas');
-
-        expect(response.status).toEqual(401);
+        expect((await httpRequest(suite, 'GET', '/schemas')).status).toEqual(401);
+        expect((await httpRequest(suite, 'GET', '/roles/@schema')).status).toEqual(401);
     });
 });
 
@@ -109,10 +136,9 @@ describe('src/http/controllers/workflows/schema/*.ts (discovery disabled)', () =
     });
 
     it('should not serve a single schema', async () => {
-        await expectClientError(
-            () => suite.client.schema.getOne(EntityType.ROLE),
-            { status: 404 },
-        );
+        const response = await httpRequest(suite, 'GET', '/roles/@schema', { headers: { Authorization: adminAuthorization } });
+
+        expect(response.status).toEqual(404);
     });
 
     // The 404 above is what an AUTHENTICATED caller sees. The login gate is

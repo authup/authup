@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPI } from '../../types-base';
 
 import type { RolePermission } from '@authup/core-kit';
@@ -14,4 +15,5 @@ export type RolePermissionCreatePayload = Pick<RolePermission, 'roleId' | 'permi
     Partial<Pick<RolePermission, 'policyId' | 'realmScope'>>;
 export type RolePermissionUpdatePayload = Partial<RolePermissionCreatePayload>;
 
-export interface IRolePermissionAPI extends IEntityAPI<RolePermission, RolePermissionCreatePayload, RolePermissionUpdatePayload> {}
+export interface IRolePermissionAPI extends IEntityAPI<RolePermission, RolePermissionCreatePayload, RolePermissionUpdatePayload>,
+    IEntitySchemaAPI {}

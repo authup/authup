@@ -21,10 +21,7 @@ export type SchemaResponseMeta = {
      */
     hash: string,
     /**
-     * The parameter subset a single-record read decodes. The record shape is
-     * advertised here rather than through a second endpoint, because it is
-     * one list shared by every entity — a per-schema record description
-     * would repeat it 26 times.
+     * The parameter subset a single-record read decodes.
      */
     recordParameters: `${Parameter}`[],
 };
@@ -45,19 +42,6 @@ export type SchemaCollectionResponse = {
     meta: SchemaResponseMeta & { total: number },
 };
 
-export type SchemaRecordResponse = {
-    data: SchemaDescription,
-    meta: SchemaResponseMeta,
-};
-
 export interface ISchemaAPI {
     getMany() : Promise<SchemaCollectionResponse>;
-
-    /**
-     * The name is typed as a plain string rather than as an `EntityType`,
-     * because the registry is documented as extensible: a persistence layer
-     * may add storage-derived schemas whose names are not entity types. An
-     * unregistered name answers 404.
-     */
-    getOne(name: string) : Promise<SchemaRecordResponse>;
 }

@@ -9,6 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientPermissionCreatePayload,
@@ -17,6 +18,12 @@ import type {
 } from './types';
 
 export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('client-permissions/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<ClientPermission>) : Promise<EntityCollectionResponse<ClientPermission>> {
         const response = await this.client.get(`client-permissions${buildQueryString(data)}`);
         return response.data;

@@ -19,13 +19,14 @@ import {
 } from '../../host/index.ts';
 import type { HostCommandContext } from '../../host/index.ts';
 import { readEntityData } from './data.ts';
-import { readEntityQuery } from './query.ts';
+import { readEntityQuery, readEntityStatsQuery } from './query.ts';
 import type { EntityName } from './types.ts';
 
 // `Record<string, any>` alone leaves `DomainEntityID<T>` unresolved to
 // `never`, because it carries no property TypeScript can pick `id` off of;
 // the intersected `id: string` gives it one.
-type EntityAPI = EntityAPIDispatch<{ id: string } & Record<string, any>>;
+type EntityRecord = { id: string } & Record<string, any>;
+type EntityAPI = EntityAPIDispatch<EntityRecord>;
 
 const QUERY_ARGS = {
     filter: {
@@ -68,6 +69,18 @@ const DATA_ARGS = {
         alias: 'd',
         required: true,
         description: 'A JSON object, @<path> to read one from a file, or @- to read it from stdin.',
+    },
+} satisfies ArgsDef;
+
+const STATS_ARGS = {
+    filter: QUERY_ARGS.filter,
+    granularity: {
+        type: 'string',
+        description: 'The bucket width: hour or day.',
+    },
+    days: {
+        type: 'string',
+        description: 'The window, in whole days back from now.',
     },
 } satisfies ArgsDef;
 
@@ -173,6 +186,37 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
                 }
 
                 writeJSON(await api.delete(args.id));
+            }),
+        });
+    }
+
+    if (probe.getStats) {
+        subCommands.stats = defineCommand({
+            meta: { name: 'stats', description: `Count ${noun} records per time bucket.` },
+            args: { ...HOST_ARGS, ...STATS_ARGS },
+            run: ({ args }) => runHostCommand(async () => {
+                const query = readEntityStatsQuery<EntityRecord>(args);
+                const api = await open(args.server);
+                if (!api.getStats) {
+                    throw unsupported(noun, 'stats');
+                }
+
+                writeJSON(await api.getStats(query));
+            }),
+        });
+    }
+
+    if (probe.getSchema) {
+        subCommands.schema = defineCommand({
+            meta: { name: 'schema', description: `Print the ${noun} query vocabulary.` },
+            args: { ...HOST_ARGS },
+            run: ({ args }) => runHostCommand(async () => {
+                const api = await open(args.server);
+                if (!api.getSchema) {
+                    throw unsupported(noun, 'schema');
+                }
+
+                writeJSON(await api.getSchema());
             }),
         });
     }

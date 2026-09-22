@@ -268,6 +268,18 @@ export enum TranslatorTranslationAppKey {
     DASHBOARD_EVENTS_LINK = 'dashboardEventsLink',
     DASHBOARD_EMPTY = 'dashboardEmpty',
     DASHBOARD_EVENT_LOG_DISABLED = 'dashboardEventLogDisabled',
+    DASHBOARD_IDENTITIES = 'dashboardIdentities',
+    DASHBOARD_CONFIGURATION = 'dashboardConfiguration',
+    SESSIONS_ACTIVE = 'sessionsActive',
+    /**
+     * The growth a statistics read reports next to a total: the rows created
+     * inside its window. `STATS_STRIP_SUMMARY` is the spoken form of the
+     * list strip, since its bars carry no text of their own.
+     */
+    STATS_NEW = 'statsNew',
+    STATS_NEW_IN_DAYS = 'statsNewInDays',
+    STATS_NEW_IN_HOURS = 'statsNewInHours',
+    STATS_STRIP_SUMMARY = 'statsStripSummary',
     SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',

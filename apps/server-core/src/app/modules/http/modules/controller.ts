@@ -12,6 +12,8 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    EventName,
+    EventScope,
     Path,
     Permission,
     PermissionPolicy,
@@ -21,27 +23,33 @@ import type {
     RolePermission,
     Scope,
     UserAttribute,
-    UserAuthenticator as UserAuthenticatorModel,
-    UserPermission,
-    UserRole,
+    UserAuthenticator as UserAuthenticatorModel, 
+    UserPermission, 
+    UserRole, 
 } from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+import type { EntityTarget, ObjectLiteral, Repository } from 'typeorm';
+import { EntityType } from '@authup/core-kit';
 import {
     ClientEntity,
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
+    EventEntity,
+    IdentityProviderEntity,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
     PathEntity,
     PermissionEntity,
     PermissionPolicyEntity,
+    PolicyEntity,
     PolicyRepository,
     RealmEntity,
     RoleAttributeEntity,
     RoleEntity,
     RolePermissionEntity,
     ScopeEntity,
+    SessionEntity,
+    TrustAnchorEntity,
     UserAttributeEntity,
     UserAuthenticatorEntity,
     UserEntity,
@@ -55,6 +63,7 @@ import {
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
     DatabaseInjectionKey,
+    EntityStatsRepositoryAdapter,
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
     PathRepositoryAdapter,
@@ -133,7 +142,8 @@ import {
     ClientService,
     ConsentService,
     CredentialsAuthenticator,
-    EventStatsService,
+    type EntityStatsDefinition,
+    EntityStatsService,
     IdentityProviderAccountService,
     IdentityProviderRoleMappingService,
     KeyProvisioner,
@@ -170,6 +180,19 @@ import {
     UserPermissionService,
     UserRoleService,
     UserService,
+    clientSchema,
+    eventSchema,
+    identityProviderSchema,
+    keySchema,
+    pathSchema,
+    permissionSchema,
+    policySchema,
+    realmSchema,
+    roleSchema,
+    scopeSchema,
+    sessionSchema,
+    trustAnchorSchema,
+    userSchema,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -183,6 +206,8 @@ import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 import { MetricsInjectionKey } from '../../metrics/index.ts';
 import { resolveURL } from '../../../../utils/index.ts';
+
+type EventStatsGroups = { scope: `${EventScope}`, name: `${EventName}` };
 
 export class HTTPControllerModule {
     async mount(router: IApp, container: IContainer): Promise<void> {
@@ -663,6 +688,10 @@ export class HTTPControllerModule {
 
             eventService,
             logger,
+            statsService: this.createStatsService(container, IdentityProviderEntity, {
+                type: EntityType.IDENTITY_PROVIDER,
+                schema: identityProviderSchema,
+            }),
         });
     }
 
@@ -687,6 +716,11 @@ export class HTTPControllerModule {
         return new ClientController({
             service,
             repository,
+            statsService: this.createStatsService(container, ClientEntity, {
+                type: EntityType.CLIENT,
+                schema: clientSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
         });
     }
 
@@ -749,6 +783,11 @@ export class HTTPControllerModule {
         return new PermissionController({
             service,
             checkerService,
+            statsService: this.createStatsService(container, PermissionEntity, {
+                type: EntityType.PERMISSION,
+                schema: permissionSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
         });
     }
 
@@ -764,7 +803,14 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
-        return new RoleController({ service });
+        return new RoleController({
+            service,
+            statsService: this.createStatsService(container, RoleEntity, {
+                type: EntityType.ROLE,
+                schema: roleSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createClientPermissionController(container: IContainer) {
@@ -844,7 +890,14 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
-        return new ScopeController({ service });
+        return new ScopeController({
+            service,
+            statsService: this.createStatsService(container, ScopeEntity, {
+                type: EntityType.SCOPE,
+                schema: scopeSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createPathController(container: IContainer) {
@@ -859,7 +912,14 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
-        return new PathController({ service });
+        return new PathController({
+            service,
+            statsService: this.createStatsService(container, PathEntity, {
+                type: EntityType.PATH,
+                schema: pathSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createKeyController(container: IContainer) {
@@ -870,7 +930,14 @@ export class HTTPControllerModule {
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
-        return new KeyController({ service });
+        return new KeyController({
+            service,
+            statsService: this.createStatsService(container, KeyEntity, {
+                type: EntityType.KEY,
+                schema: keySchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createTrustAnchorController(container: IContainer) {
@@ -882,7 +949,14 @@ export class HTTPControllerModule {
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
-        return new TrustAnchorController({ service });
+        return new TrustAnchorController({
+            service,
+            statsService: this.createStatsService(container, TrustAnchorEntity, {
+                type: EntityType.TRUST_ANCHOR,
+                schema: trustAnchorSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createSessionTokenController(container: IContainer) {
@@ -910,6 +984,11 @@ export class HTTPControllerModule {
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             sessionRepository: repository,
             logger: container.resolve(LoggerInjectionKey),
+            statsService: this.createStatsService(container, SessionEntity, {
+                type: EntityType.SESSION,
+                schema: sessionSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
         });
     }
 
@@ -1054,16 +1133,44 @@ export class HTTPControllerModule {
         });
     }
 
+    /**
+     * A `GET /<entity>/@stats` statistic over the entity's own table, cached
+     * like every statistic and gated by the definition's `scope`.
+     */
+    protected createStatsService<
+        G extends Record<string, any> = Record<string, unknown>,
+        M extends Record<string, any> = Record<string, unknown>,
+    >(
+        container: IContainer,
+        target: EntityTarget<ObjectLiteral>,
+        definition: Omit<EntityStatsDefinition, 'repository'>,
+    ): EntityStatsService<G, M> {
+        return new EntityStatsService<G, M>({
+            definition: {
+                ...definition,
+                repository: new EntityStatsRepositoryAdapter(
+                    container.resolve(DatabaseInjectionKey.DataSource),
+                    target,
+                    definition.type,
+                ),
+            },
+            cache: container.resolve(CacheInjectionKey),
+        });
+    }
+
     createEventController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const service = container.resolve(DatabaseInjectionKey.EventService);
-        const statsService = new EventStatsService({
-            repository: container.resolve(DatabaseInjectionKey.EventRepository),
-            cache: container.resolve(CacheInjectionKey),
-            options: { enabled: config.eventLogEnabled },
+        return new EventController({
+            service,
+            statsService: this.createStatsService<EventStatsGroups, { enabled: boolean }>(container, EventEntity, {
+                type: EntityType.EVENT,
+                schema: eventSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+                groupBy: ['scope', 'name'],
+                meta: () => ({ enabled: config.eventLogEnabled !== false }),
+            }),
         });
-
-        return new EventController({ service, statsService });
     }
 
     createUserService(container: IContainer) {
@@ -1087,7 +1194,16 @@ export class HTTPControllerModule {
     }
 
     createUserController(container: IContainer) {
-        return new UserController({ service: this.createUserService(container) });
+        const service = this.createUserService(container);
+
+        return new UserController({
+            service,
+            statsService: this.createStatsService(container, UserEntity, {
+                type: EntityType.USER,
+                schema: userSchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
+        });
     }
 
     createUserInfoController(container: IContainer) {
@@ -1159,6 +1275,11 @@ export class HTTPControllerModule {
         return new PolicyController({
             service,
             checkerService,
+            statsService: this.createStatsService(container, PolicyEntity, {
+                type: EntityType.POLICY,
+                schema: policySchema,
+                scope: (query, actor) => service.scopeRead(query, actor),
+            }),
         });
     }
 
@@ -1229,6 +1350,11 @@ export class HTTPControllerModule {
             },
             service,
             keyRepository,
+            statsService: this.createStatsService(container, RealmEntity, {
+                type: EntityType.REALM,
+                schema: realmSchema,
+                realmColumn: null,
+            }),
         });
     }
 }

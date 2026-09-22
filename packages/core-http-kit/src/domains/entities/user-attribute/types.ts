@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPI } from '../../types-base';
 
 import type { UserAttribute } from '@authup/core-kit';
@@ -16,4 +17,5 @@ export type UserAttributeCreatePayload = Pick<UserAttribute, 'name'> &
 export type UserAttributeUpdatePayload = Partial<UserAttributeCreatePayload>;
 export type UserAttributeSavePayload = UserAttributeCreatePayload;
 
-export interface IUserAttributeAPI extends IEntityAPI<UserAttribute, UserAttributeCreatePayload, UserAttributeUpdatePayload> {}
+export interface IUserAttributeAPI extends IEntityAPI<UserAttribute, UserAttributeCreatePayload, UserAttributeUpdatePayload>,
+    IEntitySchemaAPI {}

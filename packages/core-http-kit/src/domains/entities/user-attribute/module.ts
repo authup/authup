@@ -10,6 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAttributeAPI,
@@ -18,6 +19,12 @@ import type {
 } from './types';
 
 export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('user-attributes/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes${buildQueryString(data)}`);
 

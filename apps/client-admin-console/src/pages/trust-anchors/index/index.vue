@@ -5,6 +5,7 @@ import {
     ASearch,
     ATitle,
     ATrustAnchors,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -25,10 +26,13 @@ import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
+import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 // VCTable deliberately stays globally registered; see structure.md → Table usage.
 export default defineComponent({
     components: {
+        EntityStatsStrip,
         AEntityDelete,
         APagination,
         ASearch,
@@ -43,6 +47,9 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
         const query = defineQuery<TrustAnchor>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.trustAnchor.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.KEY_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.KEY_DELETE });
@@ -105,6 +112,7 @@ export default defineComponent({
             handleFailed: (e: Error) => emit('failed', e),
             hasDropPermission,
             hasEditPermission,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -119,6 +127,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityStatsStrip
+                :load="loadStats"
+                :filters="query.filters"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

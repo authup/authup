@@ -7,6 +7,7 @@
 
 import type { Key } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IKeyRepository extends IEntityRepository<Key> {
     checkUniqueness(data: Partial<Key>, existing?: Key): Promise<void>;
@@ -44,7 +45,7 @@ export type KeyDeleteOptions = {
     force?: boolean,
 };
 
-export interface IKeyService {
+export interface IKeyService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext, options?: KeyServiceReadOptions): Promise<EntityRepositoryFindManyResult<Key>>;
     getOne(idOrName: string, actor: ActorContext, realmId?: string): Promise<Key>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Key>;

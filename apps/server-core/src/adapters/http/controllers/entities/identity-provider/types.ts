@@ -7,13 +7,14 @@
 
 import type { Logger } from '@authup/server-kit';
 import type {
+    IEntityStatsService,
     IEventService,
     IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2AuthorizationStateManager,
-    IOAuth2FederatedLoginService,
+    IOAuth2AuthorizationStateManager, 
+    IOAuth2FederatedLoginService, 
 } from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {
@@ -27,6 +28,7 @@ export type IdentityProviderControllerOptions = {
 };
 
 export type IdentityProviderControllerContext = {
+    statsService: IEntityStatsService,
     options: IdentityProviderControllerOptions,
 
     repository: IIdentityProviderRepository,

@@ -6,7 +6,7 @@
  */
 
 import type { EventName, EventScope } from '@authup/core-kit';
-import type { EventStatsBucket, EventStatsMeta } from '@authup/core-http-kit';
+import type { EntityStatsBucket, EventStatsBucket, EventStatsMeta } from '@authup/core-http-kit';
 
 const HOUR_IN_MS = 3_600_000;
 const DAY_IN_MS = 86_400_000;
@@ -34,21 +34,35 @@ export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'gran
 }
 
 /**
- * One event type's counts aligned onto the axis, zero where it has no row.
+ * Every row's counts aligned onto the axis, zero where the window has no
+ * row: the whole of what a group-less entity read answers, and one group's
+ * share of a grouped one once the caller narrowed the rows.
  */
-export function alignEventStats(data: EventStatsBucket[], axis: string[], name: `${EventName}`): number[] {
+export function alignStats(data: Pick<EntityStatsBucket, 'bucket' | 'count'>[], axis: string[]): number[] {
     const byBucket = new Map<string, number>();
     for (const row of data) {
-        if (row.name === name) {
-            byBucket.set(row.bucket, (byBucket.get(row.bucket) ?? 0) + row.count);
-        }
+        byBucket.set(row.bucket, (byBucket.get(row.bucket) ?? 0) + row.count);
     }
 
     return axis.map((bucket) => byBucket.get(bucket) ?? 0);
 }
 
+/**
+ * The rows created inside the window, whatever they are grouped by.
+ */
+export function sumStats(data: Pick<EntityStatsBucket, 'count'>[]): number {
+    return data.reduce((sum, row) => sum + row.count, 0);
+}
+
+/**
+ * One event type's counts aligned onto the axis, zero where it has no row.
+ */
+export function alignEventStats(data: EventStatsBucket[], axis: string[], name: `${EventName}`): number[] {
+    return alignStats(data.filter((row) => row.name === name), axis);
+}
+
 export function sumEventStats(data: EventStatsBucket[], name?: `${EventName}`): number {
-    return data.reduce((sum, row) => (name && row.name !== name ? sum : sum + row.count), 0);
+    return sumStats(name ? data.filter((row) => row.name === name) : data);
 }
 
 /**

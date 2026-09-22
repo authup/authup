@@ -21,23 +21,27 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     RoleCreatePayload,
-    RoleSavePayload,
-    RoleUpdatePayload,
+    RoleSavePayload, 
+    RoleUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Role } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IRoleService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IRoleService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    roleSchema,
+    describeQuerySchema, 
+    roleSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type RoleControllerContext = {
+    statsService: IEntityStatsService,
     service: IRoleService,
 };
 
@@ -46,8 +50,27 @@ export type RoleControllerContext = {
 export class RoleController {
     protected service: IRoleService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: RoleControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.ROLE, 'filters')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(roleSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.ROLE, 'collection')

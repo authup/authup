@@ -61,15 +61,17 @@ import { OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
-    IdentityProviderSavePayload,
-    IdentityProviderUpdatePayload,
+    IdentityProviderSavePayload, 
+    IdentityProviderUpdatePayload, 
 } from '@authup/core-http-kit';
 import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { URL } from 'node:url';
 import type {
+    IEntityStatsService,
     IEventService,
     IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
@@ -78,10 +80,11 @@ import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2FederatedLoginService,
     IdentityProviderIdentity,
-    OAuth2AuthorizationState,
-    OAuth2AuthorizationStateLink,
+    OAuth2AuthorizationState, 
+    OAuth2AuthorizationStateLink, 
 } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     OAUTH2_FEDERATED_LOGIN_COOKIE,
     OAUTH2_FEDERATED_LOGIN_TTL,
     OAuth2AuthorizationCodeRequestValidator,
@@ -90,8 +93,8 @@ import {
     decodeQuery,
     describeQuerySchema,
     formatDeviceUserCode,
-    identityProviderSchema,
-    normalizeDeviceUserCode,
+    identityProviderSchema, 
+    normalizeDeviceUserCode, 
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -108,6 +111,7 @@ import {
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
+import { serveEntityStats } from '../stats.ts';
 
 @DTags('identity')
 @DController(['/identity-providers', '/realms/:realmId/identity-providers'])
@@ -134,7 +138,10 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: IdentityProviderControllerContext) {
+        this.statsService = ctx.statsService;
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.accountManager = ctx.accountManager;
@@ -154,6 +161,22 @@ export class IdentityProviderController {
     // does not extend with extra attributes, so the response is the schema's
     // fields.default projection. The record read below carries them and is
     // gated for exactly that reason.
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'filters')
+    @DGet('/@stats', [])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(identityProviderSchema, FILTERS_QUERY_PARAMETERS),
+        );
+    }
+
     @DQuerySchema(EntityType.IDENTITY_PROVIDER, 'collection')
     @DGet('', [])
     async getProviders(

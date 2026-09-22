@@ -9,10 +9,17 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { Consent } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { IConsentAPI } from './types';
 
 export class ConsentAPI extends BaseAPI implements IConsentAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('consents/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<Consent>): Promise<EntityCollectionResponse<Consent>> {
         const response = await this.client.get(`consents${buildQueryString(data)}`);
 

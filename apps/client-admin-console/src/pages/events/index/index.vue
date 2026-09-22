@@ -12,6 +12,7 @@ import {
     APagination,
     ASearch,
     ATitle,
+    injectHTTPClient,
     useTranslations,
 } from '@authup/client-web-kit';
 import { VCButton } from '@vuecs/button';
@@ -19,9 +20,12 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent } from 'vue';
+import EntityStatsStrip from '../../../components/stats/EntityStatsStrip.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityStatsStrip,
         ATitle,
         APagination,
         ASearch,
@@ -36,6 +40,9 @@ export default defineComponent({
         };
 
         const query = defineQuery<EventEntity>({ sorts: { createdAt: 'DESC' } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.event.getStats(input);
 
         const translations = useTranslations([
             {
@@ -107,6 +114,7 @@ export default defineComponent({
         return {
             columns,
             handleFailed,
+            loadStats,
             query,
             shortenId,
             translations,
@@ -121,6 +129,10 @@ export default defineComponent({
         @failed="handleFailed"
     >
         <template #header="props">
+            <EntityStatsStrip
+                :load="loadStats"
+                :filters="query.filters"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

@@ -7,13 +7,14 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { SessionToken } from '@authup/core-kit';
+import type { IEntitySchemaAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type SessionTokenDeleteManyResponse = {
     count: number,
 };
 
-export interface ISessionTokenAPI {
+export interface ISessionTokenAPI extends IEntitySchemaAPI {
     /**
      * List issued tokens. An actor without `SESSION_READ` sees only the tokens
      * of its own sessions.

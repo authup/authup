@@ -12,7 +12,7 @@ import {
     DPath,
     DTags,
 } from '@routup/decorators';
-import type { Event } from '@authup/core-kit';
+import type { Event, EventName, EventScope } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
@@ -21,7 +21,7 @@ import type {
     EntityRecordResponse,
     EventStatsResponse,
 } from '@authup/core-http-kit';
-import type { IEventService, IEventStatsService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IEventService } from '../../../../../core/index.ts';
 import {
     FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
@@ -31,10 +31,11 @@ import {
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type EventControllerContext = {
     service: IEventService,
-    statsService: IEventStatsService,
+    statsService: IEntityStatsService<{ scope: `${EventScope}`, name: `${EventName}` }, { enabled: boolean }>,
 };
 
 // Read-only surface — the log is append-only: writes happen internally via
@@ -44,7 +45,7 @@ export type EventControllerContext = {
 export class EventController {
     protected service: IEventService;
 
-    protected statsService: IEventStatsService;
+    protected statsService: IEntityStatsService<{ scope: `${EventScope}`, name: `${EventName}` }, { enabled: boolean }>;
 
     constructor(ctx: EventControllerContext) {
         this.service = ctx.service;
@@ -52,29 +53,19 @@ export class EventController {
     }
 
     /**
-     * Declared before the record read on purpose: `stats` is no uuid, and a
-     * uuid column compared against it is a 500 on postgres.
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
      */
     @DQuerySchema(EntityType.EVENT, 'filters')
-    @DGet('/stats', [ForceLoggedInMiddleware])
+    @DGet('/@stats', [ForceLoggedInMiddleware])
     async getStats(
         @DContext() event: IAppEvent,
     ): Promise<EventStatsResponse> {
-        const actor = buildActorContext(event);
-
-        const { data, meta } = await this.statsService.getMany(
-            useRequestQuery(event),
-            actor,
-            { realmId: getRequestRealmID(event) },
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(eventSchema, FILTERS_QUERY_PARAMETERS),
         );
-
-        return {
-            data,
-            meta: {
-                ...meta,
-                schema: describeQuerySchema(eventSchema, FILTERS_QUERY_PARAMETERS),
-            },
-        };
     }
 
     @DQuerySchema(EntityType.EVENT, 'collection')

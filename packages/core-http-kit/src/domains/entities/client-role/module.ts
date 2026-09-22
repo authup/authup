@@ -9,6 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { ClientRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientRoleCreatePayload,
@@ -16,6 +17,12 @@ import type {
 } from './types';
 
 export class ClientRoleAPI extends BaseAPI implements IClientRoleAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('client-roles/@schema');
+
+        return response.data;
+    }
+
     async getMany(data: EntityQueryInput<ClientRole> = {}): Promise<EntityCollectionResponse<ClientRole>> {
         const response = await this.client.get(`client-roles${buildQueryString(data)}`);
 

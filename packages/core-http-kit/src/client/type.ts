@@ -18,6 +18,8 @@ import type {
     IClientScopeAPI,
     IConsentAPI,
     IEntityAPI,
+    IEntitySchemaAPI,
+    IEntityStatsAPI,
     IEventAPI,
     IIdentityProviderAPI,
     IIdentityProviderAccountAPI,
@@ -170,7 +172,11 @@ export type ClientEntityAPIKey = keyof IClient & keyof EntityTypeMap;
  * verb (sessions/events are read(+delete)-only, junctions carry no
  * update, ...). Callers guard per method.
  */
-export type EntityAPIDispatch<T extends ObjectLiteral> = Partial<IEntityAPI<T, any, any>>;
+export type EntityAPIDispatch<T extends ObjectLiteral> = Partial<
+    IEntityAPI<T, any, any> &
+    IEntityStatsAPI<T, any, any> &
+    IEntitySchemaAPI
+>;
 
 export type ClientEntityAPIRegistry = {
     [K in ClientEntityAPIKey]: EntityAPIDispatch<EntityTypeMap[K]>
