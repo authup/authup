@@ -133,6 +133,7 @@ import {
     ClientService,
     ConsentService,
     CredentialsAuthenticator,
+    EventStatsService,
     IdentityProviderAccountService,
     IdentityProviderRoleMappingService,
     KeyProvisioner,
@@ -1054,8 +1055,15 @@ export class HTTPControllerModule {
     }
 
     createEventController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
         const service = container.resolve(DatabaseInjectionKey.EventService);
-        return new EventController({ service });
+        const statsService = new EventStatsService({
+            repository: container.resolve(DatabaseInjectionKey.EventRepository),
+            cache: container.resolve(CacheInjectionKey),
+            options: { enabled: config.eventLogEnabled },
+        });
+
+        return new EventController({ service, statsService });
     }
 
     createUserService(container: IContainer) {

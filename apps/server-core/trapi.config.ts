@@ -21,6 +21,7 @@ import type { Parameter, Response, SchemaDescription } from '@trapi/core';
 import { defineConfig } from '@trapi/cli';
 import { method, readString } from '@trapi/core';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
     computeSchemaRegistryHash,
     describeQuerySchema,
@@ -41,7 +42,7 @@ const ERROR_SCHEMA_NAME = 'ErrorResponse';
 const SHAPE_PARAMETERS : Record<string, `${RapiqParameter}`[] | undefined> = {
     collection: undefined,
     record: RECORD_QUERY_PARAMETERS,
-    filters: [RapiqParameter.FILTERS],
+    filters: FILTERS_QUERY_PARAMETERS,
 };
 
 const UPPER_BOUND_NOTE = 'This is the static upper bound: per-actor relation and column gates may narrow it silently on any given request.';

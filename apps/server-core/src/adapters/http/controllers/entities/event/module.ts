@@ -19,9 +19,11 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EventStatsResponse,
 } from '@authup/core-http-kit';
-import type { IEventService } from '../../../../../core/index.ts';
+import type { IEventService, IEventStatsService } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
     describeQuerySchema,
     eventSchema,
@@ -32,6 +34,7 @@ import { buildActorContext, getRequestRealmID } from '../../../request/index.ts'
 
 export type EventControllerContext = {
     service: IEventService,
+    statsService: IEventStatsService,
 };
 
 // Read-only surface — the log is append-only: writes happen internally via
@@ -41,8 +44,37 @@ export type EventControllerContext = {
 export class EventController {
     protected service: IEventService;
 
+    protected statsService: IEventStatsService;
+
     constructor(ctx: EventControllerContext) {
         this.service = ctx.service;
+        this.statsService = ctx.statsService;
+    }
+
+    /**
+     * Declared before the record read on purpose: `stats` is no uuid, and a
+     * uuid column compared against it is a 500 on postgres.
+     */
+    @DQuerySchema(EntityType.EVENT, 'filters')
+    @DGet('/stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EventStatsResponse> {
+        const actor = buildActorContext(event);
+
+        const { data, meta } = await this.statsService.getMany(
+            useRequestQuery(event),
+            actor,
+            { realmId: getRequestRealmID(event) },
+        );
+
+        return {
+            data,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(eventSchema, FILTERS_QUERY_PARAMETERS),
+            },
+        };
     }
 
     @DQuerySchema(EntityType.EVENT, 'collection')
