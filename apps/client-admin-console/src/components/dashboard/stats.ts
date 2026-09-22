@@ -55,18 +55,25 @@ export function sumEventStats(data: EventStatsBucket[], name?: `${EventName}`): 
  * The window's totals per (scope, name), largest first.
  */
 export function rankEventStats(data: EventStatsBucket[]): EventStatsRank[] {
+    // the ranks are collected in an array as they appear rather than read
+    // back out of the map: Map#values().toArray() is an Iterator Helpers
+    // method the console's browser floor (Safari 16.4) does not have
     const totals = new Map<string, EventStatsRank>();
+    const ranks : EventStatsRank[] = [];
     for (const row of data) {
         const key = `${row.scope}:${row.name}`;
-        const entry = totals.get(key) ?? {
-            scope: row.scope, 
-            name: row.name, 
-            count: 0, 
-        };
+        let entry = totals.get(key);
+        if (!entry) {
+            entry = {
+                scope: row.scope,
+                name: row.name,
+                count: 0,
+            };
+            totals.set(key, entry);
+            ranks.push(entry);
+        }
         entry.count += row.count;
-        totals.set(key, entry);
     }
 
-    return totals.values().toArray()
-        .sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
+    return ranks.sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
 }
