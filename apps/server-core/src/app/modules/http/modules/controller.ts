@@ -1095,7 +1095,10 @@ export class HTTPControllerModule {
     }
 
     createAuthorizationController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
         return new AuthorizationController({
+            options: { catalogEnabled: config.authorizationCatalogEnabled },
             catalogRepository: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
             logger: container.resolve(LoggerInjectionKey),
         });

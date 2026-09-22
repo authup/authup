@@ -3557,6 +3557,12 @@ every permission is bound to the global `system.default`, so a grant held at the
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
 read as authoritative where the refusal is what sends a caller to the batch check below.
+**`core.authorizationCatalogEnabled`** (`AUTHORIZATION_CATALOG_ENABLED`, default true,
+strict reader) switches the route off in the `querySchemaDiscoveryEnabled` shape: 404 to
+an authenticated caller, 401 to an anonymous one since `ForceLoggedIn` runs first (#3636).
+The batch check is deliberately NOT behind it: it publishes the caller's own verdicts and
+no policy configuration, and it is the consoles' only authorization source, so one switch
+would take every console's controls down with a surface they never read.
 **Who reads which route is decided by the KIND of caller, never by what its actor
 happens to hold.** A resource server reads the catalog with its OWN client credential,
 holding `PERMISSION_READ` through one `client-permission` row: the document is
@@ -3634,13 +3640,33 @@ not stale**: the server could not project its policy layer and says so on the wi
 of omitting it, so the consumer denies the permission and drops every grant of it, since a
 refetch cannot change what the server cannot project. **A tree
 the CONSUMER cannot project is the same condition read from the other side, and it is per
-tree**: the built-in policy type enum is closed while `auth_policies.type` is a free
-string, so a type newer than that copy of `@authup/access` (the documented upgrade order,
-server first, produces exactly that skew) or a configuration its validator refuses
-tombstones the definitions referencing it and drops the grants naming it, and takes no
-other permission down with it. One unknown type used to throw out of the whole build, for
-every caller, over a tree the caller may not even reference. A malformed catalog still
-throws: a duplicate permission namespace is not a data condition.
+tree**: a type the consumer's validator registry lacks (one newer than that copy of
+`@authup/access`, which the documented upgrade order, server first, produces, or a custom
+one it did not register) or a configuration its validator refuses tombstones the
+definitions referencing it and drops the grants naming it, and takes no other permission
+down with it. A malformed catalog still throws: a duplicate permission namespace is not a
+data condition. **The policy type set is open on both sides (#3635)**, since
+`auth_policies.type` is a free string and `PolicyEngine.registerEvaluator` takes any type:
+`PolicyDefaultValidators` sits next to `PolicyDefaultEvaluators`,
+`projectAuthorizationPolicy(input, validators?)` refuses what its registry does not name
+(and the withheld node whatever it names), and
+`createAuthorizationEvaluator(input, { validators?, evaluators? })` takes both registries,
+replacing the defaults rather than merging, so a caller spreads them. The binding evaluator
+is always the consumer's own. A custom type therefore needs its validator on the server
+(`AuthorizationCatalogBuilderContext.validators`, and the introspection context's, so a
+grant is dropped exactly when its tree is missing from the catalog) and both registries on
+the consumer; a validator without the evaluator projects the tree and then denies it.
+server-core registers no custom type, so its factories leave both at the default. Writing
+a non-built-in `type` through `POST /policies` is still accepted and evaluates as
+`POLICY_EVALUATOR_NOT_FOUND` wherever it is bound: rejecting it would pin the write path to
+one static registry while the engines are built per request, which is the closed set this
+change removes.
+**A `realmMatch` key is validated by what `realmScopeMatches` decides (#3636)**: a realm
+key, `null`, or a list of either. An empty key and an empty list are legal and deny on
+both sides; `undefined` is refused, because the server coerces it to `null` and a caller
+handing an absent column over should hear about it rather than reach the global rows. The
+realm-aware gate is pinned end to end against the server's own record read for an
+`ownOrNull` actor in `authorization.spec.ts`.
 **Both the identity and the grants are optional**, because server-core attaches IDENTITY
 data only when a request carries an identity: without one the consumer binds no grant and
 REMOVES any IDENTITY key the caller supplied (symmetrical with the identity branch, which
@@ -4759,10 +4785,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the eight security toggles
+**Env semantics are per entry, not per type**: the nine security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`, `authorizationCatalogEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.

@@ -197,6 +197,18 @@ export type CoreConfig = {
      */
     querySchemaDiscoveryEnabled: boolean,
 
+    /**
+     * Serve the authorization catalog (GET /authorization): every permission
+     * definition with its policy trees, as far as the caller's realm reach
+     * covers them, for a resource server to evaluate outside this process.
+     * Disabled, it answers 404 to an authenticated caller; an anonymous one is
+     * refused with 401 either way. POST /authorization/check is not affected:
+     * it discloses the caller's own verdicts only and is what the consoles
+     * gate on.
+     * default: true
+     */
+    authorizationCatalogEnabled: boolean,
+
     // ----------------------------------------------------
 
     /**

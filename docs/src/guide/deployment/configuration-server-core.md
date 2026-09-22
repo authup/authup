@@ -447,6 +447,18 @@ export default {
         passwordMinLength: 10,
 
         /**
+         * Serve the authorization catalog (GET /authorization), every
+         * permission definition with the policy trees the caller's realm
+         * reach covers, for a resource server to evaluate outside this
+         * process. Disabled, it answers 404 to an authenticated caller.
+         * POST /authorization/check, which the consoles gate on, is not
+         * affected.
+         * env: AUTHORIZATION_CATALOG_ENABLED
+         * default: true
+         */
+        authorizationCatalogEnabled: true,
+
+        /**
          * Persist security events (login, loginFailed, authorize,
          * logout, refresh replay, ...) to the auth_events table. The
          * admin console's dashboard counts these rows; with the log off
@@ -692,6 +704,7 @@ core:
   emailVerificationEnabled: false
   passwordRecoveryEnabled: false
   passwordMinLength: 10
+  authorizationCatalogEnabled: true
   eventLogEnabled: true
   eventLogRetentionDays: 90
   eventLogEntityEnabled: true
@@ -740,6 +753,7 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
+AUTHORIZATION_CATALOG_ENABLED=true
 ACCOUNT_CONSOLE_ENABLED=true
 ADMIN_CONSOLE_ENABLED=true
 EVENT_LOG_ENABLED=true
