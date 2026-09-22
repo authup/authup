@@ -188,8 +188,11 @@ describe('EventStatsService', () => {
         const daily = await service.getMany({ days: 7 }, actor);
         expect(daily.meta.from).toEqual('2026-09-16T00:00:00.000Z');
         expect(daily.meta.to).toEqual(NOW);
-        expect(repository.countGroupedCalls[0].options.from).toEqual(daily.meta.from);
-        expect(repository.countGroupedCalls[0].options.to).toEqual(daily.meta.to);
+
+        // the window rides the query as two createdAt conditions
+        const encoded = decodeURIComponent(buildQueryString(repository.countGroupedCalls[0].query));
+        expect(encoded).toContain(`gte(createdAt,'${daily.meta.from}')`);
+        expect(encoded).toContain(`lt(createdAt,'${NOW}')`);
 
         const hourly = await service.getMany({ days: 1, granularity: 'hour' }, actor);
         expect(hourly.meta.from).toEqual('2026-09-21T11:00:00.000Z');

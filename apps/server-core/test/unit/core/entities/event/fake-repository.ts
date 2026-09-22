@@ -139,14 +139,8 @@ export class FakeEventRepository implements IEventRepository {
     async countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]> {
         this.countGroupedCalls.push({ query, options });
 
-        const from = new Date(options.from).getTime();
-        const to = new Date(options.to).getTime();
         let rows = applyQuery(query, this.rows).data;
 
-        rows = rows.filter((row) => {
-            const createdAt = new Date(row.createdAt).getTime();
-            return createdAt >= from && createdAt < to;
-        });
         if (options.owner) {
             const { owner } = options;
             rows = rows.filter((row) => row.actorId === owner.actorId && row.actorType === owner.actorType);

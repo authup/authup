@@ -55,14 +55,6 @@ export type EventCountRecentFilter = {
 export type EventCountGroupedRow = EventStatsBucket;
 
 export type EventCountGroupedOptions = {
-    /**
-     * Window start (iso, inclusive); rows created before it do not count.
-     */
-    from: string,
-    /**
-     * Window end (iso, exclusive); rows created at or after it do not count.
-     */
-    to: string,
     granularity: `${EventStatsGranularity}`,
     /**
      * The route realm, a mandatory constraint like findMany's.
@@ -113,10 +105,11 @@ export interface IEventRepository {
 
     /**
      * Grouped counts per (bucket, scope, name) over the rows the query's
-     * filters reach, inside the window; the dashboard's read. The query
-     * carries the compiled reach condition and nothing else: the window and
-     * the realm are hand-bound, since a createdAt filter does not compare
-     * correctly on every dialect.
+     * filters reach; the dashboard's read. The query carries the client
+     * filter, the compiled reach and the half-open window on `createdAt`,
+     * which the adapter binds in the column's storage form since rapiq
+     * 2.3.0; only the route realm and the owner are hand-bound, as findMany
+     * binds them.
      */
     countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]>;
 

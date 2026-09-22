@@ -186,8 +186,9 @@ export class EventRepositoryAdapter implements IEventRepository {
     async countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]> {
         const qb = this.repository.createQueryBuilder('event');
 
-        // the compiled reach rides the query and lowers through the same
-        // adapter the list uses; the window and the realm are hand-bound
+        // the client filter, the compiled reach and the window ride the
+        // query and lower through the same adapter the list uses; only the
+        // route realm and the owner are hand-bound, as findMany binds them
         applyQuery(qb, query);
 
         const bucket = buildBucketExpression(
@@ -199,8 +200,6 @@ export class EventRepositoryAdapter implements IEventRepository {
             .addSelect('event.scope', 'scope')
             .addSelect('event.name', 'name')
             .addSelect('COUNT(*)', 'count')
-            .andWhere('event.createdAt >= :statsFrom', { statsFrom: toWallClock(options.from) })
-            .andWhere('event.createdAt < :statsTo', { statsTo: toWallClock(options.to) })
             .groupBy('bucket')
             .addGroupBy('event.scope')
             .addGroupBy('event.name')
@@ -271,13 +270,4 @@ function toBucketInstant(bucket: string, granularity: `${EventStatsGranularity}`
     return granularity === 'hour' ?
         `${bucket}:00:00.000Z` :
         `${bucket}T00:00:00.000Z`;
-}
-
-/**
- * A UTC wall-clock literal, the form every dialect compares correctly
- * against its stored `created_at` (see `countRecent` for why neither the ISO
- * string nor a bound Date does).
- */
-function toWallClock(instant: string): string {
-    return new Date(instant).toISOString().replace('T', ' ').replace('Z', '');
 }

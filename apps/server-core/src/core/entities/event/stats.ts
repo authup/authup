@@ -11,7 +11,9 @@ import type { ActorContext, ICache } from '@authup/server-kit';
 import {
     and,
     eq,
+    gte,
     inArray,
+    lt,
     or,
 } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -103,7 +105,10 @@ export class EventStatsService implements IEventStatsService {
         }
 
         // one half-open window of exactly days * bucketsPerDay bucket
-        // starts, the last of them the bucket holding `to`
+        // starts, the last of them the bucket holding `to`. It rides the IR
+        // like any other condition since rapiq 2.3.0 binds a date operand in
+        // the column's storage form (tada5hi/rapiq#939), and it is appended
+        // AFTER the key was taken, since `to` moves with every request.
         const now = new Date();
         const to = now.toISOString();
         const width = granularity === EventStatsGranularity.HOUR ? HOUR_IN_MS : DAY_IN_MS;
@@ -111,13 +116,14 @@ export class EventStatsService implements IEventStatsService {
             new Date(snapToBucket(now, granularity)).getTime() - (((days * bucketsPerDay) - 1) * width),
         ).toISOString();
 
-        const data = await this.repository.countGrouped(scoped, {
-            from,
-            to,
-            granularity,
-            ...(options.realmId ? { realmId: options.realmId } : {}),
-            ...(owner ? { owner } : {}),
-        });
+        const data = await this.repository.countGrouped(
+            appendQueryConditions(scoped, gte('createdAt', from), lt('createdAt', to)),
+            {
+                granularity,
+                ...(options.realmId ? { realmId: options.realmId } : {}),
+                ...(owner ? { owner } : {}),
+            },
+        );
 
         const result: EventStatsResult = {
             data,
