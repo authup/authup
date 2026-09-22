@@ -538,8 +538,9 @@ login bounce with `redirect`, the three route-meta gates, the cookie-mode
 rules: `logout({ revoke: false })` on a failed or `RESTORING` resolve, never a
 code exchange), `test/unit/event-stats.spec.ts` the dashboard's fetch
 composable against the fake client (the realm-plus-global filter, the hourly
-24h window, a reload on a realm change, a failed reload keeping the last
-answer, a stale answer dropped behind a newer request) and
+24h window, a reload on a realm change, a failed reload of a NEW scope
+leaving no stale answer while a failed reload of the same scope keeps it, a
+stale answer dropped behind a newer request) and
 `test/unit/dashboard-stats.spec.ts` its pure helpers. A page over the kit
 client is tested this way, through a composable that takes the client as an
 argument and mounts in a bare component, because a full page mount needs the

@@ -257,7 +257,7 @@ export default defineComponent({
                         {{ translations.dashboardEventsByType }}
                     </h2>
                     <p
-                        v-if="ranked.length === 0"
+                        v-if="ranked.length === 0 && !busy"
                         class="text-sm text-fg-muted"
                     >
                         {{ translations.dashboardEmpty }}

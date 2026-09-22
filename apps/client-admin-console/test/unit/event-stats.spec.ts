@@ -120,7 +120,28 @@ describe('src/composables/event-stats', () => {
         expect(requests[1]).toContain(`in(realmId,'${OTHER_REALM_ID}',null)`);
     });
 
-    it('keeps the last answer and reports a load that failed', async () => {
+    it('clears the previous scope\'s answer when the reload for a new scope fails', async () => {
+        let calls = 0;
+        const { stats, errors } = mountStats(() => {
+            calls += 1;
+            if (calls > 1) {
+                throw new Error('down');
+            }
+
+            return answer(7, 'day', 3);
+        });
+        await flushPromises();
+        expect(stats.response.value?.data[0].count).toEqual(3);
+
+        stats.window.value = '30d';
+        await flushPromises();
+
+        expect(errors).toHaveLength(1);
+        expect(stats.response.value).toBeNull();
+        expect(stats.busy.value).toBe(false);
+    });
+
+    it('keeps the answer when a reload of the same scope fails', async () => {
         let calls = 0;
         const { stats, errors } = mountStats(() => {
             calls += 1;
@@ -132,8 +153,7 @@ describe('src/composables/event-stats', () => {
         });
         await flushPromises();
 
-        stats.window.value = '30d';
-        await flushPromises();
+        await stats.load();
 
         expect(errors).toHaveLength(1);
         expect(stats.response.value?.data[0].count).toEqual(3);

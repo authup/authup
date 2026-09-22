@@ -48,7 +48,9 @@ export type EventStats = {
 /**
  * The dashboard's read: GET /events/stats for the selected window, reloaded
  * when the window or the realm changes. A reply that lands after a newer
- * request is dropped, and a failed reload keeps the last answer on screen.
+ * request is dropped, and a scope change clears the previous answer before
+ * it loads, so a failure never shows one scope's counts under another's
+ * label.
  */
 export function useEventStats(options: EventStatsOptions): EventStats {
     const window = ref<EventStatsWindow>(options.window ?? '7d');
@@ -83,7 +85,13 @@ export function useEventStats(options: EventStatsOptions): EventStats {
         }
     };
 
-    watch([options.realmId, window], () => load(), { immediate: true });
+    // a changed scope drops the answer of the previous one first: a failed
+    // reload must not leave the old realm's or window's numbers under the
+    // new label. A manual reload of the same scope keeps its answer.
+    watch([options.realmId, window], () => {
+        response.value = null;
+        return load();
+    }, { immediate: true });
 
     return {
         window,
