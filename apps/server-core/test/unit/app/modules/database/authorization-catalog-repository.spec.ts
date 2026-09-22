@@ -11,15 +11,18 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { BuiltInPolicyType, buildPermissionKey } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
+import { InternalError } from '@authup/errors';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import {
     ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyEntity,
+    PolicyRepository,
     RolePermissionEntity,
     UserEntity,
     UserPermissionEntity,
@@ -136,5 +139,35 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
             start: '08:00:00',
             end: '16:00:00',
         });
+    });
+
+    // a definition served without one of its trees evaluates as if that
+    // restriction did not exist (fail-open under unanimous), so the read
+    // refuses instead (issue #3634)
+    it('refuses a definition whose junction names a tree it cannot load', async () => {
+        const provider = new PermissionDatabaseProvider(suite.dataSource);
+        const permissions = suite.dataSource.getRepository(PermissionEntity);
+        const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
+
+        const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
+        const permission = await permissions.save(permissions.create({ name: 'plan109_unloadable' }));
+        await junctions.save(junctions.create({ permissionId: permission.id, policyId: policy.id }));
+
+        const original = PolicyRepository.prototype.findDescendantsTreeById;
+        const spy = vi.spyOn(PolicyRepository.prototype, 'findDescendantsTreeById')
+            .mockImplementation(function findDescendantsTreeById(this: PolicyRepository, id: string) {
+                return id === policy.id ? Promise.resolve(null) : original.call(this, id);
+            });
+
+        try {
+            const read = provider.findDefinitions();
+            await expect(read).rejects.toThrow(InternalError);
+            await expect(read).rejects.toThrow(policy.id);
+            await expect(read).rejects.toThrow(permission.name);
+        } finally {
+            spy.mockRestore();
+            await junctions.delete({ permissionId: permission.id });
+            await permissions.delete({ id: permission.id });
+        }
     });
 });
