@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { ClientPermission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { client: EntityType.CLIENT, permission: EntityType.PERMISSION };
 
@@ -38,7 +39,11 @@ export const clientPermissionSchema = defineSchema<ClientPermission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['clientId', 'permissionId', 'id', 'clientRealmId', 'permissionRealmId', 'policyId'], indexed: true },
+    filters: {
+        allowed: ['clientId', 'permissionId', 'id', 'clientRealmId', 'permissionRealmId', 'policyId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['client', 'permission'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

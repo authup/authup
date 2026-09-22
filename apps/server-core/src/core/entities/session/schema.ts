@@ -10,6 +10,7 @@ import type { Session } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { SESSION_FILTER_KEYS } from '../../authentication/session/types.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = {
     realm: EntityType.REALM,
@@ -52,7 +53,11 @@ export const sessionSchema = defineSchema<Session>({
             'realmId',
         ],
     },
-    filters: { allowed: [...SESSION_FILTER_KEYS, 'expiresAt', 'seenAt'], indexed: true },
+    filters: {
+        allowed: [...SESSION_FILTER_KEYS, 'expiresAt', 'seenAt', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['realm', 'user', 'client'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

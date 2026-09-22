@@ -10,6 +10,7 @@ import { ErrorCode } from '@authup/errors';
 import { NotFoundError } from '@ebec/http';
 import type { Response as HapicResponse, RequestOptions } from 'hapic';
 import { createClientError } from 'hapic';
+import { AdapterError } from '@rapiq/core';
 import { describeError, sanitizeError } from '../../../src/utils';
 
 const UPSTREAM_URL = 'https://upstream.test/token';
@@ -48,6 +49,18 @@ function createUpstreamNetworkError() {
 
 describe('src/utils/error', () => {
     describe('sanitizeError', () => {
+        it('should map an unbindable filter operand to a bad request', () => {
+            const error = sanitizeError(AdapterError.keyValueInvalid('createdAt'));
+
+            expect(error.code).toEqual(ErrorCode.BAD_REQUEST);
+        });
+
+        it('should keep a server-authored adapter refusal internal', () => {
+            const error = sanitizeError(AdapterError.conditionDetached('custom'));
+
+            expect(error.code).toEqual(ErrorCode.INTERNAL_ERROR);
+        });
+
         it('should map an upstream response failure to an upstream error', () => {
             const error = sanitizeError(createUpstreamResponseError({ error: 'invalid_request' }));
 

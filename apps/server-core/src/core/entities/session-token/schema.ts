@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { SessionToken } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { session: EntityType.SESSION };
 
@@ -62,8 +63,10 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
             'clientId',
             'kind',
             'expiresAt',
+            'createdAt',
         ],
         indexed: true,
+        validate: createTimestampFiltersGate(),
     },
     // `client` is deliberately absent: the repository always joins a client
     // SUMMARY (id / name / displayName — the consent-list shape), so a raw

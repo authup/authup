@@ -8,6 +8,7 @@
 import { defineSchema } from '@rapiq/core';
 import type { Realm } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 export const realmSchema = defineSchema<Realm>({
     name: EntityType.REALM,
@@ -30,7 +31,11 @@ export const realmSchema = defineSchema<Realm>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'builtIn', 'displayName', 'name'], indexed: true },
+    filters: {
+        allowed: ['id', 'builtIn', 'displayName', 'name', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: [] },
     sorts: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

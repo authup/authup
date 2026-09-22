@@ -8,6 +8,7 @@
 import { defineSchema } from '@rapiq/core';
 import type { Permission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 export const permissionSchema = defineSchema<Permission>({
     name: EntityType.PERMISSION,
@@ -38,7 +39,11 @@ export const permissionSchema = defineSchema<Permission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId', 'clientId'], indexed: true },
+    filters: {
+        allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId', 'clientId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: [] },
     sorts: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

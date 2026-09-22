@@ -10,6 +10,7 @@ import type { IdentityProviderAccount } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS } from './types.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 // `provider` is a deliberately ungated include target: the provider list
 // is anonymous and the entity columns are benign (secrets live in EA).
@@ -48,7 +49,11 @@ export const identityProviderAccountSchema = defineSchema<IdentityProviderAccoun
             'providerRealmId',
         ],
     },
-    filters: { allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS, 'providerRealmId'], indexed: true },
+    filters: {
+        allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS, 'providerRealmId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['provider'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

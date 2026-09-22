@@ -19,6 +19,7 @@ import type { ActorContext } from '@authup/server-kit';
 import { createFieldsReadGate } from '../../query/fields.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = {
     realm: EntityType.REALM,
@@ -117,8 +118,9 @@ export const clientSchema = defineSchema<Client>({
         validateMany: createFieldsReadGate({ secret: secretReadGate }),
     },
     filters: {
-        allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active', 'builtIn'],
+        allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active', 'builtIn', 'createdAt', 'updatedAt'],
         indexed: true,
+        validate: createTimestampFiltersGate(),
     },
     relations: { allowed: ['realm', 'accessPolicy', 'path'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },

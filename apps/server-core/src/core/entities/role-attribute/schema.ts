@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { RoleAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { role: EntityType.ROLE, realm: EntityType.REALM };
 
@@ -34,7 +35,11 @@ export const roleAttributeSchema = defineSchema<RoleAttribute>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'roleId', 'realmId'], indexed: true },
+    filters: {
+        allowed: ['id', 'name', 'roleId', 'realmId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['role', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: {
         allowed: [

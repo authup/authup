@@ -49,6 +49,26 @@ Two things to review:
   already exists, and a folder that cannot be created leaves the user unfiled
   rather than failing the login.
 
+### `createdAt` and `updatedAt` are filterable by range
+
+Every collection now accepts `createdAt` and `updatedAt` (`createdAt` alone on
+events and session tokens) as filter keys, under the range operators only:
+`lt`, `lte`, `gt`, `gte` (`<`, `<=`, `>`, `>=` in the bracket form). No
+migration is involved, since the columns were already indexed.
+
+Two things to review:
+
+- **Equality on a timestamp now answers `400`.** `eq`, `ne`, `in` and `nin`
+  are refused on these keys, because the database stores them at a different
+  precision than the API returns, so an equality could never match.
+  `GET /events` was the one collection that already accepted `createdAt`; an
+  integration sending `filter[createdAt]=<value>` there got an empty page
+  before and gets a `400` now. Use a range instead.
+- **A rapiq decode error now carries `issues`.** A `400` for a malformed query
+  lists the violations the way a validation `400` does, so a client showing
+  the error may now show the specific reason instead of the generic
+  "bad request" text.
+
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone

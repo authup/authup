@@ -9,6 +9,7 @@ import { defineSchema } from '@rapiq/core';
 import type { UserRole } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { createTimestampFiltersGate } from '../../query/filters.ts';
 
 const schemaMapping = { user: EntityType.USER, role: EntityType.ROLE };
 
@@ -37,7 +38,11 @@ export const userRoleSchema = defineSchema<UserRole>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'userId', 'id', 'roleRealmId', 'userRealmId'], indexed: true },
+    filters: {
+        allowed: ['roleId', 'userId', 'id', 'roleRealmId', 'userRealmId', 'createdAt', 'updatedAt'],
+        indexed: true,
+        validate: createTimestampFiltersGate(),
+    },
     relations: { allowed: ['user', 'role'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
