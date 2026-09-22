@@ -19,7 +19,7 @@ import {
 } from 'vitest';
 import type { Ref } from 'vue';
 import { defineComponent, h } from 'vue';
-import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
+import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../../../../src/core/permission-check';
 import type { Store } from '../../../../src/core/store';
 import { createStore, createStoreDispatcher } from '../../../../src/core/store';
 
@@ -96,5 +96,34 @@ describe('core/permission-check', () => {
             type: 'user',
             id: 'user-id',
         });
+    });
+    // A denial reads `false` before and after the evaluation, so the settle
+    // flag is what tells a caller the verdict is final (#3632).
+    it('should report a denial as settled only once it is evaluated', async () => {
+        const store = buildStore();
+        store.setUser({ id: 'user-id' } as User);
+
+        const deferred = Promise.withResolvers<undefined>();
+        vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
+            .mockImplementation(() => deferred.promise);
+
+        let state!: ReturnType<ReturnType<typeof createPermissionCheckerReactiveStateFn>>;
+        mount(defineComponent({
+            setup() {
+                state = createPermissionCheckerReactiveStateFn({ store })({ name: 'path_read' });
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+        expect(state.allowed.value).toBe(false);
+        expect(state.settled.value).toBe(false);
+
+        deferred.reject(new Error('denied'));
+        await flushPromises();
+
+        expect(state.allowed.value).toBe(false);
+        expect(state.settled.value).toBe(true);
     });
 });
