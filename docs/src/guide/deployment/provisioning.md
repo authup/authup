@@ -528,7 +528,9 @@ declared in the same entry can be referenced by both. A `relations.path` that
 names a folder no `paths` entry declares creates it, missing parents included,
 so declaring a folder under `paths` is only necessary to give it a display name
 or a description. A user or client entry that names no folder leaves the row
-unfiled.
+unfiled. The folder follows the entry's strategy: `createOnly` leaves an
+existing row where it is filed, and `merge` refiles it even when the
+strategy's `attributes` list does not name `pathId`.
 
 ### User
 

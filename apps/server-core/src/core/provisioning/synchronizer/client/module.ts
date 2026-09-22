@@ -107,25 +107,35 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             };
         }
 
-        await this.resolvePath(input);
-
         if (attributes) {
             switch (strategy.type) {
-                case ProvisioningEntityStrategyType.MERGE:
+                case ProvisioningEntityStrategyType.MERGE: {
+                    await this.resolvePath(input);
+
+                    // Declaring `relations.path` IS the ask, so a selective
+                    // merge carries the folder whether or not its list names
+                    // `pathId` (#3632).
+                    const keys = strategy.attributes && input.relations && input.relations.path ?
+                        [...strategy.attributes, 'pathId' as const] :
+                        strategy.attributes;
+
                     attributes = this.clientRepository.merge(
                         attributes,
-                        strategy.attributes ?
-                            pickRecord(input.attributes, strategy.attributes) :
+                        keys ?
+                            pickRecord(input.attributes, keys) :
                             input.attributes,
                     );
                     attributes = await this.clientRepository.save(attributes);
                     break;
+                }
                 case ProvisioningEntityStrategyType.REPLACE:
+                    await this.resolvePath(input);
                     input.attributes.id = attributes.id;
                     attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
                     break;
             }
         } else {
+            await this.resolvePath(input);
             attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
         }
 

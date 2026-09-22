@@ -3421,8 +3421,12 @@ declaration of its own), synchronized before the realm's clients and users like
 its scopes; a user or client entry names one folder under `relations.path`,
 which the user and client synchronizers resolve through `ensurePath` as well,
 so a file may reference `sales/berlin` without declaring it under `paths` and
-the `paths` list is what gives a folder a display name or a description. A
-wildcard realm entry seeds one folder set into every realm.
+the `paths` list is what gives a folder a display name or a description. The
+folder is resolved only on the branch that writes the row, so `createOnly` over
+an existing row creates no folder chain, and under `merge` a declared
+`relations.path` rides the merge even when the strategy's `attributes` list
+names no `pathId`, since declaring it is the ask (#3632). A wildcard realm
+entry seeds one folder set into every realm.
 
 **Listing rows by folder is an `IN` over ids, never a relation traversal.** The
 console resolves the subtree on the paths table (`GET /paths` with the

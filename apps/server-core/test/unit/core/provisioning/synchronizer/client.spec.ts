@@ -37,6 +37,7 @@ import type {
 } from '../../../../../src/core/entities/index.ts';
 import { isRealmCipherBlob } from '../../../../../src/core/key/index.ts';
 import { FakeClientRepository } from '../../entities/client/fake-repository.ts';
+import { FakePathRepository } from '../../entities/path/fake-repository.ts';
 import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 
 /**
@@ -47,14 +48,17 @@ import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
  */
 describe('core/provisioning/synchronizer/client', () => {
     let clientRepository: FakeClientRepository;
+    let pathRepository: FakePathRepository;
     let synchronizer: ClientProvisioningSynchronizer;
     const realmId = randomUUID();
     const cipher = createFakeRealmCipher(realmId);
 
     beforeEach(() => {
         clientRepository = new FakeClientRepository();
+        pathRepository = new FakePathRepository();
         synchronizer = new ClientProvisioningSynchronizer({
             clientRepository,
+            pathRepository,
             cipher,
             clientRoleRepository: new FakeEntityRepository<ClientRole>() as
                 FakeEntityRepository<ClientRole> & IClientRoleRepository,
@@ -162,5 +166,44 @@ describe('core/provisioning/synchronizer/client', () => {
         ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
         expect(clientRepository.getAll()).toHaveLength(0);
+    });
+    // #3632: declaring the folder is the ask, so it rides a selective merge
+    it('should refile an existing client under a selective merge', async () => {
+        const existing = clientRepository.seed({
+            name: 'gitops', 
+            realmId, 
+            authMethod: 'none', 
+            displayName: 'GitOps',
+        });
+
+        await synchronizer.synchronize({
+            ...buildInput({ authMethod: 'none', displayName: 'GitOps 2' }),
+            strategy: { type: ProvisioningEntityStrategyType.MERGE, attributes: ['displayName'] },
+            relations: { path: 'ci' },
+        } as ClientProvisioningEntity);
+
+        const folder = await pathRepository.findOneBy({ realmId, path: 'ci' });
+        const stored = await clientRepository.findOneBy({ id: existing.id });
+        expect(stored!.displayName).toEqual('GitOps 2');
+        expect(stored!.pathId).toEqual(folder!.id);
+    });
+
+    it('should create no folder for an existing client under createOnly', async () => {
+        const existing = clientRepository.seed({
+            name: 'gitops', 
+            realmId, 
+            authMethod: 'none', 
+        });
+
+        await synchronizer.synchronize({
+            ...buildInput({ authMethod: 'none' }),
+            strategy: { type: ProvisioningEntityStrategyType.CREATE_ONLY },
+            relations: { path: 'ci/deploy' },
+        } as ClientProvisioningEntity);
+
+        expect(pathRepository.getAll()).toHaveLength(0);
+
+        const stored = await clientRepository.findOneBy({ id: existing.id });
+        expect(stored!.pathId ?? null).toBeNull();
     });
 });
