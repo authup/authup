@@ -128,17 +128,17 @@ export default defineComponent({
         v-if="visible"
         role="img"
         :aria-label="summary"
-        class="mb-3 flex items-center gap-3 rounded-lg border border-border bg-bg-elevated px-3 py-2 transition-opacity"
+        class="mb-3 flex items-center gap-4 rounded-lg border border-border bg-bg-elevated px-4 py-3 transition-opacity"
         :class="{ 'opacity-60': busy }"
     >
         <span
-            class="shrink-0 text-sm text-fg-muted tabular-nums"
+            class="shrink-0 text-base font-medium text-fg-muted tabular-nums"
             aria-hidden="true"
         >
             {{ label }}
         </span>
         <div
-            class="flex h-6 min-w-0 grow items-end gap-px"
+            class="flex h-12 min-w-0 grow items-end gap-0.5"
             aria-hidden="true"
         >
             <div
