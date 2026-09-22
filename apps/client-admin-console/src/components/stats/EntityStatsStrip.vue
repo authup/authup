@@ -72,6 +72,11 @@ export default defineComponent({
 
         const numberFormat = computed(() => new Intl.NumberFormat(locale.value));
         const titleFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeZone: 'UTC' }));
+        const tickFormat = computed(() => new Intl.DateTimeFormat(locale.value, {
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC',
+        }));
 
         const axis = computed(() => (response.value ? buildBucketAxis(response.value.meta) : []));
         const values = computed(() => (response.value ? alignStats(response.value.data, axis.value) : []));
@@ -111,12 +116,28 @@ export default defineComponent({
             },
         });
 
+        // the y axis names the tallest day and the baseline, the x axis the
+        // first, the middle and the last day of the window
+        const yMax = computed(() => numberFormat.value.format(Math.max(0, ...values.value)));
+        const xTicks = computed(() => {
+            if (axis.value.length === 0) {
+                return [];
+            }
+
+            const middle = Math.floor((axis.value.length - 1) / 2);
+
+            return [0, middle, axis.value.length - 1]
+                .map((index) => tickFormat.value.format(new Date(axis.value[index])));
+        });
+
         const visible = computed(() => response.value !== null && !forbidden.value);
 
         return {
             busy,
             bars,
             label,
+            xTicks,
+            yMax,
             summary,
             visible,
         };
@@ -132,23 +153,37 @@ export default defineComponent({
         :class="{ 'opacity-60': busy }"
     >
         <span
-            class="shrink-0 text-base font-medium text-fg-muted tabular-nums"
+            class="shrink-0 text-sm text-fg-muted tabular-nums"
             aria-hidden="true"
         >
             {{ label }}
         </span>
         <div
-            class="flex h-12 min-w-0 grow items-end gap-0.5"
+            class="flex min-w-0 grow gap-2"
             aria-hidden="true"
         >
-            <div
-                v-for="bar in bars"
-                :key="bar.bucket"
-                class="min-w-0.5 grow rounded-sm"
-                :class="bar.count > 0 ? 'bg-primary-600' : 'bg-bg-muted'"
-                :style="{ height: bar.height }"
-                :title="bar.title"
-            />
+            <div class="flex h-20 shrink-0 flex-col justify-between text-right text-xs leading-none text-fg-muted tabular-nums">
+                <span>{{ yMax }}</span>
+                <span>0</span>
+            </div>
+            <div class="flex min-w-0 grow flex-col gap-1">
+                <div class="flex h-20 items-end gap-0.5 border-b border-border">
+                    <div
+                        v-for="bar in bars"
+                        :key="bar.bucket"
+                        class="min-w-0.5 grow rounded-t-sm"
+                        :class="bar.count > 0 ? 'bg-primary-600' : 'bg-bg-muted'"
+                        :style="{ height: bar.height }"
+                        :title="bar.title"
+                    />
+                </div>
+                <div class="flex justify-between text-xs leading-none text-fg-muted">
+                    <span
+                        v-for="(tick, index) in xTicks"
+                        :key="index"
+                    >{{ tick }}</span>
+                </div>
+            </div>
         </div>
     </div>
 </template>
