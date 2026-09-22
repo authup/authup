@@ -69,6 +69,38 @@ Two things to review:
   the error may now show the specific reason instead of the generic
   "bad request" text.
 
+### Timestamps are stamped and read in UTC on every host
+
+On PostgreSQL and MySQL, `createdAt` and `updatedAt` are now written and read
+in UTC, whatever timezone the database server or the machine running Authup
+is set to. Authup pins every database session to UTC (`TimeZone` on
+PostgreSQL, `time_zone` on MySQL) and reads the columns back as UTC. The
+container image and a database running in UTC see no change.
+
+Before, the two sides only agreed when both clocks did. If the database ran
+in UTC but the Authup host did not, the API returned every timestamp shifted
+by the host offset; that is fixed without touching stored data. **If the
+database itself ran in local time**, rows it stamped before this release hold
+local wall-clock values and now read as UTC, shifted by that offset. Rows
+written after the upgrade are correct. Check the database's zone before
+upgrading:
+
+```sql
+-- PostgreSQL
+SHOW timezone;
+-- MySQL
+SELECT @@global.time_zone, @@system_time_zone;
+```
+
+If it is not UTC and the historical values matter, convert them once after
+the upgrade, e.g. on PostgreSQL
+`UPDATE auth_events SET created_at = (created_at AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'UTC';`
+per table and column, with the zone the database used. Sessions expire on
+their own, so their `createdAt` needs no conversion.
+
+An explicit MySQL `timezone`, a PostgreSQL `TimeZone` in the driver's
+startup `options`, or a MySQL replication setup is left as configured.
+
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone

@@ -463,14 +463,34 @@ usable at the service level and nothing in core depends on TypeORM:
     match.** The bound carries milliseconds: sqlite stores less, so
     `gte(own)` excludes the row there; postgres and mysql store more, so
     `lte(own)` excludes it there. Widen the bound by a second.
-  - **The bound is UTC, and so is the stored value, but a returned value
-    need not be.** `created_at` is stamped by the database server's clock
-    (assumed UTC, as `countRecent` assumes). On a Node host whose
-    timezone is not UTC, the postgres and mysql drivers read the
-    zone-less column back as LOCAL time, so the API answers a value
-    shifted by the host offset while filters compare against the true
-    instant. The container sets no `TZ`, so the image is unaffected; the
-    spec takes its bounds from the real clock for exactly this reason.
+  - **The bound, the stored value and the returned value are all UTC.**
+    `created_at` is stamped by the DATABASE (`now()`,
+    `CURRENT_TIMESTAMP(6)`) in its SESSION timezone and read back by the
+    driver in the PROCESS timezone, so the two only agreed when both
+    clocks did, while the filter binding, the login throttle's
+    `countRecent` and the event statistics buckets all assume UTC (#3641).
+    `DataSourceOptionsBuilder` therefore pins BOTH halves on every path
+    (boot, migration CLI, tests) through `applyUTCTimestamps`
+    (`data-source/options/timezone.ts`): postgres gets `-c TimeZone=UTC`
+    as a startup option plus a pool type parser reading OID 1114 through
+    pg's own timestamptz parser with a `Z` marker (so `infinity` and BC
+    dates survive); mysql gets `timezone: 'Z'` plus a wrapped mysql2
+    module whose pools run `SET time_zone = '+00:00'` from their
+    synchronous `connection` event, i.e. before the connection is handed
+    out. Pinning only the read side was the first version and is
+    rejected: on a database running in local time it shifted every
+    value and put `auth_time` (a session's `createdAt`) in the future,
+    which satisfies `max_age` for the length of the offset. Explicit
+    operator settings win and switch the respective half off: a mysql
+    `timezone` or `driver`, a postgres `TimeZone` in `extra.options`, pg
+    `extra.types`. A mysql replication config has no per-connection hook
+    and is left as configured. Rows a local-time database stamped before
+    this change keep their local wall clock (see upgrading.md). Pinned by
+    `test/unit/adapters/database/timestamp-session-timezone.spec.ts`
+    (database default at UTC+14, with a control pool proving the shift)
+    and `test/unit/http/controllers/entities/timestamp-timezone.spec.ts`
+    (Node process at UTC+14); both fail on mysql and postgres without
+    their half of the change.
   Sorting was never affected: it compares the column against itself.
   Pinned by `test/unit/http/controllers/entities/query-surface.spec.ts`,
   which EXECUTES the surface under all three dialects (a range in both
