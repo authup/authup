@@ -2,11 +2,11 @@
 import { defineQuery } from '@rapiq/core';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { 
-    TranslatorTranslationActionKey, 
-    TranslatorTranslationAppKey, 
-    TranslatorTranslationFieldKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import type { EntityListQueryInput, ListLoadFn } from '@authup/client-web-kit';
 import {

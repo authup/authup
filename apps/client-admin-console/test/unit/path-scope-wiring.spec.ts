@@ -233,6 +233,11 @@ describe('src/composables/path-scope -> usePathScope', () => {
 
         failing = false;
         scoped.scope.retry();
+
+        // the notice clears as soon as the new lookup starts (#3632)
+        expect(scoped.scope.pending.value).toBe(true);
+        expect(scoped.scope.failed.value).toBe(false);
+
         await flushPromises();
 
         expect(scoped.scope.failed.value).toBe(false);

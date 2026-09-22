@@ -422,7 +422,10 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
             return;
         }
 
+        // a notice about the previous lookup must not stand over this one
         resolving.value = true;
+        failed.value = false;
+        missing.value = false;
 
         let resolved : Path[];
         let overflowed = false;
@@ -459,7 +462,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         failed.value = failure;
         // A subtree lookup always carries the folder itself, so an answer
         // without it names a folder that is gone.
-        missing.value = !failure && resolved.every((entry) => !(entry.path === value));
+        missing.value = !failure && resolved.every((entry) => entry.path !== value);
         truncated.value = overflowed;
         paths.value = resolved;
     };
