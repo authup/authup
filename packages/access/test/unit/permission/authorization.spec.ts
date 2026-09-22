@@ -19,6 +19,7 @@ import {
     PolicyDefaultEvaluators,
     PolicyDefaultValidators,
     createAuthorizationEvaluator,
+    isPermissionError,
     realmScopeMatches,
 } from '../../../src';
 
@@ -132,8 +133,13 @@ async function allowed(evaluator: Awaited<ReturnType<typeof createAuthorizationE
     try {
         await evaluator.evaluate({ name: 'event_read', data });
         return true;
-    } catch {
-        return false;
+    } catch (e) {
+        // Only a permission error is a deny; a refused document fails the caller.
+        if (isPermissionError(e)) {
+            return false;
+        }
+
+        throw e;
     }
 }
 

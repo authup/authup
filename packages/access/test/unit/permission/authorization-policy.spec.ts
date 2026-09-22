@@ -108,6 +108,13 @@ describe('permission/authorization/policy', () => {
         await expect(projectAuthorizationPolicy({ type: 'weekday', weekday: 3 })).rejects.toThrow();
     });
 
+    it('keeps the default registry immutable, so extending it takes a spread (#3635)', () => {
+        expect(Object.isFrozen(PolicyDefaultValidators)).toBe(true);
+        expect(() => {
+            (PolicyDefaultValidators as Record<string, unknown>).weekday = {};
+        }).toThrow(TypeError);
+    });
+
     it('refuses the withheld node even when a registry names it, and never reads the prototype', async () => {
         const validators = { ...PolicyDefaultValidators, [AUTHORIZATION_POLICY_WITHHELD_TYPE]: new WeekdayPolicyValidator() };
         await expect(projectAuthorizationPolicy({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE, weekday: 1 }, validators))

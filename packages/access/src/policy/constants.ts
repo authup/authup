@@ -42,9 +42,11 @@ export const PolicyDefaultEvaluators = {
  * `PolicyDefaultEvaluators`. It is what `projectAuthorizationPolicy` runs a
  * node through, so a type absent here cannot travel in the authorization
  * catalog. The registry is open like the evaluator one (#3635): spread it and
- * add a custom type's validator to let that type travel.
+ * add a custom type's validator to let that type travel. It is frozen, since
+ * a write into it would make the type projectable for every caller in the
+ * process.
  */
-export const PolicyDefaultValidators : PolicyValidators = {
+export const PolicyDefaultValidators : Readonly<PolicyValidators> = Object.freeze({
     [BuiltInPolicyType.COMPOSITE]: new CompositePolicyValidator(),
     [BuiltInPolicyType.ATTRIBUTES]: new AttributesPolicyValidator(),
     [BuiltInPolicyType.ATTRIBUTE_NAMES]: new AttributeNamesPolicyValidator(),
@@ -53,4 +55,4 @@ export const PolicyDefaultValidators : PolicyValidators = {
     [BuiltInPolicyType.PERMISSION_BINDING]: new PermissionBindingPolicyValidator(),
     [BuiltInPolicyType.REALM_MATCH]: new RealmMatchPolicyValidator(),
     [BuiltInPolicyType.TIME]: new TimePolicyValidator(),
-};
+});
