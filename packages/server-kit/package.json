@@ -63,7 +63,7 @@
         "@authup/kit": "^1.0.0-beta.66",
         "@authup/specs": "^1.0.0-beta.66",
         "@isaacs/ttlcache": "^2.1.4",
-        "@rapiq/core": "^2.2.0",
+        "@rapiq/core": "^2.3.0",
         "@node-rs/bcrypt": "^1.10.9",
         "@node-rs/jsonwebtoken": "^0.5.11",
         "@socket.io/redis-emitter": "^5.1.0",
