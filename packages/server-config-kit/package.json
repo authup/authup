@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-config-kit",
     "type": "module",
-    "version": "1.0.0-beta.65",
+    "version": "1.0.0-beta.66",
     "description": "Declarative configuration schema: one registry per config type, deriving the environment reader, the validator mounts, the defaults and a JSON Schema document.",
     "license": "Apache-2.0",
     "exports": {
@@ -49,11 +49,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.65",
+        "@authup/kit": "^1.0.0-beta.66",
         "@validup/zod": "^2.0.1",
         "envix": "^1.5.0",
         "validup": "^2.0.1",
-        "zod": "^4.5.4"
+        "zod": "^4.6.5"
     },
     "devDependencies": {
         "cross-env": "^10.1.0",

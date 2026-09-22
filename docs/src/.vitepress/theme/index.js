@@ -1,4 +1,5 @@
 import DefaultTheme from 'vitepress/theme';
+import Layout from './Layout.vue';
 import Hero from './components/Hero.vue';
 import FeatureGrid from './components/FeatureGrid.vue';
 import DeploymentShowcase from './components/DeploymentShowcase.vue';
@@ -8,6 +9,7 @@ import './style.css';
 
 export default {
     extends: DefaultTheme,
+    Layout,
     enhanceApp({ app }) {
         app.component('Hero', Hero);
         app.component('FeatureGrid', FeatureGrid);

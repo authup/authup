@@ -1,4 +1,5 @@
-import { defineConfig } from 'vitepress';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig, postcssIsolateStyles } from 'vitepress';
 
 const guideContributingSidebar = [
     {
@@ -32,6 +33,18 @@ const guideContributingSidebar = [
 export default defineConfig({
     title: 'Authup',
     base: '/',
+    vite: {
+        plugins: [tailwindcss()],
+        css: {
+            postcss: {
+                plugins: [
+                    // VitePress base + doc styles are unlayered and would override
+                    // Tailwind utilities, so exclude them inside `.vp-raw` wrappers.
+                    postcssIsolateStyles({ includeFiles: [/base\.css/, /vp-doc\.css/] }),
+                ],
+            },
+        },
+    },
     /**
      * `api-query-reference` is generated, not committed: the docs workflow
      * writes it from the server-core schema registry before it builds the

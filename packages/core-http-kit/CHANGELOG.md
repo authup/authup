@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* batch permission check at POST /authorization/check ([#3603](https://github.com/authup/authup/issues/3603)) ([57eb8d4](https://github.com/authup/authup/commit/57eb8d4dde731098ce76f88e794c0caead6618b3))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* identity-provider login on the device page, bounded lookup forgiveness, access-policy deny rows ([#3610](https://github.com/authup/authup/issues/3610)) ([045583a](https://github.com/authup/authup/commit/045583aeecd295e79a27c18cbaef89ed906998e6))
+* serve the authorization catalog at GET /authorization and the identity's grants on introspection ([#3588](https://github.com/authup/authup/issues/3588)) ([bd9b7d0](https://github.com/authup/authup/commit/bd9b7d03cf16de5fb4fbb3b866970e53de0a2416))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

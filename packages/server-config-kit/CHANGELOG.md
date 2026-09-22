@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+* ensure consistent version for release ([6c4868d](https://github.com/authup/authup/commit/6c4868d7fc634c4b39710965cc536f80a1be1f1a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 

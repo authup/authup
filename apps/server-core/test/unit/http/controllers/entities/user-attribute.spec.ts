@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeUserAttribute } from '../../../../utils';
+import { createFakeUser, createFakeUserAttribute, httpRequest } from '../../../../utils';
 
 describe('src/http/controllers/user-attribute', () => {
     const suite = createTestApplication();
@@ -32,5 +32,50 @@ describe('src/http/controllers/user-attribute', () => {
 
         expect(response.name).toEqual(attribute.name);
         expect(response.value).toEqual(attribute.value);
+    });
+
+    /**
+     * Naming the owner through the `user` relation keeps working, but only its
+     * id is taken: the object is dropped before anything reads it, since its
+     * `realmId` would otherwise gate USER_UPDATE against a realm of the
+     * caller's choosing. Ignoring it outright leaves no target at all, turns
+     * the self-target branch true and writes the row onto the CALLER with a
+     * 201 -- an owner silently swapped for another.
+     */
+    it('creates for the user a body names through the relation, not for the caller', async () => {
+        const { data: target } = await suite.client.user.create(createFakeUser());
+        const name = `owner_probe_${Date.now()}`;
+
+        const response = await httpRequest(suite, 'POST', '/user-attributes', {
+            headers: {
+                Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}`,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                user: { id: target.id }, 
+                name, 
+                value: 'dark', 
+            }),
+        });
+
+        expect(response.status).toEqual(201);
+
+        const { data: rows } = await suite.client.userAttribute.getMany({ filters: { name } });
+        expect(rows).toHaveLength(1);
+        expect(rows[0].userId).toEqual(target.id);
+        expect(rows[0].realmId).toEqual(target.realmId);
+    });
+
+    it('creates for another user when the owner is named by userId', async () => {
+        const { data: target } = await suite.client.user.create(createFakeUser());
+        const attribute = createFakeUserAttribute();
+
+        const { data: response } = await suite.client.userAttribute.create({
+            ...attribute,
+            userId: target.id,
+        });
+
+        expect(response.userId).toEqual(target.id);
+        expect(response.realmId).toEqual(target.realmId);
     });
 });

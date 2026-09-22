@@ -10,6 +10,7 @@ import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { eq, inArray, or } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -126,10 +127,28 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        // The owner is `userId`, never a body-supplied relation object: with
-        // no join column to resolve it from, `validateJoinColumns` keeps such
-        // an object verbatim, and its `realmId` would then gate USER_UPDATE
-        // against a realm of the caller's choosing.
+        // A body may name the owner through the `user` relation, but only its
+        // ID is taken and the object itself is dropped before anything reads
+        // it: with no join column to resolve it from, `validateJoinColumns`
+        // keeps such an object VERBATIM, and its `realmId` would then gate
+        // USER_UPDATE against a realm of the caller's choosing. Reduced to the
+        // id, the realm comes from the row the join-column validation loads,
+        // which is the only realm the row may carry. A `userId` alongside it
+        // wins, the precedence a route realm already takes over a body one.
+        //
+        // An object naming no id is REFUSED rather than ignored: dropping it
+        // would leave no target at all, which turns `isSelfTarget` true and
+        // lands the row on the CALLER under a 201 -- an owner silently swapped
+        // for another. Saying `user` at all has to mean naming one.
+        if (typeof data.user !== 'undefined') {
+            const relationId = isObject(data.user) ? data.user.id : undefined;
+            if (!relationId && !data.userId) {
+                throw new ValidationError('The user-attribute owner must be named by userId.');
+            }
+
+            data.userId = data.userId || relationId;
+        }
+
         delete data.user;
 
         const targetUserId: string | undefined = data.userId;

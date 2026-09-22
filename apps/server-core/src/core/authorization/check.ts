@@ -23,6 +23,7 @@ import {
     definePolicyData,
     isPermissionError,
 } from '@authup/access';
+import { normalizeError } from '@authup/errors';
 import type {
     AuthorizationCheckBuilderContext,
     AuthorizationCheckRequest,
@@ -122,12 +123,37 @@ export async function buildAuthorizationCheck(
     }
 
     let grants : Promise<PermissionPolicyBinding[]> | undefined;
+
+    // The grant load is the one failure a verdict cannot be derived from, and
+    // it is INVISIBLE to the catch below: `PolicyEngine.evaluate` turns every
+    // evaluator throw into issues and `PermissionEvaluator` re-raises those as
+    // a `PermissionError`, so by the time a rejected read arrives there it is
+    // indistinguishable from a denial. Left that way the route answers an
+    // authoritative empty set with a 200 and no log line, and a consumer
+    // memoizes it: the kit keys its memo on the introspection's subject, scope
+    // and grants, none of which a cache or database hiccup moves, so one
+    // failed read gates a console closed for the rest of the document's life.
+    //
+    // So the rejection is kept here and re-raised, which is what lets the
+    // caller retry: the kit clears its memo on a rejection and asks again on
+    // the next resolve.
+    let grantsError : unknown;
+    let grantsFailed = false;
+
     const policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
     policyEngine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator({
             getFor: (identity: IdentityPolicyData) => {
-                grants = grants || request.grants(identity);
+                if (!grants) {
+                    grants = request.grants(identity)
+                        .catch((e) => {
+                            grantsFailed = true;
+                            grantsError = e;
+
+                            throw e;
+                        });
+                }
 
                 return grants;
             },
@@ -165,17 +191,26 @@ export async function buildAuthorizationCheck(
 
                 held.push(realm);
             } catch (e) {
-                // A denial is the answer. Anything else denies too, but says
-                // so: the grant load is memoized into one promise, so a single
-                // failed read denies every pair at once and the route would
-                // otherwise answer an authoritative empty set with nothing in
-                // the log, which a consumer then memoizes for its session.
+                // A denial is the answer. The one failure that must NOT be
+                // read as one is the grant load, and it is caught above
+                // rather than here, since the engine has already flattened it
+                // into a `PermissionError` by the time it arrives. What is
+                // left for this guard is a throw the engine never saw -- a
+                // decorator or a policy-data access -- which denies, but says
+                // so rather than passing for a verdict.
                 if (!isPermissionError(e)) {
                     ctx.logger?.warn(
                         `Treated ${name} as denied in realm ${realm ?? 'global'} while building the authorization ` +
                         `check: ${e instanceof Error ? e.message : String(e)}.`,
                     );
                 }
+            }
+
+            // Raised on the first pair that hits it rather than after the
+            // whole matrix: the promise is memoized, so every remaining pair
+            // would fail the same way for the same reason.
+            if (grantsFailed) {
+                throw normalizeError(grantsError);
             }
         }
 

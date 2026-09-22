@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
+
+
+### Features
+
+* account-level locale and color mode preference ([#3622](https://github.com/authup/authup/issues/3622)) ([66b147c](https://github.com/authup/authup/commit/66b147ca95dd362b232a5806b5f7f181b576b02b))
+* batch permission check at POST /authorization/check ([#3603](https://github.com/authup/authup/issues/3603)) ([57eb8d4](https://github.com/authup/authup/commit/57eb8d4dde731098ce76f88e794c0caead6618b3))
+* carry the RP's language and color mode into the hosted pages ([#3620](https://github.com/authup/authup/issues/3620)) ([31817c5](https://github.com/authup/authup/commit/31817c5abd9c7b13b2933f03d19625712d746a6c))
+* **client-web-kit:** default the UI hints from the preference cookies ([#3621](https://github.com/authup/authup/issues/3621)) ([d734681](https://github.com/authup/authup/commit/d734681829229c8562aff964ad9b8055fd8fc5e1))
+* device authorization grant (RFC 8628) ([#3587](https://github.com/authup/authup/issues/3587)) ([3ce3fd4](https://github.com/authup/authup/commit/3ce3fd42f4b506fc11087a41bfc2ebb1441cf238))
+* gate consoles on POST /authorization/check ([#3617](https://github.com/authup/authup/issues/3617)) ([146bb23](https://github.com/authup/authup/commit/146bb2316143924465a88a14e0a4748700486bbf))
+* identity-provider login on the device page, bounded lookup forgiveness, access-policy deny rows ([#3610](https://github.com/authup/authup/issues/3610)) ([045583a](https://github.com/authup/authup/commit/045583aeecd295e79a27c18cbaef89ed906998e6))
+* serve the authorization catalog at GET /authorization and the identity's grants on introspection ([#3588](https://github.com/authup/authup/issues/3588)) ([bd9b7d0](https://github.com/authup/authup/commit/bd9b7d03cf16de5fb4fbb3b866970e53de0a2416))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#3625](https://github.com/authup/authup/issues/3625)) ([99f4ad5](https://github.com/authup/authup/commit/99f4ad52db40a979fde073f37b08e02172fe945a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-http-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/errors bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/i18n bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/kit bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+    * @authup/specs bumped from ^1.0.0-beta.65 to ^1.0.0-beta.66
+
 ## [1.0.0-beta.65](https://github.com/authup/authup/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2026-09-08)
 
 
