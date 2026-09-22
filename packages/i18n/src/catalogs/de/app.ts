@@ -42,7 +42,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.DASHBOARD_WINDOW_7D]: 'Letzte 7 Tage',
     [TranslatorTranslationAppKey.DASHBOARD_WINDOW_30D]: 'Letzte 30 Tage',
     [TranslatorTranslationAppKey.DASHBOARD_WINDOW_90D]: 'Letzte 90 Tage',
-    [TranslatorTranslationAppKey.DASHBOARD_LOGINS]: 'Anmeldungen',
+    [TranslatorTranslationAppKey.DASHBOARD_LOGINS]: 'Erfolgreiche Anmeldungen',
     [TranslatorTranslationAppKey.DASHBOARD_LOGINS_FAILED]: 'Fehlgeschlagene Anmeldungen',
     [TranslatorTranslationAppKey.DASHBOARD_AUTHORIZATIONS]: 'Autorisierungen',
     [TranslatorTranslationAppKey.DASHBOARD_EVENTS]: 'Ereignisse',
