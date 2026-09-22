@@ -2,8 +2,13 @@
 import { defineQuery } from '@rapiq/core';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import type { ListLoadFn } from '@authup/client-web-kit';
+import { 
+    TranslatorTranslationActionKey, 
+    TranslatorTranslationAppKey, 
+    TranslatorTranslationFieldKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import type { EntityListQueryInput, ListLoadFn } from '@authup/client-web-kit';
 import {
     AEntityDelete,
     APagination,
@@ -13,6 +18,7 @@ import {
     AUsers,
     injectStore,
     usePermissionCheck,
+    usePermissionCheckState,
     useTranslations,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
@@ -55,11 +61,13 @@ export default defineComponent({
         // reader of the row may see where it is filed), and the column is the
         // rationale that was granted for. What PATH_READ gates is the folder
         // SELECT and the request behind it, since `GET /paths` IS gated.
-        const hasPathReadPermission = usePermissionCheck({ name: PermissionName.PATH_READ });
+        const pathRead = usePermissionCheckState({ name: PermissionName.PATH_READ });
+        const hasPathReadPermission = pathRead.allowed;
 
         const pathScope = usePathScope({
             realmId: realmManagementId,
             enabled: hasPathReadPermission,
+            settled: pathRead.settled,
         });
 
         const query = computed(() => defineQuery<User>({
@@ -77,7 +85,7 @@ export default defineComponent({
         // emptied and refilled on every selection, and a deep link's
         // initial load is held back until the first resolution settles;
         // `reloadCollection` covers a list that is busy when one lands.
-        const collection = ref<{ load: ListLoadFn, busy: boolean } | null>(null);
+        const collection = ref<{ load: ListLoadFn<EntityListQueryInput<User>>, busy: boolean } | null>(null);
         watch(pathScope.filters, () => {
             if (pathScope.pending.value) {
                 return;
@@ -134,6 +142,18 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE_FAILED,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.PATH_SCOPE_MISSING,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.RETRY,
+            },
         ]);
 
         const pathScopeValue = computed<string | null>({
@@ -182,6 +202,9 @@ export default defineComponent({
             handleDeleted,
             pathScopePending: pathScope.pending,
             pathScopeTruncated: pathScope.truncated,
+            pathScopeFailed: pathScope.failed,
+            pathScopeMissing: pathScope.missing,
+            pathScopeRetry: pathScope.retry,
             pathScopeIncomplete: pathScope.optionsTruncated,
             pathScopePaths: pathScope.options,
             pathScopeValue,
@@ -248,6 +271,34 @@ export default defineComponent({
                         class="mt-2"
                     >
                         {{ translations.pathScopeTruncated }}
+                    </VCAlert>
+                    <!-- fail-closed: both list nothing, so the page says why
+                         rather than let it read as an empty folder -->
+                    <VCAlert
+                        v-if="pathScopeFailed"
+                        color="error"
+                        variant="soft"
+                        class="mt-2"
+                    >
+                        <div class="flex items-center justify-between gap-2">
+                            <span>{{ translations.pathScopeFailed }}</span>
+                            <VCButton
+                                size="sm"
+                                color="error"
+                                variant="outline"
+                                @click="pathScopeRetry"
+                            >
+                                {{ translations.retry }}
+                            </VCButton>
+                        </div>
+                    </VCAlert>
+                    <VCAlert
+                        v-else-if="pathScopeMissing"
+                        color="warning"
+                        variant="soft"
+                        class="mt-2"
+                    >
+                        {{ translations.pathScopeMissing }}
                     </VCAlert>
                 </template>
                 <template #footer="props">

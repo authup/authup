@@ -129,6 +129,8 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'Tous les chemins',
     [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'Ce dossier contient trop de sous-dossiers pour restreindre la liste, donc toutes les lignes sont affichées.',
     [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'Ce royaume contient trop de dossiers pour tous les afficher, donc l\'arborescence est incomplète.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_FAILED]: 'Le dossier n\'a pas pu être chargé, donc rien n\'est affiché.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_MISSING]: 'Ce dossier n\'existe plus, donc rien n\'est affiché.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'Cette action supprime {{paths}} sous-dossiers et retire {{users}} utilisateurs et {{clients}} clients de leur dossier. Aucun utilisateur ni client n\'est supprimé. Cette action est irréversible.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'Les sous-dossiers de ce dossier sont supprimés et tous les utilisateurs et clients qui y sont classés en sont retirés. Les nombres n\'ont pas pu être lus. Cette action est irréversible.',
 

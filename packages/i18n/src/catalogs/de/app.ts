@@ -129,6 +129,8 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.PATH_SCOPE_ALL]: 'Alle Pfade',
     [TranslatorTranslationAppKey.PATH_SCOPE_TRUNCATED]: 'Dieser Ordner enthält zu viele Unterordner, um die Liste einzugrenzen, daher werden alle Einträge angezeigt.',
     [TranslatorTranslationAppKey.PATH_SCOPE_INCOMPLETE]: 'Dieser Realm enthält zu viele Ordner, um alle anzuzeigen, daher ist der Baum unvollständig.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_FAILED]: 'Der Ordner konnte nicht geladen werden, daher wird nichts angezeigt.',
+    [TranslatorTranslationAppKey.PATH_SCOPE_MISSING]: 'Dieser Ordner existiert nicht mehr, daher wird nichts angezeigt.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_DESCRIPTION]: 'Dies löscht {{paths}} Unterordner und hebt die Zuordnung von {{users}} Benutzern und {{clients}} Clients auf. Kein Benutzer und kein Client wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
     [TranslatorTranslationAppKey.PATH_DELETE_CONFIRM_UNKNOWN]: 'Die Unterordner dieses Ordners werden gelöscht und die Zuordnung aller darin abgelegten Benutzer und Clients wird aufgehoben. Die Anzahl konnte nicht gelesen werden. Diese Aktion kann nicht rückgängig gemacht werden.',
 
