@@ -17,7 +17,6 @@ import {
     isFilter,
     isFilters,
     lt,
-    lte,
 } from '@rapiq/core';
 import { readConjuncts } from '../../stats/window.ts';
 
@@ -31,16 +30,18 @@ function toDay(input: Date): string {
 }
 
 /**
- * A rollup answers whole days: the day holding a bound is included whole,
- * so a bound is widened onto the day boundary around it.
+ * A rollup answers whole days, so it answers a bound only on a day
+ * boundary (`gte` / `lt` at 00:00Z). Any other bound, an unparsable one
+ * included, is undefined: the raw rows answer it exactly.
  */
-function translateCondition(condition: ICondition): ICondition {
+function translateCondition(condition: ICondition): ICondition | undefined {
     if (isFilters(condition)) {
-        return new Filters(
-            condition.operator,
-            condition.value.map((child) => translateCondition(child)),
-            { preserved: condition.preserved },
-        );
+        const children = condition.value.map((child) => translateCondition(child));
+        if (children.some((child) => !child)) {
+            return undefined;
+        }
+
+        return new Filters(condition.operator, children as ICondition[], { preserved: condition.preserved });
     }
 
     if (!isFilter(condition) || condition.field !== 'createdAt') {
@@ -48,27 +49,24 @@ function translateCondition(condition: ICondition): ICondition {
     }
 
     const date = new Date(condition.value as string);
-    if (condition.operator === 'lt') {
-        const start = new Date(`${toDay(date)}T00:00:00.000Z`);
-        if (start.getTime() < date.getTime()) {
-            start.setUTCDate(start.getUTCDate() + 1);
-        }
-
-        return lt('day', toDay(start));
+    if (
+        Number.isNaN(date.getTime()) ||
+        date.getTime() % 86_400_000 !== 0 ||
+        (condition.operator !== 'gte' && condition.operator !== 'lt')
+    ) {
+        return undefined;
     }
 
-    if (condition.operator === 'lte') {
-        return lte('day', toDay(date));
-    }
-
-    // gte, gt: the timestamp filters gate admits range operators only
-    return gte('day', toDay(date));
+    return condition.operator === 'lt' ?
+        lt('day', toDay(date)) :
+        gte('day', toDay(date));
 }
 
 /**
  * The raw-vocabulary grouped event query onto auth_event_aggregates:
  * `createdAt` becomes `day`, `count()` becomes `sum(count)`. Undefined when
- * an aggregate is anything but `count()`: a stored count cannot answer it.
+ * an aggregate is anything but `count()` or a bound falls inside a day: the
+ * stored counts cannot answer it.
  */
 export function translateEventAggregateQuery(query: IQuery): IQuery | undefined {
     const aggregates = query.aggregates?.value ?? [];
@@ -76,8 +74,13 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
         return undefined;
     }
 
+    const filters = translateCondition(query.filters);
+    if (!filters) {
+        return undefined;
+    }
+
     return new Query({
-        filters: translateCondition(query.filters) as Filters,
+        filters: filters as Filters,
         groups: new Groups((query.groups?.value ?? []).map((group) => {
             if (group.lowering?.fn !== 'bucket' || group.lowering.field !== 'createdAt') {
                 return group;

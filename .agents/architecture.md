@@ -954,10 +954,13 @@ until deleted.
 - **Routing is by the query's shape AFTER the gate.** A `day` or `month` read
   whose lowered query references stored columns only (filter leaves, groups,
   aggregate fields) and whose aggregates are `count()` alone is translated
-  (`translateEventAggregateQuery`: `createdAt` becomes `day`, a bound is
-  widened onto the UTC day holding it, `count()` becomes `sum(count)`) and
-  answered from the rollups; the rows are translated back, so the caller
-  cannot tell. Everything else reads raw events: every `hour` read, and every
+  (`translateEventAggregateQuery`: `createdAt` becomes `day`, `count()`
+  becomes `sum(count)`) and answered from the rollups; the rows are
+  translated back, so the caller cannot tell. A rollup answers whole days,
+  so only a `gte` / `lt` bound at 00:00Z translates (an open window ends at
+  the next day boundary); a bound inside a day, or an unparsable one, reads
+  raw events instead of being widened, which is why the console snaps its
+  lower bound. Everything else reads raw events: every `hour` read, and every
   reader without `EVENT_READ`, whose query the gate lowered onto its own
   `actorId`, a column no rollup stores. That is the property that keeps a
   reader of own rows from ever reading other actors' counts, and it holds

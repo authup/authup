@@ -119,11 +119,20 @@ export class EntityStatsService<
         // a column the rollup did not store (an actor's own actorId) reads
         // raw rows, whatever the caller asked for
         const { rollup } = this.definition;
-        const routable = rollup &&
-            readReferencedColumns(scoped).every((column) => rollup.columns.includes(column)) ?
-            rollup.translate(grouped) :
-            undefined;
-        const translated = window.unit !== 'hour' ? routable : undefined;
+        const routable = !!rollup &&
+            readReferencedColumns(scoped).every((column) => rollup.columns.includes(column));
+
+        // a rollup answers whole days, so an open window ends at the next
+        // day boundary rather than the read instant
+        let translated: IQuery | undefined;
+        if (rollup && routable && window.unit !== 'hour') {
+            const end = new Date(now);
+            end.setUTCHours(24, 0, 0, 0);
+
+            translated = rollup.translate(window.upperBound ?
+                scoped :
+                appendQueryConditions(scoped, lt(dateColumn, end.toISOString())));
+        }
 
         if (!translated && window.unit !== 'hour' && isPastRawHorizon(window, rawHorizonDays, now)) {
             throw new ValidationError(`This filter reaches back past ${rawHorizonDays} days; rollups cannot answer it.`);

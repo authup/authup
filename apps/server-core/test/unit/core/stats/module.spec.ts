@@ -776,6 +776,26 @@ describe('EntityStatsService routing onto the rollups', () => {
         }), allowed())).rejects.toSatisfy(isValidationError);
     });
 
+    it('answers a bound inside a day from raw events, never widening it', async () => {
+        await service.getMany(wire({ from: '2026-09-16T12:00:00.000Z' }), allowed());
+        await service.getMany(wire({ filter: lt('createdAt', '2026-09-22T12:00:00.000Z') }), allowed());
+
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(repository.aggregateCalls).toHaveLength(2);
+    });
+
+    it('answers an unparsable bound from raw events rather than failing the translation', async () => {
+        await service.getMany(wire({ filter: lt('createdAt', 'nope') }), allowed());
+        await service.getMany(wire({
+            from: new Date(Date.now() - DAY_IN_MS).toISOString(),
+            unit: 'hour',
+            filter: lt('createdAt', 'nope'),
+        }), allowed());
+
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(repository.aggregateCalls).toHaveLength(2);
+    });
+
     it('never shares a cache entry between the two sources', async () => {
         const raw = new EntityStatsService({
             definition: defineEventStats(repository, { rawHorizonDays: 7 }),

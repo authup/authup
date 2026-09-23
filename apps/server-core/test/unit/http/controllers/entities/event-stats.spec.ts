@@ -291,6 +291,13 @@ describe('src/http/controllers/entities/event (stats)', () => {
         );
     });
 
+    it('refuses an unparsable bound next to a valid one on a day read', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS), lt('createdAt', 'nope'))),
+            { status: 400 },
+        );
+    });
+
     it('bounds the window above by the filter', async () => {
         const to = new Date();
         to.setUTCHours(0, 0, 0, 0);
@@ -379,9 +386,14 @@ describe('src/http/controllers/entities/event (stats)', () => {
     });
 
     it('answers the entity activity shape from the rollups', async () => {
+        // a day-aligned bound, as the console sends it: a rollup answers
+        // whole days only
+        const from = new Date(Date.now() - (30 * DAY_IN_MS));
+        from.setUTCHours(0, 0, 0, 0);
+
         const { data } = await suite.client.event.getStats({
             filters: and(
-                gte('createdAt', since(30 * DAY_IN_MS)),
+                gte('createdAt', from.toISOString()),
                 eq('scope', EventScope.ENTITY),
                 eq('refType', 'user'),
             ),
