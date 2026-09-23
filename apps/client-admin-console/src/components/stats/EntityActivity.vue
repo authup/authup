@@ -14,6 +14,7 @@ import {
     useTranslations,
 } from '@authup/client-web-kit';
 import type { EntityStatsQuery, EventStatsResponse } from '@authup/core-http-kit';
+import { StatsGranularity } from '@authup/core-http-kit';
 import { EntityDefaultEventName, EventScope, PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
@@ -27,6 +28,7 @@ type Box = {
     key: string,
     label: string,
     value: string,
+    hint: string,
 };
 
 // The boxes above an entity list: its total, and how many of its rows the
@@ -118,6 +120,25 @@ export default defineComponent({
             key: TranslatorTranslationAppKey.ACTIVITY_SOURCE,
         });
 
+        // the window line under each box, as the dashboard tiles carry it
+        const inDays = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.ACTIVITY_IN_DAYS,
+            data: { days: computed(() => windowEntry.value.days) },
+        });
+        const inHours = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.ACTIVITY_IN_HOURS,
+            data: { hours: computed(() => windowEntry.value.days * 24) },
+        });
+        const allTime = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.ACTIVITY_ALL_TIME,
+        });
+        const windowHint = computed(() => (windowEntry.value.granularity === StatsGranularity.HOUR ?
+            inHours.value :
+            inDays.value));
+
         const retentionDays = computed(() => eventStats.response.value?.meta.entityRetentionDays ?? 0);
         const retentionTitle = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
@@ -133,6 +154,7 @@ export default defineComponent({
                     key: 'total',
                     label: translations.activityTotal,
                     value: numberFormat.value.format(totalStats.response.value.meta.total),
+                    hint: allTime.value,
                 });
             }
 
@@ -142,16 +164,19 @@ export default defineComponent({
                         key: EntityDefaultEventName.CREATED,
                         label: translations.activityCreated,
                         value: numberFormat.value.format(countOf(EntityDefaultEventName.CREATED)),
+                        hint: windowHint.value,
                     },
                     {
                         key: EntityDefaultEventName.UPDATED,
                         label: translations.activityUpdated,
                         value: numberFormat.value.format(countOf(EntityDefaultEventName.UPDATED)),
+                        hint: windowHint.value,
                     },
                     {
                         key: EntityDefaultEventName.DELETED,
                         label: translations.activityDeleted,
                         value: numberFormat.value.format(countOf(EntityDefaultEventName.DELETED)),
+                        hint: windowHint.value,
                     },
                 );
             }
@@ -202,6 +227,9 @@ export default defineComponent({
                 </div>
                 <div class="mt-1 text-3xl font-semibold tabular-nums">
                     {{ box.value }}
+                </div>
+                <div class="mt-1 text-sm text-fg-muted">
+                    {{ box.hint }}
                 </div>
             </div>
         </div>

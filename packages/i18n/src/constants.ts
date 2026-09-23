@@ -288,6 +288,12 @@ export enum TranslatorTranslationAppKey {
     ACTIVITY_DELETED = 'activityDeleted',
     ACTIVITY_SOURCE = 'activitySource',
     /**
+     * The window line under an activity box, as on the dashboard tiles.
+     */
+    ACTIVITY_IN_DAYS = 'activityInDays',
+    ACTIVITY_IN_HOURS = 'activityInHours',
+    ACTIVITY_ALL_TIME = 'activityAllTime',
+    /**
      * Why a statistics window is disabled: the records behind it are not
      * kept that long.
      */
