@@ -7,15 +7,35 @@
 
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
-import { isValidupError } from 'validup';
+import { Container, isValidupError  } from 'validup';
 import { describe, expect, it } from 'vitest';
-import type { AuthorizationEvaluatorInput, IdentityPolicyData } from '../../../src';
+import { createValidator } from '@validup/zod';
+import { z } from 'zod';
+import type { AuthorizationEvaluatorInput, IPolicyEvaluator, IdentityPolicyData } from '../../../src';
 import {
     AuthorizationCatalogStaleError,
     BuiltInPolicyType,
     PolicyData,
+    PolicyDefaultEvaluators,
+    PolicyDefaultValidators,
     createAuthorizationEvaluator,
+    isPermissionError,
+    realmScopeMatches,
 } from '../../../src';
+
+class WeekdayPolicyValidator extends Container<{ weekday: number }> {
+    override initialize() {
+        super.initialize();
+
+        this.mount('weekday', createValidator(z.number().int().min(0).max(6)));
+    }
+}
+
+const weekdayEvaluator : IPolicyEvaluator = {
+    async evaluate(value) {
+        return { success: value.weekday === 3 };
+    },
+};
 
 const realmA = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';
@@ -113,8 +133,13 @@ async function allowed(evaluator: Awaited<ReturnType<typeof createAuthorizationE
     try {
         await evaluator.evaluate({ name: 'event_read', data });
         return true;
-    } catch {
-        return false;
+    } catch (e) {
+        // Only a permission error is a deny; a refused document fails the caller.
+        if (isPermissionError(e)) {
+            return false;
+        }
+
+        throw e;
     }
 }
 
@@ -765,5 +790,94 @@ describe('authorization catalog consumer', () => {
             await expect(evaluator.evaluate({ name: 'event_read', data: resource(realmId) })).resolves.toBeUndefined();
         }
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'allow' });
+    });
+
+    // #3636: the consumer validates the key, the server decides it through
+    // `realmScopeMatches`, so every value the server decides is decided here
+    // the same way instead of being refused.
+    it.each([
+        ['own'],
+        ['ownOrNull'],
+    ] as const)('decides every realm match realmScopeMatches decides, for %s', async (realmScope) => {
+        const evaluator = await build({ grants: grants({ realm_scope: realmScope, policies: [] }) });
+        const values : (string | null | (string | null)[])[] = [
+            '',
+            [],
+            realmA,
+            'master',
+            realmB,
+            null,
+            [realmA, null],
+            [realmA, realmB],
+        ];
+        for (const value of values) {
+            const data = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: value });
+            expect(await allowed(evaluator, data)).toBe(realmScopeMatches(realmScope, value, realmA, 'master'));
+        }
+    });
+
+    it('refuses an undefined realm match rather than reading it as a global row', async () => {
+        const evaluator = await build({ grants: grants({ realm_scope: 'ownOrNull', policies: [] }) });
+        const issues = await issuesOf(() => evaluator.evaluate({
+            name: 'event_read',
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: undefined }),
+        }));
+
+        expect(issues[0]!.path).toEqual(['data', BuiltInPolicyType.REALM_MATCH]);
+    });
+
+    // #3635: a type the server registered travels, and a consumer that
+    // registers the same validator and evaluator decides it the same way.
+    it('evaluates a custom policy type registered on both registries', async () => {
+        const input = {
+            catalog: catalog(['binding', 'weekday'], {
+                binding: { type: 'permissionBinding' },
+                weekday: { type: 'weekday', weekday: 3 },
+            }),
+        };
+        const options = {
+            validators: { ...PolicyDefaultValidators, weekday: new WeekdayPolicyValidator() },
+            evaluators: { ...PolicyDefaultEvaluators, weekday: weekdayEvaluator },
+        };
+
+        const registered = await createAuthorizationEvaluator({
+            ...input,
+            grants: grants({ realm_scope: 'any', policies: [] }),
+            identity,
+        }, options);
+        expect(await allowed(registered, resource(realmA))).toBe(true);
+
+        const failing = await createAuthorizationEvaluator({
+            catalog: catalog(['binding', 'weekday'], {
+                binding: { type: 'permissionBinding' },
+                weekday: { type: 'weekday', weekday: 4 },
+            }),
+            grants: grants({ realm_scope: 'any', policies: [] }),
+            identity,
+        }, options);
+        expect(await allowed(failing, resource(realmA))).toBe(false);
+
+        // the defaults do not know the type: the definition denies, the build does not throw
+        const defaults = await build(input);
+        expect(await allowed(defaults, resource(realmA))).toBe(false);
+
+        // a validator without its evaluator projects the tree and then denies it
+        const projectedOnly = await createAuthorizationEvaluator({
+            ...input,
+            grants: grants({ realm_scope: 'any', policies: [] }),
+            identity,
+        }, { validators: options.validators });
+        expect(await allowed(projectedOnly, resource(realmA))).toBe(false);
+    });
+
+    it('keeps its own binding evaluator whatever evaluator registry is handed in', async () => {
+        const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
+        const handed = await createAuthorizationEvaluator({
+            catalog: catalog(),
+            grants: grants({ realm_scope: 'own', policies: [] }),
+            identity,
+        }, { evaluators: { ...PolicyDefaultEvaluators, permissionBinding: { evaluate: async () => ({ success: true }) } } });
+        expect(await allowed(evaluator, resource(realmB))).toBe(false);
+        expect(await allowed(handed, resource(realmB))).toBe(false);
     });
 });

@@ -30,12 +30,18 @@ import {
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyEntity,
+    RoleEntity,
     UserEntity,
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../app';
-import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
+import {
+    createFakeRealm,
+    createFakeRole,
+    createFakeUser,
+    httpRequest,
+} from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('src/http/controllers/workflows/authorization/*.ts', () => {
@@ -290,6 +296,73 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
                 () => compiled.verdict === 'allow';
             expect(rows.map((row) => !!predicate(row))).toEqual(expected);
         }
+    });
+
+    // #3636: the consumer's realm-aware gate, built from what a realm_admin-style
+    // actor is served, must reach the verdict the server reaches for the same
+    // read. The server's own decision is the record read itself.
+    it('decides a realm-scoped read the way the server does, for an ownOrNull actor', async () => {
+        const { data: own } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreign } = await suite.client.realm.create(createFakeRealm());
+
+        const password = 'start123-authorization-parity';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password, realmId: own.id }));
+        for (const name of [PermissionName.PERMISSION_READ, PermissionName.ROLE_READ]) {
+            const { data: permission } = await suite.client.permission.getOne(name);
+            await suite.client.userPermission.create({
+                userId: user.id,
+                permissionId: permission.id,
+                realmScope: RealmScope.OWN_OR_NULL,
+            });
+        }
+
+        const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: own.id }));
+        const { data: foreignRole } = await suite.client.role.create(createFakeRole({ realmId: foreign.id }));
+        const roleRepository = suite.dataSource.getRepository(RoleEntity);
+        const globalRole = await roleRepository.save(roleRepository.create({ name: randomUUID(), realmId: null }));
+        const roles = [ownRole, foreignRole, globalRole];
+        expect(roles.map((role) => role.realmId)).toEqual([own.id, foreign.id, null]);
+
+        const grant = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_id: own.id,
+        });
+        const headers = { Authorization: `Bearer ${grant.access_token}` };
+        const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        const response = await httpRequest(suite, 'GET', '/authorization', { headers });
+        expect(response.status).toBe(200);
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog: await response.json(),
+            grants: introspection.permissions,
+            identity: {
+                id: user.id,
+                type: introspection.sub_kind,
+                realmId: introspection.realm_id,
+                realmName: introspection.realm_name,
+            },
+        });
+
+        const names = [PermissionName.ROLE_READ, PermissionName.ROLE_UPDATE, PermissionName.ROLE_DELETE];
+        const consumer = await Promise.all(roles.map(async (role) => {
+            try {
+                await evaluator.evaluateOneOf({
+                    name: names,
+                    data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: role.realmId }),
+                });
+                return true;
+            } catch {
+                return false;
+            }
+        }));
+        const server = await Promise.all(roles.map(async (role) => {
+            const read = await httpRequest(suite, 'GET', `/roles/${role.id}`, { headers });
+            return read.status === 200;
+        }));
+
+        expect(server).toEqual([true, false, true]);
+        expect(consumer).toEqual(server);
     });
 
     it('carries the junction policy a grant names, so a restricted grant round-trips into the evaluator', async () => {

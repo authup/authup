@@ -20,3 +20,12 @@ export type PermissionCheckerReactiveFnContext = PermissionEvaluationContext |
 (() => PermissionEvaluationContext);
 
 export type PermissionCheckerReactiveFn = (ctx: PermissionCheckerReactiveFnContext) => Ref<boolean>;
+
+export type PermissionCheckState = {
+    /** The verdict, fail-closed `false` until the evaluation settles. */
+    allowed: Ref<boolean>,
+    /** Whether `allowed` is the settled verdict rather than the default. */
+    settled: Ref<boolean>
+};
+
+export type PermissionCheckerReactiveStateFn = (ctx: PermissionCheckerReactiveFnContext) => PermissionCheckState;

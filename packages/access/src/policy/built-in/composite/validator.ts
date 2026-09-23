@@ -28,7 +28,7 @@ export class CompositePolicyValidator extends Container<CompositePolicy> {
         this.mount(
             'children',
             createValidator(
-                z.array(z.looseObject({ type: z.string().min(3) })),
+                z.array(z.looseObject({ type: z.string().min(1) })),
             ),
         );
 

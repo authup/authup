@@ -25,7 +25,7 @@ import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { useAlertDialog } from '@vuecs/overlays';
-import type { ListLoadFn } from '@authup/client-web-kit';
+import type { EntityListQueryInput, ListLoadFn } from '@authup/client-web-kit';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import {
@@ -90,7 +90,7 @@ export default defineComponent({
         // parent has re-rendered: a pre-flush reload composes the query
         // this page held BEFORE the navigation, which is the very state
         // the reload exists to leave behind.
-        const collection = ref<{ load: ListLoadFn, busy: boolean } | null>(null);
+        const collection = ref<{ load: ListLoadFn<EntityListQueryInput<Path>>, busy: boolean } | null>(null);
         watch(query, () => {
             reloadCollection(() => collection.value);
         }, { flush: 'post' });

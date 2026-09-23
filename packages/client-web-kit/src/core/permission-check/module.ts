@@ -7,7 +7,6 @@
 
 import type { IdentityPolicyData, PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import type { Ref } from 'vue';
 import {
     onMounted,
     onUnmounted,
@@ -18,9 +17,11 @@ import { useHydratedValue } from '../hydration';
 import type { Store } from '../store';
 import { injectStore, storeToRefs } from '../store';
 import type {
+    PermissionCheckState,
     PermissionCheckerReactiveFn,
     PermissionCheckerReactiveFnContext,
     PermissionCheckerReactiveFnCreateContext,
+    PermissionCheckerReactiveStateFn,
 } from './types';
 
 /**
@@ -57,6 +58,19 @@ function buildPermissionHydrationKey(
 export function createPermissionCheckerReactiveFn(
     ctx: PermissionCheckerReactiveFnCreateContext = {},
 ) : PermissionCheckerReactiveFn {
+    const checkFn = createPermissionCheckerReactiveStateFn(ctx);
+
+    return (input: PermissionCheckerReactiveFnContext) => checkFn(input).allowed;
+}
+
+/**
+ * The checker with its settle state beside the verdict. A fail-closed
+ * `false` reads the same before and after the evaluation, so a caller that
+ * must tell "denied" from "not decided yet" reads `settled` (#3632).
+ */
+export function createPermissionCheckerReactiveStateFn(
+    ctx: PermissionCheckerReactiveFnCreateContext = {},
+) : PermissionCheckerReactiveStateFn {
     let store : Store;
     if (ctx.store) {
         store = ctx.store;
@@ -70,12 +84,13 @@ export function createPermissionCheckerReactiveFn(
     // Pass a GETTER to make the evaluation context reactive: the checker
     // re-evaluates whenever the getter's dependencies (e.g. component props)
     // change, in addition to the login-state changes it always tracks.
-    return (ctx: PermissionCheckerReactiveFnContext) : Ref<boolean> => {
+    return (ctx: PermissionCheckerReactiveFnContext) : PermissionCheckState => {
         const resolveContext : () => PermissionEvaluationContext = typeof ctx === 'function' ?
             ctx :
             () => ctx;
 
         const data = ref(false);
+        const settled = ref(false);
 
         // guards a recompute triggered while an earlier evaluation is still
         // in flight — only the latest evaluation may write the outcome (the
@@ -125,12 +140,14 @@ export function createPermissionCheckerReactiveFn(
             // previously allowed outcome must not keep authorizing across a
             // context/login change.
             data.value = false;
+            settled.value = false;
 
             return Promise.resolve()
                 .then(() => compute())
                 .then((outcome) => {
                     if (current === sequence) {
                         data.value = outcome;
+                        settled.value = true;
                     }
 
                     return outcome;
@@ -154,6 +171,7 @@ export function createPermissionCheckerReactiveFn(
                 resolve: () => pending,
                 apply: (value) => {
                     data.value = value;
+                    settled.value = true;
                 },
             });
         }
@@ -177,6 +195,9 @@ export function createPermissionCheckerReactiveFn(
             }
         });
 
-        return data;
+        return {
+            allowed: data,
+            settled,
+        };
     };
 }

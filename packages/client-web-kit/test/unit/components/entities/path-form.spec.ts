@@ -118,6 +118,29 @@ describe('APathForm', () => {
 
         wrapper.unmount();
     });
+
+    // #3632: the server refuses a folder as its own parent or under its own
+    // subtree, so the picker does not offer those rows in the first place
+    it('should not offer the folder itself or its subtree as a parent', async () => {
+        const { wrapper, httpClient } = mountForm({
+            realmId: REALM_ID,
+            entity: {
+                id: '0d7b1c2e-3f4a-4b5c-8d6e-7f8a9b0c1d2e',
+                name: 'sales',
+                path: 'sales',
+                parentId: null,
+                realmId: REALM_ID,
+            },
+        });
+        await flushPromises();
+
+        const requests = findCollectionRequests(httpClient);
+        expect(requests.length).toBeGreaterThan(0);
+        expect(decodeURIComponent(requests[0]!.url))
+            .toContain(`and(in(realmId,'${REALM_ID}'),not(or(eq(path,'sales'),startsWith(path,'sales/'))))`);
+
+        wrapper.unmount();
+    });
 });
 
 describe('APaths', () => {

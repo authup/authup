@@ -7,6 +7,7 @@
 
 import type { User as UserEntity } from '@authup/core-kit';
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -16,7 +17,7 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeUser } from '../../../../utils';
+import { createFakeUser, expectClientError } from '../../../../utils';
 
 describe('http/controllers/user (self-manage)', () => {
     const suite = createTestApplication();
@@ -98,6 +99,28 @@ describe('http/controllers/user (self-manage)', () => {
         await expect(
             selfClient.user.update(entity.id, { status: 'banned' } as Partial<UserEntity>),
         ).rejects.toThrow();
+    });
+
+    // the user half of the refile denylist (#3632); the client half lives in
+    // client-self-manage.spec.ts
+    it('should reject self-update of pathId (denylisted)', async () => {
+        // a real folder in the user's own realm, so the rejection can only
+        // come from the self-manage denylist
+        const { data: path } = await suite.client.path.create({
+            name: `self-${entity.id}`,
+            realmId: entity.realmId,
+        });
+
+        await expectClientError(
+            () => selfClient.user.update(entity.id, { pathId: path.id }),
+            {
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
+
+        const { data: current } = await suite.client.user.getOne(entity.id);
+        expect(current.pathId).toBeNull();
     });
 
     it('should reject self-update of another user (not self)', async () => {

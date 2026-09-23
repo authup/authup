@@ -27,6 +27,7 @@ import type {
     IUserPermissionRepository,
     IUserRoleRepository,
 } from '../../../../../src/core/entities/index.ts';
+import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import { UserProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/user/module.ts';
 import { FakePathRepository } from '../../entities/path/fake-repository.ts';
 import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
@@ -68,5 +69,44 @@ describe('core/provisioning/synchronizer/user', () => {
 
         const user = await userRepository.findOneBy({ name: 'alice', realmId });
         expect(user!.pathId).toEqual(folder!.id);
+    });
+    // A selective merge picks only the listed attributes, and `pathId` is
+    // not one an operator writes by hand: declaring the folder is the ask,
+    // so it rides the merge anyway (#3632).
+    it('should refile an existing user under a selective merge', async () => {
+        const existing = userRepository.seed({
+            name: 'alice', 
+            realmId, 
+            displayName: 'Alice', 
+        });
+
+        await synchronizer.synchronize({
+            strategy: { type: ProvisioningEntityStrategyType.MERGE, attributes: ['displayName'] },
+            attributes: {
+                name: 'alice', 
+                realmId, 
+                displayName: 'Alice B.', 
+            },
+            relations: { path: 'sales' },
+        });
+
+        const folder = await pathRepository.findOneBy({ realmId, path: 'sales' });
+        const user = await userRepository.findOneBy({ id: existing.id });
+        expect(user!.displayName).toEqual('Alice B.');
+        expect(user!.pathId).toEqual(folder!.id);
+    });
+
+    it('should create no folder for an existing user under createOnly', async () => {
+        const existing = userRepository.seed({ name: 'alice', realmId });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'alice', realmId },
+            relations: { path: 'sales/berlin' },
+        });
+
+        expect(pathRepository.getAll()).toHaveLength(0);
+
+        const user = await userRepository.findOneBy({ id: existing.id });
+        expect(user!.pathId ?? null).toBeNull();
     });
 });

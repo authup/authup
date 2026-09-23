@@ -3539,8 +3539,12 @@ declaration of its own), synchronized before the realm's clients and users like
 its scopes; a user or client entry names one folder under `relations.path`,
 which the user and client synchronizers resolve through `ensurePath` as well,
 so a file may reference `sales/berlin` without declaring it under `paths` and
-the `paths` list is what gives a folder a display name or a description. A
-wildcard realm entry seeds one folder set into every realm.
+the `paths` list is what gives a folder a display name or a description. The
+folder is resolved only on the branch that writes the row, so `createOnly` over
+an existing row creates no folder chain, and under `merge` a declared
+`relations.path` rides the merge even when the strategy's `attributes` list
+names no `pathId`, since declaring it is the ask (#3632). A wildcard realm
+entry seeds one folder set into every realm.
 
 **Listing rows by folder is an `IN` over ids, never a relation traversal.** The
 console resolves the subtree on the paths table (`GET /paths` with the
@@ -3582,8 +3586,22 @@ a scope still being RESOLVED contributes no filter at all, where one that
 resolved to nothing contributes the empty id list: rapiq encodes an empty
 `in` as a constant false, so publishing it while the lookup is out makes
 every load taken in that window list nothing, and the selection is known one
-tick before its ids on every folder change. All three are what make
-`?path=` reach the server at all; the folder scope hit each of them.
+tick before its ids on every folder change. The fourth is that a folder in
+the route counts as pending until the `PATH_READ` check has SETTLED (the
+kit's `usePermissionCheckState`, whose `settled` flag is what tells a denial
+from the fail-closed default), since `path` reads null until then and the
+page's first load would otherwise list every row in the realm (#3632). All
+four are what make `?path=` reach the server at all; the folder scope hit
+each of them.
+A lookup that fails, and one that answers without the named folder (it was
+renamed, moved or deleted), stay fail-closed and list nothing, but the scope
+reports them as `failed` (with a `retry`) and `missing` so the page renders a
+notice instead of what reads as an empty folder; both clear when the next
+lookup starts rather than when it lands. The pane's own lookup carries
+the same generation guard as the scope's, and the parent picker of an
+existing folder leaves out the folder and its subtree
+(`not(<scope condition>)`), so a parent the server would refuse is never
+offered.
 
 **The control that picks the folder is a TREE, and it carries a second budget
 of its own.** `APathTree` (kit) renders `<VCTree>` over `parseTreePaths`, the
@@ -3752,13 +3770,36 @@ not stale**: the server could not project its policy layer and says so on the wi
 of omitting it, so the consumer denies the permission and drops every grant of it, since a
 refetch cannot change what the server cannot project. **A tree
 the CONSUMER cannot project is the same condition read from the other side, and it is per
-tree**: the built-in policy type enum is closed while `auth_policies.type` is a free
-string, so a type newer than that copy of `@authup/access` (the documented upgrade order,
-server first, produces exactly that skew) or a configuration its validator refuses
-tombstones the definitions referencing it and drops the grants naming it, and takes no
-other permission down with it. One unknown type used to throw out of the whole build, for
-every caller, over a tree the caller may not even reference. A malformed catalog still
-throws: a duplicate permission namespace is not a data condition.
+tree**: a type the consumer's validator registry lacks (one newer than that copy of
+`@authup/access`, which the documented upgrade order, server first, produces, or a custom
+one it did not register) or a configuration its validator refuses tombstones the
+definitions referencing it and drops the grants naming it, and takes no other permission
+down with it. A malformed catalog still throws: a duplicate permission namespace is not a
+data condition. **The policy type set is open on both sides (#3635)**, since
+`auth_policies.type` is a free string and `PolicyEngine.registerEvaluator` takes any type:
+`PolicyDefaultValidators` sits next to `PolicyDefaultEvaluators`,
+`projectAuthorizationPolicy(input, validators?)` refuses what its registry does not name
+(and the withheld node whatever it names), and
+`createAuthorizationEvaluator(input, { validators?, evaluators? })` takes both registries,
+replacing the defaults rather than merging, so a caller spreads them. The binding evaluator
+is always the consumer's own; a validator without the evaluator projects the tree and then
+denies it. **server-core's own type set stays closed**: every engine it builds starts from
+`PolicyDefaultEvaluators` and nothing registers another type, so its catalog builder and
+introspection project with the defaults and a custom-type tree still travels as
+`policies: null`, which is exactly what the server itself decides for it. Opening it means
+one registry pair every engine construction, the catalog builder and the introspection
+read together; a validator seam on the builder alone would publish trees the server
+denies. Writing
+a non-built-in `type` through `POST /policies` is still accepted and evaluates as
+`POLICY_EVALUATOR_NOT_FOUND` wherever it is bound: rejecting it would pin the write path to
+one static registry while the engines are built per request, which is the closed set this
+change removes.
+**A `realmMatch` key is validated by what `realmScopeMatches` decides (#3636)**: a realm
+key, `null`, or a list of either. An empty key and an empty list are legal and deny on
+both sides; `undefined` is refused, because the server coerces it to `null` and a caller
+handing an absent column over should hear about it rather than reach the global rows. The
+realm-aware gate is pinned end to end against the server's own record read for an
+`ownOrNull` actor in `authorization.spec.ts`.
 **Both the identity and the grants are optional**, because server-core attaches IDENTITY
 data only when a request carries an identity: without one the consumer binds no grant and
 REMOVES any IDENTITY key the caller supplied (symmetrical with the identity branch, which

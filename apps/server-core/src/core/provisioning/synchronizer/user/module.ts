@@ -84,11 +84,11 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             };
         }
 
-        await this.resolvePath(input);
-
         if (attributes) {
             switch (strategy.type) {
-                case ProvisioningEntityStrategyType.MERGE:
+                case ProvisioningEntityStrategyType.MERGE: {
+                    await this.resolvePath(input);
+
                     if (
                         strategy.attributes &&
                         strategy.attributes.includes('email')
@@ -98,16 +98,25 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                             buildUserFakeEmail(input.attributes.name || attributes.name);
                     }
 
+                    // Declaring `relations.path` IS the ask, so a selective
+                    // merge carries the folder whether or not its list names
+                    // `pathId` (#3632).
+                    const keys = strategy.attributes && input.relations && input.relations.path ?
+                        [...strategy.attributes, 'pathId' as const] :
+                        strategy.attributes;
+
                     attributes = this.userRepository.merge(
                         attributes,
-                        strategy.attributes ?
-                            pickRecord(input.attributes, strategy.attributes) :
+                        keys ?
+                            pickRecord(input.attributes, keys) :
                             input.attributes,
                     );
 
                     attributes = await this.userRepository.save(attributes);
                     break;
+                }
                 case ProvisioningEntityStrategyType.REPLACE:
+                    await this.resolvePath(input);
                     input.attributes.email = input.attributes.email ||
                         attributes.email ||
                         (input.attributes.name ? buildUserFakeEmail(input.attributes.name) : undefined);
@@ -117,6 +126,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     break;
             }
         } else {
+            await this.resolvePath(input);
             if (!input.attributes.email && input.attributes.name) {
                 input.attributes.email = buildUserFakeEmail(input.attributes.name);
             }

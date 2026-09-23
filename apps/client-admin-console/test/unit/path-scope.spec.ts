@@ -33,6 +33,8 @@ function encodeFilters(filters: ReturnType<typeof buildPathCollectionFilters>) :
 describe('src/composables/path-scope -> readPathScopeQuery', () => {
     it('should read a folder path from the route query', () => {
         expect(readPathScopeQuery('sales/berlin')).toBe('sales/berlin');
+        expect(readPathScopeQuery(' Sales/Berlin ')).toBe('sales/berlin');
+        expect(readPathScopeQuery('  ')).toBeNull();
     });
 
     it('should read an absent, empty or repeated parameter as no scope', () => {

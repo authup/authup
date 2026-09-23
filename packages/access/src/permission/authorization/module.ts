@@ -37,10 +37,21 @@ import { parseAuthorizationEvaluatorInput } from './schema';
 import type {
     AuthorizationCheckEvaluatorInput,
     AuthorizationEvaluatorInput,
+    AuthorizationEvaluatorOptions,
     AuthorizationPolicy,
 } from './types';
 
-const realmMatchSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1), z.null()]);
+/**
+ * Every value `realmScopeMatches` decides, and nothing it would have to guess
+ * at (#3636): a realm key, `null` for a global row, or a list of either for a
+ * row spanning several realms. An empty key and an empty list are legal and
+ * DENY there (no identity's realm is the empty string, and the empty set is
+ * fail-closed), so refusing them here would make the consumer the one side
+ * that errors where the server answers. `undefined` stays refused: the server
+ * coerces it to `null`, which reads as a global row, and a caller passing an
+ * absent column should hear about it rather than reach the global rows.
+ */
+const realmMatchSchema = z.union([z.string(), z.array(z.string().nullable()), z.null()]);
 
 /**
  * Every refusal of the DOCUMENT is a `ValidupError` carrying the path of the
@@ -84,9 +95,9 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * the permission denies until the policy is fixed.
  *
  * A tree THIS copy cannot project is the same condition read from the other
- * side, and it is per tree: a policy type newer than this package (the
- * built-in type enum is closed while the column is a free string) or a
- * configuration its validator refuses denies the definitions that reference
+ * side, and it is per tree: a policy type the validator registry lacks (a
+ * type newer than this package, or a custom one the caller did not register)
+ * or a configuration its validator refuses denies the definitions that reference
  * it, exactly as `policies: null` does, and drops a grant that names it,
  * exactly as a binding check does. One such tree never takes the evaluator
  * down for the permissions that do not use it. A malformed catalog still
@@ -108,8 +119,18 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
  * rejected or evaluated over every candidate before paging. The supplied
  * identity is authoritative; `options.decisionStrategy` is forwarded and the
  * policy include, exclude and pending options are refused.
+ *
+ * The policy type set is open (#3635): `options.validators` decides which
+ * trees project and `options.evaluators` how they evaluate, the built-in
+ * registries by default. A custom type needs both, the validator the server
+ * projected it with and the evaluator the server decides it with; given only
+ * the first it projects and then denies. The binding evaluator is always this
+ * function's own, since it is what binds the introspected grants.
  */
-export async function createAuthorizationEvaluator(input: AuthorizationEvaluatorInput) : Promise<IPermissionEvaluator> {
+export async function createAuthorizationEvaluator(
+    input: AuthorizationEvaluatorInput,
+    options: AuthorizationEvaluatorOptions = {},
+) : Promise<IPermissionEvaluator> {
     const {
         catalog, 
         grants, 
@@ -120,7 +141,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
     const unevaluable = new Set<string>();
     for (const [id, raw] of Object.entries(catalog.policies)) {
         try {
-            trees.set(id, await projectAuthorizationPolicy(raw));
+            trees.set(id, await projectAuthorizationPolicy(raw, options.validators));
         } catch {
             unevaluable.add(id);
         }
@@ -206,7 +227,7 @@ export async function createAuthorizationEvaluator(input: AuthorizationEvaluator
         });
     }
 
-    const engine = new PolicyEngine(PolicyDefaultEvaluators);
+    const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
