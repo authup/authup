@@ -111,6 +111,49 @@ describe('src/policy (clock transitions)', () => {
             await expect(timeTransition({ ...window, invert: true })).resolves.toEqual(at(8));
         });
 
+        // A zone with a fall-back day makes the local minute after the end
+        // ambiguous. Node applies a TZ assigned at runtime to every Date made
+        // afterwards, so the zone is pinned here rather than read off the host,
+        // and the offset assertion fails loudly should that ever stop holding.
+        describe('across a DST fall-back', () => {
+            let tz : string | undefined;
+
+            beforeEach(() => {
+                tz = process.env.TZ;
+                process.env.TZ = 'America/New_York';
+            });
+
+            afterEach(() => {
+                if (typeof tz === 'undefined') {
+                    delete process.env.TZ;
+                } else {
+                    process.env.TZ = tz;
+                }
+            });
+
+            it('should report the minute after the first occurrence of an end before the fold', async () => {
+                // 01:30 EDT, the first pass through the repeated hour.
+                const now = new Date('2024-11-03T05:30:00.000Z');
+                expect(now.getTimezoneOffset()).toBe(240);
+
+                vi.setSystemTime(now);
+                const next = await timeTransition({ end: '01:59' });
+                expect(next?.toISOString()).toBe('2024-11-03T06:00:00.000Z');
+
+                const evaluate = async (instant: Date) => {
+                    vi.setSystemTime(instant);
+                    const result = await new TimePolicyEvaluator().evaluate(
+                        { end: '01:59' },
+                        definePolicyEvaluationContext(),
+                    );
+                    return result.success;
+                };
+
+                await expect(evaluate(new Date(next!.getTime() - 1))).resolves.toBe(true);
+                await expect(evaluate(next!)).resolves.toBe(false);
+            });
+        });
+
         it('should report nothing for an unconstrained policy', async () => {
             vi.setSystemTime(at(12));
             await expect(timeTransition({})).resolves.toBeUndefined();

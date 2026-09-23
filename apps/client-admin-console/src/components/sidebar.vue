@@ -52,12 +52,15 @@ export default defineComponent({
         // an `await`ed permission check. The reactive reads happen AFTER
         // that await, so `<VCNavItems>` can't auto-track them — the
         // explicit `:watch` list re-runs the resolver on every session
-        // transition (login/logout, identity change, realm switch) plus
-        // locale changes (so the labels re-translate on language switch).
+        // transition (login/logout, identity change, realm switch), every
+        // change of the session's verdicts (`permissionRevision`, e.g. a
+        // date or time policy flipping) plus locale changes (so the labels
+        // re-translate on language switch).
         const navigation = new Navigation(store, translate);
         const sideItems = () => navigation.getSideItems();
         const sideItemsWatch = [
             () => store.status,
+            () => store.permissionRevision,
             () => store.userId,
             () => store.realmManagement,
             () => locale.value,

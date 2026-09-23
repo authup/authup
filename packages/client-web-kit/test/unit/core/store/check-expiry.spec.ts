@@ -19,7 +19,7 @@ import {
     vi,
 } from 'vitest';
 import type { Ref } from 'vue';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, watch } from 'vue';
 import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
 import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
 import {
@@ -58,12 +58,16 @@ type CheckAnswer = {
  * The fake client answers no response headers, so the max-age the server
  * would send is stubbed on the one method that reads it.
  */
-function buildStore(answer: () => CheckAnswer | Promise<CheckAnswer>, cookieSession = false) {
+function buildStore(
+    answer: () => CheckAnswer | Promise<CheckAnswer>,
+    cookieSession = false,
+    introspection: () => Record<string, any> = () => INTROSPECTION,
+) {
     const httpClient : FakeClient = createFakeClient({
         handlers: {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
-            'POST /token/introspect': () => ({ ...INTROSPECTION }),
-            'GET /sessions/@me/introspect': () => ({ ...INTROSPECTION }),
+            'POST /token/introspect': () => ({ ...introspection() }),
+            'GET /sessions/@me/introspect': () => ({ ...introspection() }),
             'POST /token/revoke': () => ({}),
             'DELETE /sessions/@me': () => ({}),
         },
@@ -228,8 +232,44 @@ describe('core/store (check expiry)', () => {
         fail = false;
         await vi.advanceTimersByTimeAsync(30_000);
 
+        // the retry answered what was committed, so nothing re-evaluates
         expect(checks()).toBe(3);
-        expect(store.permissionRevision).toBe(1);
+        expect(store.permissionRevision).toBe(0);
+    });
+
+    it('backs off between failed refetches and starts over after a success', async () => {
+        let fail = true;
+        let calls = 0;
+        const { store, checks } = buildStore(() => {
+            calls += 1;
+            if (fail && calls > 1) {
+                throw new Error('Service unavailable.');
+            }
+
+            return { permissions: buildAuthorizationCheck(), maxAge: 60 };
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(checks()).toBe(2);
+
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(checks()).toBe(3);
+
+        await vi.advanceTimersByTimeAsync(59_000);
+        expect(checks()).toBe(3);
+        await vi.advanceTimersByTimeAsync(1_000);
+        expect(checks()).toBe(4);
+
+        fail = false;
+        await vi.advanceTimersByTimeAsync(120_000);
+        expect(checks()).toBe(5);
+
+        fail = true;
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(checks()).toBe(6);
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(checks()).toBe(7);
     });
 
     // `status` does not flip for a swap within one session, so a consumer
@@ -297,6 +337,124 @@ describe('core/store (check expiry)', () => {
 
         expect(checks()).toBe(2);
         expect(store.permissionRevision).toBe(revision + 1);
+        expect(outcome.value).toBe(false);
+    });
+
+    // A bearer session is not revalidated per navigation, so without the
+    // resolve noticing, a timer held back by sleep or background throttling
+    // would leave expired verdicts in place across every navigation.
+    it('refetches an expired answer of a bearer session on resolve, without the timer', async () => {
+        let permissions = buildAuthorizationCheck();
+        const { store, checks } = buildStore(() => ({ permissions, maxAge: 60 }));
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).resolves.toBeUndefined();
+
+        permissions = [];
+        vi.setSystemTime(new Date('2026-09-23T10:05:00Z'));
+        await store.resolve();
+
+        expect(checks()).toBe(2);
+        expect(store.permissionRevision).toBe(1);
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
+    });
+
+    // Every deadline refetches, and most answers are what they were: a bump
+    // would send every mounted check through its fail-closed default.
+    it('does not re-evaluate a permission check for an identical refetch', async () => {
+        const { store, checks } = buildStore(() => ({ permissions: buildAuthorizationCheck(), maxAge: 60 }));
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        let outcome!: Ref<boolean>;
+        mount(defineComponent({
+            setup() {
+                const checker = createPermissionCheckerReactiveFn({ store });
+                outcome = checker({ name: 'user_read' });
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+        expect(outcome.value).toBe(true);
+
+        const seen : boolean[] = [];
+        watch(outcome, (value) => {
+            seen.push(value);
+        }, { flush: 'sync' });
+
+        await vi.advanceTimersByTimeAsync(60_000);
+        await flushPromises();
+
+        expect(checks()).toBe(2);
+        expect(store.permissionRevision).toBe(0);
+        expect(seen).toEqual([]);
+        expect(outcome.value).toBe(true);
+    });
+
+    // The timer's refetch still runs for the old grants when a resolve with
+    // new ones replaces the memo: installing it would put stale verdicts in
+    // place, and the newer commit would then see nothing left to announce.
+    it('lets a newer load win over a timer refetch it overtook', async () => {
+        let grants = buildAuthorizationGrants();
+        const gates = new Map<number, PromiseWithResolvers<void>>([
+            [2, Promise.withResolvers<void>()],
+            [3, Promise.withResolvers<void>()],
+        ]);
+        let calls = 0;
+        const { store, checks } = buildStore(
+            async () => {
+                calls += 1;
+                const call = calls;
+                const gate = gates.get(call);
+                if (gate) {
+                    await gate.promise;
+                }
+
+                return {
+                    permissions: call === 3 ? [] : buildAuthorizationCheck(),
+                    maxAge: 60,
+                };
+            },
+            true,
+            () => ({ ...INTROSPECTION, permissions: grants }),
+        );
+
+        await store.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+
+        let outcome!: Ref<boolean>;
+        mount(defineComponent({
+            setup() {
+                const checker = createPermissionCheckerReactiveFn({ store });
+                outcome = checker({ name: 'user_read' });
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+        expect(outcome.value).toBe(true);
+
+        // the timer's refetch for the committed grants is in flight
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(checks()).toBe(2);
+
+        // a navigation with other grants replaces the memo
+        grants = [];
+        const resolving = store.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(checks()).toBe(3);
+
+        // the overtaken refetch settles first, the newer one after
+        gates.get(2)!.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+        gates.get(3)!.resolve();
+        await resolving;
+        await flushPromises();
+
+        await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
         expect(outcome.value).toBe(false);
     });
 });

@@ -71,12 +71,12 @@ function toDate(
  */
 function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
     const candidates : Date[] = [];
-    const atMinute = (input: Date, offset = 0) => new Date(
+    const atMinute = (input: Date) => new Date(
         now.getFullYear(),
         now.getMonth(),
         now.getDate(),
         input.getHours(),
-        input.getMinutes() + offset,
+        input.getMinutes(),
     );
 
     if (policy.start) {
@@ -84,7 +84,11 @@ function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
     }
 
     if (policy.end) {
-        candidates.push(atMinute(toDate(policy.end, now), 1));
+        // One minute of ELAPSED time after the end, not the local wall-clock
+        // minute after it: on a DST fall-back day the end can sit just before
+        // the repeated hour, and `H:(M+1)` then names the second occurrence of
+        // that hour while the evaluator already flips after the first one.
+        candidates.push(new Date(atMinute(toDate(policy.end, now)).getTime() + 60_000));
     }
 
     if (policy.start || policy.end || policy.interval) {

@@ -19,6 +19,7 @@ import type {
     PermissionPolicyBinding,
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, RealmScope } from '@authup/access';
+import { DecisionStrategy } from '@authup/kit';
 import { buildAuthorizationCheck } from '../../../../src/core/authorization/check.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
 import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorization-catalog-repository.ts';
@@ -494,6 +495,100 @@ describe('core/authorization/check', () => {
             expect(result.permissions).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
             // the minute after the end: the evaluator compares at minute precision
             expect(result.expiresAt).toEqual(new Date(2024, 3, 17, 16, 1));
+        });
+
+        // The window of a permission the caller cannot hold is none of its
+        // business: it would disclose the boundaries and have the caller
+        // refetch at them for nothing. Junction rows carry no order, so both
+        // orders of the definition's policies must answer the same.
+        it.each([
+            ['the time policy first', () => [officeHours, systemDefault]],
+            ['the time policy last', () => [systemDefault, officeHours]],
+        ])('reports no expiry to an anonymous caller for a grant-bound definition, %s', async (_, policies) => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup([[definition('user_read')[0], policies()]], []);
+
+            const result = await buildAuthorizationCheck(ctx, {
+                realms: [null],
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(undefined),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        it('reports no expiry to an identity holding no grant for a grant-bound definition', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('user_read')[0], [officeHours, systemDefault]]],
+                [grant('user_update', RealmScope.OWN_OR_NULL)],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        // An AFFIRMATIVE definition (a plain form field) passes on the time
+        // policy alone, so a grant-less caller's denial moves with the clock.
+        it('reports the expiry of an AFFIRMATIVE definition to an identity holding no grant', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('user_read', { decisionStrategy: DecisionStrategy.AFFIRMATIVE })[0], [systemDefault, officeHours]]],
+                [],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
+        it('reports the expiry of an identity-free definition to an anonymous caller', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup([[definition('office_open')[0], [officeHours]]], []);
+
+            const result = await buildAuthorizationCheck(ctx, {
+                realms: [null],
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(undefined),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
+        it('raises a failed grant load met while deciding whether a denied pair expires', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            // the time policy denies before the binding child loads the grants
+            const ctx = setup([[definition('user_read')[0], [officeHours, systemDefault]]], []);
+            const error = new Error('ECONNREFUSED: the database is down');
+
+            await expect(buildAuthorizationCheck(ctx, {
+                identity,
+                grants: () => Promise.reject(error),
+                decorate: decorateWith(identity),
+            })).rejects.toThrow(error);
         });
     });
 });

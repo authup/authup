@@ -40,6 +40,15 @@ import type {
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
 
+type StagedAuthorization = {
+    // the check-backed evaluator, or null for the name-only view
+    evaluator: IPermissionEvaluator | null,
+    // the memoized answer it was built from
+    source: Promise<AuthorizationCheckPermissions | null>,
+    // the canonical form of what it decides with
+    verdicts: string,
+};
+
 function createPromiseShareWrapperFn<F extends InputFn>(
     fn: F,
 ) : OutputFn<F> {
@@ -364,18 +373,20 @@ export function createStore(context: StoreCreateContext) {
 
     // An idle tab resolves nothing, so a deadline alone would only be noticed
     // on the next navigation: the timer refetches the verdicts when it passes
-    // and swaps what `permissionEvaluator` delegates to. `permissionRevision`
-    // is bumped whenever the verdicts of a running session are replaced by a
-    // NEW answer, by that swap or by a commit whose resolve refetched an
-    // expired memo first, because nothing else about the session changes and
-    // a consumer keyed on `status` would never re-evaluate. A commit reusing
-    // the memo does not bump it: every cookie-mode navigation commits, and
-    // each recompute briefly reads the fail-closed default.
+    // and swaps what `permissionEvaluator` delegates to. A bearer session is
+    // not revalidated per navigation either, so its resolve refetches an
+    // expired memo too, for a timer that sleep or background throttling held
+    // back. `permissionRevision` is bumped whenever the verdicts of a running
+    // session CHANGE, by that swap or by a commit, because nothing else about
+    // the session moves and a consumer keyed on `status` would never
+    // re-evaluate. An answer equal to the committed one does not bump it:
+    // every cookie-mode navigation commits, the timer refetches at every
+    // deadline, and each recompute briefly reads the fail-closed default.
     let checkTimer : ReturnType<typeof setTimeout> | undefined;
     const permissionRevision = ref(0);
 
-    // The memoized answer the committed evaluator was built from.
-    let committedCheck : Promise<AuthorizationCheckPermissions | null> | undefined;
+    // The canonical form of the verdicts the committed evaluator was built from.
+    let committedVerdicts : string | undefined;
 
     // The introspection the current session was committed from: the timer
     // rebuilds the verdicts for exactly that session, and a commit that
@@ -424,8 +435,9 @@ export function createStore(context: StoreCreateContext) {
         permissionEvaluator.reset();
         resetCheck();
         clearCheckTimer();
+        checkRetryDelay = CHECK_RETRY_DELAY;
         committedIntrospection = undefined;
-        committedCheck = undefined;
+        committedVerdicts = undefined;
         preferenceSync.reset();
 
         validated.value = false;
@@ -573,6 +585,40 @@ export function createStore(context: StoreCreateContext) {
         introspection.permissions ?? [],
     ]);
 
+    /**
+     * What a committed evaluator decides with, in a form two answers can be
+     * compared by: the identity it evaluates realm matches against, and the
+     * verdicts, sorted, or the introspection's grants for the name-only view
+     * a 404 lands on. A malformed answer builds the deny-all evaluator and is
+     * compared verbatim.
+     */
+    const buildVerdictsKey = (
+        identity: IdentityPolicyData,
+        permissions: AuthorizationCheckPermissions | null,
+        introspection: OAuth2TokenIntrospectionResponse,
+    ) : string => {
+        let verdicts : unknown = ['names', introspection.permissions ?? []];
+        if (permissions) {
+            try {
+                verdicts = permissions
+                    .map((entry) => [
+                        entry.name,
+                        [...entry.realms].sort((x, y) => String(x).localeCompare(String(y))),
+                    ])
+                    .sort((x, y) => String(x[0]).localeCompare(String(y[0])));
+            } catch {
+                verdicts = ['invalid', permissions];
+            }
+        }
+
+        return JSON.stringify([
+            identity.id,
+            identity.realmId ?? null,
+            identity.realmName ?? null,
+            verdicts,
+        ]);
+    };
+
     const buildIdentity = (
         introspection: OAuth2TokenIntrospectionResponse,
     ) : IdentityPolicyData => {
@@ -633,18 +679,32 @@ export function createStore(context: StoreCreateContext) {
     const buildAuthorization = async (
         introspection: OAuth2TokenIntrospectionResponse,
         token?: string,
-    ) : Promise<IPermissionEvaluator | null> => {
+    ) : Promise<StagedAuthorization> => {
         const identity = buildIdentity(introspection);
 
-        const permissions = await loadCheck(buildCheckKey(introspection, identity), token);
+        const source = loadCheck(buildCheckKey(introspection, identity), token);
+        const permissions = await source;
+        const verdicts = buildVerdictsKey(identity, permissions, introspection);
         if (!permissions) {
-            return null;
+            return {
+                evaluator: null, 
+                source, 
+                verdicts, 
+            };
         }
 
         try {
-            return await createAuthorizationCheckEvaluator({ permissions, identity });
+            return {
+                evaluator: await createAuthorizationCheckEvaluator({ permissions, identity }),
+                source,
+                verdicts,
+            };
         } catch {
-            return createDenyAllPermissionEvaluator();
+            return {
+                evaluator: createDenyAllPermissionEvaluator(),
+                source,
+                verdicts,
+            };
         }
     };
 
@@ -692,8 +752,9 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        // the check-backed evaluator, or null for the name-only view
-        authorization: IPermissionEvaluator | null,
+        // the check-backed evaluator (null for the name-only view) and what it
+        // was built from
+        authorization: StagedAuthorization,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -720,11 +781,38 @@ export function createStore(context: StoreCreateContext) {
     // Retried after a failed timer refetch: the failure is left alone (the
     // previous verdicts stay and the next resolve may retry too), but an idle
     // tab would otherwise never ask again.
+    // It backs off, doubling up to five minutes, and starts over once a
+    // refetch succeeds.
     const CHECK_RETRY_DELAY = 30_000;
+    const CHECK_RETRY_MAX_DELAY = 300_000;
 
     // setTimeout overflows past a signed 32-bit delay and fires at once; a
     // longer wait is re-armed in steps instead.
     const CHECK_TIMER_MAX_DELAY = 2 ** 31 - 1;
+
+    let checkRetryDelay = CHECK_RETRY_DELAY;
+
+    /**
+     * Install what a staged authorization evaluates with, and tell mounted
+     * consumers when the verdicts differ from the committed ones. The first
+     * commit of a session flips `status`, which re-evaluates on its own.
+     */
+    const applyAuthorization = (
+        authorization: StagedAuthorization,
+        introspection: OAuth2TokenIntrospectionResponse,
+    ) => {
+        if (authorization.evaluator) {
+            permissionEvaluator.setEvaluator(authorization.evaluator);
+        } else {
+            permissionEvaluator.setPermissions(introspection.permissions ?? []);
+        }
+
+        if (committedIntrospection && committedVerdicts !== authorization.verdicts) {
+            permissionRevision.value += 1;
+        }
+
+        committedVerdicts = authorization.verdicts;
+    };
 
     const armCheckTimer = (delay?: number) => {
         clearCheckTimer();
@@ -779,17 +867,21 @@ export function createStore(context: StoreCreateContext) {
             token = accessToken.value;
         }
 
-        let authorization : IPermissionEvaluator | null;
+        const retry = () => {
+            if (!(committedIntrospection === introspection &&
+                generation === tokenGeneration.value)) {
+                return;
+            }
+
+            armCheckTimer(checkRetryDelay);
+            checkRetryDelay = Math.min(checkRetryDelay * 2, CHECK_RETRY_MAX_DELAY);
+        };
+
+        let authorization : StagedAuthorization;
         try {
             authorization = await buildAuthorization(introspection, token);
         } catch {
-            if (
-                committedIntrospection === introspection &&
-                generation === tokenGeneration.value
-            ) {
-                armCheckTimer(CHECK_RETRY_DELAY);
-            }
-
+            retry();
             return;
         }
 
@@ -802,14 +894,21 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
-        if (authorization) {
-            permissionEvaluator.setEvaluator(authorization);
-        } else {
-            permissionEvaluator.setPermissions(introspection.permissions ?? []);
+        // The memo moved on while this answer was in flight (a resolve with
+        // other grants replaced it): the load that replaced it commits its
+        // own, newer verdicts, and installing these would be installing
+        // stale ones. A replacement that failed left no memo and commits
+        // nothing, so this one retries.
+        if (checkPromise !== authorization.source) {
+            if (!checkPromise) {
+                retry();
+            }
+
+            return;
         }
 
-        committedCheck = checkPromise;
-        permissionRevision.value += 1;
+        checkRetryDelay = CHECK_RETRY_DELAY;
+        applyAuthorization(authorization, introspection);
         armCheckTimer();
     };
 
@@ -879,19 +978,7 @@ export function createStore(context: StoreCreateContext) {
 
         preferenceSync.seed(ctx.introspection);
 
-        if (ctx.authorization) {
-            permissionEvaluator.setEvaluator(ctx.authorization);
-        } else {
-            permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);
-        }
-
-        // The first commit of a session flips `status`, which re-evaluates on
-        // its own; a later one replacing the answer has to say so.
-        if (committedIntrospection && committedCheck !== checkPromise) {
-            permissionRevision.value += 1;
-        }
-
-        committedCheck = checkPromise;
+        applyAuthorization(ctx.authorization, ctx.introspection);
         committedIntrospection = ctx.introspection;
         armCheckTimer();
 
@@ -1124,6 +1211,16 @@ export function createStore(context: StoreCreateContext) {
                     throw e;
                 }
             }
+        } else if (
+            accessToken.value &&
+            validated.value &&
+            isCheckExpired()
+        ) {
+            // Nothing else revalidates a validated bearer session, so an
+            // expired answer is only noticed by the timer, which sleep or
+            // background throttling may hold back past the deadline. The
+            // refetch never throws and keeps the previous verdicts on failure.
+            await refreshCheck();
         }
 
         // A session found by resolve() with no origin set is a restore
