@@ -154,6 +154,31 @@ each other. During a rolling upgrade from an older release, an old and a new
 replica do not share the provisioning lock; this matters only if both
 provision a database from scratch at the same moment.
 
+### Event statistics are kept as daily rollups
+
+This release adds per-collection statistics (`GET /<collection>/@stats`),
+which the admin console's dashboard and the activity boxes above each list
+read. A statistic is a rapiq grouped read: the rows to count are the `filter`,
+which must carry a lower bound on `createdAt`, the first `group` is
+`bucket(createdAt, hour|day|month)`, and `aggregate=count`. See
+[GET Statistics](../development/api-examples.md#get-statistics).
+
+For events, day and month counts are answered from a new table,
+`auth_event_aggregates`, holding one count per day, realm, scope, event name
+and entity type, and no personal data. Migration
+`1790178321474-EventAggregates.ts` creates it on both server dialects, applied
+by the next boot with migrations enabled or by `authup migration run`. A
+background task fills it every minute wherever the worker sweeps run (the
+`start` process, or `authup start worker` when the API replicas hand them
+over), and backfills older days from the events still on disk, seven days
+per minute, so a deployment with a long event history needs a few minutes
+after the upgrade before a 90-day window is complete.
+
+Rollups outlive the events they count. They are kept forever by default;
+`core.eventLogAggregateRetentionDays` (`EVENT_LOG_AGGREGATE_RETENTION_DAYS`)
+bounds them in days. Hour buckets always read raw events, so they reach back
+only as far as `eventLogRetentionDays`.
+
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone

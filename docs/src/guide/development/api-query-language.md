@@ -138,6 +138,24 @@ maximum and has to page. The response's `meta.total` is the count before
 pagination, and it is exact: authorization runs as a `WHERE` clause rather than
 as a post-filter wherever it can be expressed as one.
 
+## Grouped reads: group and aggregate
+
+A statistic (`GET /<collection>/@stats`) takes two more parameters, described
+under `groups` and `aggregates`: `group` lists the group terms, comma separated,
+a column or a function over one, and `aggregate` the measures computed per
+group. Rows come back one per group rather than one per entity, and no page is
+applied, so a series is never cut short.
+
+```text
+GET /events/@stats?filter[createdAt]=>=2026-09-01T00:00:00.000Z&group=bucket(createdAt,day),scope,name&aggregate=count
+```
+
+`bucket(<column>,hour|day|month)` truncates a timestamp onto the UTC start of
+its bucket. On a statistic the first group must be that bucket over `createdAt`
+and the filter must bound `createdAt` from below; the rest is in
+[GET Statistics](./api-examples.md#get-statistics). A collection read ignores
+both parameters.
+
 ## What fails, and how
 
 The parameters fail soft. An unknown key in `fields`, `sort`, `include` or the

@@ -482,6 +482,15 @@ export default {
         eventLogEntityRetentionDays: 7,
 
         /**
+         * Retention for the daily event rollups (auth_event_aggregates) in
+         * days. They hold counts only and back the day and month event
+         * statistics, so they may outlive the events. 0 = keep forever.
+         * env: EVENT_LOG_AGGREGATE_RETENTION_DAYS
+         * default: 0
+         */
+        eventLogAggregateRetentionDays: 0,
+
+        /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
          * loginFailed events. Requires eventLogEnabled.
          * The IP half of the key follows `trustProxy` — pin it to the actual
@@ -696,6 +705,7 @@ core:
   eventLogRetentionDays: 90
   eventLogEntityEnabled: true
   eventLogEntityRetentionDays: 7
+  eventLogAggregateRetentionDays: 0
   loginAttemptThrottleEnabled: false
   loginAttemptThreshold: 5
   loginAttemptWindow: 900
@@ -746,6 +756,7 @@ EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true
 EVENT_LOG_ENTITY_RETENTION_DAYS=7
+EVENT_LOG_AGGREGATE_RETENTION_DAYS=0
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5
 LOGIN_ATTEMPT_WINDOW=900
