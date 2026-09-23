@@ -3486,6 +3486,9 @@ folder-scoped delegation is an ordinary `ATTRIBUTES` junction policy:
 `{ pathId: { $in: [...] } }` on a `USER_*` / `CLIENT_*` grant (the row carries
 its folder reference, not the folder's path), or a `$startsWith` over the
 folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
+An update under such a grant is checked against the stored AND the updated row
+(`evaluateUpdate`, #3654), so a delegate can neither refile a row into its
+folder nor move one out of it.
 `$regex` must never appear in such a policy: the sqlite preset declares no
 `regexp`, so it throws and 500s every list read under the test dialect. Only a
 global admin can author one, since `applyJunctionCreateGrant` nulls a requested
