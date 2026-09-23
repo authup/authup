@@ -86,6 +86,23 @@ Two things to review:
   lists the violations the way a validation `400` does, so a client showing
   the error may now show the specific reason instead of the generic
   "bad request" text.
+### Bulk session revokes honour their filter and refuse a bad one
+
+`DELETE /sessions` without a target key (`id`, `sub`, `subKind`, `userId`,
+`clientId`, `realmId`) is the self-service "log out my other devices". It now
+applies whatever other filter it carries, so
+`DELETE /sessions?filter[seenAt]=<2026-09-01T00:00:00.000Z` revokes only your
+devices unseen since then. Before, it ignored the filter and revoked every
+other session you had. Only those flat keys select the administrative
+force-logout; a relation-qualified key such as `filter[user.id]` stays on the
+self-service path and can only narrow your own sessions.
+
+Both `DELETE /sessions` and `DELETE /session-tokens` now answer `400` for any
+filter they cannot apply as written: an unknown key, a malformed value, an
+empty target value such as `filter[userId]=`, or a relation filter your
+permissions do not cover. They used to drop such a condition and act on the
+rest, which revokes more than was asked. A call that relied on a dropped
+condition being ignored must remove it.
 
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 

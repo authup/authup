@@ -175,10 +175,14 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
             });
         }
 
+        // strict: a leaf the schema would drop (the target one included,
+        // which the schemaless check above cannot see) must refuse the
+        // revoke rather than widen it
         const parsed = await decodeQuery(query, {
             schema: sessionTokenSchema,
             parameters: ['filters'],
             actor,
+            throwOnFailure: true,
         });
 
         let canDeleteAll = true;

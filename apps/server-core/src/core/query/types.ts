@@ -45,4 +45,11 @@ export type DecodeQueryOptions<RECORD extends ObjectLiteral = ObjectLiteral> = {
      * unrestricted.
      */
     actor?: ActorContext,
+    /**
+     * Refuse the query (a `ParseError`, answered as 400) instead of
+     * dropping a leaf the schema does not accept. A read may fail soft; a
+     * destructive selection must not, since a dropped filter leaf WIDENS
+     * the rows it acts on.
+     */
+    throwOnFailure?: boolean,
 };

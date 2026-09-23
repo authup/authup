@@ -228,14 +228,15 @@ export class SessionController {
      * Naming a target (`id`, `sub`, `subKind`, `userId`, `clientId` or
      * `realmId`) is the administrative force-logout, gated by
      * `SESSION_DELETE` and a per-session realm match. Naming NONE of them is
-     * the self-service "log out my other devices", which revokes every
-     * session of the caller except the current one.
+     * the self-service "log out my other devices": it revokes the caller's
+     * own sessions except the current one, narrowed by any other filter it
+     * carries (`?filter[seenAt]=<...` logs out only the devices unseen since
+     * then).
      *
-     * The schema allows `expiresAt` and `seenAt` as filter keys because a
-     * collection READ sorts and filters on them, but neither is a target
-     * here: a filter naming only those selects the self-service branch, so
-     * `?filter[expiresAt]=...` sent to prune stale rows would instead log the
-     * caller out everywhere else.
+     * Both paths decode strictly: a condition the schema cannot apply (an
+     * unknown key, a malformed or empty value, a relation the caller may not
+     * read) answers 400 rather than widening the revoke. Only the flat keys
+     * above select the admin path; `filter[user.id]` stays self-service.
      */
     @DDelete('', [ForceLoggedInMiddleware])
     @DQuerySchema(EntityType.SESSION, 'filters')
@@ -245,8 +246,8 @@ export class SessionController {
         const actor = buildActorContext(event);
 
         // A recognized target filter (e.g. `?filter[userId]=<uuid>`) → admin
-        // force-logout (SESSION_DELETE + per-session realm-match). No filter →
-        // self-service "log out my other devices" (keeps the current session).
+        // force-logout (SESSION_DELETE + per-session realm-match). Otherwise →
+        // self-service over the caller's own sessions (keeps the current one).
         const result = await this.service.deleteMany(actor, {
             query: useRequestQuery(event),
             currentSessionId: useRequestSessionId(event),
