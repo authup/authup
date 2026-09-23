@@ -10,6 +10,7 @@ export * from './client-permission/index.ts';
 export * from './client-role/index.ts';
 export * from './client-scope/index.ts';
 export * from './event/index.ts';
+export * from './event-aggregate/index.ts';
 export * from './identity-provider/index.ts';
 export * from './identity-provider-account/index.ts';
 export * from './key/index.ts';

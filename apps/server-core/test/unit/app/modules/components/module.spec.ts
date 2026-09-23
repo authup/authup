@@ -173,7 +173,7 @@ describe('app/modules/components', () => {
         await module.setup(container);
         await flushMicrotasks();
 
-        expect(infoLines).toContain('Background components started: oauth2-cleaner, event-cleaner.');
+        expect(infoLines).toContain('Background components started: oauth2-cleaner, event-cleaner, event-aggregator.');
 
         await module.teardown(container);
     });
