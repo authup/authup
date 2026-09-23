@@ -6,15 +6,11 @@
  */
 
 /**
- * The most buckets one statistic answers: 31 days of hours. Bounds both the
- * statement (one row per bucket per group) and the response.
+ * The most buckets one statistic answers, whatever the unit: 31 days of
+ * hours, two years of days. Bounds both the statement (one row per bucket
+ * per group) and the response.
  */
 export const STATS_MAX_BUCKETS = 744;
-
-/**
- * The window a statistic defaults to, in days.
- */
-export const STATS_DAYS_DEFAULT = 30;
 
 /**
  * How long a statistic is served from the cache (ms). The grant caches take

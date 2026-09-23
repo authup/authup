@@ -5,24 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { StatsGranularity } from '@authup/core-http-kit';
-import { ValidationError } from '@authup/errors';
 import type { ActorContext, ICache } from '@authup/server-kit';
-import { eq, gte, lt } from '@rapiq/core';
+import { eq, lt } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import { appendQueryConditions, decodeQuery, queryCodec } from '../query/module.ts';
 import { narrowReadScope } from '../query/scope.ts';
-import { STATS_CACHE_TTL, STATS_DAYS_DEFAULT, STATS_MAX_BUCKETS } from './constants.ts';
+import { STATS_CACHE_TTL } from './constants.ts';
 import type {
     EntityStatsDefinition,
     EntityStatsReadOptions,
     EntityStatsResult,
     IEntityStatsService,
 } from './types.ts';
-import { EntityStatsParametersValidator } from './validator.ts';
-
-const HOUR_IN_MS = 3_600_000;
-const DAY_IN_MS = 86_400_000;
+import { resolveStatsWindow, stripWindowConditions } from './window.ts';
 
 export type EntityStatsServiceContext = {
     definition: EntityStatsDefinition,
@@ -37,12 +32,9 @@ export class EntityStatsService<
 
     protected cache: ICache;
 
-    protected validator: EntityStatsParametersValidator;
-
     constructor(ctx: EntityStatsServiceContext) {
         this.definition = ctx.definition;
         this.cache = ctx.cache;
-        this.validator = new EntityStatsParametersValidator();
     }
 
     async getMany(
@@ -50,17 +42,11 @@ export class EntityStatsService<
         actor: ActorContext,
         options: EntityStatsReadOptions = {},
     ): Promise<EntityStatsResult<G, M>> {
-        const parameters = await this.validator.run(query);
-        const granularity = parameters.granularity ?? StatsGranularity.DAY;
-        const days = parameters.days ?? STATS_DAYS_DEFAULT;
-        const bucketsPerDay = granularity === StatsGranularity.HOUR ? 24 : 1;
-        if (days * bucketsPerDay > STATS_MAX_BUCKETS) {
-            throw new ValidationError(`The window spans more than ${STATS_MAX_BUCKETS} buckets.`);
-        }
-
+        // no pagination parameter is decoded, so a grouped read returns
+        // every group row rather than a page of them
         const parsed = await decodeQuery(query, {
             schema: this.definition.schema,
-            parameters: ['filters'],
+            parameters: ['filters', 'groups', 'aggregates'],
             actor,
         });
 
@@ -80,51 +66,47 @@ export class EntityStatsService<
             scoped = appendQueryConditions(scoped, eq(realmColumn, options.realmId));
         }
 
+        const dateColumn = this.definition.dateColumn ?? 'createdAt';
+        const window = resolveStatsWindow(scoped, {
+            dateColumn,
+            now: new Date(),
+            rawHorizonDays: this.definition.rawHorizonDays?.(),
+        });
+
         // the encoded query is the lowered one, not the wire record: two
         // spellings of one filter share an answer, two reaches do not
-        const scope = [
+        const prefix = [
             'stats',
             this.definition.type,
             actor.identity ? `${actor.identity.type}:${actor.identity.data.id}` : 'anonymous',
-            queryCodec.encode(scoped) ?? '',
         ];
-        const key = [...scope, granularity, days].join(':');
+        const key = [...prefix, queryCodec.encode(scoped) ?? ''].join(':');
 
         const cached = await this.cache.get<EntityStatsResult<G, M>>(key);
         if (cached) {
             return cached;
         }
 
-        // one half-open window of exactly days * bucketsPerDay bucket
-        // starts, the last of them the bucket holding `to`, appended AFTER
-        // the key was taken, since `to` moves with every request
-        const dateColumn = this.definition.dateColumn ?? 'createdAt';
-        const now = new Date();
-        const to = now.toISOString();
-        const width = granularity === StatsGranularity.HOUR ? HOUR_IN_MS : DAY_IN_MS;
-        const from = new Date(
-            new Date(snapToBucket(now, granularity)).getTime() - (((days * bucketsPerDay) - 1) * width),
-        ).toISOString();
+        // an open window ends at the read instant, appended AFTER the key
+        // was taken, since it moves with every request
+        const grouped = window.upperBound ?
+            scoped :
+            appendQueryConditions(scoped, lt(dateColumn, window.to));
 
-        const [data, total] = await Promise.all([
-            this.definition.repository.countGrouped(
-                appendQueryConditions(scoped, gte(dateColumn, from), lt(dateColumn, to)),
-                {
-                    granularity,
-                    dateColumn,
-                    groupBy: this.definition.groupBy ?? [],
-                },
-            ),
-            this.countTotal(scope.join(':'), scoped),
+        const [rows, total] = await Promise.all([
+            this.definition.repository.aggregate(grouped),
+            this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
         ]);
 
         const result = {
-            data,
+            data: rows.map((row) => ({
+                ...row,
+                [dateColumn]: new Date(row[dateColumn] as string).toISOString(),
+            })),
             meta: {
-                from,
-                to,
-                granularity,
-                days,
+                from: window.from,
+                to: window.to,
+                bucket: window.unit,
                 total,
                 ...(this.definition.meta ? this.definition.meta() : {}),
             },
@@ -136,31 +118,20 @@ export class EntityStatsService<
     }
 
     /**
-     * The total ignores the window, so it is cached under the scope alone:
-     * switching the window reuses it instead of counting a table like
-     * auth_events again.
+     * The total ignores the window, so it is cached under the query without
+     * it: switching the window or the bucket unit reuses it instead of
+     * counting a table like auth_events again.
      */
-    protected async countTotal(key: string, query: IQuery): Promise<number> {
-        const totalKey = `${key}:total`;
-        const cached = await this.cache.get<number>(totalKey);
+    protected async countTotal(prefix: string[], query: IQuery): Promise<number> {
+        const key = [...prefix, queryCodec.encode(query) ?? '', 'total'].join(':');
+        const cached = await this.cache.get<number>(key);
         if (typeof cached === 'number') {
             return cached;
         }
 
         const total = await this.definition.repository.count(query);
-        await this.cache.set(totalKey, total, { ttl: STATS_CACHE_TTL });
+        await this.cache.set(key, total, { ttl: STATS_CACHE_TTL });
 
         return total;
     }
-}
-
-function snapToBucket(input: Date, granularity: `${StatsGranularity}`): string {
-    const date = new Date(input);
-    if (granularity === StatsGranularity.HOUR) {
-        date.setUTCMinutes(0, 0, 0);
-    } else {
-        date.setUTCHours(0, 0, 0, 0);
-    }
-
-    return date.toISOString();
 }

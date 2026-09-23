@@ -48,6 +48,8 @@ export const policySchema = defineSchema<Policy>({
     },
     relations: { allowed: ['children', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

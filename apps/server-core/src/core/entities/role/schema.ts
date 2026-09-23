@@ -47,6 +47,8 @@ export const roleSchema = defineSchema<Role>({
     },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

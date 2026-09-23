@@ -69,6 +69,8 @@ export const keySchema = defineSchema<Key>({
         ],
         indexed: true,
     },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

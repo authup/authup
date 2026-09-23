@@ -21,9 +21,9 @@ import type {
     RolePermission,
     Scope,
     UserAttribute,
-    UserAuthenticator as UserAuthenticatorModel, 
-    UserPermission, 
-    UserRole, 
+    UserAuthenticator as UserAuthenticatorModel,
+    UserPermission,
+    UserRole,
 } from '@authup/core-kit';
 import type { EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { EntityType } from '@authup/core-kit';
@@ -1164,7 +1164,7 @@ export class HTTPControllerModule {
                 type: EntityType.EVENT,
                 schema: eventSchema,
                 scope: (query, actor) => service.scopeRead(query, actor),
-                groupBy: ['scope', 'name'],
+                rawHorizonDays: () => config.eventLogRetentionDays,
                 meta: () => ({
                     enabled: config.eventLogEnabled !== false,
                     retentionDays: config.eventLogRetentionDays,

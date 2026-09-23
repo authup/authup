@@ -8,4 +8,4 @@
 export * from './constants.ts';
 export * from './module.ts';
 export * from './types.ts';
-export * from './validator.ts';
+export * from './window.ts';

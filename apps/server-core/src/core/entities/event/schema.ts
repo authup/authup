@@ -74,5 +74,10 @@ export const eventSchema = defineSchema<Event>({
     },
     relations: { allowed: [] },
     sorts: { allowed: ['createdAt'], indexed: true },
+    groups: {
+        allowed: ['scope', 'name', 'refType'],
+        functions: { bucket: { allowed: ['createdAt'] } },
+    },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
 });

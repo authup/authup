@@ -38,5 +38,7 @@ export const realmSchema = defineSchema<Realm>({
     },
     relations: { allowed: [] },
     sorts: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
 });

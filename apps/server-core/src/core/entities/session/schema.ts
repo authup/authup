@@ -60,6 +60,8 @@ export const sessionSchema = defineSchema<Session>({
     },
     relations: { allowed: ['realm', 'user', 'client'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });
