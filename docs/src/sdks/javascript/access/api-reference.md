@@ -28,8 +28,14 @@ export type PermissionEvaluationOptions = {
     policiesIncluded?: string[],
     policiesExcluded?: string[],
     pendingPolicies?: 'deny' | 'permit',
+    transitions?: PolicyTransitionSink,
 };
 ```
+
+`transitions` receives, from every `date` or `time` policy that evaluated against the
+real clock, the next instant its verdict could change. `createPolicyTransitionCollector()`
+returns a sink keeping the earliest one under `next`, which is when a cached answer
+built from those evaluations stops being current.
 
 `pendingPolicies` controls how a grant whose policy evaluation is **pending** (a required
 data key is absent from the bag — see

@@ -20,6 +20,7 @@ import {
     PolicyDefaultEvaluators,
     PolicyEngine,
     RealmScope,
+    createPolicyTransitionCollector,
     definePolicyData,
     isPermissionError,
 } from '@authup/access';
@@ -27,6 +28,7 @@ import { normalizeError } from '@authup/errors';
 import type {
     AuthorizationCheckBuilderContext,
     AuthorizationCheckRequest,
+    AuthorizationCheckResult,
 } from './types.ts';
 
 /**
@@ -89,11 +91,17 @@ function resolveRealms(
  * place for it to drift: a scope-restricted bearer would be answered a passing
  * set that every real request denies. The controller passes the request
  * evaluator's own wrapper, so the condition is inherited rather than restated.
+ *
+ * A `date` or `time` policy settles against the clock, so the answer is a
+ * snapshot. Every evaluation hands the same transition collector down the
+ * walk it already runs, and `expiresAt` is the earliest instant any evaluated
+ * clock policy could flip, so a consumer knows when to ask again. It is absent
+ * when no evaluated verdict depends on the clock.
  */
 export async function buildAuthorizationCheck(
     ctx: AuthorizationCheckBuilderContext,
     request: AuthorizationCheckRequest,
-) : Promise<AuthorizationCheckPermissions> {
+) : Promise<AuthorizationCheckResult> {
     const definitions = await ctx.catalogRepository.findDefinitions();
 
     const bindings : PermissionPolicyBinding[] = [];
@@ -119,7 +127,7 @@ export async function buildAuthorizationCheck(
 
     const realms = resolveRealms(request);
     if (requested.length === 0 || realms.length === 0) {
-        return [];
+        return { permissions: [] };
     }
 
     let grants : Promise<PermissionPolicyBinding[]> | undefined;
@@ -165,6 +173,8 @@ export async function buildAuthorizationCheck(
         policyEngine,
     }));
 
+    const transitions = createPolicyTransitionCollector();
+
     const result : AuthorizationCheckPermissions = [];
     for (const name of requested) {
         const held : Array<string | null> = [];
@@ -187,6 +197,7 @@ export async function buildAuthorizationCheck(
                             {}),
                         [BuiltInPolicyType.REALM_MATCH]: realm,
                     }),
+                    options: { transitions },
                 });
 
                 held.push(realm);
@@ -219,5 +230,8 @@ export async function buildAuthorizationCheck(
         }
     }
 
-    return result;
+    return {
+        permissions: result,
+        ...(transitions.next ? { expiresAt: transitions.next } : {}),
+    };
 }

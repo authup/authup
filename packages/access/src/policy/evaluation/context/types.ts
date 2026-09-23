@@ -7,6 +7,19 @@
 import type { PolicyData } from '../../data.ts';
 import type { IPolicyEvaluator } from '../types.ts';
 
+/**
+ * Receives the instants at which a clock-dependent verdict could change.
+ *
+ * A `date` or `time` policy that fell back to the real clock (no `date` / `time`
+ * key in the bag) reports the next strictly-future instant its own verdict could
+ * flip, from inside the evaluation walk that already runs. A caller that caches
+ * an answer derived from such a walk learns when to stop trusting it. Reports may
+ * be early (conservative) but never late, and `invert` does not move them.
+ */
+export type PolicyTransitionSink = {
+    report(at: Date): void
+};
+
 export type PolicyEvaluationContext = {
     readonly evaluators: Record<string, IPolicyEvaluator>,
     readonly path: (string | number)[],
@@ -28,7 +41,13 @@ export type PolicyEvaluationContext = {
      * evaluation takes the resource realm from the `realmMatch` data key and never
      * consults a column name, so this can never change an evaluate() outcome.
      */
-    readonly realmAttributeName?: string
+    readonly realmAttributeName?: string,
+    /**
+     * Optional receiver of clock transitions (see {@link PolicyTransitionSink}).
+     * Nested evaluations inherit it, since every walk propagates the context by
+     * spread.
+     */
+    readonly transitions?: PolicyTransitionSink
 };
 
 export type PolicyEvaluationContextInput = Partial<PolicyEvaluationContext>;

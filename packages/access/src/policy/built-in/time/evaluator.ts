@@ -9,6 +9,7 @@ import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult 
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { BuiltInPolicyType } from '../constants';
 import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear } from './helpers';
+import type { TimePolicy } from './types';
 import { TimePolicyValidator } from './validator';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
@@ -54,6 +55,55 @@ function toDate(
     return input;
 }
 
+/**
+ * The next instant at which a time policy's verdict could change, seen from
+ * `now`: today's start while it is ahead, the minute after today's end while
+ * that is ahead, and the next local midnight, where the daily window moves on
+ * and the day-of-week/month/year checks roll over. The earliest of those; a
+ * policy with no constraint never changes.
+ *
+ * `normalizeDate` keeps the seconds and milliseconds of the instant it is
+ * evaluated at and drops the policy's own, so the comparisons below are made
+ * at minute precision: `now < start` stops holding at HH:MM:00.000 of the
+ * start, and `now > end` starts holding at the following minute. Reading the
+ * candidates off `normalizeDate` instead would report the seconds of this
+ * evaluation, up to a minute after the verdict already flipped.
+ */
+function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
+    const candidates : Date[] = [];
+    const atMinute = (input: Date, offset = 0) => new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        input.getHours(),
+        input.getMinutes() + offset,
+    );
+
+    if (policy.start) {
+        candidates.push(atMinute(toDate(policy.start, now)));
+    }
+
+    if (policy.end) {
+        candidates.push(atMinute(toDate(policy.end, now), 1));
+    }
+
+    if (policy.start || policy.end || policy.interval) {
+        candidates.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+    }
+
+    let next : Date | undefined;
+    for (const candidate of candidates) {
+        if (
+            candidate.getTime() > now.getTime() &&
+            (!next || candidate.getTime() < next.getTime())
+        ) {
+            next = candidate;
+        }
+    }
+
+    return next;
+}
+
 export class TimePolicyEvaluator implements IPolicyEvaluator {
     protected validator : TimePolicyValidator;
 
@@ -79,6 +129,14 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
             }
         } else {
             now = new Date();
+
+            // Only a verdict read off the real clock expires; a supplied time is fixed.
+            if (ctx.transitions) {
+                const next = nextTimeTransition(policy, now);
+                if (next) {
+                    ctx.transitions.report(next);
+                }
+            }
         }
 
         if (policy.start) {

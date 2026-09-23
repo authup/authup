@@ -24,6 +24,7 @@ import type {
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error';
+import { isServerRuntime } from '../hydration/value';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
 import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator';
@@ -351,12 +352,49 @@ export function createStore(context: StoreCreateContext) {
     // the memo is fresh whenever the introspection's own authorization inputs
     // move and reused when they do not, so an unchanged session asks once and
     // a role bound or removed mid-session is picked up on the next resolve.
+    //
+    // It is also per INSTANT. A date or time policy settles against the
+    // server's clock, so the server says when its answer may change
+    // (`Cache-Control: max-age`) and the memo stops being current then:
+    // `checkDeadline` is that moment on THIS clock (receipt time plus the
+    // relative max-age, so a skewed client clock does not matter).
     let checkPromise : Promise<AuthorizationCheckPermissions | null> | undefined;
     let checkKey : string | undefined;
+    let checkDeadline : number | undefined;
+
+    // An idle tab resolves nothing, so a deadline alone would only be noticed
+    // on the next navigation: the timer refetches the verdicts when it passes
+    // and swaps what `permissionEvaluator` delegates to. `permissionRevision`
+    // is bumped whenever the verdicts of a running session are replaced by a
+    // NEW answer, by that swap or by a commit whose resolve refetched an
+    // expired memo first, because nothing else about the session changes and
+    // a consumer keyed on `status` would never re-evaluate. A commit reusing
+    // the memo does not bump it: every cookie-mode navigation commits, and
+    // each recompute briefly reads the fail-closed default.
+    let checkTimer : ReturnType<typeof setTimeout> | undefined;
+    const permissionRevision = ref(0);
+
+    // The memoized answer the committed evaluator was built from.
+    let committedCheck : Promise<AuthorizationCheckPermissions | null> | undefined;
+
+    // The introspection the current session was committed from: the timer
+    // rebuilds the verdicts for exactly that session, and a commit that
+    // replaced it (a revalidation, another subject) supersedes the refetch.
+    let committedIntrospection : OAuth2TokenIntrospectionResponse | undefined;
+
+    const clearCheckTimer = () => {
+        if (!(typeof checkTimer !== 'undefined')) {
+            return;
+        }
+
+        clearTimeout(checkTimer);
+        checkTimer = undefined;
+    };
 
     const resetCheck = () => {
         checkPromise = undefined;
         checkKey = undefined;
+        checkDeadline = undefined;
     };
 
     // --------------------------------------------------------------------
@@ -385,6 +423,9 @@ export function createStore(context: StoreCreateContext) {
 
         permissionEvaluator.reset();
         resetCheck();
+        clearCheckTimer();
+        committedIntrospection = undefined;
+        committedCheck = undefined;
         preferenceSync.reset();
 
         validated.value = false;
@@ -460,25 +501,41 @@ export function createStore(context: StoreCreateContext) {
      * name-only view, so a console newer than its server keeps working. Any
      * other failure rejects and clears the memo, so the next resolve retries.
      */
-    const fetchCheck = async (token?: string) : Promise<AuthorizationCheckPermissions | null> => {
+    const fetchCheck = async (token?: string) : Promise<{
+        permissions: AuthorizationCheckPermissions | null,
+        maxAge?: number
+    }> => {
         try {
-            return await client.authorization.check(
+            const { data, maxAge } = await client.authorization.checkWithMaxAge(
                 { realms: RealmScope.OWN_OR_NULL },
                 token ? { authorizationHeader: { type: 'Bearer', token } } : undefined,
             );
+
+            return { permissions: data, maxAge };
         } catch (e) {
             const { status } = extractErrorContext(e);
             if (status === 404) {
-                return null;
+                return { permissions: null };
             }
 
             throw e;
         }
     };
 
+    const isCheckExpired = () => typeof checkDeadline !== 'undefined' &&
+        Date.now() >= checkDeadline;
+
     const loadCheck = (key: string, token?: string) : Promise<AuthorizationCheckPermissions | null> => {
-        if (!checkPromise || checkKey !== key) {
-            const promise = fetchCheck(token).catch((e) => {
+        if (!checkPromise || checkKey !== key || isCheckExpired()) {
+            const promise : Promise<AuthorizationCheckPermissions | null> = fetchCheck(token).then((result) => {
+                if (checkPromise === promise) {
+                    checkDeadline = typeof result.maxAge === 'number' ?
+                        Date.now() + (result.maxAge * 1000) :
+                        undefined;
+                }
+
+                return result.permissions;
+            }).catch((e) => {
                 if (checkPromise === promise) {
                     resetCheck();
                 }
@@ -488,6 +545,7 @@ export function createStore(context: StoreCreateContext) {
 
             checkPromise = promise;
             checkKey = key;
+            checkDeadline = undefined;
         }
 
         return checkPromise;
@@ -659,6 +717,102 @@ export function createStore(context: StoreCreateContext) {
         }
     );
 
+    // Retried after a failed timer refetch: the failure is left alone (the
+    // previous verdicts stay and the next resolve may retry too), but an idle
+    // tab would otherwise never ask again.
+    const CHECK_RETRY_DELAY = 30_000;
+
+    // setTimeout overflows past a signed 32-bit delay and fires at once; a
+    // longer wait is re-armed in steps instead.
+    const CHECK_TIMER_MAX_DELAY = 2 ** 31 - 1;
+
+    const armCheckTimer = (delay?: number) => {
+        clearCheckTimer();
+
+        if (isServerRuntime()) {
+            return;
+        }
+
+        let wait = delay;
+        if (typeof wait === 'undefined') {
+            if (typeof checkDeadline === 'undefined') {
+                return;
+            }
+
+            wait = Math.max(0, checkDeadline - Date.now());
+        }
+
+        checkTimer = setTimeout(() => {
+            checkTimer = undefined;
+            refreshCheck();
+        }, Math.min(wait, CHECK_TIMER_MAX_DELAY));
+    };
+
+    /**
+     * Rebuild the verdicts of the committed session once its answer expired.
+     * Nothing else of the session is touched, and a failure never signs the
+     * user out: the credential is fine, only a snapshot of its authorization
+     * aged, so the old evaluator stays until a later attempt succeeds.
+     */
+    const refreshCheck = async () : Promise<void> => {
+        const introspection = committedIntrospection;
+        if (!introspection) {
+            return;
+        }
+
+        // A timer fires on this clock at the earliest, but it may also have
+        // been clamped to the maximum delay, so it can be early. A memo a
+        // failed refetch dropped is the retry, and carries no deadline.
+        if (checkPromise && !isCheckExpired()) {
+            armCheckTimer();
+            return;
+        }
+
+        const generation = tokenGeneration.value;
+
+        let token : string | undefined;
+        if (!context.cookieSession) {
+            if (!accessToken.value) {
+                return;
+            }
+
+            token = accessToken.value;
+        }
+
+        let authorization : IPermissionEvaluator | null;
+        try {
+            authorization = await buildAuthorization(introspection, token);
+        } catch {
+            if (
+                committedIntrospection === introspection &&
+                generation === tokenGeneration.value
+            ) {
+                armCheckTimer(CHECK_RETRY_DELAY);
+            }
+
+            return;
+        }
+
+        // A logout or another commit landed meanwhile: that commit carries
+        // verdicts of its own and armed its own timer.
+        if (
+            committedIntrospection !== introspection ||
+            generation !== tokenGeneration.value
+        ) {
+            return;
+        }
+
+        if (authorization) {
+            permissionEvaluator.setEvaluator(authorization);
+        } else {
+            permissionEvaluator.setPermissions(introspection.permissions ?? []);
+        }
+
+        committedCheck = checkPromise;
+        permissionRevision.value += 1;
+        armCheckTimer();
+    };
+
     // The single synchronous write path for a staged session. The write order
     // is load-bearing (expire date before access token — the cookie listener
     // derives the token cookie's maxAge from the already-written expire date)
@@ -730,6 +884,16 @@ export function createStore(context: StoreCreateContext) {
         } else {
             permissionEvaluator.setPermissions(ctx.introspection.permissions ?? []);
         }
+
+        // The first commit of a session flips `status`, which re-evaluates on
+        // its own; a later one replacing the answer has to say so.
+        if (committedIntrospection && committedCheck !== checkPromise) {
+            permissionRevision.value += 1;
+        }
+
+        committedCheck = checkPromise;
+        committedIntrospection = ctx.introspection;
+        armCheckTimer();
 
         validated.value = true;
 
@@ -1132,6 +1296,7 @@ export function createStore(context: StoreCreateContext) {
         setCookiesRead,
 
         permissionEvaluator,
+        permissionRevision,
 
         login,
         loginWithTokenGrant,

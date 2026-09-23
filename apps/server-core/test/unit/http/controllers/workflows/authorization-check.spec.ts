@@ -55,6 +55,7 @@ function postCheck(
 async function createDateBoundPermission(
     suite: ReturnType<typeof createTestApplication>,
     window: { start: string, end: string },
+    type: `${BuiltInPolicyType.DATE}` | `${BuiltInPolicyType.TIME}` = BuiltInPolicyType.DATE,
 ) : Promise<string> {
     const name = `date_bound_${randomUUID().replace(/-/g, '')}`;
 
@@ -67,7 +68,7 @@ async function createDateBoundPermission(
 
     const { data: policy } = await suite.client.policy.create({
         name: `date_policy_${randomUUID().replace(/-/g, '')}`,
-        type: BuiltInPolicyType.DATE,
+        type,
         realmId: null,
         ...window,
     });
@@ -263,10 +264,40 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
     });
 
+    // Scoped to one built-in name: the date-bound definitions the case above
+    // created depend on the clock, and an unscoped check would evaluate them.
     it('is not cached by an intermediary', async () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
-        const response = await postCheck(suite, {}, { Authorization: `Bearer ${grant.access_token}` });
+        const response = await postCheck(
+            suite,
+            { names: [PermissionName.USER_UPDATE] },
+            { Authorization: `Bearer ${grant.access_token}` },
+        );
 
         expect(response.headers.get('cache-control')).toEqual('private, no-cache');
+    });
+
+    // A time policy settles against the clock, so the answer carries when it
+    // expires. `no-cache` stays, so no intermediary reuses the body.
+    it('says when an answer built from a time policy expires', async () => {
+        const name = await createDateBoundPermission(
+            suite,
+            { start: '00:00:00', end: '23:59:59' },
+            BuiltInPolicyType.TIME,
+        );
+
+        const response = await postCheck(suite, { names: [name] });
+
+        expect(response.status).toBe(200);
+
+        const header = response.headers.get('cache-control')!;
+        const match = header.match(/^private, no-cache, max-age=(\d+)$/);
+        expect(match).not.toBeNull();
+
+        // the window ends today, and the daily rollover at midnight is the
+        // latest instant the verdict could change
+        const maxAge = Number(match![1]);
+        expect(maxAge).toBeGreaterThanOrEqual(0);
+        expect(maxAge).toBeLessThanOrEqual(24 * 60 * 60);
     });
 });

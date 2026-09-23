@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { MemoryTransport } from 'hapic';
 import { describe, expect, it } from 'vitest';
+import { Client } from '../../src';
 import { createFakeClient } from '../../src/testing';
 
 const catalog = {
@@ -39,5 +41,51 @@ describe('src/domains/workflows/authorization', () => {
         await client.authorization.get({ authorizationHeader: { type: 'Bearer', token: 'xyz' } });
 
         expect(client.requests[0].headers.authorization).toEqual('Bearer xyz');
+    });
+
+    describe('check', () => {
+        const permissions = [{ name: 'user_read', realms: [null] }];
+
+        function createClient(cacheControl?: string) {
+            const headers : Record<string, string> = {};
+            if (cacheControl) {
+                headers['cache-control'] = cacheControl;
+            }
+
+            return new Client({
+                baseURL: 'http://authup.test',
+                transport: new MemoryTransport({
+                    fetch: () => ({
+                        status: 200,
+                        headers,
+                        body: permissions,
+                    }),
+                }),
+            });
+        }
+
+        it('reads the max-age the server says the verdicts hold for', async () => {
+            const client = createClient('private, no-cache, max-age=120');
+
+            await expect(client.authorization.checkWithMaxAge()).resolves.toEqual({ data: permissions, maxAge: 120 });
+        });
+
+        it('carries no max-age when the answer does not expire', async () => {
+            const client = createClient('private, no-cache');
+
+            await expect(client.authorization.checkWithMaxAge()).resolves.toEqual({ data: permissions });
+        });
+
+        it('ignores a directive that only ends in max-age', async () => {
+            const client = createClient('private, s-max-age=60');
+
+            await expect(client.authorization.checkWithMaxAge()).resolves.toEqual({ data: permissions });
+        });
+
+        it('keeps answering the bare array', async () => {
+            const client = createClient('private, no-cache, max-age=120');
+
+            await expect(client.authorization.check()).resolves.toEqual(permissions);
+        });
     });
 });

@@ -183,8 +183,10 @@ export function createPermissionCheckerReactiveStateFn(
             // and the verdict would latch at its fail-closed default. Both
             // flip in the same synchronous commit as the permissions, so bearer
             // mode re-evaluates at the same instant it did before.
+            // `permissionRevision` moves when the verdicts expired and were
+            // refetched for the same session, where `status` does not flip.
             removeListener = watch(
-                [storeRefs.status, resolveContext],
+                [storeRefs.status, storeRefs.permissionRevision, resolveContext],
                 () => recompute(),
             );
         });

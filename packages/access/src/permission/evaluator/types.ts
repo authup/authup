@@ -7,7 +7,7 @@
 
 import type { ICondition } from '@rapiq/core';
 import type { DecisionStrategy } from '@authup/kit';
-import type { IPolicyEngine, PolicyData } from '../../policy';
+import type { IPolicyEngine, PolicyData, PolicyTransitionSink } from '../../policy';
 import type { IPermissionProvider } from '../provider';
 
 export interface IPermissionEvaluator {
@@ -43,6 +43,13 @@ export type PermissionEvaluationOptions = {
      *   (`preEvaluate()`): only a tree that settles false with the current bag denies.
      */
     pendingPolicies?: 'deny' | 'permit',
+    /**
+     * Receives the instants at which a clock-dependent policy (`date`, `time`)
+     * in an evaluated tree could change its verdict, so a caller caching the
+     * outcome knows when it expires. Handed to every policy evaluation this call
+     * runs; a policy-free grant evaluates nothing and reports nothing.
+     */
+    transitions?: PolicyTransitionSink,
 };
 
 export type PermissionEvaluationContext = {

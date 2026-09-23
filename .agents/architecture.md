@@ -2608,7 +2608,8 @@ rather than trusted until `exp`.
   predates the route, and the name-only memory provider is the fallback. The
   recompute WATCH keys on
   `status`, which flips in the same synchronous commit as the evaluator in
-  both modes (pinned by
+  both modes, and on `permissionRevision`, which moves when a running
+  session's verdicts are replaced by a new answer (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
   token-derived `loggedIn`, which never flips in cookie mode, latched every
   verdict at its fail-closed `false`. `loggedIn` stays
@@ -3934,6 +3935,31 @@ Fabricating one would WIDEN rather than inform, since a made-up row can satisfy 
 the real row fails. Absent, such a policy pends and permits, which is exactly the upper
 bound this answer is documented to be.
 
+**The answer says when it expires (#3618).** A `date` or `time` policy that fell back to
+the real clock settles against `new Date()`, so the answer is a point-in-time snapshot.
+`PolicyEvaluationContext.transitions` (`PolicyTransitionSink`, `{ report(at) }`,
+`@authup/access`) is an optional sink those two evaluators report into from inside
+`evaluate()`, from the "now" they already computed: the next strictly-future instant at
+which that policy's verdict could change (time: today's start and the minute after
+today's end, both at 00.000 since the evaluator compares at minute precision, keeping the
+seconds of the instant it runs at, and the next local midnight when the policy carries a window; date: the start
+while ahead, else the midnight after the end day while that day has not passed). Nothing
+reports when the bag supplied `DATE` / `TIME` or when the verdict can never change again,
+and `invert` moves no instant. Earlier is allowed, later is a bug. The sink rides the
+context by spread, so nested evaluations (the engine, composites, the binding evaluator)
+inherit it with no aggregation code, and `PermissionEvaluationOptions.transitions` hands
+it to `evaluate` / `preEvaluate` and the `*OneOf` forms (`compile` takes none). A
+short-circuited subtree needs no report: it only matters once an evaluated sibling
+flips, and that sibling reports its own instant. `buildAuthorizationCheck` passes one
+`createPolicyTransitionCollector()` on every `preEvaluate` and returns
+`{ permissions, expiresAt? }` (the earliest instant). The controller keeps the bare-array
+body and answers `Cache-Control: private, no-cache, max-age=N` (N = seconds until
+`expiresAt`, ceiled so a refetch cannot land before the flip, clamped at 0), or plain
+`private, no-cache` when nothing reported. `no-cache` stays so no HTTP cache reuses the
+body; `max-age` only carries the number, chosen over a custom header because it is
+relative (immune to clock skew) and CORS-safelisted. A denied pair reports too, so an
+unscoped check in a deployment holding any clock-bound definition always carries one.
+
 `createAuthorizationCheckEvaluator({ permissions, identity })` (`@authup/access`, next to
 `createAuthorizationEvaluator`) is the consumer. It picks the realm class from
 `data.realmMatch`: absent passes if any requested realm did, `null` is the global rows,
@@ -3961,7 +3987,22 @@ recomputes from the grants each introspection reports, so a memo cleared only by
 mid-session would keep gating on the first fetch's verdicts (a cookie-mode console
 revalidates on every navigation, so that window is the whole document's life). Keyed on
 the inputs, it refetches exactly when they move and asks once when they do not; the
-comparison can only over-refetch, never reuse an answer whose inputs changed. A `404`
+comparison can only over-refetch, never reuse an answer whose inputs changed. The fetch
+goes through `client.authorization.checkWithMaxAge`, and the memo also holds a LOCAL
+deadline (receipt time plus `max-age`); a passed deadline is the other reason the memo
+is not current. An idle tab resolves nothing, so the store additionally arms ONE
+`setTimeout` per session commit for that deadline (never during a server render; the
+delay is capped at 2^31-1 ms and re-armed when the cap cuts it short; cleared on every
+re-arm and in `cleanup()`). It rebuilds the evaluator for the committed introspection
+and swaps it into the stable `StorePermissionEvaluator`, dropping the result when the
+generation counter or the committed introspection moved while it was in flight (a logout,
+another commit). A failed timer refetch logs nobody out: it keeps the old evaluator and
+retries after 30 s. The swap bumps the store's `permissionRevision` ref, which
+`usePermissionCheck`'s watch keys on next to `status` (the swap flips no status). A
+commit bumps it only when it replaces the answer of a session already committed (a resolve
+that refetched an expired memo before the timer ran, a background tab whose timer was
+throttled, another subject); a commit reusing the memo does not, since every cookie-mode
+navigation commits and each recompute briefly reads the fail-closed default. A `404`
 memoizes as null and lands on the name-only view — the route carries no gate a caller
 can fail, so 404 means the server predates it. Any other fetch failure rejects and
 clears the memo so the next resolve retries. During

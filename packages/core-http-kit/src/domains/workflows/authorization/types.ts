@@ -32,6 +32,17 @@ export type AuthorizationCheckPayload = {
     realms?: AuthorizationCheckRealms,
 };
 
+export type AuthorizationCheckResponse = {
+    data: AuthorizationCheckPermissions,
+    /**
+     * Seconds until the answer may change, read off the response's
+     * `Cache-Control: max-age`. The server sends one only when a date or time
+     * policy in an evaluated tree will flip at a known instant; absent, the
+     * answer holds until the caller's grants change.
+     */
+    maxAge?: number,
+};
+
 export interface IAuthorizationAPI {
     /**
      * The identity-free permission catalog `GET /authorization` serves: every
@@ -59,4 +70,15 @@ export interface IAuthorizationAPI {
         payload?: AuthorizationCheckPayload,
         options?: AuthorizationRequestOptions,
     ) : Promise<AuthorizationCheckPermissions>;
+
+    /**
+     * {@link check}, together with how long the answer holds. A date or time
+     * policy settles against the server's clock, so the verdicts are a
+     * snapshot; a caller that memoizes them refetches once `maxAge` seconds
+     * have passed.
+     */
+    checkWithMaxAge(
+        payload?: AuthorizationCheckPayload,
+        options?: AuthorizationRequestOptions,
+    ) : Promise<AuthorizationCheckResponse>;
 }

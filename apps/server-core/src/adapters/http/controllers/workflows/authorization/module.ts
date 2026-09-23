@@ -215,9 +215,7 @@ export class AuthorizationController {
 
         const actor = buildActorContext(event);
 
-        event.response.headers.set('cache-control', 'private, no-cache');
-
-        return buildAuthorizationCheck(this.ctx, {
+        const { permissions, expiresAt } = await buildAuthorizationCheck(this.ctx, {
             names: payload.names,
             realms: payload.realms,
             identity: toIdentityPolicyData(actor.identity),
@@ -228,5 +226,22 @@ export class AuthorizationController {
                 identity,
             ) => useRequestGrants(event, identity),
         });
+
+        // `no-cache` stays, so no HTTP cache reuses the body without asking:
+        // the answer is per caller. `max-age` only carries WHEN the answer
+        // expires, the next instant a clock-dependent policy (`date`, `time`)
+        // it was built from could flip, so a consumer memoizing it knows when
+        // to ask again. Relative rather than an instant, so it is immune to
+        // clock skew between the two sides. Rounded up, so the refetch lands at
+        // or just after the flip: one landing before it would be answered the
+        // same verdict again, with a deadline a fraction of a second away.
+        if (expiresAt) {
+            const maxAge = Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
+            event.response.headers.set('cache-control', `private, no-cache, max-age=${maxAge}`);
+        } else {
+            event.response.headers.set('cache-control', 'private, no-cache');
+        }
+
+        return permissions;
     }
 }
