@@ -15,6 +15,7 @@ export * from './client-permission';
 export * from './client-scope';
 export * from './consent';
 export * from './event';
+export * from './event-aggregate';
 export * from './identity';
 export * from './identity-provider';
 export * from './identity-provider-attribute';

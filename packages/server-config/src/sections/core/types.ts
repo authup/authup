@@ -298,6 +298,13 @@ export type CoreConfig = {
     eventLogEntityRetentionDays: number,
 
     /**
+     * Retention for the daily event rollups (auth_event_aggregates) in
+     * days. 0 = keep forever. Rollups hold counts only, no personal data.
+     * default: 0
+     */
+    eventLogAggregateRetentionDays: number,
+
+    /**
      * Throttle failed interactive logins per (identifier, ip) pair by
      * counting recent loginFailed audit events. Requires eventLogEnabled.
      * default: false

@@ -312,6 +312,12 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
         expect(rootPath).not.toHaveProperty('default');
     });
 
+    it('publishes the event rollup retention, forever by default', () => {
+        const retention = resolveProperty('core.eventLogAggregateRetentionDays');
+        expect(retention['x-authup-env']).toEqual('EVENT_LOG_AGGREGATE_RETENTION_DAYS');
+        expect(retention.default).toEqual(0);
+    });
+
     it('represents an enum type', () => {
         expect(resolveProperty('core.certificateSource').enum)
             .toEqual(['disabled', 'standard', 'forwarded']);
