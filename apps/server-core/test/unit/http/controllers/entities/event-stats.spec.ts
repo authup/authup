@@ -8,9 +8,11 @@
 import { randomUUID } from 'node:crypto';
 import type { Event } from '@authup/core-kit';
 import { EventName, EventScope } from '@authup/core-kit';
-import type { EventStatsQuery, EventStatsRow } from '@authup/core-http-kit';
+import type { EventStatsGroups, EventStatsQuery, EventStatsRow } from '@authup/core-http-kit';
 import { Client as HTTPClient, buildQueryString } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import { MemoryCache } from '@authup/server-kit';
+import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import type { ICondition } from '@rapiq/core';
 import {
     and,
@@ -29,6 +31,11 @@ import {
 } from 'vitest';
 import { EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/modules/database/index.ts';
+import {
+    EntityStatsRepositoryAdapter,
+    EventAggregateRepositoryAdapter,
+} from '../../../../../src/app/modules/database/repositories/index.ts';
+import { EntityStatsService, eventSchema } from '../../../../../src/core/index.ts';
 import { createTestApplication } from '../../../../app';
 import {
     createFakeRealm,
@@ -47,6 +54,20 @@ function countOf(data: EventStatsRow[], name: `${EventName}`): number {
     return data
         .filter((row) => row.name === name)
         .reduce((sum, row) => sum + row.count, 0);
+}
+
+function toDay(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Roll the days a read covers up, as the event-aggregator would.
+ */
+async function recompute(dataSource: DataSource, ...dates: Date[]) {
+    const repository = new EventAggregateRepositoryAdapter(dataSource);
+    for (const date of dates) {
+        await repository.recompute(toDay(date));
+    }
 }
 
 function since(ms: number): string {
@@ -117,6 +138,9 @@ describe('src/http/controllers/entities/event (stats)', () => {
             password: userB.password!,
             realm_id: realmB.id,
         });
+
+        // day reads over stored columns are answered from the rollups
+        await recompute(dataSource, new Date(), new Date(Date.now() - DAY_IN_MS));
     });
 
     afterAll(async () => {
@@ -280,6 +304,94 @@ describe('src/http/controllers/entities/event (stats)', () => {
         }
     });
 
+    it('answers a rollup-routed read exactly like raw events, across a UTC day edge', async () => {
+        const refType = `parity-${randomUUID().slice(0, 8)}`;
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
+        const repository = dataSource.getRepository<Event>(EventEntity);
+        const instants = [
+            new Date(today.getTime() - (2 * DAY_IN_MS) + (12 * HOUR_IN_MS)),
+            new Date(today.getTime() - 1000),
+            new Date(today.getTime() - 1000),
+            today,
+        ];
+        for (const [index, createdAt] of instants.entries()) {
+            const entity = await repository.save(repository.create({
+                id: randomUUID(),
+                scope: EventScope.OAUTH2,
+                name: index % 2 === 0 ? EventName.LOGIN : EventName.LOGOUT,
+                refType,
+                realmId: masterRealmId,
+            }));
+            await repository.update({ id: entity.id }, { createdAt: createdAt.toISOString() });
+        }
+
+        await recompute(
+            dataSource,
+            new Date(today.getTime() - (2 * DAY_IN_MS)),
+            new Date(today.getTime() - DAY_IN_MS),
+            today,
+        );
+
+        const from = new Date(today.getTime() - (3 * DAY_IN_MS)).toISOString();
+        const query = buildQuery('day', from, eq('refType', refType));
+
+        const raw = new EntityStatsService<EventStatsGroups>({
+            definition: {
+                type: 'event-raw',
+                schema: eventSchema,
+                repository: new EntityStatsRepositoryAdapter(dataSource, EventEntity, 'event'),
+            },
+            cache: new MemoryCache(),
+        });
+        const expected = await raw.getMany(
+            Object.fromEntries(new URLSearchParams(buildQueryString<Event>(query).replace(/^\?/, ''))),
+            { permissionEvaluator: new FakePermissionEvaluator() },
+        );
+
+        const sort = (data: EventStatsRow[]) => data
+            .map((row) => [row.createdAt, row.scope, row.name, row.count])
+            .sort();
+
+        const { data, meta } = await suite.client.event.getStats(query);
+        expect(sort(data)).toEqual(sort(expected.data));
+        expect(sort(data)).toEqual([
+            [new Date(today.getTime() - (2 * DAY_IN_MS)).toISOString(), EventScope.OAUTH2, EventName.LOGIN, 1],
+            [new Date(today.getTime() - DAY_IN_MS).toISOString(), EventScope.OAUTH2, EventName.LOGIN, 1],
+            [new Date(today.getTime() - DAY_IN_MS).toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
+            [today.toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
+        ]);
+        expect(meta.retentionDays).toEqual(0);
+
+        // an event the rollups have not seen yet proves the read was routed
+        await repository.save(repository.create({
+            id: randomUUID(),
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType,
+            realmId: masterRealmId,
+        }));
+        const { data: stale } = await suite.client.event.getStats(
+            buildQuery('day', new Date(today.getTime() - (4 * DAY_IN_MS)).toISOString(), eq('refType', refType)),
+        );
+        expect(countOf(stale, EventName.LOGIN)).toEqual(2);
+    });
+
+    it('answers the entity activity shape from the rollups', async () => {
+        const { data } = await suite.client.event.getStats({
+            filters: and(
+                gte('createdAt', since(30 * DAY_IN_MS)),
+                eq('scope', EventScope.ENTITY),
+                eq('refType', 'user'),
+            ),
+            groups: [{ name: 'bucket', params: ['createdAt', 'day'] }, 'name'],
+            aggregates: ['count'],
+        });
+
+        expect(data.find((row) => row.name === 'created')?.count).toBeGreaterThanOrEqual(3);
+    });
+
     it('requires an identity', async () => {
         const query = buildQueryString<Event>(buildQuery('day', since(DAY_IN_MS)));
         const response = await httpRequest(suite, 'GET', `/events/@stats${query}`);
@@ -293,6 +405,7 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
             config.eventLogEnabled = false;
             config.eventLogRetentionDays = 30;
             config.eventLogEntityRetentionDays = 3;
+            config.eventLogAggregateRetentionDays = 400;
         },
     });
 
@@ -310,11 +423,29 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         expect(meta.enabled).toBe(false);
     });
 
-    it('reports both retentions, so a client never offers a window past them', async () => {
-        const { meta } = await suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS)));
+    it('reports both raw retentions on a raw read, so a client never offers a window past them', async () => {
+        const { meta } = await suite.client.event.getStats(
+            buildQuery('day', since(2 * DAY_IN_MS), eq('actorType', 'user')),
+        );
 
         expect(meta.retentionDays).toEqual(30);
         expect(meta.entityRetentionDays).toEqual(3);
+    });
+
+    it('reports the rollup retention on a rollup-routed read', async () => {
+        const { meta } = await suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS)));
+
+        expect(meta.retentionDays).toEqual(400);
+        expect(meta.entityRetentionDays).toEqual(400);
+    });
+
+    it('refuses a raw read past the entity retention when it pins scope=entity', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(
+                buildQuery('day', since(7 * DAY_IN_MS), eq('scope', EventScope.ENTITY), eq('actorType', 'user')),
+            ),
+            { status: 400, data: { message: 'This filter reaches back past 3 days; rollups cannot answer it.' } },
+        );
     });
 
     it('refuses hour buckets past the raw retention', async () => {

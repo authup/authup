@@ -67,9 +67,16 @@ export type EntityStatsDefinition = {
      */
     dateColumn?: string,
     /**
-     * How far back raw rows reach, in days (see `StatsWindowOptions`).
+     * How far back raw rows reach for the (gated) query, in days: an hour
+     * read past it, and a day or month read the rollups do not answer,
+     * are refused. Absent or 0 means never pruned.
      */
-    rawHorizonDays?: () => number,
+    rawHorizonDays?: (query: IQuery) => number,
+    /**
+     * Persisted daily counts answering day and month reads whose query
+     * references stored columns only.
+     */
+    rollup?: EntityStatsRollup,
     /**
      * The column the route realm (`/realms/:realmId/...`) constrains.
      * Defaults to `realmId`; `null` for an entity without one.
@@ -81,6 +88,28 @@ export type EntityStatsDefinition = {
     scope?: (query: IQuery, actor: ActorContext) => Promise<ReadScope>,
     /**
      * Extra response meta (events: `enabled`).
+     */
+    meta?: () => Record<string, any>,
+};
+
+export type EntityStatsRollup = {
+    /**
+     * The columns the rollup stored, in the entity schema's vocabulary.
+     */
+    columns: string[],
+    repository: IEntityStatsRepository,
+    /**
+     * The raw-vocabulary grouped query onto the rollup table, undefined
+     * when the rollup cannot answer it.
+     */
+    translate: (query: IQuery) => IQuery | undefined,
+    /**
+     * A rollup row back into the raw vocabulary.
+     */
+    translateRow: (row: Record<string, unknown>) => Record<string, unknown>,
+    /**
+     * Response meta replacing the definition's on a routed read (events:
+     * the rollup horizon as `retentionDays`).
      */
     meta?: () => Record<string, any>,
 };

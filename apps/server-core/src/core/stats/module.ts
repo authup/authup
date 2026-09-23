@@ -5,9 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ValidationError } from '@authup/errors';
 import type { ActorContext, ICache } from '@authup/server-kit';
-import { eq, lt } from '@rapiq/core';
-import type { IQuery } from '@rapiq/core';
+import { 
+    eq, 
+    isFilter, 
+    isFilters, 
+    lt, 
+} from '@rapiq/core';
+import type { ICondition, IQuery } from '@rapiq/core';
 import { appendQueryConditions, decodeQuery, queryCodec } from '../query/module.ts';
 import { narrowReadScope } from '../query/scope.ts';
 import { STATS_CACHE_TTL } from './constants.ts';
@@ -17,7 +23,35 @@ import type {
     EntityStatsResult,
     IEntityStatsService,
 } from './types.ts';
-import { resolveStatsWindow, stripWindowConditions } from './window.ts';
+import { isPastRawHorizon, resolveStatsWindow, stripWindowConditions } from './window.ts';
+
+function collectFields(condition: ICondition, output: Set<string>): void {
+    if (isFilters(condition)) {
+        condition.value.forEach((child) => collectFields(child, output));
+    } else if (isFilter(condition)) {
+        output.add(condition.field);
+    }
+}
+
+/**
+ * Every column a grouped query reads: filter leaves, groups, aggregates.
+ */
+function readReferencedColumns(query: IQuery): string[] {
+    const output = new Set<string>();
+    collectFields(query.filters, output);
+
+    for (const group of query.groups?.value ?? []) {
+        output.add(group.lowering?.field ?? group.key);
+    }
+
+    for (const aggregate of query.aggregates?.value ?? []) {
+        if (aggregate.lowering?.field) {
+            output.add(aggregate.lowering.field);
+        }
+    }
+
+    return [...output];
+}
 
 export type EntityStatsServiceContext = {
     definition: EntityStatsDefinition,
@@ -67,11 +101,33 @@ export class EntityStatsService<
         }
 
         const dateColumn = this.definition.dateColumn ?? 'createdAt';
+        const now = new Date();
+        const rawHorizonDays = this.definition.rawHorizonDays?.(scoped);
         const window = resolveStatsWindow(scoped, {
             dateColumn,
-            now: new Date(),
-            rawHorizonDays: this.definition.rawHorizonDays?.(),
+            now,
+            rawHorizonDays,
         });
+
+        // an open window ends at the read instant, appended after the cache
+        // key is taken below, since it moves with every request
+        const grouped = window.upperBound ?
+            scoped :
+            appendQueryConditions(scoped, lt(dateColumn, window.to));
+
+        // routed by the query's shape after the gate: a reach lowered onto
+        // a column the rollup did not store (an actor's own actorId) reads
+        // raw rows, whatever the caller asked for
+        const { rollup } = this.definition;
+        const translated = rollup &&
+            window.unit !== 'hour' &&
+            readReferencedColumns(scoped).every((column) => rollup.columns.includes(column)) ?
+            rollup.translate(grouped) :
+            undefined;
+
+        if (!translated && window.unit !== 'hour' && isPastRawHorizon(window, rawHorizonDays, now)) {
+            throw new ValidationError(`This filter reaches back past ${rawHorizonDays} days; rollups cannot answer it.`);
+        }
 
         // the encoded query is the lowered one, not the wire record: two
         // spellings of one filter share an answer, two reaches do not
@@ -80,21 +136,21 @@ export class EntityStatsService<
             this.definition.type,
             actor.identity ? `${actor.identity.type}:${actor.identity.data.id}` : 'anonymous',
         ];
-        const key = [...prefix, queryCodec.encode(scoped) ?? ''].join(':');
+        const key = [
+            ...prefix,
+            ...(translated ? ['rollup'] : []),
+            queryCodec.encode(scoped) ?? '',
+        ].join(':');
 
         const cached = await this.cache.get<EntityStatsResult<G, M>>(key);
         if (cached) {
             return cached;
         }
 
-        // an open window ends at the read instant, appended AFTER the key
-        // was taken, since it moves with every request
-        const grouped = window.upperBound ?
-            scoped :
-            appendQueryConditions(scoped, lt(dateColumn, window.to));
-
         const [rows, total] = await Promise.all([
-            this.definition.repository.aggregate(grouped),
+            rollup && translated ?
+                rollup.repository.aggregate(translated).then((output) => output.map((row) => rollup.translateRow(row))) :
+                this.definition.repository.aggregate(grouped),
             this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
         ]);
 
@@ -109,6 +165,7 @@ export class EntityStatsService<
                 bucket: window.unit,
                 total,
                 ...(this.definition.meta ? this.definition.meta() : {}),
+                ...(rollup && translated && rollup.meta ? rollup.meta() : {}),
             },
         } as EntityStatsResult<G, M>;
 

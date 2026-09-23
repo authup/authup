@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Event, User } from '@authup/core-kit';
+import type { Event, EventAggregate, User } from '@authup/core-kit';
 import {
     EventName,
     EventScope,
@@ -36,6 +36,11 @@ import {
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { EventService, eventSchema } from '../../../../src/core/entities/event/index.ts';
+import {
+    EVENT_AGGREGATE_COLUMNS,
+    translateEventAggregateQuery,
+    translateEventAggregateRow,
+} from '../../../../src/core/entities/event-aggregate/index.ts';
 import type { EntityStatsDefinition } from '../../../../src/core/index.ts';
 import { EntityStatsService } from '../../../../src/core/index.ts';
 import { FakeEventRepository } from '../entities/event/fake-repository.ts';
@@ -110,7 +115,11 @@ function wire(input: StatsInput = {}): Record<string, any> {
 
 function defineEventStats(
     repository: FakeEntityStatsRepository<Event>,
-    options: { enabled?: boolean, rawHorizonDays?: number } = {},
+    options: {
+        enabled?: boolean,
+        rawHorizonDays?: number,
+        rollups?: FakeEntityStatsRepository<EventAggregate>,
+    } = {},
 ): EntityStatsDefinition {
     const events = new EventService({ repository: new FakeEventRepository() });
 
@@ -120,7 +129,16 @@ function defineEventStats(
         repository,
         scope: (query, actor) => events.scopeRead(query, actor),
         rawHorizonDays: () => options.rawHorizonDays ?? 0,
-        meta: () => ({ enabled: options.enabled ?? true }),
+        meta: () => ({ enabled: options.enabled ?? true, retentionDays: 90 }),
+        ...(options.rollups ? {
+            rollup: {
+                columns: EVENT_AGGREGATE_COLUMNS,
+                repository: options.rollups,
+                translate: translateEventAggregateQuery,
+                translateRow: translateEventAggregateRow,
+                meta: () => ({ retentionDays: 0, entityRetentionDays: 0 }),
+            },
+        } : {}),
     };
 }
 
@@ -294,8 +312,20 @@ describe('EntityStatsService', () => {
         await expect(horizon.getMany(wire({ from, unit: 'hour' }), allowed()))
             .rejects.toSatisfy(isValidationError);
 
-        const { meta } = await horizon.getMany(wire({ from, unit: 'day' }), allowed());
-        expect(meta.bucket).toEqual('day');
+        expect(repository.aggregateCalls).toHaveLength(0);
+    });
+
+    it('refuses a raw day read past the raw horizon, tolerating the snapped first bucket', async () => {
+        const horizon = new EntityStatsService({
+            definition: defineEventStats(repository, { rawHorizonDays: 7 }),
+            cache,
+        });
+
+        await expect(horizon.getMany(wire({ from: new Date(Date.now() - (8 * DAY_IN_MS)).toISOString() }), allowed()))
+            .rejects.toSatisfy(isValidationError);
+
+        const { meta } = await horizon.getMany(wire({ from: new Date(Date.now() - (7 * DAY_IN_MS)).toISOString() }), allowed());
+        expect(meta.from).toEqual(WEEK_AGO);
     });
 
     it('returns every group row, never a page of them', async () => {
@@ -614,5 +644,144 @@ describe('EntityStatsService', () => {
         expect(repository.aggregateCalls).toHaveLength(2);
         expect(repository.countCalls).toHaveLength(1);
         expect(hourly.meta.total).toEqual(daily.meta.total);
+    });
+});
+
+describe('EntityStatsService routing onto the rollups', () => {
+    let repository: FakeEntityStatsRepository<Event>;
+    let rollups: FakeEntityStatsRepository<EventAggregate>;
+    let cache: MemoryCache;
+    let service: EntityStatsService;
+
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date(NOW));
+
+        repository = new FakeEntityStatsRepository<Event>();
+        rollups = new FakeEntityStatsRepository<EventAggregate>();
+        cache = new MemoryCache();
+        service = new EntityStatsService({
+            definition: defineEventStats(repository, { rawHorizonDays: 7, rollups }),
+            cache,
+        });
+
+        rollups.seed({
+            id: randomUUID(),
+            day: '2026-09-23',
+            realmId,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType: null,
+            count: 5,
+            createdAt: NOW,
+        });
+        rollups.seed({
+            id: randomUUID(),
+            day: '2026-08-30',
+            realmId,
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: 'user',
+            count: 3,
+            createdAt: NOW,
+        });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    function allowed() {
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+        return actor;
+    }
+
+    it('answers a day read filtered by realm from the rollups', async () => {
+        const { data, meta } = await service.getMany(wire({ filter: inArray('realmId', [realmId, null]) }), allowed());
+
+        expect(rollups.aggregateCalls).toHaveLength(1);
+        expect(repository.aggregateCalls).toHaveLength(0);
+        expect(data).toEqual([{
+            createdAt: TODAY,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            count: 5,
+        }]);
+        expect(meta).toMatchObject({
+            from: WEEK_AGO,
+            bucket: 'day',
+            enabled: true,
+            retentionDays: 0,
+            entityRetentionDays: 0,
+        });
+    });
+
+    it('reads the day column and sums the stored counts', async () => {
+        await service.getMany(wire(), allowed());
+
+        const encoded = decodeURIComponent(buildQueryString(rollups.aggregateCalls[0]));
+        expect(encoded).toContain('gte(day,\'2026-09-16\')');
+        expect(encoded).toContain('lt(day,\'2026-09-24\')');
+        expect(encoded).toContain('bucket(day,day)');
+        expect(encoded).toContain('sum(count)');
+    });
+
+    it('answers the entity activity shape from the rollups', async () => {
+        const { data } = await service.getMany(wire({
+            from: '2026-08-24T00:00:00.000Z',
+            filter: and(eq('scope', EventScope.ENTITY), eq('refType', 'user')),
+            groups: ['name'],
+        }), allowed());
+
+        expect(repository.aggregateCalls).toHaveLength(0);
+        expect(data).toEqual([{
+            createdAt: '2026-08-30T00:00:00.000Z', 
+            name: 'created', 
+            count: 3, 
+        }]);
+    });
+
+    it('answers an hour read from raw events', async () => {
+        await service.getMany(wire({ from: new Date(Date.now() - DAY_IN_MS).toISOString(), unit: 'hour' }), allowed());
+
+        expect(repository.aggregateCalls).toHaveLength(1);
+        expect(rollups.aggregateCalls).toHaveLength(0);
+    });
+
+    it('answers a filter on a column the rollups do not store from raw events', async () => {
+        const { meta } = await service.getMany(wire({ filter: eq('clientId', randomUUID()) }), allowed());
+
+        expect(repository.aggregateCalls).toHaveLength(1);
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(meta.retentionDays).toEqual(90);
+    });
+
+    it('answers an actor without event_read from raw events', async () => {
+        await service.getMany(wire(), makeActor({ allow: false }));
+
+        expect(repository.aggregateCalls).toHaveLength(1);
+        expect(rollups.aggregateCalls).toHaveLength(0);
+    });
+
+    it('refuses a raw read past the raw horizon', async () => {
+        await expect(service.getMany(wire({
+            from: '2026-08-24T00:00:00.000Z',
+            filter: eq('clientId', randomUUID()),
+        }), allowed())).rejects.toSatisfy(isValidationError);
+    });
+
+    it('never shares a cache entry between the two sources', async () => {
+        const raw = new EntityStatsService({
+            definition: defineEventStats(repository, { rawHorizonDays: 7 }),
+            cache,
+        });
+
+        const actor = allowed();
+        await service.getMany(wire(), actor);
+        await raw.getMany(wire(), actor);
+
+        expect(rollups.aggregateCalls).toHaveLength(1);
+        expect(repository.aggregateCalls).toHaveLength(1);
     });
 });

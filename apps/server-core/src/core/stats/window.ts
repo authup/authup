@@ -26,7 +26,7 @@ const UPPER_BOUND_OPERATORS = ['lte', 'lt'];
  * The top-level AND conjuncts of a filter tree: nested `and` groups are
  * flattened, anything else (an `or`, a `not`) is one conjunct.
  */
-function readConjuncts(condition: ICondition): ICondition[] {
+export function readConjuncts(condition: ICondition): ICondition[] {
     if (isFilters(condition, 'and')) {
         return condition.value.flatMap((child) => readConjuncts(child));
     }
@@ -132,6 +132,19 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
         upperBound: upperBounds.length > 0,
         buckets,
     };
+}
+
+/**
+ * Whether a window reaches past the raw horizon (days, 0 = never pruned).
+ * The first bucket is snapped onto its start, so a window reaching back
+ * exactly the horizon is tolerated up to that bucket.
+ */
+export function isPastRawHorizon(window: StatsWindow, horizonDays: number | undefined, now: Date): boolean {
+    if (!horizonDays || horizonDays <= 0) {
+        return false;
+    }
+
+    return new Date(window.from) < snap(new Date(now.getTime() - (horizonDays * DAY_IN_MS)), window.unit);
 }
 
 /**
