@@ -227,7 +227,7 @@ export class PathService extends AbstractEntityService implements IPathService {
                 ...validated,
                 path: resolved.path,
             },
-            this.resourceRealmMatch(entity),
+            (row) => this.resourceRealmMatch(row),
         );
 
         if (resolved.path !== entity.path) {

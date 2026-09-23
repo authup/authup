@@ -185,6 +185,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
+            const storedRealmId = entity.realmId;
             await this.evaluateUpdate(
                 actor,
                 PermissionName.ROLE_UPDATE,
@@ -193,7 +194,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                     ...entity,
                     ...validated,
                 },
-                { [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null },
+                (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }),
             );
 
             entity = this.repository.merge(entity, validated);

@@ -609,7 +609,7 @@ export class IdentityProviderController {
                     name: PermissionName.IDENTITY_PROVIDER_UPDATE,
                     data: definePolicyData({
                         [BuiltInPolicyType.ATTRIBUTES]: attributes,
-                        [BuiltInPolicyType.REALM_MATCH]: data.realmId ?? entity.realmId ?? null,
+                        [BuiltInPolicyType.REALM_MATCH]: attributes.realmId ?? entity.realmId ?? null,
                     }),
                 });
             }
