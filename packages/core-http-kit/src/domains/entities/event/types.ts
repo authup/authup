@@ -12,9 +12,9 @@ import type {
     EventScope,
 } from '@authup/core-kit';
 import type {
-    EntityStatsBucket,
     EntityStatsMeta,
     EntityStatsQuery,
+    EntityStatsRow,
     IEntitySchemaAPI,
     IEntityStatsAPI,
 } from '../../stats';
@@ -28,12 +28,13 @@ export type EventStatsQuery = EntityStatsQuery<Event>;
 export type EventStatsGroups = {
     scope: `${EventScope}`,
     name: `${EventName}`,
+    refType?: string | null,
 };
 
 /**
- * One grouped count: the rows of one (scope, name) inside one bucket.
+ * One grouped row: the events of one (scope, name) inside one bucket.
  */
-export type EventStatsBucket = EntityStatsBucket<EventStatsGroups>;
+export type EventStatsRow = EntityStatsRow<EventStatsGroups>;
 
 export type EventStatsMetaExtra = {
     /**
@@ -59,7 +60,7 @@ export type EventStatsMetaExtra = {
 export type EventStatsMeta = EntityStatsMeta & EventStatsMetaExtra;
 
 export type EventStatsResponse = {
-    data: EventStatsBucket[],
+    data: EventStatsRow[],
     meta: EventStatsMeta,
 };
 

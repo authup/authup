@@ -6,10 +6,11 @@
  */
 
 import { EntityType } from '@authup/core-kit';
-import type { EntityTypeMap } from '@authup/core-kit';
+import type { EntityTypeMap, Event } from '@authup/core-kit';
 import { createURLCodec } from '@rapiq/codec-url';
+import { gte } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import { pickEntityAPI } from '../../../src';
+import { buildStatsURL, pickEntityAPI } from '../../../src';
 import { createFakeClient } from '../../../src/testing';
 
 const STATS_ENTITY_TYPES = [
@@ -47,11 +48,11 @@ describe('src/domains/stats', () => {
         }
     });
 
-    it('should read the @stats facet with the filters, the granularity and the window', async () => {
+    it('should read the @stats facet with the filters, the groups and the aggregates', async () => {
         const client = createFakeClient({
             handlers: {
                 'GET /users/@stats': () => ({
-                    data: [{ bucket: '2026-09-22T00:00:00.000Z', count: 1 }],
+                    data: [{ createdAt: '2026-09-22T00:00:00.000Z', count: 1 }],
                     meta: { total: 1 },
                 }),
             },
@@ -59,8 +60,8 @@ describe('src/domains/stats', () => {
 
         const { data, meta } = await client.user.getStats({
             filters: { realmId: ['r1', null] },
-            granularity: 'hour',
-            days: 7,
+            groups: [{ name: 'bucket', params: ['createdAt', 'hour'] }],
+            aggregates: ['count'],
         });
 
         expect(data).toHaveLength(1);
@@ -68,18 +69,34 @@ describe('src/domains/stats', () => {
 
         const url = new URL(client.requests[0].url, 'http://localhost');
         expect(url.pathname).toEqual('/users/@stats');
-        expect(url.searchParams.get('granularity')).toEqual('hour');
-        expect(url.searchParams.get('days')).toEqual('7');
         expect(createURLCodec().decode(url.search.slice(1))).toMatchObject({
             filters: {
                 operator: 'and',
                 value: [{
-                    field: 'realmId', 
-                    operator: 'in', 
-                    value: ['r1', null], 
+                    field: 'realmId',
+                    operator: 'in',
+                    value: ['r1', null],
                 }],
             },
         });
+    });
+
+    it('should build the @stats url in rapiq vocabulary only', () => {
+        const url = new URL(buildStatsURL<Event>('/events', {
+            filters: gte('createdAt', '2026-09-01T00:00:00.000Z'),
+            groups: [{ name: 'bucket', params: ['createdAt', 'day'] }, 'scope'],
+            aggregates: ['count'],
+        }), 'http://localhost');
+
+        expect(url.pathname).toEqual('/events/@stats');
+        expect(url.searchParams.has('granularity')).toBe(false);
+        expect(url.searchParams.has('days')).toBe(false);
+
+        // a schemaless decode drops groups and aggregates (fail-closed), so the
+        // encoded parameters are asserted directly.
+        expect(url.searchParams.get('group')).toEqual('bucket(createdAt,day),scope');
+        expect(url.searchParams.get('aggregate')).toEqual('count');
+        expect(createURLCodec().decode(url.search.slice(1))?.filters).toBeDefined();
     });
 
     it('should read the bare @stats facet without a query', async () => {

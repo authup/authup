@@ -8,69 +8,61 @@
 import type { ObjectLiteral } from '@authup/kit';
 import type { QueryBuildInput, SchemaDescription } from '@rapiq/core';
 import type { SchemaResponseMeta } from '../workflows/schema/types';
-import type { StatsGranularity } from './constants';
 
-export type EntityStatsQuery<T extends ObjectLiteral = ObjectLiteral> = {
-    /**
-     * The rows to count, in the entity schema's filter vocabulary (the same
-     * `filter[...]` its collection read takes; a realm switcher's scope is
-     * `{ realmId: [<id>, null] }`). The window is NOT a filter: see `days`.
-     */
-    filters?: QueryBuildInput<T>['filters'],
-    /**
-     * The bucket width. Defaults to `day`.
-     */
-    granularity?: `${StatsGranularity}`,
-    /**
-     * The window, in whole days back from now. Defaults to 30. The window
-     * times the buckets per day must not exceed the server's bucket ceiling.
-     */
-    days?: number,
-};
+export type StatsBucketUnit = 'hour' | 'day' | 'month';
 
 /**
- * One grouped count: the rows created inside one bucket, plus the values of
- * the entity's group keys (events: `scope` and `name`; most entities: none).
+ * A statistics read in rapiq's own vocabulary: the rows to count
+ * (`filters`, which must carry a lower bound on the date column), the
+ * grouping (`groups`, first a `bucket(<dateColumn>, <unit>)`) and the
+ * measures (`aggregates`, `count` only).
  */
-export type EntityStatsBucket<G extends Record<string, any> = Record<string, unknown>> = G & {
+export type EntityStatsQuery<T extends ObjectLiteral = ObjectLiteral> = Pick<
+    QueryBuildInput<T>,
+'filters' | 'groups' | 'aggregates'
+>;
+
+/**
+ * One grouped row, keyed by column: the bucket start under the date column,
+ * the values of the other groups, and the count.
+ */
+export type EntityStatsRow<G extends Record<string, any> = Record<string, unknown>> = G & {
     /**
      * The bucket start, an ISO instant in UTC.
      */
-    bucket: string,
+    createdAt: string,
     count: number,
 };
 
 export type EntityStatsMeta = {
     /**
-     * The window start, snapped onto a bucket boundary.
+     * The window start: the lower bound, snapped onto a bucket start.
      */
     from: string,
     /**
-     * The window end, the instant the counts were taken.
+     * The window end: the upper bound, else the instant of the read.
      */
     to: string,
-    granularity: `${StatsGranularity}`,
-    days: number,
+    bucket: StatsBucketUnit,
     /**
-     * Every row the filter and the caller's read reach admit, regardless of
-     * the window.
+     * Rows the filter admits without its top-level window conditions.
      */
     total: number,
     /**
-     * The filter vocabulary this read decodes.
+     * The vocabulary this read decodes.
      */
     schema: SchemaDescription,
 };
 
 /**
- * Deliberately not the entity envelope: a bucket is not an entity. Absent
+ * Deliberately not the entity envelope: a row is not an entity. Absent
  * buckets hold no rows; a consumer zero-fills between `from` and `to`.
  */
 export type EntityStatsResponse<
     G extends Record<string, any> = Record<string, unknown>,
     M extends Record<string, any> = Record<string, unknown>,
 > = {
-    data: EntityStatsBucket<G>[],
+    data: EntityStatsRow<G>[],
     meta: EntityStatsMeta & M,
 };
 
