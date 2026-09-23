@@ -17,7 +17,12 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { RealmScope, SystemPolicyName } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    RealmScope,
+    SystemPolicyName,
+} from '@authup/access';
 import { ErrorCode } from '@authup/errors';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import {
@@ -246,6 +251,47 @@ describe('core/entities/permission/service', () => {
             );
 
             expect(result.description).toBe('updated description');
+        });
+    });
+
+    describe('update with a restricted grant (#3654)', () => {
+        const restrictedActor = () => {
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate') {
+                    return;
+                }
+
+                const attributes = ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                if (!attributes?.name?.startsWith('reach-')) {
+                    throw PermissionError.denied('out of reach');
+                }
+            });
+            return actor;
+        };
+
+        it('should refuse moving an unreachable permission into reach', async () => {
+            const entity = repository.seed(createFakePermission({ name: 'other-name', builtIn: false }));
+
+            await expect(
+                service.update(entity.id, { name: 'reach-name' }, restrictedActor()),
+            ).rejects.toBeInstanceOf(PermissionError);
+            expect(repository.getAll().find((e) => e.id === entity.id)?.name).toBe('other-name');
+        });
+
+        it('should allow updating a reachable permission that stays reachable', async () => {
+            const entity = repository.seed(createFakePermission({ name: 'reach-name', builtIn: false }));
+
+            const result = await service.update(entity.id, { name: 'reach-renamed' }, restrictedActor());
+            expect(result.name).toBe('reach-renamed');
+        });
+
+        it('should refuse moving a reachable permission out of reach', async () => {
+            const entity = repository.seed(createFakePermission({ name: 'reach-name', builtIn: false }));
+
+            await expect(
+                service.update(entity.id, { name: 'other-name' }, restrictedActor()),
+            ).rejects.toBeInstanceOf(PermissionError);
         });
     });
 

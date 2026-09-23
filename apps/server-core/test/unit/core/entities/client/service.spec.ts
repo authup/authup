@@ -738,6 +738,58 @@ describe('core/entities/client/service', () => {
 
             expect((await repository.findOneById(entity.id))!.pathId).toBeUndefined();
         });
+
+        describe('restricted CLIENT_UPDATE grant (#3654)', () => {
+            let reachable: string;
+            let unreachable: string;
+            let actor: FakeActorContext;
+
+            beforeEach(() => {
+                const realm = realmRepository.getMasterRealm();
+                reachable = pathRepository.seed(createFakePath({ realmId: realm.id, path: 'analyses' })).id;
+                unreachable = pathRepository.seed(createFakePath({ realmId: realm.id, path: 'other' })).id;
+
+                actor = createAllowAllActor();
+                actor.permissionEvaluator.setBehavior((call) => {
+                    if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.CLIENT_UPDATE) {
+                        return;
+                    }
+
+                    const attributes = call.ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                    if (attributes.pathId !== reachable) {
+                        throw PermissionError.denied('test');
+                    }
+                });
+            });
+
+            it('should refuse moving an unreachable row into reach', async () => {
+                const entity = repository.seed(createFakeClient({
+                    realmId: realmRepository.getMasterRealm().id,
+                    pathId: unreachable,
+                }));
+
+                await expect(service.update(entity.id, { pathId: reachable }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+            });
+
+            it('should allow updating a row that stays in reach', async () => {
+                const entity = repository.seed(createFakeClient({
+                    realmId: realmRepository.getMasterRealm().id,
+                    pathId: reachable,
+                }));
+
+                const result = await service.update(entity.id, { displayName: 'Renamed' }, actor);
+                expect(result.displayName).toBe('Renamed');
+            });
+
+            it('should refuse moving a reachable row out of reach', async () => {
+                const entity = repository.seed(createFakeClient({
+                    realmId: realmRepository.getMasterRealm().id,
+                    pathId: reachable,
+                }));
+
+                await expect(service.update(entity.id, { pathId: unreachable }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+            });
+        });
     });
 
     describe('save (upsert)', () => {

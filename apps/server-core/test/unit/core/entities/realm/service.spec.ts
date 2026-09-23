@@ -16,9 +16,11 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { RealmService } from '../../../../../src/core/entities/realm/service.ts';
 import { FakeRealmRepository } from './fake-repository.ts';
 import {
+    FakePermissionEvaluator,
     createAllowAllActor,
     createDenyAllActor,
 } from '@authup/server-test-kit';
@@ -205,6 +207,49 @@ describe('core/entities/realm/service', () => {
             );
 
             expect(result.description).toBe('updated description');
+        });
+    });
+
+    describe('update with a restricted grant (#3654)', () => {
+        function createRestrictedActor() {
+            const permissionEvaluator = new FakePermissionEvaluator();
+            permissionEvaluator.setBehavior((call) => {
+                if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.REALM_UPDATE) {
+                    return;
+                }
+
+                const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<Realm>;
+                if (!attributes?.name?.startsWith('reach-')) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            return { permissionEvaluator };
+        }
+
+        it('should refuse moving an unreachable row into reach', async () => {
+            const entity = repository.seed(createFakeRealm({ name: 'outside', builtIn: false }));
+
+            await expect(
+                service.update(entity.id, { name: 'reach-inside' }, createRestrictedActor()),
+            ).rejects.toThrow(PermissionError);
+            expect((await repository.findOneById(entity.id))?.name).toBe('outside');
+        });
+
+        it('should allow updating a row that stays in reach', async () => {
+            const entity = repository.seed(createFakeRealm({ name: 'reach-a', builtIn: false }));
+
+            const result = await service.update(entity.id, { name: 'reach-b' }, createRestrictedActor());
+            expect(result.name).toBe('reach-b');
+        });
+
+        it('should refuse moving a reachable row out of reach', async () => {
+            const entity = repository.seed(createFakeRealm({ name: 'reach-a', builtIn: false }));
+
+            await expect(
+                service.update(entity.id, { name: 'outside' }, createRestrictedActor()),
+            ).rejects.toThrow(PermissionError);
+            expect((await repository.findOneById(entity.id))?.name).toBe('reach-a');
         });
     });
 

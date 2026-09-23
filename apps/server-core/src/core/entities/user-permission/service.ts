@@ -238,15 +238,16 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         await this.repository.validateJoinColumns(updateData);
 
+        const current = this.junctionAttributes(entity);
         const merged = this.repository.merge(entity, updateData);
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.USER_PERMISSION_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.USER_PERMISSION_UPDATE,
+            current,
+            this.junctionAttributes(merged),
+            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+        );
 
         return this.repository.save(merged);
     }

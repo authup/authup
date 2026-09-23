@@ -584,6 +584,54 @@ describe('core/entities/user/service', () => {
 
             expect((await repository.findOneById(entity.id))!.pathId).toBeUndefined();
         });
+
+        // #3654: a grant restricted to one folder must hold for the stored row
+        // AND the updated one, or a refile moves a foreign row into reach.
+        describe('restricted USER_UPDATE grant', () => {
+            let realmId: string;
+            let reachable: string;
+            let unreachable: string;
+            let actor: FakeActorContext;
+
+            beforeEach(() => {
+                realmId = realmRepository.getMasterRealm().id;
+                reachable = pathRepository.seed(createFakePath({ realmId, path: 'analyses' })).id;
+                unreachable = pathRepository.seed(createFakePath({ realmId, path: 'other' })).id;
+
+                actor = createAllowAllActor();
+                actor.permissionEvaluator.setBehavior((call) => {
+                    if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.USER_UPDATE) {
+                        return;
+                    }
+
+                    const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<User>;
+                    if (attributes.pathId !== reachable) {
+                        throw PermissionError.denied('path');
+                    }
+                });
+            });
+
+            it('should refuse moving an unreachable row into reach', async () => {
+                const entity = repository.seed(createFakeUser({ realmId, pathId: unreachable }));
+
+                await expect(service.update(entity.id, { pathId: reachable }, actor))
+                    .rejects.toBeInstanceOf(PermissionError);
+            });
+
+            it('should allow updating a row that stays in reach', async () => {
+                const entity = repository.seed(createFakeUser({ realmId, pathId: reachable }));
+
+                const result = await service.update(entity.id, { displayName: 'New Display' }, actor);
+                expect(result.displayName).toBe('New Display');
+            });
+
+            it('should refuse moving a reachable row out of reach', async () => {
+                const entity = repository.seed(createFakeUser({ realmId, pathId: reachable }));
+
+                await expect(service.update(entity.id, { pathId: unreachable }, actor))
+                    .rejects.toBeInstanceOf(PermissionError);
+            });
+        });
     });
 
     describe('self-edit fallback', () => {

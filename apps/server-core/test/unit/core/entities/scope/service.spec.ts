@@ -13,6 +13,7 @@ import {
     expect, 
     it,
 } from 'vitest';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { ErrorCode } from '@authup/errors';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
 import { 
@@ -127,6 +128,47 @@ describe('core/entities/scope/service', () => {
             await expect(
                 service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+        });
+    });
+
+    describe('update with a restricted grant (#3654)', () => {
+        const restrictedActor = () => {
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate') {
+                    return;
+                }
+
+                const attributes = ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                if (!attributes?.name?.startsWith('reach-')) {
+                    throw PermissionError.denied('out of reach');
+                }
+            });
+            return actor;
+        };
+
+        it('should refuse moving an unreachable scope into reach', async () => {
+            const entity = repository.seed(createFakeScope({ name: 'other-name' }));
+
+            await expect(
+                service.update(entity.id, { name: 'reach-name' }, restrictedActor()),
+            ).rejects.toBeInstanceOf(PermissionError);
+            expect(repository.getAll().find((e) => e.id === entity.id)?.name).toBe('other-name');
+        });
+
+        it('should allow updating a reachable scope that stays reachable', async () => {
+            const entity = repository.seed(createFakeScope({ name: 'reach-name' }));
+
+            const result = await service.update(entity.id, { name: 'reach-renamed' }, restrictedActor());
+            expect(result.name).toBe('reach-renamed');
+        });
+
+        it('should refuse moving a reachable scope out of reach', async () => {
+            const entity = repository.seed(createFakeScope({ name: 'reach-name' }));
+
+            await expect(
+                service.update(entity.id, { name: 'other-name' }, restrictedActor()),
+            ).rejects.toBeInstanceOf(PermissionError);
         });
     });
 

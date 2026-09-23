@@ -126,15 +126,12 @@ export class RealmService extends AbstractEntityService implements IRealmService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.REALM_UPDATE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...validated,
-                    },
-                }),
-            });
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.REALM_UPDATE,
+                { ...entity },
+                { ...entity, ...validated },
+            );
 
             if (entity.name === REALM_MASTER_NAME && isPropertySet(validated, 'name') && entity.name !== validated.name) {
                 throw new ValidationError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);

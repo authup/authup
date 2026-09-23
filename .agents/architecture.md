@@ -1054,6 +1054,16 @@ Service responsibility:
 - Entity creation, merging, and persistence
 - Returns domain objects (no HTTP response formatting)
 
+**An UPDATE is evaluated against the stored row AND the updated row**
+(`AbstractEntityService.evaluateUpdate`, #3654). Evaluating only the updated
+row lets an update move a row INTO reach: an actor holding `CLIENT_UPDATE`
+under `{ pathId: { $in: [<analyses>] } }` could refile any client into
+`analyses` and own it from then on. The stored row proves the actor may change
+this row at all, the updated row that it stays in reach afterwards, so a move
+out of reach is refused too. Snapshot the stored row BEFORE
+`repository.merge`, which mutates the entity in place. `DELETE` evaluates the
+stored row only and needs nothing more.
+
 #### Entity-Specific Service Patterns
 
 | Category | Examples | Service Characteristics |
@@ -3476,6 +3486,9 @@ folder-scoped delegation is an ordinary `ATTRIBUTES` junction policy:
 `{ pathId: { $in: [...] } }` on a `USER_*` / `CLIENT_*` grant (the row carries
 its folder reference, not the folder's path), or a `$startsWith` over the
 folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
+An update under such a grant is checked against the stored AND the updated row
+(`evaluateUpdate`, #3654), so a delegate can neither refile a row into its
+folder nor move one out of it.
 `$regex` must never appear in such a policy: the sqlite preset declares no
 `regexp`, so it throws and 500s every list read under the test dialect. Only a
 global admin can author one, since `applyJunctionCreateGrant` nulls a requested

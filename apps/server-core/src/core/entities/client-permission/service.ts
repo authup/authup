@@ -237,15 +237,16 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         await this.repository.validateJoinColumns(updateData);
 
+        const current = this.junctionAttributes(entity);
         const merged = this.repository.merge(entity, updateData);
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.CLIENT_PERMISSION_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.CLIENT_PERMISSION_UPDATE,
+            current,
+            this.junctionAttributes(merged),
+            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+        );
 
         return this.repository.save(merged);
     }

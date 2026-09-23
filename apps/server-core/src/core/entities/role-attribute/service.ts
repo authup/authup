@@ -179,15 +179,16 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         delete data.role;
         delete data.realmId;
 
+        const current = { [entity.name]: entity.value };
         entity = this.repository.merge(entity, data);
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.ROLE_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value },
-                ...this.resourceRealmMatch(entity),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.ROLE_UPDATE,
+            current,
+            { [entity.name]: entity.value },
+            this.resourceRealmMatch(entity),
+        );
 
         await this.repository.save(entity);
 

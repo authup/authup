@@ -603,16 +603,16 @@ export class IdentityProviderController {
         await this.repository.validateJoinColumns(data);
 
         if (entity) {
-            await permissionEvaluator.evaluate({
-                name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...data,
-                    },
-                    [BuiltInPolicyType.REALM_MATCH]: data.realmId ?? entity.realmId ?? null,
-                }),
-            });
+            // The stored row and the merged row must both pass (#3654).
+            for (const attributes of [{ ...entity }, { ...entity, ...data }]) {
+                await permissionEvaluator.evaluate({
+                    name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: attributes,
+                        [BuiltInPolicyType.REALM_MATCH]: attributes.realmId ?? entity.realmId ?? null,
+                    }),
+                });
+            }
         } else {
             if (!data.realmId) {
                 const identity = useRequestIdentityOrFail(event);

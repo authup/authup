@@ -6,7 +6,7 @@
  */
 
 import type { PermissionPolicyBinding } from '@authup/access';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { hasOwnProperty, isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
 
@@ -48,5 +48,31 @@ export abstract class AbstractEntityService {
         return hasOwnProperty(source, 'realmId') ?
             { [BuiltInPolicyType.REALM_MATCH]: source.realmId ?? null } :
             {};
+    }
+
+    /**
+     * An UPDATE is allowed only when the permission passes for BOTH the stored
+     * row (the actor may only change a row it can already reach) and the
+     * updated row (the row must stay in reach afterwards). Evaluating the
+     * updated row alone lets an update move a row INTO reach, e.g. refile a
+     * client into the folder an ATTRIBUTES policy grants (#3654).
+     *
+     * `data` may be a function of the evaluated row, so each check reads the
+     * realm of its own row: the stored row's realm for the stored check.
+     */
+    protected async evaluateUpdate(
+        actor: ActorContext,
+        name: string,
+        current: Record<string, any>,
+        next: Record<string, any>,
+        data: Record<string, any> | ((attributes: Record<string, any>) => Record<string, any>) = {},
+    ): Promise<void> {
+        for (const attributes of [current, next]) {
+            const extra = typeof data === 'function' ? data(attributes) : data;
+            await actor.permissionEvaluator.evaluate({
+                name,
+                data: definePolicyData({ ...extra, [BuiltInPolicyType.ATTRIBUTES]: attributes }),
+            });
+        }
     }
 }
