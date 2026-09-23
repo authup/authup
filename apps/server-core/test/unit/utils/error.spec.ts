@@ -55,6 +55,12 @@ describe('src/utils/error', () => {
             expect(error.code).toEqual(ErrorCode.BAD_REQUEST);
         });
 
+        it('should map a value the column type cannot parse to a bad request', () => {
+            const error = sanitizeError({ code: '22P02', message: 'invalid input syntax for type uuid: "x"' });
+
+            expect(error.code).toEqual(ErrorCode.BAD_REQUEST);
+        });
+
         it('should keep a server-authored adapter refusal internal', () => {
             const error = sanitizeError(AdapterError.conditionDetached('custom'));
 
