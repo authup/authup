@@ -463,14 +463,33 @@ usable at the service level and nothing in core depends on TypeORM:
     match.** The bound carries milliseconds: sqlite stores less, so
     `gte(own)` excludes the row there; postgres and mysql store more, so
     `lte(own)` excludes it there. Widen the bound by a second.
-  - **The bound is UTC, and so is the stored value, but a returned value
-    need not be.** `created_at` is stamped by the database server's clock
-    (assumed UTC, as `countRecent` assumes). On a Node host whose
-    timezone is not UTC, the postgres and mysql drivers read the
-    zone-less column back as LOCAL time, so the API answers a value
-    shifted by the host offset while filters compare against the true
-    instant. The container sets no `TZ`, so the image is unaffected; the
-    spec takes its bounds from the real clock for exactly this reason.
+  - **The bound, the stored value and the returned value are all UTC.**
+    `created_at` is stamped by the DATABASE (`now()`,
+    `CURRENT_TIMESTAMP(6)`) in its SESSION timezone and read back by the
+    driver in the PROCESS timezone, so the two only agreed when both
+    clocks did, while the filter binding, the login throttle's
+    `countRecent` and the event statistics buckets all assume UTC (#3641).
+    `DataSourceOptionsBuilder` therefore pins the session, the reader and
+    the `Date` parameter writer on every path (boot, migration CLI, tests)
+    through `applyUTCTimestamps` (`data-source/options/timezone.ts`), which
+    is typeorm-extension's `pinTimezone(options, 'UTC')` (postgres:
+    `-c TimeZone=UTC` plus UTC parsers and a UTC-writing client; mysql:
+    `timezone: 'Z'`, `dateStrings: ['DATE']` and `SET time_zone` on every
+    pooled connection). Pinning only the read side is rejected: on a
+    database running in local time it shifted every value and put
+    `auth_time` (a session's `createdAt`) in the future, which satisfies
+    `max_age` for the length of the offset. An explicit setting that
+    contradicts the pin (a non-UTC mysql `timezone`, a postgres
+    `TimeZone`, a custom `typeCast`) fails the boot with an `OptionsError`
+    rather than being half applied; the one exception authup makes is a
+    mysql replication config, which has no per-connection hook and is left
+    as configured instead of refused. Rows a local-time database stamped
+    before this pin keep their local wall clock (see upgrading.md). Pinned
+    by `test/unit/adapters/database/timestamp-session-timezone.spec.ts`
+    (database default at UTC+14, with a control pool proving the shift)
+    and `test/unit/http/controllers/entities/timestamp-timezone.spec.ts`
+    (Node process at UTC+14); both fail on mysql and postgres without
+    their half of the change.
   Sorting was never affected: it compares the column against itself.
   Pinned by `test/unit/http/controllers/entities/query-surface.spec.ts`,
   which EXECUTES the surface under all three dialects (a range in both
@@ -1684,9 +1703,14 @@ two statements, so two replicas booting against an unprovisioned database
 interleave. `ProvisionerModule.setup` therefore holds a deployment-wide mutex
 around the whole pass (`withDatabaseLock`,
 `adapters/database/helpers/advisory-lock.ts`, holding the
-`PROVISIONING_DATABASE_LOCK` identity the provisioning module owns) and calls
-the untouched body as `provision()`. Nothing else changed: no write site is guarded, no port grew a
-method, and boot stays fatal.
+`PROVISIONING_DATABASE_LOCK` name the provisioning module owns) and calls
+the untouched body as `provision()`. No write site is guarded, no port grew a
+method, and boot stays fatal. `DatabaseModule.migrate` holds a second one
+(`MIGRATION_DATABASE_LOCK`) around a boot-time migration run, so replicas
+starting at once with `migrationEnabled` apply the chain once rather than
+racing on the same tables. Both names must stay stable across releases: a
+renamed lock is a different mutex, so an outgoing and an incoming replica
+would each hold their own.
 
 **One mutex rather than a guard per write site, because half the failures
 cannot raise an error to catch.** The insert sites split into two groups with
@@ -1720,26 +1744,24 @@ or an expression index over coalesced sentinels, which TypeORM cannot express
 in entity metadata; that is tracked separately and is a schema change, not a
 behaviour one.
 
-**Mechanics that are load-bearing.** The lock is SESSION-scoped in both
-dialects, so it takes a dedicated query runner for its whole lifetime:
-`dataSource.query()` would acquire and release on different pooled
-connections. It is also COUNTED in both, so it is acquired exactly once, and
-it is released explicitly in a `finally` before the runner goes back to the
-pool. Skipping that release leaks the lock onto a pooled connection for the
-lifetime of the process, and a second `setup()` in that process then
-deadlocks against itself. The acquisition answer is normalized rather than
-tested for truthiness: postgres returns a JS boolean, and mysql2 returns the
-STRING `'1'` or `'0'` (verified against a live server), so a truthiness check
-reads a lock held by another session as acquired and makes the whole mechanism
-inert on mysql.
+**The lock is typeorm-extension's `withDatabaseLock`**; the local helper only
+owns the query runner. The lock is SESSION-scoped, so it takes a dedicated
+runner for its whole lifetime (`dataSource.query()` would acquire and release
+on different pooled connections), and the helper releases that runner in a
+`finally`. Upstream releases the lock itself, also when the callback throws,
+normalizes the mysql2 answer (the STRING `'1'`/`'0'`, which a truthiness check
+reads as acquired) and namespaces a mysql lock with the current database, so
+two authup databases on one mysql server no longer share the mutex.
 
-`better-sqlite3` is a passthrough that creates no runner at all, the same
-shape and the same reasoning as `isDatabaseTypeRowLockable`: one database file
-per container means a second replica cannot reach it, and the driver hands out
-ONE shared query runner (`this.queryRunner ??= ...`), so holding one here
-would nest inside whatever else is running.
+`better-sqlite3` is a passthrough that creates no runner at all, checked
+before upstream is called, the same shape and the same reasoning as
+`isDatabaseTypeRowLockable`: one database file per container means a second
+replica cannot reach it, and the driver hands out ONE shared query runner
+(`this.queryRunner ??= ...`), so holding one here would nest inside whatever
+else is running.
 
-**On timeout it throws rather than proceeding unlocked.** Proceeding is the
+**On timeout (60s) it throws a `DatabaseLockError` rather than proceeding
+unlocked.** Proceeding is the
 pre-fix behaviour, which is the thing being removed; failing the boot is what
 today's losing replica does anyway, and the deployment restarts it, by which
 point the winner has finished and the pass is a no-op. Boot stays fatal for

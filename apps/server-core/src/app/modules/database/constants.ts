@@ -16,3 +16,10 @@ export const DatabaseInjectionKey = {
     EventRepository: new TypedToken<IEventRepository>('EventRepository'),
     EventService: new TypedToken<IEventService>('EventService'),
 } as const;
+
+/**
+ * The mutex a boot-time migration run holds against every other. The name must
+ * stay STABLE across releases, for the reason `PROVISIONING_DATABASE_LOCK`
+ * gives.
+ */
+export const MIGRATION_DATABASE_LOCK = 'authup:migration';

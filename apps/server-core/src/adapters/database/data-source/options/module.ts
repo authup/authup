@@ -70,6 +70,7 @@ import {
     UserSubscriber,
 } from '../../domains/index.ts';
 import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
+import { applyUTCTimestamps } from './timezone.ts';
 
 const NO_DATABASE_CONFIGURED = 'No database is configured. Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
 
@@ -251,6 +252,6 @@ export class DataSourceOptionsBuilder {
             } as DataSourceOptions);
         }
 
-        return options;
+        return applyUTCTimestamps(options);
     }
 }

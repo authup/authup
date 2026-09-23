@@ -6,19 +6,15 @@
  */
 
 import { TypedToken } from 'eldin';
-import type { DatabaseLock } from '../../../adapters/database/helpers/index.ts';
 import type { IRealmProvisioner } from '../../../core/index.ts';
 
 /**
- * The mutex one provisioning pass holds against every other. The values are
- * arbitrary, but they must stay STABLE across releases: a changed key is a
+ * The mutex one provisioning pass holds against every other. The name is
+ * arbitrary, but it must stay STABLE across releases: a changed name is a
  * different mutex, so during a rolling deploy the outgoing and the incoming
  * replica would each hold their own and provision at the same time.
  */
-export const PROVISIONING_DATABASE_LOCK: DatabaseLock = {
-    name: 'authup:provisioning',
-    key: [16725, 1],
-};
+export const PROVISIONING_DATABASE_LOCK = 'authup:provisioning';
 
 export const ProvisioningInjectionKey = {
     /**

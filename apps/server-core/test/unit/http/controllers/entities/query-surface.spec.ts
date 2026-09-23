@@ -30,12 +30,11 @@ import { createTestApplication } from '../../../../app';
  * column's storage form (a UTC wall-clock string), and authup admits them
  * under the range operators only (issue #3639).
  *
- * Timestamp bounds are taken from the REAL clock, never from a value the
- * API returned: on a host whose timezone is not UTC, the postgres and
- * mysql drivers read the zone-less column as local time, so the returned
- * value is shifted while the stored one (and the bound) are UTC. The
- * margins stay within one day, so a regression to the unconverted ISO
- * binding (which inverts on sqlite on the `' '` vs `'T'` byte) still fails.
+ * Timestamp bounds are taken from the real clock with a margin of minutes,
+ * which keeps a regression to the unconverted ISO binding (it inverts on
+ * sqlite on the `' '` vs `'T'` byte) failing whenever the bound and the
+ * stored value fall on the same UTC day, i.e. except in the minutes around
+ * UTC midnight.
  *
  * Assertions are written to hold on sqlite, mysql and postgres.
  */

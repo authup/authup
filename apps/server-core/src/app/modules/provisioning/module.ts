@@ -120,7 +120,6 @@ export class ProvisionerModule implements IModule {
             dataSource,
             PROVISIONING_DATABASE_LOCK,
             () => this.provision(container),
-            { logger: container.resolve(LoggerInjectionKey) },
         );
     }
 

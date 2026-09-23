@@ -118,10 +118,11 @@ issue #3356 reports. One DataSource is enough to model two replicas, because eac
 `setup()` takes its own query runner and the lock is arbitrated per session.
 The lock's own unit spec
 (`test/unit/adapters/database/advisory-lock.spec.ts`) runs on every dialect
-over a fake DataSource and pins two things a broken implementation would
-otherwise pass silently: the mysql answer shape (mysql2 returns the STRING
-`'1'`/`'0'`, so a truthiness check makes the lock inert there), and that the
-caller's lock identity is BOUND into both statements rather than interpolated.
+over a fake DataSource. The lock is typeorm-extension's, so it is a
+conformance check of what this deployment relies on: the mysql answer shape
+(mysql2 returns the STRING `'1'`/`'0'`, so a truthiness check makes the lock
+inert there), the name BOUND rather than interpolated, the runner released on
+every path, and no runner at all on better-sqlite3.
 
 **The global uniqueness index is gated the same way.**
 `test/unit/adapters/database/global-uniqueness.spec.ts` boots an EMPTY
