@@ -11,6 +11,7 @@ import type { DataSourceOptions } from 'typeorm';
 import {
     CodeTransformation,
     isCodeTransformation,
+    pinTimezone,
     readDataSourceOptionsFromEnv,
     useEnv,
 } from 'typeorm-extension';
@@ -70,7 +71,6 @@ import {
     UserSubscriber,
 } from '../../domains/index.ts';
 import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
-import { applyUTCTimestamps } from './timezone.ts';
 
 const NO_DATABASE_CONFIGURED = 'No database is configured. Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
 
@@ -252,6 +252,11 @@ export class DataSourceOptionsBuilder {
             } as DataSourceOptions);
         }
 
-        return applyUTCTimestamps(options);
+        // The database stamps zone-less timestamps in its SESSION timezone
+        // and the driver reads them in the PROCESS timezone, while the rest
+        // of authup assumes UTC (#3641), so all three halves (session,
+        // reader, Date writer) are pinned. A setting contradicting the pin
+        // fails here rather than being half applied.
+        return pinTimezone(options, 'UTC');
     }
 }

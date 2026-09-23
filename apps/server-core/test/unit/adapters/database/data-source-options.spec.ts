@@ -96,6 +96,14 @@ describe('adapters/database/data-source/options', () => {
         expect(options.type).toEqual('better-sqlite3');
     });
 
+    it('should pin postgres and mysql to UTC on every build', () => {
+        const postgres = new DataSourceOptionsBuilder().buildWith({ type: 'postgres' }) as DataSourceOptions & { extra: Record<string, any> };
+        expect(postgres.extra.options).toContain('TimeZone=UTC');
+
+        const mysql = new DataSourceOptionsBuilder().buildWith({ type: 'mysql' });
+        expect(mysql).toMatchObject({ timezone: 'Z', dateStrings: ['DATE'] });
+    });
+
     it('should still throw on the strict read when no database is configured', () => {
         withDatabaseEnv({}, () => {
             expect(() => new DataSourceOptionsBuilder().buildWithEnv()).toThrow(AuthupError);

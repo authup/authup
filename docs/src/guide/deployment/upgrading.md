@@ -137,7 +137,8 @@ A database setting that contradicts the pin now stops the boot with an error
 naming it: a MySQL `timezone` other than UTC, a MySQL `dateStrings` or
 `typeCast`, or a PostgreSQL `TimeZone` other than UTC in the driver's startup
 `options`. Remove it, since half a pin would shift values instead of fixing
-them. A MySQL replication setup is left as configured.
+them. A MySQL replication setup is refused the same way for now, since its
+per-connection session cannot be pinned yet.
 
 ### Replicas no longer race on boot-time migrations
 

@@ -116,13 +116,8 @@ with `duplicate key value violates unique constraint
 "UQ_9b95dc8c08d8b11a80a6798a640"`, the `auth_realms(name)` collision
 issue #3356 reports. One DataSource is enough to model two replicas, because each
 `setup()` takes its own query runner and the lock is arbitrated per session.
-The lock's own unit spec
-(`test/unit/adapters/database/advisory-lock.spec.ts`) runs on every dialect
-over a fake DataSource. The lock is typeorm-extension's, so it is a
-conformance check of what this deployment relies on: the mysql answer shape
-(mysql2 returns the STRING `'1'`/`'0'`, so a truthiness check makes the lock
-inert there), the name BOUND rather than interpolated, the runner released on
-every path, and no runner at all on better-sqlite3.
+The lock mechanics themselves (the mysql2 answer shape, the bound name, the
+release on a throwing callback) are typeorm-extension's and tested there.
 
 **The global uniqueness index is gated the same way.**
 `test/unit/adapters/database/global-uniqueness.spec.ts` boots an EMPTY

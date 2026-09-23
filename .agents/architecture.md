@@ -471,8 +471,7 @@ usable at the service level and nothing in core depends on TypeORM:
     `countRecent` and the event statistics buckets all assume UTC (#3641).
     `DataSourceOptionsBuilder` therefore pins the session, the reader and
     the `Date` parameter writer on every path (boot, migration CLI, tests)
-    through `applyUTCTimestamps` (`data-source/options/timezone.ts`), which
-    is typeorm-extension's `pinTimezone(options, 'UTC')` (postgres:
+    by ending with typeorm-extension's `pinTimezone(options, 'UTC')` (postgres:
     `-c TimeZone=UTC` plus UTC parsers and a UTC-writing client; mysql:
     `timezone: 'Z'`, `dateStrings: ['DATE']` and `SET time_zone` on every
     pooled connection). Pinning only the read side is rejected: on a
@@ -481,9 +480,9 @@ usable at the service level and nothing in core depends on TypeORM:
     `max_age` for the length of the offset. An explicit setting that
     contradicts the pin (a non-UTC mysql `timezone`, a postgres
     `TimeZone`, a custom `typeCast`) fails the boot with an `OptionsError`
-    rather than being half applied; the one exception authup makes is a
-    mysql replication config, which has no per-connection hook and is left
-    as configured instead of refused. Rows a local-time database stamped
+    rather than being half applied, and so does a mysql replication config
+    until upstream can pin a pool cluster (tada5hi/typeorm-extension#1452).
+    Rows a local-time database stamped
     before this pin keep their local wall clock (see upgrading.md). Pinned
     by `test/unit/adapters/database/timestamp-session-timezone.spec.ts`
     (database default at UTC+14, with a control pool proving the shift)
@@ -1701,8 +1700,7 @@ name one under `relations.path`.
 Every write in the provisioner is find-then-insert with no guard between the
 two statements, so two replicas booting against an unprovisioned database
 interleave. `ProvisionerModule.setup` therefore holds a deployment-wide mutex
-around the whole pass (`withDatabaseLock`,
-`adapters/database/helpers/advisory-lock.ts`, holding the
+around the whole pass (typeorm-extension's `withDatabaseLock`, holding the
 `PROVISIONING_DATABASE_LOCK` name the provisioning module owns) and calls
 the untouched body as `provision()`. No write site is guarded, no port grew a
 method, and boot stays fatal. `DatabaseModule.migrate` holds a second one
@@ -1744,21 +1742,21 @@ or an expression index over coalesced sentinels, which TypeORM cannot express
 in entity metadata; that is tracked separately and is a schema change, not a
 behaviour one.
 
-**The lock is typeorm-extension's `withDatabaseLock`**; the local helper only
-owns the query runner. The lock is SESSION-scoped, so it takes a dedicated
-runner for its whole lifetime (`dataSource.query()` would acquire and release
-on different pooled connections), and the helper releases that runner in a
-`finally`. Upstream releases the lock itself, also when the callback throws,
+**Each call site owns its query runner.** The lock is SESSION-scoped, so it
+takes a dedicated runner for its whole lifetime (`dataSource.query()` would
+acquire and release on different pooled connections), released in a
+`finally`. Both call sites pass `DATABASE_LOCK_OPTIONS`
+(`app/modules/database/constants.ts`). Upstream releases the lock itself, also when the callback throws,
 normalizes the mysql2 answer (the STRING `'1'`/`'0'`, which a truthiness check
 reads as acquired) and namespaces a mysql lock with the current database, so
 two authup databases on one mysql server no longer share the mutex.
 
-`better-sqlite3` is a passthrough that creates no runner at all, checked
-before upstream is called, the same shape and the same reasoning as
-`isDatabaseTypeRowLockable`: one database file per container means a second
-replica cannot reach it, and the driver hands out ONE shared query runner
-(`this.queryRunner ??= ...`), so holding one here would nest inside whatever
-else is running.
+On `better-sqlite3` the callback runs unlocked (`strict: false`, the same
+reasoning as `isDatabaseTypeRowLockable`: one database file per container
+means a second replica cannot reach it). The runner the call site creates
+there is the driver's ONE shared runner (`this.queryRunner ??= ...`); upstream
+runs the callback before touching it, and its `release()` only clears a
+table-metadata cache and the SQL log, so that is harmless.
 
 **On timeout (60s) it throws a `DatabaseLockError` rather than proceeding
 unlocked.** Proceeding is the
