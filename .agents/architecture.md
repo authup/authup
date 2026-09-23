@@ -963,9 +963,10 @@ until deleted.
   reader of own rows from ever reading other actors' counts, and it holds
   because routing inspects the lowered query rather than the request.
 - **Horizons.** A raw read past the raw retention is refused rather than
-  silently short: `rawHorizonDays` is `eventLogRetentionDays`, or the shorter
-  of that and `eventLogEntityRetentionDays` when the filter pins
-  `scope=entity` (`resolveEventRawHorizonDays`). An hour read past it answers
+  silently short: `rawHorizonDays` is `eventLogRetentionDays`, or
+  `eventLogEntityRetentionDays` alone when the filter pins `scope=entity`,
+  since entity rows are stamped on that clock only
+  (`resolveEventRawHorizonDays`). An hour read past it answers
   400, and so does a day or month read the rollups cannot answer. A read
   whose scope the rollups can answer reports the rollup retention as
   `meta.retentionDays` and `meta.entityRetentionDays` instead of the raw ones,

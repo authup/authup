@@ -125,7 +125,7 @@ export function translateEventAggregateRow(row: Record<string, unknown>): Record
 /**
  * How far back raw events reach for a query, in days (0 = never pruned):
  * entity-CRUD rows expire on their own clock, so a query pinning
- * `scope=entity` reaches the shorter of the two.
+ * `scope=entity` reaches the entity retention alone.
  */
 export function resolveEventRawHorizonDays(
     query: IQuery,
@@ -136,9 +136,5 @@ export function resolveEventRawHorizonDays(
         condition.operator === 'eq' &&
         condition.value === 'entity');
 
-    const days = (entityOnly ?
-        [retention.retentionDays, retention.entityRetentionDays] :
-        [retention.retentionDays]).filter((value) => value > 0);
-
-    return days.length > 0 ? Math.min(...days) : 0;
+    return Math.max(0, entityOnly ? retention.entityRetentionDays : retention.retentionDays);
 }

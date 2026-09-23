@@ -38,11 +38,13 @@ import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { EventService, eventSchema } from '../../../../src/core/entities/event/index.ts';
 import {
     EVENT_AGGREGATE_COLUMNS,
+    resolveEventRawHorizonDays,
     translateEventAggregateQuery,
     translateEventAggregateRow,
 } from '../../../../src/core/entities/event-aggregate/index.ts';
 import type { EntityStatsDefinition } from '../../../../src/core/index.ts';
 import { EntityStatsService } from '../../../../src/core/index.ts';
+import { decodeQuery } from '../../../../src/core/query/module.ts';
 import { FakeEventRepository } from '../entities/event/fake-repository.ts';
 import { FakeEntityStatsRepository } from './fake-repository.ts';
 
@@ -786,5 +788,26 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(rollups.aggregateCalls).toHaveLength(1);
         expect(repository.aggregateCalls).toHaveLength(1);
+    });
+});
+
+describe('resolveEventRawHorizonDays', () => {
+    const entityOnly = wire({ filter: eq('scope', EventScope.ENTITY) });
+
+    async function decode(record: Record<string, any>) {
+        return decodeQuery(record, { schema: eventSchema, parameters: ['filters', 'groups', 'aggregates'] });
+    }
+
+    it('reaches the entity retention alone for an entity-only query', async () => {
+        const query = await decode(entityOnly);
+
+        expect(resolveEventRawHorizonDays(query, { retentionDays: 30, entityRetentionDays: 0 })).toEqual(0);
+        expect(resolveEventRawHorizonDays(query, { retentionDays: 7, entityRetentionDays: 30 })).toEqual(30);
+    });
+
+    it('reaches the security retention for any other query', async () => {
+        const query = await decode(wire());
+
+        expect(resolveEventRawHorizonDays(query, { retentionDays: 30, entityRetentionDays: 3 })).toEqual(30);
     });
 });
