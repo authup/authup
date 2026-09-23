@@ -259,6 +259,37 @@ describe('components/event-aggregator', () => {
         expect(await read(old)).toEqual([]);
     });
 
+    it('should recompute a day holding events of a deleted realm', async () => {
+        await seed(`${TODAY}T01:00:00.000Z`);
+        await seed(`${TODAY}T02:00:00.000Z`, { realmId: null });
+
+        await dataSource.getRepository(RealmEntity).delete({ id: realmId });
+        await repository.recompute(TODAY);
+
+        expect(await read(TODAY)).toEqual([
+            {
+                realmId: null,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
+                refType: null,
+                count: 1,
+            },
+        ]);
+    });
+
+    it('should repair a day last recomputed before it ended', async () => {
+        await seed(`${TODAY}T01:00:00.000Z`);
+        await repository.recompute(TODAY);
+
+        // the aggregator is away for all of the next day
+        await seed(`${TODAY}T15:00:00.000Z`);
+        vi.setSystemTime(new Date(`${shift(TODAY, 2)}T12:00:00.000Z`));
+
+        await createEventAggregatorTick(repository, { retentionDays: 0 })();
+
+        expect((await read(TODAY))[0].count).toEqual(2);
+    });
+
     it('should drop the rollups of a deleted realm', async () => {
         await seed(`${TODAY}T01:00:00.000Z`);
         await repository.recompute(TODAY);

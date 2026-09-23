@@ -119,11 +119,11 @@ export class EntityStatsService<
         // a column the rollup did not store (an actor's own actorId) reads
         // raw rows, whatever the caller asked for
         const { rollup } = this.definition;
-        const translated = rollup &&
-            window.unit !== 'hour' &&
+        const routable = rollup &&
             readReferencedColumns(scoped).every((column) => rollup.columns.includes(column)) ?
             rollup.translate(grouped) :
             undefined;
+        const translated = window.unit !== 'hour' ? routable : undefined;
 
         if (!translated && window.unit !== 'hour' && isPastRawHorizon(window, rawHorizonDays, now)) {
             throw new ValidationError(`This filter reaches back past ${rawHorizonDays} days; rollups cannot answer it.`);
@@ -165,7 +165,9 @@ export class EntityStatsService<
                 bucket: window.unit,
                 total,
                 ...(this.definition.meta ? this.definition.meta() : {}),
-                ...(rollup && translated && rollup.meta ? rollup.meta() : {}),
+                // the horizon a day read of this scope reaches, also on an
+                // hour read: the window switch gates the longer windows on it
+                ...(rollup && routable && rollup.meta ? rollup.meta() : {}),
             },
         } as EntityStatsResult<G, M>;
 

@@ -743,10 +743,13 @@ describe('EntityStatsService routing onto the rollups', () => {
     });
 
     it('answers an hour read from raw events', async () => {
-        await service.getMany(wire({ from: new Date(Date.now() - DAY_IN_MS).toISOString(), unit: 'hour' }), allowed());
+        const { meta } = await service.getMany(wire({ from: new Date(Date.now() - DAY_IN_MS).toISOString(), unit: 'hour' }), allowed());
 
         expect(repository.aggregateCalls).toHaveLength(1);
         expect(rollups.aggregateCalls).toHaveLength(0);
+        // the horizon a day read of the same scope reaches, which is what
+        // the window switch gates the longer windows on
+        expect(meta.retentionDays).toEqual(0);
     });
 
     it('answers a filter on a column the rollups do not store from raw events', async () => {

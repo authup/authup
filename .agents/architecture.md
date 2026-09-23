@@ -930,6 +930,12 @@ until deleted.
   refill), and prunes rows older than
   `core.eventLogAggregateRetentionDays` (`EVENT_LOG_AGGREGATE_RETENTION_DAYS`,
   default 0 = forever). A failed pass is logged and retried next tick.
+  **A day counts as present only when its rollup was written after the day
+  ended** (`findDays`: `MAX(created_at) >= day + 1`, the recompute stamping
+  `created_at` with the process clock). A recompute of a day still open is
+  provisional, so a day whose aggregator was away for all of the next day
+  (a worker down over a weekend) is repaired by the walk instead of staying
+  short forever.
 - **A recompute replaces the day.** `EventAggregateRepositoryAdapter.recompute`
   reads the day's grouped counts from `auth_events` (a grouped rapiq query
   over the UTC day), then deletes the day's rows and inserts the new ones in
@@ -940,7 +946,11 @@ until deleted.
   pooled connection while the first is pinned, the #3526 pool deadlock. The
   lock name must stay stable across releases. On better-sqlite3 the lock is a
   passthrough, and one adapter instance queues its recomputes because the
-  single shared connection refuses a second transaction.
+  single shared connection refuses a second transaction. **Rows of a realm
+  that no longer exists are dropped before the insert**: `auth_events` is
+  FK-less by design and outlives its realms (a realm's own `deleted` audit
+  row carries its id), while the rollup's `realm_id` is an FK, so inserting
+  them would fail the recompute, and with it the whole tick, every minute.
 - **Routing is by the query's shape AFTER the gate.** A `day` or `month` read
   whose lowered query references stored columns only (filter leaves, groups,
   aggregate fields) and whose aggregates are `count()` alone is translated
@@ -956,9 +966,12 @@ until deleted.
   silently short: `rawHorizonDays` is `eventLogRetentionDays`, or the shorter
   of that and `eventLogEntityRetentionDays` when the filter pins
   `scope=entity` (`resolveEventRawHorizonDays`). An hour read past it answers
-  400, and so does a day or month read the rollups cannot answer. A routed
-  read reports the rollup retention as `meta.retentionDays` and
-  `meta.entityRetentionDays` instead of the raw ones, which is what lets the
+  400, and so does a day or month read the rollups cannot answer. A read
+  whose scope the rollups can answer reports the rollup retention as
+  `meta.retentionDays` and `meta.entityRetentionDays` instead of the raw ones,
+  an HOUR read of that scope included (it reads raw rows, but the switch
+  gates the day windows on its answer, and 24 hours sit inside any raw
+  retention), which is what lets the
   console's window switch offer 30d / 90d on the entity activity boxes even
   where entity rows expire after 7 days. A routed read lags the raw log by at
   most one aggregator tick plus the statistic cache.
@@ -970,7 +983,8 @@ ceiling, month buckets, the total's strip keeping a nested range),
 `post` without ownership, every group row returned, routing, and an actor
 without `EVENT_READ` read from raw events),
 `test/unit/components/event-aggregator.spec.ts` (recompute, backfill cursor,
-pruning, two concurrent recomputes of one day, a deleted realm's rows),
+pruning, two concurrent recomputes of one day, a deleted realm's rows, a
+recompute over a deleted realm's events, a provisional day repaired),
 `test/unit/adapters/database/event-aggregate.spec.ts`,
 `test/unit/http/controllers/entities/entity-stats.spec.ts` (all 13 routes
 reach the statistic rather than `/:id`, the realm filter and mount, the
@@ -8520,8 +8534,9 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (*Entity statistics → Event rollups*). `meta.enabled` mirrors
   `eventLogEnabled`, which is how the console learns the log is off without
   that fact being published on the anonymous `GET /`; `meta.retentionDays` /
-  `meta.entityRetentionDays` report the horizon of the source that answered
-  (the raw retentions, or the rollup retention on a routed read). The gate is
+  `meta.entityRetentionDays` report the horizon a day read of the same scope
+  reaches (the rollup retention whenever the rollups can answer the scope,
+  hour reads included, else the raw retentions). The gate is
   the list's (`EventService.scopeRead`): no `EVENT_READ` counts own rows only,
   always from raw events. Typed client: `client.event.getStats({ filters,
   groups, aggregates })`, answering `EventStatsResponse`. Pinned by

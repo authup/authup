@@ -108,8 +108,9 @@ export type EntityStatsRollup = {
      */
     translateRow: (row: Record<string, unknown>) => Record<string, unknown>,
     /**
-     * Response meta replacing the definition's on a routed read (events:
-     * the rollup horizon as `retentionDays`).
+     * Response meta replacing the definition's on every read whose scope
+     * the rollups can answer, an hour read included (events: the rollup
+     * horizon as `retentionDays`, which the day windows reach).
      */
     meta?: () => Record<string, any>,
 };

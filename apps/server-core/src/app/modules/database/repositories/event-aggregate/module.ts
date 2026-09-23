@@ -13,9 +13,9 @@ import {
     lt,
 } from '@rapiq/core';
 import type { DataSource } from 'typeorm';
-import { Between, LessThan } from 'typeorm';
+import { Between, In, LessThan } from 'typeorm';
 import { withDatabaseLock } from 'typeorm-extension';
-import { EventAggregateEntity, EventEntity } from '../../../../../adapters/database/domains/index.ts';
+import { EventAggregateEntity, EventEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import type { IEventAggregateRepository } from '../../../../../core/index.ts';
 import { EVENT_AGGREGATE_DATABASE_LOCK } from '../../../../../core/index.ts';
 import { DATABASE_LOCK_OPTIONS } from '../../constants.ts';
@@ -58,7 +58,23 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                     groups: ['realmId', 'scope', 'name', 'refType'],
                     aggregates: ['count'],
                 }));
-                const rows = normalize(await qb.getRawMany());
+                let rows = normalize(await qb.getRawMany());
+
+                // auth_events outlives its realms (no foreign key), the
+                // rollups do not: a gone realm needs no history
+                const realmIds = [...new Set(rows.map((row) => row.realmId).filter(Boolean))] as string[];
+                if (realmIds.length > 0) {
+                    const realms = await this.dataSource.getRepository(RealmEntity).find({
+                        select: { id: true },
+                        where: { id: In(realmIds) },
+                    });
+                    const existing = new Set(realms.map((realm) => realm.id));
+                    rows = rows.filter((row) => !row.realmId || existing.has(row.realmId as string));
+                }
+
+                // written with the process clock: a day whose rollup was
+                // written before the day ended is provisional (findDays)
+                const createdAt = new Date().toISOString();
 
                 // the grouped read runs outside the transaction, so the
                 // transaction never waits on a second pooled connection (#3526)
@@ -66,6 +82,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                     await manager.delete(EventAggregateEntity, { day });
                     if (rows.length > 0) {
                         await manager.insert(EventAggregateEntity, rows.map((row) => ({
+                            createdAt,
                             day,
                             realmId: row.realmId as string | null,
                             scope: row.scope as Event['scope'],
@@ -81,19 +98,37 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
         }
     }
 
+    /**
+     * The days holding a final rollup, i.e. one written after the day
+     * ended: a recompute of a day still open is provisional, and the
+     * backfill repairs it once the day is over.
+     */
     async findDays(from: string, to: string): Promise<string[]> {
         const repository = this.dataSource.getRepository(EventAggregateEntity);
-        const column = repository.metadata.findColumnWithPropertyName('day')!;
+        const dayColumn = repository.metadata.findColumnWithPropertyName('day')!;
+        const createdAtColumn = repository.metadata.findColumnWithPropertyName('createdAt')!;
 
         const rows = await repository.createQueryBuilder('aggregate')
             .select('aggregate.day', 'day')
-            .distinct(true)
+            .addSelect('MAX(aggregate.createdAt)', 'createdAt')
             .where({ day: Between(from, to) })
-            .getRawMany<{ day: unknown }>();
+            .groupBy('aggregate.day')
+            .getRawMany<{ day: unknown, createdAt: unknown }>();
 
-        // hydrate the raw value the way an entity read would: mysql2 answers
-        // a Date, the other drivers a string
-        return rows.map((row) => this.dataSource.driver.prepareHydratedValue(row.day, column));
+        // hydrate the raw values the way an entity read would: mysql2
+        // answers a Date, the other drivers a string
+        return rows
+            .map((row) => ({
+                day: this.dataSource.driver.prepareHydratedValue(row.day, dayColumn) as string,
+                createdAt: this.dataSource.driver.prepareHydratedValue(row.createdAt, createdAtColumn) as string,
+            }))
+            .filter((row) => {
+                const end = new Date(`${row.day}T00:00:00.000Z`);
+                end.setUTCDate(end.getUTCDate() + 1);
+
+                return new Date(row.createdAt).getTime() >= end.getTime();
+            })
+            .map((row) => row.day);
     }
 
     async findOldestEventDay(): Promise<string | null> {
