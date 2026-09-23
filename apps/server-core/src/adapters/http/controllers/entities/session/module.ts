@@ -32,9 +32,9 @@ import type {
     ISessionService,   
 } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    SESSION_COOKIE, 
+    SESSION_COOKIE,
+    STATS_QUERY_PARAMETERS, 
     deriveAmrAcr, 
     describeQuerySchema, 
     resolveIntrospectionSubject, 
@@ -181,7 +181,7 @@ export class SessionController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(sessionSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(sessionSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

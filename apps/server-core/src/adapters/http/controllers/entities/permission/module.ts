@@ -36,8 +36,8 @@ import type {
     IPermissionService, 
 } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     permissionSchema, 
 } from '../../../../../core/index.ts';
@@ -84,7 +84,7 @@ export class PermissionController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(permissionSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(permissionSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

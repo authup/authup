@@ -28,8 +28,8 @@ import type { Key } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IKeyService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     keySchema, 
 } from '../../../../../core/index.ts';
@@ -71,7 +71,7 @@ export class KeyController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(keySchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(keySchema, STATS_QUERY_PARAMETERS),
         );
     }
 

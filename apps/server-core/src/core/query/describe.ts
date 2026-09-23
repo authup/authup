@@ -26,12 +26,23 @@ export const RECORD_QUERY_PARAMETERS: `${Parameter}`[] = [
 
 /**
  * What a read that takes a filter and nothing else decodes: the two bulk
- * revokes and the event stats. Declared once for the same reason as the
+ * revokes. Declared once for the same reason as the
  * record subset: the `@DQuerySchema('filters')` marker, the OpenAPI shape map
  * and the `meta.schema` a route answers must name one list.
  */
 export const FILTERS_QUERY_PARAMETERS: `${Parameter}`[] = [
     Parameter.FILTERS,
+];
+
+/**
+ * What a statistic (`GET /<collection>/@stats`) decodes: the rows to count,
+ * their grouping and the measures. Declared once for the same reason as the
+ * two subsets above.
+ */
+export const STATS_QUERY_PARAMETERS: `${Parameter}`[] = [
+    Parameter.FILTERS,
+    Parameter.GROUPS,
+    Parameter.AGGREGATES,
 ];
 
 const cache = new WeakMap<Schema<any>, Map<string, SchemaDescription>>();

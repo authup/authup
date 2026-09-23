@@ -36,8 +36,8 @@ import type {
     IPolicyService, 
 } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     policySchema, 
 } from '../../../../../core/index.ts';
@@ -84,7 +84,7 @@ export class PolicyController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(policySchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(policySchema, STATS_QUERY_PARAMETERS),
         );
     }
 

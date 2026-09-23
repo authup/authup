@@ -35,9 +35,9 @@ import type {
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService, IEntityStatsService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     OAuth2ScopeAttributesResolver,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     clientSchema, 
     describeQuerySchema, 
 } from '../../../../../core/index.ts';
@@ -85,7 +85,7 @@ export class ClientController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(clientSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(clientSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

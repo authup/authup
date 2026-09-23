@@ -23,6 +23,7 @@ import { method, readString } from '@trapi/core';
 import {
     FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     computeSchemaRegistryHash,
     describeQuerySchema,
     describeSchemaRegistry,
@@ -38,43 +39,15 @@ const ERROR_SCHEMA_NAME = 'ErrorResponse';
  * Which rapiq parameters a marked read decodes. A collection read decodes the
  * schema's whole vocabulary; a record read only `RECORD_QUERY_PARAMETERS`;
  * the two bulk revokes only the filter, which is what discriminates a
- * self-service call from an administrative one.
+ * self-service call from an administrative one; a statistic the filter, the
+ * grouping and the measures.
  */
 const SHAPE_PARAMETERS : Record<string, `${RapiqParameter}`[] | undefined> = {
     collection: undefined,
     record: RECORD_QUERY_PARAMETERS,
     filters: FILTERS_QUERY_PARAMETERS,
-    stats: FILTERS_QUERY_PARAMETERS,
+    stats: STATS_QUERY_PARAMETERS,
 };
-
-/**
- * The two parameters of a statistic (`GET /<collection>/@stats`) that are not
- * rapiq parameters: the bucket width and the window. They become one once
- * tada5hi/rapiq#938 lands.
- */
-function buildStatsParameters() : Parameter[] {
-    return [
-        {
-            parameterName: 'granularity',
-            name: 'granularity',
-            in: 'queryProp',
-            required: false,
-            description: 'The bucket width, `hour` or `day`. Defaults to `day`.',
-            type: { typeName: 'string' },
-            extensions: [],
-        },
-        {
-            parameterName: 'days',
-            name: 'days',
-            in: 'queryProp',
-            required: false,
-            description: `The window in whole days back from now, 30 by default. The window times the buckets per day may not exceed ${STATS_MAX_BUCKETS}.`,
-            type: { typeName: 'integer' },
-            validators: { minimum: { value: 1 } },
-            extensions: [],
-        },
-    ] as Parameter[];
-}
 
 const UPPER_BOUND_NOTE = 'This is the static upper bound: per-actor relation and column gates may narrow it silently on any given request.';
 
@@ -227,6 +200,58 @@ function buildPaginationParameters(description) {
     ];
 }
 
+function listFunctions(functions) {
+    return list(Object.entries(functions ?? {}).map(([name, fn]: [string, any]) => {
+        const params = (fn?.params ?? []).map((param) => {
+            const value = param.values.length > 0 ? param.values.join('|') : param.name;
+
+            return param.optional ? `[${value}]` : value;
+        });
+
+        return `\`${name}(${params.join(', ')})\``;
+    }));
+}
+
+/**
+ * A statistic (`GET /<collection>/@stats`) is a grouped read. authup adds
+ * rules of its own on top of the vocabulary: the first group buckets the date
+ * column, the filter carries a lower bound on it, and the window spans at most
+ * `STATS_MAX_BUCKETS` buckets.
+ */
+function buildGroupParameter(description) {
+    const groups = description.groups ?? {};
+
+    return {
+        parameterName: 'group',
+        name: 'group',
+        in: 'queryProp',
+        required: false,
+        description: [
+            'Group the counted rows: `group=bucket(createdAt,day),scope,name`, comma separated.',
+            `Allowed columns: ${list(groups.allowed ?? []) || 'none'}. Allowed functions: ${listFunctions(groups.functions)}.`,
+            'On a statistic the first group must be `bucket(<date column>, hour|day|month)` and the filter must carry a lower bound on that column (`filter=gte(createdAt,\'<instant>\')`).',
+            `The window may span at most ${STATS_MAX_BUCKETS} buckets. Buckets are UTC.`,
+        ].join(' '),
+        type: { typeName: 'string' },
+        extensions: [],
+    };
+}
+
+function buildAggregateParameter(description) {
+    return {
+        parameterName: 'aggregate',
+        name: 'aggregate',
+        in: 'queryProp',
+        required: false,
+        description: [
+            'Measures computed per group: `aggregate=count`, comma separated.',
+            `Allowed: ${listFunctions(description.aggregates?.functions)}.`,
+        ].join(' '),
+        type: { typeName: 'string' },
+        extensions: [],
+    };
+}
+
 /**
  * The generic rapiq query parameters for one marked read, derived from that
  * schema's own description. Which ones it carries follows the marker: a record
@@ -241,7 +266,11 @@ function buildQueryParameters(
     description: SchemaDescription,
     subset: `${RapiqParameter}`[] | undefined,
 ) : Parameter[] {
-    const selected = new Set<string>(subset ?? Object.keys(description));
+    // rapiq parses groups and aggregates only on an opt-in parse, so a
+    // collection read (no subset) never advertises them.
+    const selected = new Set<string>(subset ?? Object.keys(description).filter(
+        (key) => key !== RapiqParameter.GROUPS && key !== RapiqParameter.AGGREGATES,
+    ));
     const record = Boolean(subset);
     const output : (Parameter | undefined)[] = [];
 
@@ -263,6 +292,14 @@ function buildQueryParameters(
 
     if (selected.has('pagination') && description.pagination) {
         output.push(...buildPaginationParameters(description));
+    }
+
+    if (selected.has('groups') && description.groups) {
+        output.push(buildGroupParameter(description));
+    }
+
+    if (selected.has('aggregates') && description.aggregates) {
+        output.push(buildAggregateParameter(description));
     }
 
     return output.filter(Boolean) as Parameter[];
@@ -375,9 +412,6 @@ const querySchemaHandler = method({
         });
 
         draft.parameters.push(...buildQueryParameters(description, subset));
-        if (shape === 'stats') {
-            draft.parameters.push(...buildStatsParameters());
-        }
 
         // Keyed on decoding a FILTER, not on being a collection read: the two
         // bulk revokes decode filters alone, and the filter is the only query

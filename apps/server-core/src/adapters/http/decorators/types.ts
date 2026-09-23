@@ -12,8 +12,8 @@
  * `filters` read only the filter tree, which is the bulk-revoke shape
  * (`DELETE /sessions`, `DELETE /session-tokens`) where the filter is what
  * discriminates a self-service call from an administrative one. A `stats`
- * read (`GET /<collection>/@stats`) decodes the filter tree too, and
- * additionally takes `granularity` and `days`.
+ * read (`GET /<collection>/@stats`) decodes the filter tree, the groups
+ * and the aggregates (`STATS_QUERY_PARAMETERS`).
  *
  * The shape is named rather than the parameter list spelled out,
  * because `@trapi/metadata` cannot fold an IMPORTED constant into a

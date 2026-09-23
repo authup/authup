@@ -84,11 +84,11 @@ import type {
     OAuth2AuthorizationStateLink, 
 } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     OAUTH2_FEDERATED_LOGIN_COOKIE,
     OAUTH2_FEDERATED_LOGIN_TTL,
     OAuth2AuthorizationCodeRequestValidator,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     createIdentityProviderOAuth2Authenticator,
     decodeQuery,
     describeQuerySchema,
@@ -173,7 +173,7 @@ export class IdentityProviderController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(identityProviderSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(identityProviderSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

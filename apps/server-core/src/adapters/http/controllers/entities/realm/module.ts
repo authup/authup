@@ -41,8 +41,8 @@ import type { Realm } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IRealmService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     realmSchema, 
 } from '../../../../../core/index.ts';
@@ -97,7 +97,7 @@ export class RealmController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(realmSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(realmSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

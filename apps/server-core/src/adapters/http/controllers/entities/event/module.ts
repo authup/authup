@@ -25,8 +25,8 @@ import type {
 } from '@authup/core-http-kit';
 import type { IEntityStatsService, IEventService } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema,
     eventSchema,
 } from '../../../../../core/index.ts';
@@ -66,7 +66,7 @@ export class EventController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(eventSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(eventSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

@@ -30,8 +30,8 @@ import type { Scope } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IScopeService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     scopeSchema, 
 } from '../../../../../core/index.ts';
@@ -69,7 +69,7 @@ export class ScopeController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(scopeSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(scopeSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

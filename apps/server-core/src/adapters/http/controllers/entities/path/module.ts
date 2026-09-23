@@ -28,8 +28,8 @@ import type { Path } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IPathService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     pathSchema, 
 } from '../../../../../core/index.ts';
@@ -71,7 +71,7 @@ export class PathController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(pathSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(pathSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

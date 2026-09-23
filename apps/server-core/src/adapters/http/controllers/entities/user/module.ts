@@ -30,8 +30,8 @@ import type { User } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IUserService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     userSchema, 
 } from '../../../../../core/index.ts';
@@ -74,7 +74,7 @@ export class UserController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(userSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(userSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

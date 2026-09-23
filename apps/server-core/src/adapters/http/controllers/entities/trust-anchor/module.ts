@@ -28,8 +28,8 @@ import {
 import type { IAppEvent } from 'routup';
 import type { IEntityStatsService, ITrustAnchorService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     trustAnchorSchema, 
 } from '../../../../../core/index.ts';
@@ -71,7 +71,7 @@ export class TrustAnchorController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(trustAnchorSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(trustAnchorSchema, STATS_QUERY_PARAMETERS),
         );
     }
 
