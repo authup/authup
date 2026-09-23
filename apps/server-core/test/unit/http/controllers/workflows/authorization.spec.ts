@@ -40,7 +40,6 @@ import {
     createFakeRealm,
     createFakeRole,
     createFakeUser,
-    expectClientError,
     httpRequest,
 } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
@@ -477,41 +476,5 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: user.realmId }),
         })).rejects.toThrow();
         expect(await evaluator.compile({ name: permission.name })).toEqual({ verdict: 'deny' });
-    });
-});
-
-describe('src/http/controllers/workflows/authorization/*.ts (catalog disabled)', () => {
-    const suite = createTestApplication({
-        config: (config) => {
-            config.authorizationCatalogEnabled = false;
-        },
-    });
-
-    beforeAll(async () => {
-        await suite.setup();
-    });
-
-    afterAll(async () => {
-        await suite.teardown();
-    });
-
-    it('does not serve the catalog to an authenticated caller', async () => {
-        await expectClientError(
-            () => suite.client.authorization.get(),
-            { status: 404 },
-        );
-    });
-
-    // the login gate is route middleware and runs before the flag is read
-    it('refuses an anonymous caller with 401 either way', async () => {
-        const response = await httpRequest(suite, 'GET', '/authorization');
-
-        expect(response.status).toBe(401);
-    });
-
-    it('keeps serving the batch check the consoles gate on', async () => {
-        const answer = await suite.client.authorization.check({ names: [PermissionName.ROLE_READ] });
-
-        expect(answer).toEqual([expect.objectContaining({ name: PermissionName.ROLE_READ })]);
     });
 });

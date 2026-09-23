@@ -13,7 +13,6 @@ import {
     isPermissionError,
 } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
-import { NotFoundError } from '@ebec/http';
 import {
     DBody,
     DContext,
@@ -38,15 +37,7 @@ import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { RequestPermissionEvaluator, buildActorContext, useRequestGrants } from '../../../request/index.ts';
 
 export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext &
-AuthorizationCheckBuilderContext & {
-    options: {
-        /**
-         * `core.authorizationCatalogEnabled`: off, `GET /authorization` is
-         * not served (#3636). The batch check below is unaffected.
-         */
-        catalogEnabled: boolean,
-    },
-};
+AuthorizationCheckBuilderContext;
 
 /**
  * The identity-free permission catalog: every definition with its policy
@@ -88,13 +79,6 @@ AuthorizationCheckBuilderContext & {
  * The catalog is an upper bound on what may be asked, never an
  * entitlement (the same posture as `GET /schemas`); every decision it feeds
  * still runs over the caller's own grants.
- *
- * `core.authorizationCatalogEnabled` switches the catalog off entirely, the
- * `querySchemaDiscoveryEnabled` shape: 404 to an authenticated caller, 401 to
- * an anonymous one since the login gate runs first (#3636). The batch check is
- * deliberately NOT behind it: it discloses the caller's own verdicts and no
- * policy configuration, and it is the one source the consoles gate on, so the
- * switch would take every console's controls down with the catalog.
  */
 @DTags('auth')
 @DController('/authorization')
@@ -112,10 +96,6 @@ export class AuthorizationController {
     async get(
         @DContext() event: IAppEvent,
     ): Promise<AuthorizationCatalog> {
-        if (!this.ctx.options.catalogEnabled) {
-            throw new NotFoundError();
-        }
-
         const names = [
             PermissionName.PERMISSION_READ,
             PermissionName.PERMISSION_UPDATE,

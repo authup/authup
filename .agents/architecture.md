@@ -3557,12 +3557,6 @@ every permission is bound to the global `system.default`, so a grant held at the
 reaches nothing at all. **`ownOrNull` is therefore the floor for this route**, for a
 single-realm resource server as much as for a console, and an all-deny document would
 read as authoritative where the refusal is what sends a caller to the batch check below.
-**`core.authorizationCatalogEnabled`** (`AUTHORIZATION_CATALOG_ENABLED`, default true,
-strict reader) switches the route off in the `querySchemaDiscoveryEnabled` shape: 404 to
-an authenticated caller, 401 to an anonymous one since `ForceLoggedIn` runs first (#3636).
-The batch check is deliberately NOT behind it: it publishes the caller's own verdicts and
-no policy configuration, and it is the consoles' only authorization source, so one switch
-would take every console's controls down with a surface they never read.
 **Who reads which route is decided by the KIND of caller, never by what its actor
 happens to hold.** A resource server reads the catalog with its OWN client credential,
 holding `PERMISSION_READ` through one `client-permission` row: the document is
@@ -4788,10 +4782,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the nine security toggles
+**Env semantics are per entry, not per type**: the eight security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`, `querySchemaDiscoveryEnabled`, `authorizationCatalogEnabled`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.

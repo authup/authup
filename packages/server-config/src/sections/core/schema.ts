@@ -209,13 +209,6 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             env: EnvironmentVariable.QUERY_SCHEMA_DISCOVERY_ENABLED,
             readEnv: readEnvBoolStrict,
         },
-        authorizationCatalogEnabled: {
-            type: booleanType,
-            default: true,
-            description: 'Serve the authorization catalog (GET /authorization), every permission definition with the policy trees the caller\'s realm reach covers, for a resource server to evaluate outside this process. Disabled, it answers 404 to an authenticated caller; an anonymous one is refused with 401 either way. POST /authorization/check is not affected.',
-            env: EnvironmentVariable.AUTHORIZATION_CATALOG_ENABLED,
-            readEnv: readEnvBoolStrict,
-        },
 
         tokenRefreshMaxAge: {
             type: nonNegativeNumberType,
