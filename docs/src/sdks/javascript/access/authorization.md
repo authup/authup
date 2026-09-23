@@ -292,8 +292,8 @@ you never asked about denies too. Ask about the realms your UI will ask about.
 
 The answer is `Cache-Control: private, no-cache`, plus `max-age=N` when a `date`
 or `time` policy in an evaluated tree could change a verdict for you: N is the
-seconds until the earliest such instant. A permission you are denied only counts
-when you hold a grant for it or its policies read no grants at all, so the window
+seconds until the earliest such instant. A permission you are denied counts unless its
+policies deny every caller holding no grant for it and you hold none, so the window
 of a permission you cannot hold is never disclosed. Refetch then. `client.authorization.checkWithMaxAge`
 answers `{ data, maxAge }` for exactly this; `check` keeps returning the bare array.
 

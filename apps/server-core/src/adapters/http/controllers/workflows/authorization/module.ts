@@ -227,7 +227,7 @@ export class AuthorizationController {
             ) => useRequestGrants(event, identity),
         });
 
-        // `no-cache` stays, so no HTTP cache reuses the body without asking:
+        // `no-cache` stays, so no cache reuses the body without revalidating:
         // the answer is per caller. `max-age` only carries WHEN the answer
         // expires, the next instant a clock-dependent policy (`date`, `time`)
         // it was built from could flip, so a consumer memoizing it knows when

@@ -3970,8 +3970,8 @@ the answer depend on the unordered order of a definition's policies, since a
 `{ permissions, expiresAt? }` (the earliest kept instant). The controller keeps the
 bare-array body and answers `Cache-Control: private, no-cache, max-age=N` (N = seconds until
 `expiresAt`, ceiled so a refetch cannot land before the flip, clamped at 0), or plain
-`private, no-cache` when nothing reported. `no-cache` stays so no HTTP cache reuses the
-body; `max-age` only carries the number, chosen over a custom header because it is
+`private, no-cache` when nothing reported. `no-cache` stays so no cache reuses the body without
+revalidating it first; `max-age` only carries the number, chosen over a custom header because it is
 relative (immune to clock skew) and CORS-safelisted.
 
 `createAuthorizationCheckEvaluator({ permissions, identity })` (`@authup/access`, next to
