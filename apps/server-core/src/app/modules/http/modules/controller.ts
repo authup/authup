@@ -1182,6 +1182,7 @@ export class HTTPControllerModule {
                     ),
                     translate: translateEventAggregateQuery,
                     translateRow: translateEventAggregateRow,
+                    horizonDays: () => config.eventLogAggregateRetentionDays,
                     meta: () => ({
                         retentionDays: config.eventLogAggregateRetentionDays,
                         entityRetentionDays: config.eventLogAggregateRetentionDays,

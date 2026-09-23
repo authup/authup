@@ -132,6 +132,10 @@ export class EntityStatsService<
             translated = rollup.translate(window.upperBound ?
                 scoped :
                 appendQueryConditions(scoped, lt(dateColumn, end.toISOString())));
+
+            if (translated && isPastRawHorizon(window, rollup.horizonDays?.(), now)) {
+                translated = undefined;
+            }
         }
 
         if (!translated && window.unit !== 'hour' && isPastRawHorizon(window, rawHorizonDays, now)) {

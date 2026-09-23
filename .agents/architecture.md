@@ -970,7 +970,10 @@ until deleted.
   `eventLogEntityRetentionDays` alone when the filter pins `scope=entity`,
   since entity rows are stamped on that clock only
   (`resolveEventRawHorizonDays`). An hour read past it answers
-  400, and so does a day or month read the rollups cannot answer. A read
+  400, and so does a day or month read the rollups cannot answer. A routable
+  read past the rollup retention (`eventLogAggregateRetentionDays`, whose
+  days the aggregator prunes) reads raw rows instead, and is refused only
+  past the raw horizon as well. A read
   whose scope the rollups can answer reports the rollup retention as
   `meta.retentionDays` and `meta.entityRetentionDays` instead of the raw ones,
   an HOUR read of that scope included (it reads raw rows, but the switch

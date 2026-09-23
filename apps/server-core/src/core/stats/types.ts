@@ -108,6 +108,11 @@ export type EntityStatsRollup = {
      */
     translateRow: (row: Record<string, unknown>) => Record<string, unknown>,
     /**
+     * How far back the rollups reach, in days (0 = never pruned): a window
+     * past it reads raw rows, or is refused past the raw horizon too.
+     */
+    horizonDays?: () => number,
+    /**
      * Response meta replacing the definition's on every read whose scope
      * the rollups can answer, an hour read included (events: the rollup
      * horizon as `retentionDays`, which the day windows reach).

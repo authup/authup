@@ -121,6 +121,7 @@ function defineEventStats(
         enabled?: boolean,
         rawHorizonDays?: number,
         rollups?: FakeEntityStatsRepository<EventAggregate>,
+        rollupHorizonDays?: number,
     } = {},
 ): EntityStatsDefinition {
     const events = new EventService({ repository: new FakeEventRepository() });
@@ -138,6 +139,7 @@ function defineEventStats(
                 repository: options.rollups,
                 translate: translateEventAggregateQuery,
                 translateRow: translateEventAggregateRow,
+                horizonDays: () => options.rollupHorizonDays ?? 0,
                 meta: () => ({ retentionDays: 0, entityRetentionDays: 0 }),
             },
         } : {}),
@@ -794,6 +796,32 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(rollups.aggregateCalls).toHaveLength(0);
         expect(repository.aggregateCalls).toHaveLength(2);
+    });
+
+    it('answers a window past the rollup horizon from raw events, never silently short', async () => {
+        const within = new EntityStatsService({
+            definition: defineEventStats(repository, {
+                rawHorizonDays: 90,
+                rollups,
+                rollupHorizonDays: 7,
+            }),
+            cache,
+        });
+        await within.getMany(wire({ from: '2026-08-24T00:00:00.000Z' }), allowed());
+
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(repository.aggregateCalls).toHaveLength(1);
+
+        const past = new EntityStatsService({
+            definition: defineEventStats(repository, {
+                rawHorizonDays: 7,
+                rollups,
+                rollupHorizonDays: 7,
+            }),
+            cache: new MemoryCache(),
+        });
+        await expect(past.getMany(wire({ from: '2026-08-24T00:00:00.000Z' }), allowed()))
+            .rejects.toSatisfy(isValidationError);
     });
 
     it('never shares a cache entry between the two sources', async () => {
