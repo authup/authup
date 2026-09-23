@@ -11,7 +11,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { RealmEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
+import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class RealmSubscriber extends EntitySubscriber<Realm> {
@@ -26,6 +26,7 @@ export class RealmSubscriber extends EntitySubscriber<Realm> {
                         prefix: CachePrefix.REALM,
                         key: data.id,
                     }),
+                    ...AUTHORIZATION_CACHE_KEYS,
                 ],
             },
         });

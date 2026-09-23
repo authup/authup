@@ -18,7 +18,9 @@ import type {
     EntitySubscriberInterface,
     InsertEvent,
     ObjectLiteral,
+    QueryRunner,
     RemoveEvent,
+    TransactionCommitEvent,
     UpdateEvent,
 } from 'typeorm';
 import type { EntitySubscriberContext } from './types.ts';
@@ -50,6 +52,8 @@ export function buildEntityDestinations<T extends ObjectLiteral>(
     };
 }
 
+const PENDING_CACHE_KEYS = 'authupPendingCacheKeys';
+
 export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscriberInterface<T> {
     protected ctx : EntitySubscriberContext<T>;
 
@@ -75,7 +79,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         }
 
         if (this.ctx.cache && this.ctx.cache.onInsert) {
-            await this.dropCacheKeys(event.connection, event.entity);
+            await this.dropCacheKeys(event.connection, event.queryRunner, event.entity);
         }
 
         await this.publish(EntityDefaultEventName.CREATED, event.entity, undefined, event.manager);
@@ -86,7 +90,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             return;
         }
 
-        await this.dropCacheKeys(event.connection, event.entity as T);
+        await this.dropCacheKeys(event.connection, event.queryRunner, event.entity as T);
 
         await this.publish(EntityDefaultEventName.UPDATED, event.entity as T, event.databaseEntity, event.manager);
     }
@@ -100,17 +104,44 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             return;
         }
 
-        await this.dropCacheKeys(event.connection, entity);
+        await this.dropCacheKeys(event.connection, event.queryRunner, entity);
 
         await this.publish(EntityDefaultEventName.DELETED, entity, undefined, event.manager);
     }
 
-    protected async dropCacheKeys(connection: DataSource, data: T) : Promise<void> {
+    /**
+     * The hooks run inside the persist transaction, so a concurrent reader may
+     * repopulate a key before the write commits. The keys are therefore dropped
+     * again once the outermost transaction has committed (#3599).
+     */
+    async afterTransactionCommit(event: TransactionCommitEvent): Promise<any> {
+        if (event.queryRunner.isTransactionActive) {
+            return;
+        }
+
+        const keys = event.queryRunner.data[PENDING_CACHE_KEYS] as Set<string> | undefined;
+        if (!keys || !event.connection.queryResultCache) {
+            return;
+        }
+
+        delete event.queryRunner.data[PENDING_CACHE_KEYS];
+        await event.connection.queryResultCache.remove([...keys]);
+    }
+
+    protected async dropCacheKeys(connection: DataSource, queryRunner: QueryRunner, data: T) : Promise<void> {
         if (!this.ctx.cache || !connection.queryResultCache) {
             return;
         }
 
-        await connection.queryResultCache.remove(this.ctx.cache.keys(data));
+        const keys = this.ctx.cache.keys(data);
+        await connection.queryResultCache.remove(keys);
+
+        if (queryRunner.isTransactionActive) {
+            const pending = (queryRunner.data[PENDING_CACHE_KEYS] ??= new Set<string>()) as Set<string>;
+            for (const key of keys) {
+                pending.add(key);
+            }
+        }
     }
 
     /**

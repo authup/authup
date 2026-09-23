@@ -3769,6 +3769,29 @@ a copy older than the definition. A tree the CALLER may not read is withheld the
 way, so the two reasons a definition cannot be evaluated reach a consumer as one state. A grant tree that fails projection is dropped with a
 warning, and the introspection drops every grant of it.
 
+**The two repository reads are cached, the document is not (#3599).** The response is
+narrowed per caller, so it cannot be cached; `findDefinitions` and `findGrantPolicies` are
+identity-free, and `PermissionDatabaseProvider` keeps both in the DataSource's query result
+cache (the shared `ICache`, so on redis a drop reaches every replica) under
+`AUTHORIZATION_CACHE_KEYS`, which both `GET /authorization` and `POST /authorization/check`
+then serve from. Invalidation is the mechanism, because a stale copy converts a
+`POST /permissions` into a stale-catalog refetch that answers the same and ends in a deny-all
+evaluator: the subscribers of `auth_permissions`, `auth_permission_policies`, `auth_policies`,
+`auth_policy_attributes` and the role, user and client permission junctions drop both keys on
+insert, update and remove (the realm and client subscribers too, since a realm delete
+cascades its rows and a client delete sets `auth_permissions.client_id` to NULL), and each has
+a spec in `authorization-catalog-cache.spec.ts`. A hook runs inside the persist transaction,
+so a concurrent reader could repopulate a key with pre-commit rows; `EntitySubscriber`
+therefore records every key it drops inside a transaction on the query runner and drops them
+again in `afterTransactionCommit` once the outermost transaction committed, which covers every
+subscriber cache, not only this one. The 60 s duration is a backstop for a write that bypasses
+the subscribers (a query-builder `delete()`, a database cascade other than the two above); a
+cascade from a deleted role or user only leaves unused grant trees behind. Reads hand out a `structuredClone`, because the memory cache returns
+the stored reference and the realm-match evaluator writes `decisionStrategy` onto a policy it
+evaluates. Narrowing parameters on the route were considered and dropped: the per-caller
+reach narrowing already decides what a caller sees, and the document is close to
+constant-size since the built-in catalogue is global rows.
+
 The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on
 `GET /sessions/@me/introspect` is the identity's grant list, one entry per junction row
 with the definition it names (`name`, `realm_id`, `client_id`), the grant's own

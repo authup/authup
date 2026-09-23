@@ -27,6 +27,8 @@ import type {
 import { IsNull } from 'typeorm';
 import type { IAuthorizationCatalogRepository, PermissionPolicies } from '../../../../../core/authorization/types.ts';
 import {
+    AUTHORIZATION_DEFINITIONS_CACHE_KEY,
+    AUTHORIZATION_GRANT_POLICIES_CACHE_KEY,
     CachePrefix,
     ClientPermissionEntity,
     PermissionEntity,
@@ -109,6 +111,44 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
     }
 
     async findDefinitions() : Promise<PermissionPolicies[]> {
+        return this.withCache(AUTHORIZATION_DEFINITIONS_CACHE_KEY, () => this.readDefinitions());
+    }
+
+    async findGrantPolicies() : Promise<BasePolicy[]> {
+        return this.withCache(AUTHORIZATION_GRANT_POLICIES_CACHE_KEY, () => this.readGrantPolicies());
+    }
+
+    /**
+     * Invalidated by the subscriber of every table the value derives from
+     * (AUTHORIZATION_CACHE_KEYS); the duration only bounds a key dropped
+     * inside a transaction and repopulated before it commits (#3599).
+     * Cloned on the way out, since the memory cache hands back the stored
+     * reference and an evaluator may write to a policy it evaluates.
+     */
+    protected async withCache<T>(identifier: string, read: () => Promise<T>) : Promise<T> {
+        const cache = this.dataSource.queryResultCache;
+        if (!cache) {
+            return read();
+        }
+
+        const saved = await cache.getFromCache({ identifier, duration: 60_000 });
+        if (saved && !cache.isExpired(saved)) {
+            return structuredClone(saved.result as T);
+        }
+
+        const result = await read();
+        await cache.storeInCache({
+            identifier,
+            time: Date.now(),
+            duration: 60_000,
+            query: '',
+            result,
+        }, saved);
+
+        return structuredClone(result);
+    }
+
+    protected async readDefinitions() : Promise<PermissionPolicies[]> {
         const entities = await this.repository.find();
         if (entities.length === 0) {
             return [];
@@ -144,7 +184,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
         ]);
     }
 
-    async findGrantPolicies() : Promise<BasePolicy[]> {
+    protected async readGrantPolicies() : Promise<BasePolicy[]> {
         const ids = new Set<string>();
         for (const target of [RolePermissionEntity, UserPermissionEntity, ClientPermissionEntity]) {
             for (const id of await this.readGrantPolicyIds(target)) {

@@ -11,7 +11,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { ClientEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
+import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class ClientSubscriber extends EntitySubscriber<Client> {
@@ -26,6 +26,9 @@ export class ClientSubscriber extends EntitySubscriber<Client> {
                         prefix: CachePrefix.CLIENT,
                         key: data.id,
                     }),
+                    // a client delete sets auth_permissions.client_id to NULL
+                    // by foreign key, which runs no permission subscriber
+                    ...AUTHORIZATION_CACHE_KEYS,
                 ],
             },
         });
