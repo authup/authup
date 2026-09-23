@@ -130,15 +130,11 @@ export function sanitizeError(input: unknown): AuthupError {
                 });
             }
             /**
-             * postgres `invalid_text_representation`: a request-supplied
-             * value the column type cannot parse, e.g. a non-uuid filter
-             * operand or path id on a uuid column (#3647). sqlite and
-             * mysql store uuids as text and match nothing instead.
-             *
-             * ponytail: postgres-only; a decode-time refusal in
-             * `@rapiq/adapter-typeorm`'s `bindValue` (tada5hi/rapiq#950)
-             * gives filters one answer on every dialect, and an isUUID
-             * guard in the by-id lookups would turn path ids into 404.
+             * postgres `invalid_text_representation`: a bound value the
+             * column type cannot parse. Filter operands (refused by the
+             * rapiq adapter) and path ids (guarded in the repositories)
+             * no longer reach it (#3647, #3650); this is the backstop so
+             * a missed input answers 400 rather than 500.
              */
             case '22P02':
                 return new AuthupError({

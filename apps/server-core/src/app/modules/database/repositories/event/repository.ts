@@ -7,6 +7,7 @@
 
 import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
+import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { EntityManager, LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../query.ts';
@@ -88,6 +89,10 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async findOneById(id: string): Promise<Event | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         return this.repository.findOneBy({ id });
     }
 

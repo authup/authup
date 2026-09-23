@@ -42,7 +42,7 @@
         "@ilingo/validup-vue": "^1.2.0",
         "@ilingo/vue": "^6.1.0",
         "@nuxt/icon": "^2.5.1",
-        "@rapiq/core": "^2.3.0",
+        "@rapiq/core": "^2.4.0",
         "@tailwindcss/vite": "^4.3.3",
         "@validup/vue": "^2.0.1",
         "@vitejs/plugin-vue": "^6.0.9",

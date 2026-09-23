@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityProviderRoleMappingRepository {
     private readonly repository: Repository<IdentityProviderRoleMapping>;
@@ -60,6 +60,10 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
     }
 
     async findOneBy(where: Record<string, any>): Promise<IdentityProviderRoleMapping | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

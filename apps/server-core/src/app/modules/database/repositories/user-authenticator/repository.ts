@@ -7,6 +7,7 @@
 
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
+import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
@@ -41,6 +42,10 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async findOneById(id: string): Promise<UserAuthenticator | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         return this.repository.findOneBy({ id });
     }
 
@@ -90,6 +95,13 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
         applyRealmScopeSelect(qb, 'userAuthenticator', ['userId']);
 
         if (options.owner) {
+            if (!isUUID(options.owner.userId)) {
+                // no row can carry a non-uuid owner: answer the empty page
+                // every dialect would, rather than the parse error postgres
+                // raises for the bind
+                return { data: [], meta: { total: 0, ...pagination } };
+            }
+
             // mandatory constraint — not overridable by a rapiq filter
             qb.andWhere('userAuthenticator.userId = :ownerUserId', { ownerUserId: options.owner.userId });
         }

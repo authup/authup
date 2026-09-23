@@ -126,7 +126,7 @@ export const queryCodec = createURLCodec(schemaRegistry);
 export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
     input: unknown,
     options: DecodeQueryOptions<RECORD>,
-) : Promise<Query> {
+) : Promise<IQuery> {
     const normalized = typeof input === 'string' || isObject(input) ? input : {};
 
     const parsed = await queryCodec.decodeAsync(normalized, {

@@ -922,7 +922,8 @@ export class RoleRepositoryAdapter implements IRoleRepository {
 Key adapter patterns:
 - `findMany()`: Execute the decoded IR via `applyQuery(qb, query)` — the allow-list schema was already applied at decode time (service layer)
 - `findOneByIdOrName()`: Delegate to `findOneById` / `findOneByName` using `isUUID()`
-- `findOneBy()`: Delegate to `this.repository.findOneBy(where)`
+- `findOneBy()`: Delegate to `this.repository.findOneBy(where)`, returning `null` first when `hasUnmatchableId(where)` (a non-uuid `where.id`)
+- **A non-uuid id is "no row", decided before the query** (#3650): every by-id lookup returns `null` for it, so every dialect answers 404. Without the guard postgres refuses to parse the bind (`22P02`) while sqlite and mysql compare and miss. Filter operands get the same treatment from the adapter: since rapiq 2.4.0 a non-uuid value on a uuid column is `AdapterError` `KEY_VALUE_INVALID`, i.e. 400 on every dialect (#3647). `sanitizeError` maps a residual `22P02` to 400 as a backstop only
 - `create/merge/save/remove`: Delegate to TypeORM, cast to entity type where needed
 - `validateJoinColumns()`: Use `validateEntityJoinColumns(data, { dataSource, entityTarget })`
 - `checkUniqueness()`: Use `isEntityUnique({ dataSource, entityTarget, entity, entityExisting })`

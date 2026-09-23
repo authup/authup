@@ -7,6 +7,7 @@
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import { EntityConflictError } from '@authup/errors';
+import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -72,6 +73,10 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
     }
 
     async findOneById(id: string): Promise<IdentityProviderAccount | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         return this.repository.findOneBy({ id });
     }
 

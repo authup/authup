@@ -14,7 +14,12 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { PermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -86,6 +91,10 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Permission | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

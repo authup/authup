@@ -6,14 +6,15 @@
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
+import { EntityRelationLookupError, validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository {
     private readonly repository: Repository<RoleAttribute>;
@@ -58,6 +59,10 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
     }
 
     async findOneBy(where: Record<string, any>): Promise<RoleAttribute | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 
@@ -78,6 +83,12 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
     }
 
     async validateJoinColumns(data: Partial<RoleAttribute>): Promise<void> {
+        // a non-uuid owner can reference no row: refuse it the way the lookup
+        // does on every dialect, before postgres fails to parse the bind
+        if (typeof data.roleId === 'string' && !isUUID(data.roleId)) {
+            throw EntityRelationLookupError.notFound('role', ['roleId']);
+        }
+
         await validateEntityJoinColumns(data, {
             dataSource: this.repository.manager.connection,
             entityTarget: RoleAttributeEntity,

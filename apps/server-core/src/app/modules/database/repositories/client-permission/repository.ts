@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
 import { ClientPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class ClientPermissionRepositoryAdapter implements IClientPermissionRepository {
     private readonly repository: Repository<ClientPermission>;
@@ -60,6 +60,10 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
     }
 
     async findOneBy(where: Record<string, any>): Promise<ClientPermission | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

@@ -17,7 +17,7 @@ import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
 import { CachePrefix, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
@@ -26,7 +26,11 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         this.repository = repository;
     }
 
-    findOneById(id: string): Promise<Realm | null> {
+    async findOneById(id: string): Promise<Realm | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         const qb = this.repository.createQueryBuilder('realm');
         qb.where('realm.id = :id', { id });
         qb.cache(
@@ -75,6 +79,10 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Realm | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

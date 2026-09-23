@@ -14,7 +14,12 @@ import { validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
 import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
@@ -80,6 +85,10 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<TrustAnchor | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

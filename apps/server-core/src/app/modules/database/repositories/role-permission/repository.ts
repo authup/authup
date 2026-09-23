@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRolePermissionRepository } from '../../../../../core/index.ts';
 import { RolePermissionEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class RolePermissionRepositoryAdapter implements IRolePermissionRepository {
     private readonly repository: Repository<RolePermission>;
@@ -60,6 +60,10 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
     }
 
     async findOneBy(where: Record<string, any>): Promise<RolePermission | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

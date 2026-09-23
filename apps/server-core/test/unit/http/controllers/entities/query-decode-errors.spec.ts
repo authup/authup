@@ -57,16 +57,16 @@ describe('src/http/controllers/entities (query decode errors)', () => {
         expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
     });
 
-    // #3647: postgres refuses to parse the operand (400); sqlite and mysql
-    // store uuids as text and match nothing. Never a 500.
-    it('should not answer 500 for a non-uuid value on a uuid column', async () => {
-        const expected = process.env.DB_TYPE === 'postgres' ? 400 : 200;
-
+    // #3647: the adapter refuses a non-uuid operand on a uuid column
+    // before the query runs, so every dialect answers 400.
+    it('should answer 400 for a non-uuid value on a uuid column', async () => {
         const read = await httpRequest(suite, 'GET', '/sessions?filter[userId]=not-a-uuid', { headers: { Authorization: basic } });
-        expect(read.status).toEqual(expected);
+        expect(read.status).toEqual(400);
+        expect((await read.json()).code).toEqual(ErrorCode.BAD_REQUEST);
 
         const revoke = await httpRequest(suite, 'DELETE', '/sessions?filter[id]=not-a-uuid', { headers: { Authorization: basic } });
-        expect(revoke.status).toEqual(expected === 200 ? 202 : 400);
+        expect(revoke.status).toEqual(400);
+        expect((await revoke.json()).code).toEqual(ErrorCode.BAD_REQUEST);
     });
 
     it('should keep serving a well-formed query', async () => {

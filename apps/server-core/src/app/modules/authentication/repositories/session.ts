@@ -9,6 +9,7 @@ import type { Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
+import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../../database/repositories/query.ts';
@@ -46,6 +47,10 @@ export class SessionRepository implements ISessionRepository {
     // -----------------------------------------------------
 
     async findOneById(id: string): Promise<Session | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         const session = await this.cache.get<Session>(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
