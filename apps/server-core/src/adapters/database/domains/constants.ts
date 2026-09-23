@@ -54,9 +54,20 @@ export const AUTHORIZATION_GRANT_POLICIES_CACHE_KEY = buildCacheKey({
 });
 
 /**
- * Every write to a table the authorization catalog reads drops both (#3599).
+ * The generation a cached catalog read was taken in. A stored value counts
+ * only while this key still holds the generation it was tagged with, so a read
+ * that straddles a write's commit can never be served afterwards (#3599).
+ */
+export const AUTHORIZATION_EPOCH_CACHE_KEY = buildCacheKey({
+    prefix: CachePrefix.AUTHORIZATION,
+    key: 'epoch',
+});
+
+/**
+ * Every write to a table the authorization catalog reads drops these (#3599).
  */
 export const AUTHORIZATION_CACHE_KEYS = [
+    AUTHORIZATION_EPOCH_CACHE_KEY,
     AUTHORIZATION_DEFINITIONS_CACHE_KEY,
     AUTHORIZATION_GRANT_POLICIES_CACHE_KEY,
 ];

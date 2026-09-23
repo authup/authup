@@ -18,6 +18,7 @@ import { BuiltInPolicyType } from '@authup/access';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import {
     AUTHORIZATION_DEFINITIONS_CACHE_KEY,
+    AUTHORIZATION_EPOCH_CACHE_KEY,
     ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
@@ -109,27 +110,136 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
 
     it('drops the keys again once the writing transaction commits', async () => {
         const cache = suite.dataSource.queryResultCache!;
+        const store = (identifier: string, result: unknown) => cache.storeInCache({
+            identifier,
+            time: Date.now(),
+            duration: 60_000,
+            query: '',
+            result,
+        }, undefined);
 
         await suite.dataSource.transaction(async (manager) => {
             const permissions = manager.getRepository(PermissionEntity);
             await permissions.save(permissions.create({ name: 'issue3599_committed' }));
 
-            // a concurrent reader repopulating the key before the commit
-            await cache.storeInCache({
-                identifier: AUTHORIZATION_DEFINITIONS_CACHE_KEY,
-                time: Date.now(),
-                duration: 60_000,
-                query: '',
-                result: [],
-            }, undefined);
+            // a concurrent reader repopulating the keys with pre-commit rows
+            await store(AUTHORIZATION_EPOCH_CACHE_KEY, 'stale');
+            await store(AUTHORIZATION_DEFINITIONS_CACHE_KEY, { epoch: 'stale', value: [] });
         });
 
         expect(await cache.getFromCache({
-            identifier: AUTHORIZATION_DEFINITIONS_CACHE_KEY, 
+            identifier: AUTHORIZATION_EPOCH_CACHE_KEY, 
             query: '', 
             duration: 60_000, 
         })).toBeUndefined();
         expect(await findDefinition('issue3599_committed')).toBeDefined();
+    });
+
+    it('never serves a read that an invalidation overtook', async () => {
+        const permissions = suite.dataSource.getRepository(PermissionEntity);
+        await provider.findDefinitions();
+
+        // A read takes its rows, a write commits and invalidates, a second
+        // reader starts a new epoch and stores fresh rows, and only then does
+        // the first read store its stale rows over them.
+        const original = (provider as unknown as { readDefinitions: () => Promise<unknown> }).readDefinitions.bind(provider);
+        const spy = vi.spyOn(provider as unknown as { readDefinitions: () => Promise<unknown> }, 'readDefinitions')
+            .mockImplementationOnce(async () => {
+                const rows = await original();
+                await permissions.save(permissions.create({ name: 'issue3599_overtaken' }));
+                await provider.findDefinitions();
+                return rows;
+            });
+
+        try {
+            await suite.dataSource.queryResultCache!.remove([AUTHORIZATION_DEFINITIONS_CACHE_KEY]);
+            await provider.findDefinitions();
+
+            expect(await findDefinition('issue3599_overtaken')).toBeDefined();
+            expect(spy).toHaveBeenCalledTimes(3);
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
+    it('sees a subtree moved under a bound policy', async () => {
+        const permissions = suite.dataSource.getRepository(PermissionEntity);
+        const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const { data: moved } = await suite.client.policy.createBuiltIn({
+            name: 'issue3599_moved',
+            type: BuiltInPolicyType.COMPOSITE,
+            invert: false,
+            children: [createFakeTimePolicy()],
+        });
+        const { data: to } = await suite.client.policy.createBuiltIn({
+            name: 'issue3599_to',
+            type: BuiltInPolicyType.COMPOSITE,
+            invert: false,
+            children: [createFakeTimePolicy()],
+        });
+
+        const permission = await permissions.save(permissions.create({ name: 'issue3599_subtree' }));
+        await junctions.save(junctions.create({ permissionId: permission.id, policyId: to.id }));
+
+        type Tree = { id: string, children?: Tree[] };
+        const shape = (tree: Tree) : unknown => ({ id: tree.id, children: (tree.children ?? []).map(shape) });
+        const read = async () => shape((await findDefinition(permission.name))?.[1][0] as Tree);
+
+        expect(await read()).toEqual({ id: to.id, children: [{ id: to.children![0]!.id, children: [] }] });
+
+        await suite.client.policy.update(moved.id, { parentId: to.id });
+
+        expect(await read()).toEqual({
+            id: to.id,
+            children: expect.arrayContaining([
+                { id: moved.id, children: [{ id: moved.children![0]!.id, children: [] }] },
+            ]),
+        });
+    });
+
+    it('sees a child policy created under a bound policy', async () => {
+        const permissions = suite.dataSource.getRepository(PermissionEntity);
+        const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const { data: parent } = await suite.client.policy.createBuiltIn({
+            name: 'issue3599_parent',
+            type: BuiltInPolicyType.COMPOSITE,
+            invert: false,
+            children: [createFakeTimePolicy()],
+        });
+        const permission = await permissions.save(permissions.create({ name: 'issue3599_child' }));
+        await junctions.save(junctions.create({ permissionId: permission.id, policyId: parent.id }));
+
+        const children = async () => ((await findDefinition(permission.name))?.[1][0] as { children?: BasePolicy[] })
+            .children ?? [];
+
+        expect(await children()).toHaveLength(1);
+
+        // a bare save carries no attribute rows, so only the policy's own
+        // insert hook can report it
+        const policies = suite.dataSource.getRepository(PolicyEntity);
+        await policies.save(policies.create({
+            name: 'issue3599_bare_child',
+            type: BuiltInPolicyType.IDENTITY,
+            parentId: parent.id,
+            parent: { id: parent.id } as PolicyEntity,
+        }));
+
+        expect(await children()).toHaveLength(2);
+    });
+
+    it('keeps every policy tree once', async () => {
+        await suite.dataSource.queryResultCache!.remove([AUTHORIZATION_DEFINITIONS_CACHE_KEY]);
+        await provider.findDefinitions();
+
+        const entry = await suite.dataSource.queryResultCache!.getFromCache({
+            identifier: AUTHORIZATION_DEFINITIONS_CACHE_KEY,
+            query: '',
+            duration: 60_000,
+        });
+        const { value } = entry!.result as { value: { permissions: [unknown, string[]][], trees: Record<string, unknown> } };
+        const bound = new Set(value.permissions.flatMap(([, ids]) => ids));
+
+        expect(Object.keys(value.trees).sort()).toEqual([...bound].sort());
     });
 
     it('sees a permission unowned by deleting its client', async () => {
