@@ -33,6 +33,7 @@ function createController(realm: Realm, baseURL = 'https://auth.example.com') {
         options: { baseURL },
         service,
         keyRepository: {} as Repository<KeyEntity>,
+        statsService: { getMany: notImplemented },
     });
 }
 

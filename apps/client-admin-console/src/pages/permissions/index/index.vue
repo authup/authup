@@ -10,6 +10,7 @@ import {
     APermissions,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -20,9 +21,12 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -42,6 +46,9 @@ export default defineComponent({
         const { realmManagementId } = storeToRefs(store);
 
         const query = defineQuery<Permission>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.permission.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
@@ -96,6 +103,7 @@ export default defineComponent({
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -109,6 +117,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityActivity
+                type="permission"
+                :load="loadStats"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

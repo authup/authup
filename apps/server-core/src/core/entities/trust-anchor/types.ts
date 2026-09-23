@@ -7,6 +7,7 @@
 
 import type { TrustAnchor } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface ITrustAnchorRepository extends IEntityRepository<TrustAnchor> {
     checkUniqueness(data: Partial<TrustAnchor>, existing?: TrustAnchor): Promise<void>;
@@ -23,7 +24,7 @@ export type TrustAnchorServiceReadOptions = {
     realmId?: string,
 };
 
-export interface ITrustAnchorService {
+export interface ITrustAnchorService extends IReadScoper {
     getMany(
         query: Record<string, any>,
         actor: ActorContext,

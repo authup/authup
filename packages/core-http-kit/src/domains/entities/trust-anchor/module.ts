@@ -10,6 +10,8 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ITrustAnchorAPI,
@@ -18,6 +20,18 @@ import type {
 } from './types';
 
 export class TrustAnchorAPI extends BaseAPI implements ITrustAnchorAPI {
+    async getStats(query: EntityStatsQuery<TrustAnchor> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('trust-anchors', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('trust-anchors/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<TrustAnchor>): Promise<EntityCollectionResponse<TrustAnchor>> {
         const response = await this.client.get(`trust-anchors${buildQueryString(data)}`);
 

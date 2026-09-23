@@ -8,10 +8,11 @@
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     PermissionAPICheckResponse,
     PermissionCreatePayload,
-    PermissionSavePayload,
-    PermissionUpdatePayload,
+    PermissionSavePayload, 
+    PermissionUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Permission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -30,13 +31,15 @@ import {
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
-    IPermissionCheckerService,
-    IPermissionService,
+    IEntityStatsService,
+    IPermissionCheckerService, 
+    IPermissionService, 
 } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    permissionSchema,
+    describeQuerySchema, 
+    permissionSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -46,8 +49,10 @@ import {
     getRequestRealmID,
     useRequestPolicyIdentity,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type PermissionControllerContext = {
+    statsService: IEntityStatsService,
     service: IPermissionService,
     checkerService: IPermissionCheckerService,
 };
@@ -59,9 +64,28 @@ export class PermissionController {
 
     protected checkerService: IPermissionCheckerService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: PermissionControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
         this.checkerService = ctx.checkerService;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.PERMISSION, 'stats')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(permissionSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.PERMISSION, 'collection')

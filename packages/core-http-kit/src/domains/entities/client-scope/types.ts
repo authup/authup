@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPISlim } from '../../types-base';
 
 import type { ClientScope } from '@authup/core-kit';
@@ -12,4 +13,5 @@ import type { ClientScope } from '@authup/core-kit';
 // Mirrors `ClientScopeValidator` mounts in @authup/core-kit.
 export type ClientScopeCreatePayload = Pick<ClientScope, 'clientId' | 'scopeId'>;
 
-export interface IClientScopeAPI extends IEntityAPISlim<ClientScope, ClientScopeCreatePayload> {}
+export interface IClientScopeAPI extends IEntityAPISlim<ClientScope, ClientScopeCreatePayload>,
+    IEntitySchemaAPI {}

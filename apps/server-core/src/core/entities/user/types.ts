@@ -9,6 +9,7 @@ import type { Role, User } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IUserRepository extends IEntityRepository<User> {
     checkUniqueness(data: Partial<User>, existing?: User): Promise<void>;
@@ -35,7 +36,7 @@ export interface IUserRepository extends IEntityRepository<User> {
     transaction<R>(fn: (repository: IUserRepository) => Promise<R>): Promise<R>;
 }
 
-export interface IUserService {
+export interface IUserService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<User>>;
     getOne(idOrName: string, actor: ActorContext, query?: Record<string, any>, realmId?: string): Promise<User>;
     create(data: Record<string, any>, actor: ActorContext): Promise<User>;

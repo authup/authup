@@ -9,6 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { RolePermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IRolePermissionAPI,
@@ -17,6 +18,12 @@ import type {
 } from './types';
 
 export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('role-permissions/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<RolePermission>) : Promise<EntityCollectionResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions${buildQueryString(data)}`);
         return response.data;

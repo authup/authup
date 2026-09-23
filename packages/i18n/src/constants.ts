@@ -268,6 +268,36 @@ export enum TranslatorTranslationAppKey {
     DASHBOARD_EVENTS_LINK = 'dashboardEventsLink',
     DASHBOARD_EMPTY = 'dashboardEmpty',
     DASHBOARD_EVENT_LOG_DISABLED = 'dashboardEventLogDisabled',
+    DASHBOARD_IDENTITIES = 'dashboardIdentities',
+    DASHBOARD_CONFIGURATION = 'dashboardConfiguration',
+    SESSIONS_ACTIVE = 'sessionsActive',
+    /**
+     * The growth a statistics read reports next to a total: the rows created
+     * inside its window.
+     */
+    STATS_NEW = 'statsNew',
+    STATS_NEW_IN_DAYS = 'statsNewInDays',
+    STATS_NEW_IN_HOURS = 'statsNewInHours',
+    /**
+     * The activity boxes above an entity list: its total, and the rows the
+     * audit log saw created, updated and deleted inside the window.
+     */
+    ACTIVITY_TOTAL = 'activityTotal',
+    ACTIVITY_CREATED = 'activityCreated',
+    ACTIVITY_UPDATED = 'activityUpdated',
+    ACTIVITY_DELETED = 'activityDeleted',
+    ACTIVITY_SOURCE = 'activitySource',
+    /**
+     * The window line under an activity box, as on the dashboard tiles.
+     */
+    ACTIVITY_IN_DAYS = 'activityInDays',
+    ACTIVITY_IN_HOURS = 'activityInHours',
+    ACTIVITY_ALL_TIME = 'activityAllTime',
+    /**
+     * Why a statistics window is disabled: the records behind it are not
+     * kept that long.
+     */
+    STATS_WINDOW_RETAINED = 'statsWindowRetained',
     SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',

@@ -31,8 +31,10 @@ import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
+import type { IQuery } from '@rapiq/core';
 
 export type ClientServiceContext = {
     repository: IClientRepository;
@@ -81,20 +83,24 @@ export class ClientService extends AbstractEntityService implements IClientServi
         this.requestContext = ctx.requestContext;
     }
 
+    async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
+        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS, compile: false });
+    }
+
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Client>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
-
         // The per-row `secret` visibility gate lives on the client SCHEMA
         // (`fields.validateMany`, issue #3322), so it also covers the
         // `include=client` paths served by other services; the repository
         // layer redacts unauthorized values without dropping rows. An
         // encrypted value that survived it is one the reader may see.
-        const result = await this.repository.findMany(
+        const scope = await this.scopeRead(
             await decodeQuery(query, { schema: clientSchema, actor }),
+            actor,
         );
+        const result = await this.repository.findMany(scope.query);
 
         await Promise.all(result.data.map((entity) => this.revealSecret(entity)));
 

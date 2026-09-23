@@ -14,6 +14,8 @@ import { base64URLEncode } from '@authup/kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type {
     IIdentityProviderAPI,
     IdentityProviderAuthorizeUriOptions,
@@ -25,6 +27,18 @@ import type {
 } from './types';
 
 export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI {
+    async getStats(query: EntityStatsQuery<IdentityProvider> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('identity-providers', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('identity-providers/@schema');
+
+        return response.data;
+    }
+
     getAuthorizeUri(id: IdentityProvider['id'], options: IdentityProviderAuthorizeUriOptions = {}): string {
         const url = cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
         if (options.codeRequest) {

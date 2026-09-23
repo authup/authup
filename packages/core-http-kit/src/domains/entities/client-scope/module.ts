@@ -9,6 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { ClientScope } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientScopeCreatePayload,
@@ -16,6 +17,12 @@ import type {
 } from './types';
 
 export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('client-scopes/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
         const response = await this.client.get(`client-scopes${buildQueryString(data)}`);
         return response.data;

@@ -7,9 +7,10 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import type { IEntitySchemaAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export interface IIdentityProviderAccountAPI {
+export interface IIdentityProviderAccountAPI extends IEntitySchemaAPI {
     getMany(data?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityCollectionResponse<IdentityProviderAccount>>;
 
     getOne(id: IdentityProviderAccount['id'], record?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityRecordResponse<IdentityProviderAccount>>;

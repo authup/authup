@@ -20,6 +20,7 @@ import {
     APathTree,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     usePermissionCheckState,
@@ -37,9 +38,12 @@ import {
     watch,
 } from 'vue';
 import { reloadCollection, usePathScope } from '../../../composables/path-scope';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         APagination,
         APathTree,
         ASearch,
@@ -80,6 +84,9 @@ export default defineComponent({
             },
             relations: ['path'],
         }));
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.client.getStats(input);
 
         // The collection reads its base query on every load but does not
         // watch the prop, so a folder resolved after mount needs the list
@@ -264,6 +271,7 @@ export default defineComponent({
             pathScopeIncomplete: pathScope.optionsTruncated,
             pathScopePaths: pathScope.options,
             pathScopeValue,
+            loadStats,
             query,
             translations,
             authMethodLabel,
@@ -314,6 +322,10 @@ export default defineComponent({
                 @deleted="handleDeleted"
             >
                 <template #header="props">
+                    <EntityActivity
+                        type="client"
+                        :load="loadStats"
+                    />
                     <ATitle />
                     <ASearch
                         :load="props.load"

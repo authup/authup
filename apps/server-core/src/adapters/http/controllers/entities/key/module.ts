@@ -20,16 +20,18 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
-    KeyCreatePayload,
-    KeyUpdatePayload,
+    EntityStatsResponse,
+    KeyCreatePayload, 
+    KeyUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Key } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IKeyService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IKeyService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    keySchema,
+    describeQuerySchema, 
+    keySchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -38,8 +40,10 @@ import {
     buildActorContext,
     getRequestRealmID,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type KeyControllerContext = {
+    statsService: IEntityStatsService,
     service: IKeyService,
 };
 
@@ -48,8 +52,27 @@ export type KeyControllerContext = {
 export class KeyController {
     protected service: IKeyService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: KeyControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.KEY, 'stats')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(keySchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.KEY, 'collection')

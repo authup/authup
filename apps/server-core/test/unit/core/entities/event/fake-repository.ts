@@ -6,13 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { Query } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import type { Event } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { applyQuery } from '@rapiq/adapter-memory';
 import type {
-    EventCountGroupedOptions,
-    EventCountGroupedRow,
     EventCountRecentFilter,
     EventFindManyOptions,
     IEventRepository,
@@ -25,7 +24,6 @@ export class FakeEventRepository implements IEventRepository {
 
     public saveError: Error | null = null;
 
-    public countGroupedCalls: Array<{ query: IQuery, options: EventCountGroupedOptions }> = [];
 
     seed(data: Partial<Event>): Event {
         const entity = this.create(data);
@@ -80,7 +78,7 @@ export class FakeEventRepository implements IEventRepository {
         query: IQuery,
         options: EventFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
-        let data = [...this.rows];
+        let { data } = applyQuery(new Query({ filters: query.filters }), this.rows);
 
         if (options.owner) {
             const { owner } = options;
@@ -134,42 +132,6 @@ export class FakeEventRepository implements IEventRepository {
 
             return true;
         }).length;
-    }
-
-    async countGrouped(query: IQuery, options: EventCountGroupedOptions): Promise<EventCountGroupedRow[]> {
-        this.countGroupedCalls.push({ query, options });
-
-        let rows = applyQuery(query, this.rows).data;
-
-        if (options.owner) {
-            const { owner } = options;
-            rows = rows.filter((row) => row.actorId === owner.actorId && row.actorType === owner.actorType);
-        }
-        if (options.realmId) {
-            rows = rows.filter((row) => row.realmId === options.realmId);
-        }
-
-        const groups = new Map<string, EventCountGroupedRow>();
-        for (const row of rows) {
-            const date = new Date(row.createdAt);
-            if (options.granularity === 'hour') {
-                date.setUTCMinutes(0, 0, 0);
-            } else {
-                date.setUTCHours(0, 0, 0, 0);
-            }
-            const bucket = date.toISOString();
-            const key = `${bucket}:${row.scope}:${row.name}`;
-            const group = groups.get(key) ?? {
-                bucket,
-                scope: row.scope,
-                name: row.name,
-                count: 0,
-            };
-            group.count += 1;
-            groups.set(key, group);
-        }
-
-        return groups.values().toArray();
     }
 
     async deleteExpired(now: string): Promise<number> {

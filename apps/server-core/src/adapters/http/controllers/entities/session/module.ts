@@ -17,21 +17,28 @@ import type { Session } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse, EntityRecordResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
+import type { 
+    EntityCollectionResponse, 
+    EntityRecordResponse, 
+    EntityStatsResponse, 
+    SessionDeleteManyResponse,  
+} from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { 
+    IEntityStatsService, 
     IIdentityPermissionProvider, 
     IIdentityResolver, 
     ISessionRepository, 
-    ISessionService,  
+    ISessionService,   
 } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    SESSION_COOKIE,
+    SESSION_COOKIE, 
     deriveAmrAcr, 
     describeQuerySchema, 
     resolveIntrospectionSubject, 
-    sessionSchema, 
+    sessionSchema,  
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -47,8 +54,10 @@ import { OAuth2SubKind, serializeOAuth2Scope } from '@authup/specs';
 import { useRequestCookie } from '@routup/basic/cookie';
 import { SYSTEM_CLIENT_SCOPE_NAMES } from '../../../../../core/entities/client/system-clients.ts';
 import { unsetSessionCookie } from '../../../cookie/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type SessionControllerContext = {
+    statsService: IEntityStatsService,
     /**
      * Only the cookie-session additions below use these (plan 088). The entity
      * routes delegate wholly to `service`, as every entity controller does.
@@ -76,7 +85,10 @@ export class SessionController {
 
     protected logger?: Logger;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: SessionControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
         this.baseURL = ctx.baseURL;
         this.identityResolver = ctx.identityResolver;
@@ -155,6 +167,22 @@ export class SessionController {
             ...deriveAmrAcr(session),
             ...subject.claims,
         };
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.SESSION, 'stats')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(sessionSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.SESSION, 'collection')

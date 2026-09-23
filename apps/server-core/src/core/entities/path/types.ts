@@ -7,6 +7,7 @@
 
 import type { Path } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IPathRepository extends IEntityRepository<Path> {
     checkUniqueness(data: Partial<Path>, existing?: Path): Promise<void>;
@@ -27,7 +28,7 @@ export type PathReadOptions = {
     realmId?: string,
 };
 
-export interface IPathService {
+export interface IPathService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext, options?: PathReadOptions): Promise<EntityRepositoryFindManyResult<Path>>;
     getOne(id: string, actor: ActorContext, realmKey?: string): Promise<Path>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Path>;

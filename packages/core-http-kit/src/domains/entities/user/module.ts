@@ -10,6 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ActivateResponse,
@@ -26,6 +28,18 @@ import type {
 } from './types';
 
 export class UserAPI extends BaseAPI implements IUserAPI {
+    async getStats(query: EntityStatsQuery<User> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('users', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('users/@schema');
+
+        return response.data;
+    }
+
     async getMany(
         options?: EntityQueryInput<User>,
     ): Promise<EntityCollectionResponse<User>> {

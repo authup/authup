@@ -14,6 +14,7 @@ import {
     AEntityDelete,
     APagination,
     ASessions,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslation,
@@ -27,9 +28,12 @@ import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { computed, defineComponent, ref } from 'vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         AEntityDelete,
         APagination,
         ASessions,
@@ -52,6 +56,9 @@ export default defineComponent({
             relations: ['user', 'client'],
             sorts: { seenAt: 'DESC' },
         }));
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.session.getStats(input);
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });
         const hasUserReadPermission = usePermissionCheck({ name: PermissionName.USER_READ });
@@ -138,6 +145,7 @@ export default defineComponent({
         ]);
 
         return {
+            loadStats,
             query,
             columns,
             handleFailed,
@@ -162,6 +170,10 @@ export default defineComponent({
         @failed="handleFailed"
     >
         <template #header="props">
+            <EntityActivity
+                type="session"
+                :load="loadStats"
+            />
             <div class="flex justify-end mb-2">
                 <VCFormSelect
                     v-model="subjectKind"

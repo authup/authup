@@ -9,10 +9,24 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { ISessionAPI, SessionDeleteManyResponse } from './types';
 
 export class SessionAPI extends BaseAPI implements ISessionAPI {
+    async getStats(query: EntityStatsQuery<Session> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('sessions', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('sessions/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>> {
         const response = await this.client.get(`sessions${buildQueryString(data)}`);
 

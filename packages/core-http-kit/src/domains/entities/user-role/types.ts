@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPISlim } from '../../types-base';
 
 import type { UserRole } from '@authup/core-kit';
@@ -12,4 +13,5 @@ import type { UserRole } from '@authup/core-kit';
 // Mirrors `UserRoleValidator` mounts in @authup/core-kit.
 export type UserRoleCreatePayload = Pick<UserRole, 'userId' | 'roleId'>;
 
-export interface IUserRoleAPI extends IEntityAPISlim<UserRole, UserRoleCreatePayload> {}
+export interface IUserRoleAPI extends IEntityAPISlim<UserRole, UserRoleCreatePayload>,
+    IEntitySchemaAPI {}

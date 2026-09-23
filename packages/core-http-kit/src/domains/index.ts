@@ -6,6 +6,7 @@
  */
 
 export * from './entities';
+export * from './stats';
 export * from './workflows';
 
 export * from './base';

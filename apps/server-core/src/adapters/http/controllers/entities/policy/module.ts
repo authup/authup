@@ -8,11 +8,12 @@
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
+    EntityStatsResponse,
     PolicyAPICheckResponse,
     PolicyCreatePayload,
     PolicyResponse,
-    PolicySavePayload,
-    PolicyUpdatePayload,
+    PolicySavePayload, 
+    PolicyUpdatePayload, 
 } from '@authup/core-http-kit';
 import { EntityType } from '@authup/core-kit';
 import { serializeError } from '@authup/errors';
@@ -30,13 +31,15 @@ import {
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import type {
-    IPolicyCheckerService,
-    IPolicyService,
+    IEntityStatsService,
+    IPolicyCheckerService, 
+    IPolicyService, 
 } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    policySchema,
+    describeQuerySchema, 
+    policySchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -46,8 +49,10 @@ import {
     getRequestRealmID,
     useRequestPolicyIdentity,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type PolicyControllerContext = {
+    statsService: IEntityStatsService,
     service: IPolicyService,
     checkerService: IPolicyCheckerService,
 };
@@ -59,9 +64,28 @@ export class PolicyController {
 
     protected checkerService: IPolicyCheckerService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: PolicyControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
         this.checkerService = ctx.checkerService;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.POLICY, 'stats')
+    @DGet('/@stats', [])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(policySchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.POLICY, 'collection')

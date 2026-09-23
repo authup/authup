@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPI } from '../../types-base';
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
@@ -18,4 +19,4 @@ export interface IIdentityProviderRoleMappingAPI extends IEntityAPI<
     IdentityProviderRoleMapping,
     IdentityProviderRoleMappingCreatePayload,
     IdentityProviderRoleMappingUpdatePayload
-> {}
+>, IEntitySchemaAPI {}

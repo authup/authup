@@ -5,14 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EventName, EventScope, EventStatsGranularity } from '@authup/core-kit';
+import { EventName, EventScope } from '@authup/core-kit';
 import type { EventStatsBucket } from '@authup/core-http-kit';
+import { StatsGranularity } from '@authup/core-http-kit';
 import { describe, expect, it } from 'vitest';
 import {
     alignEventStats,
+    alignStats,
     buildBucketAxis,
     rankEventStats,
     sumEventStats,
+    sumStats,
 } from '../../src/components/dashboard/stats';
 
 function row(bucket: string, name: `${EventName}`, count: number, scope: `${EventScope}` = EventScope.OAUTH2): EventStatsBucket {
@@ -30,7 +33,7 @@ describe('src/components/dashboard/stats', () => {
             expect(buildBucketAxis({
                 from: '2026-09-20T00:00:00.000Z',
                 to: '2026-09-22T10:15:00.000Z',
-                granularity: EventStatsGranularity.DAY,
+                granularity: StatsGranularity.DAY,
             })).toEqual([
                 '2026-09-20T00:00:00.000Z',
                 '2026-09-21T00:00:00.000Z',
@@ -42,7 +45,7 @@ describe('src/components/dashboard/stats', () => {
             expect(buildBucketAxis({
                 from: '2026-09-22T10:00:00.000Z',
                 to: '2026-09-22T12:30:00.000Z',
-                granularity: EventStatsGranularity.HOUR,
+                granularity: StatsGranularity.HOUR,
             })).toEqual([
                 '2026-09-22T10:00:00.000Z',
                 '2026-09-22T11:00:00.000Z',
@@ -54,8 +57,39 @@ describe('src/components/dashboard/stats', () => {
             expect(buildBucketAxis({
                 from: '2026-09-22T10:00:00.000Z',
                 to: '2026-09-22T10:00:00.000Z',
-                granularity: EventStatsGranularity.HOUR,
+                granularity: StatsGranularity.HOUR,
             })).toEqual(['2026-09-22T10:00:00.000Z']);
+        });
+    });
+
+    describe('alignStats', () => {
+        it('sums every row per bucket and zero-fills the rest of the axis', () => {
+            const axis = [
+                '2026-09-20T00:00:00.000Z',
+                '2026-09-21T00:00:00.000Z',
+                '2026-09-22T00:00:00.000Z',
+            ];
+
+            expect(alignStats([
+                { bucket: '2026-09-20T00:00:00.000Z', count: 3 },
+                { bucket: '2026-09-20T00:00:00.000Z', count: 2 },
+                { bucket: '2026-09-22T00:00:00.000Z', count: 1 },
+                { bucket: '2026-09-19T00:00:00.000Z', count: 7 },
+            ], axis)).toEqual([5, 0, 1]);
+        });
+
+        it('answers zeros for an empty window', () => {
+            expect(alignStats([], ['2026-09-20T00:00:00.000Z', '2026-09-21T00:00:00.000Z'])).toEqual([0, 0]);
+        });
+    });
+
+    describe('sumStats', () => {
+        it('totals every row whatever it is grouped by', () => {
+            expect(sumStats([
+                row('2026-09-20T00:00:00.000Z', EventName.LOGIN, 3),
+                { count: 4 },
+            ])).toEqual(7);
+            expect(sumStats([])).toEqual(0);
         });
     });
 

@@ -47,24 +47,35 @@ curl -X GET 'http://localhost:3000/permissions' \
 
 ## GET Statistics
 
-Some collections answer grouped counts next to their rows. The security event log does
-(`GET /events/stats`), which is what the admin console's dashboard reads. The rows to
-count are selected with the same `filter[...]` vocabulary the collection read takes;
+Most collections answer grouped counts of the rows created per time bucket next to
+their rows, under `GET /<collection>/@stats`: realms, clients, scopes, identity
+providers, keys, trust anchors, users, paths, roles, policies, permissions, sessions and
+events. The admin console's dashboard and the activity boxes above each list read them.
+The rows to count are selected with the same `filter[...]` vocabulary the collection
+read takes, and the caller is gated exactly like that read;
 `granularity` (`hour` or `day`, default `day`) sets the bucket width and `days`
 (default `30`) the window, counted back from now. The window times the buckets per day
 may not exceed 744 (31 days of hours).
 
 ```shell
-curl -X GET 'http://localhost:3000/events/stats?filter[name]=login&days=7' \
+curl -X GET 'http://localhost:3000/events/@stats?filter[name]=login&days=7' \
   -H 'Authorization: Bearer ***'
 ```
+
+`@` marks a reserved segment that can never be a name or an id, which is why a
+statistic of `users` cannot collide with a user named `stats`.
 
 ### Response
 
 Only buckets holding rows are listed; a consumer fills the gaps between `from` and `to`
 with zeros. The window holds exactly `days` times the buckets per day bucket starts, the
-last of them the bucket holding `to`, and `enabled` says whether the deployment records
-events at all. A reader without `event_read` is answered the counts of its own rows.
+last of them the bucket holding `to`, and `total` counts every row the filter admits,
+regardless of the window, so `GET /sessions/@stats?filter[expiresAt]=>2026-09-22T10:15:00.000Z`
+answers the active sessions. Events group their buckets by `scope` and `name` and add
+`enabled`, which says whether the deployment records events at all, plus `retentionDays`
+and `entityRetentionDays`, how long security events and entity create/update/delete
+events are kept (`0` = forever), so a client never offers a window past them. A reader without
+`event_read` is answered the counts of its own rows.
 
 ```json
 {
@@ -87,7 +98,10 @@ events at all. A reader without `event_read` is answered the counts of its own r
         "to": "2026-09-22T10:15:00.000Z",
         "granularity": "day",
         "days": 7,
+        "total": 1283,
         "enabled": true,
+        "retentionDays": 90,
+        "entityRetentionDays": 7,
         "schema": {}
     }
 }

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPI } from '../../types-base';
 
 import type { RoleAttribute } from '@authup/core-kit';
@@ -18,4 +19,5 @@ export type RoleAttributeCreatePayload = Pick<RoleAttribute, 'name' | 'roleId'> 
 export type RoleAttributeUpdatePayload = Partial<RoleAttributeCreatePayload>;
 export type RoleAttributeSavePayload = RoleAttributeCreatePayload;
 
-export interface IRoleAttributeAPI extends IEntityAPI<RoleAttribute, RoleAttributeCreatePayload, RoleAttributeUpdatePayload> {}
+export interface IRoleAttributeAPI extends IEntityAPI<RoleAttribute, RoleAttributeCreatePayload, RoleAttributeUpdatePayload>,
+    IEntitySchemaAPI {}

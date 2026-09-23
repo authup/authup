@@ -10,6 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IIdentityProviderRoleMappingAPI,
@@ -18,6 +19,12 @@ import type {
 } from './types';
 
 export class IdentityProviderRoleMappingAPI extends BaseAPI implements IIdentityProviderRoleMappingAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('identity-provider-role-mappings/@schema');
+
+        return response.data;
+    }
+
     async getMany(data: EntityQueryInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.get(`identity-provider-role-mappings${buildQueryString(data)}`);
 

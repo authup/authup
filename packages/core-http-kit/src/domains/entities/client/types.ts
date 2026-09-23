@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Client, ClientSecretRotatePayload } from '@authup/core-kit';
@@ -46,7 +47,8 @@ export type ClientSecretRotateResponseMeta = {
 
 export type ClientSecretRotateResponse = EntityRecordResponse<Client, ClientSecretRotateResponseMeta>;
 
-export interface IClientAPI extends IEntityAPI<Client, ClientCreatePayload, ClientUpdatePayload> {
+export interface IClientAPI extends IEntityAPI<Client, ClientCreatePayload, ClientUpdatePayload>,
+    IEntitySchemaAPI, IEntityStatsAPI<Client> {
     createOrUpdate(idOrName: string, data: ClientSavePayload) : Promise<EntityRecordResponse<Client>>;
 
     rotateSecret(id: Client['id'], data?: ClientSecretRotatePayload) : Promise<ClientSecretRotateResponse>;

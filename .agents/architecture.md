@@ -513,7 +513,7 @@ PUBLISHES the vocabulary is a projection of it, serving the same
 - `meta.schema` on every query-capable response (issue #1649): the
   full description on a collection read, the `RECORD_QUERY_PARAMETERS` subset
   on a record read;
-- `GET /schemas` and `GET /schemas/:name`;
+- `GET /schemas` and `GET /<collection>/@schema`;
 - the OpenAPI document's root `x-authup-schemas` map, projected at build time.
 
 None of the three re-derives anything: `describeSchemaRegistry()`
@@ -666,17 +666,27 @@ Nothing about a document generated from stale dists LOOKS wrong, so if the
 payload types ever thin out, suspect resolution before suspecting the
 annotations.
 
-**`GET /schemas` + `GET /schemas/:name`** (`controllers/workflows/schema/`,
-`core/query/discovery.ts`; typed as `client.schema.getMany()/getOne(name)` in
-`@authup/core-http-kit`). The response is deliberately NOT the entity envelope:
-a schema is not an entity, so the collection `meta` carries what a reader of a
-static bound needs, the `version` that produced it, the `hash` a cached copy is
-compared against, and `recordParameters`, the subset a single-record read
-decodes. That last one is one list shared by every entity, so it is advertised
-once in `meta` rather than repeated in 26 descriptions or served from a second
-endpoint. `getOne` takes a plain string rather than an `EntityType`, because the
-registry is documented as extensible and the natural caller reads the name back
-out of a response's own `meta.schema`.
+**`GET /schemas` + `GET /<collection>/@schema`** (`controllers/workflows/schema/`,
+`core/query/discovery.ts`; typed as `client.schema.getMany()` and
+`client.<entity>.getSchema()` in `@authup/core-http-kit`). The response is
+deliberately NOT the entity envelope: a schema is not an entity, so `meta`
+carries what a reader of a static bound needs, the `version` that produced it,
+the `hash` a cached copy is compared against, and `recordParameters`, the
+subset a single-record read decodes. That last one is one list shared by every
+entity, so it is advertised once in `meta` rather than repeated in 26
+descriptions. The per-entity facet is served by ONE route pattern,
+`/:collection/@schema` on `SchemaController` (`@DController('')`), mapped onto
+a registry name through `SCHEMA_COLLECTIONS` (`schema/constants.ts`), and not by
+a method on each entity controller: it needs the registry and nothing of the
+entity's, so 26 copies would buy nothing. That controller is registered ahead
+of every entity controller, which is what keeps `/users/:id` from taking
+`@schema` as an id; *should serve every mapped collection its own schema*
+(`workflows/schema.spec.ts`) is the proof, and *should map every registered
+schema but the owner-scoped user authenticator* pins the map against the
+registry. The user authenticator is the one registered schema without a facet
+(its collection is `/users/:id/authenticators`); the bulk read still describes
+it. The bulk read stays for now as the one call carrying every description and
+the registry `hash`.
 
 Where it is NOT mounted is the design:
 
@@ -685,10 +695,13 @@ Where it is NOT mounted is the design:
   under a path implying it varies by realm.
 - **never `.well-known/*`** (RFC 8615): authup's `.well-known` is the
   realm-scoped OIDC surface.
-- **never a per-entity `/roles/schema`.** `schema` matches the entity name
-  charset `/^[a-z0-9-_.]+$/`, so that path is a valid `GET /roles/:id` lookup
-  today and would shadow a role someone named `schema`. A genuine route
-  collision, not a stylistic preference.
+- **never a per-entity `/roles/schema`, always `/roles/@schema`.** `schema`
+  matches the entity name charset `/^[a-z0-9-_.]+$/`, so that path is a valid
+  `GET /roles/:id` lookup and would shadow a role someone named `schema`.
+  **`@` marks a reserved segment that can never be a row key** (it is outside
+  the charset, and ids are uuids): `@me` / `@self` name the caller, `@schema`
+  and `@stats` name a facet of the collection. A facet route must still be
+  registered before the `/:id` read it would otherwise fall into.
 
 **Authenticated, ungated, and switchable.** `ForceLoggedInMiddleware` with no
 permission gate: the descriptions are the upper bound of what may be ASKED,
@@ -715,9 +728,9 @@ reads themselves, which stay permission-gated and per-actor narrowed.
 Disabled, both routes answer 404 and `meta.schema` is unaffected. The 404 is
 what an AUTHENTICATED caller sees: `ForceLoggedInMiddleware` runs before the
 flag is read, so an anonymous request is refused with 401 either way, and the
-flag's state is not observable without a credential. The single
-lookup guards own-property, because the description record is a plain object
-literal and `/schemas/constructor` would otherwise answer with a member of
+flag's state is not observable without a credential. The facet lookup
+guards own-property, because the collection map is a plain object literal and
+`/constructor/@schema` would otherwise answer with a member of
 `Object.prototype`.
 
 **No handler sets an ETag on any of this, and that is not an omission.** routup
@@ -765,13 +778,103 @@ generated page is absent from a plain checkout, so `config.mjs` carries an
 
 **Two plan-077 questions are settled and should not be re-litigated.**
 Per-actor EFFECTIVE vocabulary, when it comes, evolves `meta.schema` and not a
-`GET /schemas/:name?effective=true`: `meta.schema` rides a response that is
+`GET /<collection>/@schema?effective=true`: `meta.schema` rides a response that is
 already per-actor and already uncacheable, while an effective mode on the
 discovery route would make the body depend on the caller and break the
 fingerprint comparison the whole surface is built around. And the discovery
 toggle ships default-ON: the routes are authenticated, they publish an upper
 bound rather than an entitlement, and a default-off documentation surface is
 one nobody discovers.
+
+### Entity statistics (`GET /<entity>/@stats`)
+
+Thirteen entities answer grouped counts over their own table: realms, clients,
+scopes, identity providers, keys, trust anchors, users, paths, roles, policies,
+permissions, sessions and events (every admin-console section with a list).
+The response is `{ data: [{ bucket, count, ...groupKeys }], meta: { from, to,
+granularity, days, total, schema } }` (`EntityStatsResponse` in
+`@authup/core-http-kit`, not the entity envelope: a bucket is not an entity).
+Composite statistics that span entities (distinct active users) get a root
+`GET /stats/<name>` family once the first exists; none does yet.
+
+- **One service, one adapter, a declaration per entity.**
+  `EntityStatsService` (`core/stats/`) over an `EntityStatsDefinition` (the
+  entity's list schema, `dateColumn` defaulting to `createdAt`, `groupBy`, the
+  route-realm column, the list's gate as `scope`, extra `meta`), and one
+  `EntityStatsRepositoryAdapter` (`app/modules/database/repositories/stats/`)
+  over any TypeORM target. The definitions are wired in the HTTP controller
+  factory (`createStatsService`), because the cache lives in a module the
+  database module does not depend on. Adding an entity is a definition plus a
+  `@stats` method on its controller.
+- **The gate is the list's, by construction.** Every converted list gates
+  through `scopeReadQuery` (`core/query/scope.ts`: pre-gate, compile, the
+  verdict lowered onto the query, an optional ownership term ORed in or
+  standing alone for a self-service list), exposed as the service's
+  `scopeRead(query, actor)` (`IReadScoper`). `getMany` and the statistic call
+  the same method, so the two cannot disagree about which rows an actor
+  reaches. A `post` verdict (a reach that does not lower) runs the list's
+  per-row loop, while the statistic narrows to the ownership term or to
+  nothing (`narrowReadScope`): a grouped count has no row to evaluate, and
+  failing closed cannot over-disclose. The price is that a reader whose
+  grant carries a non-lowering policy sees a full list next to a statistic of 0 on the
+  seven entities without an ownership term (role, scope, permission, policy,
+  key, trust anchor, path). Moving the gate into `scopeRead` also moved the
+  decode ahead of the pre-gate in the services that pre-gated first, so an
+  unpermitted caller sending a malformed filter now gets 400 rather than 403;
+  the vocabulary is public (`/docs/openapi.json`), so nothing is disclosed.
+  Three lists carry no compile: clients
+  pre-gate only (`compile: false`; the secret is field-gated), realms and
+  identity providers are anonymous (no `scope`).
+- **Filters and window.** The rows to count are an ordinary rapiq
+  `filter[...]` decoded through the entity schema with `parameters:
+  ['filters']` (the route carries `@DQuerySchema(<type>, 'stats')`, whose
+  shape contributes the filter plus `granularity` and `days` to the OpenAPI
+  document, and passes `describeQuerySchema(<schema>, FILTERS_QUERY_PARAMETERS)`
+  into `serveEntityStats`, so the OpenAPI coverage guard still checks marker
+  and schema name the same entity). `granularity` (`hour` | `day`, default `day`)
+  is a GROUP BY and `days` (default 30) names the window; both stay outside
+  rapiq until tada5hi/rapiq#938 (an aggregation parameter with a bucket
+  function) lands. The window is HALF-OPEN and holds exactly `days` times the
+  buckets per day bucket starts, appended onto the IR as `gte`/`lt` on the
+  date column (rapiq 2.3.0 binds a date operand in the column's storage form,
+  tada5hi/rapiq#939), so a consumer zero-fills between `from` and `to`. The
+  ceiling is `STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it). The
+  route realm (`/realms/:realmId/...`) is appended as a condition on the
+  definition's realm column. That makes a statistic under a realm mount
+  NARROWER than its list for the lists that ignore the route realm on read
+  (user, session, permission, policy, client, identity provider, a
+  pre-existing quirk of theirs): the console never uses the realm mount,
+  and narrower cannot disclose.
+- **`meta.total`** counts every row the filter and the gate admit, regardless
+  of the window, cached under the scope alone (`<key>:total`), so switching
+  the window reuses it instead of counting a table like `auth_events` again. "Active sessions" is therefore the
+  total under `filter[expiresAt]=>now`, no statistic of its own.
+- **One bucket expression.** The per-dialect string (`to_char` /
+  `DATE_FORMAT` / `strftime`, normalized back to an ISO instant) lives in the
+  adapter; all 13 date columns are `@CreateDateColumn`s. Buckets count
+  `DISTINCT id`: a filter through a to-many relation (`policy.children`) joins
+  one row per match, and a plain `COUNT(*)` counted a composite policy once
+  per matching child.
+- **Cache.** `ICache`, `STATS_CACHE_TTL` (60s), keyed by the statistic, the
+  actor, the parameters and `queryCodec.encode` of the LOWERED query (taken
+  BEFORE the window is appended, since `to` moves with every request). The
+  whole gate runs before the lookup and what it produced is in the key: reach
+  is a property of the REQUEST (a token narrowed to its client, a bearer
+  without `global`), so two requests by one identity can lower differently and
+  a restricted one must never read the broad one's answer; two spellings of
+  one filter still share an answer.
+- **Typed client and CLI.** `client.<entity>.getStats(query?)` on the 13
+  sub-APIs (`IEntityStatsAPI`); `EntityAPIDispatch` carries it as optional, so
+  the CLI derives `authup api <entity> stats` like its other verbs.
+
+Pinned by `test/unit/core/query/scope.spec.ts` (the verdict matrix of the
+gate), `test/unit/core/stats/module.spec.ts` (window, ceiling, cache keys and
+partitioning, `total`, `post` without ownership, an ungated definition) and
+`test/unit/http/controllers/entities/entity-stats.spec.ts` (all 13 routes
+reach the statistic rather than `/:id`, the realm filter and mount, the
+active-sessions filter, own sessions for an unprivileged user, the user list's
+403 and the anonymous realm read). The dialect expressions are what the
+mysql/psql runs exercise.
 
 ### Adapter Implementation
 
@@ -4406,8 +4509,9 @@ stops working; the group is what keeps the two vocabularies apart.
 (its client API is nested under a user, which is why `EntityTypeMap`
 deliberately omits it) and keeps every other value `pickEntityAPI` resolves on
 a `Client`, names the command in kebab-case and gives it the verbs its
-dispatch has (`list`/`get`/`create`/`update`/`delete` over
-`getMany`/`getOne`/`create`/`update`/`delete`), so an entity-shaped sub-API
+dispatch has (`list`/`get`/`create`/`update`/`delete`/`stats`/`schema` over
+`getMany`/`getOne`/`create`/`update`/`delete`/`getStats`/`getSchema`; `stats`
+takes `--filter`, `--granularity` and `--days`), so an entity-shaped sub-API
 added to the kit is a command with no CLI edit. Query flags are the URL
 parameters the server documents, assembled and decoded through
 `@rapiq/codec-url` into the `IQuery` the typed APIs accept; several filter
@@ -8220,62 +8324,20 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Dashboard statistics:** `GET /events/stats` (+ `/realms/:realmId/events/stats`,
-  declared BEFORE the record read so `stats` never reaches a uuid compare)
-  answers grouped counts per `(bucket, scope, name)` over a window: the
-  query-time half of plan 097, stage 1, with no schema change and no worker
-  (`EventStatsService`, `core/entities/event/stats.ts`, built by the HTTP
-  controller factory because the cache lives in a module the database module
-  does not depend on). The rows to count are an ordinary rapiq `filter[...]`
-  decoded through the event schema with `parameters: ['filters']` (the
-  bulk-revoke shape; the route carries `@DQuerySchema(EntityType.EVENT,
-  'filters')` and answers the filters vocabulary under `meta.schema` through
-  `FILTERS_QUERY_PARAMETERS`), so the console's realm scope is the list's own
-  `filter[realmId]=<id>,null` and "logins only" or "one client" is a filter
-  rather than a group dimension. Two parameters are NOT filters and are the
-  fallback for tada5hi/rapiq#938 (an aggregation parameter with a bucket
-  function): `granularity` (`hour` | `day`, default `day`) is a GROUP BY, and
-  `days` (default 30) names the window. The window itself is HALF-OPEN and
-  holds exactly `days` times the buckets per day bucket starts: `from` is the
-  bucket holding `now` minus that many widths less one, `to` is `now`, and
-  the service appends `gte('createdAt', from)` and `lt('createdAt', to)` onto
-  the IR like any other condition, so a consumer zero-fills between the two
-  and a future-dated row never lands past `to`. That ride is what rapiq
-  2.3.0 bought (tada5hi/rapiq#939, filed from here): the typeorm adapter
-  binds a date operand in the column's storage form, where a raw ISO string
-  compared wrong on sqlite (the stored `'YYYY-MM-DD HH:MM:SS'` sorts below
-  any ISO literal on the `' '` vs `'T'` byte). The ceiling is
-  `EVENT_STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it).
-  **The gate is the list's, minus its per-row loop.**
-  No `EVENT_READ` counts own rows only; `compile(EVENT_READ)` lowers `allow` /
-  `conditional` (OR'd with ownership, through the same `applyQuery` the list
-  uses, which applies nothing but the WHERE for a filters-only IR) / `deny`
-  onto the grouped builder; and `post` fails CLOSED to own rows, since a
-  grouped count has no row to evaluate and the alternative is over-disclosure.
-  The bucket expression is the one per-dialect string in the repository
-  (`to_char` / `DATE_FORMAT` / `strftime`, normalized back to an ISO instant),
-  riding the `(realm_id, created_at)` index. Answers are cached in `ICache`
-  for `EVENT_STATS_CACHE_TTL` (60s) under a key of actor, route realm, the
-  validated parameters, `queryCodec.encode` of the LOWERED query (taken
-  BEFORE the window is appended, since `to` moves with every request) and
-  the owner constraint. The whole gate therefore runs before the lookup, and
-  what it produced is in the key: reach is a property of the REQUEST (a
-  token narrowed to its client, a bearer without `global`), not of the
-  identity, so two requests by one identity can lower to different queries
-  and a restricted one must never read the broad one's answer; two
-  spellings of one filter still share an answer, since the key is the
-  decoded IR rather than the wire record.
-  `meta.enabled` mirrors `eventLogEnabled`, which is how the console learns
-  the log is off without that fact being published on the anonymous `GET /`.
-  Typed client: `client.event.getStats({ filters?, granularity?, days? })`,
-  answering `EventStatsResponse` (`{ data: EventStatsBucket[], meta }`, not
-  the entity envelope: a bucket is not an entity). Pinned by
-  `test/unit/core/entities/event/stats.spec.ts` (the gate matrix on the
-  fakes, the ceiling, the cache keys) and
-  `test/unit/http/controllers/entities/event-stats.spec.ts` (day and hour
-  buckets on a real database, the realm filter, both mounts, the own-rows
-  scope, a disallowed filter key, `enabled: false`); the dialect expressions
-  are what the mysql/psql runs exercise.
+- **Dashboard statistics:** `GET /events/@stats` (+ `/realms/:realmId/events/@stats`)
+  is the event instance of the generic entity statistic (see *Entity
+  statistics* below): grouped by `(bucket, scope, name)` (`groupBy`), realm
+  and everything else a FILTER, so the console's realm scope is the list's own
+  `filter[realmId]=<id>,null` and "logins only" is a filter rather than a group
+  dimension. `meta.enabled` mirrors `eventLogEnabled`, which is how the console
+  learns the log is off without that fact being published on the anonymous
+  `GET /`. The gate is the list's (`EventService.scopeRead`): no `EVENT_READ`
+  counts own rows only. Typed client: `client.event.getStats({ filters?,
+  granularity?, days? })`, answering `EventStatsResponse`. Pinned by
+  `test/unit/core/stats/module.spec.ts` (the event definition drives the gate
+  matrix) and `test/unit/http/controllers/entities/event-stats.spec.ts` (day
+  and hour buckets on a real database, both mounts, the own-rows scope, a
+  disallowed filter key, `enabled: false`).
 - **Admin UI:** the landing page `apps/client-admin-console/src/pages/index.vue`
   is the dashboard over that read, scoped by the header realm switcher like
   every list page (`filters: { realmId: [<realm>, null] }`), with a 24h / 7d /
@@ -8288,9 +8350,44 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   root and re-read on the colour-mode flip since a canvas cannot read css;
   green was rejected by the palette validator for deuteranopia) and a ranked
   `(scope, name)` list linking to `/events`. `meta.enabled === false` renders
-  a warning alert in place of the charts. The pure helpers (bucket axis,
-  zero-fill, totals, ranking) live in `components/dashboard/stats.ts` and are
-  pinned by `test/unit/dashboard-stats.spec.ts`. The Events section keeps its
+  a warning alert in place of the charts. Above the event row, two tile groups
+  read the entity statistics (Identities: users, clients, active sessions,
+  the last being the session `total` under `gt('expiresAt', now)` taken per
+  load; Configuration: roles, permissions, identity providers), each showing
+  `meta.total` and the window's growth, linking to its list and dropped when
+  its read answers 403. Every entity list page but Events renders
+  `components/stats/EntityActivity.vue` as the first child of its
+  collection's `#header` slot (not a sibling root: the parent passes
+  `@failed` through attribute fallthrough onto the single root): a Total box
+  (the entity's own `@stats` total) and Created / Updated / Deleted boxes
+  counted from the entity-CRUD audit rows (`GET /events/@stats` with
+  `filter[scope]=entity&filter[refType]=<type>`, grouped by name), because
+  updates and deletions are recorded nowhere else. They follow the realm
+  switcher only, not the list's folder or search (an audit row carries its
+  owner realm and nothing else of the list's scope), the three operation
+  boxes need `event_read` (without it the event read answers own rows, so
+  they are dropped and the read stays `paused`), and a 24h / 7d / 30d / 90d
+  switch picks their window. That switch is `components/stats/StatsWindowSwitch.vue`,
+  shared with the dashboard: it disables a window longer than the retention
+  the event read reports (`meta.entityRetentionDays` on the entity page,
+  `meta.retentionDays` on the dashboard, 0 = forever), with the reason as its
+  title, instead of silently counting fewer rows than happened. Rejected: a
+  30-day trend strip of daily creation bars, which showed a shape but not the
+  operations a reader of the list asks about. `useEntityStats`
+  (`composables/entity-stats.ts`) is the shared read. It reloads on the
+  ENCODED scope (`buildQueryString` of the filters plus the window), never on
+  object identity, so a page recomputing an equal filter does not refetch; it
+  waits while `paused` (the activity boxes pause their event read until
+  `event_read` is known); it keeps the previous answer up, dimmed on `busy`, while a
+  new scope loads and drops it only when that read fails; it drops a stale
+  answer; and a 403 raises `forbidden` instead of calling `onError`. Tiles
+  render only once answered (never a fabricated 0) and pass no `onError`, so
+  an unreachable API toasts once, from the event read. `useEventStats` is its
+  event wrapper. The pure
+  helpers (bucket axis, zero-fill, totals, ranking) live in
+  `components/dashboard/stats.ts` and are pinned by
+  `test/unit/dashboard-stats.spec.ts`, the composable by
+  `test/unit/entity-stats.spec.ts`. The Events section keeps its
   list and detail pages: `apps/client-admin-console/src/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is

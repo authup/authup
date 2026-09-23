@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EventName, EventStatsGranularity } from '@authup/core-kit';
+import { EventName } from '@authup/core-kit';
 import type { EventStatsBucket } from '@authup/core-http-kit';
-import { Client as HTTPClient } from '@authup/core-http-kit';
+import { Client as HTTPClient, StatsGranularity } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import {
     afterAll,
@@ -85,7 +85,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
     it('answers day buckets per (scope, name) over the default window', async () => {
         const { data, meta } = await suite.client.event.getStats();
 
-        expect(meta.granularity).toEqual(EventStatsGranularity.DAY);
+        expect(meta.granularity).toEqual(StatsGranularity.DAY);
         expect(meta.days).toEqual(30);
         expect(meta.enabled).toBe(true);
         expect(meta.from).toMatch(DAY_BUCKET);
@@ -106,7 +106,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
     it('answers hour buckets when asked to', async () => {
         const { data, meta } = await suite.client.event.getStats({ granularity: 'hour', days: 1 });
 
-        expect(meta.granularity).toEqual(EventStatsGranularity.HOUR);
+        expect(meta.granularity).toEqual(StatsGranularity.HOUR);
         expect(meta.from).toMatch(HOUR_BUCKET);
         for (const row of data) {
             expect(row.bucket).toMatch(HOUR_BUCKET);
@@ -141,12 +141,12 @@ describe('src/http/controllers/entities/event (stats)', () => {
     });
 
     it('takes the realm from the nested mount, by id and by name', async () => {
-        const byId = await httpRequest(suite, 'GET', `/realms/${realmBId}/events/stats`, { headers: { Authorization: adminAuthorization } });
+        const byId = await httpRequest(suite, 'GET', `/realms/${realmBId}/events/@stats`, { headers: { Authorization: adminAuthorization } });
         expect(byId.status).toEqual(200);
         const { data: dataB } = await byId.json();
         expect(countOf(dataB, EventName.LOGIN)).toEqual(1);
 
-        const byName = await httpRequest(suite, 'GET', '/realms/master/events/stats?days=7', { headers: { Authorization: adminAuthorization } });
+        const byName = await httpRequest(suite, 'GET', '/realms/master/events/@stats?days=7', { headers: { Authorization: adminAuthorization } });
         expect(byName.status).toEqual(200);
         const { data: dataMaster } = await byName.json();
         expect(countOf(dataMaster, EventName.LOGIN)).toBeGreaterThanOrEqual(2);
@@ -175,7 +175,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
     });
 
     it('requires an identity', async () => {
-        const response = await httpRequest(suite, 'GET', '/events/stats');
+        const response = await httpRequest(suite, 'GET', '/events/@stats');
         expect(response.status).toEqual(401);
     });
 });
@@ -184,6 +184,8 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.eventLogEnabled = false;
+            config.eventLogRetentionDays = 30;
+            config.eventLogEntityRetentionDays = 3;
         },
     });
 
@@ -199,5 +201,12 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         const { meta } = await suite.client.event.getStats({ days: 7 });
 
         expect(meta.enabled).toBe(false);
+    });
+
+    it('reports both retentions, so a client never offers a window past them', async () => {
+        const { meta } = await suite.client.event.getStats({ days: 7 });
+
+        expect(meta.retentionDays).toEqual(30);
+        expect(meta.entityRetentionDays).toEqual(3);
     });
 });

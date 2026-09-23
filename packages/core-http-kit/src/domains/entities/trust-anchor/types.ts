@@ -7,13 +7,14 @@
 
 import type { TrustAnchor } from '@authup/core-kit';
 import type { EntityQueryInput } from '../../../helpers';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type TrustAnchorCreatePayload = Pick<TrustAnchor, 'name' | 'certificate'> &
     Partial<Pick<TrustAnchor, 'enabled' | 'realmId'>>;
 export type TrustAnchorUpdatePayload = Partial<Pick<TrustAnchor, 'name' | 'enabled'>>;
 
-export interface ITrustAnchorAPI {
+export interface ITrustAnchorAPI extends IEntitySchemaAPI, IEntityStatsAPI<TrustAnchor> {
     getMany(data?: EntityQueryInput<TrustAnchor>): Promise<EntityCollectionResponse<TrustAnchor>>;
 
     getOne(id: TrustAnchor['id'], record?: EntityQueryInput<TrustAnchor>): Promise<EntityRecordResponse<TrustAnchor>>;

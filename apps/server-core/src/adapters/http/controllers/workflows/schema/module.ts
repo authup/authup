@@ -6,8 +6,8 @@
  */
 
 import type {
+    EntitySchemaResponse,
     SchemaCollectionResponse,
-    SchemaRecordResponse,
     SchemaResponseMeta,
 } from '@authup/core-http-kit';
 import { NotFoundError } from '@ebec/http';
@@ -29,6 +29,7 @@ import {
     describeQuerySchemas,
 } from '../../../../../core/index.ts';
 import { PACKAGE_PATH } from '../../../../../path.ts';
+import { SCHEMA_COLLECTIONS } from './constants.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { SchemaControllerContext, SchemaControllerOptions } from './types.ts';
 
@@ -56,8 +57,13 @@ import type { SchemaControllerContext, SchemaControllerOptions } from './types.t
  * path is routed is a property of the software, published in its OpenAPI
  * document, not of the deployment.
  */
+/**
+ * Registered ahead of every entity controller: `/<collection>/@schema` would
+ * otherwise reach that controller's `/:id` read first. `@` is outside the
+ * name charset, so no row key can shadow it in turn.
+ */
 @DTags('schema')
-@DController('/schemas')
+@DController('')
 export class SchemaController {
     protected options: SchemaControllerOptions;
 
@@ -69,7 +75,7 @@ export class SchemaController {
         this.options = ctx.options;
     }
 
-    @DGet('', [ForceLoggedInMiddleware])
+    @DGet('/schemas', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
     ): Promise<SchemaCollectionResponse> {
@@ -83,14 +89,21 @@ export class SchemaController {
         return { data, meta: { ...meta, total: data.length } };
     }
 
-    @DGet('/:name', [ForceLoggedInMiddleware])
+    /**
+     * Flat only, never under `/realms/:realmId`: a schema is realm
+     * independent, so a realm-scoped copy would imply it varies by realm.
+     */
+    @DGet('/:collection/@schema', [ForceLoggedInMiddleware])
     async getOne(
-        @DPath('name') name: string,
+        @DPath('collection') collection: string,
         @DContext() event: IAppEvent,
-    ): Promise<SchemaRecordResponse> {
+    ): Promise<EntitySchemaResponse> {
         this.assertEnabled();
 
-        const data = describeQuerySchemaByName(name);
+        const name = Object.hasOwn(SCHEMA_COLLECTIONS, collection) ?
+            SCHEMA_COLLECTIONS[collection] :
+            undefined;
+        const data = name ? describeQuerySchemaByName(name) : undefined;
         if (!data) {
             throw new NotFoundError();
         }

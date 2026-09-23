@@ -10,6 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IPermissionAPI,
@@ -20,6 +22,18 @@ import type {
 } from './types';
 
 export class PermissionAPI extends BaseAPI implements IPermissionAPI {
+    async getStats(query: EntityStatsQuery<Permission> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('permissions', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('permissions/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
         const response = await this.client.get(`permissions${buildQueryString(data)}`);
         return response.data;

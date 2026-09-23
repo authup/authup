@@ -5,13 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { StatsGranularity } from '@authup/core-http-kit';
+import type { EntityStatsQuery } from '@authup/core-http-kit';
 import { createURLCodec } from '@rapiq/codec-url';
 import type { IQuery } from '@rapiq/core';
-import type { EntityQueryArgs } from './types.ts';
+import type { EntityQueryArgs, EntityStatsArgs } from './types.ts';
 
 const codec = createURLCodec();
 
-function readPageNumber(name: string, value: string | undefined) : string | undefined {
+const GRANULARITIES = Object.values(StatsGranularity) as string[];
+
+function readInteger(name: string, value: string | undefined) : string | undefined {
     if (value === undefined) {
         return undefined;
     }
@@ -21,6 +25,10 @@ function readPageNumber(name: string, value: string | undefined) : string | unde
     }
 
     return value;
+}
+
+function isStatsGranularity(value: string) : value is `${StatsGranularity}` {
+    return GRANULARITIES.includes(value);
 }
 
 /**
@@ -53,12 +61,12 @@ export function readEntityQuery(args: EntityQueryArgs) : IQuery | undefined {
         params.set('include', args.include);
     }
 
-    const limit = readPageNumber('limit', args.limit);
+    const limit = readInteger('limit', args.limit);
     if (limit !== undefined) {
         params.set('page[limit]', limit);
     }
 
-    const offset = readPageNumber('offset', args.offset);
+    const offset = readInteger('offset', args.offset);
     if (offset !== undefined) {
         params.set('page[offset]', offset);
     }
@@ -68,4 +76,34 @@ export function readEntityQuery(args: EntityQueryArgs) : IQuery | undefined {
     }
 
     return codec.decode(params.toString()) ?? undefined;
+}
+
+/**
+ * The filter is decoded like a list read's; the window and the bucket
+ * width travel as plain parameters next to it.
+ */
+export function readEntityStatsQuery<
+    T extends Record<string, any> = Record<string, any>,
+>(args: EntityStatsArgs) : EntityStatsQuery<T> {
+    const query : EntityStatsQuery<T> = {};
+
+    const filters = readEntityQuery({ filter: args.filter })?.filters;
+    if (filters) {
+        query.filters = filters;
+    }
+
+    if (args.granularity !== undefined) {
+        if (!isStatsGranularity(args.granularity)) {
+            throw new Error(`--granularity must be one of ${GRANULARITIES.join(', ')}.`);
+        }
+
+        query.granularity = args.granularity;
+    }
+
+    const days = readInteger('days', args.days);
+    if (days !== undefined) {
+        query.days = Number(days);
+    }
+
+    return query;
 }

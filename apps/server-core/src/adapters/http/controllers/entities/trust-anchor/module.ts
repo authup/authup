@@ -8,8 +8,9 @@
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
-    TrustAnchorCreatePayload,
-    TrustAnchorUpdatePayload,
+    EntityStatsResponse,
+    TrustAnchorCreatePayload, 
+    TrustAnchorUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { TrustAnchor } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -25,11 +26,12 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import type { ITrustAnchorService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, ITrustAnchorService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    trustAnchorSchema,
+    describeQuerySchema, 
+    trustAnchorSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -38,8 +40,10 @@ import {
     buildActorContext,
     getRequestRealmID,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type TrustAnchorControllerContext = {
+    statsService: IEntityStatsService,
     service: ITrustAnchorService,
 };
 
@@ -48,8 +52,27 @@ export type TrustAnchorControllerContext = {
 export class TrustAnchorController {
     protected service: ITrustAnchorService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: TrustAnchorControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.TRUST_ANCHOR, 'stats')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(trustAnchorSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.TRUST_ANCHOR, 'collection')

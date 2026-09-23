@@ -30,14 +30,16 @@ import type {
     ClientSecretRotateResponse,
     ClientUpdatePayload,
     EntityCollectionResponse,
-    EntityRecordResponse,
+    EntityRecordResponse, 
+    EntityStatsResponse, 
 } from '@authup/core-http-kit';
-import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
+import type { IClientRepository, IClientService, IEntityStatsService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     OAuth2ScopeAttributesResolver,
     RECORD_QUERY_PARAMETERS,
-    clientSchema,
-    describeQuerySchema,
+    clientSchema, 
+    describeQuerySchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -48,8 +50,10 @@ import {
     useRequestIdentity,
     useRequestScopes,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type ClientControllerContext = {
+    statsService: IEntityStatsService,
     service: IClientService,
     repository: IClientRepository,
 };
@@ -61,9 +65,28 @@ export class ClientController {
 
     protected repository: IClientRepository;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: ClientControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
         this.repository = ctx.repository;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.CLIENT, 'stats')
+    @DGet('/@stats', [])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(clientSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.CLIENT, 'collection')

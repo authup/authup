@@ -9,14 +9,12 @@ import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
-import type { ICondition } from '@rapiq/core';
+import type { ICondition, IQuery } from '@rapiq/core';
 import {
-    and, 
-    eq, 
-    inArray, 
-    isFilter, 
-    isFilters, 
-    or,
+    and,
+    eq,
+    isFilter,
+    isFilters,
 } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
@@ -25,7 +23,8 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionManager, ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import type { ReadScope } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
 export type SessionServiceContext = {
@@ -57,53 +56,29 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             session.subKind === actor.identity.type;
     }
 
+    async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
+        return scopeReadQuery(query, actor, {
+            names: [PermissionName.SESSION_READ],
+            ownership: actor.identity ?
+                and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
+                null,
+            selfService: true,
+        });
+    }
+
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         const parsed = await decodeQuery(query, { schema: sessionSchema, actor });
 
-        let canReadAll = true;
-        try {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_READ });
-        } catch (e) {
-            if (!actor.identity) {
-                throw e;
-            }
-            canReadAll = false;
-        }
-
-        if (!canReadAll) {
-            // self-service: only the actor's own sessions
-            return this.repository.findMany(parsed, {
-                owner: {
-                    sub: actor.identity!.data.id,
-                    subKind: actor.identity!.type,
-                },
-            });
-        }
-
-        // Compile SESSION_READ into a row condition (#3286 phase 3). Own sessions
-        // are always readable, so ownership composes as an OR-alternative — the
-        // whole gate runs as WHERE and pagination/totals stay exact. Only a
-        // non-expressible policy falls back to the per-row loop below.
-        const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.SESSION_READ });
-        if (compiled.verdict !== 'post') {
-            const ownership = actor.identity ?
-                and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
-                null;
-
-            let scoped = parsed;
-            if (compiled.verdict === 'deny') {
-                scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
-            } else if (compiled.verdict === 'conditional') {
-                scoped = appendQueryConditions(
-                    parsed,
-                    ownership ? or(ownership, compiled.condition) : compiled.condition,
-                );
-            }
-
-            return this.repository.findMany(scoped);
+        // the list's gate, shared with the session statistic (scopeRead): own
+        // sessions are always readable, so ownership composes as an
+        // OR-alternative, and stands alone for an actor without SESSION_READ.
+        // A non-expressible policy falls back to the per-row loop below.
+        const scope = await this.scopeRead(parsed, actor);
+        if (!scope.post) {
+            return this.repository.findMany(scope.query);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);

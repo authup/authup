@@ -7,12 +7,13 @@
 
 import type { Scope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IScopeRepository extends IEntityRepository<Scope> {
     checkUniqueness(data: Partial<Scope>, existing?: Scope): Promise<void>;
 }
 
-export interface IScopeService {
+export interface IScopeService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Scope>>;
     getOne(idOrName: string, actor: ActorContext): Promise<Scope>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Scope>;

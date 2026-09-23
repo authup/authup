@@ -29,12 +29,15 @@ import { useAlertDialog } from '@vuecs/overlays';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { computed, defineComponent } from 'vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 // VCTable deliberately stays globally registered — its generic component
 // signature is not assignable to the Options-API `components: {}` slot
 // (see structure.md → Table usage).
 export default defineComponent({
     components: {
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -136,6 +139,7 @@ export default defineComponent({
         ]);
 
         const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.key.getStats(input);
         const confirmDialog = useAlertDialog();
         const translate = useTranslator();
 
@@ -182,6 +186,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             handleDeleteFailed,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -195,6 +200,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityActivity
+                type="key"
+                :load="loadStats"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

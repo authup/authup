@@ -20,16 +20,18 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
-    PathCreatePayload,
-    PathUpdatePayload,
+    EntityStatsResponse,
+    PathCreatePayload, 
+    PathUpdatePayload, 
 } from '@authup/core-http-kit';
 import type { Path } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import type { IPathService } from '../../../../../core/index.ts';
+import type { IEntityStatsService, IPathService  } from '../../../../../core/index.ts';
 import {
+    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
-    describeQuerySchema,
-    pathSchema,
+    describeQuerySchema, 
+    pathSchema, 
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -38,8 +40,10 @@ import {
     buildActorContext,
     getRequestRealmID,
 } from '../../../request/index.ts';
+import { serveEntityStats } from '../stats.ts';
 
 export type PathControllerContext = {
+    statsService: IEntityStatsService,
     service: IPathService,
 };
 
@@ -48,8 +52,27 @@ export type PathControllerContext = {
 export class PathController {
     protected service: IPathService;
 
+    protected statsService: IEntityStatsService;
+
     constructor(ctx: PathControllerContext) {
+        this.statsService = ctx.statsService;
         this.service = ctx.service;
+    }
+
+    /**
+     * Declared before the record read on purpose: `/:id` would otherwise
+     * take the `@stats` segment as an id.
+     */
+    @DQuerySchema(EntityType.PATH, 'stats')
+    @DGet('/@stats', [ForceLoggedInMiddleware])
+    async getStats(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityStatsResponse> {
+        return serveEntityStats(
+            event,
+            this.statsService,
+            describeQuerySchema(pathSchema, FILTERS_QUERY_PARAMETERS),
+        );
     }
 
     @DQuerySchema(EntityType.PATH, 'collection')

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { IdentityProvider, IdentityProviderAccount, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
@@ -52,7 +53,8 @@ export type IdentityProviderAuthorizeUriOptions = {
     userCode?: string
 };
 
-export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
+export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload>,
+    IEntitySchemaAPI, IEntityStatsAPI<IdentityProvider> {
     /**
      * The URL that starts a federated login through the provider. A login
      * needs the authorization code request it completes, or the device page's

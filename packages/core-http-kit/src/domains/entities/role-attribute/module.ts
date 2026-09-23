@@ -10,6 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { RoleAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IRoleAttributeAPI,
@@ -18,6 +19,12 @@ import type {
 } from './types';
 
 export class RoleAttributeAPI extends BaseAPI implements IRoleAttributeAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('role-attributes/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
         const response = await this.client.get(`role-attributes${buildQueryString(data)}`);
 

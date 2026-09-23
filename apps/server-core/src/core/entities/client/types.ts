@@ -10,6 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 import type { IRealmProvisioner } from '../../provisioning/types.ts';
+import type { IReadScoper } from '../../query/scope.ts';
 
 /**
  * One system-provisioned public client (plan 079): `admin-console` or
@@ -68,7 +69,7 @@ export type ClientSecretRotateResult = {
     secret: string,
 };
 
-export interface IClientService {
+export interface IClientService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Client>>;
     getOne(
         idOrName: string,

@@ -8,6 +8,7 @@
 import type { Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IRoleRepository extends IEntityRepository<Role> {
     checkUniqueness(data: Partial<Role>, existing?: Role): Promise<void>;
@@ -17,7 +18,7 @@ export interface IRoleRepository extends IEntityRepository<Role> {
     getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]>;
 }
 
-export interface IRoleService {
+export interface IRoleService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Role>>;
     getOne(idOrName: string, actor: ActorContext): Promise<Role>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Role>;

@@ -15,6 +15,7 @@ import {
     ARoles,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -25,9 +26,12 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent } from 'vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -46,6 +50,9 @@ export default defineComponent({
         const { realmManagementId } = storeToRefs(store);
 
         const query = defineQuery<Role>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.role.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.ROLE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.ROLE_DELETE });
@@ -120,6 +127,7 @@ export default defineComponent({
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -133,6 +141,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityActivity
+                type="role"
+                :load="loadStats"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

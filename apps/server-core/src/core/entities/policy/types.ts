@@ -7,6 +7,7 @@
 
 import type { Policy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IPolicyRepository extends IEntityRepository<Policy> {
     checkUniqueness(data: Partial<Policy>, existing?: Policy): Promise<void>;
@@ -16,7 +17,7 @@ export interface IPolicyRepository extends IEntityRepository<Policy> {
     deleteFromTree(entity: Policy): Promise<void>;
 }
 
-export interface IPolicyService {
+export interface IPolicyService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Policy>>;
     getOne(idOrName: string, actor: ActorContext, realm?: string): Promise<Policy>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Policy>;

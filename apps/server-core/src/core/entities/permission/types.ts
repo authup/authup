@@ -7,12 +7,13 @@
 
 import type { Permission } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IReadScoper } from '../../query/scope.ts';
 
 export interface IPermissionRepository extends IEntityRepository<Permission> {
     checkUniqueness(data: Partial<Permission>, existing?: Permission): Promise<void>;
 }
 
-export interface IPermissionService {
+export interface IPermissionService extends IReadScoper {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Permission>>;
     getOne(idOrName: string, actor: ActorContext, realm?: string): Promise<Permission>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Permission>;

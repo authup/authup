@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { EntityQueryInput } from '../../../helpers';
 
@@ -37,7 +38,7 @@ export type BuiltInPolicyUpdatePayload<
     T extends Record<string, any> = Record<string, any>,
 > = Partial<Omit<PolicyValidatedFields, 'type'>> & Partial<BuiltInPolicies<T>>;
 
-export interface IPolicyAPI {
+export interface IPolicyAPI extends IEntitySchemaAPI, IEntityStatsAPI<Policy> {
     getMany<OUTPUT extends PolicyResponse = PolicyResponse>(
         data?: EntityQueryInput<Policy & { parentId?: string | null }>,
     ) : Promise<EntityCollectionResponse<OUTPUT>>;

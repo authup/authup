@@ -7,6 +7,8 @@
 
 import type { Event } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IQuery } from '@rapiq/core';
+import type { ReadScope } from '../../../../src/core/query/scope.ts';
 import type {
     EventRecordInput,
     IEventService,
@@ -17,6 +19,14 @@ export class FakeEventService implements IEventService {
 
     async record(input: EventRecordInput): Promise<void> {
         this.recordCalls.push(input);
+    }
+
+    async scopeRead(query: IQuery): Promise<ReadScope> {
+        return {
+            query,
+            post: false,
+            ownership: null,
+        };
     }
 
     async getMany(): Promise<EntityRepositoryFindManyResult<Event>> {

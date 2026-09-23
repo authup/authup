@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntitySchemaAPI } from '../../stats';
 import type { IEntityAPI } from '../../types-base';
 
 import type { ClientPermission } from '@authup/core-kit';
@@ -14,4 +15,5 @@ export type ClientPermissionCreatePayload = Pick<ClientPermission, 'clientId' | 
     Partial<Pick<ClientPermission, 'policyId' | 'realmScope'>>;
 export type ClientPermissionUpdatePayload = Partial<ClientPermissionCreatePayload>;
 
-export interface IClientPermissionAPI extends IEntityAPI<ClientPermission, ClientPermissionCreatePayload, ClientPermissionUpdatePayload> {}
+export interface IClientPermissionAPI extends IEntityAPI<ClientPermission, ClientPermissionCreatePayload, ClientPermissionUpdatePayload>,
+    IEntitySchemaAPI {}

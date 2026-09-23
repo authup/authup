@@ -9,24 +9,20 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { Event } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { EventStatsQuery, EventStatsResponse, IEventAPI } from './types';
 
 export class EventAPI extends BaseAPI implements IEventAPI {
     async getStats(query: EventStatsQuery = {}): Promise<EventStatsResponse> {
-        const filters = buildQueryString<Event>(query.filters ? { filters: query.filters } : undefined);
+        const response = await this.client.get(buildStatsURL('events', query));
 
-        const params = new URLSearchParams();
-        if (query.granularity) {
-            params.set('granularity', query.granularity);
-        }
-        if (typeof query.days !== 'undefined') {
-            params.set('days', `${query.days}`);
-        }
+        return response.data;
+    }
 
-        const own = params.toString();
-        const search = [filters.replace(/^\?/, ''), own].filter(Boolean).join('&');
-        const response = await this.client.get(`events/stats${search ? `?${search}` : ''}`);
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('events/@schema');
 
         return response.data;
     }

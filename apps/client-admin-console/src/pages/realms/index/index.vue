@@ -11,6 +11,7 @@ import {
     ARealms,
     ASearch,
     ATitle,
+    injectHTTPClient,
     injectStore,
     usePermissionCheck,
     useTranslations,
@@ -19,9 +20,12 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         ATitle,
         APagination,
         ASearch,
@@ -39,6 +43,9 @@ export default defineComponent({
         const handleDeleted = (e: Realm) => {
             emit('deleted', e);
         };
+
+        const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.realm.getStats(input);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.REALM_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.REALM_DELETE });
@@ -82,6 +89,7 @@ export default defineComponent({
 
         return {
             columns,
+            loadStats,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -98,6 +106,11 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityActivity
+                type="realm"
+                :load="loadStats"
+                :realm-scoped="false"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

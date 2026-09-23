@@ -28,21 +28,3 @@ export const EVENT_RETENTION_SWEEP_BATCH_SIZE = 1000;
  * untruncated lookup key never matches its own truncated rows.
  */
 export const EVENT_ACTOR_NAME_MAX_LENGTH = 128;
-
-/**
- * The most buckets one grouped count answers: 31 days of hours. Bounds both
- * the statement (one row per bucket per event type) and the response.
- */
-export const EVENT_STATS_MAX_BUCKETS = 744;
-
-/**
- * The window a grouped count defaults to, in days.
- */
-export const EVENT_STATS_DAYS_DEFAULT = 30;
-
-/**
- * How long a grouped count is served from the cache (ms). The grant caches
- * take the same window, so a reach change reaches the dashboard no later
- * than it reaches the list.
- */
-export const EVENT_STATS_CACHE_TTL = 60_000;

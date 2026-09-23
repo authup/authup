@@ -42,9 +42,12 @@ import {
     readPathScopeQuery,
     reloadCollection,
 } from '../../../composables/path-scope';
+import EntityActivity from '../../../components/stats/EntityActivity.vue';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
 
 export default defineComponent({
     components: {
+        EntityActivity,
         ATitle,
         APagination,
         APaths,
@@ -62,6 +65,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
         const httpClient = injectHTTPClient();
+        const loadStats : EntityStatsLoadFn = (input) => httpClient.path.getStats(input);
 
         // A record's breadcrumb links an ancestor segment to
         // `/paths?path=<prefix>`, so the collection narrows to that subtree
@@ -233,6 +237,7 @@ export default defineComponent({
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
+            loadStats,
             query,
             translations,
             VCLink,
@@ -247,6 +252,10 @@ export default defineComponent({
         @deleted="handleDeleted"
     >
         <template #header="props">
+            <EntityActivity
+                type="path"
+                :load="loadStats"
+            />
             <ATitle />
             <ASearch
                 :load="props.load"

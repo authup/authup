@@ -9,6 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { UserRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
+import type { EntitySchemaResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserRoleAPI,
@@ -16,6 +17,12 @@ import type {
 } from './types';
 
 export class UserRoleAPI extends BaseAPI implements IUserRoleAPI {
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('user-roles/@schema');
+
+        return response.data;
+    }
+
     async getMany(data: EntityQueryInput<UserRole> = {}): Promise<EntityCollectionResponse<UserRole>> {
         const response = await this.client.get(`user-roles${buildQueryString(data)}`);
 

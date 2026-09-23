@@ -10,6 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
+import { buildStatsURL } from '../../stats';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IScopeAPI,
@@ -19,6 +21,18 @@ import type {
 } from './types';
 
 export class ScopeAPI extends BaseAPI implements IScopeAPI {
+    async getStats(query: EntityStatsQuery<Scope> = {}): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('scopes', query));
+
+        return response.data;
+    }
+
+    async getSchema(): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('scopes/@schema');
+
+        return response.data;
+    }
+
     async getMany(data?: EntityQueryInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
         const response = await this.client.get(`scopes${buildQueryString(data)}`);
 

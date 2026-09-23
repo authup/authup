@@ -28,6 +28,7 @@ import {
     describeSchemaRegistry,
     schemaRegistry,
 } from './src/core/query/index.ts';
+import { STATS_MAX_BUCKETS } from './src/core/stats/constants.ts';
 
 const SCHEMA_MAP_KEY = 'x-authup-schemas';
 
@@ -43,7 +44,37 @@ const SHAPE_PARAMETERS : Record<string, `${RapiqParameter}`[] | undefined> = {
     collection: undefined,
     record: RECORD_QUERY_PARAMETERS,
     filters: FILTERS_QUERY_PARAMETERS,
+    stats: FILTERS_QUERY_PARAMETERS,
 };
+
+/**
+ * The two parameters of a statistic (`GET /<collection>/@stats`) that are not
+ * rapiq parameters: the bucket width and the window. They become one once
+ * tada5hi/rapiq#938 lands.
+ */
+function buildStatsParameters() : Parameter[] {
+    return [
+        {
+            parameterName: 'granularity',
+            name: 'granularity',
+            in: 'queryProp',
+            required: false,
+            description: 'The bucket width, `hour` or `day`. Defaults to `day`.',
+            type: { typeName: 'string' },
+            extensions: [],
+        },
+        {
+            parameterName: 'days',
+            name: 'days',
+            in: 'queryProp',
+            required: false,
+            description: `The window in whole days back from now, 30 by default. The window times the buckets per day may not exceed ${STATS_MAX_BUCKETS}.`,
+            type: { typeName: 'integer' },
+            validators: { minimum: { value: 1 } },
+            extensions: [],
+        },
+    ] as Parameter[];
+}
 
 const UPPER_BOUND_NOTE = 'This is the static upper bound: per-actor relation and column gates may narrow it silently on any given request.';
 
@@ -344,6 +375,9 @@ const querySchemaHandler = method({
         });
 
         draft.parameters.push(...buildQueryParameters(description, subset));
+        if (shape === 'stats') {
+            draft.parameters.push(...buildStatsParameters());
+        }
 
         // Keyed on decoding a FILTER, not on being a collection read: the two
         // bulk revokes decode filters alone, and the filter is the only query

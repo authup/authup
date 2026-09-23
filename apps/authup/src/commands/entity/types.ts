@@ -17,3 +17,9 @@ export type EntityQueryArgs = {
     limit?: string,
     offset?: string,
 };
+
+export type EntityStatsArgs = {
+    filter?: string,
+    granularity?: string,
+    days?: string,
+};
