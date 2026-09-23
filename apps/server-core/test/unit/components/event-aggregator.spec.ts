@@ -151,6 +151,28 @@ describe('components/event-aggregator', () => {
         ].sort((a, b) => `${a.realmId}${a.name}`.localeCompare(`${b.realmId}${b.name}`)));
     });
 
+    it('should write a day holding more groups than one statement can bind', async () => {
+        // 7 bound values per rollup row: past postgres' 65535 and sqlite's
+        // 32766 parameters in one statement
+        const groups = 10_000;
+        const events = Array.from({ length: groups }, (_, index) => ({
+            id: randomUUID(),
+            scope: EventScope.ENTITY,
+            name: 'created' as `${EventName}`,
+            refType: `type-${index}`,
+            realmId,
+            expiring: false,
+            createdAt: new Date(`${TODAY}T01:00:00.000Z`) as unknown as string,
+        }));
+        for (let i = 0; i < events.length; i += 500) {
+            await dataSource.getRepository(EventEntity).insert(events.slice(i, i + 500));
+        }
+
+        await repository.recompute(TODAY);
+
+        expect(await dataSource.getRepository(EventAggregateEntity).count({ where: { day: TODAY } })).toEqual(groups);
+    }, HOOK_TIMEOUT);
+
     it('should leave the counts of one recompute after repeated and concurrent ones', async () => {
         await seed(`${TODAY}T01:00:00.000Z`);
         await seed(`${TODAY}T02:00:00.000Z`);

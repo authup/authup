@@ -938,8 +938,9 @@ until deleted.
   short forever.
 - **A recompute replaces the day.** `EventAggregateRepositoryAdapter.recompute`
   reads the day's grouped counts from `auth_events` (a grouped rapiq query
-  over the UTC day), then deletes the day's rows and inserts the new ones in
-  one transaction, all under `withDatabaseLock(queryRunner,
+  over the UTC day), then deletes the day's rows and inserts the new ones
+  (in chunks of 500, since one statement binds at most 65535 values on
+  postgres) in one transaction, all under `withDatabaseLock(queryRunner,
   EVENT_AGGREGATE_DATABASE_LOCK, ...)` (typeorm-extension 4.2), so two
   replicas recomputing one day leave exactly one day's counts. The grouped
   read runs OUTSIDE the transaction: inside it, it would wait on a second

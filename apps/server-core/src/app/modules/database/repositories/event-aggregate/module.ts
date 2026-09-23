@@ -21,6 +21,8 @@ import { EVENT_AGGREGATE_DATABASE_LOCK } from '../../../../../core/index.ts';
 import { DATABASE_LOCK_OPTIONS } from '../../constants.ts';
 import { applyGroupedQuery } from '../query.ts';
 
+const EVENT_AGGREGATE_INSERT_CHUNK = 500;
+
 export class EventAggregateRepositoryAdapter implements IEventAggregateRepository {
     private readonly dataSource: DataSource;
 
@@ -80,8 +82,13 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                 // transaction never waits on a second pooled connection (#3526)
                 await this.dataSource.transaction(async (manager) => {
                     await manager.delete(EventAggregateEntity, { day });
-                    if (rows.length > 0) {
-                        await manager.insert(EventAggregateEntity, rows.map((row) => ({
+
+                    // one statement binds at most 65535 values on postgres
+                    // (32766 on sqlite), 7 per row, and insert() never chunks; sqlite
+                    // also reloads the generated ids through one expression of
+                    // at most 1000 terms
+                    for (let i = 0; i < rows.length; i += EVENT_AGGREGATE_INSERT_CHUNK) {
+                        await manager.insert(EventAggregateEntity, rows.slice(i, i + EVENT_AGGREGATE_INSERT_CHUNK).map((row) => ({
                             createdAt,
                             day,
                             realmId: row.realmId as string | null,
