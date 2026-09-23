@@ -6,5 +6,4 @@
  */
 
 export * from './date.ts';
-export * from './advisory-lock.ts';
 export * from './is-supported.ts';

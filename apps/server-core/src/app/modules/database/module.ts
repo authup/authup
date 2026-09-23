@@ -19,6 +19,7 @@ import {
     checkDatabase,
     createDatabase,
     synchronizeDatabaseSchema,
+    withDatabaseLock,
 } from 'typeorm-extension';
 import {
     DataSourceOptionsBuilder,
@@ -37,7 +38,7 @@ import { verifySchemaOrSynchronize } from './migration.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
-import { DatabaseInjectionKey } from './constants.ts';
+import { DATABASE_LOCK_OPTIONS, DatabaseInjectionKey, MIGRATION_DATABASE_LOCK } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -179,8 +180,21 @@ export class DatabaseModule implements IModule {
             return;
         }
 
+        // Replicas booting at once would each apply the pending migrations
+        // and race on the same tables, so one of them does while the others
+        // wait and then find nothing pending.
         logger.debug('Migrating database...');
-        await synchronizeDatabaseSchema(dataSource);
+        const queryRunner = dataSource.createQueryRunner();
+        try {
+            await withDatabaseLock(
+                queryRunner,
+                MIGRATION_DATABASE_LOCK,
+                () => synchronizeDatabaseSchema(dataSource),
+                DATABASE_LOCK_OPTIONS,
+            );
+        } finally {
+            await queryRunner.release();
+        }
         logger.debug('Migrated database');
     }
 

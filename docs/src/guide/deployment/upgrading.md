@@ -104,6 +104,56 @@ permissions do not cover. They used to drop such a condition and act on the
 rest, which revokes more than was asked. A call that relied on a dropped
 condition being ignored must remove it.
 
+### Timestamps are stamped and read in UTC on every host
+
+On PostgreSQL and MySQL, `createdAt` and `updatedAt` are now written and read
+in UTC, whatever timezone the database server or the machine running Authup
+is set to. Authup pins every database session to UTC (`TimeZone` on
+PostgreSQL, `time_zone` on MySQL) and reads the columns back as UTC. The
+container image and a database running in UTC see no change.
+
+Before, the two sides only agreed when both clocks did. If the database ran
+in UTC but the Authup host did not, the API returned every timestamp shifted
+by the host offset; that is fixed without touching stored data. **If the
+database itself ran in local time**, rows it stamped before this release hold
+local wall-clock values and now read as UTC, shifted by that offset. Rows
+written after the upgrade are correct. Check the database's zone before
+upgrading:
+
+```sql
+-- PostgreSQL
+SHOW timezone;
+-- MySQL
+SELECT @@global.time_zone, @@system_time_zone;
+```
+
+If it is not UTC and the historical values matter, convert them once after
+the upgrade, e.g. on PostgreSQL
+`UPDATE auth_events SET created_at = (created_at AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'UTC';`
+per table and column, with the zone the database used. Sessions expire on
+their own, so their `createdAt` needs no conversion.
+
+A database setting that contradicts the pin now stops the boot with an error
+naming it: a MySQL `timezone` other than UTC, a MySQL `dateStrings` or
+`typeCast`, or a PostgreSQL `TimeZone` other than UTC in the driver's startup
+`options`. Remove it, since half a pin would shift values instead of fixing
+them. A MySQL replication setup is refused the same way for now, since its
+per-connection session cannot be pinned yet.
+
+### Replicas no longer race on boot-time migrations
+
+With `MIGRATION_ENABLED` on (the default), replicas that start at the same
+time now take a database lock around the migration run: one applies the
+pending migrations, the others wait for it and then find nothing pending.
+Running `authup migration run` as a one-off step, as the replica guide
+describes, keeps working unchanged.
+
+On MySQL the provisioning lock is now scoped to the database rather than to
+the server, so two Authup databases on one MySQL server no longer wait for
+each other. During a rolling upgrade from an older release, an old and a new
+replica do not share the provisioning lock; this matters only if both
+provision a database from scratch at the same moment.
+
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone
