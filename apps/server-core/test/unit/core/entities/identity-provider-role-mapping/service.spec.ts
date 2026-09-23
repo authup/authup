@@ -15,6 +15,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { IdentityProviderRoleMappingService } from '../../../../../src/core/entities/identity-provider-role-mapping/service.ts';
 import { 
     FakeEntityRepository, 
@@ -185,6 +186,50 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                     roleId: randomUUID(),
                 }, createMasterRealmActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+    });
+
+    describe('update reach (#3654)', () => {
+        const restrict = () => {
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE) {
+                    return;
+                }
+
+                const attributes = call.ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                if (attributes.name !== 'reachable') {
+                    throw PermissionError.denied('test');
+                }
+            });
+            return actor;
+        };
+
+        it('should refuse moving an unreachable row into reach', async () => {
+            const entity = repository.seed({
+                providerId: randomUUID(), 
+                roleId: randomUUID(), 
+                name: 'other', 
+            });
+            await expect(service.update(entity.id, { name: 'reachable' }, restrict())).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('should allow updating a row that stays in reach', async () => {
+            const entity = repository.seed({
+                providerId: randomUUID(), 
+                roleId: randomUUID(), 
+                name: 'reachable', 
+            });
+            await expect(service.update(entity.id, { value: 'changed' }, restrict())).resolves.toBeDefined();
+        });
+
+        it('should refuse moving a reachable row out of reach', async () => {
+            const entity = repository.seed({
+                providerId: randomUUID(), 
+                roleId: randomUUID(), 
+                name: 'reachable', 
+            });
+            await expect(service.update(entity.id, { name: 'other' }, restrict())).rejects.toBeInstanceOf(PermissionError);
         });
     });
 

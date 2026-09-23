@@ -1054,6 +1054,16 @@ Service responsibility:
 - Entity creation, merging, and persistence
 - Returns domain objects (no HTTP response formatting)
 
+**An UPDATE is evaluated against the stored row AND the updated row**
+(`AbstractEntityService.evaluateUpdate`, #3654). Evaluating only the updated
+row lets an update move a row INTO reach: an actor holding `CLIENT_UPDATE`
+under `{ pathId: { $in: [<analyses>] } }` could refile any client into
+`analyses` and own it from then on. The stored row proves the actor may change
+this row at all, the updated row that it stays in reach afterwards, so a move
+out of reach is refused too. Snapshot the stored row BEFORE
+`repository.merge`, which mutates the entity in place. `DELETE` evaluates the
+stored row only and needs nothing more.
+
 #### Entity-Specific Service Patterns
 
 | Category | Examples | Service Characteristics |

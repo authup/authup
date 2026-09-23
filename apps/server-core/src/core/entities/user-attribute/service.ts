@@ -255,6 +255,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         delete data.user;
         delete data.realmId;
 
+        const before: UserAttribute = { ...entity };
         entity = this.repository.merge(entity, data);
 
         if (isSelfFallback) {
@@ -263,10 +264,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
                 data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
             });
         } else {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_UPDATE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
-            });
+            await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, entity, this.resourceRealmMatch(entity));
         }
 
         await this.repository.save(entity);

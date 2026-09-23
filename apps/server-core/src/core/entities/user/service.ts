@@ -325,16 +325,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             if (!isSelfEdit) {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.USER_UPDATE,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: {
-                            ...entity,
-                            ...validated,
-                        },
-                        [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
-                    }),
-                });
+                await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
+                    ...entity,
+                    ...validated,
+                }, { [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null });
             }
 
             if (emailChanged) {

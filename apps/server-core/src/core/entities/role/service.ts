@@ -185,16 +185,16 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.ROLE_UPDATE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...validated,
-                    },
-                    [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
-                }),
-            });
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.ROLE_UPDATE,
+                { ...entity },
+                {
+                    ...entity,
+                    ...validated,
+                },
+                { [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null },
+            );
 
             entity = this.repository.merge(entity, validated);
             await this.repository.checkUniqueness(validated, entity);

@@ -299,6 +299,47 @@ describe('core/entities/role-attribute/service', () => {
         });
     });
 
+    describe('update reach (#3654)', () => {
+        const restrict = () => {
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
+                    return;
+                }
+
+                const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) ?? {};
+                if (Object.keys(attributes).some((key) => !key.startsWith('team-'))) {
+                    throw PermissionError.denied('reach');
+                }
+            });
+
+            return actor;
+        };
+
+        it('should refuse moving an unreachable attribute into reach', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ name: 'other-attr' }));
+
+            await expect(
+                service.update(entity.id, { name: 'team-attr' }, restrict()),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('should allow updating a reachable attribute that stays reachable', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ name: 'team-attr' }));
+
+            const result = await service.update(entity.id, { value: 'x' }, restrict());
+            expect(result.value).toBe('x');
+        });
+
+        it('should refuse moving a reachable attribute out of reach', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ name: 'team-attr' }));
+
+            await expect(
+                service.update(entity.id, { name: 'other-attr' }, restrict()),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+    });
+
     describe('delete', () => {
         it('should delete an existing attribute', async () => {
             const entity = repository.seed(createFakeRoleAttribute());

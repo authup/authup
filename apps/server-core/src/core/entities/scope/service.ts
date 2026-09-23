@@ -184,16 +184,13 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.SCOPE_UPDATE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...validated,
-                    },
-                    [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
-                }),
-            });
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.SCOPE_UPDATE,
+                entity,
+                { ...entity, ...validated },
+                { [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null },
+            );
 
             await this.repository.checkUniqueness(validated, entity);
 

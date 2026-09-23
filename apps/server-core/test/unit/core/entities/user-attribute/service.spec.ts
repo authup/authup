@@ -583,6 +583,59 @@ describe('core/entities/user-attribute/service', () => {
             const result = await service.update(entity.id, { value: 'x', userId: randomUUID() }, actor);
             expect(result.userId).toBe(ownerId);
         });
+
+        // #3654: a grant restricted to some attribute names must hold for the
+        // stored row AND the renamed one.
+        describe('restricted USER_UPDATE grant', () => {
+            let actor: FakeActorContext;
+
+            beforeEach(() => {
+                actor = createAllowAllActor();
+                actor.permissionEvaluator.setBehavior((call) => {
+                    if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.USER_UPDATE) {
+                        return;
+                    }
+
+                    const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<UserAttribute>;
+                    if (!attributes.name?.startsWith('app-')) {
+                        throw PermissionError.denied('name');
+                    }
+                });
+            });
+
+            it('should refuse renaming an unreachable row into reach', async () => {
+                const entity = repository.seed(createFakeUserAttribute({
+                    name: 'other', 
+                    value: 'v', 
+                    userId: randomUUID(), 
+                }));
+
+                await expect(service.update(entity.id, { name: 'app-theme' }, actor))
+                    .rejects.toBeInstanceOf(PermissionError);
+            });
+
+            it('should allow updating a row that stays in reach', async () => {
+                const entity = repository.seed(createFakeUserAttribute({
+                    name: 'app-theme', 
+                    value: 'v', 
+                    userId: randomUUID(), 
+                }));
+
+                const result = await service.update(entity.id, { value: 'w' }, actor);
+                expect(result.value).toBe('w');
+            });
+
+            it('should refuse renaming a reachable row out of reach', async () => {
+                const entity = repository.seed(createFakeUserAttribute({
+                    name: 'app-theme', 
+                    value: 'v', 
+                    userId: randomUUID(), 
+                }));
+
+                await expect(service.update(entity.id, { name: 'other' }, actor))
+                    .rejects.toBeInstanceOf(PermissionError);
+            });
+        });
     });
 
     describe('delete', () => {

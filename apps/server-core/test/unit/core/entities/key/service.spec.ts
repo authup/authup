@@ -33,6 +33,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
 } from '@authup/server-test-kit';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { KeyService } from '../../../../../src/core/entities/key/service.ts';
 import { FakeEventService } from '../../helpers/index.ts';
 import { FakeKeyRepository } from './fake-repository.ts';
@@ -399,6 +400,58 @@ describe('core/entities/key/service', () => {
             } catch (e) {
                 expect(isAuthupError(e) && e.code === ErrorCode.ENTITY_NOT_FOUND).toBeTruthy();
             }
+        });
+    });
+
+    const createRestrictedActor = (name: string, reachable: (attributes: Record<string, any>) => boolean) => {
+        const actor = createAllowAllActor();
+        actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+            if (method !== 'evaluate' || ctx.name !== name) {
+                return;
+            }
+
+            const attributes = ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            if (!reachable(attributes)) {
+                throw PermissionError.denied(name);
+            }
+        });
+
+        return actor;
+    };
+
+    describe('update with a restricted grant (#3654)', () => {
+        const reachable = (attributes: Record<string, any>) => typeof attributes.name === 'string' &&
+            attributes.name.startsWith('team-');
+
+        it('refuses renaming an unreachable key into reach', async () => {
+            const [seeded] = repository.seed([buildKey({ name: 'other' })]);
+
+            await expect(service.update(
+                seeded.id,
+                { name: 'team-other' },
+                createRestrictedActor(PermissionName.KEY_UPDATE, reachable),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('allows updating a key that stays in reach', async () => {
+            const [seeded] = repository.seed([buildKey({ name: 'team-a' })]);
+
+            const entity = await service.update(
+                seeded.id,
+                { name: 'team-b' },
+                createRestrictedActor(PermissionName.KEY_UPDATE, reachable),
+            );
+            expect(entity.name).toEqual('team-b');
+        });
+
+        it('refuses renaming a reachable key out of reach', async () => {
+            const [seeded] = repository.seed([buildKey({ name: 'team-a' })]);
+
+            await expect(service.update(
+                seeded.id,
+                { name: 'other' },
+                createRestrictedActor(PermissionName.KEY_UPDATE, reachable),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 

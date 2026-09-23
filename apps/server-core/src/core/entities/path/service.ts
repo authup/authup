@@ -218,17 +218,17 @@ export class PathService extends AbstractEntityService implements IPathService {
         // under concurrency (issue #3526).
         const resolved = await this.resolveNextPath(this.repository, entity, validated);
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.PATH_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: {
-                    ...entity,
-                    ...validated,
-                    path: resolved.path,
-                },
-                ...this.resourceRealmMatch(entity),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.PATH_UPDATE,
+            entity,
+            {
+                ...entity,
+                ...validated,
+                path: resolved.path,
+            },
+            this.resourceRealmMatch(entity),
+        );
 
         if (resolved.path !== entity.path) {
             await this.repository.checkUniqueness({

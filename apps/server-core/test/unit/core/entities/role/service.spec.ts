@@ -17,6 +17,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { FakeRoleRepository } from './fake-repository.ts';
@@ -185,6 +186,47 @@ describe('core/entities/role/service', () => {
             await service.update(entity.id, { name: 'new-name' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
+        });
+    });
+
+    describe('update reach (#3654)', () => {
+        const restrict = () => {
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
+                    return;
+                }
+
+                const attributes = call.ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                if (!attributes || !`${attributes.name}`.startsWith('team-')) {
+                    throw PermissionError.denied('reach');
+                }
+            });
+
+            return actor;
+        };
+
+        it('should refuse moving an unreachable role into reach', async () => {
+            const entity = repository.seed(createFakeRole({ name: 'other-role' }));
+
+            await expect(
+                service.update(entity.id, { name: 'team-role' }, restrict()),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('should allow updating a reachable role that stays reachable', async () => {
+            const entity = repository.seed(createFakeRole({ name: 'team-role' }));
+
+            const result = await service.update(entity.id, { name: 'team-renamed' }, restrict());
+            expect(result.name).toBe('team-renamed');
+        });
+
+        it('should refuse moving a reachable role out of reach', async () => {
+            const entity = repository.seed(createFakeRole({ name: 'team-role' }));
+
+            await expect(
+                service.update(entity.id, { name: 'other-role' }, restrict()),
+            ).rejects.toBeInstanceOf(PermissionError);
         });
     });
 

@@ -247,15 +247,16 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         await this.repository.validateJoinColumns(updateData);
 
+        const current = this.junctionAttributes(entity);
         const merged = this.repository.merge(entity, updateData);
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.ROLE_PERMISSION_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.ROLE_PERMISSION_UPDATE,
+            current,
+            this.junctionAttributes(merged),
+            { [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged) },
+        );
 
         return this.repository.save(merged);
     }

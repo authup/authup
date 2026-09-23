@@ -198,16 +198,13 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
-        await actor.permissionEvaluator.evaluate({
-            name: PermissionName.KEY_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: {
-                    ...entity,
-                    ...validated,
-                },
-                ...this.resourceRealmMatch(entity),
-            }),
-        });
+        await this.evaluateUpdate(
+            actor,
+            PermissionName.KEY_UPDATE,
+            entity,
+            { ...entity, ...validated },
+            this.resourceRealmMatch(entity),
+        );
 
         if (validated.name && validated.name !== entity.name) {
             await this.repository.checkUniqueness({

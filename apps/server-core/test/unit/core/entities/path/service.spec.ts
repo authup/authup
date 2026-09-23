@@ -21,6 +21,7 @@ import {
     createDenyAllActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { PathService } from '../../../../../src/core/entities/path/service.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { createFakePath } from '../../../../utils/domains/index.ts';
@@ -419,6 +420,70 @@ describe('core/entities/path/service', () => {
             await expect(
                 service.update(sales.id, { name: 'marketing' }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+    });
+
+    const createRestrictedActor = (name: string, reachable: (attributes: Record<string, any>) => boolean) => {
+        const actor = createAllowAllActor();
+        actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+            if (method !== 'evaluate' || ctx.name !== name) {
+                return;
+            }
+
+            const attributes = ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            if (!reachable(attributes)) {
+                throw PermissionError.denied(name);
+            }
+        });
+
+        return actor;
+    };
+
+    describe('update with a restricted grant (#3654)', () => {
+        const reachable = (attributes: Record<string, any>) => typeof attributes.path === 'string' &&
+            (attributes.path === 'analyses' || attributes.path.startsWith('analyses/'));
+
+        it('should refuse moving an unreachable folder into reach', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+            const other = seedPath({ name: 'other', path: 'other' });
+
+            await expect(service.update(
+                other.id,
+                { parentId: analyses.id },
+                createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+            expect((await repository.findOneById(other.id))!.path).toBe('other');
+        });
+
+        it('should allow updating a folder that stays in reach', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+            const a = seedPath({
+                name: 'a', 
+                path: 'analyses/a', 
+                parentId: analyses.id, 
+            });
+
+            const result = await service.update(
+                a.id,
+                { name: 'b' },
+                createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
+            );
+            expect(result.path).toBe('analyses/b');
+        });
+
+        it('should refuse moving a reachable folder out of reach', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+            const a = seedPath({
+                name: 'a', 
+                path: 'analyses/a', 
+                parentId: analyses.id, 
+            });
+
+            await expect(service.update(
+                a.id,
+                { parentId: null },
+                createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
