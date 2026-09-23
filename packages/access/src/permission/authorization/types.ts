@@ -6,7 +6,7 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
-import type { IdentityPolicyData } from '../../policy';
+import type { IdentityPolicyData, PolicyEvaluators, PolicyValidators } from '../../policy';
 import type { RealmScope } from '../realm-scope';
 
 /**
@@ -84,6 +84,21 @@ export type AuthorizationEvaluatorInput = {
      * definition whose policies need no identity can pass.
      */
     identity?: IdentityPolicyData,
+};
+
+export type AuthorizationEvaluatorOptions = {
+    /**
+     * The policy types a catalog tree may carry. Defaults to
+     * `PolicyDefaultValidators`; spread it to add a custom type.
+     */
+    validators?: PolicyValidators,
+    /**
+     * How the projected trees evaluate. Defaults to
+     * `PolicyDefaultEvaluators`; spread it to add a custom type. The
+     * permission-binding evaluator is always replaced by the one binding the
+     * introspected grants.
+     */
+    evaluators?: PolicyEvaluators,
 };
 
 /**

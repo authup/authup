@@ -3667,13 +3667,36 @@ not stale**: the server could not project its policy layer and says so on the wi
 of omitting it, so the consumer denies the permission and drops every grant of it, since a
 refetch cannot change what the server cannot project. **A tree
 the CONSUMER cannot project is the same condition read from the other side, and it is per
-tree**: the built-in policy type enum is closed while `auth_policies.type` is a free
-string, so a type newer than that copy of `@authup/access` (the documented upgrade order,
-server first, produces exactly that skew) or a configuration its validator refuses
-tombstones the definitions referencing it and drops the grants naming it, and takes no
-other permission down with it. One unknown type used to throw out of the whole build, for
-every caller, over a tree the caller may not even reference. A malformed catalog still
-throws: a duplicate permission namespace is not a data condition.
+tree**: a type the consumer's validator registry lacks (one newer than that copy of
+`@authup/access`, which the documented upgrade order, server first, produces, or a custom
+one it did not register) or a configuration its validator refuses tombstones the
+definitions referencing it and drops the grants naming it, and takes no other permission
+down with it. A malformed catalog still throws: a duplicate permission namespace is not a
+data condition. **The policy type set is open on both sides (#3635)**, since
+`auth_policies.type` is a free string and `PolicyEngine.registerEvaluator` takes any type:
+`PolicyDefaultValidators` sits next to `PolicyDefaultEvaluators`,
+`projectAuthorizationPolicy(input, validators?)` refuses what its registry does not name
+(and the withheld node whatever it names), and
+`createAuthorizationEvaluator(input, { validators?, evaluators? })` takes both registries,
+replacing the defaults rather than merging, so a caller spreads them. The binding evaluator
+is always the consumer's own; a validator without the evaluator projects the tree and then
+denies it. **server-core's own type set stays closed**: every engine it builds starts from
+`PolicyDefaultEvaluators` and nothing registers another type, so its catalog builder and
+introspection project with the defaults and a custom-type tree still travels as
+`policies: null`, which is exactly what the server itself decides for it. Opening it means
+one registry pair every engine construction, the catalog builder and the introspection
+read together; a validator seam on the builder alone would publish trees the server
+denies. Writing
+a non-built-in `type` through `POST /policies` is still accepted and evaluates as
+`POLICY_EVALUATOR_NOT_FOUND` wherever it is bound: rejecting it would pin the write path to
+one static registry while the engines are built per request, which is the closed set this
+change removes.
+**A `realmMatch` key is validated by what `realmScopeMatches` decides (#3636)**: a realm
+key, `null`, or a list of either. An empty key and an empty list are legal and deny on
+both sides; `undefined` is refused, because the server coerces it to `null` and a caller
+handing an absent column over should hear about it rather than reach the global rows. The
+realm-aware gate is pinned end to end against the server's own record read for an
+`ownOrNull` actor in `authorization.spec.ts`.
 **Both the identity and the grants are optional**, because server-core attaches IDENTITY
 data only when a request carries an identity: without one the consumer binds no grant and
 REMOVES any IDENTITY key the caller supplied (symmetrical with the identity branch, which

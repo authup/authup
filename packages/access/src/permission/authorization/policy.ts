@@ -5,25 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { prefixIssuePath } from '@ebec/core';
+import { defineIssueItem, prefixIssuePath } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError, isValidupError } from 'validup';
 import { z } from 'zod';
-import {
-    AttributeNamesPolicyValidator,
-    AttributesPolicyValidator,
-    BuiltInPolicyType,
-    CompositePolicyValidator,
-    DatePolicyValidator,
-    IdentityPolicyValidator,
-    PermissionBindingPolicyValidator,
-    RealmMatchPolicyValidator,
-    TimePolicyValidator,
-} from '../../policy';
+import type { PolicyValidators } from '../../policy';
+import { BuiltInPolicyType, PolicyDefaultValidators } from '../../policy';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants';
 import type { AuthorizationPolicy } from './types';
 
 type AuthorizationPolicyHead = {
-    type: BuiltInPolicyType,
+    type: string,
     children?: unknown[],
 };
 
@@ -36,22 +28,9 @@ class AuthorizationPolicyHeadValidator extends Container<AuthorizationPolicyHead
     override initialize() {
         super.initialize();
 
-        this.mount('type', createValidator(z.enum(BuiltInPolicyType)));
+        this.mount('type', createValidator(z.string().min(1)));
         this.mount('children', createValidator(z.array(z.unknown()).optional()));
     }
-}
-
-function createValidators() : Record<BuiltInPolicyType, Container<Record<string, any>>> {
-    return {
-        [BuiltInPolicyType.ATTRIBUTES]: new AttributesPolicyValidator(),
-        [BuiltInPolicyType.ATTRIBUTE_NAMES]: new AttributeNamesPolicyValidator(),
-        [BuiltInPolicyType.COMPOSITE]: new CompositePolicyValidator(),
-        [BuiltInPolicyType.DATE]: new DatePolicyValidator(),
-        [BuiltInPolicyType.TIME]: new TimePolicyValidator(),
-        [BuiltInPolicyType.IDENTITY]: new IdentityPolicyValidator(),
-        [BuiltInPolicyType.PERMISSION_BINDING]: new PermissionBindingPolicyValidator(),
-        [BuiltInPolicyType.REALM_MATCH]: new RealmMatchPolicyValidator(),
-    };
 }
 
 /**
@@ -61,17 +40,35 @@ function createValidators() : Record<BuiltInPolicyType, Container<Record<string,
  * such as `id`, `name`, `builtIn` or `createdAt` never travel), plus its type
  * and, for a composite, its projected children.
  *
+ * The type set is the `validators` registry, `PolicyDefaultValidators` unless
+ * the caller hands another (#3635): a type the registry lacks is refused, so
+ * the server and a consumer that register the same custom type let it travel,
+ * and one that does not denies it. The withheld node is refused whatever the
+ * registry says, since projecting it would evaluate a tree the caller was not
+ * allowed to see.
+ *
  * Every refusal is a `ValidupError`, the node's head and the type's own
  * validator alike, and a child's issues are rebased onto the position it sits
  * at, so one message names the node in the tree that is wrong.
  */
-export async function projectAuthorizationPolicy(input: unknown) : Promise<AuthorizationPolicy> {
+export async function projectAuthorizationPolicy(
+    input: unknown,
+    validators: PolicyValidators = PolicyDefaultValidators,
+) : Promise<AuthorizationPolicy> {
     const headValidator = new AuthorizationPolicyHeadValidator();
-    const validators = createValidators();
 
     const project = async (value: unknown) : Promise<AuthorizationPolicy> => {
         const head = await headValidator.run(value as Record<string, any>);
-        const validated = await validators[head.type].run(value as Record<string, any>) as Record<string, unknown>;
+        const validator = head.type !== AUTHORIZATION_POLICY_WITHHELD_TYPE && Object.hasOwn(validators, head.type) ?
+            validators[head.type] :
+            undefined;
+        if (!validator) {
+            throw new ValidupError([defineIssueItem({
+                message: `The policy type ${head.type} is not supported.`,
+                path: ['type'],
+            })]);
+        }
+        const validated = await validator.run(value as Record<string, any>) as Record<string, unknown>;
 
         const output : AuthorizationPolicy = { ...validated, type: head.type };
         for (const key of Object.keys(output)) {
