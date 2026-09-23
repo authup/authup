@@ -84,7 +84,9 @@ describe('src/http/controllers/policy', () => {
             .policy
             .getMany();
 
-        const prevCount = response.data.length;
+        // totals, not page lengths: on mysql and postgres every spec file
+        // shares one database, so both lists can fill a whole page
+        const prevCount = response.meta.total;
 
         expect(response.data).toBeDefined();
         expect(response.data.length).toBeGreaterThanOrEqual(2);
@@ -95,7 +97,7 @@ describe('src/http/controllers/policy', () => {
 
         expect(response.data).toBeDefined();
         expect(response.data.length).toBeGreaterThanOrEqual(2);
-        expect(response.data.length).toBeLessThan(prevCount);
+        expect(response.meta.total).toBeLessThan(prevCount);
     });
 
     it('should read time policy', async () => {
