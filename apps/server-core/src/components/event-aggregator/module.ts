@@ -106,9 +106,11 @@ export function createEventAggregatorComponent(
                 return;
             }
 
+            // a tick outlasting the minute must not queue another scan of
+            // the same days behind it: the next fire is skipped instead
             task = cron.schedule('* * * * *', async () => {
                 await execute();
-            });
+            }, { noOverlap: true });
         },
         async stop() {
             stopped = true;

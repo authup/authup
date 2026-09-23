@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { EventName, EventScope } from '@authup/core-kit';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
+import cron from 'node-cron';
 import type { DataSource } from 'typeorm';
 import {
     afterAll,
@@ -32,7 +33,7 @@ import {
 } from '../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../../src/app/modules/database/index.ts';
 import { EventAggregateRepositoryAdapter } from '../../../src/app/modules/database/repositories/index.ts';
-import { createEventAggregatorTick } from '../../../src/components/index.ts';
+import { createEventAggregatorComponent, createEventAggregatorTick } from '../../../src/components/index.ts';
 import { createTestDatabaseModuleForSecondaryInstance } from '../../app/index.ts';
 
 // A schema synchronize before the first assertion runs.
@@ -149,6 +150,19 @@ describe('components/event-aggregator', () => {
                 count: 1,
             },
         ].sort((a, b) => `${a.realmId}${a.name}`.localeCompare(`${b.realmId}${b.name}`)));
+    });
+
+    it('should never start a tick while the previous one still runs', async () => {
+        const schedule = vi.spyOn(cron, 'schedule');
+        const component = createEventAggregatorComponent(dataSource, { retentionDays: 0 });
+        try {
+            await component.start();
+
+            expect(schedule).toHaveBeenCalledWith('* * * * *', expect.any(Function), expect.objectContaining({ noOverlap: true }));
+        } finally {
+            await component.stop();
+            schedule.mockRestore();
+        }
     });
 
     it('should write a day holding more groups than one statement can bind', async () => {

@@ -923,7 +923,9 @@ until deleted.
   are `EVENT_AGGREGATE_COLUMNS` (`core/entities/event-aggregate/`).
 - **The writer is the `event-aggregator` component** (scheduled by
   `ComponentsModule` whenever `eventLogEnabled`, so it runs where the worker
-  runs). Every minute it recomputes today and yesterday, backfills up to
+  runs). Every minute (`noOverlap`, so a tick outlasting the minute skips
+  the next fire instead of queueing another scan of the same days) it
+  recomputes today and yesterday, backfills up to
   `EVENT_AGGREGATE_BACKFILL_DAYS` (7) missing days per tick walking a cursor
   down toward the oldest raw event (a day without events yields no rows and
   would read as missing forever, hence the cursor rather than a newest-missing
