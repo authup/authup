@@ -8,6 +8,7 @@
 import type {
     AuthorizationCheckPermission,
     AuthorizationCheckPermissions,
+    BasePolicy,
     IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
@@ -20,13 +21,16 @@ import {
     PolicyDefaultEvaluators,
     PolicyEngine,
     RealmScope,
+    createPolicyTransitionCollector,
     definePolicyData,
     isPermissionError,
 } from '@authup/access';
 import { normalizeError } from '@authup/errors';
+import { DecisionStrategy } from '@authup/kit';
 import type {
     AuthorizationCheckBuilderContext,
     AuthorizationCheckRequest,
+    AuthorizationCheckResult,
 } from './types.ts';
 
 /**
@@ -63,6 +67,39 @@ function resolveRealms(
 }
 
 /**
+ * Whether a policy settles false for a caller holding no grant for the
+ * permission, whatever else the evaluation bag says: a non-inverted binding
+ * check, reached only through non-inverted composites that cannot pass without
+ * it (UNANIMOUS: any such child; AFFIRMATIVE: every child). Anything else,
+ * inverted or CONSENSUS included, answers false, which only ever keeps a
+ * transition that could have been dropped.
+ */
+function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean {
+    if (policy.invert) {
+        return false;
+    }
+
+    if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {
+        return true;
+    }
+
+    if (policy.type !== BuiltInPolicyType.COMPOSITE || !Array.isArray(policy.children) || policy.children.length === 0) {
+        return false;
+    }
+
+    const strategy = policy.decisionStrategy ?? DecisionStrategy.UNANIMOUS;
+    if (strategy === DecisionStrategy.UNANIMOUS) {
+        return policy.children.some((child: BasePolicy) => deniesWithoutGrant(child));
+    }
+
+    if (strategy === DecisionStrategy.AFFIRMATIVE) {
+        return policy.children.every((child: BasePolicy) => deniesWithoutGrant(child));
+    }
+
+    return false;
+}
+
+/**
  * Evaluate the caller's own permissions against the requested realms and
  * answer the pairs that hold.
  *
@@ -89,15 +126,22 @@ function resolveRealms(
  * place for it to drift: a scope-restricted bearer would be answered a passing
  * set that every real request denies. The controller passes the request
  * evaluator's own wrapper, so the condition is inherited rather than restated.
+ *
+ * A `date` or `time` policy settles against the clock, so the answer is a
+ * snapshot. Every (name, realm) pair hands a collector of its own down the
+ * walk it already runs, and `expiresAt` is the earliest instant among the
+ * pairs whose clock could actually move THIS caller's answer (see
+ * `affectsCaller`). It is absent when no such pair depends on the clock.
  */
 export async function buildAuthorizationCheck(
     ctx: AuthorizationCheckBuilderContext,
     request: AuthorizationCheckRequest,
-) : Promise<AuthorizationCheckPermissions> {
+) : Promise<AuthorizationCheckResult> {
     const definitions = await ctx.catalogRepository.findDefinitions();
 
     const bindings : PermissionPolicyBinding[] = [];
     const names : string[] = [];
+    const grantGated = new Set<string>();
     for (const [permission, policies] of definitions) {
         if (permission.realmId || permission.clientId) {
             continue;
@@ -108,6 +152,16 @@ export async function buildAuthorizationCheck(
             policies: policies.length > 0 ? policies : undefined,
         });
         names.push(permission.name);
+
+        // The definition's policies are combined under its own decision
+        // strategy, the way the evaluator composes them.
+        if (policies.length > 0 && deniesWithoutGrant({
+            type: BuiltInPolicyType.COMPOSITE,
+            decisionStrategy: permission.decisionStrategy || DecisionStrategy.UNANIMOUS,
+            children: policies,
+        })) {
+            grantGated.add(permission.name);
+        }
     }
 
     // A requested name with no global definition is left in: the evaluator
@@ -119,7 +173,7 @@ export async function buildAuthorizationCheck(
 
     const realms = resolveRealms(request);
     if (requested.length === 0 || realms.length === 0) {
-        return [];
+        return { permissions: [] };
     }
 
     let grants : Promise<PermissionPolicyBinding[]> | undefined;
@@ -140,36 +194,70 @@ export async function buildAuthorizationCheck(
     let grantsError : unknown;
     let grantsFailed = false;
 
+    const loadGrants = (identity: IdentityPolicyData) => {
+        if (!grants) {
+            grants = request.grants(identity)
+                .catch((e) => {
+                    grantsFailed = true;
+                    grantsError = e;
+
+                    throw e;
+                });
+        }
+
+        return grants;
+    };
+
     const policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
     policyEngine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
-        new IdentityPermissionBindingPolicyEvaluator({
-            getFor: (identity: IdentityPolicyData) => {
-                if (!grants) {
-                    grants = request.grants(identity)
-                        .catch((e) => {
-                            grantsFailed = true;
-                            grantsError = e;
-
-                            throw e;
-                        });
-                }
-
-                return grants;
-            },
-        }),
+        new IdentityPermissionBindingPolicyEvaluator({ getFor: loadGrants }),
     );
+
+    // Whether the clock of a DENIED pair can move this caller's answer. Held
+    // pairs always can. A denied one can unless its definition denies every
+    // caller holding no grant for it (`deniesWithoutGrant`) and this caller
+    // holds none: then the pair is denied for want of a grant whatever the
+    // clock says, and its window would only disclose the boundaries of a
+    // permission the caller cannot hold, and have it refetch at them for
+    // nothing. Every other denied pair keeps its transition, so no report
+    // that could matter is dropped.
+    const affectsCaller = async (name: string) : Promise<boolean> => {
+        if (!grantGated.has(name)) {
+            return true;
+        }
+
+        if (!request.identity) {
+            return false;
+        }
+
+        let held : PermissionPolicyBinding[];
+        try {
+            held = await loadGrants(request.identity);
+        } catch (e) {
+            throw normalizeError(e);
+        }
+
+        return held.some((grant) => grant.permission.name === name &&
+            !grant.permission.realmId &&
+            !grant.permission.clientId);
+    };
 
     const evaluator : IPermissionEvaluator = request.decorate(new PermissionEvaluator({
         provider: new PermissionMemoryProvider(bindings),
         policyEngine,
     }));
 
+    const transitions = createPolicyTransitionCollector();
+
     const result : AuthorizationCheckPermissions = [];
     for (const name of requested) {
         const held : Array<string | null> = [];
 
         for (const realm of realms) {
+            const pairTransitions = createPolicyTransitionCollector();
+            let passed = false;
+
             try {
                 await evaluator.preEvaluate({
                     name,
@@ -187,9 +275,11 @@ export async function buildAuthorizationCheck(
                             {}),
                         [BuiltInPolicyType.REALM_MATCH]: realm,
                     }),
+                    options: { transitions: pairTransitions },
                 });
 
                 held.push(realm);
+                passed = true;
             } catch (e) {
                 // A denial is the answer. The one failure that must NOT be
                 // read as one is the grant load, and it is caught above
@@ -212,6 +302,13 @@ export async function buildAuthorizationCheck(
             if (grantsFailed) {
                 throw normalizeError(grantsError);
             }
+
+            if (
+                pairTransitions.next &&
+                (passed || await affectsCaller(name))
+            ) {
+                transitions.report(pairTransitions.next);
+            }
         }
 
         if (held.length > 0) {
@@ -219,5 +316,8 @@ export async function buildAuthorizationCheck(
         }
     }
 
-    return result;
+    return {
+        permissions: result,
+        ...(transitions.next ? { expiresAt: transitions.next } : {}),
+    };
 }

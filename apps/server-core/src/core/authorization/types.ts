@@ -6,6 +6,7 @@
  */
 
 import type {
+    AuthorizationCheckPermissions,
     AuthorizationCheckRealms,
     BasePermission,
     BasePolicy,
@@ -95,6 +96,16 @@ export type AuthorizationCheckRequest = {
      * carry.
      */
     grants: (identity: IdentityPolicyData) => Promise<PermissionPolicyBinding[]>,
+};
+
+export type AuthorizationCheckResult = {
+    permissions: AuthorizationCheckPermissions,
+    /**
+     * The earliest instant a clock-dependent policy in an evaluated tree could
+     * change its verdict, after which `permissions` is stale. Absent when no
+     * verdict depends on the clock.
+     */
+    expiresAt?: Date,
 };
 
 /**

@@ -146,6 +146,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 definePolicyEvaluationContext({
                     include: options.policiesIncluded,
                     exclude: options.policiesExcluded,
+                    transitions: options.transitions,
                     data,
                 }),
             );

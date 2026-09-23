@@ -290,6 +290,13 @@ A permission that reaches none of the requested realms is **absent** from the
 answer, so absent means denied, and a check carrying a `realmMatch` for a realm
 you never asked about denies too. Ask about the realms your UI will ask about.
 
+The answer is `Cache-Control: private, no-cache`, plus `max-age=N` when a `date`
+or `time` policy in an evaluated tree could change a verdict for you: N is the
+seconds until the earliest such instant. A permission you are denied counts unless its
+policies deny every caller holding no grant for it and you hold none, so the window
+of a permission you cannot hold is never disclosed. Refetch then. `client.authorization.checkWithMaxAge`
+answers `{ data, maxAge }` for exactly this; `check` keeps returning the bare array.
+
 Two limits to hold on to:
 
 - **It is an upper bound on what may be attempted, never an entitlement.** It

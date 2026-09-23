@@ -6,4 +6,5 @@
  */
 
 export * from './define.ts';
+export * from './transition.ts';
 export * from './types.ts';

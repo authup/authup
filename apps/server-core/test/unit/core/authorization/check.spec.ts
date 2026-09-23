@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import type {
     IPermissionEvaluator,
     IdentityPolicyData,
@@ -13,6 +19,7 @@ import type {
     PermissionPolicyBinding,
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData, RealmScope } from '@authup/access';
+import { DecisionStrategy } from '@authup/kit';
 import { buildAuthorizationCheck } from '../../../../src/core/authorization/check.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
 import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorization-catalog-repository.ts';
@@ -125,7 +132,7 @@ describe('core/authorization/check', () => {
             [grant('user_update', RealmScope.OWN_OR_NULL)],
         );
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -164,7 +171,7 @@ describe('core/authorization/check', () => {
     it('answers the own realm alone for an own grant', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -182,7 +189,7 @@ describe('core/authorization/check', () => {
             ],
         );
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             realms: [FOREIGN_REALM_ID],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
@@ -195,7 +202,7 @@ describe('core/authorization/check', () => {
     it('omits a permission reaching none of the requested realms', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.NONE)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -207,7 +214,7 @@ describe('core/authorization/check', () => {
     it('omits a requested name with no global definition', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             names: ['user_update', 'not_a_permission'],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
@@ -242,7 +249,7 @@ describe('core/authorization/check', () => {
 
         const ctx = setup([identityOnly], []);
 
-        const held = await buildAuthorizationCheck(ctx, {
+        const { permissions: held } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -259,7 +266,7 @@ describe('core/authorization/check', () => {
             clientId: 'c641912c-21e5-4cb4-84b6-169e2b2bb002',
         };
 
-        const denied = await buildAuthorizationCheck(ctx, {
+        const { permissions: denied } = await buildAuthorizationCheck(ctx, {
             identity: clientIdentity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(clientIdentity),
@@ -298,7 +305,7 @@ describe('core/authorization/check', () => {
             [identityOnlyPolicy],
         ]], []);
 
-        const held = await buildAuthorizationCheck(ctx, {
+        const { permissions: held } = await buildAuthorizationCheck(ctx, {
             identity,
             realms: RealmScope.OWN,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
@@ -311,7 +318,7 @@ describe('core/authorization/check', () => {
     it('answers nothing for a credential whose scopes withhold the identity', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.ANY)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(undefined),
@@ -323,7 +330,7 @@ describe('core/authorization/check', () => {
     it('resolves the own selector to the identity realm alone', async () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.OWN_OR_NULL)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             realms: RealmScope.OWN,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
@@ -336,7 +343,7 @@ describe('core/authorization/check', () => {
     it('echoes an explicit realm list verbatim and deduplicates it', async () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             realms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
@@ -362,7 +369,7 @@ describe('core/authorization/check', () => {
             ],
         );
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -390,7 +397,7 @@ describe('core/authorization/check', () => {
             return inner(value);
         };
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(identity),
@@ -403,7 +410,7 @@ describe('core/authorization/check', () => {
     it('answers nothing when the identity has no realm to resolve own against', async () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
 
-        const result = await buildAuthorizationCheck(ctx, {
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity: {
                 ...identity, 
                 realmId: null, 
@@ -419,5 +426,169 @@ describe('core/authorization/check', () => {
         });
 
         expect(result).toEqual([]);
+    });
+
+    describe('expiry', () => {
+        // Wednesday, 2024-04-17, local time.
+        const at = (hours: number) => new Date(2024, 3, 17, hours);
+
+        const officeHours = {
+            id: 'policy-office-hours',
+            realmId: null,
+            builtIn: false,
+            type: 'time',
+            start: '08:00:00',
+            end: '16:00:00',
+        };
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('reports no expiry when no evaluated verdict depends on the clock', async () => {
+            const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.OWN_OR_NULL)]);
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toHaveLength(1);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        it('reports when a time policy opens the window it still denies', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('user_read')[0], [systemDefault, officeHours]]],
+                [grant('user_read', RealmScope.OWN_OR_NULL)],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
+        it('reports when a time policy closes the window it holds in', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(12));
+
+            const ctx = setup(
+                [[definition('user_read')[0], [systemDefault, officeHours]]],
+                [grant('user_read', RealmScope.OWN_OR_NULL)],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
+            // the minute after the end: the evaluator compares at minute precision
+            expect(result.expiresAt).toEqual(new Date(2024, 3, 17, 16, 1));
+        });
+
+        // The window of a permission the caller cannot hold is none of its
+        // business: it would disclose the boundaries and have the caller
+        // refetch at them for nothing. Junction rows carry no order, so both
+        // orders of the definition's policies must answer the same.
+        it.each([
+            ['the time policy first', () => [officeHours, systemDefault]],
+            ['the time policy last', () => [systemDefault, officeHours]],
+        ])('reports no expiry to an anonymous caller for a grant-bound definition, %s', async (_, policies) => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup([[definition('user_read')[0], policies()]], []);
+
+            const result = await buildAuthorizationCheck(ctx, {
+                realms: [null],
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(undefined),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        it('reports no expiry to an identity holding no grant for a grant-bound definition', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('user_read')[0], [officeHours, systemDefault]]],
+                [grant('user_update', RealmScope.OWN_OR_NULL)],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        // An AFFIRMATIVE definition (a plain form field) passes on the time
+        // policy alone, so a grant-less caller's denial moves with the clock.
+        it('reports the expiry of an AFFIRMATIVE definition to an identity holding no grant', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('user_read', { decisionStrategy: DecisionStrategy.AFFIRMATIVE })[0], [systemDefault, officeHours]]],
+                [],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                identity,
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(identity),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
+        it('reports the expiry of an identity-free definition to an anonymous caller', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup([[definition('office_open')[0], [officeHours]]], []);
+
+            const result = await buildAuthorizationCheck(ctx, {
+                realms: [null],
+                grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                decorate: decorateWith(undefined),
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
+        it('raises a failed grant load met while deciding whether a denied pair expires', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            // the time policy denies before the binding child loads the grants
+            const ctx = setup([[definition('user_read')[0], [officeHours, systemDefault]]], []);
+            const error = new Error('ECONNREFUSED: the database is down');
+
+            await expect(buildAuthorizationCheck(ctx, {
+                identity,
+                grants: () => Promise.reject(error),
+                decorate: decorateWith(identity),
+            })).rejects.toThrow(error);
+        });
     });
 });

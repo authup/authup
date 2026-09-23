@@ -71,6 +71,9 @@ rows).
      the realm-match evaluator's scope vs. attribute mode).
    - `toCondition(value, ctx)` — optional, only when the policy is expressible over row
      attributes.
+   - a policy whose verdict depends on the real clock reports the next instant it could
+     change through `ctx.transitions?.report(at)` inside `evaluate()`, as the `date` and
+     `time` evaluators do; that is how `POST /authorization/check` derives its `max-age`.
 3. Register the type in `BuiltInPolicyType`, `BuiltInPolicyTypeMap`
    (`built-in/types.ts` — without this `definePolicyWithType` cannot author it) and
    `PolicyDefaultEvaluators` (`policy/constants.ts`).
