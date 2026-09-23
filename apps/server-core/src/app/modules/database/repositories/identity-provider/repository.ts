@@ -21,7 +21,7 @@ import {
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import { hasUnmatchableId, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type IdentityProviderRepositoryAdapterContext = {
@@ -104,6 +104,10 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
     }
 
     async findOneBy(where: Record<string, any>): Promise<IdentityProvider | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

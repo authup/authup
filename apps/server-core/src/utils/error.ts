@@ -34,7 +34,7 @@ import { hasOwnProperty, isObject } from '@authup/kit';
  *    rapiq AdapterError (value)        → BAD_REQUEST AuthupError (unbindable operand)
  * 5. hapic ClientError                 → UPSTREAM_ERROR AuthupError (outbound call)
  * 6. foreign @ebec/http HTTPError      → AuthupError with the closest semantic code
- * 7. driver error w/ a recognised code → ENTITY_CONFLICT or STORAGE_INSUFFICIENT
+ * 7. driver error w/ a recognised code → ENTITY_CONFLICT, BAD_REQUEST or STORAGE_INSUFFICIENT
  * 8. anything else                     → INTERNAL_ERROR AuthupError
  *
  * The HTTP-status concern is handled separately by `httpStatusFromCode` in
@@ -129,6 +129,19 @@ export function sanitizeError(input: unknown): AuthupError {
                     stack: input.stack as string | undefined,
                 });
             }
+            /**
+             * postgres `invalid_text_representation`: a bound value the
+             * column type cannot parse. Filter operands (refused by the
+             * rapiq adapter) and path ids (guarded in the repositories)
+             * no longer reach it (#3647, #3650); this is the backstop so
+             * a missed input answers 400 rather than 500.
+             */
+            case '22P02':
+                return new AuthupError({
+                    code: ErrorCode.BAD_REQUEST,
+                    message: 'A supplied value does not match the type of its field.',
+                    stack: input.stack as string | undefined,
+                });
             case 'ER_DISK_FULL':
                 return new AuthupError({
                     code: ErrorCode.STORAGE_INSUFFICIENT,

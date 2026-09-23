@@ -6,6 +6,7 @@
  */
 
 import { KeyStatus } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { JWTAlgorithm, OAuth2JsonWebKey } from '@authup/specs';
 import { JWKError, JWKType, JWKUse } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
@@ -83,6 +84,10 @@ export class JwkController {
 
     @DGet('/jwks/:id', [])
     async getOneJwks(@DPath('id') id: string): Promise<OAuth2JsonWebKey> {
+        if (!isUUID(id)) {
+            throw JWKError.notFound(id);
+        }
+
         const entity = await this.repository.findOne({
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),

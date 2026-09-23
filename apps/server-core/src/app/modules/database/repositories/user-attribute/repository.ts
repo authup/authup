@@ -6,14 +6,15 @@
  */
 
 import type { UserAttribute } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
+import { EntityRelationLookupError, validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class UserAttributeRepositoryAdapter implements IUserAttributeRepository {
     private readonly repository: Repository<UserAttribute>;
@@ -58,6 +59,10 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
     }
 
     async findOneBy(where: Record<string, any>): Promise<UserAttribute | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 
@@ -78,6 +83,12 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
     }
 
     async validateJoinColumns(data: Partial<UserAttribute>): Promise<void> {
+        // a non-uuid owner can reference no row: refuse it the way the lookup
+        // does on every dialect, before postgres fails to parse the bind
+        if (typeof data.userId === 'string' && !isUUID(data.userId)) {
+            throw EntityRelationLookupError.notFound('user', ['userId']);
+        }
+
         await validateEntityJoinColumns(data, {
             dataSource: this.repository.manager.connection,
             entityTarget: UserAttributeEntity,

@@ -14,6 +14,7 @@ import type {
     Repository,
     SelectQueryBuilder,
 } from 'typeorm';
+import { isUUID } from '@authup/kit';
 import { Brackets, In, IsNull } from 'typeorm';
 
 /**
@@ -211,4 +212,14 @@ export function translateWhereConditions(where: Record<string, any>): Record<str
         }
     });
     return result;
+}
+
+/**
+ * An `id` that is not a uuid cannot match a row, since every entity key is
+ * one. Checking it before the query makes every dialect answer the same:
+ * postgres refuses to parse the value for a uuid column (22P02) where sqlite
+ * and mysql compare and miss.
+ */
+export function hasUnmatchableId(where: Record<string, any>): boolean {
+    return typeof where.id === 'string' && !isUUID(where.id);
 }

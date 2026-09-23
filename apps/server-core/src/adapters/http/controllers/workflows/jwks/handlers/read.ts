@@ -6,6 +6,7 @@
  */
 
 import { KeyStatus } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import { AsymmetricKey } from '@authup/server-kit';
 import type { JWTAlgorithm, OAuth2JsonWebKey } from '@authup/specs';
 import { JWKError, JWKType, JWKUse } from '@authup/specs';
@@ -64,6 +65,10 @@ export async function getJwkRouteHandler(
     keyId: string,
     realmId?: string,
 ) : Promise<OAuth2JsonWebKey> {
+    if (!isUUID(keyId)) {
+        throw JWKError.notFound(keyId);
+    }
+
     const entity = await repository.findOne({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),

@@ -14,7 +14,12 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -84,6 +89,10 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Scope | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

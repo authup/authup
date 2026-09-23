@@ -15,7 +15,12 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -90,6 +95,10 @@ export class RoleRepositoryAdapter implements IRoleRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Role | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

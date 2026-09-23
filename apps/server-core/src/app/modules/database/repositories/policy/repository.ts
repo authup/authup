@@ -16,7 +16,12 @@ import type { IPolicyRepository, IRealmRepository } from '../../../../../core/in
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PolicyRepositoryAdapterContext = {
@@ -94,6 +99,10 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Policy | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

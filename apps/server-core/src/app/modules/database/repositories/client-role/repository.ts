@@ -13,7 +13,7 @@ import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
 import { ClientRoleEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 
 export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     private readonly repository: Repository<ClientRole>;
@@ -60,6 +60,10 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<ClientRole | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

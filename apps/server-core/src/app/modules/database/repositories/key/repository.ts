@@ -39,7 +39,12 @@ import {
     unwrapKeyMaterial,
     wrapKeyMaterial,
 } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type KeyRepositoryAdapterOptions = {
@@ -372,6 +377,10 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Key | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 

@@ -17,7 +17,7 @@ import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
-import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import { hasUnmatchableId, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -119,6 +119,10 @@ export class ClientRepositoryAdapter implements IClientRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Client | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOne({
             where: translateWhereConditions(where),
             ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),

@@ -6,6 +6,7 @@
  */
 
 import type { SessionToken } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
@@ -72,6 +73,10 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
     }
 
     async findOneById(id: string): Promise<SessionToken | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         return this.repository.findOne({ where: { id } });
     }
 
@@ -191,6 +196,10 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
     }
 
     async findOneWithSessionById(id: string): Promise<SessionToken | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         const qb = this.repository.createQueryBuilder('sessionToken')
             .where('sessionToken.id = :id', { id });
 

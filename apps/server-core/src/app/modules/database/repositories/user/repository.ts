@@ -25,7 +25,12 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../../../../adapters/database/domains/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -136,6 +141,10 @@ export class UserRepositoryAdapter implements IUserRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<User | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOne({
             where: translateWhereConditions(where),
             ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),

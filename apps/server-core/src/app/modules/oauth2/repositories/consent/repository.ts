@@ -6,6 +6,7 @@
  */
 
 import type { Consent } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import { IdentityType  } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
@@ -81,6 +82,10 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
     }
 
     async findOneById(id: string): Promise<Consent | null> {
+        if (!isUUID(id)) {
+            return null;
+        }
+
         return this.repository.findOneBy({ id });
     }
 

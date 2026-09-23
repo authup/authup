@@ -17,7 +17,12 @@ import type { IPathRepository, IRealmRepository } from '../../../../../core/inde
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { isTransientLockDatabaseError, isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
-import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
+import {
+    applyRealmScopeSelect,
+    hasUnmatchableId,
+    isEntityUnique,
+    translateWhereConditions,
+} from '../helpers.ts';
 import { PathEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -111,6 +116,10 @@ export class PathRepositoryAdapter implements IPathRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Path | null> {
+        if (hasUnmatchableId(where)) {
+            return null;
+        }
+
         return this.repository.findOne({
             where: translateWhereConditions(where),
             ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
