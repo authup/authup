@@ -7,7 +7,6 @@
 <script lang="ts">
 import { EventName } from '@authup/core-kit';
 import type { EntityStatsQuery } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationEntityKey,
@@ -203,7 +202,7 @@ export default defineComponent({
                 },
             });
 
-            return computed(() => (windowEntry.value.granularity === StatsGranularity.HOUR ?
+            return computed(() => (windowEntry.value.unit === 'hour' ?
                 inHours.value :
                 inDays.value));
         };
@@ -309,7 +308,7 @@ export default defineComponent({
 
         const rows = computed(() => response.value?.data ?? []);
         const enabled = computed(() => response.value?.meta.enabled !== false);
-        const hourly = computed(() => response.value?.meta.granularity === StatsGranularity.HOUR);
+        const hourly = computed(() => response.value?.meta.bucket === 'hour');
         const axis = computed(() => (response.value ? buildBucketAxis(response.value.meta) : []));
 
         const labelFormat = computed(() => new Intl.DateTimeFormat(locale.value, hourly.value ?

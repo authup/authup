@@ -6,8 +6,7 @@
  */
 
 import { EventName, EventScope } from '@authup/core-kit';
-import type { EventStatsBucket } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
+import type { EventStatsRow } from '@authup/core-http-kit';
 import { describe, expect, it } from 'vitest';
 import {
     alignEventStats,
@@ -18,9 +17,9 @@ import {
     sumStats,
 } from '../../src/components/dashboard/stats';
 
-function row(bucket: string, name: `${EventName}`, count: number, scope: `${EventScope}` = EventScope.OAUTH2): EventStatsBucket {
+function row(createdAt: string, name: `${EventName}`, count: number, scope: `${EventScope}` = EventScope.OAUTH2): EventStatsRow {
     return {
-        bucket,
+        createdAt,
         scope,
         name,
         count,
@@ -33,7 +32,7 @@ describe('src/components/dashboard/stats', () => {
             expect(buildBucketAxis({
                 from: '2026-09-20T00:00:00.000Z',
                 to: '2026-09-22T10:15:00.000Z',
-                granularity: StatsGranularity.DAY,
+                bucket: 'day',
             })).toEqual([
                 '2026-09-20T00:00:00.000Z',
                 '2026-09-21T00:00:00.000Z',
@@ -45,7 +44,7 @@ describe('src/components/dashboard/stats', () => {
             expect(buildBucketAxis({
                 from: '2026-09-22T10:00:00.000Z',
                 to: '2026-09-22T12:30:00.000Z',
-                granularity: StatsGranularity.HOUR,
+                bucket: 'hour',
             })).toEqual([
                 '2026-09-22T10:00:00.000Z',
                 '2026-09-22T11:00:00.000Z',
@@ -53,11 +52,23 @@ describe('src/components/dashboard/stats', () => {
             ]);
         });
 
+        it('walks month buckets', () => {
+            expect(buildBucketAxis({
+                from: '2026-07-01T00:00:00.000Z',
+                to: '2026-09-22T10:00:00.000Z',
+                bucket: 'month',
+            })).toEqual([
+                '2026-07-01T00:00:00.000Z',
+                '2026-08-01T00:00:00.000Z',
+                '2026-09-01T00:00:00.000Z',
+            ]);
+        });
+
         it('answers the single bucket of a window that ends where it starts', () => {
             expect(buildBucketAxis({
                 from: '2026-09-22T10:00:00.000Z',
                 to: '2026-09-22T10:00:00.000Z',
-                granularity: StatsGranularity.HOUR,
+                bucket: 'hour',
             })).toEqual(['2026-09-22T10:00:00.000Z']);
         });
     });
@@ -71,10 +82,10 @@ describe('src/components/dashboard/stats', () => {
             ];
 
             expect(alignStats([
-                { bucket: '2026-09-20T00:00:00.000Z', count: 3 },
-                { bucket: '2026-09-20T00:00:00.000Z', count: 2 },
-                { bucket: '2026-09-22T00:00:00.000Z', count: 1 },
-                { bucket: '2026-09-19T00:00:00.000Z', count: 7 },
+                { createdAt: '2026-09-20T00:00:00.000Z', count: 3 },
+                { createdAt: '2026-09-20T00:00:00.000Z', count: 2 },
+                { createdAt: '2026-09-22T00:00:00.000Z', count: 1 },
+                { createdAt: '2026-09-19T00:00:00.000Z', count: 7 },
             ], axis)).toEqual([5, 0, 1]);
         });
 

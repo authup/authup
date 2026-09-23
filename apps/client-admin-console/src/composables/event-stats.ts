@@ -48,6 +48,7 @@ export function useEventStats(options: EventStatsOptions): EventStats {
         load: (query) => options.client.event.getStats(query),
         filters: computed(() => ({ realmId: [options.realmId.value ?? null, null] })),
         window: computed(() => ENTITY_STATS_WINDOWS[window.value]),
+        groups: ['scope', 'name'],
         onError: options.onError,
     });
 

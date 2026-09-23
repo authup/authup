@@ -176,18 +176,32 @@ describe('entity commands', () => {
         });
 
         it('counts with the stats flags carried onto the @stats read and prints the body', async () => {
-            const body = { data: [{ bucket: '2026-09-22T00:00:00.000Z', count: 1 }], meta: { total: 1 } };
-            await run('user', ['stats', '--filter', 'realmId=r1', '--granularity', 'hour', '--days', '7'], { 'GET /users/@stats': () => ({ body }) });
+            const body = { data: [{ createdAt: '2026-09-22T00:00:00.000Z', count: 1 }], meta: { total: 1 } };
+            await run('user', [
+                'stats',
+                '--filter',
+                'createdAt=>=2026-09-01&realmId=r1',
+                '--group',
+                'bucket(createdAt,day),name',
+                '--aggregate',
+                'count',
+            ], { 'GET /users/@stats': () => ({ body }) });
 
             const url = new URL(requests[0]!.url);
             expect(requests[0]!.method).toEqual('GET');
             expect(url.pathname).toEqual('/users/@stats');
-            expect(url.searchParams.get('granularity')).toEqual('hour');
-            expect(url.searchParams.get('days')).toEqual('7');
+            expect(url.searchParams.get('group')).toEqual('bucket(createdAt,day),name');
+            expect(url.searchParams.get('aggregate')).toEqual('count');
+            expect(url.searchParams.has('granularity')).toBe(false);
             expect(createURLCodec().decode(url.search.slice(1))).toMatchObject({
                 filters: {
                     operator: 'and',
                     value: [
+                        {
+                            field: 'createdAt',
+                            operator: 'gte',
+                            value: '2026-09-01',
+                        },
                         {
                             field: 'realmId',
                             operator: 'eq',
@@ -217,8 +231,7 @@ describe('entity commands', () => {
         });
 
         it('refuses a malformed stats flag before any request', async () => {
-            await expect(run('user', ['stats', '--granularity', 'week'], {})).rejects.toThrow(/--granularity must be one of hour, day/);
-            await expect(run('user', ['stats', '--days', 'seven'], {})).rejects.toThrow(/--days must be a non-negative integer/);
+            await expect(run('user', ['stats', '--group', 'bucket(createdAt,day'], {})).rejects.toThrow(/--group/);
             expect(requests).toEqual([]);
         });
 
@@ -285,15 +298,15 @@ describe('readEntityStatsQuery', () => {
         expect(readEntityStatsQuery({})).toEqual({});
     });
 
-    it('decodes the filter like a list read and takes the window as a number', () => {
+    it('decodes the filter like a list read and takes the groups and aggregates as terms', () => {
         const query = readEntityStatsQuery({
-            filter: 'realmId=r1', 
-            granularity: 'day', 
-            days: '30', 
+            filter: 'realmId=r1',
+            group: 'bucket(createdAt,day),scope',
+            aggregate: 'count',
         });
 
-        expect(query.granularity).toEqual('day');
-        expect(query.days).toEqual(30);
+        expect(query.groups).toEqual([{ name: 'bucket', params: ['createdAt', 'day'] }, 'scope']);
+        expect(query.aggregates).toEqual(['count']);
         expect(query.filters).toMatchObject({
             operator: 'and',
             value: [{
@@ -304,8 +317,9 @@ describe('readEntityStatsQuery', () => {
         });
     });
 
-    it('refuses an unknown granularity', () => {
-        expect(() => readEntityStatsQuery({ granularity: 'week' })).toThrow(/--granularity must be one of hour, day/);
+    it('refuses an unbalanced term', () => {
+        expect(() => readEntityStatsQuery({ group: 'bucket(createdAt,day' })).toThrow(/--group/);
+        expect(() => readEntityStatsQuery({ aggregate: 'count)' })).toThrow(/--aggregate/);
     });
 });
 

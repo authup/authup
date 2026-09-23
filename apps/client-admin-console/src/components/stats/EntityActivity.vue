@@ -14,7 +14,6 @@ import {
     useTranslations,
 } from '@authup/client-web-kit';
 import type { EntityStatsQuery, EventStatsResponse } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
 import { EntityDefaultEventName, EventScope, PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
@@ -95,6 +94,7 @@ export default defineComponent({
                 ...realmFilter(),
             }) as EntityStatsQuery['filters'],
             window: windowEntry,
+            groups: ['name'],
             paused: () => !canReadEvents.value,
         });
 
@@ -135,7 +135,7 @@ export default defineComponent({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.ACTIVITY_ALL_TIME,
         });
-        const windowHint = computed(() => (windowEntry.value.granularity === StatsGranularity.HOUR ?
+        const windowHint = computed(() => (windowEntry.value.unit === 'hour' ?
             inHours.value :
             inDays.value));
 

@@ -6,8 +6,15 @@
  */
 
 import { extractErrorContext } from '@authup/client-web-kit';
-import type { EntityStatsMeta, EntityStatsQuery } from '@authup/core-http-kit';
-import { StatsGranularity, buildQueryString } from '@authup/core-http-kit';
+import type { EntityStatsMeta, EntityStatsQuery, StatsBucketUnit } from '@authup/core-http-kit';
+import { buildQueryString } from '@authup/core-http-kit';
+import type { IGroups } from '@rapiq/core';
+import {
+    and,
+    defineFilters,
+    defineGroups,
+    gte,
+} from '@rapiq/core';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { ref, toValue, watch } from 'vue';
 
@@ -15,18 +22,40 @@ export type EntityStatsWindow = '24h' | '7d' | '30d' | '90d';
 
 export type EntityStatsWindowEntry = {
     days: number,
-    granularity: `${StatsGranularity}`,
+    unit: StatsBucketUnit,
 };
 
 /**
  * The windows the dashboard offers: hours for a day, days for the rest.
  */
 export const ENTITY_STATS_WINDOWS : Record<EntityStatsWindow, EntityStatsWindowEntry> = {
-    '24h': { days: 1, granularity: StatsGranularity.HOUR },
-    '7d': { days: 7, granularity: StatsGranularity.DAY },
-    '30d': { days: 30, granularity: StatsGranularity.DAY },
-    '90d': { days: 90, granularity: StatsGranularity.DAY },
+    '24h': { days: 1, unit: 'hour' },
+    '7d': { days: 7, unit: 'day' },
+    '30d': { days: 30, unit: 'day' },
+    '90d': { days: 90, unit: 'day' },
 };
+
+/**
+ * The window's lower bound, snapped onto the start of its first bucket
+ * with the current one counted: 24 hour buckets for a day, `days` day
+ * buckets otherwise. Snapped, so the same window within one bucket asks
+ * the same query and the server's cache answers it.
+ */
+export function buildStatsWindowStart(entry: EntityStatsWindowEntry, now: Date): string {
+    const date = new Date(now);
+    if (entry.unit === 'hour') {
+        date.setUTCHours(date.getUTCHours() - ((entry.days * 24) - 1), 0, 0, 0);
+    } else {
+        date.setUTCDate(date.getUTCDate() - (entry.days - 1));
+        date.setUTCHours(0, 0, 0, 0);
+    }
+
+    if (entry.unit === 'month') {
+        date.setUTCDate(1);
+    }
+
+    return date.toISOString();
+}
 
 /**
  * What any `GET /<collection>/@stats` answers, stated structurally so the
@@ -34,30 +63,40 @@ export const ENTITY_STATS_WINDOWS : Record<EntityStatsWindow, EntityStatsWindowE
  * `enabled`) and the plain entity reads fit the same composable.
  */
 export type EntityStatsResponseLike = {
-    data: { bucket: string, count: number }[],
+    data: { createdAt: string, count: number }[],
     meta: EntityStatsMeta,
 };
+
+/**
+ * The query the composable builds. The groups are already defined, so the
+ * same query fits every entity's typed `getStats`.
+ */
+export type EntityStatsLoadQuery = Omit<EntityStatsQuery, 'groups'> & { groups: IGroups };
 
 /**
  * One entity's statistics read, `client.<entity>.getStats` bound to its
  * client. A parameter rather than the client itself, so the composable
  * knows no entity and a page hands it whichever facet it lists.
  */
-export type EntityStatsLoadFn<R extends EntityStatsResponseLike = EntityStatsResponseLike> = (query: EntityStatsQuery) => Promise<R>;
+export type EntityStatsLoadFn<R extends EntityStatsResponseLike = EntityStatsResponseLike> = (query: EntityStatsLoadQuery) => Promise<R>;
 
 export type EntityStatsOptions<R extends EntityStatsResponseLike = EntityStatsResponseLike> = {
     load: EntityStatsLoadFn<R>,
     /**
      * The rows to count, in the entity's own filter vocabulary: the header
-     * realm switcher's scope, a list page's folder scope. The window is not
-     * a filter and rides `window` instead.
+     * realm switcher's scope, a list page's folder scope. The window's lower
+     * bound is appended to them from `window`.
      */
     filters?: MaybeRefOrGetter<EntityStatsQuery['filters']>,
     /**
-     * The `{ days, granularity }` pair: one of `ENTITY_STATS_WINDOWS` for a
+     * The `{ days, unit }` pair: one of `ENTITY_STATS_WINDOWS` for a
      * dashboard window, or a caller's own fixed one.
      */
     window: MaybeRefOrGetter<EntityStatsWindowEntry>,
+    /**
+     * The columns each bucket is grouped by next to its time bucket.
+     */
+    groups?: string[],
     /**
      * While true, a scope change waits instead of reloading: a caller whose
      * filters are still being resolved (a folder scope looking up its
@@ -103,26 +142,34 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
     let answered : string | undefined;
     let requested : string | undefined;
 
-    const buildScope = () => {
-        const { days, granularity } = toValue(options.window);
+    const buildQuery = () : EntityStatsLoadQuery => {
+        const window = toValue(options.window);
+        const filters = toValue(options.filters);
+        const start = gte('createdAt', buildStatsWindowStart(window, new Date()));
 
-        return `${buildQueryString({ filters: toValue(options.filters) })}|${granularity}|${days}`;
+        return {
+            filters: filters ? and(defineFilters(filters), start) : start,
+            groups: defineGroups([
+                { name: 'bucket', params: ['createdAt', window.unit] },
+                ...(options.groups ?? []),
+            ]),
+            aggregates: ['count'],
+        };
     };
+
+    // the encoded query, snapped lower bound included, is the scope
+    const buildScope = () => buildQueryString(buildQuery());
 
     const load = async () => {
         generation += 1;
         const current = generation;
-        const scope = buildScope();
+        const query = buildQuery();
+        const scope = buildQueryString(query);
         requested = scope;
         busy.value = true;
 
         try {
-            const { days, granularity } = toValue(options.window);
-            const next = await options.load({
-                filters: toValue(options.filters),
-                days,
-                granularity,
-            });
+            const next = await options.load(query);
 
             if (current === generation) {
                 response.value = next;
