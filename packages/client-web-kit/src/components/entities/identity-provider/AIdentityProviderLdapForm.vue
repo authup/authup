@@ -30,6 +30,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
+import AIdentityProviderEnrollmentFields from './AIdentityProviderEnrollmentFields.vue';
 import AIdentityProviderLdapConnectionFields from './AIdentityProviderLdapConnectionFields.vue';
 import AIdentityProviderLdapCredentialsFields from './AIdentityProviderLdapCredentialsFields.vue';
 import AIdentityProviderLdapGroupFields from './AIdentityProviderLdapGroupFields.vue';
@@ -41,6 +42,7 @@ export default defineComponent({
         VCIcon,
         AFormSubmit,
         AIdentityProviderBasicFields,
+        AIdentityProviderEnrollmentFields,
         AIdentityProviderLdapConnectionFields,
         AIdentityProviderLdapCredentialsFields,
         AIdentityProviderLdapGroupFields,
@@ -72,7 +74,7 @@ export default defineComponent({
         const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
 
         const isInvalid = computed(() => {
-            const slots = ['basic', 'connection', 'credentials', 'group', 'user'] as const;
+            const slots = ['basic', 'enrollment', 'connection', 'credentials', 'group', 'user'] as const;
             return slots.some((slot) => !!v.$getResultsForChild(slot)?.$invalid.value);
         });
 
@@ -85,6 +87,7 @@ export default defineComponent({
             try {
                 const data: Partial<IdentityProvider> = {
                     ...extractValidupResultsFromChild(v, 'basic'),
+                    ...extractValidupResultsFromChild(v, 'enrollment'),
                     ...extractValidupResultsFromChild(v, 'connection'),
                     ...extractValidupResultsFromChild(v, 'credentials'),
                     ...extractValidupResultsFromChild(v, 'group'),
@@ -161,6 +164,10 @@ export default defineComponent({
                     <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
                 </h6>
                 <AIdentityProviderBasicFields :entity="data" />
+                <AIdentityProviderEnrollmentFields
+                    :entity="data"
+                    :realm-id="realmId"
+                />
             </div>
             <div class="flex-1 basis-0 px-2">
                 <h6>

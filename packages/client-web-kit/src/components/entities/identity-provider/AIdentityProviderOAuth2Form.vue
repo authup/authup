@@ -39,6 +39,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
+import AIdentityProviderEnrollmentFields from './AIdentityProviderEnrollmentFields.vue';
 import AIdentityProviderOAuth2ClientFields from './AIdentityProviderOAuth2ClientFields.vue';
 import AIdentityProviderOAuth2EndpointFields from './AIdentityProviderOAuth2EndpointFields.vue';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
@@ -48,6 +49,7 @@ export default defineComponent({
     components: {
         AFormSubmit,
         AIdentityProviderBasicFields,
+        AIdentityProviderEnrollmentFields,
         AIdentityProviderOAuth2ClientFields,
         AIdentityProviderOAuth2EndpointFields,
         AIdentityProviderPreset,
@@ -100,9 +102,11 @@ export default defineComponent({
             const basic = v.$getResultsForChild('basic');
             const client = v.$getResultsForChild('client');
             const endpoint = v.$getResultsForChild('endpoint');
+            const enrollment = v.$getResultsForChild('enrollment');
             return !!basic?.$invalid.value ||
                 !!client?.$invalid.value ||
-                !!endpoint?.$invalid.value;
+                !!endpoint?.$invalid.value ||
+                !!enrollment?.$invalid.value;
         });
 
         // The redirect_uri authup sends to the external provider is the
@@ -155,6 +159,7 @@ export default defineComponent({
                 ...extractValidupResultsFromChild(v, 'basic'),
                 ...extractValidupResultsFromChild(v, 'client'),
                 ...extractValidupResultsFromChild(v, 'endpoint'),
+                ...extractValidupResultsFromChild(v, 'enrollment'),
             };
 
             if (protocolEff.value) {
@@ -271,6 +276,10 @@ export default defineComponent({
                 <AIdentityProviderBasicFields
                     ref="basicFieldsRef"
                     :entity="data"
+                />
+                <AIdentityProviderEnrollmentFields
+                    :entity="data"
+                    :realm-id="realmId"
                 />
             </div>
             <div class="flex-1 basis-0 px-2">
