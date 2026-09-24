@@ -1186,11 +1186,15 @@ export class HTTPControllerModule {
                     translateRow: translateEventAggregateRow,
                     horizonDays: () => config.eventLogAggregateRetentionDays,
                 },
-                meta: async () => ({
+                // coverage only where the rollups can answer the read, so a
+                // client never offers a window the server then refuses
+                meta: async ({ routable }) => ({
                     enabled: config.eventLogEnabled !== false,
                     retentionDays: config.eventLogRetentionDays,
                     entityRetentionDays: config.eventLogEntityRetentionDays,
-                    ...await aggregates.findCoverage(),
+                    ...(routable ?
+                        await aggregates.findCoverage() :
+                        { aggregateFrom: null, entityAggregateFrom: null }),
                 }),
             }),
         });

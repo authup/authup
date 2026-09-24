@@ -136,8 +136,10 @@ export class EntityStatsService<
         // which only raw events hold, so that half is bounded by the raw
         // retention by nature
         let own: IQuery | undefined;
-        if (!this.isRoutable(scoped) && gate?.reach && gate.ownership) {
+        let routable = this.isRoutable(scoped);
+        if (!routable && gate?.reach && gate.ownership) {
             const reached = appendQueryConditions(base, gate.reach);
+            routable = this.isRoutable(reached);
             translated = this.translate(reached, window, now);
             if (translated) {
                 own = appendQueryConditions(base, gate.ownership, not(gate.reach));
@@ -176,7 +178,7 @@ export class EntityStatsService<
                 this.definition.repository.aggregate(bound(scoped)),
             own ? this.definition.repository.aggregate(bound(own)) : [],
             this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
-            this.definition.meta ? this.definition.meta() : {},
+            this.definition.meta ? this.definition.meta({ routable }) : {},
         ]);
 
         const merged = new Map<string, Record<string, unknown>>();

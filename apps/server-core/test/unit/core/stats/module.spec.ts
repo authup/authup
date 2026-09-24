@@ -132,11 +132,11 @@ function defineEventStats(
         repository,
         scope: (query, actor) => events.scopeRead(query, actor),
         rawHorizonDays: () => options.rawHorizonDays ?? 0,
-        meta: async () => ({
+        meta: async ({ routable }) => ({
             enabled: options.enabled ?? true,
             retentionDays: 90,
             entityRetentionDays: 7,
-            aggregateFrom: '2026-01-01',
+            aggregateFrom: routable ? '2026-01-01' : null,
             entityAggregateFrom: null,
         }),
         ...(options.rollups ? {
@@ -766,14 +766,15 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(repository.aggregateCalls).toHaveLength(1);
         expect(rollups.aggregateCalls).toHaveLength(0);
-        expect(meta).toMatchObject({ retentionDays: 90, aggregateFrom: '2026-01-01' });
+        expect(meta).toMatchObject({ retentionDays: 90, aggregateFrom: null });
     });
 
     it('answers an actor without event_read from raw events', async () => {
-        await service.getMany(wire(), makeActor({ allow: false }));
+        const { meta } = await service.getMany(wire(), makeActor({ allow: false }));
 
         expect(repository.aggregateCalls).toHaveLength(1);
         expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(meta).toMatchObject({ aggregateFrom: null });
     });
 
     it('refuses a raw read past the raw horizon', async () => {

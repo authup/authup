@@ -88,9 +88,10 @@ export type EntityStatsDefinition = {
     scope?: (query: IQuery, actor: ActorContext) => Promise<ReadScope>,
     /**
      * Extra response meta, cached with the read (events: `enabled`, the raw
-     * retentions and the rollup coverage).
+     * retentions and the rollup coverage). `routable` says whether the
+     * rollups can answer the read's gated scope at all, whatever its window.
      */
-    meta?: () => Record<string, any> | Promise<Record<string, any>>,
+    meta?: (context: { routable: boolean }) => Record<string, any> | Promise<Record<string, any>>,
 };
 
 export type EntityStatsRollup = {

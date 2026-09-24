@@ -560,6 +560,15 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         expect(meta.entityAggregateFrom! <= day).toBe(true);
     });
 
+    it('reports no rollup coverage on a read the rollups can never answer', async () => {
+        const { meta } = await suite.client.event.getStats(
+            buildQuery('day', since(2 * DAY_IN_MS), eq('actorType', 'client')),
+        );
+
+        expect(meta.aggregateFrom).toBeNull();
+        expect(meta.entityAggregateFrom).toBeNull();
+    });
+
     it('refuses a raw read past the entity retention when it pins scope=entity', async () => {
         await expectClientError(
             () => suite.client.event.getStats(
