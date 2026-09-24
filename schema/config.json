@@ -379,6 +379,13 @@
                     "default": 7,
                     "x-authup-env": "EVENT_LOG_ENTITY_RETENTION_DAYS"
                 },
+                "eventLogAggregateRetentionDays": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Retention for the daily event rollups (auth_event_aggregates) in days. Zero keeps them forever. Rollups hold counts only, no personal data.",
+                    "default": 0,
+                    "x-authup-env": "EVENT_LOG_AGGREGATE_RETENTION_DAYS"
+                },
                 "loginAttemptThrottleEnabled": {
                     "type": "boolean",
                     "description": "Throttle failed interactive logins per (identifier, ip) pair by counting recent loginFailed audit events. Requires eventLogEnabled.",
