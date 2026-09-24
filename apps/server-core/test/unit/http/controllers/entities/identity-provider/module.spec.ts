@@ -126,6 +126,20 @@ describe('src/http/controllers/identity-provider', () => {
         expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
     });
 
+    // #3671: a numeric client id reads back as a string
+    it('should keep a numeric client id a string', async () => {
+        const { data: created } = await suite.client
+            .identityProvider
+            .create(createFakeOAuth2IdentityProvider({ clientId: '123456' }));
+
+        const { data: read } = await suite.client
+            .identityProvider
+            .getOne(created.id);
+        expect((read as OAuth2IdentityProvider).clientId).toBe('123456');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
     it('should read resource (ldap)', async () => {
         const { data: response } = await suite.client
             .identityProvider

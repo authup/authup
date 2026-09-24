@@ -158,6 +158,21 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
             { status: 409 },
         );
 
+        // a blob written before values were JSON-quoted (#3671) is stored
+        // bare, and still counts as a reference
+        const blob = (await stored(created.id, 'clientSecret'))!;
+        await dataSource
+            .createQueryBuilder()
+            .update(IdentityProviderAttributeEntity)
+            .set({ value: () => ':blob' })
+            .setParameter('blob', blob)
+            .where({ providerId: created.id, name: 'clientSecret' })
+            .execute();
+        await expectClientError(
+            () => suite.client.key.delete(keyId),
+            { status: 409 },
+        );
+
         // disabled: the provider stays readable, the secret is withheld
         await suite.client.key.update(keyId, { status: KeyStatus.DISABLED });
         const { data: withheld } = await suite.client.identityProvider.getOne(created.id);

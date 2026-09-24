@@ -34,6 +34,23 @@ describe('src/http/controllers/user-attribute', () => {
         expect(response.value).toEqual(attribute.value);
     });
 
+    // #3671: a numeric-looking string reads back as a string on every surface
+    it('keeps a numeric-looking value a string', async () => {
+        const name = `numeric_${Date.now()}`;
+        const { data: created } = await suite.client.userAttribute.create({ name, value: '123' });
+
+        const { data: read } = await suite.client.userAttribute.getOne(created.id);
+        expect(read.value).toBe('123');
+
+        const { data: user } = await suite.client.user.getOne(created.userId);
+        expect((user as Record<string, any>)[name]).toBe('123');
+
+        const userInfo = await suite.client.userInfo.get<Record<string, any>>();
+        expect(userInfo[name]).toBe('123');
+
+        await suite.client.userAttribute.delete(created.id);
+    });
+
     /**
      * Naming the owner through the `user` relation keeps working, but only its
      * id is taken: the object is dropped before anything reads it, since its

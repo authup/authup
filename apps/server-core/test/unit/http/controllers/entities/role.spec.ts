@@ -45,6 +45,20 @@ describe('src/http/controllers/role', () => {
         );
     });
 
+    // #3671: a numeric-looking value reads back as a string
+    it('should keep a numeric-looking attribute value a string', async () => {
+        const { data: created } = await suite.client.roleAttribute.create({
+            name: `numeric_${Date.now()}`,
+            value: '123',
+            roleId: details.id!,
+        });
+
+        const { data: read } = await suite.client.roleAttribute.getOne(created.id);
+        expect(read.value).toBe('123');
+
+        await suite.client.roleAttribute.delete(created.id);
+    });
+
     it('should read collection', async () => {
         const response = await suite.client
             .role
