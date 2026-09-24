@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.66)
+## v1.0.0-beta.67 (was: next release after v1.0.0-beta.66)
 
 ### `GET /schemas/:name` moved to `GET /<collection>/@schema`
 
@@ -128,10 +128,21 @@ SELECT @@global.time_zone, @@system_time_zone;
 ```
 
 If it is not UTC and the historical values matter, convert them once after
-the upgrade, e.g. on PostgreSQL
-`UPDATE auth_events SET created_at = (created_at AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'UTC';`
-per table and column, with the zone the database used. Sessions expire on
-their own, so their `createdAt` needs no conversion.
+the upgrade, per table and column, with the zone the database used:
+
+```sql
+-- PostgreSQL
+UPDATE auth_events SET created_at = (created_at AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'UTC';
+-- MySQL (needs the server's time zone tables loaded)
+UPDATE auth_events SET created_at = CONVERT_TZ(created_at, 'Europe/Berlin', '+00:00');
+```
+
+Sessions deserve a look even when nothing else does. A session's `createdAt`
+is its authentication time, so on a database east of UTC a session created
+before the upgrade reads up to the offset in the future. Until that time has
+passed, `prompt=login` and `max_age` accept it without a fresh sign-in.
+Convert `auth_sessions.created_at` as well, or revoke the sessions created
+shortly before the upgrade.
 
 A database setting that contradicts the pin now stops the boot with an error
 naming it: a MySQL `timezone` other than UTC, a MySQL `dateStrings` or
