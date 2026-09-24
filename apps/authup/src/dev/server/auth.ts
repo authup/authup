@@ -19,14 +19,61 @@ import {
 } from '@authup/server-console-kit';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ViteDevServer } from 'vite';
+import type { EnvironmentModuleGraph, EnvironmentModuleNode, ViteDevServer } from 'vite';
 import { createConsoleViteServer } from './module.ts';
 import type { AuthConsoleDevServer } from './types.ts';
 
 type ViteRenderContext = Pick<
     ViteDevServer,
 'transformIndexHtml' | 'ssrLoadModule' | 'ssrFixStacktrace'
->;
+> & {
+    environments: { ssr: { moduleGraph: Pick<EnvironmentModuleGraph, 'getModuleByUrl'> } },
+};
+
+const SSR_ENTRY = '/src/server.ts';
+
+const CSS_REQUEST = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)$/;
+
+/**
+ * The stylesheets the SSR entry reaches, inlined as the `<style>` tags vite's
+ * client would create itself. A build links them through the manifest; dev
+ * has none, so without this the markup paints unstyled (white) until the
+ * client modules load, which a fast reload makes visible every time. The
+ * `data-vite-dev-id` is what vite's client looks a sheet up by, so it adopts
+ * these tags on hot updates instead of appending a second copy.
+ */
+async function renderDevStyles(vite: ViteRenderContext) : Promise<string> {
+    const entry = await vite.environments.ssr.moduleGraph.getModuleByUrl(SSR_ENTRY);
+    if (!entry) {
+        return '';
+    }
+
+    const sheets : EnvironmentModuleNode[] = [];
+    const seen = new Set<EnvironmentModuleNode>();
+    const queue = [entry];
+    while (queue.length > 0) {
+        const mod = queue.shift()!;
+        if (seen.has(mod)) {
+            continue;
+        }
+
+        seen.add(mod);
+        if (mod.id && CSS_REQUEST.test(mod.id)) {
+            sheets.push(mod);
+        }
+
+        queue.push(...mod.importedModules);
+    }
+
+    const tags = await Promise.all(sheets.map(async (sheet) => {
+        const { default: css } = await vite.ssrLoadModule(`${sheet.url}?inline`);
+        const id = (sheet.id as string).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+        return `<style type="text/css" data-vite-dev-id="${id}">${String(css).replace(/<\/style/gi, '<\\/style')}</style>`;
+    }));
+
+    return tags.join('');
+}
 
 /**
  * The service's own render, with the three inputs it reads from the built
@@ -65,7 +112,7 @@ export function createViteRender(vite: ViteRenderContext, root: string) : Render
             // it imports) throws here rather than in the render, and that is
             // the failure a contributor hits most. Loading it above would
             // hand them bundled frames for exactly that case.
-            const render = (await vite.ssrLoadModule('/src/server.ts')).render as RenderFunction;
+            const render = (await vite.ssrLoadModule(SSR_ENTRY)).render as RenderFunction;
 
             // The manifest drives preload links, which only a build produces.
             // Dev loads every module through the server, so an empty one is
@@ -77,6 +124,8 @@ export function createViteRender(vite: ViteRenderContext, root: string) : Render
                 httpClient: createAPIClient(config),
                 cookies: ctx.session ? readRenderCookies(event) : {},
             });
+
+            preloadLinks = await renderDevStyles(vite) + preloadLinks;
         } catch (e) {
             if (isError(e)) {
                 vite.ssrFixStacktrace(e);

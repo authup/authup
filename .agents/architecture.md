@@ -5391,7 +5391,12 @@ today's behaviour:
   loads `src/server.ts` through `vite.ssrLoadModule`, and calls the same
   payload assembly and splice chain the built render uses, minus
   `rebaseAssetURLs` (the dev html already carries the base vite was given,
-  so rebasing it would be a no-op done the hard way).
+  so rebasing it would be a no-op done the hard way). It additionally inlines every stylesheet the SSR entry reaches as the
+  `<style data-vite-dev-id>` tag vite's client would create itself: a build
+  links the CSS through the manifest, dev has none, so the markup otherwise
+  paints unstyled until the client modules load (visible on every fast
+  reload). The attribute is what vite's client adopts a sheet by, so hot
+  updates replace these tags rather than adding a second copy.
 - server-core itself runs from TypeScript via an `authup-source` export
   condition on `@authup/server-core`'s `package.json`
   (`"authup-source": "./src/index.ts"`), reached by
