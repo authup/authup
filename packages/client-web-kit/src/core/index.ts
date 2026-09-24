@@ -6,6 +6,7 @@
  */
 
 export * from './color-mode';
+export * from './console';
 export * from './constants';
 export * from './cookie';
 export * from './error';

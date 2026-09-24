@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getURLBasePath } from '@authup/kit';
+import { resolveConsoleRuntimeConfig } from '@authup/client-web-kit';
 
 export type AccountConsoleConfigInput = {
     /**
@@ -32,7 +32,7 @@ export type AccountConsoleConfigInput = {
      *
      * Two different facts gate cookie mode and only one of them is knowable
      * here. Whether the credential can be PRESENTED is a client-side question
-     * (is the API this document's own origin?) and is derived below. Whether
+     * (is the API this document's own origin?) and is derived by the kit's `resolveConsoleRuntimeConfig`. Whether
      * the server implements `/console/account/login|callback|session` at all is a
      * server-side question, and a console dist newer than the server it talks
      * to cannot answer it: it would navigate to `/console/account/login` and get a 404
@@ -62,7 +62,7 @@ export type AccountConsoleConfig = {
      * Path the kit store scopes its session cookies to. The authup surfaces
      * on an origin (the hosted auth pages and this console) share one
      * session, so the scope is the sub-path authup is served under — derived
-     * from a same-origin `apiUrl`. See {@link resolveCookiePath}.
+     * from a same-origin `apiUrl` (`resolveCookiePath` in the kit).
      */
     cookiePath: string,
     enabled: boolean,
@@ -103,97 +103,21 @@ export function resolveAccountConsoleConfig(
         (typeof window !== 'undefined' ? window.__AUTHUP__ : undefined) ??
         {};
 
-    const basePath = normalizeBasePath(injected.basePath ?? BASE_PATH_DEFAULT);
     const origin = location?.origin ??
         (typeof window !== 'undefined' ? window.location.origin : '');
 
-    let { apiUrl } = injected;
-    if (!apiUrl && typeof import.meta.env !== 'undefined') {
-        apiUrl = import.meta.env.VITE_API_URL;
-    }
-    if (!apiUrl) {
-        const prefix = basePath.endsWith(BASE_PATH_DEFAULT) ?
-            basePath.slice(0, -BASE_PATH_DEFAULT.length) :
-            '';
-
-        apiUrl = `${origin}${prefix}`;
-    }
-
-    apiUrl = apiUrl.replace(/\/+$/, '');
+    const runtime = resolveConsoleRuntimeConfig({
+        apiUrl: injected.apiUrl ||
+            (typeof import.meta.env !== 'undefined' ? import.meta.env.VITE_API_URL : undefined),
+        basePath: injected.basePath,
+        basePathDefault: BASE_PATH_DEFAULT,
+        cookieSession: injected.cookieSession,
+        origin,
+    });
 
     return {
-        apiUrl,
-        basePath,
-        cookiePath: resolveCookiePath(apiUrl, origin),
+        ...runtime,
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
-        // Capability AND applicability, because they are different facts and
-        // each alone is wrong.
-        //
-        // The injected half is the server vouching for the routes (see the
-        // input field): without it a console dist newer than its server would
-        // navigate to a `/console/account/login` that does not exist. The derived half
-        // is this document checking it could present the credential at all:
-        // it is `SameSite=Strict` and the server also demands
-        // `Sec-Fetch-Site: same-origin`, so a foreign API means every request
-        // is cross-site and refused. Injected alone made that broken pairing
-        // representable and silently fatal — the kick redirects, the cookie
-        // lands on the API's origin, and the console loops back to sign-in
-        // with no diagnostic. Together they are exactly the condition under
-        // which `${apiUrl}/console/account/login` is both a real route and a usable
-        // one, which is what makes the kick in `pages/index.vue` sound.
-        cookieSession: injected.cookieSession === true &&
-            isSameOriginApiUrl(apiUrl, origin),
     };
-}
-
-/**
- * The path the kit store's session cookies are scoped to.
- *
- * The hosted auth pages and the account console share one session on the
- * IdP origin, so the scope is the sub-path authup is publicly served under
- * (the pathname of a same-origin `apiUrl`) — the same value the auth
- * console derives from its payload's baseURL. Root-scoped cookies would
- * share their records with a host application at `/` that embeds authup
- * under a sub-path and itself uses the kit's cookie names: each side then
- * hydrates, rotates and revokes the other's tokens, and the strict refresh
- * rotation escalates the shared refresh token into family revocation.
- *
- * A cross-origin `apiUrl` (standalone hosting) says nothing about this
- * origin's layout, so it keeps the root path — the pre-existing behavior.
- */
-/**
- * Whether the API this console talks to is its OWN origin.
- *
- * Two things hang off it, and both break silently when it is false: the kit's
- * cookie scope (a foreign API means the console's own origin owns nothing
- * worth scoping) and cookie mode itself (see below).
- */
-function isSameOriginApiUrl(apiUrl: string, origin: string) : boolean {
-    if (!origin) {
-        return false;
-    }
-
-    try {
-        return new URL(apiUrl).origin === origin;
-    } catch {
-        return false;
-    }
-}
-
-function resolveCookiePath(apiUrl: string, origin: string) : string {
-    if (!isSameOriginApiUrl(apiUrl, origin)) {
-        return '/';
-    }
-
-    return getURLBasePath(apiUrl) || '/';
-}
-
-function normalizeBasePath(input: string) : string {
-    let output = input.trim();
-    if (!output.startsWith('/')) {
-        output = `/${output}`;
-    }
-
-    return output.length > 1 ? output.replace(/\/+$/, '') : output;
 }

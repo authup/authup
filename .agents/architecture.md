@@ -2453,7 +2453,7 @@ nothing else.
 - **Session cookies are scoped to the deployment base path** (issue
   #3495): both authup surfaces on the IdP origin — this console and the
   hosted auth pages — pass the kit `cookiePath` derived from the sub-path
-  authup is served under (`resolveCookiePath` in `src/config.ts` over a
+  authup is served under (the kit's `resolveCookiePath`, `core/console/`, over a
   same-origin `apiUrl`; the auth console derives the same value from its
   payload baseURL). Root-scoped cookies collided with a host application
   that embeds authup under its own origin (e.g. hub at `/` with authup at
@@ -2747,7 +2747,8 @@ rather than trusted until `exp`.
   routes), which a console dist cannot determine for itself: newer than its
   server, it would navigate to a `/console/account/login/start` that does not
   exist, and a 404 on a top-level navigation is unrecoverable.
-  `resolveAccountConsoleConfig` in the BUNDLE then ANDs it with
+  The bundle's config resolution (`resolveConsoleRuntimeConfig` in the kit's
+  `core/console/`, shared by both static consoles) then ANDs it with
   **applicability**, `isSameOriginApiUrl(apiUrl, origin)`: the credential is
   `SameSite=Strict` and the server also demands
   `Sec-Fetch-Site: same-origin`, so against a foreign API every request is
