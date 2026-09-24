@@ -14,7 +14,6 @@ import {
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import type {
     AuthenticationResponseJSON,
-    AuthenticatorTransportFuture,
     RegistrationResponseJSON,
 } from '@simplewebauthn/server';
 import type { UserAuthenticatorWebauthnParameters } from './types.ts';
@@ -27,8 +26,6 @@ export type WebauthnContext = {
 
 export type WebauthnCredentialRef = {
     id: string,
-    // persisted as a plain string[] on the credential row (JSON column); the
-    // SimpleWebAuthn API narrows it to its transport string-literal union.
     transports?: string[],
 };
 
@@ -39,10 +36,6 @@ export type WebauthnCredentialRef = {
 // single boundary conversion below.
 function asOpaqueOptions(options: object): Record<string, unknown> {
     return options as unknown as Record<string, unknown>;
-}
-
-function asTransports(transports?: string[]): AuthenticatorTransportFuture[] | undefined {
-    return transports as AuthenticatorTransportFuture[] | undefined;
 }
 
 export async function buildWebauthnRegistrationOptions(
@@ -58,7 +51,7 @@ export async function buildWebauthnRegistrationOptions(
         attestationType: 'none',
         excludeCredentials: existing.map((credential) => ({
             id: credential.id,
-            transports: asTransports(credential.transports),
+            transports: credential.transports,
         })),
         authenticatorSelection: {
             residentKey: 'discouraged',
@@ -109,7 +102,7 @@ export async function buildWebauthnAuthenticationOptions(
         userVerification: 'preferred',
         allowCredentials: credentials.map((credential) => ({
             id: credential.id,
-            transports: asTransports(credential.transports),
+            transports: credential.transports,
         })),
     });
 
@@ -135,7 +128,7 @@ export async function verifyWebauthnAuthentication(
             id: credential.credential_id,
             publicKey: isoBase64URL.toBuffer(credential.public_key),
             counter: credential.counter,
-            transports: asTransports(credential.transports),
+            transports: credential.transports,
         },
     });
 
