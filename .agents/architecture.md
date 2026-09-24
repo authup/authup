@@ -7051,7 +7051,7 @@ plus a `<uuid>@example.com` placeholder (#3434).
   default projection and carries no email; comparing against it would clear
   the flag on every login for every user with a static email mapping.
 
-**Enrollment gating (#PR060).** A first federated login for an unknown
+**Enrollment gating (#3675).** A first federated login for an unknown
 external subject creates a local user, and two extra attributes on EVERY
 identity provider (OAuth2, OIDC and LDAP alike, since all three flow through
 `IdentityProviderAccountManager.save`) gate that creation: `enrollmentEnabled`
