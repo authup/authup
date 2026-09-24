@@ -3644,8 +3644,7 @@ prefix on `path`, ancestors are that string's own prefixes, children are
 `eq('parentId', x)` and roots are `parentId IS NULL`. Because `path` is NOT
 NULL the `(realmId, parentId, name)` tuple needs no #3559 coalesce index either:
 a duplicate segment under one parent collides on the derived path. The depth is
-capped at `PATH_MAX_DEPTH` (15), the limit MySQL imposes on nested cascading
-deletes, so a delete cannot succeed on one dialect and fail on another.
+capped at `PATH_MAX_DEPTH` (15).
 
 **The folder carries NO authorization semantics, and `@authup/access` is
 untouched by it.** A folder grants nothing, withholds nothing and is not a reach
@@ -3706,9 +3705,17 @@ rename committing in between would otherwise store a path the row's own parent
 chain contradicts, and since nothing recomputes a stored path later the row
 stays out of the subtree prefix under both names (measured at 13 desyncs in 15
 rounds). The users and clients filed there follow by id with no write at
-all. Empty folders are legal. Delete is never refused on occupancy: the
-`CASCADE` on `parentId` removes the subtree and the `SET NULL` on `pathId`
-unfiles every occupant in the same statement, and the console reads the subtree
+all. Empty folders are legal. Delete is never refused on occupancy, and it
+never leans on the database cascades: `unwindPaths`
+(`app/modules/database/repositories/path/unwind.ts`) unfiles every user and
+client of the subtree, then deletes the folders deepest level first, in one
+transaction, and the realm delete runs the same unwind over all of its folders
+before removing the realm. Left to the `parentId` CASCADE and the `pathId` SET
+NULL, the delete counts every folder level against InnoDB's cascade limits,
+15 levels and (from MySQL 9) 30 tables per statement, so a realm holding a user
+filed three folders deep answered 500 (pinned on every dialect by
+`path-delete.spec.ts`; mysql is where it bites). The cascades stay as the
+backstop. The console reads the subtree
 plus the two occupant totals and names all three in the confirmation before it
 sends the call (a count it may not read degrades to a prompt saying so).
 

@@ -9,7 +9,7 @@ import type { Path, Realm } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import { EntityConflictError } from '@authup/errors';
-import type { Repository } from 'typeorm';
+import type { EntityManager, Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
@@ -25,6 +25,7 @@ import {
 } from '../helpers.ts';
 import { PathEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { unwindPaths } from './unwind.ts';
 
 export type PathRepositoryAdapterContext = {
     repository: Repository<Path>,
@@ -176,7 +177,22 @@ export class PathRepositoryAdapter implements IPathRepository {
     }
 
     async remove(entity: Path): Promise<void> {
-        await this.repository.remove(entity);
+        const run = async (manager: EntityManager) => {
+            await unwindPaths(manager, {
+                realmId: entity.realmId, 
+                path: entity.path, 
+                keepRoot: true, 
+            });
+            await manager.getRepository(PathEntity).remove(entity);
+        };
+
+        const { manager } = this.repository;
+        if (!isDatabaseTypeRowLockable(manager.connection.options.type)) {
+            await run(manager);
+            return;
+        }
+
+        await manager.transaction(run);
     }
 
     async transaction<R>(fn: (repository: IPathRepository) => Promise<R>): Promise<R> {

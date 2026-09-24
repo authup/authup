@@ -10,7 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import { REALM_MASTER_NAME  } from '@authup/core-kit';
 import { InternalError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
-import type { Repository } from 'typeorm';
+import type { EntityManager, Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
@@ -18,6 +18,8 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
 import { CachePrefix, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
+import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { unwindPaths } from '../path/unwind.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
@@ -99,7 +101,20 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     async remove(entity: Realm): Promise<void> {
-        await this.repository.remove(entity);
+        // the folder tree goes first: left to the database cascade, a realm
+        // holding filed users or deep folders exceeds mysql's cascade limits
+        const run = async (manager: EntityManager) => {
+            await unwindPaths(manager, { realmId: entity.id });
+            await manager.getRepository(RealmEntity).remove(entity);
+        };
+
+        const { manager } = this.repository;
+        if (!isDatabaseTypeRowLockable(manager.connection.options.type)) {
+            await run(manager);
+            return;
+        }
+
+        await manager.transaction(run);
     }
 
     async validateJoinColumns(data: Partial<Realm>): Promise<void> {
