@@ -7,7 +7,7 @@
 
 import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { IIdentityProviderRepository, IRealmCipher, IRealmRepository } from '../../../../../core/index.ts';
+import type { IIdentityProviderRepository, IRealmCipher } from '../../../../../core/index.ts';
 import {
     IDENTITY_PROVIDER_SECRET_ATTRIBUTES,
     isRealmCipherBlob,
@@ -32,21 +32,16 @@ export type IdentityProviderRepositoryAdapterContext = {
 
 export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<IdentityProvider, IdentityProviderRepository>
     implements IIdentityProviderRepository {
-    private readonly realmRepository: IRealmRepository;
-
     private readonly cipher?: IRealmCipher;
 
     constructor(ctx: IdentityProviderRepositoryAdapterContext) {
-        const realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
-
         super(ctx.repository, {
             alias: 'provider',
             target: IdentityProviderEntity,
             entity: 'identity provider',
-            realmRepository,
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
         });
 
-        this.realmRepository = realmRepository;
         this.cipher = ctx.cipher;
     }
 
@@ -110,7 +105,7 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
         qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
+            const realmId = await this.options.realmRepository?.resolveId(realmKey);
             if (!realmId) {
                 return [];
             }
