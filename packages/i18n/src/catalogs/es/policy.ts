@@ -13,6 +13,6 @@ export const TranslatorTranslationPolicySpanish : NamespaceTranslations<SystemPo
     [SystemPolicyName.IDENTITY]: 'Política de identidad',
     [SystemPolicyName.PERMISSION_BINDING]: 'Política de vinculación de permisos',
     [SystemPolicyName.REALM_MATCH]: 'Política de coincidencia de dominio',
-    [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Campos de autogestión de clientes',
-    [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'Campos de autogestión de usuarios',
+    [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Campos bloqueados para la autogestión de clientes',
+    [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'Campos bloqueados para la autogestión de usuarios',
 };

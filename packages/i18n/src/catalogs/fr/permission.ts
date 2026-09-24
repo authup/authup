@@ -47,10 +47,10 @@ export const TranslatorTranslationPermissionFrench : NamespaceTranslations<`${Pe
     [PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE]: 'Modifier les correspondances de rôles de fournisseur d\'identité',
     [PermissionName.IDENTITY_PROVIDER_ROLE_READ]: 'Lire les correspondances de rôles de fournisseur d\'identité',
 
-    [PermissionName.KEY_CREATE]: 'Créer des clés',
-    [PermissionName.KEY_DELETE]: 'Supprimer les clés',
-    [PermissionName.KEY_UPDATE]: 'Modifier les clés',
-    [PermissionName.KEY_READ]: 'Lire les clés',
+    [PermissionName.KEY_CREATE]: 'Créer des clés et des AC de confiance',
+    [PermissionName.KEY_DELETE]: 'Supprimer les clés et les AC de confiance',
+    [PermissionName.KEY_UPDATE]: 'Modifier les clés et les AC de confiance',
+    [PermissionName.KEY_READ]: 'Lire les clés et les AC de confiance',
 
     [PermissionName.PATH_CREATE]: 'Créer des chemins',
     [PermissionName.PATH_DELETE]: 'Supprimer les chemins',

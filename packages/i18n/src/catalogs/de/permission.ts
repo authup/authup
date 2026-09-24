@@ -47,10 +47,10 @@ export const TranslatorTranslationPermissionGerman : NamespaceTranslations<`${Pe
     [PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE]: 'Rollenzuordnungen von Identitätsanbietern bearbeiten',
     [PermissionName.IDENTITY_PROVIDER_ROLE_READ]: 'Rollenzuordnungen von Identitätsanbietern lesen',
 
-    [PermissionName.KEY_CREATE]: 'Schlüssel erstellen',
-    [PermissionName.KEY_DELETE]: 'Schlüssel löschen',
-    [PermissionName.KEY_UPDATE]: 'Schlüssel bearbeiten',
-    [PermissionName.KEY_READ]: 'Schlüssel lesen',
+    [PermissionName.KEY_CREATE]: 'Schlüssel und vertrauenswürdige CAs erstellen',
+    [PermissionName.KEY_DELETE]: 'Schlüssel und vertrauenswürdige CAs löschen',
+    [PermissionName.KEY_UPDATE]: 'Schlüssel und vertrauenswürdige CAs bearbeiten',
+    [PermissionName.KEY_READ]: 'Schlüssel und vertrauenswürdige CAs lesen',
 
     [PermissionName.PATH_CREATE]: 'Pfade erstellen',
     [PermissionName.PATH_DELETE]: 'Pfade löschen',

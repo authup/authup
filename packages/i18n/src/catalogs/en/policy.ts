@@ -13,6 +13,6 @@ export const TranslatorTranslationPolicyEnglish : NamespaceTranslations<SystemPo
     [SystemPolicyName.IDENTITY]: 'Identity policy',
     [SystemPolicyName.PERMISSION_BINDING]: 'Permission binding policy',
     [SystemPolicyName.REALM_MATCH]: 'Realm match policy',
-    [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Client self-management fields',
-    [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'User self-management fields',
+    [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Fields locked from client self-management',
+    [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'Fields locked from user self-management',
 };
