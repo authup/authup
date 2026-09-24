@@ -9,15 +9,9 @@ import type { Client, Realm, Role } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
-import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { IClientRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
-import { hasUnmatchableId, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -26,6 +20,7 @@ import {
     ClientRoleEntity,
     RealmEntity,
 } from '../../../../../adapters/database/domains/index.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type ClientRepositoryAdapterContext = {
@@ -37,97 +32,27 @@ export type ClientRepositoryAdapterOptions = {
     lockRows?: boolean,
 };
 
-export class ClientRepositoryAdapter implements IClientRepository {
-    private readonly repository: Repository<Client>;
-
-    private readonly realmRepository: IRealmRepository;
-
-    private readonly lockRows: boolean;
-
+/**
+ * No `realmScope`: the list is not gated per row, the secret is gated by the
+ * client schema's field condition instead (issue #3322).
+ */
+export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> implements IClientRepository {
     constructor(ctx: ClientRepositoryAdapterContext, options: ClientRepositoryAdapterOptions = {}) {
-        this.repository = ctx.repository;
-        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
-        this.lockRows = options.lockRows ?? false;
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Client>> {
-        const qb = this.repository.createQueryBuilder('client');
-        qb.groupBy('client.id');
-
-        const { pagination } = applyQuery(qb, query);
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<Client | null> {
-        return this.findOneBy({ id });
-    }
-
-    async findOneByName(name: string, realmKey?: string): Promise<Client | null> {
-        const qb = this.repository.createQueryBuilder('client');
-        qb.where('client.name = :name', { name });
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-            qb.andWhere('client.realmId = :realmId', { realmId });
-        }
-
-        return qb.getOne();
+        super(ctx.repository, {
+            alias: 'client',
+            target: ClientEntity,
+            entity: 'client',
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            lockRows: options.lockRows,
+        });
     }
 
     async findOne(id: string, query?: IQuery, realmKey?: string): Promise<Client | null> {
-        const qb = this.repository.createQueryBuilder('client');
-
-        if (isUUID(id)) {
-            qb.where('client.id = :id', { id });
-        } else {
-            qb.where('client.name = :name', { name: id });
-
-            if (realmKey) {
-                const realmId = await this.realmRepository.resolveId(realmKey);
-                if (!realmId) {
-                    return null;
-                }
-                qb.andWhere('client.realmId = :realmId', { realmId });
-            }
-        }
-
-        applyQuery(qb, query);
-
-        return qb.getOne();
+        return this.findOneWithQuery(id, query, realmKey);
     }
 
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Client | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
-    }
 
-    async findManyBy(where: Record<string, any>): Promise<Client[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
 
-    async findOneBy(where: Record<string, any>): Promise<Client | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOne({
-            where: translateWhereConditions(where),
-            ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
-        });
-    }
 
     async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {
         const qb = this.repository.createQueryBuilder('client');
@@ -138,27 +63,11 @@ export class ClientRepositoryAdapter implements IClientRepository {
 
         qb.addSelect('client.secret');
 
-        if (this.lockRows) {
+        if (this.options.lockRows) {
             qb.setLock('pessimistic_write');
         }
 
         return qb.getOne();
-    }
-
-    create(data: Partial<Client>): Client {
-        return this.repository.create(data);
-    }
-
-    merge(entity: Client, data: Partial<Client>): Client {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: Client): Promise<Client> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: Client): Promise<void> {
-        await this.repository.remove(entity);
     }
 
     async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
@@ -178,26 +87,6 @@ export class ClientRepositoryAdapter implements IClientRepository {
             repository: manager.getRepository(ClientEntity),
             realmRepository: manager.getRepository(RealmEntity),
         }, { lockRows: true })));
-    }
-
-    async validateJoinColumns(data: Partial<Client>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: ClientEntity,
-        });
-    }
-
-    async checkUniqueness(data: Partial<Client>, existing?: Client): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.repository.manager.connection,
-            entityTarget: ClientEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 
     async getBoundRoles(entity: string | Client): Promise<Role[]> {

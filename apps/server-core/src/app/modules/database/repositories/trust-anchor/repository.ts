@@ -6,125 +6,20 @@
  */
 
 import type { TrustAnchor } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
-import { isUUID } from '@authup/kit';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
-import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
-import {
-    applyRealmScopeSelect,
-    hasUnmatchableId,
-    isEntityUnique,
-    translateWhereConditions,
-} from '../helpers.ts';
+import type { DataSource, Repository } from 'typeorm';
+import { RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
+import type { ITrustAnchorRepository } from '../../../../../core/index.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
-export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
-    protected dataSource: DataSource;
-
-    protected realmRepository: IRealmRepository;
-
+export class TrustAnchorRepositoryAdapter extends EntityRepositoryAdapter<TrustAnchor> implements ITrustAnchorRepository {
     constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.realmRepository = new RealmRepositoryAdapter(dataSource.getRepository(RealmEntity));
-    }
-
-    protected get repository(): Repository<TrustAnchorEntity> {
-        return this.dataSource.getRepository(TrustAnchorEntity);
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<TrustAnchor>> {
-        const qb = this.repository.createQueryBuilder('trustAnchor');
-        qb.groupBy('trustAnchor.id');
-
-        const { pagination } = applyQuery(qb, query);
-
-        applyRealmScopeSelect(qb, 'trustAnchor');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    async findOneById(id: string): Promise<TrustAnchor | null> {
-        return this.findOneBy({ id });
-    }
-
-    async findOneByName(name: string, realmKey?: string): Promise<TrustAnchor | null> {
-        const where: FindOptionsWhere<TrustAnchorEntity> = { name };
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-
-            where.realmId = realmId;
-        }
-
-        return this.repository.findOneBy(where);
-    }
-
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<TrustAnchor | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<TrustAnchor[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<TrustAnchor | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<TrustAnchor>): TrustAnchor {
-        return this.repository.create(data);
-    }
-
-    merge(entity: TrustAnchor, data: Partial<TrustAnchor>): TrustAnchor {
-        return this.repository.merge(entity as TrustAnchorEntity, data);
-    }
-
-    async save(entity: TrustAnchor): Promise<TrustAnchor> {
-        return this.repository.save(entity as TrustAnchorEntity);
-    }
-
-    async remove(entity: TrustAnchor): Promise<void> {
-        await this.repository.remove(entity as TrustAnchorEntity);
-    }
-
-    async validateJoinColumns(data: Partial<TrustAnchor>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
-            entityTarget: TrustAnchorEntity,
+        super(dataSource.getRepository(TrustAnchorEntity) as unknown as Repository<TrustAnchor>, {
+            alias: 'trustAnchor',
+            target: TrustAnchorEntity,
+            entity: 'trust anchor',
+            realmScope: {},
+            realmRepository: new RealmRepositoryAdapter(dataSource.getRepository(RealmEntity)),
         });
-    }
-
-    async checkUniqueness(data: Partial<TrustAnchor>, existing?: TrustAnchor): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
-            entityTarget: TrustAnchorEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 }

@@ -6,24 +6,11 @@
  */
 
 import type { Path, Realm } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
-import { isUUID } from '@authup/kit';
-import { EntityConflictError } from '@authup/errors';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IPathRepository, IRealmRepository } from '../../../../../core/index.ts';
-import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import type { IPathRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
-import {
-    applyRealmScopeSelect,
-    hasUnmatchableId,
-    isEntityUnique,
-    translateWhereConditions,
-} from '../helpers.ts';
 import { PathEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 import { runPathTransaction, unwindPaths } from './unwind.ts';
 
@@ -36,84 +23,23 @@ export type PathRepositoryAdapterOptions = {
     lockRows?: boolean,
 };
 
-export class PathRepositoryAdapter implements IPathRepository {
-    private readonly repository: Repository<Path>;
-
-    private readonly realmRepository: IRealmRepository;
-
-    private readonly lockRows: boolean;
-
+export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> implements IPathRepository {
     constructor(ctx: PathRepositoryAdapterContext, options: PathRepositoryAdapterOptions = {}) {
-        this.repository = ctx.repository;
-        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
-        this.lockRows = options.lockRows ?? false;
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Path>> {
-        const qb = this.repository.createQueryBuilder('path');
-        qb.groupBy('path.id');
-
-        const { pagination } = applyQuery(qb, query);
-        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
-        // PRESENCE-based: a `fields=` projection that strips the column would
-        // leave the realm-match key absent and neutral-pass (issue #3574)
-        applyRealmScopeSelect(qb, 'path');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<Path | null> {
-        return this.findOneBy({ id });
-    }
-
-    /**
-     * A folder is addressed by its FULL path, never by the single segment
-     * `name`: the name repeats across the tree while the path is unique
-     * per realm.
-     */
-    async findOneByName(name: string, realmKey?: string): Promise<Path | null> {
-        const qb = this.repository.createQueryBuilder('path');
-        qb.where('path.path = :path', { path: name });
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-            qb.andWhere('path.realmId = :realmId', { realmId });
-        }
-
-        return qb.getOne();
-    }
-
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Path | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<Path[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<Path | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOne({
-            where: translateWhereConditions(where),
-            ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
+        super(ctx.repository, {
+            alias: 'path',
+            target: PathEntity,
+            entity: 'path',
+            // the per-row realm gate reads `realmId` (issue #3574)
+            realmScope: {},
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            // a folder is addressed by its FULL path, never by the single
+            // segment `name`: the name repeats across the tree while the
+            // path is unique per realm
+            nameColumn: 'path',
+            lockRows: options.lockRows,
         });
     }
+
 
     /**
      * ponytail: the whole subtree is loaded with no `take`, and the caller
@@ -128,7 +54,7 @@ export class PathRepositoryAdapter implements IPathRepository {
             .where('path.realmId = :realmId', { realmId: entity.realmId })
             .andWhere('path.path LIKE :prefix', { prefix: `${prefix}%` });
 
-        if (this.lockRows) {
+        if (this.options.lockRows) {
             qb.setLock('pessimistic_write');
         }
 
@@ -142,29 +68,7 @@ export class PathRepositoryAdapter implements IPathRepository {
         return entities.filter((item) => item.path.startsWith(prefix));
     }
 
-    create(data: Partial<Path>): Path {
-        return this.repository.create(data);
-    }
-
-    merge(entity: Path, data: Partial<Path>): Path {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: Path): Promise<Path> {
-        try {
-            return await this.repository.save(entity);
-        } catch (e) {
-            // ensurePath re-reads the row that won the race; anything else
-            // is an ordinary conflict
-            if (isUniqueConstraintDatabaseError(e)) {
-                throw new EntityConflictError({ entity: 'path' });
-            }
-
-            throw e;
-        }
-    }
-
-    async remove(entity: Path): Promise<void> {
+    override async remove(entity: Path): Promise<void> {
         await runPathTransaction(this.repository.manager, async (manager) => {
             // the path as it stands under the lock: a rename committed since
             // the caller's read would otherwise leave its subtree to the
@@ -207,25 +111,5 @@ export class PathRepositoryAdapter implements IPathRepository {
             repository: manager.getRepository(PathEntity),
             realmRepository: manager.getRepository(RealmEntity),
         }, { lockRows: true })));
-    }
-
-    async validateJoinColumns(data: Partial<Path>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: PathEntity,
-        });
-    }
-
-    async checkUniqueness(data: Partial<Path>, existing?: Path): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.repository.manager.connection,
-            entityTarget: PathEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 }

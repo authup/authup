@@ -7,91 +7,29 @@
 
 import type { RoleAttribute } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { EntityRelationLookupError, validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import { EntityRelationLookupError } from 'typeorm-extension';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 
-export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository {
-    private readonly repository: Repository<RoleAttribute>;
-
+export class RoleAttributeRepositoryAdapter extends EntityRepositoryAdapter<RoleAttribute> implements IRoleAttributeRepository {
     constructor(repository: Repository<RoleAttribute>) {
-        this.repository = repository;
+        super(repository, {
+            alias: 'roleAttribute',
+            target: RoleAttributeEntity,
+            entity: 'role attribute',
+            realmScope: {},
+        });
     }
 
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
-        const qb = this.repository.createQueryBuilder('roleAttribute');
-        qb.groupBy('roleAttribute.id');
-
-        const { pagination } = applyQuery(qb, query);
-
-        applyRealmScopeSelect(qb, 'roleAttribute');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<RoleAttribute | null> {
-        return this.findOneBy({ id });
-    }
-
-    async findOneByName(): Promise<RoleAttribute | null> {
-        return null;
-    }
-
-    async findOneByIdOrName(idOrName: string): Promise<RoleAttribute | null> {
-        return this.findOneById(idOrName);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<RoleAttribute[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<RoleAttribute | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<RoleAttribute>): RoleAttribute {
-        return this.repository.create(data);
-    }
-
-    merge(entity: RoleAttribute, data: Partial<RoleAttribute>): RoleAttribute {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: RoleAttribute): Promise<RoleAttribute> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: RoleAttribute): Promise<void> {
-        await this.repository.remove(entity);
-    }
-
-    async validateJoinColumns(data: Partial<RoleAttribute>): Promise<void> {
+    override async validateJoinColumns(data: Partial<RoleAttribute>): Promise<void> {
         // a non-uuid owner can reference no row: refuse it the way the lookup
         // does on every dialect, before postgres fails to parse the bind
         if (typeof data.roleId === 'string' && !isUUID(data.roleId)) {
             throw EntityRelationLookupError.notFound('role', ['roleId']);
         }
 
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: RoleAttributeEntity,
-        });
+        await super.validateJoinColumns(data);
     }
 }

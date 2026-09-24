@@ -1064,37 +1064,30 @@ rollups exactly like its list). The day edges are what the mysql/psql runs exerc
 
 ### Adapter Implementation
 
-Adapters live in `app/modules/database/repositories/` and are named `{Entity}RepositoryAdapter`:
+Adapters live in `app/modules/database/repositories/` and are named `{Entity}RepositoryAdapter`. Most extend **`EntityRepositoryAdapter<T, R = Repository<T>>`** (`repositories/entity/`), the one TypeORM implementation of the port, configured per entity. An adapter declares its options and adds only what is bespoke to its entity:
 
 ```typescript
-export class RoleRepositoryAdapter implements IRoleRepository {
-    private readonly repository: Repository<RoleEntity>;
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RoleEntity);
+export class UserRoleRepositoryAdapter extends EntityRepositoryAdapter<UserRole> implements IUserRoleRepository {
+    constructor(repository: Repository<UserRole>) {
+        super(repository, {
+            alias: 'userRole',
+            target: UserRoleEntity,
+            entity: 'user role',                        // the conflict message: "The user role already exists."
+            realmScope: { column: 'userRealmId' },      // columns a `fields=` projection must not strip
+        });
     }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Role>> {
-        const qb = this.repository.createQueryBuilder('role');
-        qb.groupBy('role.id');
-        const { pagination } = applyQuery(qb, query);
-        const [entities, total] = await qb.getManyAndCount();
-        return { data: entities, meta: { total, ...pagination } };
-    }
-    // ... other methods delegate to this.repository
 }
 ```
 
-Key adapter patterns:
-- `findMany()`: Execute the decoded IR via `applyQuery(qb, query)` — the allow-list schema was already applied at decode time (service layer)
-- `findOneByIdOrName()`: Delegate to `findOneById` / `findOneByName` using `isUUID()`
-- `findOneBy()`: Delegate to `this.repository.findOneBy(where)`, returning `null` first when `hasUnmatchableId(where)` (a non-uuid `where.id`)
-- **A non-uuid id is "no row", decided before the query** (#3650): every by-id lookup returns `null` for it, so every dialect answers 404. Without the guard postgres refuses to parse the bind (`22P02`) while sqlite and mysql compare and miss. Filter operands get the same treatment from the adapter: since rapiq 2.4.0 a non-uuid value on a uuid column is `AdapterError` `KEY_VALUE_INVALID`, i.e. 400 on every dialect (#3647). `sanitizeError` maps a residual `22P02` to 400 as a backstop only
-- `create/merge/save/remove`: Delegate to TypeORM, cast to entity type where needed
-- `validateJoinColumns()`: Use `validateEntityJoinColumns(data, { dataSource, entityTarget })`
-- `checkUniqueness()`: Use `isEntityUnique({ dataSource, entityTarget, entity, entityExisting })`
+The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. client and identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
+
+- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is not gated on realm reach unless a secret is present, by design, so its adapter sets no `realmScope`.
+- **Extension runs on reads that answer a caller, never on the read a write loads through.** `findMany`, `findOneById`, `findOneByName` and the protected `findOneWithQuery` call the overridable `extendMany` / `extendOne` (no-ops by default); `findOneBy` and `findManyBy` never do. That is the extra-attribute read/write rule as structure rather than convention: policy and user load their attributes there, identity-provider loads and decrypts its secrets on single reads only, since its list is the anonymous login surface.
+- **A name lookup scoped to an unknown realm matches nothing** (`IRealmRepository.resolveId`, fail closed), and a non-uuid id is "no row" before the query (`hasUnmatchableId`, #3650: every by-id lookup returns `null` for it, so every dialect answers 404 where postgres would otherwise refuse the bind with `22P02`; filter operands get the same treatment from the rapiq adapter, #3647).
+- **Every write answers a unique-index refusal with `EntityConflictError` (409)**, the losing side of a race `checkUniqueness` cannot close. `save` runs through the protected `persist(write)`, and so does every write an adapter adds besides it (policy and identity-provider `saveWithEA`, which the services and the policy provisioner write through); a new write that skips `persist` answers the race with a 500 again. Recognizable by `isEntityConflictError`, which `ensurePath` and the federated account manager rely on to re-read the winner. `checkUniqueness` throws the same error, so a caller sees one conflict type whichever of the two caught the duplicate.
+- `validateJoinColumns` / `checkUniqueness` run over `target`; an adapter overriding one calls `super` (the attribute adapters refuse a non-uuid owner first).
+
+Deliberately NOT on the base: `transaction()` (user, client, path; path runs through its own retrying runner) and everything entity-specific (`getBoundPermissions`, `findOneWithSecret`, `saveWithEA`, `findDescendants`). Key, realm, event, user-authenticator and identity-provider-account do not extend it: they are mostly bespoke (key mints and KEK-wraps material, realm resolves keys, event and user-authenticator are append- or owner-shaped). Pinned by `test/unit/app/modules/database/entity-repository.spec.ts` against the suite database, so it runs on every dialect.
 
 ### Service Pattern (Core Business Logic)
 
@@ -1820,12 +1813,7 @@ threads instances through constructor/context args:
 
 Entities like user, policy, and identity-provider store dynamic key-value pairs in a separate table.
 
-**Critical rule: separate read-path vs write-path EA loading.**
-
-- `findOneById()` / `findOneByName()`: Call `extendOneWithEA()` after loading (read endpoints)
-- `findOneBy()`: Do NOT call `extendOneWithEA()` (write endpoints that load-then-update)
-- `findMany()`: Call `extendManyWithEA()` after loading
-- `saveWithEA()`: Do NOT call `extendOneWithEA()` after save
+**Critical rule: separate read-path vs write-path EA loading.** `EntityRepositoryAdapter` enforces it (see *Adapter Implementation*): an EA adapter overrides `extendOne` / `extendMany`, which the base calls from `findOneById`, `findOneByName` and `findMany` but never from `findOneBy`, the read a write loads through. `saveWithEA()` does not extend after the save either.
 
 **`saveEA` REPLACES the attribute set, which a partial update must opt out
 of.** Every existing attribute row whose name is not an own-property of the
@@ -3067,7 +3055,10 @@ core/identity/
   password-recovery/service.ts      — PasswordRecoveryService (forgot + reset)
 
 app/modules/database/repositories/
-  {entity}/repository.ts            — {Entity}RepositoryAdapter implements I{Entity}Repository
+  entity/module.ts                  — EntityRepositoryAdapter<T, R>: the shared TypeORM implementation of the port
+  entity/types.ts                   — EntityRepositoryAdapterOptions (alias, target, entity, realmScope, realmRepository,
+                                      nameColumn, lockRows)
+  {entity}/repository.ts            — {Entity}RepositoryAdapter extends EntityRepositoryAdapter<T> implements I{Entity}Repository
   {entity}/index.ts                 — barrel export
   index.ts                          — barrel re-exports all adapters
 

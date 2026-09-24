@@ -6,87 +6,18 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientScopeRepository } from '../../../../../core/entities/client-scope/types.ts';
 import { ClientScopeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 
-export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
-    private readonly repository: Repository<ClientScope>;
-
+export class ClientScopeRepositoryAdapter extends EntityRepositoryAdapter<ClientScope> implements IClientScopeRepository {
     constructor(repository: Repository<ClientScope>) {
-        this.repository = repository;
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<ClientScope>> {
-        const qb = this.repository.createQueryBuilder('clientScope');
-        qb.groupBy('clientScope.id');
-
-        const { pagination } = applyQuery(qb, query);
-        // the per-row realm gate reads the OWNER realm key, and
-        // `junctionResourceRealm` reads it off the row — a `fields=` projection
-        // that strips it would leave the reach unmatched (issue #3594)
-        applyJunctionRealmScopeSelect(qb, 'clientScope', 'clientRealmId');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<ClientScope | null> {
-        return this.findOneBy({ id });
-    }
-
-    findOneByName(_name: string): Promise<ClientScope | null> {
-        return Promise.resolve(null);
-    }
-
-    findOneByIdOrName(idOrName: string): Promise<ClientScope | null> {
-        return this.findOneById(idOrName);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<ClientScope[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<ClientScope | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<ClientScope>): ClientScope {
-        return this.repository.create(data);
-    }
-
-    merge(entity: ClientScope, data: Partial<ClientScope>): ClientScope {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: ClientScope): Promise<ClientScope> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: ClientScope): Promise<void> {
-        await this.repository.remove(entity);
-    }
-
-    async validateJoinColumns(data: Partial<ClientScope>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: ClientScopeEntity,
+        super(repository, {
+            alias: 'clientScope',
+            target: ClientScopeEntity,
+            entity: 'client scope',
+            realmScope: { column: 'clientRealmId' },
         });
     }
 }
