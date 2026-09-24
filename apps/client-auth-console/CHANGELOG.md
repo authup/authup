@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### Features
+
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/client-web-theme bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/i18n bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

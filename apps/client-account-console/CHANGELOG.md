@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+
+
+### Bug Fixes
+
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/client-web-theme bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-http-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/i18n bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/specs bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

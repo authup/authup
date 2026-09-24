@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* EntityStatsQuery drops granularity/days in favour of rapiq groups/aggregates, StatsGranularity and EntityStatsBucket are removed (EntityStatsRow, EventStatsRow), and EntityStatsMeta carries bucket instead of granularity/days.
+* GET /schemas/:name is removed in favour of GET /<collection>/@schema, and client.schema.getOne(name) in favour of client.<entity>.getSchema(). The unreleased GET /events/stats moved to GET /events/@stats.
+
+### Features
+
+* **docs:** redesign the documentation site with Tailwind and Authup's brand palette ([#3627](https://github.com/authup/authup/issues/3627)) ([76c2295](https://github.com/authup/authup/commit/76c2295294949a0f6731ad90e0bce31a4b2f261e))
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* grouped statistics on rapiq 2.4.0 and daily event rollups ([#3657](https://github.com/authup/authup/issues/3657)) ([c581906](https://github.com/authup/authup/commit/c581906c80e8c89440eb05f24d991aa38468cca7))
+* open policy type registry for the authorization catalog, align realmMatch validation ([#3644](https://github.com/authup/authup/issues/3644)) ([d0096f5](https://github.com/authup/authup/commit/d0096f5d3c6d19b870783edc9395b7396d3080fd))
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+* per-entity statistics and schema facets (/&lt;collection&gt;/[@stats](https://github.com/stats), /&lt;collection&gt;/[@schema](https://github.com/schema)) ([#3649](https://github.com/authup/authup/issues/3649)) ([7ab1869](https://github.com/authup/authup/commit/7ab1869cb69ceba77167f5b6d2dbe61ab19cf764))
+* **server-core:** adopt typeorm-extension 4.2.0 (UTC timestamps, database locks) ([#3652](https://github.com/authup/authup/issues/3652)) ([8f00082](https://github.com/authup/authup/commit/8f00082ca68fcb712b84810db402db70923492b1))
+* **server-core:** filter createdAt/updatedAt by range on every collection ([#3643](https://github.com/authup/authup/issues/3643)) ([efc3b1a](https://github.com/authup/authup/commit/efc3b1a2ad46f1e2e74e962b95124ad9200c0a37)), closes [#3639](https://github.com/authup/authup/issues/3639)
+
+
+### Bug Fixes
+
+* bound authorization-check verdicts by a server-computed policy expiry ([#3653](https://github.com/authup/authup/issues/3653)) ([48f820b](https://github.com/authup/authup/commit/48f820bff9247b05f2a2474d5a1a4464c54c5496))
+* **deps:** bump the majorprod group with 6 updates ([#3658](https://github.com/authup/authup/issues/3658)) ([74531c4](https://github.com/authup/authup/commit/74531c46d741a23cf7e3ea4f89dfead1778adfca))
+* **docs:** address review feedback on hero CTA, flyout tokens and copy failures ([#3660](https://github.com/authup/authup/issues/3660)) ([9c98eca](https://github.com/authup/authup/commit/9c98eca98d2a835329781696c7673fb2ee6b89b2))
+* ensure consistent version for release ([101db34](https://github.com/authup/authup/commit/101db3427f1ab362bd0b4b4aad6c2b7e81f4e993))
+* evaluate UPDATE permissions against the stored row as well as the updated one ([#3655](https://github.com/authup/authup/issues/3655)) ([bbace32](https://github.com/authup/authup/commit/bbace32ad4f94607804eb1a1c974eb60188bae59))
+* follow-ups of the per-realm folders feature ([#3645](https://github.com/authup/authup/issues/3645)) ([bb3a117](https://github.com/authup/authup/commit/bb3a117b965087204d6e7f1dd581bf50bf16d96f))
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+* **server-core:** cache the authorization catalog reads with subscriber invalidation ([#3656](https://github.com/authup/authup/issues/3656)) ([2604842](https://github.com/authup/authup/commit/2604842ee36d5b0394624258dc12484aa3de6bd4))
+* **server-core:** delete folder trees without mysql cascade chains ([#3659](https://github.com/authup/authup/issues/3659)) ([035d8c5](https://github.com/authup/authup/commit/035d8c50b6f75e05100af629a221177bd6e5f3ba))
+* **server-core:** narrow the self-service session revoke by its filter ([#3648](https://github.com/authup/authup/issues/3648)) ([ee843c8](https://github.com/authup/authup/commit/ee843c8562ae809da41d5a856f60362f2f503001)), closes [#3642](https://github.com/authup/authup/issues/3642)
+* settle a binding-node grant policy false and refuse an unloadable definition tree ([#3637](https://github.com/authup/authup/issues/3637)) ([771e33b](https://github.com/authup/authup/commit/771e33bcc7df1b479bdd5dbd196da11567568ddb)), closes [#3633](https://github.com/authup/authup/issues/3633) [#3634](https://github.com/authup/authup/issues/3634)
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

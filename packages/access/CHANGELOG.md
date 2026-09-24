@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* open policy type registry for the authorization catalog, align realmMatch validation ([#3644](https://github.com/authup/authup/issues/3644)) ([d0096f5](https://github.com/authup/authup/commit/d0096f5d3c6d19b870783edc9395b7396d3080fd))
+
+
+### Bug Fixes
+
+* bound authorization-check verdicts by a server-computed policy expiry ([#3653](https://github.com/authup/authup/issues/3653)) ([48f820b](https://github.com/authup/authup/commit/48f820bff9247b05f2a2474d5a1a4464c54c5496))
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+* settle a binding-node grant policy false and refuse an unloadable definition tree ([#3637](https://github.com/authup/authup/issues/3637)) ([771e33b](https://github.com/authup/authup/commit/771e33bcc7df1b479bdd5dbd196da11567568ddb)), closes [#3633](https://github.com/authup/authup/issues/3633) [#3634](https://github.com/authup/authup/issues/3634)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 
