@@ -39,7 +39,7 @@ export class PolicyRepositoryAdapter extends EntityRepositoryAdapter<Policy, Pol
     }
 
     async saveWithEA(entity: Policy, data?: Record<string, any>): Promise<Policy> {
-        await this.repository.saveOneWithEA(entity, data);
+        await this.persist(() => this.repository.saveOneWithEA(entity, data));
         await this.repository.updateClosureTable(entity, this.repository.manager);
 
         return entity;

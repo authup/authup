@@ -85,7 +85,7 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
             }
         }
 
-        await this.repository.saveOneWithEA(entity, stored, options);
+        await this.persist(() => this.repository.saveOneWithEA(entity, stored, options));
 
         // the adapter hands the stored values back onto the entity; the
         // caller, and the response built from it, gets the plaintext it gave

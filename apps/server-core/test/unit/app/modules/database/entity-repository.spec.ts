@@ -17,6 +17,8 @@ import {
     it,
 } from 'vitest';
 import {
+    PolicyEntity,
+    PolicyRepository,
     RealmEntity,
     RoleEntity,
     UserAttributeEntity,
@@ -27,6 +29,7 @@ import {
 import { DatabaseConflictError } from '../../../../../src/adapters/database/errors/index.ts';
 import { decodeQuery } from '../../../../../src/core/query/index.ts';
 import {
+    PolicyRepositoryAdapter,
     RoleRepositoryAdapter,
     UserAttributeRepositoryAdapter,
     UserRepositoryAdapter,
@@ -38,6 +41,8 @@ describe('app/modules/database/repositories/entity', () => {
     const suite = createTestDatabaseApplication();
 
     let realm : Realm;
+    let policies : PolicyRepositoryAdapter;
+
     let roles : RoleRepositoryAdapter;
     let users : UserRepositoryAdapter;
     let userRoles : UserRoleRepositoryAdapter;
@@ -53,6 +58,10 @@ describe('app/modules/database/repositories/entity', () => {
 
         roles = new RoleRepositoryAdapter({
             repository: dataSource.getRepository(RoleEntity),
+            realmRepository: dataSource.getRepository(RealmEntity),
+        });
+        policies = new PolicyRepositoryAdapter({
+            repository: new PolicyRepository(dataSource),
             realmRepository: dataSource.getRepository(RealmEntity),
         });
         users = new UserRepositoryAdapter({
@@ -207,6 +216,25 @@ describe('app/modules/database/repositories/entity', () => {
 
             expect(isEntityConflictError(error)).toBeTruthy();
             expect(error.message).toEqual('The user already exists.');
+        });
+
+        it('should answer a duplicate key on an extra-attribute write with a conflict', async () => {
+            const name = `policy-${randomUUID()}`;
+            const policy = await policies.saveWithEA(policies.create({
+                name,
+                type: 'time',
+                realmId: realm.id,
+            }), { start: '08:00', end: '16:00' });
+            created.push({ target: PolicyEntity, id: policy.id });
+
+            const error = await policies.saveWithEA(policies.create({
+                name,
+                type: 'time',
+                realmId: realm.id,
+            }), { start: '08:00', end: '16:00' }).then(() => undefined, (e) => e);
+
+            expect(isEntityConflictError(error)).toBeTruthy();
+            expect(error.message).toEqual('The policy already exists.');
         });
 
         it('should report a taken name through checkUniqueness', async () => {

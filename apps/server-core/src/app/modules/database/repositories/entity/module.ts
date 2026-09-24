@@ -138,20 +138,8 @@ export abstract class EntityRepositoryAdapter<
         return this.repository.merge(entity, data as DeepPartial<T>);
     }
 
-    /**
-     * A unique index refusing the row is a conflict, not a server error:
-     * it is the losing side of a race `checkUniqueness` can not close.
-     */
     async save(entity: T): Promise<T> {
-        try {
-            return await this.repository.save(entity);
-        } catch (e) {
-            if (isUniqueConstraintDatabaseError(e)) {
-                throw new EntityConflictError({ entity: this.options.entity });
-            }
-
-            throw e;
-        }
+        return this.persist(() => this.repository.save(entity));
     }
 
     async remove(entity: T): Promise<void> {
@@ -230,6 +218,24 @@ export abstract class EntityRepositoryAdapter<
         }
 
         return qb;
+    }
+
+    /**
+     * Run a write, answering a unique index refusing the row with a conflict
+     * rather than a server error: it is the losing side of a race
+     * `checkUniqueness` can not close. Every write an adapter adds besides
+     * `save` (e.g. `saveWithEA`) goes through here too.
+     */
+    protected async persist<O>(write: () => Promise<O>): Promise<O> {
+        try {
+            return await write();
+        } catch (e) {
+            if (isUniqueConstraintDatabaseError(e)) {
+                throw new EntityConflictError({ entity: this.options.entity });
+            }
+
+            throw e;
+        }
     }
 
     protected async extendOne(_entity: T): Promise<void> {
