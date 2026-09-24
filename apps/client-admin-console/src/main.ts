@@ -91,7 +91,8 @@ install(app, {
     translatorLocale: matchLocale(localeHandles.resolved.value),
     // Scope the session cookies to the sub-path authup is served under
     // (shared with the hosted auth pages and the account console: one
-    // session per deployment). See resolveCookiePath in ./config.ts.
+    // session per deployment). See resolveCookiePath
+    // in the kit (@authup/client-web-kit, core/console).
     cookiePath: config.cookiePath,
     preferences: {
         locale: localeSource,
