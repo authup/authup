@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectHeadContent, stampDocumentTitle } from '../html';
+import { injectHeadContent, removeFaviconLinks, stampDocumentTitle } from '../html';
 import { escapeHtml } from './contract/index';
 import type { IThemeProvider } from './types';
 
@@ -34,6 +34,12 @@ export async function applyTheme(
     const manifest = await provider.getManifest();
     if (manifest?.title) {
         body = stampDocumentTitle(body, escapeHtml(manifest.title));
+    }
+
+    // The theme's head emits its own icon link, which replaces the console's
+    // built-in favicon rather than competing with it.
+    if (manifest?.favicon) {
+        body = removeFaviconLinks(body);
     }
 
     const head = await provider.getHead(basePath);

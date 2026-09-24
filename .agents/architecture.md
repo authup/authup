@@ -3215,6 +3215,12 @@ which the hosted auth pages rendered unthemed.
   the ONE part that does not apply to already-published console packages:
   the kit theme CSS ships raw and is inlined by each console's Tailwind
   build.
+- **`favicon` REPLACES the console's own icon.** Every console bundle ships
+  a default `src/favicon.svg` (the logo mark) linked from its `index.html`,
+  so vite emits it as a hashed asset under the bundle's base. When the
+  manifest names a `favicon`, `applyTheme` strips the shell's icon links
+  (`removeFaviconLinks`) before injecting the theme head, because with
+  several `rel="icon"` links which one a browser shows is its own choice.
 - **The theme asset route is hand-written, NOT `@routup/assets`**
   (`theme/assets.ts`). It is mounted per console SERVICE under that
   console's own base (`THEME_ASSET_MOUNT_PATH`, `theme`) rather than at one

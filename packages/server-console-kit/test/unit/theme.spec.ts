@@ -14,6 +14,7 @@ import {
 import type { IThemeProvider, ThemeManifest } from '../../src/theme/index';
 import {
     injectHeadContent,
+    removeFaviconLinks,
     stampDocumentTitle,
 } from '../../src/html';
 
@@ -363,6 +364,28 @@ describe('theme', () => {
                 .toBeLessThan(result.indexOf('</head>'));
         });
 
+        it('should replace the shell favicon with the theme favicon', async () => {
+            const shell = '<html><head><link rel="icon" type="image/svg+xml" href="/assets/favicon-x.svg"><title>Authup</title></head><body>x</body></html>';
+            const result = await applyTheme(shell, createProvider({
+                version: 1,
+                favicon: 'assets/favicon.svg',
+            }), '/auth');
+
+            expect(result).not.toContain('favicon-x.svg');
+            expect(result.match(/rel="icon"/g)).toHaveLength(1);
+            expect(result).toContain('href="/auth/theme/favicon.svg"');
+        });
+
+        it('should keep the shell favicon when the theme declares none', async () => {
+            const shell = '<html><head><link rel="icon" href="/assets/favicon-x.svg"></head><body>x</body></html>';
+            const result = await applyTheme(shell, createProvider({
+                version: 1,
+                title: 'ACME',
+            }), '');
+
+            expect(result).toContain('favicon-x.svg');
+        });
+
         it('should replace the document title', async () => {
             const result = await applyTheme(html, createProvider({
                 version: 1,
@@ -394,6 +417,23 @@ describe('theme', () => {
             const result = injectHeadContent('<head></head>', "<meta content=\"$'$&$`\">");
 
             expect(result).toEqual("<head><meta content=\"$'$&$`\"></head>");
+        });
+    });
+
+    describe('removeFaviconLinks', () => {
+        it.each([
+            '<link rel="icon" href="/a.svg">',
+            '<link href="/a.ico" rel="shortcut icon">',
+            "<link rel='ICON' type='image/png' href='/a.png' />",
+        ])('should remove %s', async (link) => {
+            expect(removeFaviconLinks(`<head>${link}<title>x</title></head>`))
+                .toEqual('<head><title>x</title></head>');
+        });
+
+        it('should keep other links', async () => {
+            const html = '<head><link rel="apple-touch-icon" href="/a.png"><link rel="stylesheet" href="/a.css"></head>';
+
+            expect(removeFaviconLinks(html)).toEqual(html);
         });
     });
 
