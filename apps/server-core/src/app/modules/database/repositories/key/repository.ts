@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
+import { AuthupError, EntityConflictError } from '@authup/errors';
 import type { IQuery } from '@rapiq/core';
 import type { Key } from '@authup/core-kit';
 import { KeyStatus  } from '@authup/core-kit';
@@ -26,7 +26,6 @@ import { applyQuery, fetchMany } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
     ClientEntity,
-    DatabaseConflictError,
     IdentityProviderAttributeEntity,
     KeyEntity,
     RealmEntity,
@@ -428,7 +427,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         });
 
         if (!isUnique) {
-            throw new DatabaseConflictError();
+            throw new EntityConflictError({ entity: 'key' });
         }
     }
 

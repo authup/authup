@@ -26,7 +26,6 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
-import { DatabaseConflictError } from '../../../../../src/adapters/database/errors/index.ts';
 import { decodeQuery } from '../../../../../src/core/query/index.ts';
 import {
     PolicyRepositoryAdapter,
@@ -240,8 +239,10 @@ describe('app/modules/database/repositories/entity', () => {
         it('should report a taken name through checkUniqueness', async () => {
             const role = await createRole();
 
-            await expect(roles.checkUniqueness({ name: role.name, realmId: realm.id }))
-                .rejects.toBeInstanceOf(DatabaseConflictError);
+            const error = await roles.checkUniqueness({ name: role.name, realmId: realm.id })
+                .then(() => undefined, (e) => e);
+            expect(isEntityConflictError(error)).toBeTruthy();
+            expect(error.message).toEqual('The role already exists.');
             await expect(roles.checkUniqueness({ name: role.name, realmId: realm.id }, role))
                 .resolves.toBeUndefined();
         });
