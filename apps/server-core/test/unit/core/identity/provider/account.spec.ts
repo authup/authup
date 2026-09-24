@@ -39,7 +39,7 @@ import {
     PathRepositoryAdapter,
     PermissionEntity,
     RealmEntity,
-    RoleRepository,
+    RoleEntity,
     UserEntity,
     UserIdentityRepository,
     UserPermissionEntity,
@@ -241,7 +241,7 @@ describe('core/identity/provider/account', () => {
     });
 
     it('should synchronize roles', async () => {
-        const roleRepository = new RoleRepository(suite.dataSource);
+        const roleRepository = suite.dataSource.getRepository(RoleEntity);
         const role = roleRepository.create({ name: createNanoID() });
 
         await roleRepository.save(role);
@@ -274,7 +274,7 @@ describe('core/identity/provider/account', () => {
     });
 
     it('should not synchronize roles', async () => {
-        const roleRepository = new RoleRepository(suite.dataSource);
+        const roleRepository = suite.dataSource.getRepository(RoleEntity);
         const role = roleRepository.create({ name: createNanoID() });
 
         await roleRepository.save(role);

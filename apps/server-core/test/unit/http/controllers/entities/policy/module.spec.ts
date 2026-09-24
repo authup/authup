@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
 import { createTestApplication } from '../../../../../app';
+import { expectClientError } from '../../../../../utils';
 import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
 
 describe('src/http/controllers/policy', () => {
@@ -45,12 +46,21 @@ describe('src/http/controllers/policy', () => {
             .create({
                 name: 'foo',
                 type: 'foo',
-                bar: 'baz',
             });
 
         expect(response).toBeDefined();
-        expect(response.bar).toEqual('baz');
         ids.push(response.id);
+    });
+
+    it('should refuse an option for a custom policy', async () => {
+        await expectClientError(
+            () => suite.client.policy.create({
+                name: 'foo-options',
+                type: 'foo',
+                bar: 'baz',
+            }),
+            { status: 400 },
+        );
     });
 
     it('should create group policy', async () => {
