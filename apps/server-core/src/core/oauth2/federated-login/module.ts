@@ -201,10 +201,10 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             user = await authenticator.authenticate({ code });
         } catch (e) {
             // The provider's enrollment gate refused a first login for an
-            // unknown subject (#3675). The gate runs before the account
-            // manager's first write, so no user is provisioned and no account
-            // linked. The row carries no actor: there is no user to name, and
-            // the external subject is not an authup identity.
+            // unknown subject (#3675). The gate runs before the user row is
+            // written, so no user is provisioned and no account linked. The
+            // row carries no actor: there is no user to name, and the external
+            // subject is not an authup identity.
             if (isIdentityProviderEnrollmentDeniedError(e)) {
                 this.logger?.warn(describeError(
                     e,

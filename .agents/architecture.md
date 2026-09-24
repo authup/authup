@@ -7062,8 +7062,13 @@ are stored like `requiredAmr` / `requiredAcr` (rows in
 `IdentityProviderEnrollmentAttributesValidator` inside the protocol attribute
 validators, loaded by `extendOneWithEA` and read back through destr, so a
 stored `"false"` is boolean `false`. The gate runs in `saveUser`, on the CREATE
-branch only, after the mapped attributes validated and before any write, so a
-refused login leaves no user row and no `sources/<provider>` folder. It runs
+branch only, over the FINAL row: after the mapped attributes validated and the
+default `sources/<provider>` folder resolved, before the user row is written,
+so a refused login leaves no user row. The provider's folder may exist after a
+refusal, which is accepted: it is per-provider decoration that names nobody,
+and gating before it made the first pass and the retry pass see different
+rows (a `pathId` rule naming the provider's own folder denied on the first and
+passed on the second). It runs
 AGAIN each time the name-collision retry renames the row, because a policy that
 approved `corp-alice` said nothing about the `mallory` fallback (the next
 upstream candidate, or a nanoid) the loop would otherwise store: a rename is a
@@ -7072,11 +7077,10 @@ branch (an account already linked) is never gated, so a provider switched to
 `enrollmentEnabled: false` keeps its existing users signing in and admits new
 ones only through the account console's Connect flow (see *Identity-Provider
 Account Linking*). The policy is evaluated over the user row that WOULD be
-created (the validated mapped attributes: `name`, `email` and `realmId`, plus
-`displayName`, `emailVerified` and `pathId` when a mapping supplied them, since
-neither identity builder produces a display name on its own; the default
-`sources/<provider>` folder is resolved after the gate, which is what leaves no
-folder behind a refusal) under
+created (the validated mapped attributes: `name`, `email`, `realmId` and
+`pathId`, the provider's default folder unless a mapping filed the row
+elsewhere, plus `displayName` and `emailVerified` when a mapping supplied them,
+since neither identity builder produces a display name on its own) under
 `BuiltInPolicyType.ATTRIBUTES` alone and with NO identity, since no authup
 actor exists yet: an `identity` policy therefore denies by `DATA_MISSING`, the
 anonymous posture `POST /authorization/check` documents, and a missing key in

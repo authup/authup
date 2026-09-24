@@ -51,9 +51,10 @@ to the provider: they keep signing in.
   accounts**. This is the setting for an invite-only realm.
 - **New-user policy** names an `attributes`
   [policy](./permissions-and-policies.md) that is evaluated against the user
-  Authup is about to create: its `name`, `email` and `realmId`, plus
-  `displayName`, `emailVerified` and the folder (`pathId`) when a mapping
-  supplies them. A rule on a column no mapping fills denies everyone.
+  Authup is about to create: its `name`, `email`, `realmId` and the folder
+  (`pathId`, the provider's own `sources/<provider>` folder unless a mapping
+  filed the user elsewhere), plus `displayName` and `emailVerified` when a
+  mapping supplies them. A rule on a column no mapping fills denies everyone.
   A denial refuses the login. There is no signed-in person yet, so
   the policy sees no identity and an identity policy always denies; a policy
   that cannot be loaded, or that belongs to another realm, denies as well.

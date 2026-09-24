@@ -711,6 +711,13 @@ describe('core/identity/provider/account', () => {
                 realmId: realm.id,
             });
 
+            // the row as it would be stored: the provider's default folder is
+            // resolved before the verdict, so a pathId rule can name it
+            const folder = await suite.dataSource.getRepository(PathEntity)
+                .findOneBy({ realmId: realm.id, path: 'sources/keycloak' });
+            expect(folder).not.toBeNull();
+            expect(call.data.get<User>(BuiltInPolicyType.ATTRIBUTES).pathId).toEqual(folder!.id);
+
             const users = suite.dataSource.getRepository(UserEntity);
             expect(await users.findOneBy({ name: 'enrollment-denied' })).toBeNull();
         });

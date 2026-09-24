@@ -236,10 +236,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
     /**
      * The provider's enrollment gate (`enrollmentEnabled` /
      * `enrollmentPolicyId`) over the user row a FIRST login would create; a
-     * linked account never reaches it. Runs before any write, so a refused
-     * login leaves no user row and creates no folder, and again whenever the
-     * name-collision retry renames the row, since a policy that approved one
-     * name said nothing about the fallback the loop would store instead.
+     * linked account never reaches it. Runs over the FINAL row (the default
+     * folder resolved) and before the user row is written, so a refused login
+     * leaves no user row; the provider's `sources/<provider>` folder may exist
+     * afterwards, which is per-provider decoration and names nobody. Runs
+     * again whenever the name-collision retry renames the row, since a policy
+     * that approved one name said nothing about the fallback the loop would
+     * store instead.
      */
     protected async assertEnrollment(
         provider: IdentityProvider & IdentityProviderEnrollmentAttributes,
@@ -313,10 +316,6 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             throw new Error('Identity provider attributes could not be validated.');
         }
 
-        if (!user) {
-            await this.assertEnrollment(identity.provider, attributesSelf);
-        }
-
         // A mapped `pathId` never passes through UserService.save, so the realm
         // assert every other write runs has to run here: the FK proves the
         // folder exists, not that it sits in the user's realm, and a foreign
@@ -347,6 +346,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             } catch (e) {
                 this.logger?.warn(describeError(e, 'The default identity provider folder could not be created.'));
             }
+        }
+
+        // After the default folder, so the policy decides the row as it will
+        // be stored: a `pathId` rule that names the provider's own folder
+        // would otherwise deny on the first pass and pass on the retry.
+        if (!user) {
+            await this.assertEnrollment(identity.provider, attributesSelf);
         }
 
         const attributesSelfKeys = Object.keys(attributesSelf);
