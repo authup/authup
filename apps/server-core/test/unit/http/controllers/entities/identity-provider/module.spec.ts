@@ -5,15 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import type { OAuth2IdentityProvider } from '@authup/core-kit';
+import type { LdapIdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import {
     IdentityProviderPreset,
     IdentityProviderProtocol,
@@ -349,6 +350,71 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
 
         expect((read as OAuth2IdentityProvider).requiredAmr).toEqual('mfa');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    // The enrollment gate (#PR060) is two extra attributes like the
+    // assurance allow-lists, so the same round-trip applies: a key nobody
+    // mounted is stripped silently, and the EA value column round-trips
+    // through destr, so the stored "false" must come back as a boolean.
+    it('should persist the enrollment gate on an oauth2 provider and clear it with null', async () => {
+        const policyId = randomUUID();
+        const entity = createFakeOAuth2IdentityProvider({
+            enrollmentEnabled: false,
+            enrollmentPolicyId: policyId,
+        });
+        const { data: created } = await suite.client.identityProvider.create(entity);
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        const attributes = read as OAuth2IdentityProvider;
+        expect(attributes.enrollmentEnabled).toBe(false);
+        expect(attributes.enrollmentPolicyId).toEqual(policyId);
+
+        // `null` is what the console submits for a cleared field; `false`
+        // would keep the gate shut, so the read-back is held to null exactly
+        await suite.client.identityProvider.update(created.id, {
+            ...entity,
+            enrollmentEnabled: null,
+            enrollmentPolicyId: null,
+        });
+
+        const { data: cleared } = await suite.client.identityProvider.getOne(created.id);
+        const clearedAttributes = cleared as OAuth2IdentityProvider;
+        expect(clearedAttributes.enrollmentEnabled ?? null).toBeNull();
+        expect(clearedAttributes.enrollmentPolicyId ?? null).toBeNull();
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    it('should persist the enrollment gate on an ldap provider', async () => {
+        const policyId = randomUUID();
+        const { data: created } = await suite.client.identityProvider.create(createFakeLdapIdentityProvider({
+            enrollmentEnabled: false,
+            enrollmentPolicyId: policyId,
+        }));
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        const attributes = read as LdapIdentityProvider;
+        expect(attributes.enrollmentEnabled).toBe(false);
+        expect(attributes.enrollmentPolicyId).toEqual(policyId);
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    it('should persist the enrollment gate on a preset provider', async () => {
+        const { data: created } = await suite.client.identityProvider.create({
+            name: 'enrollment-preset',
+            protocol: IdentityProviderProtocol.OIDC,
+            preset: IdentityProviderPreset.GOOGLE,
+            enabled: true,
+            clientId: 'preset-client-id',
+            clientSecret: 'preset-client-secret',
+            enrollmentEnabled: false,
+        });
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect((read as OAuth2IdentityProvider).enrollmentEnabled).toBe(false);
 
         await suite.client.identityProvider.delete(created.id);
     });

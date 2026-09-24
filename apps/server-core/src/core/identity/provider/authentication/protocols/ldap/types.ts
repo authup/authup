@@ -6,6 +6,7 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IIdentityProviderRepository } from '../../../../../entities/index.ts';
 import type { ILdapClientFactory } from '../../../../../ldap/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
@@ -16,7 +17,8 @@ type IdentityProviderAuthenticatorBaseContext = {
 };
 
 export type IdentityProviderLdapCollectionAuthenticatorContext = IdentityProviderAuthenticatorBaseContext & {
-    repository: IIdentityProviderRepository
+    repository: IIdentityProviderRepository,
+    logger?: Logger
 };
 
 export type IdentityProviderLdapAuthenticatorContext = IdentityProviderAuthenticatorBaseContext & {

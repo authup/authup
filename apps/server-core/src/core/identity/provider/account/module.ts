@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAccount, User } from '@authup/core-kit';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import type {
+    IdentityProvider,
+    IdentityProviderAccount,
+    IdentityProviderEnrollmentAttributes,
+    User,
+} from '@authup/core-kit';
 import {
     UserValidator,
     buildUserFakeEmail,
@@ -19,11 +25,13 @@ import type { Logger } from '@authup/server-kit';
 import { describeError } from '../../../../utils/index.ts';
 import { ensurePath } from '../../../entities/path/helpers.ts';
 import type { IPathRepository } from '../../../entities/path/types.ts';
+import type { IOAuth2AccessPolicyEvaluator } from '../../../oauth2/access-policy/types.ts';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
 import { IdentityProviderMapperOperation } from '../mapper/index.ts';
 import type { IdentityProviderIdentity } from '../types.ts';
+import { IdentityProviderEnrollmentDeniedError } from './enrollment-error.ts';
 import { IdentityProviderAccountAlreadyLinkedError } from './error.ts';
 import type { IIdentityProviderAccountManager, IIdentityProviderAccountRepository, IdentityProviderAccountManagerContext } from './types.ts';
 
@@ -42,6 +50,8 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
     protected userValidator : UserValidator;
 
+    protected enrollmentPolicyEvaluator?: Pick<IOAuth2AccessPolicyEvaluator, 'evaluateData'>;
+
     protected logger?: Logger;
 
     constructor(ctx: IdentityProviderAccountManagerContext) {
@@ -51,6 +61,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         this.repository = ctx.repository;
         this.userRepository = ctx.userRepository;
         this.pathRepository = ctx.pathRepository;
+        this.enrollmentPolicyEvaluator = ctx.enrollmentPolicyEvaluator;
         this.logger = ctx.logger;
 
         this.userValidator = new UserValidator();
@@ -222,6 +233,54 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         }
     }
 
+    /**
+     * The provider's enrollment gate (`enrollmentEnabled` /
+     * `enrollmentPolicyId`) over the user row a FIRST login would create; a
+     * linked account never reaches it. Runs before any write, so a refused
+     * login leaves no user row and creates no folder, and again whenever the
+     * name-collision retry renames the row, since a policy that approved one
+     * name said nothing about the fallback the loop would store instead.
+     */
+    protected async assertEnrollment(
+        provider: IdentityProvider & IdentityProviderEnrollmentAttributes,
+        attributes: User,
+    ): Promise<void> {
+        if (provider.enrollmentEnabled === false) {
+            throw new IdentityProviderEnrollmentDeniedError(
+                `The identity provider "${provider.name}" is not accepting new users.`,
+            );
+        }
+
+        if (!provider.enrollmentPolicyId) {
+            return;
+        }
+
+        if (!this.enrollmentPolicyEvaluator) {
+            this.logger?.warn(
+                `The identity provider "${provider.name}" carries an enrollment policy, but no evaluator is wired to decide it.`,
+            );
+
+            throw new IdentityProviderEnrollmentDeniedError(
+                `The identity provider "${provider.name}" enrollment policy could not be evaluated.`,
+            );
+        }
+
+        // ATTRIBUTES alone and no identity: there is no authenticated authup
+        // actor yet, so an identity-bound policy denies by DATA_MISSING, the
+        // anonymous posture POST /authorization/check documents.
+        const allowed = await this.enrollmentPolicyEvaluator.evaluateData(
+            provider.enrollmentPolicyId,
+            new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: attributes }),
+            { realmId: provider.realmId },
+        );
+
+        if (!allowed) {
+            throw new IdentityProviderEnrollmentDeniedError(
+                `The identity provider "${provider.name}" enrollment policy denied the user.`,
+            );
+        }
+    }
+
     async saveUser(
         identity: IdentityProviderIdentity,
         user?: User,
@@ -252,6 +311,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         if (!attributesSelf) {
             // todo: better error name
             throw new Error('Identity provider attributes could not be validated.');
+        }
+
+        if (!user) {
+            await this.assertEnrollment(identity.provider, attributesSelf);
         }
 
         // A mapped `pathId` never passes through UserService.save, so the realm
@@ -353,6 +416,12 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
                 if (isUserFakeEmail(output.email)) {
                     output.email = buildUserFakeEmail(output.name);
+                }
+
+                // The renamed row is not the row the policy approved, on
+                // exactly the field a name rule constrains.
+                if (!user) {
+                    await this.assertEnrollment(identity.provider, output);
                 }
 
                 attempts -= 1;

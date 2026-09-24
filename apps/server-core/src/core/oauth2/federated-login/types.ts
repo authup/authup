@@ -83,6 +83,13 @@ export enum OAuth2FederatedLoginRefusal {
      * reach this.
      */
     ASSURANCE_INSUFFICIENT = 'assuranceInsufficient',
+    /**
+     * The provider is not accepting new users (`enrollmentEnabled: false`),
+     * or its `enrollmentPolicyId` denied the user row a first login would
+     * have created. A linked account never reaches this; the gate runs
+     * before any write, so no user is provisioned.
+     */
+    ENROLLMENT_DENIED = 'enrollmentDenied',
 }
 
 export type OAuth2FederatedLoginRefusedResult = {

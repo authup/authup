@@ -14,6 +14,9 @@ import type { IPathRepository } from '../../../entities/path/types.ts';
 // The account repository port moved into the entity module (plan 091):
 // one unified port serves the management API and the login/link flows.
 import type { IIdentityProviderAccountRepository } from '../../../entities/identity-provider-account/types.ts';
+// The FILE, never the oauth2 barrel: that barrel reaches back into this
+// module through the core barrel, and the cycle would TDZ-crash.
+import type { IOAuth2AccessPolicyEvaluator } from '../../../oauth2/access-policy/types.ts';
 
 export type { IIdentityProviderAccountRepository } from '../../../entities/identity-provider-account/types.ts';
 
@@ -68,7 +71,13 @@ export type IdentityProviderAccountManagerContext = {
 
     repository: IIdentityProviderAccountRepository,
     userRepository: IUserIdentityRepository,
-    pathRepository: IPathRepository
+    pathRepository: IPathRepository,
+    /**
+     * Evaluates a provider's `enrollmentPolicyId` over the user row a first
+     * login would create. Without it a provider carrying such a policy
+     * refuses every first login (fail closed).
+     */
+    enrollmentPolicyEvaluator?: Pick<IOAuth2AccessPolicyEvaluator, 'evaluateData'>,
 };
 
 export interface IIdentityProviderAccountManager {

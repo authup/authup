@@ -31,6 +31,7 @@ import type { ISessionManager } from '../../authentication/index.ts';
 // Deep imports, never the `core/identity` barrel: it reaches back into
 // this module through the core barrel, and the cycle would TDZ-crash.
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
+import { isIdentityProviderEnrollmentDeniedError } from '../../identity/provider/account/enrollment-error.ts';
 import { createIdentityProviderOAuth2Authenticator } from '../../identity/provider/authentication/factory.ts';
 import { isIdentityProviderAssuranceError } from '../../identity/provider/authentication/protocols/oauth2/assurance.ts';
 import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
@@ -199,6 +200,36 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         try {
             user = await authenticator.authenticate({ code });
         } catch (e) {
+            // The provider's enrollment gate refused a first login for an
+            // unknown subject (#PR060). The gate runs before the account
+            // manager's first write, so no user is provisioned and no account
+            // linked. The row carries no actor: there is no user to name, and
+            // the external subject is not an authup identity.
+            if (isIdentityProviderEnrollmentDeniedError(e)) {
+                this.logger?.warn(describeError(
+                    e,
+                    `The identity provider (${provider.id}) login was refused.`,
+                ));
+
+                await this.eventService?.record({
+                    scope: EventScope.OAUTH2,
+                    name: EventName.LOGIN_FAILED,
+                    actorType: null,
+                    actorId: null,
+                    actorName: null,
+                    realmId: provider.realmId ?? null,
+                    requestIpAddress: input.request?.ipAddress ?? null,
+                    requestUserAgent: input.request?.userAgent ?? null,
+                    data: { reason: 'enrollment', providerId: provider.id },
+                });
+
+                return {
+                    kind: 'refused',
+                    refusal: OAuth2FederatedLoginRefusal.ENROLLMENT_DENIED,
+                    error: OAuth2ErrorCode.ACCESS_DENIED,
+                };
+            }
+
             // The upstream did not meet the provider's assurance allow-list
             // (issue #3477). No user is provisioned and no account linked
             // because the gate throws inside `resolveIdentity`, before the

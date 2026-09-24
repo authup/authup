@@ -211,6 +211,9 @@ const createAccessPolicyEvaluator = () : FakeAccessPolicyEvaluator => {
             evaluator.calls.push({ policyId, subject });
             return evaluator.allowed;
         },
+        evaluateData: async () => {
+            throw new Error('the device flow evaluates the access policy for a subject, never a bare bag');
+        },
     };
 
     return evaluator;

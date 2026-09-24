@@ -465,6 +465,10 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
             this.calls.push({ policyId, subject });
             return this.allowed;
         }
+
+        async evaluateData(): Promise<boolean> {
+            throw new Error('the authorize gate evaluates the access policy for a subject, never a bare bag');
+        }
     }
 
     const identity: UserIdentity = {
@@ -751,6 +755,9 @@ describe('OAuth2AuthorizationGate', () => {
         async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
             evaluatorCalls.push({ policyId, subject });
             return evaluatorAllowed;
+        },
+        async evaluateData(): Promise<boolean> {
+            throw new Error('the authorize gate evaluates the access policy for a subject, never a bare bag');
         },
     };
 
