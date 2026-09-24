@@ -120,15 +120,23 @@ const TRANSACTION_ATTEMPTS = 3;
 
 /**
  * Run a folder-tree write in one transaction on mysql / postgres, retried on
- * a transient lock conflict. On better-sqlite3 the driver shares ONE query
- * runner, so a transaction would nest as a savepoint inside whatever is
- * running on it: the callback runs on the given manager instead.
+ * a transient lock conflict, or inside the caller's when it already holds
+ * one. On better-sqlite3 the driver shares ONE query runner, so a transaction
+ * would nest as a savepoint inside whatever is running on it: the callback
+ * runs on the given manager instead.
  */
 export async function runPathTransaction<R>(
     manager: EntityManager,
     fn: (manager: EntityManager) => Promise<R>,
 ) : Promise<R> {
     if (!isDatabaseTypeRowLockable(manager.connection.options.type)) {
+        return fn(manager);
+    }
+
+    // a manager bound to a running transaction joins it: a fresh one would
+    // wait on another pooled connection for the locks the outer one holds,
+    // and a retry cannot recover inside a transaction the owner must abort
+    if (manager.queryRunner?.isTransactionActive) {
         return fn(manager);
     }
 
