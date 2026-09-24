@@ -173,7 +173,10 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
         const start = gte('createdAt', buildStatsWindowStart(window, new Date()));
 
         return {
-            filters: filters ? and(defineFilters(filters), start) : start,
+            // an empty record encodes as an empty compound, which rapiq refuses
+            filters: filters && Object.keys(filters).length > 0 ?
+                and(defineFilters(filters), start) :
+                start,
             groups: defineGroups([
                 { name: 'bucket', params: ['createdAt', window.unit] },
                 ...(options.groups ?? []),

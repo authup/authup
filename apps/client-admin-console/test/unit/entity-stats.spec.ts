@@ -195,6 +195,29 @@ describe('src/composables/entity-stats', () => {
         expect(stats.forbidden.value).toBe(false);
     });
 
+    it('loads the window alone for empty filters', async () => {
+        const queries : EntityStatsQuery[] = [];
+        mount(defineComponent({
+            setup() {
+                useEntityStats({
+                    load: async (query) => {
+                        queries.push(query);
+
+                        return answer(query, 1);
+                    },
+                    filters: () => ({}),
+                    window: ENTITY_STATS_WINDOWS['7d'],
+                });
+
+                return () => h('div');
+            },
+        }));
+        await flushPromises();
+
+        expect(queries).toHaveLength(1);
+        expect(encode(queries[0])).toContain('gte(createdAt,\'2026-09-16T00:00:00.000Z\')');
+    });
+
     it('takes a caller\'s own fixed window', async () => {
         const { queries } = mountStats((query) => answer(query, 3), { days: 30, unit: 'day' });
         await flushPromises();
