@@ -27,9 +27,10 @@ screen.
 
 ## Accounts
 
-**A first login creates a new user.** Authup does not match an external
-identity to an existing account by email address, since anyone who can control
-an email claim at the provider could otherwise take over an account.
+**A first login creates a new user**, unless the provider's settings below say
+otherwise. Authup does not match an external identity to an existing account
+by email address, since anyone who can control an email claim at the provider
+could otherwise take over an account.
 
 **An existing account is linked by its owner.** A signed-in person links a
 provider from the account console under **Connected accounts**. From then on,
@@ -37,6 +38,71 @@ signing in through that provider signs them in to that account.
 
 An administrator can see and remove links (a user's **Identity provider
 accounts** tab) but cannot create one, for the same reason.
+
+### Who may get an account
+
+Two settings on every provider, LDAP included, decide whether a first login may
+create a user at all. Neither affects a person whose account is already linked
+to the provider: they keep signing in.
+
+- **Allow new users** is on by default. Switched off, a first login for an
+  external identity nobody has linked yet is refused, and the only way in
+  through that provider is a link an existing user made under **Connected
+  accounts**. This is the setting for an invite-only realm.
+- **New-user policy** names an `attributes`
+  [policy](./permissions-and-policies.md) that is evaluated against the user
+  Authup is about to create: its `name`, `email` and `realmId`, plus
+  `displayName`, `emailVerified` and the folder (`pathId`) when a mapping
+  supplies them. A rule on a column no mapping fills denies everyone.
+  A denial refuses the login. There is no signed-in person yet, so
+  the policy sees no identity and an identity policy always denies; a policy
+  that cannot be loaded, or that belongs to another realm, denies as well.
+
+A refused person is returned to the login page with the access denied card,
+exactly like an application's access policy; the reason is in the server log
+only. Someone signing in with an LDAP password is told the credentials are
+invalid, the same answer a wrong password gets, so nobody learns from the
+refusal that the LDAP password was right; the reason is in the server log here
+too.
+
+**Recipe: verified company e-mail only.** A domain rule needs nothing but the
+policy, because the address Authup stores comes from the provider's `email`
+claim. Create an `attributes` policy with the query
+
+```json
+{ "email": { "$endsWith": "@company.com" } }
+```
+
+and pick it as the provider's **New-user policy**. Addresses are stored in
+lowercase, so write the domain in lowercase. `$endsWith`, `$startsWith`, `$in`
+and plain equality are the operators to reach for; `$regex` is not portable
+across the databases Authup supports and must not be used in a policy. A login
+whose token carries no address at all gets a placeholder under `example.com`
+and is denied by the same rule.
+
+Requiring the address to be **verified** takes one more piece, because
+`emailVerified` is only set when a mapping supplies it. Add an attribute
+mapping to the provider with the source claim `email_verified`, the source
+value `^true$` matched as a regular expression (the claim is a boolean, and
+only the regular-expression match compares it as text), the target
+`emailVerified` and no target value, so the claim's own value is copied. Then
+tighten the policy:
+
+```json
+{ "emailVerified": true, "email": { "$endsWith": "@company.com" } }
+```
+
+A token that carries `email_verified: false`, or no such claim, sets nothing,
+and a missing `emailVerified` fails the rule, so the login is refused. Attribute
+mappings have no page in the admin console yet; the row goes into the
+`auth_identity_provider_attribute_mappings` table.
+
+One caveat applies to that mapping and to every other one: **a mapping reads
+the claims of the provider's access token**, not its `id_token` and not its
+userinfo response. Google and other providers whose access token is opaque put
+`email_verified` in the `id_token` alone, so the mapping never sees it there
+and every new user is refused. Sign in once and check where the provider
+carries the claim before relying on it.
 
 ## Multi-factor authentication
 
@@ -141,8 +207,12 @@ reason itself.
 **"The identity provider is not available."** The provider was disabled while
 the person was away at it.
 
-**Access was denied.** Either the person's Authup user is inactive, or the
-application carries an access policy that the person does not satisfy.
+**Access was denied.** The person's Authup user is inactive, the application
+carries an access policy that the person does not satisfy, the provider's
+[required claims](#verifying-what-the-provider-did) were not met, or the
+provider does not allow this person a new account
+([Who may get an account](#who-may-get-an-account)). The server log names
+which.
 
 **The provider says the redirect URI is invalid.** The callback URL above is
 not registered at the provider, or `publicUrl` does not match the address the
