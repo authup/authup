@@ -12,11 +12,12 @@ import {
     ATitle,
     injectHTTPClient,
     injectStore,
+    useEntityNameTranslator,
     usePermissionCheck,
     useTranslations,
 } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { EntityType, PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
@@ -52,6 +53,9 @@ export default defineComponent({
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
+
+        const translateEntityName = useEntityNameTranslator();
+        const displayName = (row: Permission) => translateEntityName(EntityType.PERMISSION, row);
 
         const translations = useTranslations([
             {
@@ -100,6 +104,7 @@ export default defineComponent({
 
         return {
             columns,
+            displayName,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -140,6 +145,13 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
+                <template #cell-name="{ row }">
+                    {{ displayName(row) }}
+                    <small
+                        v-if="displayName(row) !== row.name"
+                        class="block text-fg-muted"
+                    >{{ row.name }}</small>
+                </template>
                 <template #cell-builtIn="{ row }">
                     <VCIcon
                         :name="row.builtIn ? 'fa6-solid:check' : 'fa6-solid:xmark'"

@@ -45,6 +45,8 @@ import { isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
 import { injectHydrationStore } from '../../../../core/hydration';
+import { useEntityNameSearch, useEntityNameTranslator } from '../../../../core/translator';
+import type { EntityNamed } from '../../../../core/translator';
 import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
 import {
@@ -115,6 +117,8 @@ function create<
 
     const client = injectHTTPClient();
     const hydration = injectHydrationStore();
+    const translateEntityName = useEntityNameTranslator();
+    const searchEntityNames = useEntityNameSearch();
 
     const domainAPI = pickEntityAPI<TYPE, Entity<RECORD>>(client, context.type);
     // Captured bound, so the load fn's guard survives the query
@@ -203,7 +207,11 @@ function create<
                 // searchable fields.
                 const transformed = context.queryFilters ?
                     context.queryFilters(input.filters.name) :
-                    buildEntitySearchCondition(context.type, input.filters.name);
+                    buildEntitySearchCondition(
+                        context.type,
+                        input.filters.name,
+                        searchEntityNames(context.type, input.filters.name),
+                    );
                 filtersOverride = defineFilters(
                     transformed as FiltersBuildInput | ICondition,
                 );
@@ -581,7 +589,17 @@ function create<
                                     itemOpt.content(item, itemSlotProps) :
                                     itemOpt.content;
                             } else {
-                                body = h('span', String((hasOwnProperty(item, 'name') ? item.name : undefined) ?? item.id ?? ''));
+                                const name = hasOwnProperty(item, 'name') && typeof item.name === 'string' ?
+                                    item.name :
+                                    undefined;
+                                if (name) {
+                                    const label = translateEntityName(context.type, item as EntityNamed);
+                                    body = label === name ?
+                                        h('span', name) :
+                                        h('span', [label, h('small', { class: 'block text-fg-muted' }, name)]);
+                                } else {
+                                    body = h('span', String(item.id ?? ''));
+                                }
                             }
 
                             if (!itemActionsSlot && !itemActionsExtraSlot) {

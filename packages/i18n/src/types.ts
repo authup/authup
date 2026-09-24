@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { SystemPolicyName } from '@authup/access';
 import type { PluralNode } from 'ilingo';
+
+/**
+ * The built-in policy names as a union, the key set of the `authupPolicy`
+ * namespace (`SystemPolicyName` is a `const` object, not an enum).
+ */
+export type SystemPolicyNameValue = (typeof SystemPolicyName)[keyof typeof SystemPolicyName];
 
 export type LocaleDescriptor = {
     code: string,

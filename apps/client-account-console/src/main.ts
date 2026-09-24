@@ -243,7 +243,8 @@ install(app, {
     // Scope the session cookies to the sub-path authup is served under
     // (shared with the hosted auth pages — one session per deployment).
     // Root-scoped cookies collide with a same-origin host application that
-    // uses the kit's cookie names; see resolveCookiePath in ./config.ts.
+    // uses the kit's cookie names; see resolveCookiePath in the kit
+    // (@authup/client-web-kit, core/console).
     cookiePath: config.cookiePath,
     preferences: {
         locale: localeSource,

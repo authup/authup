@@ -9,7 +9,8 @@ export type RecordNamed = {
     id?: string | null,
     name?: string | null,
     displayName?: string | null,
-    description?: string | null
+    description?: string | null,
+    builtIn?: boolean | null
 };
 
 export type RecordHeading = {
@@ -46,10 +47,19 @@ export type RecordHeading = {
  * A description is free text and can run long, so `.sub-title` clamps it. The
  * heading block sits above the tab rail, and an unclamped paragraph would push
  * the rail down the page.
+ *
+ * `localizeName` fills an empty display name from the `@authup/i18n` catalogs
+ * (a built-in permission, policy or scope), so the raw name moves to rung 2;
+ * it answers the raw name for any other record, which keeps the ladder above
+ * unchanged for those.
  */
-export function buildRecordHeading(entity: RecordNamed) : RecordHeading {
+export function buildRecordHeading(
+    entity: RecordNamed,
+    localizeName?: (entity: RecordNamed) => string,
+) : RecordHeading {
     const name = entity.name || '';
-    const displayName = (entity.displayName || '').trim();
+    const displayName = (entity.displayName || '').trim() ||
+        (localizeName && name ? localizeName(entity) : '');
     const description = (entity.description || '').trim();
 
     const label = displayName.length > 0 ?

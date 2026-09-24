@@ -537,13 +537,22 @@ composable against the fake client (the realm-plus-global filter, the hourly
 24h window, a reload on a realm change, a failed reload of a NEW scope
 leaving no stale answer while a failed reload of the same scope keeps it, a
 stale answer dropped behind a newer request) and
-`test/unit/dashboard-stats.spec.ts` its pure helpers. A page over the kit
-client is tested this way, through a composable that takes the client as an
-argument and mounts in a bare component, because a full page mount needs the
-kit, pinia, vuecs and ilingo installed, which no console spec sets up. The
-server-side half is split by ownership now: the SERVING
-lives in each console service's suite (above), and the cookie login round-trip
-stays in server-core, as the `describe.each` over both consoles in
+`test/unit/dashboard-stats.spec.ts` its pure helpers. A composable is tested
+through a bare component that takes the client as an argument. A whole PAGE is
+mounted with `mountPage(path, handlers?, routes?)` (`test/utils/index.ts`):
+pinia, the kit `install` over a `createFakeClient`, vuecs, `installOverlays`,
+`installNavigation` and a memory-history router over the real `routes`, with
+`<Suspense>` around the `RouterView` (the async `setup()` detail pages need it)
+and `VCIcon` stubbed, since iconify would fetch every icon it holds no data for.
+It installs no guard and no layout, and only what `/users/:id` needs, so a page
+reaching another global component adds its plugin there. A spec swaps route
+records by mapping `routes` (a probe child route to see what `RouterView`
+forwards, a stub collection page as a redirect target), as
+`test/unit/user-page.spec.ts` does for the record heading, the `entity` handed
+to the tab, and the failed fetch landing on `/users`. The server-side half is
+split by ownership now: the SERVING lives in each console service's suite
+(above), and the cookie login round-trip stays in server-core, as the
+`describe.each` over both consoles in
 `test/unit/http/controllers/workflows/account/console-session.spec.ts`. That
 file gained a **"console shell"** block asserting server-core answers 404 for
 `''`, `/login` and an arbitrary sub-path under each segment, which is the
