@@ -179,6 +179,11 @@ Rollups outlive the events they count. They are kept forever by default;
 bounds them in days. Hour buckets always read raw events, so they reach back
 only as far as `eventLogRetentionDays`.
 
+Deleting a realm deletes its rollups. The realm's own `created` and `deleted`
+entries are counted again as deployment-wide on the days the background task
+recomputes (today and yesterday), so the Realms page still reports the
+deletion; its entries on older days are not restored.
+
 ## v1.0.0-beta.66 (was: next release after v1.0.0-beta.65)
 
 ### The consoles gate on `POST /authorization/check` alone

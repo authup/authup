@@ -6,6 +6,7 @@
  */
 
 import type { Event } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import {
     and,
     defineQuery,
@@ -63,7 +64,9 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                 let rows = normalize(await qb.getRawMany());
 
                 // auth_events outlives its realms (no foreign key), the
-                // rollups do not: a gone realm needs no history
+                // rollups do not: a gone realm's events are dropped, except
+                // the rows about the realm itself, which are the deployment's
+                // history of realms and are kept as global
                 const realmIds = [...new Set(rows.map((row) => row.realmId).filter(Boolean))] as string[];
                 if (realmIds.length > 0) {
                     const realms = await this.dataSource.getRepository(RealmEntity).find({
@@ -71,7 +74,16 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                         where: { id: In(realmIds) },
                     });
                     const existing = new Set(realms.map((realm) => realm.id));
-                    rows = rows.filter((row) => !row.realmId || existing.has(row.realmId as string));
+
+                    // several gone realms may then share a key: every
+                    // reader sums the counts, so the rows need no merge
+                    rows = rows.flatMap((row) => {
+                        if (!row.realmId || existing.has(row.realmId as string)) {
+                            return [row];
+                        }
+
+                        return row.refType === EntityType.REALM ? [{ ...row, realmId: null }] : [];
+                    });
                 }
 
                 // written with the process clock: a day whose rollup was

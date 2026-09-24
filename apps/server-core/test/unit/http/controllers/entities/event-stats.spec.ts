@@ -409,6 +409,41 @@ describe('src/http/controllers/entities/event (stats)', () => {
         expect(data.find((row) => row.name === 'created')?.count).toBeGreaterThanOrEqual(3);
     });
 
+    it('keeps a deleted realm in the rollups of the realms page', async () => {
+        const read = async (days: number) => {
+            const from = new Date(Date.now() - (days * DAY_IN_MS));
+            from.setUTCHours(0, 0, 0, 0);
+
+            const { data } = await suite.client.event.getStats({
+                filters: and(
+                    gte('createdAt', from.toISOString()),
+                    eq('scope', EventScope.ENTITY),
+                    eq('refType', 'realm'),
+                ),
+                groups: [{ name: 'bucket', params: ['createdAt', 'day'] }, 'name'],
+                aggregates: ['count'],
+            });
+
+            return data
+                .filter((row) => row.name === 'deleted')
+                .reduce((sum, row) => sum + row.count, 0);
+        };
+
+        await recompute(dataSource, new Date());
+        const before = await read(30);
+
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        await suite.client.realm.delete(realm.id);
+        await recompute(dataSource, new Date());
+
+        expect(await read(31)).toEqual(before + 1);
+
+        // a delete the rollups have not seen yet proves the read was routed
+        const { data: other } = await suite.client.realm.create(createFakeRealm());
+        await suite.client.realm.delete(other.id);
+        expect(await read(32)).toEqual(before + 1);
+    });
+
     it('answers a realm-bounded reader from the rollups plus its own events in a foreign realm', async () => {
         const refType = `reach-${randomUUID().slice(0, 8)}`;
         const password = 'start123-event-reach';

@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { EventName, EventScope } from '@authup/core-kit';
+import { EntityType, EventName, EventScope } from '@authup/core-kit';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
 import cron from 'node-cron';
@@ -91,13 +91,15 @@ describe('components/event-aggregator', () => {
     async function seed(at: string, input: {
         realmId?: string | null, 
         name?: string, 
-        scope?: string 
+        scope?: string,
+        refType?: string | null,
     } = {}) {
         await dataSource.getRepository(EventEntity).insert({
             id: randomUUID(),
             scope: (input.scope ?? EventScope.OAUTH2) as `${EventScope}`,
             name: (input.name ?? EventName.LOGIN) as `${EventName}`,
             realmId: input.realmId === undefined ? realmId : input.realmId,
+            refType: input.refType ?? null,
             expiring: false,
             createdAt: new Date(at) as unknown as string,
         });
@@ -303,6 +305,98 @@ describe('components/event-aggregator', () => {
         await repository.recompute(TODAY);
 
         expect(await read(TODAY)).toEqual([
+            {
+                realmId: null,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
+                refType: null,
+                count: 1,
+            },
+        ]);
+    });
+
+    it('should keep the realm history of a deleted realm as global', async () => {
+        const live = await dataSource.getRepository(RealmEntity).save({ name: `realm-${randomUUID().slice(0, 8)}` });
+
+        await seed(`${TODAY}T01:00:00.000Z`, {
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: EntityType.REALM, 
+        });
+        await seed(`${TODAY}T02:00:00.000Z`, {
+            scope: EventScope.ENTITY, 
+            name: 'deleted', 
+            refType: EntityType.REALM, 
+        });
+        await seed(`${TODAY}T01:00:00.000Z`, {
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: EntityType.USER, 
+        });
+        await seed(`${TODAY}T01:00:00.000Z`, {
+            realmId: live.id, 
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: EntityType.REALM,
+        });
+
+        await dataSource.getRepository(RealmEntity).delete({ id: realmId });
+        await repository.recompute(TODAY);
+
+        expect(await read(TODAY)).toEqual([
+            {
+                realmId: live.id,
+                scope: EventScope.ENTITY,
+                name: 'created',
+                refType: EntityType.REALM,
+                count: 1,
+            },
+            {
+                realmId: null,
+                scope: EventScope.ENTITY,
+                name: 'created',
+                refType: EntityType.REALM,
+                count: 1,
+            },
+            {
+                realmId: null,
+                scope: EventScope.ENTITY,
+                name: 'deleted',
+                refType: EntityType.REALM,
+                count: 1,
+            },
+        ].sort((a, b) => `${a.realmId}${a.name}`.localeCompare(`${b.realmId}${b.name}`)));
+    });
+
+    it('should restore a deleted realm on the days the tick recomputes, and only there', async () => {
+        const older = shift(TODAY, -3);
+        const realmRow = {
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: EntityType.REALM, 
+        };
+
+        await seed(`${older}T01:00:00.000Z`, realmRow);
+        await seed(`${older}T02:00:00.000Z`, { realmId: null });
+        await seed(`${TODAY}T01:00:00.000Z`, { ...realmRow, name: 'deleted' });
+
+        const tick = createEventAggregatorTick(repository, { retentionDays: 0 });
+        await tick();
+        expect(await read(older)).toHaveLength(2);
+
+        // the cascade takes every rollup row of the realm, on every day
+        await dataSource.getRepository(RealmEntity).delete({ id: realmId });
+        await tick();
+
+        expect(await read(TODAY)).toEqual([{
+            ...realmRow, 
+            name: 'deleted', 
+            realmId: null, 
+            count: 1, 
+        }]);
+        // an older day still holding other rows reads as final and is
+        // never recomputed: the realm's row of that day stays gone
+        expect(await read(older)).toEqual([
             {
                 realmId: null,
                 scope: EventScope.OAUTH2,

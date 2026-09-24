@@ -916,7 +916,8 @@ until deleted.
 
 - **The table.** One row per `(day, realmId, scope, name, refType)` with a
   `count`: `day` a `date`, `realm_id` nullable with an FK to `auth_realms`
-  (`ON DELETE CASCADE`, so a deleted realm takes its counts with it),
+  (`ON DELETE CASCADE`, so a deleted realm takes its counts with it, see
+  the recompute below for what comes back),
   `ref_type` nullable, an index on `(day, realm_id)` and NO unique
   constraint. Counts only, no actor, no client, no request data, so it
   carries no personal data and is not a place to add any. The stored columns
@@ -950,10 +951,25 @@ until deleted.
   lock name must stay stable across releases. On better-sqlite3 the lock is a
   passthrough, and one adapter instance queues its recomputes because the
   single shared connection refuses a second transaction. **Rows of a realm
-  that no longer exists are dropped before the insert**: `auth_events` is
-  FK-less by design and outlives its realms (a realm's own `deleted` audit
-  row carries its id), while the rollup's `realm_id` is an FK, so inserting
-  them would fail the recompute, and with it the whole tick, every minute.
+  that no longer exists are dropped before the insert, except the rows ABOUT
+  the realm (`refType: realm`), which are kept with `realmId` null**:
+  `auth_events` is FK-less by design and outlives its realms, while the
+  rollup's `realm_id` is an FK, so inserting a gone realm's id would fail the
+  recompute, and with it the whole tick, every minute. A realm's own entity
+  audit rows carry its own id, so dropping them too would leave the Realms
+  page's `Deleted` box at 0 forever; they are the deployment's history of
+  realms and the realm list is anonymous, so counting them as global
+  discloses nothing. A live realm's rows keep its id, and two gone realms may
+  share a null key, which every reader sums. **What the cascade takes comes
+  back only where the tick recomputes**: the realm-delete cascade removes the
+  realm's rollup rows on EVERY day, and today and yesterday (the `deleted`
+  row among them) are recomputed within a minute, as null. An older day that
+  still holds other rows reads as final and is never recomputed, so the
+  realm's `created` / `updated` rows of that day stay gone; one the cascade
+  emptied reads as missing, but the backfill cursor has already passed it, so
+  it is restored only by the walk of a fresh process, and only while its raw
+  rows exist (`eventLogEntityRetentionDays`, default 7). That loss is the
+  accepted cost of the FK.
 - **Routing is by the query's shape AFTER the gate.** A `day` or `month` read
   whose lowered query references stored columns only (filter leaves, groups,
   aggregate fields) and whose aggregates are `count()` alone is translated
@@ -1011,7 +1027,9 @@ without `EVENT_READ` read from raw events, and the two-part read of a
 realm-bounded reader),
 `test/unit/components/event-aggregator.spec.ts` (recompute, backfill cursor,
 pruning, two concurrent recomputes of one day, a deleted realm's rows, a
-recompute over a deleted realm's events, a provisional day repaired),
+recompute over a deleted realm's events, a deleted realm's history kept as
+global and restored only on the days the tick recomputes, a provisional day
+repaired),
 `test/unit/adapters/database/event-aggregate.spec.ts`,
 `test/unit/http/controllers/entities/entity-stats.spec.ts` (all 13 routes
 reach the statistic rather than `/:id`, the realm filter and mount, the
