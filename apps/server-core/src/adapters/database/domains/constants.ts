@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildCacheKey } from '@authup/server-kit';
+
 export enum CachePrefix {
+    AUTHORIZATION = 'authorization',
+
     IDENTITY_PROVIDER = 'identity_provider',
     IDENTITY_PROVIDER_ACCOUNT = 'identity_provider_account',
     IDENTITY_PROVIDER_ATTRIBUTE = 'identity_provider_attribute',
@@ -38,3 +42,32 @@ export enum CachePrefix {
     ROLE = 'role',
     ROLE_OWNED_PERMISSIONS = 'role_owned_permissions',
 }
+
+export const AUTHORIZATION_DEFINITIONS_CACHE_KEY = buildCacheKey({
+    prefix: CachePrefix.AUTHORIZATION,
+    key: 'definitions',
+});
+
+export const AUTHORIZATION_GRANT_POLICIES_CACHE_KEY = buildCacheKey({
+    prefix: CachePrefix.AUTHORIZATION,
+    key: 'grant_policies',
+});
+
+/**
+ * The generation a cached catalog read was taken in. A stored value counts
+ * only while this key still holds the generation it was tagged with, so a read
+ * that straddles a write's commit can never be served afterwards (#3599).
+ */
+export const AUTHORIZATION_EPOCH_CACHE_KEY = buildCacheKey({
+    prefix: CachePrefix.AUTHORIZATION,
+    key: 'epoch',
+});
+
+/**
+ * Every write to a table the authorization catalog reads drops these (#3599).
+ */
+export const AUTHORIZATION_CACHE_KEYS = [
+    AUTHORIZATION_EPOCH_CACHE_KEY,
+    AUTHORIZATION_DEFINITIONS_CACHE_KEY,
+    AUTHORIZATION_GRANT_POLICIES_CACHE_KEY,
+];

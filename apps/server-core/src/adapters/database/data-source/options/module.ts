@@ -42,6 +42,7 @@ import {
     PathSubscriber,
     PermissionEntity,
     PermissionPolicyEntity,
+    PermissionPolicySubscriber,
     PermissionSubscriber,
     PolicyAttributeEntity,
     PolicyAttributeSubscriber,
@@ -213,6 +214,7 @@ export class DataSourceOptionsBuilder {
                 PathSubscriber,
 
                 PermissionSubscriber,
+                PermissionPolicySubscriber,
                 PolicySubscriber,
                 PolicyAttributeSubscriber,
 

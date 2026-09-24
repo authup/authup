@@ -11,7 +11,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PolicyEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
+import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class PolicySubscriber extends EntitySubscriber<Policy> {
@@ -21,11 +21,13 @@ export class PolicySubscriber extends EntitySubscriber<Policy> {
             target: PolicyEntity,
             destinations: buildEntityDestinations(EntityType.POLICY),
             cache: {
+                onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.POLICY,
                         key: data.id,
                     }),
+                    ...AUTHORIZATION_CACHE_KEYS,
                 ],
             },
         });

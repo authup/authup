@@ -12,7 +12,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PermissionEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
+import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class PermissionSubscriber extends EntitySubscriber<Permission> {
@@ -22,6 +22,7 @@ export class PermissionSubscriber extends EntitySubscriber<Permission> {
             target: PermissionEntity,
             destinations: buildEntityDestinations(EntityType.PERMISSION),
             cache: {
+                onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.PERMISSION,
@@ -35,6 +36,7 @@ export class PermissionSubscriber extends EntitySubscriber<Permission> {
                             realmId: data.realmId,
                         }),
                     }),
+                    ...AUTHORIZATION_CACHE_KEYS,
                 ],
             },
         });

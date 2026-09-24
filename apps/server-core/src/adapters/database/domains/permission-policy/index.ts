@@ -6,3 +6,4 @@
  */
 
 export * from './entity.ts';
+export * from './subscriber.ts';

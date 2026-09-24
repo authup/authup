@@ -11,7 +11,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { RolePermissionEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
+import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class RolePermissionSubscriber extends EntitySubscriber<RolePermission> {
@@ -30,6 +30,7 @@ export class RolePermissionSubscriber extends EntitySubscriber<RolePermission> {
                         prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
                         key: data.roleId,
                     }),
+                    ...AUTHORIZATION_CACHE_KEYS,
                 ],
             },
         });
