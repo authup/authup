@@ -175,6 +175,16 @@ describe('realm isolation (field projection)', () => {
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
     });
 
+    // the record read is gated per row too, and reads the row through a
+    // query that applies the same `fields=` projection
+    it('refuses a foreign-realm user on a record read even when realmId is projected away', async () => {
+        const own = await actor.user.getOne(ownUserId, { fields: ['name'] });
+        expect(own.data.name).toBeDefined();
+
+        await expect(actor.user.getOne(foreignUserId, { fields: ['name'] })).rejects.toThrow();
+        await expect(readerActor.user.getOne(foreignUserId, { fields: ['name'] })).rejects.toThrow();
+    });
+
     it('keeps a foreign-realm plaintext client secret hidden even when realmId and the secret flags are projected away', async () => {
         const own = await actor.client.getMany({ filters: { id: ownClientId }, fields: ['id', 'secret'] });
         const ownEntity = own.data.find((entity) => entity.id === ownClientId);

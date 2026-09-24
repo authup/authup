@@ -50,23 +50,13 @@ export abstract class EntityRepositoryAdapter<
     }
 
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<T>> {
-        const { alias, realmScope } = this.options;
+        const { alias } = this.options;
 
         const qb = this.repository.createQueryBuilder(alias);
         qb.groupBy(`${alias}.id`);
 
         const { pagination } = applyQuery(qb, query);
-
-        // the per-row realm gate reads these columns, and a `fields=`
-        // projection that strips them would neutral-pass it (#3574, #3594)
-        if (realmScope) {
-            applyJunctionRealmScopeSelect(
-                qb,
-                alias,
-                realmScope.column ?? 'realmId',
-                realmScope.extraColumns,
-            );
-        }
+        this.applyRealmScopeSelect(qb);
 
         const { data, total } = await fetchMany(qb, query);
         await this.extendMany(data);
@@ -185,6 +175,9 @@ export abstract class EntityRepositoryAdapter<
         }
 
         applyQuery(qb, query);
+        // the record read is checked per row as well, and `id` tells the
+        // caller whether the row is its own (issue #3667)
+        this.applyRealmScopeSelect(qb, ['id']);
 
         const entity = await qb.getOne();
         if (entity) {
@@ -192,6 +185,24 @@ export abstract class EntityRepositoryAdapter<
         }
 
         return entity;
+    }
+
+    /**
+     * Force-select the columns the per-row realm gate reads: a `fields=`
+     * projection that strips them would neutral-pass it (#3574, #3594).
+     */
+    protected applyRealmScopeSelect(qb: SelectQueryBuilder<T>, extraColumns: string[] = []): void {
+        const { alias, realmScope } = this.options;
+        if (!realmScope) {
+            return;
+        }
+
+        applyJunctionRealmScopeSelect(
+            qb,
+            alias,
+            realmScope.column ?? 'realmId',
+            [...(realmScope.extraColumns ?? []), ...extraColumns],
+        );
     }
 
     /**
