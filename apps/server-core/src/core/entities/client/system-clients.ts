@@ -12,7 +12,7 @@ import {
     ClientTokenBindingMethod,
     ScopeName,
 } from '@authup/core-kit';
-import type { Client, Realm } from '@authup/core-kit';
+import type { Client, Realm, Scope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IClientScopeRepository } from '../client-scope/types.ts';
 import type { IScopeRepository } from '../scope/types.ts';
@@ -116,6 +116,12 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
 
     protected logger?: Logger;
 
+    // ponytail: found global scopes are memoized for the provisioner's
+    // lifetime (boot loop, realm-create hook). Built-in scopes are not
+    // deletable; a miss is not memoized, so a later provisioned scope is
+    // picked up.
+    protected scopes = new Map<string, Scope>();
+
     constructor(ctx: SystemClientProvisionerContext) {
         this.clientRepository = ctx.clientRepository;
         this.scopeRepository = ctx.scopeRepository;
@@ -213,10 +219,7 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
      */
     protected async ensureScopes(definition: SystemClientDefinition, client: Client): Promise<void> {
         for (const name of definition.scopeNames) {
-            const scope = await this.scopeRepository.findOneBy({
-                name,
-                realmId: null,
-            });
+            const scope = await this.findGlobalScope(name);
 
             if (!scope) {
                 if (this.logger) {
@@ -243,5 +246,19 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
                 scopeRealmId: scope.realmId,
             }));
         }
+    }
+
+    protected async findGlobalScope(name: string): Promise<Scope | null> {
+        const cached = this.scopes.get(name);
+        if (cached) {
+            return cached;
+        }
+
+        const scope = await this.scopeRepository.findOneBy({ name, realmId: null });
+        if (scope) {
+            this.scopes.set(name, scope);
+        }
+
+        return scope;
     }
 }

@@ -343,6 +343,9 @@ export class ProvisionerModule implements IModule {
             container.register(ProvisioningInjectionKey.WildcardRealmProvisioner, { useValue: wildcardProvisioner });
         }
 
+        // ponytail: sequential on purpose. Wildcard and path provisioning run
+        // repository transactions, better-sqlite3 shares one query runner,
+        // and a pool-bound fan-out across realms has deadlocked before.
         const realms = await realmRepository.find();
         for (const realm of realms) {
             await systemClientProvisioner.ensureForRealm(realm);
@@ -371,18 +374,20 @@ export class ProvisionerModule implements IModule {
         const permissionRepo = dataSource.getRepository(PermissionEntity);
         const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
 
-        const permissions = await permissionRepo.find();
-        for (const permission of permissions) {
-            const hasAnyPolicy = await junctionRepo.findOneBy({ permissionId: permission.id });
+        const bound = await junctionRepo.find({ select: { permissionId: true } });
+        const boundIds = new Set(bound.map((row) => row.permissionId));
 
-            if (!hasAnyPolicy) {
-                await junctionRepo.save(junctionRepo.create({
-                    permissionId: permission.id,
-                    permissionRealmId: permission.realmId,
-                    policyId: defaultPolicy.id,
-                    policyRealmId: defaultPolicy.realmId,
-                }));
-            }
+        const permissions = await permissionRepo.find({ select: { id: true, realmId: true } });
+        const missing = permissions.filter((permission) => !boundIds.has(permission.id));
+        if (missing.length === 0) {
+            return;
         }
+
+        await junctionRepo.save(missing.map((permission) => junctionRepo.create({
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+            policyId: defaultPolicy.id,
+            policyRealmId: defaultPolicy.realmId,
+        })));
     }
 }
