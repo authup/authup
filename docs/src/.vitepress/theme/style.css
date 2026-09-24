@@ -488,18 +488,37 @@
     color: inherit;
 }
 
+/*
+ * Normal-theme aliases, captured on the root element — the hero rescoping
+ * below never reaches here, so these always hold the real values for the
+ * current color mode (`.dark` lives on the same element, so its overrides are
+ * already folded in). `var()` is substituted at computed-value time on this
+ * element, so descendants inherit the resolved color, not the lookup.
+ */
+:root {
+    --au-menu-text-1: var(--vp-c-text-1);
+    --au-menu-text-2: var(--vp-c-text-2);
+    --au-menu-brand-1: var(--vp-c-brand-1);
+    --au-menu-divider: var(--vp-c-divider);
+    --au-menu-bg-alt: var(--vp-c-bg-alt);
+}
+
 /* The flyout trap: `.VPMenu` (Guide/SDKs/About dropdowns, the narrow-width
  * "extra" overflow menu) renders as a normal DOM descendant of the bar items
  * above, not a portal, so it would otherwise inherit their dark-on-hero text
- * colors onto its own always-opaque, normal-theme popup. `initial` breaks
- * the custom-property inheritance chain here, so `color: var(--vp-c-text-1)`
- * etc. inside the popup fall back to the real (unscoped) computed value. */
+ * colors onto its own always-opaque, normal-theme popup. Restore the real
+ * values from the aliases above rather than resetting to `initial`: `initial`
+ * on a custom property is the guaranteed-invalid value, which makes every
+ * `var()` that reads it invalid at computed-value time — the menu's dividers
+ * (`border-color: var(--vp-c-divider)`) would fall back to `currentColor` and
+ * its labels would inherit the hovered hero color, which is the very leak
+ * this block exists to stop. */
 .Layout.au-home .VPNavBar.top:not(.screen-open) .VPMenu {
-    --vp-c-text-1: initial;
-    --vp-c-text-2: initial;
-    --vp-c-brand-1: initial;
-    --vp-c-divider: initial;
-    --vp-c-bg-alt: initial;
+    --vp-c-text-1: var(--au-menu-text-1);
+    --vp-c-text-2: var(--au-menu-text-2);
+    --vp-c-brand-1: var(--au-menu-brand-1);
+    --vp-c-divider: var(--au-menu-divider);
+    --vp-c-bg-alt: var(--au-menu-bg-alt);
 }
 
 /*
