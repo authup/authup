@@ -914,11 +914,13 @@ not group ninety days of `auth_events`. There is deliberately no generic
 rollup mechanism: the other twelve tables are small, and their rows live
 until deleted.
 
-- **The table.** One row per `(day, realmId, scope, name, refType)` with a
-  `count`: `day` a `date`, `realm_id` nullable with an FK to `auth_realms`
-  (`ON DELETE CASCADE`, so a deleted realm takes its counts with it, see
+- **The table.** One row per `(date, realmId, scope, name, refType)` with a
+  `count`: `date` a `date` column holding the UTC calendar day (named for
+  what it holds; the `*At` suffix is reserved for timestamps, and
+  `createdAt` is the write stamp the finality rule reads), `realm_id`
+  nullable with an FK to `auth_realms` (`ON DELETE CASCADE`, so a deleted realm takes its counts with it, see
   the recompute below for what comes back),
-  `ref_type` nullable, an index on `(day, realm_id)` and NO unique
+  `ref_type` nullable, an index on `(date, realm_id)` and NO unique
   constraint. Counts only, no actor, no client, no request data, so it
   carries no personal data and is not a place to add any. The stored columns
   are `EVENT_AGGREGATE_COLUMNS` (`core/entities/event-aggregate/`).
@@ -979,7 +981,7 @@ until deleted.
 - **Routing is by the query's shape AFTER the gate.** A `day` or `month` read
   whose lowered query references stored columns only (filter leaves, groups,
   aggregate fields) and whose aggregates are `count()` alone is translated
-  (`translateEventAggregateQuery`: `createdAt` becomes `day`, `count()`
+  (`translateEventAggregateQuery`: `createdAt` becomes `date`, `count()`
   becomes `sum(count)`) and answered from the rollups; the rows are
   translated back, so the caller cannot tell (the one exception is a gone
   realm's own rows, above). A rollup answers whole days,

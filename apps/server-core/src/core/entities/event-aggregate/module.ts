@@ -58,13 +58,13 @@ function translateCondition(condition: ICondition): ICondition | undefined {
     }
 
     return condition.operator === 'lt' ?
-        lt('day', toDay(date)) :
-        gte('day', toDay(date));
+        lt('date', toDay(date)) :
+        gte('date', toDay(date));
 }
 
 /**
  * The raw-vocabulary grouped event query onto auth_event_aggregates:
- * `createdAt` becomes `day`, `count()` becomes `sum(count)`. Undefined when
+ * `createdAt` becomes `date`, `count()` becomes `sum(count)`. Undefined when
  * an aggregate is anything but `count()` or a bound falls inside a day: the
  * stored counts cannot answer it.
  */
@@ -88,10 +88,10 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
 
             return new Group({
                 name: 'bucket',
-                params: ['day', ...group.lowering.args],
+                params: ['date', ...group.lowering.args],
                 lowering: {
                     fn: 'bucket', 
-                    field: 'day', 
+                    field: 'date', 
                     args: group.lowering.args, 
                 },
             });
@@ -113,14 +113,14 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
  */
 export function translateEventAggregateRow(row: Record<string, unknown>): Record<string, unknown> {
     const {
-        day, 
+        date, 
         sumCount, 
         ...rest 
     } = row;
 
     return {
         ...rest,
-        createdAt: day,
+        createdAt: date,
         count: sumCount,
     };
 }

@@ -8,8 +8,9 @@
 /**
  * Daily event rollups.
  *
- * `auth_event_aggregates` holds one row per UTC day and (realm, scope, name,
- * ref_type) with the number of `auth_events` rows it stands for, so a day or
+ * `auth_event_aggregates` holds one row per UTC calendar day (the `date`
+ * column) and (realm, scope, name, ref_type) with the number of
+ * `auth_events` rows it stands for, so a day or
  * month statistic reads a few hundred rows instead of scanning the raw log.
  * `realm_id` deletes CASCADE: a gone realm needs no history, global events
  * keep theirs. There is no unique constraint: a recompute replaces a whole
@@ -18,14 +19,14 @@
 
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class EventAggregates1790178321474 implements MigrationInterface {
-    name = 'EventAggregates1790178321474';
+export class EventAggregates1790241235945 implements MigrationInterface {
+    name = 'EventAggregates1790241235945';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE "auth_event_aggregates" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "day" date NOT NULL,
+                "date" date NOT NULL,
                 "realm_id" uuid,
                 "scope" character varying(64) NOT NULL,
                 "name" character varying(64) NOT NULL,
@@ -36,7 +37,7 @@ export class EventAggregates1790178321474 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            CREATE INDEX "IDX_bb277f12800b91a01cf8f60aa4" ON "auth_event_aggregates" ("day", "realm_id")
+            CREATE INDEX "IDX_dbc33a4d3f78297eacf707ab6e" ON "auth_event_aggregates" ("date", "realm_id")
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_event_aggregates"
@@ -49,7 +50,7 @@ export class EventAggregates1790178321474 implements MigrationInterface {
             ALTER TABLE "auth_event_aggregates" DROP CONSTRAINT "FK_2949cc65b187ad191fa381309ff"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_bb277f12800b91a01cf8f60aa4"
+            DROP INDEX "public"."IDX_dbc33a4d3f78297eacf707ab6e"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_event_aggregates"

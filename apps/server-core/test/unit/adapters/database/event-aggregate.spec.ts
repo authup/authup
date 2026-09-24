@@ -40,7 +40,7 @@ describe('adapters/database/domains/event-aggregate', () => {
     it('should read a day back as a calendar date string', async () => {
         const repository = dataSource.getRepository(EventAggregateEntity);
         const saved = await repository.save({
-            day: '2026-09-22',
+            date: '2026-09-22',
             realmId: null,
             scope: 'oauth2',
             name: 'login',
@@ -49,7 +49,7 @@ describe('adapters/database/domains/event-aggregate', () => {
         });
 
         const row = await repository.findOneByOrFail({ id: saved.id });
-        expect(row.day).toEqual('2026-09-22');
+        expect(row.date).toEqual('2026-09-22');
         expect(row.realmId).toBeNull();
         expect(row.count).toEqual(3);
     });
@@ -58,7 +58,7 @@ describe('adapters/database/domains/event-aggregate', () => {
         const realm = await dataSource.getRepository(RealmEntity).save({ name: 'aggregate-realm' });
         const repository = dataSource.getRepository(EventAggregateEntity);
         const saved = await repository.save({
-            day: '2026-09-21',
+            date: '2026-09-21',
             realmId: realm.id,
             scope: 'entity',
             name: 'created',

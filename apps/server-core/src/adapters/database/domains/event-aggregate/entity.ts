@@ -25,14 +25,14 @@ import { RealmEntity } from '../realm/index.ts';
 // Daily rollup of auth_events. A recompute replaces a whole day under a
 // database lock, so no unique constraint over the nullable columns is needed.
 // No subscriber: not cached, not realtime-broadcast.
-@Index(['day', 'realmId'])
+@Index(['date', 'realmId'])
 @Entity({ name: 'auth_event_aggregates' })
 export class EventAggregateEntity implements EventAggregate {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'day', type: 'date' })
-    day: string;
+    @Column({ name: 'date', type: 'date' })
+    date: string;
 
     @Column({
         name: 'realm_id',

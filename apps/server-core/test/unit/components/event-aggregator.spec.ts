@@ -106,7 +106,7 @@ describe('components/event-aggregator', () => {
     }
 
     async function read(day: string) {
-        const rows = await dataSource.getRepository(EventAggregateEntity).find({ where: { day } });
+        const rows = await dataSource.getRepository(EventAggregateEntity).find({ where: { date: day } });
         return rows
             .map((row) => ({
                 realmId: row.realmId,
@@ -210,7 +210,7 @@ describe('components/event-aggregator', () => {
 
         await repository.recompute(TODAY);
 
-        expect(await dataSource.getRepository(EventAggregateEntity).count({ where: { day: TODAY } })).toEqual(groups);
+        expect(await dataSource.getRepository(EventAggregateEntity).count({ where: { date: TODAY } })).toEqual(groups);
     }, HOOK_TIMEOUT);
 
     it('should leave the counts of one recompute after repeated and concurrent ones', async () => {
@@ -306,7 +306,7 @@ describe('components/event-aggregator', () => {
     it('should prune rollups past their retention, and keep them without one', async () => {
         const old = shift(TODAY, -40);
         await dataSource.getRepository(EventAggregateEntity).save({
-            day: old,
+            date: old,
             realmId,
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN,

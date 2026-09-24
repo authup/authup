@@ -98,7 +98,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                 // the grouped read runs outside the transaction, so the
                 // transaction never waits on a second pooled connection (#3526)
                 await this.dataSource.transaction(async (manager) => {
-                    await manager.delete(EventAggregateEntity, { day });
+                    await manager.delete(EventAggregateEntity, { date: day });
 
                     // one statement binds at most 65535 values on postgres
                     // (32766 on sqlite), 7 per row, and insert() never chunks; sqlite
@@ -107,7 +107,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                     for (let i = 0; i < rows.length; i += EVENT_AGGREGATE_INSERT_CHUNK) {
                         await manager.insert(EventAggregateEntity, rows.slice(i, i + EVENT_AGGREGATE_INSERT_CHUNK).map((row) => ({
                             createdAt,
-                            day,
+                            date: day,
                             realmId: row.realmId as string | null,
                             scope: row.scope as Event['scope'],
                             name: row.name as string,
@@ -129,21 +129,21 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
      */
     async findDays(from: string, to: string): Promise<string[]> {
         const repository = this.dataSource.getRepository(EventAggregateEntity);
-        const dayColumn = repository.metadata.findColumnWithPropertyName('day')!;
+        const dayColumn = repository.metadata.findColumnWithPropertyName('date')!;
         const createdAtColumn = repository.metadata.findColumnWithPropertyName('createdAt')!;
 
         const rows = await repository.createQueryBuilder('aggregate')
-            .select('aggregate.day', 'day')
+            .select('aggregate.date', 'date')
             .addSelect('MAX(aggregate.createdAt)', 'createdAt')
-            .where({ day: Between(from, to) })
-            .groupBy('aggregate.day')
-            .getRawMany<{ day: unknown, createdAt: unknown }>();
+            .where({ date: Between(from, to) })
+            .groupBy('aggregate.date')
+            .getRawMany<{ date: unknown, createdAt: unknown }>();
 
         // hydrate the raw values the way an entity read would: mysql2
         // answers a Date, the other drivers a string
         return rows
             .map((row) => ({
-                day: this.dataSource.driver.prepareHydratedValue(row.day, dayColumn) as string,
+                day: this.dataSource.driver.prepareHydratedValue(row.date, dayColumn) as string,
                 createdAt: this.dataSource.driver.prepareHydratedValue(row.createdAt, createdAtColumn) as string,
             }))
             .filter((row) => {
@@ -169,25 +169,25 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
         const repository = this.dataSource.getRepository(EventAggregateEntity);
         const [other, entity] = await Promise.all([
             repository.findOne({
-                select: { id: true, day: true }, 
+                select: { id: true, date: true }, 
                 where: { scope: Not(EventScope.ENTITY) }, 
-                order: { day: 'ASC' }, 
+                order: { date: 'ASC' }, 
             }),
             repository.findOne({
-                select: { id: true, day: true }, 
+                select: { id: true, date: true }, 
                 where: { scope: EventScope.ENTITY }, 
-                order: { day: 'ASC' }, 
+                order: { date: 'ASC' }, 
             }),
         ]);
 
         return {
-            aggregateFrom: other?.day ?? null,
-            entityAggregateFrom: entity?.day ?? null,
+            aggregateFrom: other?.date ?? null,
+            entityAggregateFrom: entity?.date ?? null,
         };
     }
 
     async deleteBefore(before: string): Promise<number> {
-        const result = await this.dataSource.getRepository(EventAggregateEntity).delete({ day: LessThan(before) });
+        const result = await this.dataSource.getRepository(EventAggregateEntity).delete({ date: LessThan(before) });
 
         return result.affected ?? 0;
     }

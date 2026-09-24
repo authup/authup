@@ -17,7 +17,7 @@ export interface EventAggregate {
     /**
      * UTC calendar day, `YYYY-MM-DD`.
      */
-    day: string;
+    date: string;
 
     realmId: Realm['id'] | null;
 

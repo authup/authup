@@ -676,7 +676,7 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         rollups.seed({
             id: randomUUID(),
-            day: '2026-09-23',
+            date: '2026-09-23',
             realmId,
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN,
@@ -686,7 +686,7 @@ describe('EntityStatsService routing onto the rollups', () => {
         });
         rollups.seed({
             id: randomUUID(),
-            day: '2026-08-30',
+            date: '2026-08-30',
             realmId,
             scope: EventScope.ENTITY,
             name: 'created',
@@ -728,13 +728,13 @@ describe('EntityStatsService routing onto the rollups', () => {
         });
     });
 
-    it('reads the day column and sums the stored counts', async () => {
+    it('reads the date column and sums the stored counts', async () => {
         await service.getMany(wire(), allowed());
 
         const encoded = decodeURIComponent(buildQueryString(rollups.aggregateCalls[0]));
-        expect(encoded).toContain('gte(day,\'2026-09-16\')');
-        expect(encoded).toContain('lt(day,\'2026-09-24\')');
-        expect(encoded).toContain('bucket(day,day)');
+        expect(encoded).toContain('gte(date,\'2026-09-16\')');
+        expect(encoded).toContain('lt(date,\'2026-09-24\')');
+        expect(encoded).toContain('bucket(date,day)');
         expect(encoded).toContain('sum(count)');
     });
 

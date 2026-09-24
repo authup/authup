@@ -544,7 +544,7 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         const dataSource = suite.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const day = toDay(new Date(Date.now() - (100 * DAY_IN_MS)));
         await dataSource.getRepository(EventAggregateEntity).insert({
-            day,
+            date: day,
             realmId: null,
             scope: EventScope.ENTITY,
             name: 'created',
