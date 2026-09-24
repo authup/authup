@@ -435,11 +435,21 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         // every consumer of the realm cipher: the MFA seeds, the client
         // secrets stored in encrypted mode and the identity-provider
         // secrets (the OAuth2 client secret, the LDAP bind password).
-        const pattern = Like(`${REALM_CIPHER_BLOB_VERSION}.${keyId}.%`);
+        const prefix = `${REALM_CIPHER_BLOB_VERSION}.${keyId}.`;
+        const pattern = Like(`${prefix}%`);
         const [authenticators, clients, providerAttributes] = await Promise.all([
             this.dataSource.getRepository(UserAuthenticatorEntity).countBy({ secret: pattern }),
             this.dataSource.getRepository(ClientEntity).countBy({ secret: pattern }),
-            this.dataSource.getRepository(IdentityProviderAttributeEntity).countBy({ value: pattern }),
+            // raw parameters: a find operator would run through the column
+            // transformer, and the value is stored bare (legacy) or
+            // JSON-quoted (#3671).
+            this.dataSource.getRepository(IdentityProviderAttributeEntity)
+                .createQueryBuilder('attribute')
+                .where('attribute.value LIKE :bare OR attribute.value LIKE :quoted', {
+                    bare: `${prefix}%`,
+                    quoted: `"${prefix}%`,
+                })
+                .getCount(),
         ]);
 
         return authenticators + clients + providerAttributes;

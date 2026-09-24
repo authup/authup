@@ -1813,6 +1813,8 @@ threads instances through constructor/context args:
 
 Entities like user, policy, and identity-provider store dynamic key-value pairs in a separate table.
 
+**A value is stored in a type-preserving form (#3671).** The four `*_attributes` `value` columns persist through `serialize` / `deserialize` from `@authup/kit`: `serialize` writes a string JSON-quoted like any other JSON value, and `deserialize` (destr) reads both the quoted and the legacy bare form. Two consequences. A query on `value` through a find operator runs its operand through the transformer, so `KeyRepositoryAdapter.countBlobReferences` matches identity-provider blobs with raw parameters for both forms (`v1.<key>.%` and `"v1.<key>.%`). And no row is migrated: a legacy bare `false` or `123` is ambiguous, since `serialize(false)` and `serialize('false')` both wrote `false` and the API accepts non-string JSON values, so rewriting it would be a guess. Every attribute table may therefore hold legacy bare rows, which keep their old reading everywhere until written again; a reader or filter on `value` must accept both forms.
+
 **Critical rule: separate read-path vs write-path EA loading.** `EntityRepositoryAdapter` enforces it (see *Adapter Implementation*): an EA adapter overrides `extendOne` / `extendMany`, which the base calls from `findOneById`, `findOneByName` and `findMany` but never from `findOneBy`, the read a write loads through. `saveWithEA()` does not extend after the save either.
 
 **`saveEA` REPLACES the attribute set, which a partial update must opt out

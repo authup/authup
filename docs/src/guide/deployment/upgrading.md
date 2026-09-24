@@ -33,6 +33,18 @@ older version; that cookie was a session cookie and ends when the browser closes
 `@authup/client-web-kit` no longer depends on `@iconify-json/fa6-solid`,
 `@iconify-json/fa6-brands` or `@iconify/vue`.
 
+### Attribute values keep their type
+
+From this release on, a string attribute value (user, role, policy and
+identity-provider attributes) keeps its type: `"123"` or `"true"` reads back as
+the string it was written as. Values stored earlier are not rewritten and read
+back as before, so a numeric- or boolean-looking string written before still
+reads as a number or a boolean until it is written again.
+
+`serialize` from `@authup/kit` now writes a string JSON-quoted (`"abc"` instead of
+`abc`). `deserialize` reads both forms, so a round trip is unchanged; only code
+that reads the stored text directly sees the quotes.
+
 ## v1.0.0-beta.67 (was: next release after v1.0.0-beta.66)
 
 ### `GET /schemas/:name` moved to `GET /<collection>/@schema`
