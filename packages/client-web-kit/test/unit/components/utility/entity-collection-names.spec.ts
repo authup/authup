@@ -62,7 +62,7 @@ describe('defineEntityCollectionManager (catalog names)', () => {
         await (wrapper.vm as any).load({ filters: { name: 'SIGN-IN' } });
 
         expect(filters(httpClient.requests)[1]).toEqual(
-            `or(contains(name,'SIGN-IN'),contains(displayName,'SIGN-IN'),in(name,'${ScopeName.OPEN_ID}'))`,
+            `or(contains(name,'SIGN-IN'),contains(displayName,'SIGN-IN'),and(in(name,'${ScopeName.OPEN_ID}'),eq(builtIn,'true'),or(eq(displayName,null),eq(displayName,''))))`,
         );
     });
 
