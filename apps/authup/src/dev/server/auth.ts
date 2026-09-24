@@ -32,7 +32,10 @@ type ViteRenderContext = Pick<
 
 const SSR_ENTRY = '/src/server.ts';
 
-const CSS_REQUEST = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)$/;
+const CSS_REQUEST = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/;
+
+/** A stylesheet already loaded as a string or a url, never a sheet on its own. */
+const CSS_SPECIAL_QUERY = /[?&](?:inline|raw|url|direct)\b/;
 
 /**
  * The stylesheets the SSR entry reaches, inlined as the `<style>` tags vite's
@@ -48,25 +51,28 @@ async function renderDevStyles(vite: ViteRenderContext) : Promise<string> {
         return '';
     }
 
+    // Depth-first, a module's imports before the module itself: the order
+    // the browser evaluates them in, and so the order vite's client appends
+    // their style tags in. It reuses a tag in place, so the markup must
+    // already carry the cascade order.
     const sheets : EnvironmentModuleNode[] = [];
     const seen = new Set<EnvironmentModuleNode>();
-    const queue = [entry];
-    while (queue.length > 0) {
-        const mod = queue.shift()!;
+    const visit = (mod: EnvironmentModuleNode) => {
         if (seen.has(mod)) {
-            continue;
+            return;
         }
 
         seen.add(mod);
-        if (mod.id && CSS_REQUEST.test(mod.id)) {
+        mod.importedModules.forEach(visit);
+
+        if (mod.id && CSS_REQUEST.test(mod.id) && !CSS_SPECIAL_QUERY.test(mod.id)) {
             sheets.push(mod);
         }
-
-        queue.push(...mod.importedModules);
-    }
+    };
+    visit(entry);
 
     const tags = await Promise.all(sheets.map(async (sheet) => {
-        const { default: css } = await vite.ssrLoadModule(`${sheet.url}?inline`);
+        const { default: css } = await vite.ssrLoadModule(`${sheet.url}${sheet.url.includes('?') ? '&' : '?'}inline`);
         const id = (sheet.id as string).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
         return `<style type="text/css" data-vite-dev-id="${id}">${String(css).replace(/<\/style/gi, '<\\/style')}</style>`;

@@ -431,7 +431,7 @@ describe('theme', () => {
         });
 
         it('should keep other links', async () => {
-            const html = '<head><link rel="apple-touch-icon" href="/a.png"><link rel="stylesheet" href="/a.css"></head>';
+            const html = '<head><link rel="apple-touch-icon" href="/a.png"><link rel="stylesheet" href="/a.css?rel=icon"></head>';
 
             expect(removeFaviconLinks(html)).toEqual(html);
         });

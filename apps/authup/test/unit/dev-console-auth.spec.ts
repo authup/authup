@@ -175,4 +175,52 @@ describe('createViteRender', () => {
         expect(html).toContain('<style type="text/css" data-vite-dev-id="/repo/src/tailwind.css">body{color:red}<\\/style></style>');
         expect(loaded.filter((url) => url.endsWith('?inline'))).toEqual(['/src/tailwind.css?inline']);
     });
+
+    it('keeps the stylesheets in evaluation order and keeps their query', async () => {
+        const base : FakeModule = {
+            id: '/repo/src/base.css', 
+            url: '/src/base.css', 
+            importedModules: new Set(), 
+        };
+        const app : FakeModule = {
+            id: '/repo/src/app.ts', 
+            url: '/src/app.ts', 
+            importedModules: new Set([base]), 
+        };
+        const overrides : FakeModule = {
+            id: '/repo/src/overrides.css?v=2', 
+            url: '/src/overrides.css?v=2', 
+            importedModules: new Set(), 
+        };
+        const entry : FakeModule = {
+            id: '/repo/src/server.ts', 
+            url: '/src/server.ts', 
+            importedModules: new Set([app, overrides]), 
+        };
+
+        const loaded : string[] = [];
+
+        const vite : ViteRenderContext = {
+            transformIndexHtml: async (_url, html) => html,
+            ssrLoadModule: async (url) => {
+                loaded.push(url);
+                if (url.includes('inline')) {
+                    return { default: url };
+                }
+
+                return { render: async () : Promise<RenderResult> => ['<p>page</p>', ''] };
+            },
+            ssrFixStacktrace: () => undefined,
+            environments: createModuleGraph(entry),
+        };
+
+        const html = await createViteRender(vite, root)(event, config, { url: '/logout', data: {} });
+
+        expect(loaded.filter((url) => url.includes('inline'))).toEqual([
+            '/src/base.css?inline',
+            '/src/overrides.css?v=2&inline',
+        ]);
+        expect(html.indexOf('data-vite-dev-id="/repo/src/base.css"'))
+            .toBeLessThan(html.indexOf('data-vite-dev-id="/repo/src/overrides.css?v=2"'));
+    });
 });

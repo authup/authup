@@ -86,7 +86,7 @@ export function injectHeadContent(html: string, content: string) : string {
  * a browser shows is its own choice.
  */
 export function removeFaviconLinks(html: string) : string {
-    return html.replace(/<link\b(?=[^>]*\brel\s*=\s*["']?(?:shortcut\s+)?icon["'\s>/])[^>]*>\s*/gi, '');
+    return html.replace(/<link\b(?=[^>]*\srel\s*=\s*["']?(?:shortcut\s+)?icon["'\s>/])[^>]*>\s*/gi, '');
 }
 
 /**
