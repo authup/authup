@@ -18,6 +18,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
 import { CachePrefix, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
+import { runPathTransaction, unwindPaths } from '../path/unwind.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
@@ -99,7 +100,12 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     async remove(entity: Realm): Promise<void> {
-        await this.repository.remove(entity);
+        // the folder tree goes first: left to the database cascade, a realm
+        // holding filed users or deep folders exceeds mysql's cascade limits
+        await runPathTransaction(this.repository.manager, async (manager) => {
+            await unwindPaths(manager, { realmId: entity.id });
+            await manager.getRepository(RealmEntity).remove(entity);
+        });
     }
 
     async validateJoinColumns(data: Partial<Realm>): Promise<void> {
