@@ -50,6 +50,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
+        "@authup/access": "^1.0.0-beta.67",
+        "@authup/core-kit": "^1.0.0-beta.67",
         "@authup/errors": "^1.0.0-beta.67",
         "ilingo": "^6.2.0"
     },

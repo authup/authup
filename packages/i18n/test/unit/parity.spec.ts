@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { SystemPolicyName } from '@authup/access';
+import { PermissionName, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import type { Translations } from 'ilingo';
 import { describe, expect, it } from 'vitest';
@@ -36,6 +38,11 @@ const EXPECTED_KEYS: Record<`${TranslatorTranslationNamespace}`, string[]> = {
     [TranslatorTranslationNamespace.VUECS]: Object.values(TranslatorTranslationVuecsKey),
     [TranslatorTranslationNamespace.ERROR]: Object.values(ErrorCode),
     [TranslatorTranslationNamespace.MAIL]: Object.values(TranslatorTranslationMailKey),
+    // The identifier enums are the key set, so a member added there fails
+    // this suite until every locale carries its display name.
+    [TranslatorTranslationNamespace.PERMISSION]: Object.values(PermissionName),
+    [TranslatorTranslationNamespace.POLICY]: Object.values(SystemPolicyName),
+    [TranslatorTranslationNamespace.SCOPE]: Object.values(ScopeName),
 };
 
 /**

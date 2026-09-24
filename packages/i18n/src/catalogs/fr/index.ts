@@ -13,4 +13,7 @@ export * from './entity';
 export * from './error';
 export * from './field';
 export * from './mail';
+export * from './permission';
+export * from './policy';
+export * from './scope';
 export * from './vuecs';

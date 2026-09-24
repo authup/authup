@@ -33,6 +33,12 @@ export enum TranslatorTranslationNamespace {
     APP = 'authupApp',
 
     MAIL = 'authupMail',
+
+    PERMISSION = 'authupPermission',
+
+    POLICY = 'authupPolicy',
+
+    SCOPE = 'authupScope',
 }
 
 export enum TranslatorTranslationVuecsKey {

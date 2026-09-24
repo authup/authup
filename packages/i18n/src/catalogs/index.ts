@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionName, ScopeName } from '@authup/core-kit';
 import type { ErrorCode } from '@authup/errors';
 import {
     type NamespaceChild,
@@ -26,7 +27,7 @@ import type {
 import {
     TranslatorTranslationNamespace,
 } from '../constants';
-import type { NamespaceTranslations } from '../types';
+import type { NamespaceTranslations, SystemPolicyNameValue } from '../types';
 import {
     TranslatorTranslationActionEnglish,
     TranslatorTranslationAppEnglish,
@@ -36,6 +37,9 @@ import {
     TranslatorTranslationErrorEnglish,
     TranslatorTranslationFieldEnglish,
     TranslatorTranslationMailEnglish,
+    TranslatorTranslationPermissionEnglish,
+    TranslatorTranslationPolicyEnglish,
+    TranslatorTranslationScopeEnglish,
     TranslatorTranslationVuecsEnglish,
 } from './en';
 import {
@@ -47,6 +51,9 @@ import {
     TranslatorTranslationErrorGerman,
     TranslatorTranslationFieldGerman,
     TranslatorTranslationMailGerman,
+    TranslatorTranslationPermissionGerman,
+    TranslatorTranslationPolicyGerman,
+    TranslatorTranslationScopeGerman,
     TranslatorTranslationVuecsGerman,
 } from './de';
 import {
@@ -58,6 +65,9 @@ import {
     TranslatorTranslationErrorFrench,
     TranslatorTranslationFieldFrench,
     TranslatorTranslationMailFrench,
+    TranslatorTranslationPermissionFrench,
+    TranslatorTranslationPolicyFrench,
+    TranslatorTranslationScopeFrench,
     TranslatorTranslationVuecsFrench,
 } from './fr';
 import {
@@ -69,6 +79,9 @@ import {
     TranslatorTranslationErrorSpanish,
     TranslatorTranslationFieldSpanish,
     TranslatorTranslationMailSpanish,
+    TranslatorTranslationPermissionSpanish,
+    TranslatorTranslationPolicySpanish,
+    TranslatorTranslationScopeSpanish,
     TranslatorTranslationVuecsSpanish,
 } from './es';
 
@@ -93,6 +106,9 @@ type LocaleNamespaces = {
     vuecs: NamespaceTranslations<`${TranslatorTranslationVuecsKey}`>,
     error: NamespaceTranslations<`${ErrorCode}`>,
     mail: NamespaceTranslations<`${TranslatorTranslationMailKey}`>,
+    permission: NamespaceTranslations<`${PermissionName}`>,
+    policy: NamespaceTranslations<SystemPolicyNameValue>,
+    scope: NamespaceTranslations<`${ScopeName}`>,
 };
 
 /**
@@ -111,6 +127,9 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
         defineNamespace(TranslatorTranslationNamespace.VUECS, [defineTranslations(namespaces.vuecs)]),
         defineNamespace(TranslatorTranslationNamespace.ERROR, [defineTranslations(namespaces.error)]),
         defineNamespace(TranslatorTranslationNamespace.MAIL, [defineTranslations(namespaces.mail)]),
+        defineNamespace(TranslatorTranslationNamespace.PERMISSION, [defineTranslations(namespaces.permission)]),
+        defineNamespace(TranslatorTranslationNamespace.POLICY, [defineTranslations(namespaces.policy)]),
+        defineNamespace(TranslatorTranslationNamespace.SCOPE, [defineTranslations(namespaces.scope)]),
     ];
 
     return defineLocale(code, children);
@@ -141,6 +160,9 @@ export const CATALOGS = defineCatalog([
         vuecs: TranslatorTranslationVuecsEnglish,
         error: TranslatorTranslationErrorEnglish,
         mail: TranslatorTranslationMailEnglish,
+        permission: TranslatorTranslationPermissionEnglish,
+        policy: TranslatorTranslationPolicyEnglish,
+        scope: TranslatorTranslationScopeEnglish,
     }),
     defineAuthupLocale('de', {
         entity: TranslatorTranslationEntityGerman,
@@ -152,6 +174,9 @@ export const CATALOGS = defineCatalog([
         vuecs: TranslatorTranslationVuecsGerman,
         error: TranslatorTranslationErrorGerman,
         mail: TranslatorTranslationMailGerman,
+        permission: TranslatorTranslationPermissionGerman,
+        policy: TranslatorTranslationPolicyGerman,
+        scope: TranslatorTranslationScopeGerman,
     }),
     defineAuthupLocale('fr', {
         entity: TranslatorTranslationEntityFrench,
@@ -163,6 +188,9 @@ export const CATALOGS = defineCatalog([
         vuecs: TranslatorTranslationVuecsFrench,
         error: TranslatorTranslationErrorFrench,
         mail: TranslatorTranslationMailFrench,
+        permission: TranslatorTranslationPermissionFrench,
+        policy: TranslatorTranslationPolicyFrench,
+        scope: TranslatorTranslationScopeFrench,
     }),
     defineAuthupLocale('es', {
         entity: TranslatorTranslationEntitySpanish,
@@ -174,5 +202,8 @@ export const CATALOGS = defineCatalog([
         vuecs: TranslatorTranslationVuecsSpanish,
         error: TranslatorTranslationErrorSpanish,
         mail: TranslatorTranslationMailSpanish,
+        permission: TranslatorTranslationPermissionSpanish,
+        policy: TranslatorTranslationPolicySpanish,
+        scope: TranslatorTranslationScopeSpanish,
     }),
 ]);
