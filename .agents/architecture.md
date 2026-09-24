@@ -964,10 +964,26 @@ until deleted.
   the next day boundary); a bound inside a day, or an unparsable one, reads
   raw events instead of being widened, which is why the console snaps its
   lower bound. Everything else reads raw events: every `hour` read, and every
-  reader without `EVENT_READ`, whose query the gate lowered onto its own
-  `actorId`, a column no rollup stores. That is the property that keeps a
-  reader of own rows from ever reading other actors' counts, and it holds
-  because routing inspects the lowered query rather than the request.
+  reader whose query the gate lowered onto its own `actorId` ALONE (no
+  `EVENT_READ`, or a `post` / `deny` verdict), a column no rollup stores.
+  That is the property that keeps a reader of own rows from ever reading
+  other actors' counts, and it holds because routing inspects the lowered
+  query rather than the request.
+- **A realm-bounded reader is answered in two parts.** A `conditional`
+  verdict (a `realm_admin`'s `ownOrNull` reach) lowers to `or(ownership,
+  reach)`, which references `actorId` and would read raw. So `scopeReadQuery`
+  hands the compiled reach back on its own (`ReadScope.reach`), and when the
+  reach references stored columns only the statistic answers `and(filter,
+  reach)` from the rollups and `and(filter, ownership, not(reach))` from raw
+  events (rapiq's `not()` is null-inclusive, the complement of the reach
+  exactly), summing `count` per identical group row. The two parts are
+  disjoint, so the sum equals the raw count of the whole OR. `meta.total`
+  stays the raw count of the whole OR, and the cache key (the encoded OR plus
+  a `split` tag) covers both parts. The raw part is bounded by the raw
+  retention by nature and never refuses a window: it counts whatever raw rows
+  still exist, so the reader's own events in a foreign realm older than the
+  raw retention are counted nowhere, since the rollups never stored an
+  actor.
 - **Horizons.** A raw read past the raw retention is refused rather than
   silently short: `rawHorizonDays` is `eventLogRetentionDays`, or
   `eventLogEntityRetentionDays` alone when the filter pins `scope=entity`,
@@ -990,8 +1006,9 @@ Pinned by `test/unit/core/query/scope.spec.ts` (the verdict matrix of the
 gate), `test/unit/core/stats/window.spec.ts` (the four rules, snapping, the
 ceiling, month buckets, the total's strip keeping a nested range),
 `test/unit/core/stats/module.spec.ts` (cache keys and partitioning, `total`,
-`post` without ownership, every group row returned, routing, and an actor
-without `EVENT_READ` read from raw events),
+`post` without ownership, every group row returned, routing, an actor
+without `EVENT_READ` read from raw events, and the two-part read of a
+realm-bounded reader),
 `test/unit/components/event-aggregator.spec.ts` (recompute, backfill cursor,
 pruning, two concurrent recomputes of one day, a deleted realm's rows, a
 recompute over a deleted realm's events, a provisional day repaired),
@@ -1003,7 +1020,8 @@ active-sessions filter, own sessions for an unprivileged user, the user list's
 `test/unit/http/controllers/entities/event-stats.spec.ts` (a routed read
 answering exactly like raw events across a UTC day edge, the entity activity
 shape from the rollups, the retention meta on both paths, the horizon
-refusals). The day edges are what the mysql/psql runs exercise.
+refusals, an `ownOrNull` reader's own foreign-realm event counted next to the
+rollups exactly like its list). The day edges are what the mysql/psql runs exercise.
 
 ### Adapter Implementation
 

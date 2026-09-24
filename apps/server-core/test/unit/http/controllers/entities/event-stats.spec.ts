@@ -7,10 +7,15 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Event } from '@authup/core-kit';
-import { EventName, EventScope } from '@authup/core-kit';
+import {
+    EventName,
+    EventScope,
+    PermissionName,
+} from '@authup/core-kit';
 import type { EventStatsGroups, EventStatsQuery, EventStatsRow } from '@authup/core-http-kit';
 import { Client as HTTPClient, buildQueryString } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import { RealmScope } from '@authup/access';
 import { MemoryCache } from '@authup/server-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import type { ICondition } from '@rapiq/core';
@@ -402,6 +407,60 @@ describe('src/http/controllers/entities/event (stats)', () => {
         });
 
         expect(data.find((row) => row.name === 'created')?.count).toBeGreaterThanOrEqual(3);
+    });
+
+    it('answers a realm-bounded reader from the rollups plus its own events in a foreign realm', async () => {
+        const refType = `reach-${randomUUID().slice(0, 8)}`;
+        const password = 'start123-event-reach';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        // the reach a realm_admin reads with: its own realm plus the global rows
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
+
+        const repository = dataSource.getRepository<Event>(EventEntity);
+        const seedEvent = (realmId: string | null, actorId?: string) => repository.save(repository.create({
+            id: randomUUID(),
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType,
+            realmId,
+            ...(actorId ? { actorId, actorType: 'user' } : {}),
+        }));
+        // inside the reach, answered by the rollups
+        await seedEvent(masterRealmId);
+        await seedEvent(null);
+        await seedEvent(masterRealmId, user.id);
+        // the reader's own event outside its reach, answered by raw events
+        await seedEvent(realmBId, user.id);
+        // outside the reach and not its own
+        await seedEvent(realmBId);
+
+        await recompute(dataSource, new Date());
+
+        const from = new Date(Date.now() - (30 * DAY_IN_MS));
+        from.setUTCHours(0, 0, 0, 0);
+
+        const { data, meta } = await client.event.getStats(buildQuery('day', from.toISOString(), eq('refType', refType)));
+        const { meta: list } = await client.event.getMany({ filters: and(gte('createdAt', from.toISOString()), eq('refType', refType)) });
+
+        expect(list.total).toEqual(4);
+        expect(countOf(data, EventName.LOGIN)).toEqual(list.total);
+        expect(meta.total).toEqual(list.total);
+        expect(meta.retentionDays).toEqual(0);
+
+        // an event the rollups have not seen yet proves the reach was routed
+        await seedEvent(masterRealmId);
+        const { data: stale } = await client.event.getStats(
+            buildQuery('day', new Date(from.getTime() - DAY_IN_MS).toISOString(), eq('refType', refType)),
+        );
+        expect(countOf(stale, EventName.LOGIN)).toEqual(4);
     });
 
     it('requires an identity', async () => {

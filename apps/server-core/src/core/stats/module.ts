@@ -12,6 +12,7 @@ import {
     isFilter, 
     isFilters, 
     lt, 
+    not,
 } from '@rapiq/core';
 import type { ICondition, IQuery } from '@rapiq/core';
 import { appendQueryConditions, decodeQuery, queryCodec } from '../query/module.ts';
@@ -22,6 +23,7 @@ import type {
     EntityStatsReadOptions,
     EntityStatsResult,
     IEntityStatsService,
+    StatsWindow,
 } from './types.ts';
 import { isPastRawHorizon, resolveStatsWindow, stripWindowConditions } from './window.ts';
 
@@ -89,15 +91,24 @@ export class EntityStatsService<
         // narrowed to its client, a bearer without `global`), not of the
         // identity, so two requests by one identity can lower to different
         // queries and one must never read the other's answer
-        let scoped = this.definition.scope ?
-            narrowReadScope(await this.definition.scope(parsed, actor)) :
-            parsed;
+        const gate = this.definition.scope ?
+            await this.definition.scope(parsed, actor) :
+            undefined;
 
+        let base = parsed;
         const realmColumn = this.definition.realmColumn === undefined ?
             'realmId' :
             this.definition.realmColumn;
         if (realmColumn && options.realmId) {
-            scoped = appendQueryConditions(scoped, eq(realmColumn, options.realmId));
+            base = appendQueryConditions(base, eq(realmColumn, options.realmId));
+        }
+
+        let scoped = base;
+        if (gate) {
+            scoped = narrowReadScope(gate);
+            if (realmColumn && options.realmId) {
+                scoped = appendQueryConditions(scoped, eq(realmColumn, options.realmId));
+            }
         }
 
         const dateColumn = this.definition.dateColumn ?? 'createdAt';
@@ -111,30 +122,27 @@ export class EntityStatsService<
 
         // an open window ends at the read instant, appended after the cache
         // key is taken below, since it moves with every request
-        const grouped = window.upperBound ?
-            scoped :
-            appendQueryConditions(scoped, lt(dateColumn, window.to));
+        const bound = (query: IQuery) => (window.upperBound ?
+            query :
+            appendQueryConditions(query, lt(dateColumn, window.to)));
 
         // routed by the query's shape after the gate: a reach lowered onto
         // a column the rollup did not store (an actor's own actorId) reads
         // raw rows, whatever the caller asked for
-        const { rollup } = this.definition;
-        const routable = !!rollup &&
-            readReferencedColumns(scoped).every((column) => rollup.columns.includes(column));
+        let translated = this.translate(scoped, window, now);
+        let routable = this.isRoutable(scoped);
 
-        // a rollup answers whole days, so an open window ends at the next
-        // day boundary rather than the read instant
-        let translated: IQuery | undefined;
-        if (rollup && routable && window.unit !== 'hour') {
-            const end = new Date(now);
-            end.setUTCHours(24, 0, 0, 0);
-
-            translated = rollup.translate(window.upperBound ?
-                scoped :
-                appendQueryConditions(scoped, lt(dateColumn, end.toISOString())));
-
-            if (translated && isPastRawHorizon(window, rollup.horizonDays?.(), now)) {
-                translated = undefined;
+        // a reach ORed with the ownership term (actorId, not stored) splits:
+        // the reach from the rollups, the actor's own rows outside it raw,
+        // which only raw events hold, so that half is bounded by the raw
+        // retention by nature
+        let own: IQuery | undefined;
+        if (!routable && gate?.reach && gate.ownership) {
+            const reached = appendQueryConditions(base, gate.reach);
+            routable = this.isRoutable(reached);
+            translated = this.translate(reached, window, now);
+            if (translated) {
+                own = appendQueryConditions(base, gate.ownership, not(gate.reach));
             }
         }
 
@@ -143,7 +151,9 @@ export class EntityStatsService<
         }
 
         // the encoded query is the lowered one, not the wire record: two
-        // spellings of one filter share an answer, two reaches do not
+        // spellings of one filter share an answer, two reaches do not; it
+        // carries both the reach and the ownership term, so it covers both
+        // halves of a split read
         const prefix = [
             'stats',
             this.definition.type,
@@ -152,6 +162,7 @@ export class EntityStatsService<
         const key = [
             ...prefix,
             ...(translated ? ['rollup'] : []),
+            ...(own ? ['split'] : []),
             queryCodec.encode(scoped) ?? '',
         ].join(':');
 
@@ -160,18 +171,34 @@ export class EntityStatsService<
             return cached;
         }
 
-        const [rows, total] = await Promise.all([
+        const { rollup } = this.definition;
+        const [rows, ownRows, total] = await Promise.all([
             rollup && translated ?
                 rollup.repository.aggregate(translated).then((output) => output.map((row) => rollup.translateRow(row))) :
-                this.definition.repository.aggregate(grouped),
+                this.definition.repository.aggregate(bound(scoped)),
+            own ? this.definition.repository.aggregate(bound(own)) : [],
             this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
         ]);
 
-        const result = {
-            data: rows.map((row) => ({
+        const merged = new Map<string, Record<string, unknown>>();
+        for (const row of [...rows, ...ownRows]) {
+            const normalized = {
                 ...row,
                 [dateColumn]: new Date(row[dateColumn] as string).toISOString(),
-            })),
+            };
+            const { count, ...group } = normalized;
+            const id = JSON.stringify(Object.entries(group).sort(([a], [b]) => a.localeCompare(b)));
+
+            const existing = merged.get(id);
+            if (existing) {
+                existing.count = Number(existing.count) + Number(count);
+            } else {
+                merged.set(id, normalized);
+            }
+        }
+
+        const result = {
+            data: merged.values().toArray(),
             meta: {
                 from: window.from,
                 to: window.to,
@@ -187,6 +214,40 @@ export class EntityStatsService<
         await this.cache.set(key, result, { ttl: STATS_CACHE_TTL });
 
         return result;
+    }
+
+    protected isRoutable(query: IQuery): boolean {
+        const { rollup } = this.definition;
+
+        return !!rollup &&
+            readReferencedColumns(query).every((column) => rollup.columns.includes(column));
+    }
+
+    /**
+     * The query onto the rollups, undefined when they cannot answer it:
+     * an hour read, an unstored column, a bound inside a day or a window
+     * past the rollup horizon.
+     */
+    protected translate(query: IQuery, window: StatsWindow, now: Date): IQuery | undefined {
+        const { rollup } = this.definition;
+        if (!rollup || window.unit === 'hour' || !this.isRoutable(query)) {
+            return undefined;
+        }
+
+        // a rollup answers whole days, so an open window ends at the next
+        // day boundary rather than the read instant
+        const end = new Date(now);
+        end.setUTCHours(24, 0, 0, 0);
+
+        const translated = rollup.translate(window.upperBound ?
+            query :
+            appendQueryConditions(query, lt(this.definition.dateColumn ?? 'createdAt', end.toISOString())));
+
+        if (!translated || isPastRawHorizon(window, rollup.horizonDays?.(), now)) {
+            return undefined;
+        }
+
+        return translated;
     }
 
     /**

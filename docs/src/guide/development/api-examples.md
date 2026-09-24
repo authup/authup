@@ -89,7 +89,9 @@ far back the source that answered reaches (`0` = forever), so a client never off
 window past them. Day and month counts of events come from daily rollups, which are
 kept longer than the events themselves; hour buckets read the events and are refused
 past their retention. A reader without `event_read` is answered the counts of its own
-rows.
+rows. A reader whose `event_read` reaches some realms only (`realm_admin`) is answered
+the rollups of those realms plus its own events elsewhere, which only the events
+themselves hold, so that part reaches back only as far as their retention.
 
 ```json
 {

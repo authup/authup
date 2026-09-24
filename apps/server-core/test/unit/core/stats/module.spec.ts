@@ -824,6 +824,72 @@ describe('EntityStatsService routing onto the rollups', () => {
             .rejects.toSatisfy(isValidationError);
     });
 
+    const factory = new FakeEventRepository();
+    function seedEvent(data: Record<string, unknown> = {}) {
+        return repository.seed(factory.create({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            actorType: IdentityType.USER,
+            actorId: otherUserId,
+            realmId,
+            createdAt: new Date(Date.now() - 60_000).toISOString(),
+            ...data,
+        } as Partial<Event>));
+    }
+
+    function bounded() {
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({
+            verdict: 'conditional',
+            condition: inArray('realmId', [realmId, null]),
+        });
+        return actor;
+    }
+
+    it('answers a realm-bounded reader from the rollups plus its own rows outside the reach', async () => {
+        // inside the reach: the rollups count it, the raw part must not again
+        seedEvent({ actorId: userId });
+        // the actor's own row in a foreign realm, which only raw events hold
+        seedEvent({ actorId: userId, realmId: otherRealmId });
+        // a foreign row outside the reach, never counted
+        seedEvent({ realmId: otherRealmId });
+
+        const { data, meta } = await service.getMany(wire(), bounded());
+
+        expect(rollups.aggregateCalls).toHaveLength(1);
+        expect(repository.aggregateCalls).toHaveLength(1);
+        expect(data).toEqual([{
+            createdAt: TODAY,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            count: 6,
+        }]);
+        expect(meta.retentionDays).toEqual(0);
+    });
+
+    it('answers a realm-bounded reader from raw events when the reach is not routable', async () => {
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({
+            verdict: 'conditional',
+            condition: eq('clientId', randomUUID()),
+        });
+
+        await service.getMany(wire(), actor);
+
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(repository.aggregateCalls).toHaveLength(1);
+    });
+
+    it.each(['post', 'deny'] as const)('answers own rows from raw events on a %s reach', async (verdict) => {
+        const actor = makeActor();
+        evaluatorOf(actor).setCompileResult({ verdict });
+
+        await service.getMany(wire(), actor);
+
+        expect(rollups.aggregateCalls).toHaveLength(0);
+        expect(repository.aggregateCalls).toHaveLength(1);
+    });
+
     it('never shares a cache entry between the two sources', async () => {
         const raw = new EntityStatsService({
             definition: defineEventStats(repository, { rawHorizonDays: 7 }),
