@@ -24,6 +24,13 @@ export type SystemClientProvisionerContext = {
     clientScopeRepository: IClientScopeRepository;
     appOrigins: string[];
     logger?: Logger;
+    /**
+     * Memoize found global scopes for the provisioner's lifetime. Only safe
+     * for a short-lived instance (the boot pass): built-in scopes can be
+     * deleted or renamed through the API, so a long-lived instance would
+     * bind a stale row.
+     */
+    cacheScopes?: boolean;
 };
 
 /**
@@ -116,11 +123,8 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
 
     protected logger?: Logger;
 
-    // ponytail: found global scopes are memoized for the provisioner's
-    // lifetime (boot loop, realm-create hook). Built-in scopes are not
-    // deletable; a miss is not memoized, so a later provisioned scope is
-    // picked up.
-    protected scopes = new Map<string, Scope>();
+    // Only populated with ctx.cacheScopes; a miss is never memoized.
+    protected scopes?: Map<string, Scope>;
 
     constructor(ctx: SystemClientProvisionerContext) {
         this.clientRepository = ctx.clientRepository;
@@ -128,6 +132,9 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
         this.clientScopeRepository = ctx.clientScopeRepository;
         this.appOrigins = ctx.appOrigins;
         this.logger = ctx.logger;
+        if (ctx.cacheScopes) {
+            this.scopes = new Map();
+        }
     }
 
     async ensureForRealm(realm: Realm | { id: string }): Promise<void> {
@@ -249,13 +256,13 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
     }
 
     protected async findGlobalScope(name: string): Promise<Scope | null> {
-        const cached = this.scopes.get(name);
+        const cached = this.scopes?.get(name);
         if (cached) {
             return cached;
         }
 
         const scope = await this.scopeRepository.findOneBy({ name, realmId: null });
-        if (scope) {
+        if (scope && this.scopes) {
             this.scopes.set(name, scope);
         }
 

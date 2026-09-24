@@ -314,6 +314,7 @@ export class ProvisionerModule implements IModule {
             clientScopeRepository,
             appOrigins: getAppOrigins(config),
             logger: container.resolve(LoggerInjectionKey),
+            cacheScopes: true,
         });
 
         // Eager key minting (plan 071 hybrid model): every realm — incl.
@@ -374,10 +375,10 @@ export class ProvisionerModule implements IModule {
         const permissionRepo = dataSource.getRepository(PermissionEntity);
         const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
 
+        const permissions = await permissionRepo.find({ select: { id: true, realmId: true } });
+
         const bound = await junctionRepo.find({ select: { permissionId: true } });
         const boundIds = new Set(bound.map((row) => row.permissionId));
-
-        const permissions = await permissionRepo.find({ select: { id: true, realmId: true } });
         const missing = permissions.filter((permission) => !boundIds.has(permission.id));
         if (missing.length === 0) {
             return;

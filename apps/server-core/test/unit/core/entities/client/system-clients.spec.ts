@@ -181,7 +181,23 @@ describe('core/entities/client/system-clients', () => {
             );
         });
 
-        it('should look up each global scope once across several realms', async () => {
+        it('should look up each global scope per call without cacheScopes', async () => {
+            const findOneBy = vi.spyOn(scopeRepository, 'findOneBy');
+
+            await provisioner.ensureForRealm({ id: randomUUID() });
+            await provisioner.ensureForRealm({ id: randomUUID() });
+
+            expect(findOneBy).toHaveBeenCalledTimes(2 * SYSTEM_CLIENT_DEFINITIONS.length * SYSTEM_CLIENT_SCOPE_NAMES.length);
+        });
+
+        it('should look up each global scope once across several realms with cacheScopes', async () => {
+            provisioner = new SystemClientProvisioner({
+                clientRepository: repository,
+                scopeRepository,
+                clientScopeRepository,
+                appOrigins,
+                cacheScopes: true,
+            });
             const findOneBy = vi.spyOn(scopeRepository, 'findOneBy');
 
             await provisioner.ensureForRealm({ id: randomUUID() });
