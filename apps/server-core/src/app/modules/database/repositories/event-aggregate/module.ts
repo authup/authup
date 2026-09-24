@@ -6,7 +6,7 @@
  */
 
 import type { Event } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import { EntityType, EventScope } from '@authup/core-kit';
 import {
     and,
     defineQuery,
@@ -14,7 +14,12 @@ import {
     lt,
 } from '@rapiq/core';
 import type { DataSource } from 'typeorm';
-import { Between, In, LessThan } from 'typeorm';
+import {
+    Between,
+    In,
+    LessThan,
+    Not,
+} from 'typeorm';
 import { withDatabaseLock } from 'typeorm-extension';
 import { EventAggregateEntity, EventEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import type { IEventAggregateRepository } from '../../../../../core/index.ts';
@@ -158,6 +163,27 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
         });
 
         return event ? event.createdAt.slice(0, 10) : null;
+    }
+
+    async findCoverage(): Promise<{ aggregateFrom: string | null, entityAggregateFrom: string | null }> {
+        const repository = this.dataSource.getRepository(EventAggregateEntity);
+        const [other, entity] = await Promise.all([
+            repository.findOne({
+                select: { id: true, day: true }, 
+                where: { scope: Not(EventScope.ENTITY) }, 
+                order: { day: 'ASC' }, 
+            }),
+            repository.findOne({
+                select: { id: true, day: true }, 
+                where: { scope: EventScope.ENTITY }, 
+                order: { day: 'ASC' }, 
+            }),
+        ]);
+
+        return {
+            aggregateFrom: other?.day ?? null,
+            entityAggregateFrom: entity?.day ?? null,
+        };
     }
 
     async deleteBefore(before: string): Promise<number> {

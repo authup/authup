@@ -34,7 +34,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { EventAggregateEntity, EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/modules/database/index.ts';
 import {
     EntityStatsRepositoryAdapter,
@@ -374,7 +374,9 @@ describe('src/http/controllers/entities/event (stats)', () => {
             [new Date(today.getTime() - DAY_IN_MS).toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
             [today.toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
         ]);
-        expect(meta.retentionDays).toEqual(0);
+        expect(meta.retentionDays).toEqual(90);
+        // the rollups hold at least the days just recomputed
+        expect(meta.aggregateFrom! <= toDay(new Date(today.getTime() - (2 * DAY_IN_MS)))).toBe(true);
 
         // an event the rollups have not seen yet proves the read was routed
         await repository.save(repository.create({
@@ -488,7 +490,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
         expect(list.total).toEqual(4);
         expect(countOf(data, EventName.LOGIN)).toEqual(list.total);
         expect(meta.total).toEqual(list.total);
-        expect(meta.retentionDays).toEqual(0);
+        expect(meta.retentionDays).toEqual(90);
 
         // an event the rollups have not seen yet proves the reach was routed
         await seedEvent(masterRealmId);
@@ -538,11 +540,24 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
         expect(meta.entityRetentionDays).toEqual(3);
     });
 
-    it('reports the rollup retention on a rollup-routed read', async () => {
-        const { meta } = await suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS)));
+    it('reports the raw retentions and the rollup coverage on a rollup-routed read', async () => {
+        const dataSource = suite.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const day = toDay(new Date(Date.now() - (100 * DAY_IN_MS)));
+        await dataSource.getRepository(EventAggregateEntity).insert({
+            day,
+            realmId: null,
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: randomUUID(),
+            count: 1,
+            createdAt: new Date().toISOString(),
+        });
 
-        expect(meta.retentionDays).toEqual(400);
-        expect(meta.entityRetentionDays).toEqual(400);
+        const { meta } = await suite.client.event.getStats(buildQuery('day', since(6 * DAY_IN_MS)));
+
+        expect(meta.retentionDays).toEqual(30);
+        expect(meta.entityRetentionDays).toEqual(3);
+        expect(meta.entityAggregateFrom! <= day).toBe(true);
     });
 
     it('refuses a raw read past the entity retention when it pins scope=entity', async () => {

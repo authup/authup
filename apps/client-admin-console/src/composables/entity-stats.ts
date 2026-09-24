@@ -58,6 +58,31 @@ export function buildStatsWindowStart(entry: EntityStatsWindowEntry, now: Date):
 }
 
 /**
+ * What the server reports about how far back a statistic reaches: the raw
+ * retention in days (0 = forever) and the oldest day the daily rollups hold.
+ */
+export type StatsWindowCoverage = {
+    retentionDays: number,
+    aggregateFrom?: string | null,
+};
+
+/**
+ * Whether a window is answered in full: an hour window by the raw rows
+ * alone, a day window by the raw rows or the rollups.
+ */
+export function isStatsWindowCovered(entry: EntityStatsWindowEntry, coverage: StatsWindowCoverage, now: Date): boolean {
+    if (coverage.retentionDays <= 0 || entry.days <= coverage.retentionDays) {
+        return true;
+    }
+
+    if (entry.unit === 'hour' || !coverage.aggregateFrom) {
+        return false;
+    }
+
+    return coverage.aggregateFrom <= buildStatsWindowStart(entry, now).slice(0, 10);
+}
+
+/**
  * What any `GET /<collection>/@stats` answers, stated structurally so the
  * event read (whose buckets carry `scope` and `name`, and whose meta carries
  * `enabled`) and the plain entity reads fit the same composable.

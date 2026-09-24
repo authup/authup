@@ -140,6 +140,10 @@ export default defineComponent({
             inDays.value));
 
         const retentionDays = computed(() => eventStats.response.value?.meta.entityRetentionDays ?? 0);
+        const coverage = computed(() => ({
+            retentionDays: retentionDays.value,
+            aggregateFrom: eventStats.response.value?.meta.entityAggregateFrom,
+        }));
         const retentionTitle = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.STATS_WINDOW_RETAINED,
@@ -191,7 +195,7 @@ export default defineComponent({
             boxes,
             busy,
             hasOperations,
-            retentionDays,
+            coverage,
             retentionTitle,
             sourceLabel,
             window,
@@ -212,7 +216,7 @@ export default defineComponent({
             <span class="text-xs text-fg-muted">{{ sourceLabel }}</span>
             <StatsWindowSwitch
                 v-model="window"
-                :max-days="retentionDays"
+                :coverage="coverage"
                 :disabled-title="retentionTitle"
             />
         </div>

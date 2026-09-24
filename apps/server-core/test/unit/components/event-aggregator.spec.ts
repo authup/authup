@@ -154,6 +154,30 @@ describe('components/event-aggregator', () => {
         ].sort((a, b) => `${a.realmId}${a.name}`.localeCompare(`${b.realmId}${b.name}`)));
     });
 
+    it('should report the oldest rollup day per class', async () => {
+        expect(await repository.findCoverage()).toEqual({ aggregateFrom: null, entityAggregateFrom: null });
+
+        await seed(`${shift(TODAY, -9)}T01:00:00.000Z`);
+        await seed(`${shift(TODAY, -3)}T01:00:00.000Z`, {
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: 'user', 
+        });
+        await seed(`${shift(TODAY, -1)}T01:00:00.000Z`, {
+            scope: EventScope.ENTITY, 
+            name: 'created', 
+            refType: 'user', 
+        });
+        await repository.recompute(shift(TODAY, -9));
+        await repository.recompute(shift(TODAY, -3));
+        await repository.recompute(shift(TODAY, -1));
+
+        expect(await repository.findCoverage()).toEqual({
+            aggregateFrom: shift(TODAY, -9),
+            entityAggregateFrom: shift(TODAY, -3),
+        });
+    });
+
     it('should never start a tick while the previous one still runs', async () => {
         const schedule = vi.spyOn(cron, 'schedule');
         const component = createEventAggregatorComponent(dataSource, { retentionDays: 0 });

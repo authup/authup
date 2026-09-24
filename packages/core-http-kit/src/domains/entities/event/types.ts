@@ -44,17 +44,27 @@ export type EventStatsMetaExtra = {
      */
     enabled: boolean,
     /**
-     * How long a security event is kept, in days (`eventLogRetentionDays`,
-     * 0 = forever). A window reaching past it counts fewer rows than
-     * happened.
+     * How long a raw security event is kept, in days (`eventLogRetentionDays`,
+     * 0 = forever): how far back an hour bucket reaches. A day or month
+     * bucket may reach further, through the rollups (`aggregateFrom`).
      */
     retentionDays: number,
     /**
-     * How long an entity create/update/delete event is kept, in days
-     * (`eventLogEntityRetentionDays`, 0 = forever). Updates and deletions are
-     * recorded nowhere else, so a window past it undercounts them.
+     * How long a raw entity create/update/delete event is kept, in days
+     * (`eventLogEntityRetentionDays`, 0 = forever), the `retentionDays` of
+     * `scope=entity` (`entityAggregateFrom` for the rollups).
      */
     entityRetentionDays: number,
+    /**
+     * The oldest UTC day (`YYYY-MM-DD`) the daily rollups hold for the
+     * scopes other than `entity`, or null when they hold none. A day or
+     * month window starting on or after it is answered in full.
+     */
+    aggregateFrom: string | null,
+    /**
+     * The same for `scope=entity`, whose raw rows expire on their own clock.
+     */
+    entityAggregateFrom: string | null,
 };
 
 export type EventStatsMeta = EntityStatsMeta & EventStatsMetaExtra;

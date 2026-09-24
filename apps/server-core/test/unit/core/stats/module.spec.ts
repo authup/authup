@@ -132,7 +132,13 @@ function defineEventStats(
         repository,
         scope: (query, actor) => events.scopeRead(query, actor),
         rawHorizonDays: () => options.rawHorizonDays ?? 0,
-        meta: () => ({ enabled: options.enabled ?? true, retentionDays: 90 }),
+        meta: async () => ({
+            enabled: options.enabled ?? true,
+            retentionDays: 90,
+            entityRetentionDays: 7,
+            aggregateFrom: '2026-01-01',
+            entityAggregateFrom: null,
+        }),
         ...(options.rollups ? {
             rollup: {
                 columns: EVENT_AGGREGATE_COLUMNS,
@@ -140,7 +146,6 @@ function defineEventStats(
                 translate: translateEventAggregateQuery,
                 translateRow: translateEventAggregateRow,
                 horizonDays: () => options.rollupHorizonDays ?? 0,
-                meta: () => ({ retentionDays: 0, entityRetentionDays: 0 }),
             },
         } : {}),
     };
@@ -716,8 +721,10 @@ describe('EntityStatsService routing onto the rollups', () => {
             from: WEEK_AGO,
             bucket: 'day',
             enabled: true,
-            retentionDays: 0,
-            entityRetentionDays: 0,
+            retentionDays: 90,
+            entityRetentionDays: 7,
+            aggregateFrom: '2026-01-01',
+            entityAggregateFrom: null,
         });
     });
 
@@ -751,9 +758,7 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(repository.aggregateCalls).toHaveLength(1);
         expect(rollups.aggregateCalls).toHaveLength(0);
-        // the horizon a day read of the same scope reaches, which is what
-        // the window switch gates the longer windows on
-        expect(meta.retentionDays).toEqual(0);
+        expect(meta).toMatchObject({ retentionDays: 90, aggregateFrom: '2026-01-01' });
     });
 
     it('answers a filter on a column the rollups do not store from raw events', async () => {
@@ -761,7 +766,7 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(repository.aggregateCalls).toHaveLength(1);
         expect(rollups.aggregateCalls).toHaveLength(0);
-        expect(meta.retentionDays).toEqual(90);
+        expect(meta).toMatchObject({ retentionDays: 90, aggregateFrom: '2026-01-01' });
     });
 
     it('answers an actor without event_read from raw events', async () => {
@@ -864,7 +869,7 @@ describe('EntityStatsService routing onto the rollups', () => {
             name: EventName.LOGIN,
             count: 6,
         }]);
-        expect(meta.retentionDays).toEqual(0);
+        expect(meta.retentionDays).toEqual(90);
     });
 
     it('answers a realm-bounded reader from raw events when the reach is not routable', async () => {

@@ -22,7 +22,12 @@ import type {
     EntityStatsResponseLike,
     EntityStatsWindowEntry,
 } from '../../src/composables/entity-stats';
-import { ENTITY_STATS_WINDOWS, buildStatsWindowStart, useEntityStats } from '../../src/composables/entity-stats';
+import {
+    ENTITY_STATS_WINDOWS,
+    buildStatsWindowStart,
+    isStatsWindowCovered,
+    useEntityStats,
+} from '../../src/composables/entity-stats';
 
 const REALM_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 const OTHER_REALM_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
@@ -140,6 +145,35 @@ describe('src/composables/entity-stats', () => {
 
         it('snaps an hour window onto the hour 23 hours back, 24 buckets with the current one', () => {
             expect(buildStatsWindowStart({ days: 1, unit: 'hour' }, NOW)).toEqual('2026-09-21T11:00:00.000Z');
+        });
+    });
+
+    describe('isStatsWindowCovered', () => {
+        const covered = (key: keyof typeof ENTITY_STATS_WINDOWS, retentionDays: number, aggregateFrom: string | null) => isStatsWindowCovered(
+            ENTITY_STATS_WINDOWS[key],
+            { retentionDays, aggregateFrom },
+            NOW,
+        );
+
+        it('disables the day windows past both the raw retention and 7 days of rollups', () => {
+            expect(covered('7d', 7, '2026-09-16')).toBe(true);
+            expect(covered('30d', 7, '2026-09-16')).toBe(false);
+            expect(covered('90d', 7, '2026-09-16')).toBe(false);
+            expect(covered('30d', 7, null)).toBe(false);
+        });
+
+        it('enables the day windows the rollups reach, whatever the raw retention', () => {
+            expect(covered('30d', 7, '2026-06-14')).toBe(true);
+            expect(covered('90d', 7, '2026-06-14')).toBe(true);
+        });
+
+        it('enables every window under a raw retention of forever', () => {
+            expect(covered('90d', 0, null)).toBe(true);
+        });
+
+        it('caps an hour window by the raw retention alone', () => {
+            expect(covered('24h', 7, null)).toBe(true);
+            expect(isStatsWindowCovered({ days: 3, unit: 'hour' }, { retentionDays: 1, aggregateFrom: '2026-01-01' }, NOW)).toBe(false);
         });
     });
 

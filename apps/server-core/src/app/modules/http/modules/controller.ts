@@ -63,6 +63,7 @@ import {
     ClientScopeRepositoryAdapter,
     DatabaseInjectionKey,
     EntityStatsRepositoryAdapter,
+    EventAggregateRepositoryAdapter,
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
     PathRepositoryAdapter,
@@ -1163,6 +1164,7 @@ export class HTTPControllerModule {
     createEventController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const service = container.resolve(DatabaseInjectionKey.EventService);
+        const aggregates = new EventAggregateRepositoryAdapter(container.resolve(DatabaseInjectionKey.DataSource));
         return new EventController({
             service,
             statsService: this.createStatsService<EventStatsGroups, EventStatsMetaExtra>(container, EventEntity, {
@@ -1183,15 +1185,12 @@ export class HTTPControllerModule {
                     translate: translateEventAggregateQuery,
                     translateRow: translateEventAggregateRow,
                     horizonDays: () => config.eventLogAggregateRetentionDays,
-                    meta: () => ({
-                        retentionDays: config.eventLogAggregateRetentionDays,
-                        entityRetentionDays: config.eventLogAggregateRetentionDays,
-                    }),
                 },
-                meta: () => ({
+                meta: async () => ({
                     enabled: config.eventLogEnabled !== false,
                     retentionDays: config.eventLogRetentionDays,
                     entityRetentionDays: config.eventLogEntityRetentionDays,
+                    ...await aggregates.findCoverage(),
                 }),
             }),
         });

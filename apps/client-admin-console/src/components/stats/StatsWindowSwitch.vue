@@ -10,8 +10,8 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { VCButton } from '@vuecs/button';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
-import type { EntityStatsWindow } from '../../composables/entity-stats';
-import { ENTITY_STATS_WINDOWS } from '../../composables/entity-stats';
+import type { EntityStatsWindow, StatsWindowCoverage } from '../../composables/entity-stats';
+import { ENTITY_STATS_WINDOWS, isStatsWindowCovered } from '../../composables/entity-stats';
 
 const WINDOW_LABELS = {
     '24h': TranslatorTranslationAppKey.DASHBOARD_WINDOW_24H,
@@ -21,8 +21,8 @@ const WINDOW_LABELS = {
 } as const satisfies Record<EntityStatsWindow, TranslatorTranslationAppKey>;
 
 // The 24h / 7d / 30d / 90d switch the dashboard and the entity activity boxes
-// share. A window reaching past `maxDays` (a retention the server reports) is
-// offered but disabled, with the reason as its title, rather than silently
+// share. A window the server's coverage does not reach (the raw retention, or
+// for a day window the rollups) is offered but disabled, with the reason as its title, rather than silently
 // counting fewer rows than happened.
 export default defineComponent({
     components: { VCButton },
@@ -32,15 +32,15 @@ export default defineComponent({
             required: true,
         },
         /**
-         * The longest window the data behind the switch can answer, in days;
-         * 0 or absent means no limit.
+         * How far back the data behind the switch reaches; absent means no
+         * limit.
          */
-        maxDays: {
-            type: Number,
-            default: 0,
+        coverage: {
+            type: Object as PropType<StatsWindowCoverage>,
+            default: () => ({ retentionDays: 0 }),
         },
         /**
-         * Why a window past `maxDays` is disabled.
+         * Why a window past the coverage is disabled.
          */
         disabledTitle: {
             type: String,
@@ -62,7 +62,7 @@ export default defineComponent({
 
         const entries = computed(() => (Object.keys(ENTITY_STATS_WINDOWS) as EntityStatsWindow[])
             .map((key) => {
-                const disabled = props.maxDays > 0 && ENTITY_STATS_WINDOWS[key].days > props.maxDays;
+                const disabled = !isStatsWindowCovered(ENTITY_STATS_WINDOWS[key], props.coverage, new Date());
 
                 return {
                     key,

@@ -84,11 +84,13 @@ lower bound snapped onto the start of its bucket. `total` counts every row the f
 admits without its window, so
 `GET /sessions/@stats?filter[expiresAt]=>2026-09-22T10:15:00.000Z&filter[createdAt]=>=2026-09-22T00:00:00.000Z&group=bucket(createdAt,day)&aggregate=count`
 answers the active sessions under `total`. Events add `enabled`, which says whether the
-deployment records events at all, plus `retentionDays` and `entityRetentionDays`, how
-far back the source that answered reaches (`0` = forever), so a client never offers a
-window past them. Day and month counts of events come from daily rollups, which are
-kept longer than the events themselves; hour buckets read the events and are refused
-past their retention. A reader without `event_read` is answered the counts of its own
+deployment records events at all, `retentionDays` and `entityRetentionDays`, how long
+the events themselves are kept (`0` = forever, `entityRetentionDays` for
+`scope=entity`), and `aggregateFrom` and `entityAggregateFrom`, the oldest day the
+daily rollups hold for the same two classes (`null` when they hold none). Hour buckets
+read the events and are refused past their retention; day and month counts come from
+the rollups, so a day window is answered in full when either the retention covers it or
+the rollups start on or before its first day. A reader without `event_read` is answered the counts of its own
 rows. A reader whose `event_read` reaches some realms only (`realm_admin`) is answered
 the rollups of those realms plus its own events elsewhere, which only the events
 themselves hold, so that part reaches back only as far as their retention.
@@ -115,8 +117,10 @@ themselves hold, so that part reaches back only as far as their retention.
         "bucket": "day",
         "total": 1283,
         "enabled": true,
-        "retentionDays": 0,
-        "entityRetentionDays": 0,
+        "retentionDays": 90,
+        "entityRetentionDays": 7,
+        "aggregateFrom": "2025-10-02",
+        "entityAggregateFrom": "2025-10-02",
         "schema": {}
     }
 }

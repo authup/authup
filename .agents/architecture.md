@@ -1008,15 +1008,17 @@ until deleted.
   400, and so does a day or month read the rollups cannot answer. A routable
   read past the rollup retention (`eventLogAggregateRetentionDays`, whose
   days the aggregator prunes) reads raw rows instead, and is refused only
-  past the raw horizon as well. A read
-  whose scope the rollups can answer reports the rollup retention as
-  `meta.retentionDays` and `meta.entityRetentionDays` instead of the raw ones,
-  an HOUR read of that scope included (it reads raw rows, but the switch
-  gates the day windows on its answer, and 24 hours sit inside any raw
-  retention), which is what lets the
-  console's window switch offer 30d / 90d on the entity activity boxes even
-  where entity rows expire after 7 days. A routed read lags the raw log by at
-  most one aggregator tick plus the statistic cache.
+  past the raw horizon as well. Every event statistic, routed or not,
+  reports the RAW retentions as `meta.retentionDays` /
+  `meta.entityRetentionDays` (0 = forever) and the rollup coverage next to
+  them as `meta.aggregateFrom` / `meta.entityAggregateFrom`: the oldest UTC
+  day the rollups hold for the non-entity scopes and for `scope=entity`, or
+  null (`IEventAggregateRepository.findCoverage`, two ordered one-row reads
+  riding the cached statistic through the definition's async `meta`).
+  Overriding the retention with the rollup one on routable reads was
+  rejected: it made one key mean two things, and a rollup retention says
+  nothing about which days were actually backfilled. A routed read lags the
+  raw log by at most one aggregator tick plus the statistic cache.
 
 Pinned by `test/unit/core/query/scope.spec.ts` (the verdict matrix of the
 gate), `test/unit/core/stats/window.spec.ts` (the four rules, snapping, the
@@ -1037,7 +1039,7 @@ active-sessions filter, own sessions for an unprivileged user, the user list's
 403, the anonymous realm read, a to-many filter counted once) and
 `test/unit/http/controllers/entities/event-stats.spec.ts` (a routed read
 answering exactly like raw events across a UTC day edge, the entity activity
-shape from the rollups, the retention meta on both paths, the horizon
+shape from the rollups, the raw retentions and the rollup coverage on both paths, the horizon
 refusals, an `ownOrNull` reader's own foreign-realm event counted next to the
 rollups exactly like its list). The day edges are what the mysql/psql runs exercise.
 
@@ -8580,9 +8582,9 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (*Entity statistics → Event rollups*). `meta.enabled` mirrors
   `eventLogEnabled`, which is how the console learns the log is off without
   that fact being published on the anonymous `GET /`; `meta.retentionDays` /
-  `meta.entityRetentionDays` report the horizon a day read of the same scope
-  reaches (the rollup retention whenever the rollups can answer the scope,
-  hour reads included, else the raw retentions). The gate is
+  `meta.entityRetentionDays` report the raw retentions and
+  `meta.aggregateFrom` / `meta.entityAggregateFrom` the oldest day the
+  rollups hold (*Horizons* above). The gate is
   the list's (`EventService.scopeRead`): no `EVENT_READ` counts own rows only,
   always from raw events. Typed client: `client.event.getStats({ filters,
   groups, aggregates })`, answering `EventStatsResponse`. Pinned by
@@ -8622,12 +8624,15 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   boxes need `event_read` (without it the event read answers own rows, so
   they are dropped and the read stays `paused`), and a 24h / 7d / 30d / 90d
   switch picks their window. That switch is `components/stats/StatsWindowSwitch.vue`,
-  shared with the dashboard: it disables a window longer than the retention
-  the event read reports (`meta.entityRetentionDays` on the entity page,
-  `meta.retentionDays` on the dashboard, 0 = forever), with the reason as its
-  title, instead of silently counting fewer rows than happened. A day read is
-  answered from the rollups, which report their own retention, so the 30d and
-  90d windows stay available where entity rows expire after 7 days. Rejected: a
+  shared with the dashboard: it disables a window the event read does not
+  cover (`isStatsWindowCovered`, fed `meta.entityRetentionDays` /
+  `meta.entityAggregateFrom` on the entity page and `meta.retentionDays` /
+  `meta.aggregateFrom` on the dashboard), with the reason as its title,
+  instead of silently counting fewer rows than happened. An hour window is
+  covered by the raw retention alone; a day window by the raw retention (0 =
+  forever) or by rollups starting on or before its first day, so the 30d and
+  90d windows open where entity rows expire after 7 days once the aggregator
+  has backfilled that far. Rejected: a
   30-day trend strip of daily creation bars, which showed a shape but not the
   operations a reader of the list asks about. `useEntityStats`
   (`composables/entity-stats.ts`) is the shared read. It reloads on the

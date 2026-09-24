@@ -34,6 +34,8 @@ function answer(_days: number, bucket: 'hour' | 'day', count: number): EventStat
             enabled: true,
             retentionDays: 90,
             entityRetentionDays: 7,
+            aggregateFrom: null,
+            entityAggregateFrom: null,
             schema: {} as EventStatsResponse['meta']['schema'],
         },
     };

@@ -87,9 +87,10 @@ export type EntityStatsDefinition = {
      */
     scope?: (query: IQuery, actor: ActorContext) => Promise<ReadScope>,
     /**
-     * Extra response meta (events: `enabled`).
+     * Extra response meta, cached with the read (events: `enabled`, the raw
+     * retentions and the rollup coverage).
      */
-    meta?: () => Record<string, any>,
+    meta?: () => Record<string, any> | Promise<Record<string, any>>,
 };
 
 export type EntityStatsRollup = {
@@ -112,12 +113,6 @@ export type EntityStatsRollup = {
      * past it reads raw rows, or is refused past the raw horizon too.
      */
     horizonDays?: () => number,
-    /**
-     * Response meta replacing the definition's on every read whose scope
-     * the rollups can answer, an hour read included (events: the rollup
-     * horizon as `retentionDays`, which the day windows reach).
-     */
-    meta?: () => Record<string, any>,
 };
 
 export type EntityStatsReadOptions = {

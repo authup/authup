@@ -130,16 +130,14 @@ export class EntityStatsService<
         // a column the rollup did not store (an actor's own actorId) reads
         // raw rows, whatever the caller asked for
         let translated = this.translate(scoped, window, now);
-        let routable = this.isRoutable(scoped);
 
         // a reach ORed with the ownership term (actorId, not stored) splits:
         // the reach from the rollups, the actor's own rows outside it raw,
         // which only raw events hold, so that half is bounded by the raw
         // retention by nature
         let own: IQuery | undefined;
-        if (!routable && gate?.reach && gate.ownership) {
+        if (!this.isRoutable(scoped) && gate?.reach && gate.ownership) {
             const reached = appendQueryConditions(base, gate.reach);
-            routable = this.isRoutable(reached);
             translated = this.translate(reached, window, now);
             if (translated) {
                 own = appendQueryConditions(base, gate.ownership, not(gate.reach));
@@ -172,12 +170,13 @@ export class EntityStatsService<
         }
 
         const { rollup } = this.definition;
-        const [rows, ownRows, total] = await Promise.all([
+        const [rows, ownRows, total, extra] = await Promise.all([
             rollup && translated ?
                 rollup.repository.aggregate(translated).then((output) => output.map((row) => rollup.translateRow(row))) :
                 this.definition.repository.aggregate(bound(scoped)),
             own ? this.definition.repository.aggregate(bound(own)) : [],
             this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
+            this.definition.meta ? this.definition.meta() : {},
         ]);
 
         const merged = new Map<string, Record<string, unknown>>();
@@ -204,10 +203,7 @@ export class EntityStatsService<
                 to: window.to,
                 bucket: window.unit,
                 total,
-                ...(this.definition.meta ? this.definition.meta() : {}),
-                // the horizon a day read of this scope reaches, also on an
-                // hour read: the window switch gates the longer windows on it
-                ...(rollup && routable && rollup.meta ? rollup.meta() : {}),
+                ...extra,
             },
         } as EntityStatsResult<G, M>;
 

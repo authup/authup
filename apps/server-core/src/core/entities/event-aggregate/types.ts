@@ -24,6 +24,12 @@ export interface IEventAggregateRepository {
     findOldestEventDay(): Promise<string | null>;
 
     /**
+     * The oldest UTC day holding a rollup row, for the scopes other than
+     * `entity` and for `scope=entity`, each null when there is none.
+     */
+    findCoverage(): Promise<{ aggregateFrom: string | null, entityAggregateFrom: string | null }>;
+
+    /**
      * Delete the rollup rows of the days before `before` (exclusive).
      */
     deleteBefore(before: string): Promise<number>;
