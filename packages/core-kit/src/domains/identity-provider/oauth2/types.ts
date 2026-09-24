@@ -7,8 +7,9 @@
 
 import type { IdentityProvider } from '../entity';
 import type { IdentityProviderProtocol } from '../constants';
+import type { IdentityProviderEnrollmentAttributes } from '../enrollment';
 
-export interface OAuth2IdentityProviderBase {
+export interface OAuth2IdentityProviderBase extends IdentityProviderEnrollmentAttributes {
     clientId: string;
 
     clientSecret: string;

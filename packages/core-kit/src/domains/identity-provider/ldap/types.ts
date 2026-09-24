@@ -7,8 +7,9 @@
 
 import type { IdentityProvider } from '../entity';
 import type { IdentityProviderProtocol } from '../constants';
+import type { IdentityProviderEnrollmentAttributes } from '../enrollment';
 
-export interface LdapIdentityProvider extends IdentityProvider {
+export interface LdapIdentityProvider extends IdentityProvider, IdentityProviderEnrollmentAttributes {
     protocol: IdentityProviderProtocol.LDAP | `${IdentityProviderProtocol.LDAP}`;
 
     /**

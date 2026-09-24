@@ -7,6 +7,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
+import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment';
 import { getIdentityProviderProtocolForPreset } from '../preset';
 import type { OAuth2IdentityProvider } from './types';
 
@@ -97,5 +98,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
                 .optional()
                 .nullable()),
         );
+
+        this.mount(new IdentityProviderEnrollmentAttributesValidator());
     }
 }
