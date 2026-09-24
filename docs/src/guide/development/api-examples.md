@@ -87,13 +87,16 @@ answers the active sessions under `total`. Events add `enabled`, which says whet
 deployment records events at all, `retentionDays` and `entityRetentionDays`, how long
 the events themselves are kept (`0` = forever, `entityRetentionDays` for
 `scope=entity`), and `aggregateFrom` and `entityAggregateFrom`, the oldest day the
-daily rollups hold for the same two classes (`null` when they hold none). Hour buckets
+daily rollups hold for the same two classes (`null` when they hold none, or when the
+rollups cannot answer the read at all, such as own rows or a filter on `actorId`). Hour buckets
 read the events and are refused past their retention; day and month counts come from
 the rollups, so a day window is answered in full when either the retention covers it or
 the rollups start on or before its first day. A reader without `event_read` is answered the counts of its own
 rows. A reader whose `event_read` reaches some realms only (`realm_admin`) is answered
 the rollups of those realms plus its own events elsewhere, which only the events
-themselves hold, so that part reaches back only as far as their retention.
+themselves hold, so that part reaches back only as far as their retention. The rollups
+keep a deleted realm's own history (its `created` and `deleted` rows) as global, so such a
+reader's day counts include it while its hour counts do not.
 
 ```json
 {

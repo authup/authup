@@ -959,8 +959,14 @@ until deleted.
   audit rows carry its own id, so dropping them too would leave the Realms
   page's `Deleted` box at 0 forever; they are the deployment's history of
   realms and the realm list is anonymous, so counting them as global
-  discloses nothing. A live realm's rows keep its id, and two gone realms may
-  share a null key, which every reader sums. **What the cascade takes comes
+  discloses nothing. The price is one place a routed answer differs from the
+  raw one: in the rollups those rows fall inside every `ownOrNull` reach and
+  every realm-plus-null filter, while the raw rows keep the gone id and fall
+  outside, so a `realm_admin`'s day read counts another realm's creation and
+  deletion that its hour read does not (accepted; keeping them off the
+  `ownOrNull` reach would take a marker column or a sentinel realm). A live
+  realm's rows keep its id, and two gone realms may share a null key, which
+  every reader sums. **What the cascade takes comes
   back only where the tick recomputes**: the realm-delete cascade removes the
   realm's rollup rows on EVERY day, and today and yesterday (the `deleted`
   row among them) are recomputed within a minute, as null. An older day that
@@ -975,7 +981,8 @@ until deleted.
   aggregate fields) and whose aggregates are `count()` alone is translated
   (`translateEventAggregateQuery`: `createdAt` becomes `day`, `count()`
   becomes `sum(count)`) and answered from the rollups; the rows are
-  translated back, so the caller cannot tell. A rollup answers whole days,
+  translated back, so the caller cannot tell (the one exception is a gone
+  realm's own rows, above). A rollup answers whole days,
   so only a `gte` / `lt` bound at 00:00Z translates (an open window ends at
   the next day boundary); a bound inside a day, or an unparsable one, reads
   raw events instead of being widened, which is why the console snaps its
@@ -1008,13 +1015,19 @@ until deleted.
   400, and so does a day or month read the rollups cannot answer. A routable
   read past the rollup retention (`eventLogAggregateRetentionDays`, whose
   days the aggregator prunes) reads raw rows instead, and is refused only
-  past the raw horizon as well. Every event statistic, routed or not,
-  reports the RAW retentions as `meta.retentionDays` /
-  `meta.entityRetentionDays` (0 = forever) and the rollup coverage next to
-  them as `meta.aggregateFrom` / `meta.entityAggregateFrom`: the oldest UTC
-  day the rollups hold for the non-entity scopes and for `scope=entity`, or
-  null (`IEventAggregateRepository.findCoverage`, two ordered one-row reads
-  riding the cached statistic through the definition's async `meta`).
+  past the raw horizon as well. Every event statistic reports the RAW
+  retentions as `meta.retentionDays` / `meta.entityRetentionDays` (0 =
+  forever) and, next to them, the rollup coverage as `meta.aggregateFrom` /
+  `meta.entityAggregateFrom`: the oldest UTC day the rollups hold for the
+  non-entity scopes and for `scope=entity`, or null
+  (`IEventAggregateRepository.findCoverage`, two ordered one-row reads riding
+  the cached statistic through the definition's async `meta`). The coverage
+  is reported only when the rollups can answer the read's GATED scope at all,
+  whatever its bucket (`meta({ routable })`: the scoped query, or the reach
+  half of a split read, references stored columns only), and is null
+  otherwise: a reader of own rows (no `EVENT_READ`, a `post` / `deny`
+  verdict) or a filter on an unstored column would otherwise be offered a
+  day window past the raw retention that the server then refuses.
   Overriding the retention with the rollup one on routable reads was
   rejected: it made one key mean two things, and a rollup retention says
   nothing about which days were actually backfilled. A routed read lags the
