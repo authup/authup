@@ -306,6 +306,15 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Hosted Login Pages',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/hosted-login',
+                        },
+                    ],
+                },
+                {
                     text: 'Account Console',
                     items: [
                         {
