@@ -1015,7 +1015,11 @@ until deleted.
   400, and so does a day or month read the rollups cannot answer. A routable
   read past the rollup retention (`eventLogAggregateRetentionDays`, whose
   days the aggregator prunes) reads raw rows instead, and is refused only
-  past the raw horizon as well. Every event statistic reports the RAW
+  past the raw horizon as well. The horizon is snapped onto the start of its
+  hour or day, so a window starting on the horizon's own bucket passes; a
+  month window is held to the horizon's day, since its first bucket would
+  otherwise silently miss up to a month of pruned rows (`isPastRawHorizon`,
+  which both horizons use). Every event statistic reports the RAW
   retentions as `meta.retentionDays` / `meta.entityRetentionDays` (0 =
   forever) and, next to them, the rollup coverage as `meta.aggregateFrom` /
   `meta.entityAggregateFrom`: the oldest UTC day the rollups hold for the

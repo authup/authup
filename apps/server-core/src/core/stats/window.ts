@@ -136,15 +136,19 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
 
 /**
  * Whether a window reaches past the raw horizon (days, 0 = never pruned).
- * The first bucket is snapped onto its start, so a window reaching back
- * exactly the horizon is tolerated up to that bucket.
+ * The horizon is snapped onto the start of its hour or day, so a window
+ * reaching back exactly the horizon is tolerated up to that bucket. A month
+ * is never tolerated: its first bucket would silently miss the pruned days
+ * of that month, so a month window is held to the horizon's day.
  */
 export function isPastRawHorizon(window: StatsWindow, horizonDays: number | undefined, now: Date): boolean {
     if (!horizonDays || horizonDays <= 0) {
         return false;
     }
 
-    return new Date(window.from) < snap(new Date(now.getTime() - (horizonDays * DAY_IN_MS)), window.unit);
+    const unit = window.unit === 'month' ? 'day' : window.unit;
+
+    return new Date(window.from) < snap(new Date(now.getTime() - (horizonDays * DAY_IN_MS)), unit);
 }
 
 /**

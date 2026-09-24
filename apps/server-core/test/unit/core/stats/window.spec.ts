@@ -21,7 +21,7 @@ import {
 } from '@rapiq/core';
 import { isValidationError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
-import { resolveStatsWindow, stripWindowConditions } from '../../../../src/core/stats/index.ts';
+import { isPastRawHorizon, resolveStatsWindow, stripWindowConditions } from '../../../../src/core/stats/index.ts';
 
 const NOW = new Date('2026-09-23T10:30:00.000Z');
 const HOUR_IN_MS = 3_600_000;
@@ -170,6 +170,29 @@ describe('resolveStatsWindow', () => {
         expect(resolve(gte('createdAt', ago(6 * DAY_IN_MS)), [bucket('createdAt', 'hour')], 7).unit).toEqual('hour');
         expect(resolve(gte('createdAt', ago(8 * DAY_IN_MS)), [bucket('createdAt', 'hour')], 0).unit).toEqual('hour');
         expect(resolve(gte('createdAt', ago(8 * DAY_IN_MS)), [bucket('createdAt', 'day')], 7).unit).toEqual('day');
+    });
+});
+
+describe('isPastRawHorizon', () => {
+    it('tolerates a day window whose first bucket starts on the horizon day', () => {
+        // horizon 30 days back is 2026-08-24T10:30Z; its day starts at 00:00
+        const window = resolve(gte('createdAt', '2026-08-24T00:00:00.000Z'), [bucket('createdAt', 'day')]);
+
+        expect(isPastRawHorizon(window, 30, NOW)).toBe(false);
+    });
+
+    it('refuses a month window starting before the horizon day', () => {
+        // 2026-08-01 is inside the horizon's month, but 23 days of it are pruned
+        const window = resolve(gte('createdAt', '2026-08-01T00:00:00.000Z'), [bucket('createdAt', 'month')]);
+
+        expect(isPastRawHorizon(window, 30, NOW)).toBe(true);
+    });
+
+    it('accepts a month window when the horizon reaches its first day', () => {
+        const window = resolve(gte('createdAt', '2026-08-01T00:00:00.000Z'), [bucket('createdAt', 'month')]);
+
+        expect(isPastRawHorizon(window, 60, NOW)).toBe(false);
+        expect(isPastRawHorizon(window, 0, NOW)).toBe(false);
     });
 });
 
