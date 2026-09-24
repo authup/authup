@@ -71,6 +71,10 @@ describe('app/modules/provisioning', () => {
     const cache = new CacheModule();
     const database = createTestDatabaseModuleForSuite();
 
+    const assignDefaultPolicy = () => (new ProvisionerModule() as unknown as {
+        assignDefaultPolicy(dataSource: DataSource, policyRepository: PolicyRepositoryAdapter): Promise<void>
+    }).assignDefaultPolicy(dataSource, policyRepositoryAdapter);
+
     beforeAll(async () => {
         di = new Container();
 
@@ -489,77 +493,39 @@ describe('app/modules/provisioning', () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
             expect(defaultPolicy).toBeDefined();
 
-            const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
-            const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
+            const permissionRepo = dataSource.getRepository(PermissionEntity);
+            const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
+            const realm = await dataSource.getRepository(RealmEntity).findOneByOrFail({ name: REALM_MASTER_NAME });
 
-            const oldPermission = await permissionRepo.save(permissionRepo.create({
+            const unbound = await permissionRepo.save(permissionRepo.create({
                 name: 'old_permission_backfill',
                 builtIn: false,
+                realmId: realm.id,
             }));
+            expect(await junctionRepo.countBy({ permissionId: unbound.id })).toBe(0);
 
-            // Verify no junction exists yet
-            const before = await junctionRepo.findOneBy({
-                permissionId: oldPermission.id,
-                policyId: defaultPolicy!.id,
-            });
-            expect(before).toBeNull();
+            await assignDefaultPolicy();
 
-            // Run assignDefaultPolicy manually (avoid full provisioning to prevent SQLite nested transaction)
-            const existing = await junctionRepo.findOneBy({
-                permissionId: oldPermission.id,
-                policyId: defaultPolicy!.id,
-            });
-            if (!existing) {
-                await junctionRepo.save(junctionRepo.create({
-                    permissionId: oldPermission.id,
-                    permissionRealmId: oldPermission.realmId,
-                    policyId: defaultPolicy!.id,
-                    policyRealmId: defaultPolicy!.realmId,
-                }));
-            }
-
-            const after = await junctionRepo.findOneBy({
-                permissionId: oldPermission.id,
-                policyId: defaultPolicy!.id,
-            });
-            expect(after).toBeDefined();
+            const junctions = await junctionRepo.findBy({ permissionId: unbound.id });
+            expect(junctions).toHaveLength(1);
+            expect(junctions[0].policyId).toBe(defaultPolicy!.id);
+            expect(junctions[0].permissionRealmId).toBe(realm.id);
+            expect(junctions[0].policyRealmId).toBe(defaultPolicy!.realmId);
         });
 
         it('should not duplicate junction when permission already has default policy', async () => {
-            const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
-            expect(defaultPolicy).toBeDefined();
+            const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
+            const permission = await dataSource.getRepository(PermissionEntity).findOneByOrFail({ name: 'user_create' });
 
-            const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
+            const existing = await junctionRepo.findBy({ permissionId: permission.id });
+            expect(existing.length).toBeGreaterThan(0);
+            const countBefore = await junctionRepo.count();
 
-            // Pick a permission that was provisioned with the default policy
-            const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
-            const permission = await permissionRepo.findOneBy({ name: 'user_create' });
-            expect(permission).toBeDefined();
+            await assignDefaultPolicy();
+            await assignDefaultPolicy();
 
-            const countBefore = await junctionRepo.countBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-
-            // Attempt to re-assign — should be idempotent
-            const existing = await junctionRepo.findOneBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-            if (!existing) {
-                await junctionRepo.save(junctionRepo.create({
-                    permissionId: permission!.id,
-                    permissionRealmId: permission!.realmId,
-                    policyId: defaultPolicy!.id,
-                    policyRealmId: defaultPolicy!.realmId,
-                }));
-            }
-
-            const countAfter = await junctionRepo.countBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-            expect(countAfter).toBe(countBefore);
+            expect(await junctionRepo.count()).toBe(countBefore);
+            expect(await junctionRepo.findBy({ permissionId: permission.id })).toEqual(existing);
         });
 
         // ---------------------------------------------------------------
@@ -748,36 +714,14 @@ describe('app/modules/provisioning', () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
             expect(defaultPolicy).toBeDefined();
 
-            const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
+            const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
+            const permission = await dataSource.getRepository(PermissionEntity).findOneByOrFail({ name: 'user_create' });
+            const where = { permissionId: permission.id, policyId: defaultPolicy!.id };
+            expect(await junctionRepo.countBy(where)).toBe(1);
 
-            const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
-            const permission = await permissionRepo.findOneBy({ name: 'user_create' });
-            expect(permission).toBeDefined();
+            await assignDefaultPolicy();
 
-            const countBefore = await junctionRepo.countBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-            expect(countBefore).toBe(1);
-
-            // Attempt duplicate insert — idempotent check
-            const existing = await junctionRepo.findOneBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-            if (!existing) {
-                await junctionRepo.save(junctionRepo.create({
-                    permissionId: permission!.id,
-                    policyId: defaultPolicy!.id,
-                }));
-            }
-
-            const countAfter = await junctionRepo.countBy({
-                permissionId: permission!.id,
-                policyId: defaultPolicy!.id,
-            });
-
-            expect(countAfter).toBe(countBefore);
+            expect(await junctionRepo.countBy(where)).toBe(1);
         });
     });
 });

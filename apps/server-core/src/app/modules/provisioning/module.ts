@@ -314,7 +314,6 @@ export class ProvisionerModule implements IModule {
             clientScopeRepository,
             appOrigins: getAppOrigins(config),
             logger: container.resolve(LoggerInjectionKey),
-            cacheScopes: true,
         });
 
         // Eager key minting (plan 071 hybrid model): every realm — incl.
@@ -389,6 +388,6 @@ export class ProvisionerModule implements IModule {
             permissionRealmId: permission.realmId,
             policyId: defaultPolicy.id,
             policyRealmId: defaultPolicy.realmId,
-        })));
+        })), { chunk: 1000 });
     }
 }

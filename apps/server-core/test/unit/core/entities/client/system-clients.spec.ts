@@ -18,7 +18,6 @@ import {
     describe,
     expect,
     it,
-    vi,
 } from 'vitest';
 import {
     SYSTEM_CLIENT_DEFINITIONS,
@@ -179,38 +178,6 @@ describe('core/entities/client/system-clients', () => {
             expect(await readScopeNames(client!.id)).toEqual(
                 [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
             );
-        });
-
-        it('should look up each global scope per call without cacheScopes', async () => {
-            const findOneBy = vi.spyOn(scopeRepository, 'findOneBy');
-
-            await provisioner.ensureForRealm({ id: randomUUID() });
-            await provisioner.ensureForRealm({ id: randomUUID() });
-
-            expect(findOneBy).toHaveBeenCalledTimes(2 * SYSTEM_CLIENT_DEFINITIONS.length * SYSTEM_CLIENT_SCOPE_NAMES.length);
-        });
-
-        it('should look up each global scope once across several realms with cacheScopes', async () => {
-            provisioner = new SystemClientProvisioner({
-                clientRepository: repository,
-                scopeRepository,
-                clientScopeRepository,
-                appOrigins,
-                cacheScopes: true,
-            });
-            const findOneBy = vi.spyOn(scopeRepository, 'findOneBy');
-
-            await provisioner.ensureForRealm({ id: randomUUID() });
-            await provisioner.ensureForRealm({ id: randomUUID() });
-            await provisioner.ensureForRealm({ id: randomUUID() });
-
-            expect(findOneBy).toHaveBeenCalledTimes(SYSTEM_CLIENT_SCOPE_NAMES.length);
-
-            const clients = await repository.findManyBy({ builtIn: true });
-            expect(clients).toHaveLength(3 * SYSTEM_CLIENT_DEFINITIONS.length);
-            for (const client of clients) {
-                expect(await readScopeNames(client.id)).toEqual([...SYSTEM_CLIENT_SCOPE_NAMES].sort());
-            }
         });
 
         it('should be idempotent across repeated runs', async () => {

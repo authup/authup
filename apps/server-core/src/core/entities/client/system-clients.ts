@@ -12,7 +12,7 @@ import {
     ClientTokenBindingMethod,
     ScopeName,
 } from '@authup/core-kit';
-import type { Client, Realm, Scope } from '@authup/core-kit';
+import type { Client, Realm } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IClientScopeRepository } from '../client-scope/types.ts';
 import type { IScopeRepository } from '../scope/types.ts';
@@ -24,13 +24,6 @@ export type SystemClientProvisionerContext = {
     clientScopeRepository: IClientScopeRepository;
     appOrigins: string[];
     logger?: Logger;
-    /**
-     * Memoize found global scopes for the provisioner's lifetime. Only safe
-     * for a short-lived instance (the boot pass): built-in scopes can be
-     * deleted or renamed through the API, so a long-lived instance would
-     * bind a stale row.
-     */
-    cacheScopes?: boolean;
 };
 
 /**
@@ -123,18 +116,12 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
 
     protected logger?: Logger;
 
-    // Only populated with ctx.cacheScopes; a miss is never memoized.
-    protected scopes?: Map<string, Scope>;
-
     constructor(ctx: SystemClientProvisionerContext) {
         this.clientRepository = ctx.clientRepository;
         this.scopeRepository = ctx.scopeRepository;
         this.clientScopeRepository = ctx.clientScopeRepository;
         this.appOrigins = ctx.appOrigins;
         this.logger = ctx.logger;
-        if (ctx.cacheScopes) {
-            this.scopes = new Map();
-        }
     }
 
     async ensureForRealm(realm: Realm | { id: string }): Promise<void> {
@@ -226,7 +213,10 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
      */
     protected async ensureScopes(definition: SystemClientDefinition, client: Client): Promise<void> {
         for (const name of definition.scopeNames) {
-            const scope = await this.findGlobalScope(name);
+            const scope = await this.scopeRepository.findOneBy({
+                name,
+                realmId: null,
+            });
 
             if (!scope) {
                 if (this.logger) {
@@ -253,19 +243,5 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
                 scopeRealmId: scope.realmId,
             }));
         }
-    }
-
-    protected async findGlobalScope(name: string): Promise<Scope | null> {
-        const cached = this.scopes?.get(name);
-        if (cached) {
-            return cached;
-        }
-
-        const scope = await this.scopeRepository.findOneBy({ name, realmId: null });
-        if (scope && this.scopes) {
-            this.scopes.set(name, scope);
-        }
-
-        return scope;
     }
 }
