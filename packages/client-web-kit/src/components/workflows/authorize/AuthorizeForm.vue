@@ -95,6 +95,11 @@ export default defineComponent({
             ],
         );
 
+        const loadingText = useTranslation({
+            namespace: TranslatorTranslationNamespace.COMMON,
+            key: TranslatorTranslationCommonKey.LOADING,
+        });
+
         const signedInAsLabel = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
             key: TranslatorTranslationClientKey.SIGNED_IN_AS,
@@ -257,6 +262,7 @@ export default defineComponent({
             accessDeniedText,
             autoConsent,
             showSpinner,
+            loadingText,
             translationsDefault,
             translationsClient,
             signedInAsLabel,
@@ -285,12 +291,11 @@ export default defineComponent({
         v-else-if="aborted"
         :message="abortedText"
     />
-    <div
+    <AuthorizeText
         v-else-if="showSpinner"
-        class="text-center"
-    >
-        <VCIcon name="fa6-solid:spinner" />
-    </div>
+        :message="loadingText"
+        loading
+    />
     <div
         v-else
         class="flex-col flex gap-2"

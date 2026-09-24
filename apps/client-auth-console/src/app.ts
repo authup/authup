@@ -56,7 +56,13 @@ import { providePayload } from './di';
 import type { HydrationPayload } from './contract';
 
 export type CreateAppOptions = {
-    httpClient?: IClient
+    httpClient?: IClient,
+    /**
+     * Server render only: the cookies the host forwarded (the kit's access
+     * token), so the page renders the visitor's session rather than the
+     * logged-out form. Ignored in the browser, which reads its own.
+     */
+    cookies?: Record<string, string>
 };
 
 export function createApp(payload: HydrationPayload, options: CreateAppOptions = {}) : {
@@ -131,7 +137,11 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         try {
             await store.resolve();
         } catch {
-            await store.logout();
+            // A server render renders logged out and leaves the tokens to the
+            // browser: it holds no refresh token to recover with, and a failed
+            // resolve here (an expired token, an API blip) is no reason to
+            // revoke what the browser may still renew.
+            await store.logout(isClient ? {} : { revoke: false, revokeTokens: false });
         }
 
         return undefined;
@@ -157,7 +167,8 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // `createColorMode()` gets (one per cookie name and document), so a
     // login on these pages lands the account's mode on the toggle and a
     // toggle lands on the account. Server-side both are per-render refs
-    // nothing seeds: the store never resolves a session there.
+    // nothing seeds: the store may resolve a session there, but it is
+    // handed no preferences to sync (see the install below).
     const colorModeSource = createCookieRef(COLOR_MODE_COOKIE, payload?.config?.colorMode, COLOR_MODE_UNSET);
 
     // Bucket for the SSR to client handoff: filled while rendering and
@@ -188,10 +199,20 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         // strict refresh rotation escalates the shared refresh token into
         // family revocation. A path-less baseURL keeps the root path.
         cookiePath: basePath || '/',
-        preferences: {
-            locale: localeSource,
-            colorMode: colorModeSource,
-        },
+        // The server render reads only what the host forwarded and writes
+        // nothing: a Set-Cookie it can not emit would be a silent no-op at
+        // best. The preference sync is browser-only for the same reason, and
+        // because it WRITES user attributes, which a render must never do.
+        ...(isClient ? {
+            preferences: {
+                locale: localeSource,
+                colorMode: colorModeSource,
+            },
+        } : {
+            cookieGet: (key: string) => options.cookies?.[key],
+            cookieSet: () => undefined,
+            cookieUnset: () => undefined,
+        }),
         hydrationStore: {
             get: <T>(key: string) => hydration[key] as T | undefined,
             set: (key: string, value: unknown) => {

@@ -6,8 +6,10 @@
  */
 
 import type { Client } from '@authup/core-http-kit';
+import { basic } from '@routup/basic';
+import { App, defineCoreHandler } from 'routup';
 import { describe, expect, it } from 'vitest';
-import { createFeaturesReader } from '../../src/payload';
+import { createFeaturesReader, readRenderCookies } from '../../src/payload';
 
 const FEATURES = {
     registration: true,
@@ -117,5 +119,31 @@ describe('createFeaturesReader', () => {
         await expect(readFeatures()).rejects.toThrow();
         expect(await readFeatures()).toEqual(FEATURES);
         expect(attempts).toEqual(2);
+    });
+});
+
+describe('readRenderCookies', () => {
+    async function read(cookie?: string) {
+        const app = new App();
+        app.use(basic({ cookie: true }));
+        app.use(defineCoreHandler({
+            method: 'get',
+            path: '',
+            fn: (event) => readRenderCookies(event),
+        }));
+
+        const response = await app.fetch(new Request('http://localhost/', { headers: cookie ? { cookie } : {} }));
+
+        return response.json();
+    }
+
+    it('forwards the access token and never the refresh token', async () => {
+        await expect(read('access_token=at-1; refresh_token=rt-1; id_token=idt-1'))
+            .resolves.toEqual({ access_token: 'at-1' });
+    });
+
+    it('forwards nothing for a visitor without a session', async () => {
+        await expect(read('refresh_token=rt-1')).resolves.toEqual({});
+        await expect(read()).resolves.toEqual({});
     });
 });

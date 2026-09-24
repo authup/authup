@@ -416,7 +416,7 @@ export function createStore(context: StoreCreateContext) {
     // may bump again before this one resumes, and reading the ref afterwards
     // would let both commits pass the guard (the loser's committed tokens
     // would be clobbered without revocation).
-    const cleanup = async () : Promise<number> => {
+    const cleanup = async (options: { revokeTokens?: boolean } = {}) : Promise<number> => {
         const tempAccessToken = accessToken.value;
         const tempRefreshToken = refreshToken.value;
 
@@ -444,6 +444,10 @@ export function createStore(context: StoreCreateContext) {
         resolutionStale.value = false;
         tokenGeneration.value += 1;
         const generation = tokenGeneration.value;
+
+        if (options.revokeTokens === false) {
+            return generation;
+        }
 
         try {
             if (tempAccessToken) {
@@ -1364,6 +1368,12 @@ export function createStore(context: StoreCreateContext) {
      * a proxy hiccup) would DESTROY a healthy session rather than re-read it.
      * A failed resolve is not an intent to sign out; pass `revoke: false`
      * there and keep the default for a real sign-out.
+     *
+     * `revokeTokens` (default true) is separate on purpose: dropping a token
+     * pair from the browser without revoking it would leave a live refresh
+     * token nothing holds. Only a caller that never owned the pair, and so
+     * cannot drop it, passes false: a server render reading the browser's
+     * cookies.
      */
     const logout = async (options: StoreLogoutOptions = {}) => {
         const revoke = options.revoke ?? true;
@@ -1383,7 +1393,7 @@ export function createStore(context: StoreCreateContext) {
             }
         }
 
-        await cleanup();
+        await cleanup({ revokeTokens: options.revokeTokens });
 
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_OUT);
     };

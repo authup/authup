@@ -9,6 +9,7 @@ import type { HydrationPayload, RenderFunction } from '@authup/client-auth-conso
 import { isError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
 import type { RenderPage } from '@authup/server-auth-console';
+import { createAPIClient, readRenderCookies } from '@authup/server-auth-console';
 import {
     applyTheme,
     applyUIPageHeaders,
@@ -73,6 +74,8 @@ export function createViteRender(vite: ViteRenderContext, root: string) : Render
                 url: ctx.url,
                 manifest: {},
                 payload,
+                httpClient: createAPIClient(config),
+                cookies: ctx.session ? readRenderCookies(event) : {},
             });
         } catch (e) {
             if (isError(e)) {

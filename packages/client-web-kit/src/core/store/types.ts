@@ -130,12 +130,20 @@ export type StoreInstallOptions = {
  */
 export type StoreLogoutOptions = {
     /**
-     * Whether to END the server-side session, not merely this instance.
+     * Whether to END the session server-side, not merely this instance.
      *
      * Defaults to true, which is what a real sign-out means. Pass false where
      * the teardown is a reaction to a failure rather than an intent: in cookie
      * mode the revoke deletes the `auth_sessions` row, so a transient error
      * would otherwise destroy a session that is still perfectly good.
      */
-    revoke?: boolean
+    revoke?: boolean,
+    /**
+     * Whether to revoke the token pair this instance holds. Defaults to true:
+     * a teardown drops the tokens from the browser, and a pair dropped but not
+     * revoked leaves a live refresh token nothing holds. Pass false only where
+     * this instance never owned the pair, a server render reading the
+     * browser's cookies, which must not end the session it merely looked at.
+     */
+    revokeTokens?: boolean
 };

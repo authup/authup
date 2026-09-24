@@ -97,6 +97,11 @@ export async function createHandler(
             url: '/authorize',
             data: await readAuthorizeInfo(client, event),
             theme,
+            // The one page whose first paint depends on the visitor's
+            // session (the account chooser, consent, the challenge). Every
+            // other page opens on the same step signed in or not, so
+            // resolving a session there would only cost API calls.
+            session: true,
         }),
     }));
 

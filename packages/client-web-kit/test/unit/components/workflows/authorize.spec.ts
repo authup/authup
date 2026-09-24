@@ -39,6 +39,7 @@ import type { Store } from '../../../../src/core';
 import { install } from '../../../../src/module';
 import type { Options } from '../../../../src/types';
 import { buildAuthorizationCatalog } from '../../../utils/authorization';
+import { createFakeHydrationStore } from '../../../utils/hydration';
 
 const noop = () => undefined;
 const REALM = { id: 'realm-x', name: 'master' };
@@ -51,6 +52,7 @@ const REALM = { id: 'realm-x', name: 'master' };
 function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
     store.setAccessToken('access-token');
     store.setRealm({ id: realmId, name: REALM.name });
+    store.sessionId = 'session-1';
 
     if (!withUser) {
         return;
@@ -163,6 +165,7 @@ type MountOverrides = {
     challengeHandler?: () => unknown,
     loginCompleteHandler?: () => unknown,
     userInfoHandler?: () => unknown,
+    hydration?: Record<string, any>,
 };
 
 function mountAuthorize(overrides: MountOverrides = {}) {
@@ -180,6 +183,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         challengeHandler,
         loginCompleteHandler,
         userInfoHandler,
+        hydration,
     } = overrides;
 
     const pinia = createPinia();
@@ -225,6 +229,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         cookieGet: noop,
         cookieSet: noop,
         cookieUnset: noop,
+        ...(hydration ? { hydrationStore: createFakeHydrationStore(hydration).store } : {}),
     };
 
     const codeRequest: OAuth2AuthorizationCodeRequest = {
@@ -954,5 +959,53 @@ describe('AAuthorize MFA gate', () => {
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
+    });
+});
+
+describe('AAuthorize server-render handoff', () => {
+    it('adopts the second factor and the consent the server resolved, fetching neither', async () => {
+        const { wrapper, httpClient } = mountAuthorize({
+            prompt: '',
+            hydration: {
+                'authup:authorize:mfa:session-1:user-1:': {
+                    required: false,
+                    enrollmentRequired: false,
+                    kinds: [],
+                },
+                'authup:authorize:consent:user-1:client-1:global openid': { covered: true },
+            },
+        });
+
+        // the first render already is the consent step: no loading state
+        expect(authorizeForm(wrapper).exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(true);
+
+        await flushPromises();
+
+        expect(httpClient.requests.some(
+            (request) => request.url.includes('authenticators/challenge'),
+        )).toBe(false);
+        expect(httpClient.requests.some(
+            (request) => request.url.includes('consents'),
+        )).toBe(false);
+    });
+
+    it('fetches for itself when the handoff names another session', async () => {
+        const { httpClient } = mountAuthorize({
+            prompt: '',
+            hydration: {
+                'authup:authorize:mfa:session-2:user-1:': {
+                    required: false,
+                    enrollmentRequired: false,
+                    kinds: [],
+                },
+            },
+        });
+
+        await flushPromises();
+
+        expect(httpClient.requests.some(
+            (request) => request.url.includes('authenticators/challenge'),
+        )).toBe(true);
     });
 });

@@ -24,7 +24,10 @@ export async function render(ctx: RenderContext) : Promise<RenderResult> {
     const {
         app,
         router,
-    } = createApp(ctx.payload, { httpClient: ctx.httpClient });
+    } = createApp(ctx.payload, {
+        httpClient: ctx.httpClient,
+        cookies: ctx.cookies,
+    });
 
     // set the router to the desired URL before rendering
     await router.push(ctx.url);

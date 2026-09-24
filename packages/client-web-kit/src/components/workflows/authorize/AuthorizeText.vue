@@ -12,6 +12,7 @@ export default defineComponent({
     components: { VCIcon },
     props: {
         isError: { type: Boolean },
+        loading: { type: Boolean },
         message: {
             type: String,
             required: true,
@@ -20,9 +21,23 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex flex-col">
+    <div
+        class="flex flex-col"
+        :role="loading ? 'status' : undefined"
+    >
         <div class="text-center">
+            <!--
+                CSS rather than an icon: icons resolve in the browser, so a
+                server-rendered one is an empty <svg> until the page hydrates,
+                which is exactly the moment this has to be visible.
+            -->
+            <span
+                v-if="loading"
+                class="inline-block size-12 animate-spin motion-reduce:animate-none rounded-full border-4 border-primary-600 border-t-transparent"
+                aria-hidden="true"
+            />
             <VCIcon
+                v-else
                 :name="isError ? 'fa6-solid:exclamation' : 'fa6-solid:info'"
                 class="text-9xl"
                 :class="{
