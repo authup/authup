@@ -15,20 +15,35 @@ const ENTITY_NAME_NAMESPACES : Partial<Record<string, TranslatorTranslationNames
     [EntityType.SCOPE]: TranslatorTranslationNamespace.SCOPE,
 };
 
+export type EntityNamed = {
+    name?: string | null,
+    displayName?: string | null,
+    builtIn?: boolean | null,
+};
+
 /**
- * The display name of a built-in permission, policy or scope in the active
- * locale, and the raw identifier for every other name (an operator-created
- * row, an entity type without a catalog, a store that refuses the sync read).
+ * How an entity names itself in a list or picker: the operator-set
+ * `displayName` first, then the `@authup/i18n` catalog name in the active
+ * locale, then the raw `name`. The catalog is consulted for a BUILT-IN
+ * permission, policy or scope only, so an operator row that happens to be
+ * named like a built-in identifier keeps its own name. A store refusing the
+ * sync read falls through to the raw name as well.
  * Runs in `setup()`; the returned function reads the locale on each call, so
  * a render using it follows a locale switch.
  */
-export function useEntityNameTranslator() : (type: string, name: string) => string {
+export function useEntityNameTranslator() : (type: string, entity: EntityNamed) => string {
     const ilingo = injectIlingo();
     const locale = injectLocale();
 
-    return (type, name) => {
+    return (type, entity) => {
+        const name = entity.name || '';
+        const displayName = (entity.displayName || '').trim();
+        if (displayName.length > 0) {
+            return displayName;
+        }
+
         const namespace = ENTITY_NAME_NAMESPACES[type];
-        if (!namespace) {
+        if (!name || !namespace || !entity.builtIn) {
             return name;
         }
 

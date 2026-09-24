@@ -46,6 +46,7 @@ import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
 import { injectHydrationStore } from '../../../../core/hydration';
 import { useEntityNameTranslator } from '../../../../core/translator';
+import type { EntityNamed } from '../../../../core/translator';
 import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
 import {
@@ -583,9 +584,17 @@ function create<
                                     itemOpt.content(item, itemSlotProps) :
                                     itemOpt.content;
                             } else {
-                                body = h('span', hasOwnProperty(item, 'name') && typeof item.name === 'string' ?
-                                    translateEntityName(context.type, item.name) :
-                                    String(item.id ?? ''));
+                                const name = hasOwnProperty(item, 'name') && typeof item.name === 'string' ?
+                                    item.name :
+                                    undefined;
+                                if (name) {
+                                    const label = translateEntityName(context.type, item as EntityNamed);
+                                    body = label === name ?
+                                        h('span', name) :
+                                        h('span', [label, h('small', { class: 'block text-fg-muted' }, name)]);
+                                } else {
+                                    body = h('span', String(item.id ?? ''));
+                                }
                             }
 
                             if (!itemActionsSlot && !itemActionsExtraSlot) {

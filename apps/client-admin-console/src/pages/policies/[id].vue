@@ -83,7 +83,7 @@ export default defineComponent({
 
         const heading = computed(() => buildRecordHeading(
             entity.value ?? {},
-            (name) => translateEntityName(EntityType.POLICY, name),
+            (record) => translateEntityName(EntityType.POLICY, record),
         ));
 
         const breadcrumbItems = computed(() => buildEntityBreadcrumb({

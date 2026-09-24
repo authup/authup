@@ -58,7 +58,7 @@ export default defineComponent({
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });
 
         const translateEntityName = useEntityNameTranslator();
-        const displayName = (row: Scope) => translateEntityName(EntityType.SCOPE, row.name);
+        const displayName = (row: Scope) => translateEntityName(EntityType.SCOPE, row);
 
         const translations = useTranslations([
             {

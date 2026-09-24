@@ -56,7 +56,7 @@ export default defineComponent({
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
 
         const translateEntityName = useEntityNameTranslator();
-        const displayName = (row: Policy) => translateEntityName(EntityType.POLICY, row.name);
+        const displayName = (row: Policy) => translateEntityName(EntityType.POLICY, row);
 
         const translations = useTranslations([
             {

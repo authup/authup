@@ -19,17 +19,23 @@ const component = defineComponent({
         const translate = useEntityNameTranslator();
 
         return () => h('ul', [
-            translate(EntityType.PERMISSION, PermissionName.CLIENT_CREATE),
-            translate(EntityType.POLICY, SystemPolicyName.DEFAULT),
-            translate(EntityType.SCOPE, ScopeName.OPEN_ID),
-            translate(EntityType.PERMISSION, 'reports_export'),
-            translate(EntityType.USER, 'admin'),
+            translate(EntityType.PERMISSION, { name: PermissionName.CLIENT_CREATE, builtIn: true }),
+            translate(EntityType.POLICY, { name: SystemPolicyName.DEFAULT, builtIn: true }),
+            translate(EntityType.SCOPE, { name: ScopeName.OPEN_ID, builtIn: true }),
+            translate(EntityType.PERMISSION, { name: 'reports_export' }),
+            translate(EntityType.USER, { name: 'admin', builtIn: true }),
+            translate(EntityType.PERMISSION, { name: PermissionName.CLIENT_CREATE, builtIn: false }),
+            translate(EntityType.PERMISSION, {
+                name: PermissionName.CLIENT_CREATE, 
+                displayName: 'Onboard apps', 
+                builtIn: true, 
+            }),
         ].map((text) => h('li', text)).concat(h('button', { onClick: () => { locale.value = 'de'; } })));
     },
 });
 
 describe('useEntityNameTranslator', () => {
-    it('answers the catalog name, a dotted policy name included, and the raw name for everything else', async () => {
+    it('prefers the display name, localizes built-in rows only, and answers the raw name otherwise', async () => {
         const { wrapper } = mountKitComponent(component);
 
         expect(wrapper.findAll('li').map((item) => item.text())).toEqual([
@@ -38,6 +44,8 @@ describe('useEntityNameTranslator', () => {
             'OpenID sign-in',
             'reports_export',
             'admin',
+            PermissionName.CLIENT_CREATE,
+            'Onboard apps',
         ]);
 
         await wrapper.find('button').trigger('click');
