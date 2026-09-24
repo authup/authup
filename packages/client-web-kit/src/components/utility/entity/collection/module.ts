@@ -45,7 +45,7 @@ import { isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
 import { injectHydrationStore } from '../../../../core/hydration';
-import { useEntityNameTranslator } from '../../../../core/translator';
+import { useEntityNameSearch, useEntityNameTranslator } from '../../../../core/translator';
 import type { EntityNamed } from '../../../../core/translator';
 import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
@@ -118,6 +118,7 @@ function create<
     const client = injectHTTPClient();
     const hydration = injectHydrationStore();
     const translateEntityName = useEntityNameTranslator();
+    const searchEntityNames = useEntityNameSearch();
 
     const domainAPI = pickEntityAPI<TYPE, Entity<RECORD>>(client, context.type);
     // Captured bound, so the load fn's guard survives the query
@@ -206,7 +207,11 @@ function create<
                 // searchable fields.
                 const transformed = context.queryFilters ?
                     context.queryFilters(input.filters.name) :
-                    buildEntitySearchCondition(context.type, input.filters.name);
+                    buildEntitySearchCondition(
+                        context.type,
+                        input.filters.name,
+                        searchEntityNames(context.type, input.filters.name),
+                    );
                 filtersOverride = defineFilters(
                     transformed as FiltersBuildInput | ICondition,
                 );

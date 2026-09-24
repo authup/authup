@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityType } from '@authup/core-kit';
+import { SystemPolicyName } from '@authup/access';
+import { EntityType, PermissionName, ScopeName } from '@authup/core-kit';
 import { TranslatorTranslationNamespace } from '@authup/i18n';
 import { injectIlingo, injectLocale } from '@ilingo/vue';
 
@@ -14,6 +15,15 @@ const ENTITY_NAME_NAMESPACES : Partial<Record<string, TranslatorTranslationNames
     [EntityType.POLICY]: TranslatorTranslationNamespace.POLICY,
     [EntityType.SCOPE]: TranslatorTranslationNamespace.SCOPE,
 };
+
+const ENTITY_NAME_KEYS : Partial<Record<string, readonly string[]>> = {
+    [EntityType.PERMISSION]: Object.values(PermissionName),
+    [EntityType.POLICY]: Object.values(SystemPolicyName),
+    [EntityType.SCOPE]: Object.values(ScopeName),
+};
+
+// ponytail: bounded so a one-letter search cannot put the whole catalog in the URL.
+const ENTITY_NAME_SEARCH_LIMIT = 100;
 
 export type EntityNamed = {
     name?: string | null,
@@ -31,6 +41,25 @@ export type EntityNamed = {
  * Runs in `setup()`; the returned function reads the locale on each call, so
  * a render using it follows a locale switch.
  */
+function readCatalogName(
+    ilingo: ReturnType<typeof injectIlingo>,
+    locale: string,
+    namespace: string,
+    name: string,
+) : string | undefined {
+    try {
+        // ilingo walks a dotted key as a path, so `system.default` has to
+        // be escaped to reach the flat catalog entry of that name.
+        return ilingo.getSync({
+            locale,
+            namespace,
+            key: name.replace(/\./g, '\\.'),
+        }) ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 export function useEntityNameTranslator() : (type: string, entity: EntityNamed) => string {
     const ilingo = injectIlingo();
     const locale = injectLocale();
@@ -47,16 +76,39 @@ export function useEntityNameTranslator() : (type: string, entity: EntityNamed) 
             return name;
         }
 
-        try {
-            // ilingo walks a dotted key as a path, so `system.default` has to
-            // be escaped to reach the flat catalog entry of that name.
-            return ilingo.getSync({
-                locale: locale.value,
-                namespace,
-                key: name.replace(/\./g, '\\.'),
-            }) ?? name;
-        } catch {
-            return name;
+        return readCatalogName(ilingo, locale.value, namespace, name) ?? name;
+    };
+}
+
+/**
+ * The built-in identifiers of an entity type whose catalog name in the
+ * active locale contains `text` (case-insensitive), so a search can match
+ * the label a list shows. Empty for a type without a catalog, and when the
+ * store refuses the sync read.
+ */
+export function useEntityNameSearch() : (type: string, text: string) => string[] {
+    const ilingo = injectIlingo();
+    const locale = injectLocale();
+
+    return (type, text) => {
+        const namespace = ENTITY_NAME_NAMESPACES[type];
+        const keys = ENTITY_NAME_KEYS[type];
+        const needle = text.trim().toLowerCase();
+        if (!namespace || !keys || needle.length === 0) {
+            return [];
         }
+
+        const output : string[] = [];
+        for (const key of keys) {
+            const label = readCatalogName(ilingo, locale.value, namespace, key);
+            if (label && label.toLowerCase().includes(needle)) {
+                output.push(key);
+                if (output.length >= ENTITY_NAME_SEARCH_LIMIT) {
+                    break;
+                }
+            }
+        }
+
+        return output;
     };
 }

@@ -14,7 +14,6 @@ graph TD
     subgraph Layer 1
         access
         core-realtime-kit
-        i18n
         server-console-kit
         specs
     end
@@ -25,6 +24,7 @@ graph TD
 
     subgraph Layer 3
         core-http-kit
+        i18n
         server-config
         server-kit
     end
@@ -67,7 +67,6 @@ graph TD
     access --> errors
     access --> kit
     core-realtime-kit --> kit
-    i18n --> errors
     server-console-kit --> errors
     server-console-kit --> kit
     specs --> errors
@@ -84,6 +83,9 @@ graph TD
     core-http-kit --> errors
     core-http-kit --> kit
     core-http-kit --> specs
+    i18n --> access
+    i18n --> core-kit
+    i18n --> errors
     server-config --> core-kit
     server-config --> kit
     server-config --> server-config-kit
