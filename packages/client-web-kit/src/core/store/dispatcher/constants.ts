@@ -6,36 +6,15 @@
  */
 
 /**
- * The store's event bus is a DERIVED layer over its state — every lifecycle
- * emission happens at a documented state transition, never as a parallel
- * source of truth. Emission semantics are frozen for backward compatibility
- * (plan 045): read the store's `status` / `lastAuthOrigin` state for new code.
+ * Events the store emits when a token or realm ref changes, which the cookie
+ * persistence and the http client's authentication hook follow, plus the
+ * involuntary expiry signal. Session lifecycle is read from the store's
+ * `status` / `lastAuthOrigin` state, never from an event.
  */
 export enum StoreDispatcherEventName {
-    /** @deprecated Read the store's `status` (=== 'authenticating') instead. */
-    LOGGING_IN = 'loggingIn',
-    /** @deprecated Read the store's `lastAuthOrigin` (=== 'login') / `status` instead. */
-    LOGGED_IN = 'loggedIn',
-
-    /** @deprecated Read the store's `status` instead. */
-    LOGGING_OUT = 'loggingOut',
-    /** @deprecated Read the store's `status` (=== 'unauthenticated') instead. */
-    LOGGED_OUT = 'loggedOut',
-
     // Emitted when a background token refresh fails and the session is torn
-    // down involuntarily (distinct from a user-initiated LOGGED_OUT, which
-    // already drives its own navigation).
+    // down involuntarily (a user-initiated logout drives its own navigation).
     SESSION_EXPIRED = 'sessionExpired',
-
-    /** @deprecated Read the store's `status` instead. */
-    RESOLVING = 'resolving',
-    /**
-     * @deprecated Read the store's `status` / `lastAuthOrigin` instead.
-     * Fires at the end of every resolve() that does not REJECT — including the
-     * unauthenticated no-op — so it means "resolution completed", not "a
-     * session exists" (a failed resolve() rejects without emitting it).
-     */
-    RESOLVED = 'resolved',
 
     ACCESS_TOKEN_UPDATED = 'accessTokenUpdated',
     ACCESS_TOKEN_EXPIRE_DATE_UPDATED = 'accessTokenExpireDateUpdated',
@@ -46,6 +25,5 @@ export enum StoreDispatcherEventName {
 
     USER_UPDATED = 'userUpdated',
 
-    REALM_UPDATED = 'realmUpdated',
     REALM_MANAGEMENT_UPDATED = 'realmManagementUpdated',
 }

@@ -5,6 +5,34 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.67)
+
+### Removed kit APIs
+
+`@authup/client-web-kit` drops the store API that was deprecated in favour of
+`status` / `lastAuthOrigin`, plus three aliases. There is no compatibility layer;
+code still using any of these no longer compiles.
+
+| Removed | Use instead |
+|---|---|
+| `store.loggedIn` | `store.status === StoreAuthStatus.AUTHENTICATED`, or `!!store.accessToken` where only token presence is meant |
+| `store.setAccessToken()`, `setRefreshToken()`, `setAccessTokenExpireDate()`, `setIdToken()` | `store.login()`, `store.exchangeAuthorizationCode()`, `store.loginWithTokenGrant()` or `store.applyTokenGrantResponse()` |
+| `store.setRealm()` | nothing: the realm comes from the token introspection during `resolve()` / `login()` |
+| `store.setCookiesRead()` | nothing: kit-internal |
+| `StoreDispatcherEventName.LOGGING_IN` / `LOGGED_IN` | `store.status` (`authenticating`) and `store.lastAuthOrigin` (`login`) |
+| `StoreDispatcherEventName.LOGGING_OUT` / `LOGGED_OUT` | `store.status` (`unauthenticated`) |
+| `StoreDispatcherEventName.RESOLVING` / `RESOLVED` | `await store.resolve()`, then read `store.status` |
+| `StoreDispatcherEventName.REALM_UPDATED` | nothing: the realm is not persisted |
+| `ALogin` | `ALoginForm` |
+| `LanguageSwitcherDropdown` | `ALanguageSwitcherDropdown` |
+| `registerIconCollections()` | a build-time icon scan (`NuxtIconBundle` from `@nuxt/icon/vite`), or `addCollection()` from `@iconify/vue` in your own app |
+
+`@authup/core-http-kit` drops `CookieName.USER`. The store no longer reads or
+writes the `realm` cookie, and it no longer sweeps a `user` cookie left by an
+older version; that cookie was a session cookie and ends when the browser closes.
+`@authup/client-web-kit` no longer depends on `@iconify-json/fa6-solid`,
+`@iconify-json/fa6-brands` or `@iconify/vue`.
+
 ## v1.0.0-beta.67 (was: next release after v1.0.0-beta.66)
 
 ### `GET /schemas/:name` moved to `GET /<collection>/@schema`

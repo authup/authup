@@ -1608,8 +1608,7 @@ API. The six page GETs became a stateless hop:
   path-less url for exactly this reason, since a console served AT its vite
   base looks identical either way.
 - **Kit form components** (`@authup/client-web-kit`,
-  `src/components/workflows/`): `ALoginForm` (renamed from `ALogin`,
-  deprecated alias kept; optional `registerLink` / `passwordForgotLink`
+  `src/components/workflows/`): `ALoginForm` (optional `registerLink` / `passwordForgotLink`
   `LinkProperties` props rendered via `<VCLink>`, presence shows the link),
   `ARegisterForm` (embeds `AActivateForm` when the register response is
   inactive), `AActivateForm`, `APasswordForgotForm`, `APasswordResetForm`.
@@ -2835,10 +2834,8 @@ rather than trusted until `exp`.
   both modes, and on `permissionRevision`, which moves when a running
   session's verdicts change (pinned by
   `test/unit/core/permission-check/cookie-mode.spec.ts`); keying on the
-  token-derived `loggedIn`, which never flips in cookie mode, latched every
-  verdict at its fail-closed `false`. `loggedIn` stays
-  `@deprecated` and unchanged (no admin-console consumer left since #3240;
-  its remaining kit consumer is `Authorize.vue`, a bearer-mode page). The
+  token presence, which never flips in cookie mode, latched every
+  verdict at its fail-closed `false`. The
   socket manager is dormant: `install()` gates it on `options.realtime`,
   which no consumer sets, and server-core runs no socket.io server. The
   authentication hook being inert means there is no automatic 401 teardown:
@@ -5971,7 +5968,7 @@ SSR app's router guard `await store.resolve()` settles the session:
   `AuthorizeSilentRedirect.vue` (client-only `window.location` in `onMounted`).
 - **`prompt=login`**: forces the login form (with a re-auth banner,
   `authupClient.reauthText`) even for a logged-in user, until a fresh login on
-  this page fires `LOGGED_IN`; the same banner path is reused when the POST
+  this page stamps `lastAuthOrigin`; the same banner path is reused when the POST
   surfaces `login_required` mid-flow.
 
 **Known limitation (accepted):** because the ladder is client-side,
@@ -6402,7 +6399,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   would otherwise get every subject's rows back and auto-consent off a
   stranger's grant — the covering match therefore also re-checks
   `row.sub`/`row.subKind` (defense in depth). The probe is driven by the
-  resolved user id (not the access-token-derived `loggedIn`, which flips
+  resolved user id (not access-token presence, which flips
   before `userInfo` resolves) and drops any in-flight response whose subject
   is no longer current (logout / account switch mid-probe). `builtIn`
   clients and non-user / logged-out sessions never auto-consent (they settle
@@ -6804,8 +6801,8 @@ still hold would consent the application into the WRONG account, silently for a
 page strips `provider` from the URL on mount (correctly - a reload after a
 SUCCESSFUL completion would otherwise re-POST a spent cookie), so a reload
 restores the old session with no error and no hint, and resumes. `Authorize.vue`
-therefore runs the local `store.logout()` in the completion catch, which flips
-`loggedIn` synchronously before its first await and drops the render through to
+therefore runs the local `store.logout()` in the completion catch, which clears
+the access token synchronously before its first await and drops the render through to
 the login form carrying the reason, so the person can retry as the account they
 came for. **One refusal is exempt**: `provider` is a plain query parameter
 anyone can put in a link, so tearing the session down on every failure would
@@ -8426,7 +8423,7 @@ enc-exclusion), enc-key `kid` + disabled-key rejection in
 (`client-web-kit/src/components/workflows/mfa/`) — code input posting to
 `client.userAuthenticator.verifyChallenge`, recovery-code fallback toggle,
 `extractErrorContext` failures. The hosted `Authorize.vue` ladder gates on it
-**interactively only**: after login a `watch(loggedIn)` fetches
+**interactively only**: after login a watch on access-token presence fetches
 `GET /authenticators/challenge` into `mfaStatus`; consent is blocked until it
 resolves (a `builtIn` client auto-submits, so it must not render before the
 factor requirement is known); `required` → `AMfaChallengeForm` before consent
@@ -9040,23 +9037,20 @@ response AFTER the query projection, so the value was bounded by nothing: one
 operator-defined attribute is enough to push the cookie past the 4096-byte
 limit, where the browser drops it silently. It also carried the email and both
 names into the header of every request on the origin, static assets included.
-`install()` sweeps copies written by earlier versions at the pinned path, since
-they carry no `maxAge` and an open browser would keep sending one until it
-closes. `CookieName.USER` survives as a `@deprecated` name for that sweep.
+Copies an earlier version wrote are not swept: they carry no `maxAge`, so they
+end with the browser session, and nothing reads them.
 
 The same rule governs `realm_management`, which is narrowed to `{ id, name, displayName }` (the display name is the label the chrome renders and is kept when the row carries one)
 in `setRealmManagement` rather than at its call sites: the realm switcher hands
 over the whole table row, and `RealmMinimal` is a structural `Pick`, so the
-free-text `description` column rode along. The deprecated `setRealm` shim
-narrows the same way, since its `REALM_UPDATED` emit feeds the `authup_realm`
-cookie through the same `install()` wiring and re-hydrates through the same
-sink; no kit flow calls it with a value today, so this only reaches a
-downstream consumer handing it a whole `Realm` row.
+free-text `description` column rode along.
 
 Status is unaffected by any of this. `AUTHENTICATED` requires realm AND user,
-and the realm has not been cookie-persisted since #3218 (`commitSession`
-assigns `realm.value` directly, so `REALM_UPDATED` never fires), so a cookie
-restore has always reported `RESTORING` until `resolve()` settles.
+and the realm is never cookie-persisted or read from the jar (`commitSession`
+assigns `realm.value` from the introspection), so a cookie restore reports
+`RESTORING` until `resolve()` settles. Cookie hydration assigns the token refs
+directly rather than through the emitting setters, so it writes nothing back;
+the authentication hook syncs from those refs when it installs.
 
 ### Post-login destination — the `redirect` round-trip
 

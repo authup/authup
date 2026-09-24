@@ -67,7 +67,3 @@ const ALanguageSwitcherDropdown = defineComponent({
 
 export { ALanguageSwitcherDropdown };
 
-/**
- * @deprecated Import `ALanguageSwitcherDropdown` instead.
- */
-export const LanguageSwitcherDropdown = ALanguageSwitcherDropdown;

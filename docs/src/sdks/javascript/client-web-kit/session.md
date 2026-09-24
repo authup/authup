@@ -92,5 +92,5 @@ refresh-token-only session reads `restoring` until `resolve()` settles it. The
 realm and the user are derived from the token introspection, so a restored
 session reads `restoring` until `resolve()` has completed that round-trip, and a
 session whose subject is not a user never reaches `authenticated`.
-The former `loggedIn` flag (a coarse "an access token exists" boolean) is
-deprecated — compare `status` against `StoreAuthStatus.AUTHENTICATED` instead.
+Compare `status` against `StoreAuthStatus.AUTHENTICATED` to ask whether a
+session exists.

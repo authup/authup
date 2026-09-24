@@ -10,13 +10,7 @@ import type { EventEmitter } from '@posva/event-emitter';
 import type { StoreDispatcherEventName } from './constants';
 
 export type StoreDispatcherEvents = {
-    [StoreDispatcherEventName.LOGGING_IN]: [],
-    [StoreDispatcherEventName.LOGGED_IN]: [],
-    [StoreDispatcherEventName.LOGGING_OUT]: [],
-    [StoreDispatcherEventName.LOGGED_OUT]: [],
     [StoreDispatcherEventName.SESSION_EXPIRED]: [],
-    [StoreDispatcherEventName.RESOLVING]: [],
-    [StoreDispatcherEventName.RESOLVED]: [],
 
     [StoreDispatcherEventName.ACCESS_TOKEN_UPDATED]: string | null,
     [StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED]: Date | null,
@@ -24,7 +18,6 @@ export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.REFRESH_TOKEN_UPDATED]: string | null,
     [StoreDispatcherEventName.ID_TOKEN_UPDATED]: string | null,
     [StoreDispatcherEventName.USER_UPDATED]: UserMinimal | null,
-    [StoreDispatcherEventName.REALM_UPDATED]: RealmMinimal | null,
     [StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED]: RealmMinimal | null,
 };
 

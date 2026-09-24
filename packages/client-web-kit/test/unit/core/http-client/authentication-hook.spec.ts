@@ -62,8 +62,8 @@ describe('core/http-client/authentication-hook', () => {
             }),
         });
 
-        store.setAccessToken('at-1');
-        store.setRefreshToken('rt-1');
+        store.accessToken = 'at-1';
+        store.refreshToken = 'rt-1';
 
         await hook.refresh();
 
@@ -91,8 +91,8 @@ describe('core/http-client/authentication-hook', () => {
             },
         });
 
-        store.setAccessToken('at-1');
-        store.setRefreshToken('rt-1');
+        store.accessToken = 'at-1';
+        store.refreshToken = 'rt-1';
 
         hook.attach(httpClient);
 
@@ -101,7 +101,7 @@ describe('core/http-client/authentication-hook', () => {
         // an interactive login/exchange (or logout) replaced the session while
         // the refresh grant was in flight — its response must NOT be applied
         // (it would overwrite the new session's tokens with the old one's)
-        store.setRefreshToken('rt-new');
+        store.refreshToken = 'rt-new';
         release();
 
         await refresh;
@@ -144,8 +144,8 @@ describe('core/http-client/authentication-hook', () => {
             },
         });
 
-        store.setAccessToken('at-1');
-        store.setRefreshToken('rt-1');
+        store.accessToken = 'at-1';
+        store.refreshToken = 'rt-1';
 
         hook.attach(httpClient);
 

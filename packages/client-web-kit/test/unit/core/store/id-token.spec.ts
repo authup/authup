@@ -63,7 +63,7 @@ describe('core/store/id-token', () => {
     it('keeps a retained id_token across a refresh grant response that carries none', async () => {
         const { store } = buildStore();
 
-        store.setIdToken('previous-id-token');
+        store.idToken.value = 'previous-id-token';
         // a refresh response has no id_token — the retained one must survive
         store.applyTokenGrantResponse({
             access_token: 'at2',
@@ -102,7 +102,7 @@ describe('core/store/id-token', () => {
             dispatcher: createStoreDispatcher(),
         });
 
-        store.setIdToken('stale-id-token');
+        store.idToken.value = 'stale-id-token';
 
         await store.login({ name: 'admin', password: 'start123' });
 

@@ -163,10 +163,10 @@ describe('core/store/status', () => {
     it('derives status from raw-setter seeding (presence, not internal flags)', () => {
         const { store } = buildStore();
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
         expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
 
-        store.setRealm({ id: 'realm-1', name: 'master' });
+        store.realm.value = { id: 'realm-1', name: 'master' };
         expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
 
         store.setUser(buildUser());
@@ -179,7 +179,7 @@ describe('core/store/status', () => {
         // the access-token cookie expires via maxAge, the refresh-token
         // cookie is a session cookie — an RT-only hydration is a normal
         // restorable state, not unauthenticated
-        store.setRefreshToken('rt-1');
+        store.refreshToken.value = 'rt-1';
         expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
 
         await store.resolve();
@@ -195,7 +195,7 @@ describe('core/store/status', () => {
             },
         });
 
-        store.setRefreshToken('rt-1');
+        store.refreshToken.value = 'rt-1';
         expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
 
         await expect(store.resolve()).rejects.toThrow();
@@ -207,7 +207,7 @@ describe('core/store/status', () => {
     it('stamps origin restore when resolve() settles a seeded session', async () => {
         const { store } = buildStore();
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
 
         await store.resolve();
 

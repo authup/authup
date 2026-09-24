@@ -100,18 +100,23 @@ export default defineComponent({
         const store = injectStore();
         const {
             acr,
-            loggedIn,
+            accessToken,
             lastAuthOrigin,
             realmId,
             sessionId,
             user,
         } = storeToRefs(store);
 
+        // Token presence, not `status`: the ladder must keep the login form
+        // mounted while a login() is in flight (status reads AUTHENTICATING
+        // then) and must treat a refresh-token-only restore as logged out.
+        const loggedIn = computed<boolean>(() => !!accessToken.value);
+
         // Held true from the first render (SSR included) so the login form
         // never flashes while the handle is in flight.
         const federatedLoginPending = ref<boolean>(!!props.federatedLogin);
 
-        // Local logout — the reactive loggedIn flip re-renders into the
+        // Local logout — the reactive token-presence flip re-renders into the
         // realm-pinned login form below.
         const switchAccount = () => {
             store.logout();

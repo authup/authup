@@ -163,32 +163,22 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     const isTokenCookie = (key: string) => options.cookieSession &&
         TOKEN_COOKIE_NAMES.includes(key);
 
+    // Assigned directly rather than through the store's emitting setters:
+    // the values come FROM the cookies, so there is nothing to write back, and
+    // the authentication hook syncs from the refs when it installs.
     const readCookies = () => {
         if (store.cookiesRead) {
             return;
         }
 
-        store.setCookiesRead(true);
+        store.cookiesRead = true;
 
-        // The expire date must hydrate BEFORE the access token: the cookie
-        // listener's write-back echo derives the token cookie's maxAge from
-        // the already-written expire date (the same pinned order
-        // applyTokenGrantResponse follows) — enum order would re-persist the
-        // token as a session cookie.
-        const keys : string[] = [
-            CookieName.ACCESS_TOKEN_EXPIRE_DATE,
-            ...Object.values(CookieName).filter(
-                (key) => key !== CookieName.ACCESS_TOKEN_EXPIRE_DATE,
-            ),
-        ];
-
-        let value : any;
-        for (const key of keys) {
+        for (const key of Object.values(CookieName)) {
             if (isTokenCookie(key)) {
                 continue;
             }
 
-            value = cookieGet(key);
+            const value = cookieGet(key);
             if (!value) {
                 continue;
             }
@@ -196,27 +186,22 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             switch (key) {
                 case CookieName.ACCESS_TOKEN:
                     if (!store.accessToken) {
-                        store.setAccessToken(value);
+                        store.accessToken = value;
                     }
                     break;
                 case CookieName.ACCESS_TOKEN_EXPIRE_DATE:
                     if (!store.accessTokenExpireDate) {
-                        store.setAccessTokenExpireDate(value);
+                        store.accessTokenExpireDate = new Date(value);
                     }
                     break;
                 case CookieName.REFRESH_TOKEN:
                     if (!store.refreshToken) {
-                        store.setRefreshToken(value);
+                        store.refreshToken = value;
                     }
                     break;
                 case CookieName.ID_TOKEN:
                     if (!store.idToken) {
-                        store.setIdToken(value);
-                    }
-                    break;
-                case CookieName.REALM:
-                    if (!store.realm) {
-                        store.setRealm(value);
+                        store.idToken = value;
                     }
                     break;
                 case CookieName.REALM_MANAGEMENT:
@@ -294,17 +279,6 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     }
 
     storeDispatcher.on(
-        StoreDispatcherEventName.REALM_UPDATED,
-        (input) => {
-            if (input) {
-                cookieSet(CookieName.REALM, input, { path: cookiePath });
-            } else {
-                cookieUnset(CookieName.REALM, { path: cookiePath });
-            }
-        },
-    );
-
-    storeDispatcher.on(
         StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
         (input) => {
             if (input) {
@@ -316,29 +290,6 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     );
 
     dropShadowingCookies();
-
-    /**
-     * The user record is deliberately NOT persisted.
-     *
-     * Its value was the verbatim `/userinfo` body, and extra attributes are
-     * flattened onto that response AFTER the query projection, so nothing
-     * bounded its size: one operator-defined attribute is enough to push the
-     * cookie past the 4096 byte limit, where the browser drops it silently.
-     * It also carried the email and both names into the header of every
-     * request on the origin, static assets included. The store now builds the
-     * subject from the introspection response `resolve()` already awaits, so
-     * there is nothing to persist and nothing to restore.
-     *
-     * Copies written by earlier versions are swept here rather than left to
-     * expire: they carry no `maxAge`, so an open browser would keep sending one
-     * until it closes. The sweep is conditional because the name is a bare
-     * `user` on the pinned path — an unconditional delete would reach a
-     * same-named cookie belonging to another app on the origin on every single
-     * install, rather than once for a browser carrying the kit's own leftover.
-     */
-    if (cookieGet(CookieName.USER)) {
-        cookieUnset(CookieName.USER, { path: cookiePath });
-    }
 
     readCookies();
 

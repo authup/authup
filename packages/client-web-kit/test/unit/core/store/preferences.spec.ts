@@ -114,7 +114,7 @@ describe('core/store/preferences', () => {
             colorMode,
         } = buildStore({ claims: { locale: 'de', color_mode: 'dark' } });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         expect(locale.value).toEqual('de');
@@ -130,7 +130,7 @@ describe('core/store/preferences', () => {
     it('writes an explicit browser value up once when the account holds none', async () => {
         const { store, httpClient } = buildStore({ locale: 'fr' });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
@@ -162,7 +162,7 @@ describe('core/store/preferences', () => {
     it('never writes the no-choice sentinel up', async () => {
         const { store, httpClient } = buildStore({ locale: 'auto', colorMode: 'system' });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
@@ -184,7 +184,7 @@ describe('core/store/preferences', () => {
             }],
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         locale.value = 'fr';
@@ -225,7 +225,7 @@ describe('core/store/preferences', () => {
             colorMode,
         } = buildStore({ claims: { color_mode: 'light' } });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         expect(colorMode.value).toEqual('light');
 
@@ -282,7 +282,7 @@ describe('core/store/preferences', () => {
             },
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         locale.value = 'fr';
@@ -304,7 +304,7 @@ describe('core/store/preferences', () => {
             },
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
@@ -352,7 +352,7 @@ describe('core/store/preferences', () => {
             },
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         locale.value = 'auto';
@@ -402,7 +402,7 @@ describe('core/store/preferences', () => {
             },
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         expect(colorMode.value).toEqual('light');
 
@@ -469,7 +469,7 @@ describe('core/store/preferences', () => {
             },
         });
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         // user-1's change is in flight (the POST has not answered yet)

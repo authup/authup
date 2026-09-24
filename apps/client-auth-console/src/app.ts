@@ -37,8 +37,6 @@ import './tailwind.css';
 
 // Registers the build-time icon subset (see `NuxtIconBundle` in
 // vite.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
-// Replaces the kit's `registerIconCollections()`, which pulled both full
-// Font Awesome collections into the bundle.
 import 'virtual:nuxt-icon-bundle/register';
 
 import type { Router } from 'vue-router';

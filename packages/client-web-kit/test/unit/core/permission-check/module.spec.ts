@@ -54,7 +54,7 @@ describe('core/permission-check', () => {
     it('should keep realm id and realm name on distinct identity fields', async () => {
         const store = buildStore();
         store.setUser({ id: 'user-id' } as User);
-        store.setRealm({ id: 'realm-id', name: 'master' });
+        store.realm = { id: 'realm-id', name: 'master' };
 
         const spy = vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
             .mockResolvedValue(undefined);

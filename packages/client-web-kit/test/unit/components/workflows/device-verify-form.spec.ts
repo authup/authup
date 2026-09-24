@@ -100,8 +100,8 @@ function mountForm(
 
     const store = injectStore(mounted.pinia, mounted.wrapper.vm.$.appContext.app);
     if (loggedIn) {
-        store.setAccessToken('access-token');
-        store.setRealm({ id: REALM.id, name: REALM.name });
+        store.accessToken = 'access-token';
+        store.realm = { id: REALM.id, name: REALM.name };
         store.setUser({
             id: 'user-1',
             name: 'jdoe',

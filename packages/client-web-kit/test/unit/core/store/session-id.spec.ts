@@ -44,7 +44,7 @@ describe('core/store/session-id', () => {
 
         expect(store.sessionId.value).toBeNull();
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         expect(store.sessionId.value).toEqual('sess-123');
@@ -53,7 +53,7 @@ describe('core/store/session-id', () => {
     it('leaves sessionId null when introspection carries none', async () => {
         const { store } = buildStore();
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
 
         expect(store.sessionId.value).toBeNull();
@@ -62,7 +62,7 @@ describe('core/store/session-id', () => {
     it('clears sessionId on logout', async () => {
         const { store } = buildStore('sess-123');
 
-        store.setAccessToken('abc');
+        store.accessToken.value = 'abc';
         await store.resolve();
         expect(store.sessionId.value).toEqual('sess-123');
 

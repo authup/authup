@@ -50,8 +50,8 @@ const REALM = { id: 'realm-x', name: 'master' };
 // cookie-restored one whose userinfo fetch failed: loggedIn/realm are set from
 // token introspection, but the user never resolves.
 function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
-    store.setAccessToken('access-token');
-    store.setRealm({ id: realmId, name: REALM.name });
+    store.accessToken = 'access-token';
+    store.realm = { id: realmId, name: REALM.name };
     store.sessionId = 'session-1';
 
     if (!withUser) {
