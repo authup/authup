@@ -1832,10 +1832,18 @@ survives validation (`null` is not "optional" under validup's default
 `optionalValue: 'undefined'`) and is what the console submits for a blank field.
 A protocol switch is the one exception and replaces: the previous protocol's
 rows are dead configuration no code reads, and one of them is a secret
-(the LDAP bind password). `PolicyService.save` has the identical defect and is
-deliberately untouched - its per-type validators mount their config as
-REQUIRED, so a partial update fails validation instead of silently disabling a
-control.
+(the LDAP bind password). `PolicyService.save` keeps the replace semantics and
+stores only the options its type declares (#3669): `PolicyAttributesValidator`
+runs the validator a registry holds for the type (`PolicyServiceContext.validators`,
+`PolicyDefaultValidators` unless given; a composite's `children` excluded),
+picked by the STORED type on an update because `type` is create-only. A type
+the registry lacks accepts no options: a body carrying any key beyond the
+policy's own columns answers 400 naming the type, one without is stored as the
+bare row. That registry is the first seam of #3676, which feeds custom types
+into it from provisioning. The two types whose config is required (`attributes`,
+`attributeNames`) therefore fail validation on a partial update rather than
+silently disabling a control, while the others replace their options with what
+the body carries.
 
 ## Provisioning Architecture
 
@@ -4074,7 +4082,10 @@ denies. Writing
 a non-built-in `type` through `POST /policies` is still accepted and evaluates as
 `POLICY_EVALUATOR_NOT_FOUND` wherever it is bound: rejecting it would pin the write path to
 one static registry while the engines are built per request, which is the closed set this
-change removes.
+change removes, but such a policy accepts no options (400) until a validator for its type
+is registered, since storing the body verbatim is what put arbitrary keys into
+`auth_policy_attributes` (#3669); the write path already takes that registry, and #3676
+registers custom types into it together with the engines and the catalog builder.
 **A `realmMatch` key is validated by what `realmScopeMatches` decides (#3636)**: a realm
 key, `null`, or a list of either. An empty key and an empty list are legal and deny on
 both sides; `undefined` is refused, because the server coerces it to `null` and a caller

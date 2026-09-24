@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import type { PolicyValidators } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import {
     ValidatorGroup,
@@ -32,6 +33,11 @@ import { policySchema } from './schema.ts';
 export type PolicyServiceContext = {
     repository: IPolicyRepository;
     realmRepository: IRealmRepository;
+    /**
+     * The option validator per policy type, `PolicyDefaultValidators`
+     * unless given. A type absent here accepts no options.
+     */
+    validators?: PolicyValidators;
 };
 
 const PERMISSION_NAMES = [
@@ -54,7 +60,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.validator = new PolicyValidator();
-        this.attributesValidator = new PolicyAttributesValidator({});
+        this.attributesValidator = new PolicyAttributesValidator(ctx.validators);
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
@@ -190,7 +196,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validate(data, group);
+        const validated = await this.validate(data, group, entity?.type);
 
         await this.repository.validateJoinColumns(validated);
 
@@ -250,14 +256,18 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
     private async validate(
         data: Record<string, any>,
         group: string,
+        type?: string,
     ): Promise<Policy> {
         const validated = await this.validator.run(data, { group });
 
-        const attributes = await this.attributesValidator.run(data);
+        // `type` is create-only, so an update reads its options by the stored type
+        const resolvedType = type ?? data.type;
+        const attributes = await this.attributesValidator.run({ ...data, type: resolvedType });
         extendObject(validated, attributes);
 
+        // each child is a policy of its own: validated here, with its own type's validator
         if (Array.isArray(data.children)) {
-            if (data.type === BuiltInPolicyType.COMPOSITE) {
+            if (resolvedType === BuiltInPolicyType.COMPOSITE) {
                 const promises = data.children.map(
                     (child) => this.validate(child, group),
                 );
