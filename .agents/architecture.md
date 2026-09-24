@@ -1489,7 +1489,7 @@ API. The six page GETs became a stateless hop:
     `apiInternalUrl`), because the store puts the visitor's bearer on it.
   - **the MFA status and the consent decision are fetched ONCE, server
     side, and handed over** through the hydration store
-    (`authup:authorize:mfa:<user>:<acr>`, `authup:authorize:consent:<user>:<client>:<scopes>`);
+    (`authup:authorize:mfa:<session>:<user>:<acr>`, since the second factor is stamped on the session, and `authup:authorize:consent:<user>:<client>:<scopes>`);
     the browser adopts them instead of refetching. Once is load-bearing: a
     second `GET /authenticators/challenge` mints a second WebAuthn nonce and
     orphans the one the markup carries. A federated return hands nothing

@@ -103,6 +103,7 @@ export default defineComponent({
             loggedIn,
             lastAuthOrigin,
             realmId,
+            sessionId,
             user,
         } = storeToRefs(store);
 
@@ -353,10 +354,13 @@ export default defineComponent({
         // state on hydration. Fetched once: a second request would mint a
         // second WebAuthn challenge and orphan the one the markup carries.
         // Not for a federated return, whose ladder runs for the account the
-        // redemption establishes rather than the one the cookies held.
-        if (!props.federatedLogin) {
+        // redemption establishes rather than the one the cookies held. Keyed
+        // by the SESSION, since that is what the status describes (the
+        // second factor is stamped on the session row): a browser that holds
+        // another session by hydration time fetches its own.
+        if (!props.federatedLogin && sessionId.value) {
             useHydratedValue<UserAuthenticatorChallengeResponse>({
-                key: `authup:authorize:mfa:${user.value?.id ?? ''}:${props.codeRequest?.acr_values ?? ''}`,
+                key: `authup:authorize:mfa:${sessionId.value}:${user.value?.id ?? ''}:${props.codeRequest?.acr_values ?? ''}`,
                 resolve: async () => {
                     if (!loggedIn.value || !user.value) {
                         return undefined;

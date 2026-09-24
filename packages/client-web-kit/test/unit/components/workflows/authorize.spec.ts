@@ -52,6 +52,7 @@ const REALM = { id: 'realm-x', name: 'master' };
 function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
     store.setAccessToken('access-token');
     store.setRealm({ id: realmId, name: REALM.name });
+    store.sessionId = 'session-1';
 
     if (!withUser) {
         return;
@@ -966,7 +967,7 @@ describe('AAuthorize server-render handoff', () => {
         const { wrapper, httpClient } = mountAuthorize({
             prompt: '',
             hydration: {
-                'authup:authorize:mfa:user-1:': {
+                'authup:authorize:mfa:session-1:user-1:': {
                     required: false,
                     enrollmentRequired: false,
                     kinds: [],
@@ -989,11 +990,11 @@ describe('AAuthorize server-render handoff', () => {
         )).toBe(false);
     });
 
-    it('fetches for itself when the handoff names another subject', async () => {
+    it('fetches for itself when the handoff names another session', async () => {
         const { httpClient } = mountAuthorize({
             prompt: '',
             hydration: {
-                'authup:authorize:mfa:user-2:': {
+                'authup:authorize:mfa:session-2:user-1:': {
                     required: false,
                     enrollmentRequired: false,
                     kinds: [],

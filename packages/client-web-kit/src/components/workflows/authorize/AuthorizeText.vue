@@ -21,7 +21,10 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex flex-col">
+    <div
+        class="flex flex-col"
+        :role="loading ? 'status' : undefined"
+    >
         <div class="text-center">
             <!--
                 CSS rather than an icon: icons resolve in the browser, so a
@@ -30,8 +33,8 @@ export default defineComponent({
             -->
             <span
                 v-if="loading"
-                class="inline-block size-12 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"
-                role="status"
+                class="inline-block size-12 animate-spin motion-reduce:animate-none rounded-full border-4 border-primary-600 border-t-transparent"
+                aria-hidden="true"
             />
             <VCIcon
                 v-else

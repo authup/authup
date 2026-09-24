@@ -88,6 +88,7 @@ async function render(
         const store = app.runWithContext(() => injectStore());
         store.setAccessToken('access-token');
         store.setRealm({ id: 'realm-1', name: 'master' });
+        store.sessionId = 'session-1';
         store.setUser({
             id: 'user-1', 
             name: 'jdoe', 
@@ -147,7 +148,7 @@ describe('components/workflows/authorize (server render)', () => {
         expect(requests.filter((path) => path === '/authenticators/challenge')).toHaveLength(1);
         expect(requests.filter((path) => path === '/consents')).toHaveLength(1);
 
-        expect(entries['authup:authorize:mfa:user-1:']).toEqual({
+        expect(entries['authup:authorize:mfa:session-1:user-1:']).toEqual({
             required: false,
             enrollmentRequired: false,
             kinds: [],
