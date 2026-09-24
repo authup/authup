@@ -8,6 +8,7 @@
 import type { ObjectLiteral } from '@authup/kit';
 import { hasOwnProperty } from '@authup/kit';
 import type {
+    EntityManager,
     FindManyOptions,
     FindOneOptions,
     FindOptionsWhere,
@@ -15,6 +16,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { In } from 'typeorm';
+import { isDatabaseTypeRowLockable } from '../helpers/index.ts';
 import type {
     EARepositoryAdapterOptions,
     EARepositoryEntityBase,
@@ -84,7 +86,31 @@ export class ExtraAttributesRepositoryAdapter<
         return this.extendManyWithEA(entities, extraOptions);
     }
 
+    /**
+     * The parent row and its attribute rows are written in one transaction
+     * (issue #3668), on the manager the write started on: an open transaction
+     * is joined rather than a second pooled connection taken (#3526, #3539).
+     * better-sqlite3 shares one query runner, so a transaction there would
+     * nest inside whatever else is running; it writes without one.
+     */
     async saveWithEA<E extends Record<string, any>>(
+        input: T & E,
+        attributes?: E,
+        options?: EARepositorySaveOptions<T>,
+    ) : Promise<T & E> {
+        const { manager } = this.repository;
+        if (
+            manager.queryRunner?.isTransactionActive ||
+            !isDatabaseTypeRowLockable(manager.connection.options.type)
+        ) {
+            return this.saveWithEAIn(manager, input, attributes, options);
+        }
+
+        return manager.transaction((transaction) => this.saveWithEAIn(transaction, input, attributes, options));
+    }
+
+    protected async saveWithEAIn<E extends Record<string, any>>(
+        manager: EntityManager,
         input: T & E,
         attributes?: E,
         options?: EARepositorySaveOptions<T>,
@@ -113,9 +139,10 @@ export class ExtraAttributesRepositoryAdapter<
             }
         }
 
-        await this.repository.save(input);
+        await manager.save(this.repository.target, input);
 
         await this.saveEA(
+            manager,
             input,
             extra,
             options,
@@ -206,6 +233,7 @@ export class ExtraAttributesRepositoryAdapter<
     // ------------------------------------------------------------------------------
 
     private async saveEA(
+        manager: EntityManager,
         parent: T,
         input: Record<string, any>,
         options: EARepositorySaveOptions<T> = {},
@@ -216,7 +244,8 @@ export class ExtraAttributesRepositoryAdapter<
         const where : Partial<A> = {};
         where[foreignColumn] = foreignColumnValue;
 
-        const items = await this.attributeRepository.findBy(where);
+        const attributeRepository = manager.getRepository(this.attributeRepository.target);
+        const items = await attributeRepository.findBy(where);
 
         const itemsToDelete : A[] = [];
         const itemsToUpdate : A[] = [];
@@ -236,11 +265,11 @@ export class ExtraAttributesRepositoryAdapter<
         }
 
         if (itemsToUpdate.length > 0) {
-            await this.attributeRepository.save(itemsToUpdate);
+            await attributeRepository.save(itemsToUpdate);
         }
 
         if (itemsToDelete.length > 0) {
-            await this.attributeRepository.remove(itemsToDelete);
+            await attributeRepository.remove(itemsToDelete);
         }
 
         const itemsToAdd : A[] = [];
@@ -260,7 +289,7 @@ export class ExtraAttributesRepositoryAdapter<
         }
 
         if (itemsToAdd.length > 0) {
-            await this.attributeRepository.insert(itemsToAdd);
+            await attributeRepository.insert(itemsToAdd);
         }
     }
 

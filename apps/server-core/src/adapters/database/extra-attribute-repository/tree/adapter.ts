@@ -6,6 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
+import type { EntityManager } from 'typeorm';
 import { ExtraAttributesRepositoryAdapter } from '../adapter.ts';
 import type { EARepositoryEntityBase, EARepositoryFindOptions, EARepositorySaveOptions } from '../types.ts';
 
@@ -13,7 +14,8 @@ export class ExtraAttributesTreeRepositoryAdapter<
     T extends ObjectLiteral = ObjectLiteral,
     A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > extends ExtraAttributesRepositoryAdapter<T, A> {
-    async saveWithEA<E extends Record<string, any>>(
+    protected override async saveWithEAIn<E extends Record<string, any>>(
+        manager: EntityManager,
         input: T & E,
         attributes?: E,
         options?: EARepositorySaveOptions<T>,
@@ -36,7 +38,7 @@ export class ExtraAttributesTreeRepositoryAdapter<
             input[parentColumnName as keyof T] = options.parent as (T & E)[keyof T];
         }
 
-        await super.saveWithEA(input, attributes, options);
+        await super.saveWithEAIn(manager, input, attributes, options);
 
         if (
             parentColumnName &&
@@ -53,13 +55,13 @@ export class ExtraAttributesTreeRepositoryAdapter<
         ) {
             if (Array.isArray(children)) {
                 for (const child of children) {
-                    await this.saveWithEA(child, undefined, {
+                    await this.saveWithEAIn(manager, child, undefined, {
                         ...(options || {}),
                         parent: input,
                     });
                 }
             } else {
-                await this.saveWithEA(children, undefined, {
+                await this.saveWithEAIn(manager, children, undefined, {
                     ...(options || {}),
                     parent: input,
                 });
