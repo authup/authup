@@ -549,9 +549,10 @@ reaching another global component adds its plugin there. A spec swaps route
 records by mapping `routes` (a probe child route to see what `RouterView`
 forwards, a stub collection page as a redirect target), as
 `test/unit/user-page.spec.ts` does for the record heading, the `entity` handed
-to the tab, and the failed fetch landing on `/users`. The server-side half is split by ownership now: the SERVING
-lives in each console service's suite (above), and the cookie login round-trip
-stays in server-core, as the `describe.each` over both consoles in
+to the tab, and the failed fetch landing on `/users`. The server-side half is
+split by ownership now: the SERVING lives in each console service's suite
+(above), and the cookie login round-trip stays in server-core, as the
+`describe.each` over both consoles in
 `test/unit/http/controllers/workflows/account/console-session.spec.ts`. That
 file gained a **"console shell"** block asserting server-core answers 404 for
 `''`, `/login` and an arbitrary sub-path under each segment, which is the

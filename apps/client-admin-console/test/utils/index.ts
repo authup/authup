@@ -65,8 +65,8 @@ export async function mountPage(
     await flushPromises();
 
     return {
-        wrapper, 
-        router, 
-        httpClient, 
+        wrapper,
+        router,
+        httpClient,
     };
 }
