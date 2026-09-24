@@ -6,87 +6,18 @@
  */
 
 import type { UserRole } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserRoleRepository } from '../../../../../core/index.ts';
 import { UserRoleEntity } from '../../../../../adapters/database/domains/index.ts';
-import { applyJunctionRealmScopeSelect, hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 
-export class UserRoleRepositoryAdapter implements IUserRoleRepository {
-    private readonly repository: Repository<UserRole>;
-
+export class UserRoleRepositoryAdapter extends EntityRepositoryAdapter<UserRole> implements IUserRoleRepository {
     constructor(repository: Repository<UserRole>) {
-        this.repository = repository;
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<UserRole>> {
-        const qb = this.repository.createQueryBuilder('userRole');
-        qb.groupBy('userRole.id');
-
-        const { pagination } = applyQuery(qb, query);
-        // the per-row realm gate reads the OWNER realm key, and
-        // `junctionResourceRealm` reads it off the row — a `fields=` projection
-        // that strips it would leave the reach unmatched (issue #3594)
-        applyJunctionRealmScopeSelect(qb, 'userRole', 'userRealmId');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<UserRole | null> {
-        return this.findOneBy({ id });
-    }
-
-    async findOneByName(_name: string): Promise<UserRole | null> {
-        return Promise.resolve(null);
-    }
-
-    findOneByIdOrName(idOrName: string): Promise<UserRole | null> {
-        return this.findOneById(idOrName);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<UserRole[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<UserRole | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<UserRole>): UserRole {
-        return this.repository.create(data);
-    }
-
-    merge(entity: UserRole, data: Partial<UserRole>): UserRole {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: UserRole): Promise<UserRole> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: UserRole): Promise<void> {
-        await this.repository.remove(entity);
-    }
-
-    async validateJoinColumns(data: Partial<UserRole>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: UserRoleEntity,
+        super(repository, {
+            alias: 'userRole',
+            target: UserRoleEntity,
+            entity: 'user role',
+            realmScope: { column: 'userRealmId' },
         });
     }
 }

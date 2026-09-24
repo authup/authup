@@ -6,21 +6,10 @@
  */
 
 import type { Realm, Scope } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
-import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
-import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import {
-    applyRealmScopeSelect,
-    hasUnmatchableId,
-    isEntityUnique,
-    translateWhereConditions,
-} from '../helpers.ts';
+import type { IScopeRepository } from '../../../../../core/index.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type ScopeRepositoryAdapterContext = {
@@ -28,107 +17,15 @@ export type ScopeRepositoryAdapterContext = {
     realmRepository: Repository<Realm>,
 };
 
-export class ScopeRepositoryAdapter implements IScopeRepository {
-    private readonly repository: Repository<Scope>;
-
-    private readonly realmRepository: IRealmRepository;
-
+export class ScopeRepositoryAdapter extends EntityRepositoryAdapter<Scope> implements IScopeRepository {
     constructor(ctx: ScopeRepositoryAdapterContext) {
-        this.repository = ctx.repository;
-        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
-    }
-
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Scope>> {
-        const qb = this.repository.createQueryBuilder('scope');
-        qb.groupBy('scope.id');
-
-        const { pagination } = applyQuery(qb, query);
-        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
-        // PRESENCE-based — a `fields=` projection that strips the column would
-        // leave the realm-match key absent and neutral-pass (issue #3574)
-        applyRealmScopeSelect(qb, 'scope');
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    findOneById(id: string): Promise<Scope | null> {
-        return this.findOneBy({ id });
-    }
-
-    async findOneByName(name: string, realmKey?: string): Promise<Scope | null> {
-        const qb = this.repository.createQueryBuilder('scope');
-        qb.where('scope.name = :name', { name });
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-            qb.andWhere('scope.realmId = :realmId', { realmId });
-        }
-
-        return qb.getOne();
-    }
-
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Scope | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<Scope[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<Scope | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<Scope>): Scope {
-        return this.repository.create(data);
-    }
-
-    merge(entity: Scope, data: Partial<Scope>): Scope {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: Scope): Promise<Scope> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: Scope): Promise<void> {
-        await this.repository.remove(entity);
-    }
-
-    async validateJoinColumns(data: Partial<Scope>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: ScopeEntity,
+        super(ctx.repository, {
+            alias: 'scope',
+            target: ScopeEntity,
+            entity: 'scope',
+            // the per-row realm gate reads `realmId` (issue #3574)
+            realmScope: {},
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
         });
-    }
-
-    async checkUniqueness(data: Partial<Scope>, existing?: Scope): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.repository.manager.connection,
-            entityTarget: ScopeEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 }

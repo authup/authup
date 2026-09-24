@@ -9,13 +9,8 @@ import type { Realm, Role, User } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
-import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { IUserRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import {
     CachePrefix,
@@ -25,13 +20,9 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../../../../adapters/database/domains/index.ts';
-import {
-    applyRealmScopeSelect,
-    hasUnmatchableId,
-    isEntityUnique,
-    translateWhereConditions,
-} from '../helpers.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type UserRepositoryAdapterContext = {
@@ -43,113 +34,33 @@ export type UserRepositoryAdapterOptions = {
     lockRows?: boolean,
 };
 
-export class UserRepositoryAdapter implements IUserRepository {
-    private readonly repository: UserRepository;
-
-    private readonly realmRepository: IRealmRepository;
-
-    private readonly lockRows: boolean;
-
+export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRepository> implements IUserRepository {
     constructor(ctx: UserRepositoryAdapterContext, options: UserRepositoryAdapterOptions = {}) {
-        this.repository = ctx.repository;
-        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
-        this.lockRows = options.lockRows ?? false;
+        super(ctx.repository, {
+            alias: 'user',
+            target: UserEntity,
+            entity: 'user',
+            // `id` for the self short-circuit of the per-row gate
+            realmScope: { extraColumns: ['id'] },
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            lockRows: options.lockRows,
+        });
     }
 
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<User>> {
-        const qb = this.repository.createQueryBuilder('user');
-        qb.groupBy('user.id');
+    protected override async extendOne(entity: User): Promise<void> {
+        await this.repository.extendOneWithEA(entity);
+    }
 
-        const { pagination } = applyQuery(qb, query);
-
-        applyRealmScopeSelect(qb, 'user', ['id']);
-
-        const { data: entities, total } = await fetchMany(qb, query);
-
+    protected override async extendMany(entities: User[]): Promise<void> {
         await this.repository.extendManyWithEA(entities);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    async findOneById(id: string): Promise<User | null> {
-        const entity = await this.findOneBy({ id });
-        if (entity) {
-            await this.repository.extendOneWithEA(entity);
-        }
-        return entity;
-    }
-
-    async findOneByName(name: string, realmKey?: string): Promise<User | null> {
-        const qb = this.repository.createQueryBuilder('user');
-        qb.where('user.name = :name', { name });
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-            qb.andWhere('user.realmId = :realmId', { realmId });
-        }
-
-        const entity = await qb.getOne();
-        if (entity) {
-            await this.repository.extendOneWithEA(entity);
-        }
-        return entity;
-    }
-
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<User | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
     }
 
     async findOne(id: string, query?: IQuery, realmKey?: string): Promise<User | null> {
-        const qb = this.repository.createQueryBuilder('user');
-
-        if (isUUID(id)) {
-            qb.where('user.id = :id', { id });
-        } else {
-            qb.where('user.name = :name', { name: id });
-
-            if (realmKey) {
-                const realmId = await this.realmRepository.resolveId(realmKey);
-                if (!realmId) {
-                    return null;
-                }
-                qb.andWhere('user.realmId = :realmId', { realmId });
-            }
-        }
-
-        applyQuery(qb, query);
-
-        const entity = await qb.getOne();
-        if (entity) {
-            await this.repository.extendOneWithEA(entity);
-        }
-        return entity;
+        return this.findOneWithQuery(id, query, realmKey);
     }
 
-    async findManyBy(where: Record<string, any>): Promise<User[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
 
-    async findOneBy(where: Record<string, any>): Promise<User | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
 
-        return this.repository.findOne({
-            where: translateWhereConditions(where),
-            ...(this.lockRows ? { lock: { mode: 'pessimistic_write' } } : {}),
-        });
-    }
 
     async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
@@ -159,22 +70,6 @@ export class UserRepositoryAdapter implements IUserRepository {
         qb.where(translated);
 
         return qb.getOne();
-    }
-
-    create(data: Partial<User>): User {
-        return this.repository.create(data);
-    }
-
-    merge(entity: User, data: Partial<User>): User {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: User): Promise<User> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: User): Promise<void> {
-        await this.repository.remove(entity);
     }
 
     async transaction<R>(fn: (repository: IUserRepository) => Promise<R>): Promise<R> {
@@ -194,26 +89,6 @@ export class UserRepositoryAdapter implements IUserRepository {
             repository: new UserRepository(manager),
             realmRepository: manager.getRepository(RealmEntity),
         }, { lockRows: true })));
-    }
-
-    async validateJoinColumns(data: Partial<User>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: UserEntity,
-        });
-    }
-
-    async checkUniqueness(data: Partial<User>, existing?: User): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.repository.manager.connection,
-            entityTarget: UserEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 
     async getBoundRoles(entity: string | User): Promise<Role[]> {

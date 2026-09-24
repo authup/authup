@@ -6,22 +6,11 @@
  */
 
 import type { Policy, Realm } from '@authup/core-kit';
-import type { IQuery } from '@rapiq/core';
-import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery, fetchMany } from '../query.ts';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
-import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { IPolicyRepository } from '../../../../../core/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
-import {
-    applyRealmScopeSelect,
-    hasUnmatchableId,
-    isEntityUnique,
-    translateWhereConditions,
-} from '../helpers.ts';
+import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PolicyRepositoryAdapterContext = {
@@ -29,117 +18,24 @@ export type PolicyRepositoryAdapterContext = {
     realmRepository: Repository<Realm>,
 };
 
-export class PolicyRepositoryAdapter implements IPolicyRepository {
-    private readonly repository: PolicyRepository;
-
-    private readonly realmRepository: IRealmRepository;
-
+export class PolicyRepositoryAdapter extends EntityRepositoryAdapter<Policy, PolicyRepository> implements IPolicyRepository {
     constructor(ctx: PolicyRepositoryAdapterContext) {
-        this.repository = ctx.repository;
-        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
+        super(ctx.repository, {
+            alias: 'policy',
+            target: PolicyEntity,
+            entity: 'policy',
+            // the per-row realm gate reads `realmId` (issue #3574)
+            realmScope: {},
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+        });
     }
 
-    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Policy>> {
-        const qb = this.repository.createQueryBuilder('policy');
-        qb.groupBy('policy.id');
+    protected override async extendOne(entity: Policy): Promise<void> {
+        await this.repository.extendOneWithEA(entity);
+    }
 
-        const { pagination } = applyQuery(qb, query);
-        // the per-row realm gate reads `realmId`, and `resourceRealmMatch` is
-        // PRESENCE-based — a `fields=` projection that strips the column would
-        // leave the realm-match key absent and neutral-pass (issue #3574)
-        applyRealmScopeSelect(qb, 'policy');
-
-        const { data: entities, total } = await fetchMany(qb, query);
+    protected override async extendMany(entities: Policy[]): Promise<void> {
         await this.repository.extendManyWithEA(entities);
-
-        return {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
-        };
-    }
-
-    async findOneById(id: string): Promise<Policy | null> {
-        const entity = await this.findOneBy({ id });
-        if (entity) {
-            await this.repository.extendOneWithEA(entity);
-        }
-        return entity;
-    }
-
-    async findOneByName(name: string, realmKey?: string): Promise<Policy | null> {
-        const qb = this.repository.createQueryBuilder('policy');
-        qb.where('policy.name = :name', { name });
-
-        if (realmKey) {
-            const realmId = await this.realmRepository.resolveId(realmKey);
-            if (!realmId) {
-                return null;
-            }
-            qb.andWhere('policy.realmId = :realmId', { realmId });
-        }
-
-        const entity = await qb.getOne();
-        if (entity) {
-            await this.repository.extendOneWithEA(entity);
-        }
-        return entity;
-    }
-
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Policy | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
-    }
-
-    async findManyBy(where: Record<string, any>): Promise<Policy[]> {
-        return this.repository.findBy(translateWhereConditions(where));
-    }
-
-    async findOneBy(where: Record<string, any>): Promise<Policy | null> {
-        if (hasUnmatchableId(where)) {
-            return null;
-        }
-
-        return this.repository.findOneBy(translateWhereConditions(where));
-    }
-
-    create(data: Partial<Policy>): Policy {
-        return this.repository.create(data);
-    }
-
-    merge(entity: Policy, data: Partial<Policy>): Policy {
-        return this.repository.merge(entity, data);
-    }
-
-    async save(entity: Policy): Promise<Policy> {
-        return this.repository.save(entity);
-    }
-
-    async remove(entity: Policy): Promise<void> {
-        await this.repository.remove(entity);
-    }
-
-    async validateJoinColumns(data: Partial<Policy>): Promise<void> {
-        await validateEntityJoinColumns(data, {
-            dataSource: this.repository.manager.connection,
-            entityTarget: PolicyEntity,
-        });
-    }
-
-    async checkUniqueness(data: Partial<Policy>, existing?: Policy): Promise<void> {
-        const isUnique = await isEntityUnique({
-            dataSource: this.repository.manager.connection,
-            entityTarget: PolicyEntity,
-            entity: data,
-            entityExisting: existing,
-        });
-
-        if (!isUnique) {
-            throw new DatabaseConflictError();
-        }
     }
 
     async saveWithEA(entity: Policy, data?: Record<string, any>): Promise<Policy> {
