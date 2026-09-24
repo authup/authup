@@ -1458,12 +1458,56 @@ API. The six page GETs became a stateless hop:
   replace the hosted auth UI (the Keycloak login-theme analog), via
   `authConsole.path`. A missing bundle 500s with an actionable
   message (build `apps/client-auth-console` first).
-- **The service hydrates ANONYMOUSLY.** It holds no credential and asks
-  server-core only for what an unauthenticated visitor may see, which is the
-  whole of what these pages render: `/authorize` from `GET /authorize/info`,
+- **The service holds no credential; the page data is anonymous, the
+  visitor's own session is not.** It asks server-core only for what an
+  unauthenticated visitor may see: `/authorize` from `GET /authorize/info`,
   the four workflow pages from `GET /` plus their own query, and `/logout`
   from nothing at all, since that page drives the end-session call itself.
-  No loopback, no database, no session.
+  No loopback, no database. What it does forward, on `/authorize` alone
+  (the handler's `session: true`), is the visitor's kit **access token**
+  cookie (`readRenderCookies`, `RenderContext.cookies`), so the render
+  resolves the session the browser already holds and draws the right step
+  (the account chooser, the consent, the MFA challenge) instead of the login
+  form the browser then replaced after an introspection round trip. Every
+  other page opens on the same step signed in or not (`/device` always on
+  its code step), so resolving a session there would only cost API calls.
+  Rules the render rests on, each a hazard on its own:
+  - **never the refresh token.** A render cannot hand a rotated pair back to
+    the browser, and refresh tokens rotate strictly, so a server refresh
+    would leave the browser replaying a spent token into family revocation.
+    A token that no longer verifies renders the logged-out page, and the
+    browser renews it on hydration.
+  - **never a revoke.** The server router guard tears a failed resolve down
+    with `logout({ revoke: false, revokeTokens: false })`, which drops the
+    store without calling `/token/revoke` (a transient API error must not
+    end a live session). `revokeTokens` is its own option because every
+    browser teardown must keep revoking: a pair dropped from the browser
+    but left live is a refresh token nothing holds.
+  - **never a write.** The server install gets no-op cookie writers and no
+    `preferences`, since the preference sync writes user attributes.
+  - **one client per render** (`createAPIClient(config)`, over
+    `apiInternalUrl`), because the store puts the visitor's bearer on it.
+  - **the MFA status and the consent decision are fetched ONCE, server
+    side, and handed over** through the hydration store
+    (`authup:authorize:mfa:<user>:<acr>`, `authup:authorize:consent:<user>:<client>:<scopes>`);
+    the browser adopts them instead of refetching. Once is load-bearing: a
+    second `GET /authenticators/challenge` mints a second WebAuthn nonce and
+    orphans the one the markup carries. A federated return hands nothing
+    over, since its ladder runs for the account the redemption establishes.
+  The response already carries `Vary: Cookie` and `no-store`.
+  **Rate-limit cost on a split deployment.** server-core's limiter runs
+  before authentication and keys on the source address alone (its
+  per-identity `max` never sees an identity), and the service forwards no
+  visitor address. So on a split topology every server-side call of every
+  render counts against the console's ONE address at the anonymous 1200/min,
+  and a signed-in `/authorize` render makes about five (the authorize info,
+  introspection, the authorization check, the challenge status, the consent
+  probe) where an anonymous one makes one: about 240 signed-in renders a
+  minute, over all visitors, exhaust it, and `/authorize/info` failing fails
+  the page. The composed `authup start` is loopback and skipped. A split
+  deployment under that load raises `core.middlewareRateLimit.max`; the real
+  fix is forwarding the visitor's address from the console services, which
+  needs a trust contract they do not have yet.
 - **It is the ONE console that fetches server-side, so its API address is
   two values, not one** (issue #3550). `Config.apiUrl` is the BROWSER's: it
   becomes the hydration payload's `baseURL`, from which the console derives
@@ -2993,7 +3037,8 @@ apps/server-auth-console/src/       — the SSR console service
   render.ts                         — createRenderPage(distPath): a per-handler closure holding the memoized
                                       template, manifest and render entry; assertRenderContract(distPath),
                                       the boot-time CONTRACT_VERSION check
-  payload.ts                        — the anonymous hydration reads (authorize info, status features) + the
+  payload.ts                        — the anonymous page reads (authorize info, status features), the forwarded
+                                      access-token cookie (readRenderCookies) + the
                                       workflow-page payload assembly. createAPIClient dispatches against
                                       config.apiInternalUrl, never the browser-facing config.apiUrl
   resolve.ts                        — resolvePackagePath/resolveDistPath (pure: the substituted distPath first,
@@ -8858,9 +8903,9 @@ integration are worth knowing before editing UI code:
 The store's cookies are the SSR transport, not a storage preference: a Nuxt
 consumer on `@authup/client-web-nuxt` (hub) reads them server-side (the kit plugin wires `cookieGet` to Nuxt's
 `useCookie`, which parses the request header), so its routing interceptor can
-await `store.resolve()` during the render. The auth console passes no cookie
-functions, so its server-side `useCookies()` fallback finds no `document` and
-reads nothing; the account and admin consoles never server-render, and served
+await `store.resolve()` during the render. The auth console's server render
+reads the access token alone, handed over by its service, and writes nothing
+(see *Auth Workflow UI*); the account and admin consoles never server-render, and served
 by server-core they hold no token cookies at all (cookie mode). `localStorage`
 cannot replace any of this, because the server never sees it.
 

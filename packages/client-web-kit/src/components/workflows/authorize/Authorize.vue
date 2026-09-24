@@ -41,6 +41,8 @@ import {
     extractErrorContext,
     injectHTTPClient,
     injectStore,
+    isServerRuntime,
+    useHydratedValue,
     useTranslation,
 } from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
@@ -346,8 +348,40 @@ export default defineComponent({
             }
         };
 
+        // A session the server render already resolved gets its status there
+        // and hands it over, so the page is not re-rendered into the loading
+        // state on hydration. Fetched once: a second request would mint a
+        // second WebAuthn challenge and orphan the one the markup carries.
+        // Not for a federated return, whose ladder runs for the account the
+        // redemption establishes rather than the one the cookies held.
+        if (!props.federatedLogin) {
+            useHydratedValue<UserAuthenticatorChallengeResponse>({
+                key: `authup:authorize:mfa:${user.value?.id ?? ''}:${props.codeRequest?.acr_values ?? ''}`,
+                resolve: async () => {
+                    if (!loggedIn.value || !user.value) {
+                        return undefined;
+                    }
+
+                    try {
+                        return await httpClient.userAuthenticator.challenge(challengeOptions());
+                    } catch {
+                        // the browser fetches for itself
+                        return undefined;
+                    }
+                },
+                apply: (value) => {
+                    mfaStatus.value = value;
+                },
+            });
+        }
+
         // Fetch once the identity is logged in (and refetch after a switch).
+        // The server render fetches through the handoff above instead.
         watch(loggedIn, (value) => {
+            if (isServerRuntime()) {
+                return;
+            }
+
             if (value && !mfaStatus.value && !mfaResolving.value) {
                 Promise.resolve().then(() => refreshMfaStatus());
             }
@@ -357,8 +391,12 @@ export default defineComponent({
             }
         }, { immediate: true });
 
-        const error = ref<Error | null>(null);
-        const client = ref<Client | null>(null);
+        // Set up front rather than after a tick: without a prefetch to wait
+        // on (no hydration store, or a federated return) the server renders
+        // the first pass synchronously, so a deferred copy left an error page
+        // and every client-dependent branch empty in the markup.
+        const error = ref<Error | null>(props.error ?? null);
+        const client = ref<Client | null>(props.error ? null : (props.client ?? null));
 
         // The chooser needs the resolved user for "Continue as X" — but
         // loggedIn/realmId are truthy for ANY identity (token introspection),
@@ -385,11 +423,39 @@ export default defineComponent({
         // its settlement, or the code request changes, so the decision is
         // always computed for the current subject and never carried across an
         // account switch or a code-request change.
+        // Handed over from the server render like the MFA status, and the
+        // watch below skips its first run for it, which would otherwise reset
+        // the adopted decision and fetch it again.
+        let consentHydrated = false;
+        if (!props.federatedLogin && props.client && !props.client.builtIn) {
+            useHydratedValue<{ covered: boolean }>({
+                key: `authup:authorize:consent:${user.value?.id ?? ''}:${props.client.id}:${requestedScopeTokens.value.join(' ')}`,
+                resolve: async () => {
+                    if (!loggedIn.value || !user.value) {
+                        return undefined;
+                    }
+
+                    await refreshConsentStatus();
+
+                    return consentStatus.value ?? undefined;
+                },
+                apply: (value) => {
+                    consentStatus.value = value;
+                    consentHydrated = true;
+                },
+            });
+        }
+
         watch(
             [loggedIn, () => user.value?.id, userSettled, () => props.codeRequest],
             () => {
+                if (consentHydrated) {
+                    consentHydrated = false;
+                    return;
+                }
+
                 consentStatus.value = null;
-                if (loggedIn.value) {
+                if (loggedIn.value && !isServerRuntime()) {
                     Promise.resolve().then(() => refreshConsentStatus());
                 }
             },
@@ -428,12 +494,7 @@ export default defineComponent({
 
         const resolve = async () => {
             if (props.error) {
-                error.value = props.error;
                 return;
-            }
-
-            if (props.client) {
-                client.value = props.client;
             }
 
             if (props.clientId) {
@@ -482,7 +543,7 @@ export default defineComponent({
             // builtIn client auto-consents on mount — delivering the
             // application a code for the wrong account.
             if (federatedLoginPending.value) {
-                return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                return wrapChild(h(AuthorizeText, { message: loadingText.value, loading: true }));
             }
 
             // A failed completion must not let the ladder continue against a
@@ -523,7 +584,7 @@ export default defineComponent({
                         // the lastAuthOrigin watch, not LoginForm's `done`.
                         onFailed: (message: string) => emit('failed', message),
                     }),
-                    fallback: () => h(AuthorizeText, { message: loadingText.value }),
+                    fallback: () => h(AuthorizeText, { message: loadingText.value, loading: true }),
                 });
 
                 // A failed federated completion states its reason above the
@@ -549,7 +610,7 @@ export default defineComponent({
             // AuthorizeForm auto-consent (onMounted) can't fire before a
             // mismatch is detected.
             if (!realmId.value) {
-                return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                return wrapChild(h(AuthorizeText, { message: loadingText.value, loading: true }));
             }
 
             if (
@@ -589,7 +650,7 @@ export default defineComponent({
                     // (an empty identityName hides the continue action)
                     // instead of an indefinite spinner.
                     if (!userSettled.value) {
-                        return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                        return wrapChild(h(AuthorizeText, { message: loadingText.value, loading: true }));
                     }
 
                     return wrapChild(h(AAccountPrompt, {
@@ -614,7 +675,7 @@ export default defineComponent({
                 // auto-submits for built_in clients, so it must not render
                 // before we know whether a factor is required.
                 if (!mfaStatus.value) {
-                    return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                    return wrapChild(h(AuthorizeText, { message: loadingText.value, loading: true }));
                 }
 
                 if (mfaStatus.value.required) {
@@ -653,7 +714,7 @@ export default defineComponent({
             // logged-out branches returned earlier. Silent requests must wait
             // here too, or they'd race to a false consent_required redirect.
             if (!client.value.builtIn && consentStatus.value === null) {
-                return wrapChild(h(AuthorizeText, { message: consentStatusLoadingText.value }));
+                return wrapChild(h(AuthorizeText, { message: consentStatusLoadingText.value, loading: true }));
             }
 
             // A silent request against a non-built_in client can only proceed
@@ -697,7 +758,7 @@ export default defineComponent({
                         silentErrorCode.value = OAuth2ErrorCode.INTERACTION_REQUIRED;
                     },
                 }),
-                fallback: () => h(AuthorizeText, { message: loadingText.value }),
+                fallback: () => h(AuthorizeText, { message: loadingText.value, loading: true }),
             }));
         };
     },

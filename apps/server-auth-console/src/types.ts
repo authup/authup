@@ -97,5 +97,10 @@ export type RenderPage = (
         url: string,
         data: Record<string, any>,
         theme?: IThemeProvider,
+        /**
+         * Render the visitor's session: forward their access-token cookie
+         * (see `readRenderCookies`). Off, the page renders logged out.
+         */
+        session?: boolean,
     },
 ) => Promise<string>;

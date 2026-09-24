@@ -101,9 +101,17 @@ export type RenderContext = {
     /**
      * Pre-built HTTP client handed to the Vue app instead of one
      * constructed from payload.config.baseURL (host self-call rewrite,
-     * test injection).
+     * test injection). It carries the visitor's bearer once their session
+     * resolved, so a host must build one per render and never share it.
      */
-    httpClient?: IClient
+    httpClient?: IClient,
+    /**
+     * The request cookies the render may resolve the visitor's session
+     * from. A host forwards the kit's access token only, never the refresh
+     * token: a render can not return a rotated pair to the browser. Absent,
+     * the page renders logged out and the browser resolves the session.
+     */
+    cookies?: Record<string, string>
 };
 
 /**

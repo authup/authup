@@ -386,7 +386,10 @@ export default defineComponent({
             @failed="(message: string) => $emit('failed', message)"
         />
         <template #fallback>
-            <AuthorizeText :message="translations.loading" />
+            <AuthorizeText
+                :message="translations.loading"
+                loading
+            />
         </template>
     </Suspense>
     <AuthorizeText

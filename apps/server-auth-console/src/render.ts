@@ -20,7 +20,12 @@ import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import { CONTRACT_VERSION, VITE_BASE } from './constants';
-import { readUIColorModeHint, readUILocalesHint } from './payload';
+import {
+    createAPIClient,
+    readRenderCookies,
+    readUIColorModeHint,
+    readUILocalesHint,
+} from './payload';
 import { resolveDistPath } from './resolve';
 import type { RenderPage } from './types';
 
@@ -122,6 +127,12 @@ export function createRenderPage(distPath?: string) : RenderPage {
             url: ctx.url,
             manifest,
             payload,
+            // One client per render: it carries the visitor's bearer once the
+            // store has resolved their session, so it must never outlive the
+            // request. Built against the internal address like every other
+            // server-side call (#3550).
+            httpClient: createAPIClient(config),
+            cookies: ctx.session ? readRenderCookies(event) : {},
         });
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);

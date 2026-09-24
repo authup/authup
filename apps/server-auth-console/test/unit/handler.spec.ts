@@ -305,6 +305,12 @@ describe('createHandler server-side fetch', () => {
             },
         }));
 
+        app.use(defineCoreHandler({
+            method: 'get',
+            path: '/authorize/info',
+            fn: () => ({}),
+        }));
+
         api = serve(app, { port: 0, silent: true });
         await api.ready();
 
@@ -334,6 +340,34 @@ describe('createHandler server-side fetch', () => {
 
         expect(config.apiUrl).toEqual('https://idp.example.com');
         expect(config.apiInternalUrl).toEqual('http://authup.authup.svc:3000');
+    });
+
+    it('should hand the render the access token on /authorize only, never the refresh token', async () => {
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'client/.vite/ssr-manifest.json': '{}',
+            'server/server.js': 'export const CONTRACT_VERSION = 5; ' +
+                'export async function render(ctx) { ' +
+                'return [`render:${JSON.stringify(ctx.cookies)}:${typeof ctx.httpClient}`, ""]; }',
+        });
+
+        const local = serve(await createHandler({
+            ...await resolveConfig({ publicUrl: 'https://example.com', path: root }),
+            apiInternalUrl: apiURL,
+        }), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const headers = { cookie: 'access_token=at-1; refresh_token=rt-1' };
+
+            expect(await (await fetch(`${url}/authorize`, { headers })).text())
+                .toContain('render:{"access_token":"at-1"}:object');
+            expect(await (await fetch(`${url}/password-forgot`, { headers })).text())
+                .toContain('render:{}:object');
+        } finally {
+            await local.close(true);
+        }
     });
 
     it('should dispatch against apiInternalUrl and still hand the browser the public one', async () => {

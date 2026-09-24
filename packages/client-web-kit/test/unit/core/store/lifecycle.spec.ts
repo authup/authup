@@ -239,6 +239,32 @@ describe('core/store/lifecycle', () => {
         )).toBe(false);
     });
 
+    it('logout without revoke still revokes the token pair it drops', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.login({ name: 'admin', password: 'start123' });
+        const requestCount = httpClient.requests.length;
+
+        await store.logout({ revoke: false });
+
+        expect(httpClient.requests.slice(requestCount).map((request) => pathname(request)))
+            .toEqual(['/token/revoke', '/token/revoke']);
+    });
+
+    it('logout without revokeTokens drops this instance and leaves every token live', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.login({ name: 'admin', password: 'start123' });
+        const requestCount = httpClient.requests.length;
+
+        await store.logout({ revoke: false, revokeTokens: false });
+
+        expect(store.accessToken.value).toBeNull();
+        expect(store.refreshToken.value).toBeNull();
+        expect(store.user.value).toBeNull();
+        expect(httpClient.requests.slice(requestCount)).toHaveLength(0);
+    });
+
     it('swallows revoke failures on logout', async () => {
         const { store } = buildStore({
             'POST /token/revoke': () => {

@@ -6,18 +6,20 @@
  */
 
 import type { AuthorizeInfo, StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
-import { Client } from '@authup/core-http-kit';
+import { Client, CookieName } from '@authup/core-http-kit';
 import { isUUID } from '@authup/kit';
 import { OAuth2UIColorMode } from '@authup/specs';
+import { useRequestCookie } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from './redirect';
 import type { Config } from './types';
 
 /**
- * The service hydrates ANONYMOUSLY. It holds no credential of its own and
- * asks server-core only for what an unauthenticated visitor may see, which
- * is the whole of what these pages render.
+ * The service holds no credential of its own. Its page data is what an
+ * unauthenticated visitor may see; the only authenticated calls are the
+ * render's own, made with the visitor's forwarded access token (see
+ * `readRenderCookies`) through a client built per render.
  *
  * It dispatches against `apiInternalUrl`, never the browser-facing `apiUrl`:
  * this is a server-side call, so it must not depend on the public address
@@ -243,4 +245,20 @@ export function readDeviceFederatedLogin(event: IAppEvent) : { providerId: strin
  */
 export function readDeviceError(event: IAppEvent) : 'access_denied' | undefined {
     return useRequestQuery(event).error === 'access_denied' ? 'access_denied' : undefined;
+}
+
+/**
+ * The request's cookies a render may use to show the visitor's own session:
+ * the kit's access token and nothing else.
+ *
+ * The refresh token is deliberately NOT forwarded. A server render can not
+ * hand a rotated pair back to the browser, and refresh tokens rotate strictly,
+ * so a refresh here would leave the browser replaying a spent token into
+ * family revocation. Without it, a token that no longer verifies simply
+ * renders the logged-out page and the browser renews it on hydration.
+ */
+export function readRenderCookies(event: IAppEvent) : Record<string, string> {
+    const accessToken = useRequestCookie(event, CookieName.ACCESS_TOKEN);
+
+    return accessToken ? { [CookieName.ACCESS_TOKEN]: accessToken } : {};
 }
