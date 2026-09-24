@@ -31,6 +31,7 @@ import {
     ClientEntity,
     IdentityProviderRepository,
     PathEntity,
+    PolicyRepository,
     RealmEntity,
     RoleEntity,
     UserPermissionEntity,
@@ -53,6 +54,7 @@ import {
     IdentityProviderRoleMapper,
     IdentityResolver,
     IdentityRoleProvider,
+    OAuth2AccessPolicyEvaluator,
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
 import { OAuth2InjectionToken } from '../oauth2/constants.ts';
@@ -149,6 +151,15 @@ export class IdentityModule implements IModule {
                 attributeMapper,
                 roleMapper,
                 permissionMapper,
+                // Built inside the factory, the way the controller factory
+                // builds the one behind the client access policy: the
+                // evaluator has no token of its own, and resolving the
+                // permission provider here keeps module order irrelevant.
+                enrollmentPolicyEvaluator: new OAuth2AccessPolicyEvaluator({
+                    policyProvider: new PolicyRepository(dataSource),
+                    identityPermissionProvider: c.resolve(IdentityInjectionKey.PermissionProvider),
+                    logger: c.resolve(LoggerInjectionKey),
+                }),
                 logger: c.resolve(LoggerInjectionKey),
             }),
         });
@@ -182,6 +193,7 @@ export class IdentityModule implements IModule {
                 repository: c.resolve(IdentityInjectionKey.ProviderRepository),
                 accountManager: c.resolve(IdentityInjectionKey.ProviderAccountManager),
                 clientFactory: c.resolve(LDAPInjectionKey.ClientFactory),
+                logger: c.resolve(LoggerInjectionKey),
             }),
         });
     }

@@ -7,6 +7,7 @@
 
 export * from './attributes-validator';
 export * from './constants';
+export * from './enrollment';
 export * from './entity';
 export * from './utils';
 

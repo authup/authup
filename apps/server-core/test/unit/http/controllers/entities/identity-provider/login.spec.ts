@@ -15,9 +15,11 @@ import {
     expect,
     it,
 } from 'vitest';
+import { BuiltInPolicyType } from '@authup/access';
 import type { Client, IdentityProvider, Realm } from '@authup/core-kit';
-import { IdentityProviderProtocol, ScopeName } from '@authup/core-kit';
+import { EventName, IdentityProviderProtocol, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
+import { OAuth2ErrorCode } from '@authup/specs';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import {
     createFakeClient,
@@ -392,5 +394,107 @@ describe('identity-provider login flow', () => {
         const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: userInfoProvider.id } });
         expect(accounts).toHaveLength(1);
         expect(accounts[0].providerUserId).toEqual('external-user-1');
+    });
+
+    /**
+     * The enrollment gate (#PR060), end to end: the provider's attributes
+     * decide whether the unknown subject the fake IdP always answers with may
+     * become a user. Every new provider below is a new account key, so each
+     * login is a FIRST one.
+     */
+    async function completeAt(providerId: string, code: string) {
+        const state = await authorizeOut(providerId);
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${providerId}/authorize-in?state=${state}&code=${code}`,
+            {
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
+                redirect: 'manual',
+            },
+        );
+        expect(response.status).toEqual(302);
+
+        return new URL(response.headers.get('location') as string);
+    }
+
+    it('refuses a first login at a provider that is not enrolling', async () => {
+        const closed = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            enrollmentEnabled: false,
+        }))).data;
+
+        const location = await completeAt(closed.id, 'external-code-4');
+
+        // bounced to the hosted page with the marker it already maps, and no
+        // login handle to complete
+        expect(location.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+        expect(location.searchParams.get('provider')).toBeNull();
+
+        // the gate runs before the first write, so no account and no user
+        const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: closed.id } });
+        expect(accounts).toHaveLength(0);
+
+        // the one trace: a LOGIN_FAILED row naming the provider and no actor
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, realmId: realm.id } });
+        const row = events.find((event) => event.data?.providerId === closed.id);
+        expect(row).toBeDefined();
+        expect(row?.data).toEqual({ reason: 'enrollment', providerId: closed.id });
+        expect(row?.actorId).toBeNull();
+        expect(row?.actorName).toBeNull();
+    });
+
+    it('decides a first login by the provider enrollment policy', async () => {
+        // the policy is evaluated over the user row the login would create,
+        // whose email the id_token supplies; the wiring under test is the real
+        // evaluator the identity module hands the account manager. The
+        // permitting rule is the documented domain rule: an earlier login in
+        // this file already provisioned the same subject's name, so the
+        // name-collision retry rewrites the placeholder address, and the gate
+        // decides the renamed row again.
+        const { data: denying } = await suite.client.policy.create({
+            name: 'enrollment-nobody',
+            type: BuiltInPolicyType.ATTRIBUTES,
+            realmId: realm.id,
+            query: { email: { $eq: 'nobody@example.com' } },
+        });
+        const { data: permitting } = await suite.client.policy.create({
+            name: 'enrollment-external',
+            type: BuiltInPolicyType.ATTRIBUTES,
+            realmId: realm.id,
+            query: { email: { $endsWith: '@example.com' } },
+        });
+
+        const denied = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            enrollmentPolicyId: denying.id,
+        }))).data;
+
+        const deniedLocation = await completeAt(denied.id, 'external-code-5');
+        expect(deniedLocation.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+        expect(deniedLocation.searchParams.get('provider')).toBeNull();
+
+        const { data: deniedAccounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: denied.id } });
+        expect(deniedAccounts).toHaveLength(0);
+
+        const permitted = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            enrollmentPolicyId: permitting.id,
+        }))).data;
+
+        const permittedLocation = await completeAt(permitted.id, 'external-code-6');
+        expect(permittedLocation.searchParams.get('error')).toBeNull();
+        expect(permittedLocation.searchParams.get('provider')).toEqual(permitted.id);
+
+        const { data: permittedAccounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: permitted.id } });
+        expect(permittedAccounts).toHaveLength(1);
+        expect(permittedAccounts[0].providerUserId).toEqual('external-user-1');
     });
 });

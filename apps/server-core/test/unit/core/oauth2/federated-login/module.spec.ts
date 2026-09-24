@@ -32,6 +32,7 @@ import { describe, expect, it } from 'vitest';
 import { OAuth2FederatedLoginService } from '../../../../../src/core/oauth2/federated-login/module.ts';
 import { OAuth2FederatedLoginRefusal } from '../../../../../src/core/oauth2/federated-login/types.ts';
 import { IdentityProviderAssuranceError } from '../../../../../src/core/identity/provider/authentication/protocols/oauth2/assurance.ts';
+import { IdentityProviderEnrollmentDeniedError } from '../../../../../src/core/identity/provider/account/enrollment-error.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../src/core/oauth2/authorization/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth2/access-policy/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/types.ts';
@@ -403,6 +404,70 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             .not.toContain(EventName.AUTHORIZE_FAILED);
     });
 
+    it('should refuse a first login the provider enrollment gate denied', async () => {
+        // a realm-bound provider, so the row's realm is assertable; the client
+        // shares it, or the provider/client realm guard fires ahead of the gate
+        const realmId = randomUUID();
+        const provider = createProvider({ realmId, enrollmentEnabled: false });
+        const verifier = new FakeVerifier({
+            client: {
+                id: codeRequest.client_id,
+                name: 'app',
+                realmId,
+            } as Client,
+        });
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+            eventService,
+            metrics,
+        } = buildService({
+            verifier,
+            // what the account manager raises for an unknown subject once the
+            // provider stops enrolling, before its first write (#PR060)
+            authenticate: async () => {
+                throw new IdentityProviderEnrollmentDeniedError('the provider is not accepting new users.');
+            },
+        });
+
+        const result = await service.complete({
+            provider,
+            codeRequest,
+            code: 'provider-code',
+            request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
+        });
+
+        expect(result).toMatchObject({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.ENROLLMENT_DENIED,
+            // the hosted page's closed marker set already carries this one
+            error: OAuth2ErrorCode.ACCESS_DENIED,
+        });
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+
+        // the one trace of a refused enrollment: no user exists to attribute
+        // it to, so the row names none
+        expect(eventService.recordCalls).toHaveLength(1);
+        expect(eventService.recordCalls[0]).toMatchObject({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN_FAILED,
+            actorType: null,
+            actorId: null,
+            actorName: null,
+            realmId: provider.realmId,
+            requestIpAddress: '203.0.113.7',
+            requestUserAgent: 'agent',
+        });
+        expect(eventService.recordCalls[0].data).toEqual({
+            reason: 'enrollment',
+            providerId: provider.id,
+        });
+        // no metric, like the assurance refusal next to it: the row is the trace
+        expect(metrics.loginCalls).toEqual([]);
+    });
+
     it('should let any other authenticator failure keep throwing', async () => {
         const { service } = buildService({
             authenticate: async () => {
@@ -439,7 +504,10 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         } = buildService({
             user,
             verifier,
-            accessPolicyEvaluator: { evaluate: async () => false },
+            accessPolicyEvaluator: {
+                evaluate: async () => false,
+                evaluateData: async () => false,
+            },
         });
 
         const result = await service.complete({
@@ -525,6 +593,9 @@ describe('core/oauth2/federated-login — device variant', () => {
 
     const untouchedEvaluator : IOAuth2AccessPolicyEvaluator = {
         evaluate: async () => {
+            throw new Error('the access policy was evaluated without a client');
+        },
+        evaluateData: async () => {
             throw new Error('the access policy was evaluated without a client');
         },
     };
@@ -671,6 +742,41 @@ describe('core/oauth2/federated-login — device variant', () => {
         });
         expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should still refuse a first login the enrollment gate denied', async () => {
+        const provider = createProvider({ realmId: randomUUID(), enrollmentEnabled: false });
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+            eventService,
+        } = buildService({
+            verifier: untouchedVerifier,
+            authenticate: async () => {
+                throw new IdentityProviderEnrollmentDeniedError('the provider is not accepting new users.');
+            },
+        });
+
+        const result = await service.complete({
+            provider,
+            codeRequest: null,
+            code: 'provider-code',
+        });
+
+        expect(result).toEqual({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.ENROLLMENT_DENIED,
+            error: OAuth2ErrorCode.ACCESS_DENIED,
+        });
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+        expect(eventService.recordCalls.map((row) => row.name))
+            .toEqual([EventName.LOGIN_FAILED]);
+        expect(eventService.recordCalls[0].data).toEqual({
+            reason: 'enrollment',
+            providerId: provider.id,
+        });
     });
 });
 

@@ -7064,6 +7064,82 @@ plus a `<uuid>@example.com` placeholder (#3434).
   default projection and carries no email; comparing against it would clear
   the flag on every login for every user with a static email mapping.
 
+**Enrollment gating (#3675).** A first federated login for an unknown
+external subject creates a local user, and two extra attributes on EVERY
+identity provider (OAuth2, OIDC and LDAP alike, since all three flow through
+`IdentityProviderAccountManager.save`) gate that creation: `enrollmentEnabled`
+(`null` / absent means true, today's behaviour; `false` refuses the first login
+of an unknown subject) and `enrollmentPolicyId` (the uuid of a policy). They
+are stored like `requiredAmr` / `requiredAcr` (rows in
+`auth_identity_provider_attributes`, no column, no migration), validated by
+`IdentityProviderEnrollmentAttributesValidator` inside the protocol attribute
+validators, loaded by `extendOneWithEA` and read back through destr, so a
+stored `"false"` is boolean `false`. The gate runs in `saveUser`, on the CREATE
+branch only, over the FINAL row: after the mapped attributes validated and the
+default `sources/<provider>` folder resolved, before the user row is written,
+so a refused login leaves no user row. The provider's folder may exist after a
+refusal, which is accepted: it is per-provider decoration that names nobody,
+and gating before it made the first pass and the retry pass see different
+rows (a `pathId` rule naming the provider's own folder denied on the first and
+passed on the second). It runs
+AGAIN each time the name-collision retry renames the row, because a policy that
+approved `corp-alice` said nothing about the `mallory` fallback (the next
+upstream candidate, or a nanoid) the loop would otherwise store: a rename is a
+different row on exactly the field a name rule constrains. The UPDATE
+branch (an account already linked) is never gated, so a provider switched to
+`enrollmentEnabled: false` keeps its existing users signing in and admits new
+ones only through the account console's Connect flow (see *Identity-Provider
+Account Linking*). The policy is evaluated over the user row that WOULD be
+created (the validated mapped attributes: `name`, `email`, `realmId` and
+`pathId`, the provider's default folder unless a mapping filed the row
+elsewhere, plus `displayName` and `emailVerified` when a mapping supplied them,
+since neither identity builder produces a display name on its own) under
+`BuiltInPolicyType.ATTRIBUTES` alone and with NO identity, since no authup
+actor exists yet: an `identity` policy therefore denies by `DATA_MISSING`, the
+anonymous posture `POST /authorization/check` documents, and a missing key in
+the bag denies an equality on it (`@rapiq/adapter-memory` unifies an absent
+column with `null`), so `{ emailVerified: true }` refuses a login whose token
+never carried the claim. Every uncertainty fails CLOSED: a deny, a tree that
+cannot be loaded (a dangling id included), a tree whose realm is neither `null`
+nor the provider's, and no evaluator wired at all. The refusal is
+`IdentityProviderEnrollmentDeniedError`, a `ValidationError` marker-guarded like
+`IdentityProviderAssuranceError` and for the same reason (no dedicated
+`ErrorCode`, so a code fallback would match every `ValidationError`);
+`OAuth2FederatedLoginService.complete` catches it next to the assurance refusal,
+answers `{ kind: 'refused', refusal: ENROLLMENT_DENIED, error: access_denied }`
+so the hosted page renders the existing denial card, logs the reason through
+`describeError` and records one `LOGIN_FAILED` row (`EventScope.OAUTH2`, no
+actor since none was provisioned, `realmId` the provider's, the request ip and
+user agent, `data: { reason: 'enrollment', providerId }`). On the LDAP password
+grant the refusal never reaches the caller as itself: the composite
+`CredentialsAuthenticator` runs the LDAP collection and then `UserAuthenticator`
+and throws the LAST strategy's error, so a refused enrollment answers
+`entity_credentials_invalid`, indistinguishable from a wrong password. That is
+the right answer for an anonymous token endpoint (a distinct error would confirm
+the LDAP bind succeeded), so it is kept rather than fixed; the trace is the warn
+line `IdentityProviderLdapCollectionAuthenticator` writes through
+`describeError` when it sees the error, before the composite displaces it, next
+to the password grant's own `LOGIN_FAILED` row. Extra
+attributes rather than columns for two reasons that are not tidiness: the
+anonymous `GET /identity-providers` collection ships every column in
+`fields.default` while `findMany` never extends with attributes, so a column
+would publish each provider's enrollment posture to every visitor of the login
+page; and a deleted policy leaves a dangling `enrollmentPolicyId` that fails
+closed, where an FK `ON DELETE SET NULL` would silently reopen enrollment.
+Rejected: auto-link-by-email (an account-takeover surface, since whoever
+controls an email claim at the provider would inherit the local account; the
+Connect flow, where the signed-in owner links, is the honest version), a
+separate require-verified-email switch (one `attributes` policy over
+`emailVerified` covers it once the upstream `email_verified` claim is mapped
+onto that column), and any matching-mode enum. One caveat predates this work
+and is documented rather than fixed: an attribute mapping reads
+`identity.data`, which is the ACCESS-token payload alone (`resolveClaims`
+merges the `id_token` and userinfo into the name and email CANDIDATES only), so
+an `email_verified` mapping is blind to a claim present only in the `id_token`
+or userinfo, which is where Google-style opaque access tokens put it; the fix
+is feeding the mapper the merged claims, which changes every existing mapper's
+input and is its own change (#3674).
+
 ## Identity-Provider Account Linking
 
 `auth_identity_provider_accounts` (external identity → `userId`) is

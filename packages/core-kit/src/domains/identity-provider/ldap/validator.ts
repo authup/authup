@@ -9,6 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { IdentityProviderProtocol } from '../constants';
+import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment';
 import type { LdapIdentityProvider } from './types';
 
 export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdentityProvider> {
@@ -67,5 +68,7 @@ export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdent
         this.mount('groupMemberAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
         this.mount('groupMemberUserAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
+
+        this.mount(new IdentityProviderEnrollmentAttributesValidator());
     }
 }

@@ -9,9 +9,10 @@ import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit'
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
+import { defineQuery } from '@rapiq/core';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
-import { VCFormInput } from '@vuecs/forms';
+import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AIdentityProviderBasicFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderBasicFields.vue';
@@ -80,6 +81,16 @@ function mountComponent(component: any, entity: IdentityProvider) {
         props: { entity },
         global: {
             components: { VCIcon: { render: () => null } },
+            stubs: {
+                // the enrollment policy picker is a network-backed entity
+                // collection; the stub declares its props so hydration is
+                // assertable
+                APolicyPicker: {
+                    name: 'APolicyPicker',
+                    props: ['value', 'query'],
+                    template: '<div class="policy-picker-stub" />',
+                },
+            },
             plugins: [
                 pinia,
                 [vuecs, {}],
@@ -185,6 +196,51 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         expect(findUpdateRequest(httpClient)!.body).toMatchObject({ requiredAmr: 'mfa hwk' });
+    });
+
+    it('should submit an enabled enrollment with no policy while the entity carries neither key', async () => {
+        const entity = createEntity();
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const body = findUpdateRequest(httpClient)!.body as Record<string, any>;
+        expect(body.enrollmentEnabled).toBe(true);
+        expect(body.enrollmentPolicyId ?? null).toBeNull();
+    });
+
+    it('should hydrate the enrollment gate and submit a re-enabled enrollment with its policy', async () => {
+        const entity = createEntity();
+        (entity as OAuth2IdentityProvider).enrollmentEnabled = false;
+        (entity as OAuth2IdentityProvider).enrollmentPolicyId = '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0';
+
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        // the basic `enabled` switch is on, so the one reading false is the
+        // enrollment gate
+        const toggles = wrapper.findAllComponents(VCFormSwitch);
+        const enrollmentToggle = toggles.find((toggle) => toggle.props('modelValue') === false);
+        expect(enrollmentToggle).toBeDefined();
+
+        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        expect(picker.props('value')).toEqual('1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0');
+        expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
+
+        enrollmentToggle!.vm.$emit('update:modelValue', true);
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        expect(findUpdateRequest(httpClient)!.body).toMatchObject({
+            enrollmentEnabled: true,
+            enrollmentPolicyId: '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0',
+        });
     });
 
     it('should hydrate the scope list and submit a changed scope on update', async () => {

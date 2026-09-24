@@ -10,13 +10,15 @@ import {
     PolicyData,
     definePolicyEvaluationContext,
 } from '@authup/access';
-import type { BasePolicy, IdentityPolicyData } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
 import { PolicyEngine } from '../../security/policy/engine.ts';
 import type {
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AccessPolicyProvider,
+    OAuth2AccessPolicyEvaluateDataOptions,
     OAuth2AccessPolicyEvaluatorContext,
+    OAuth2AccessPolicyTree,
 } from './types.ts';
 
 export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator {
@@ -33,7 +35,15 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
     }
 
     async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
-        let tree : BasePolicy | null;
+        return this.evaluateData(policyId, new PolicyData({ [BuiltInPolicyType.IDENTITY]: subject }));
+    }
+
+    async evaluateData(
+        policyId: string,
+        data: PolicyData,
+        options: OAuth2AccessPolicyEvaluateDataOptions = {},
+    ): Promise<boolean> {
+        let tree : OAuth2AccessPolicyTree | null;
 
         try {
             tree = await this.policyProvider.findDescendantsTreeById(policyId);
@@ -46,7 +56,15 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
             return false;
         }
 
-        const ctx = definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.IDENTITY]: subject }) });
+        if (typeof options.realmId !== 'undefined') {
+            const treeRealmId = tree.realmId ?? null;
+            if (treeRealmId !== null && treeRealmId !== options.realmId) {
+                this.logger?.warn(`The access policy ${policyId} belongs to another realm than the one it is evaluated for.`);
+                return false;
+            }
+        }
+
+        const ctx = definePolicyEvaluationContext({ data });
 
         const result = await this.engine.evaluate(tree, ctx);
 

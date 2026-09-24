@@ -5,25 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
     vi,
 } from 'vitest';
-import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
+import { BuiltInPolicyType } from '@authup/access';
+import type { PolicyData } from '@authup/access';
+import type { OAuth2IdentityProvider, Realm, User } from '@authup/core-kit';
 import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
 import { EntityConflictError, ErrorCode } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
-import type { IdentityProviderIdentity } from '../../../../../src/core';
+import type { IdentityProviderAccountManagerContext, IdentityProviderIdentity } from '../../../../../src/core';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
     IdentityProviderPermissionMapper,
     IdentityProviderRoleMapper,
 } from '../../../../../src/core';
+import { IdentityProviderEnrollmentDeniedError } from '../../../../../src/core/identity/provider/account/enrollment-error.ts';
+import type {
+    IOAuth2AccessPolicyEvaluator,
+    OAuth2AccessPolicyEvaluateDataOptions,
+} from '../../../../../src/core/oauth2/access-policy/types.ts';
 import claims from '../../../../data/jwt.json';
 import {
     IdentityProviderAccountEntity,
@@ -57,6 +65,8 @@ describe('core/identity/provider/account', () => {
     let provider : OAuth2IdentityProvider;
 
     let accountManager : IdentityProviderAccountManager;
+
+    let accountManagerContext : IdentityProviderAccountManagerContext;
 
     let accountRepository : IdentityProviderAccountRepositoryAdapter;
 
@@ -108,7 +118,7 @@ describe('core/identity/provider/account', () => {
             userRoleRepository: suite.dataSource.getRepository(UserRoleEntity),
         });
 
-        accountManager = new IdentityProviderAccountManager({
+        accountManagerContext = {
             attributeMapper,
             roleMapper,
             permissionMapper,
@@ -118,7 +128,8 @@ describe('core/identity/provider/account', () => {
                 repository: suite.dataSource.getRepository(PathEntity),
                 realmRepository: suite.dataSource.getRepository(RealmEntity),
             }),
-        });
+        };
+        accountManager = new IdentityProviderAccountManager(accountManagerContext);
     });
 
     afterAll(async () => {
@@ -585,5 +596,195 @@ describe('core/identity/provider/account', () => {
         await mappings.remove(mapping);
         await paths.remove(folder);
         await realms.remove(foreignRealm);
+    });
+
+    /**
+     * The provider's enrollment gate (#PR060): two extra attributes decide
+     * whether a FIRST login for an unknown subject may create a user. The
+     * manager reads them off `identity.provider`, so each case hands it a
+     * copy of the provider carrying the attribute under test.
+     */
+    describe('enrollment gating', () => {
+        type EvaluateDataCall = {
+            policyId: string,
+            data: PolicyData,
+            options?: OAuth2AccessPolicyEvaluateDataOptions,
+        };
+
+        type Verdict = boolean | ((attributes: User) => boolean);
+
+        class FakeEnrollmentPolicyEvaluator implements Pick<IOAuth2AccessPolicyEvaluator, 'evaluateData'> {
+            public calls: EvaluateDataCall[] = [];
+
+            protected verdict: Verdict;
+
+            constructor(verdict: Verdict) {
+                this.verdict = verdict;
+            }
+
+            async evaluateData(
+                policyId: string,
+                data: PolicyData,
+                options?: OAuth2AccessPolicyEvaluateDataOptions,
+            ): Promise<boolean> {
+                this.calls.push({
+                    policyId,
+                    data,
+                    options,
+                });
+
+                if (typeof this.verdict === 'function') {
+                    return this.verdict(data.get<User>(BuiltInPolicyType.ATTRIBUTES));
+                }
+
+                return this.verdict;
+            }
+        }
+
+        const buildIdentity = (id: string, gated: OAuth2IdentityProvider) : IdentityProviderIdentity => ({
+            data: claims,
+            id,
+            attributeCandidates: { name: [id] },
+            provider: gated,
+        });
+
+        const withAttributes = (attributes: Partial<OAuth2IdentityProvider>) : OAuth2IdentityProvider => ({
+            ...provider,
+            ...attributes,
+        });
+
+        it('should create an active user when the provider declares no gate', async () => {
+            const account = await accountManager.save(buildIdentity('enrollment-open', provider));
+
+            const users = suite.dataSource.getRepository(UserEntity);
+            const row = await users.findOneBy({ id: account.user.id });
+            expect(row?.name).toEqual('enrollment-open');
+            expect(row?.active).toEqual(true);
+        });
+
+        it('should refuse a first login while enrollment is disabled', async () => {
+            const gated = withAttributes({ enrollmentEnabled: false });
+
+            await expect(accountManager.save(buildIdentity('enrollment-closed', gated)))
+                .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
+
+            // the gate runs before the first write, so nothing is left behind
+            const users = suite.dataSource.getRepository(UserEntity);
+            expect(await users.findOneBy({ name: 'enrollment-closed' })).toBeNull();
+            expect(await accountRepository.findOneByProviderIdentity(buildIdentity('enrollment-closed', gated)))
+                .toBeNull();
+        });
+
+        it('should keep a linked account logging in while enrollment is disabled', async () => {
+            const linked = await accountManager.save(buildIdentity('enrollment-linked', provider));
+
+            const gated = withAttributes({ enrollmentEnabled: false });
+            const again = await accountManager.save(buildIdentity('enrollment-linked', gated));
+
+            expect(again.id).toEqual(linked.id);
+            expect(again.user.id).toEqual(linked.user.id);
+        });
+
+        it('should refuse a first login the enrollment policy denies', async () => {
+            const evaluator = new FakeEnrollmentPolicyEvaluator(false);
+            const manager = new IdentityProviderAccountManager({
+                ...accountManagerContext,
+                enrollmentPolicyEvaluator: evaluator,
+            });
+
+            const policyId = randomUUID();
+            const gated = withAttributes({ enrollmentPolicyId: policyId });
+
+            await expect(manager.save(buildIdentity('enrollment-denied', gated)))
+                .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
+
+            expect(evaluator.calls).toHaveLength(1);
+            const [call] = evaluator.calls;
+            expect(call.policyId).toEqual(policyId);
+            expect(call.options).toEqual({ realmId: realm.id });
+            // the bag is the validated row the login would have created, and
+            // nothing else: no identity exists yet
+            expect(call.data.has(BuiltInPolicyType.ATTRIBUTES)).toBe(true);
+            expect(call.data.has(BuiltInPolicyType.IDENTITY)).toBe(false);
+            expect(call.data.get<User>(BuiltInPolicyType.ATTRIBUTES)).toMatchObject({
+                name: 'enrollment-denied',
+                realmId: realm.id,
+            });
+
+            // the row as it would be stored: the provider's default folder is
+            // resolved before the verdict, so a pathId rule can name it
+            const folder = await suite.dataSource.getRepository(PathEntity)
+                .findOneBy({ realmId: realm.id, path: 'sources/keycloak' });
+            expect(folder).not.toBeNull();
+            expect(call.data.get<User>(BuiltInPolicyType.ATTRIBUTES).pathId).toEqual(folder!.id);
+
+            const users = suite.dataSource.getRepository(UserEntity);
+            expect(await users.findOneBy({ name: 'enrollment-denied' })).toBeNull();
+        });
+
+        it('should create the user the enrollment policy permits', async () => {
+            const evaluator = new FakeEnrollmentPolicyEvaluator(true);
+            const manager = new IdentityProviderAccountManager({
+                ...accountManagerContext,
+                enrollmentPolicyEvaluator: evaluator,
+            });
+
+            const gated = withAttributes({ enrollmentPolicyId: randomUUID() });
+            const account = await manager.save(buildIdentity('enrollment-permitted', gated));
+
+            expect(account.user.name).toEqual('enrollment-permitted');
+            expect(evaluator.calls).toHaveLength(1);
+
+            const users = suite.dataSource.getRepository(UserEntity);
+            expect(await users.findOneBy({ name: 'enrollment-permitted' })).not.toBeNull();
+        });
+
+        it('should decide the enrollment policy again when a name collision renames the row', async () => {
+            // only corp- names may enroll; a local corp-alice already exists,
+            // unlinked, so the save collides and the retry loop falls back to
+            // the next upstream candidate, a name the policy never approved
+            // read at call time: the bag is the row object itself, which the
+            // retry loop renames in place after the first verdict
+            const seen : string[] = [];
+            const evaluator = new FakeEnrollmentPolicyEvaluator((attributes) => {
+                seen.push(attributes.name);
+                return attributes.name.startsWith('corp-');
+            });
+            const manager = new IdentityProviderAccountManager({
+                ...accountManagerContext,
+                enrollmentPolicyEvaluator: evaluator,
+            });
+
+            const users = suite.dataSource.getRepository(UserEntity);
+            await users.save(users.create({
+                name: 'corp-alice',
+                email: buildUserFakeEmail('corp-alice'),
+                realmId: realm.id,
+            }));
+
+            const gated = withAttributes({ enrollmentPolicyId: randomUUID() });
+            const colliding = buildIdentity('enrollment-collision', gated);
+            colliding.attributeCandidates = { name: ['corp-alice', 'mallory'] };
+
+            await expect(manager.save(colliding))
+                .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
+
+            // the gate saw the approved name first and the renamed row second
+            expect(seen).toEqual(['corp-alice', 'mallory']);
+
+            expect(await users.findOneBy({ name: 'mallory' })).toBeNull();
+            expect(await accountRepository.findOneByProviderIdentity(colliding)).toBeNull();
+        });
+
+        it('should refuse a first login when no evaluator is wired to decide the policy', async () => {
+            // fail closed: the default manager of this suite carries none
+            const gated = withAttributes({ enrollmentPolicyId: randomUUID() });
+
+            await expect(accountManager.save(buildIdentity('enrollment-undecided', gated)))
+                .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
+
+            const users = suite.dataSource.getRepository(UserEntity);
+            expect(await users.findOneBy({ name: 'enrollment-undecided' })).toBeNull();
+        });
     });
 });
