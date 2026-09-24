@@ -46,10 +46,18 @@ export type RecordHeading = {
  * A description is free text and can run long, so `.sub-title` clamps it. The
  * heading block sits above the tab rail, and an unclamped paragraph would push
  * the rail down the page.
+ *
+ * `localizeName` fills an empty display name from the `@authup/i18n` catalogs
+ * (a built-in permission, policy or scope); it answers the raw name for any
+ * other record, which keeps the ladder above unchanged for those.
  */
-export function buildRecordHeading(entity: RecordNamed) : RecordHeading {
+export function buildRecordHeading(
+    entity: RecordNamed,
+    localizeName?: (name: string) => string,
+) : RecordHeading {
     const name = entity.name || '';
-    const displayName = (entity.displayName || '').trim();
+    const displayName = (entity.displayName || '').trim() ||
+        (localizeName && name ? localizeName(name) : '');
     const description = (entity.description || '').trim();
 
     const label = displayName.length > 0 ?

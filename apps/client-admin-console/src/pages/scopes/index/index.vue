@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineQuery } from '@rapiq/core';
 import type { Scope } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { EntityType, PermissionName } from '@authup/core-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
@@ -16,6 +16,7 @@ import {
     ATitle,
     injectHTTPClient,
     injectStore,
+    useEntityNameTranslator,
     usePermissionCheck,
     useTranslations,
 } from '@authup/client-web-kit';
@@ -55,6 +56,9 @@ export default defineComponent({
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.SCOPE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });
+
+        const translateEntityName = useEntityNameTranslator();
+        const displayName = (row: Scope) => translateEntityName(EntityType.SCOPE, row.name);
 
         const translations = useTranslations([
             {
@@ -113,6 +117,7 @@ export default defineComponent({
 
         return {
             columns,
+            displayName,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -153,6 +158,13 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
+                <template #cell-name="{ row }">
+                    {{ displayName(row) }}
+                    <small
+                        v-if="displayName(row) !== row.name"
+                        class="block text-fg-muted"
+                    >{{ row.name }}</small>
+                </template>
                 <template #cell-builtIn="{ row }">
                     <VCIcon
                         :name="row.builtIn ? 'fa6-solid:check' : 'fa6-solid:xmark'"

@@ -7,10 +7,12 @@ import {
 } from '@authup/i18n';
 import {
     injectHTTPClient,
+    useEntityNameTranslator,
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
@@ -72,6 +74,7 @@ export default defineComponent({
 
 
         const translate = useTranslator();
+        const translateEntityName = useEntityNameTranslator();
 
         const httpClient = injectHTTPClient();
 
@@ -120,7 +123,10 @@ export default defineComponent({
             },
         ] : []));
 
-        const heading = computed(() => buildRecordHeading(entity.value ?? {}));
+        const heading = computed(() => buildRecordHeading(
+            entity.value ?? {},
+            (name) => translateEntityName(EntityType.PERMISSION, name),
+        ));
 
         const breadcrumbItems = computed(() => buildEntityBreadcrumb({
             base: breadcrumbBase.value,
