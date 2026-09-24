@@ -46,6 +46,12 @@ export type ReadScope = {
     query: IQuery,
     post: boolean,
     ownership: ICondition | null,
+    /**
+     * The compiled reach of a `conditional` verdict, before the ownership
+     * term was ORed in: a statistic splits the two to answer the reach
+     * from stored rollups and only the actor's own rows outside it raw.
+     */
+    reach?: ICondition,
 };
 
 /**
@@ -103,6 +109,7 @@ export async function scopeReadQuery(
                 ),
                 post: false,
                 ownership,
+                reach: compiled.condition,
             };
         case 'deny':
             return {

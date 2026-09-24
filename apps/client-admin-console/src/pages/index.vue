@@ -7,7 +7,6 @@
 <script lang="ts">
 import { EventName } from '@authup/core-kit';
 import type { EntityStatsQuery } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationEntityKey,
@@ -156,8 +155,13 @@ export default defineComponent({
         const windowEntry = computed(() => ENTITY_STATS_WINDOWS[window.value]);
 
         // the event chart and ranking read security events, kept
-        // eventLogRetentionDays: a window past it is disabled, not undercounted
+        // eventLogRetentionDays raw and further as daily rollups: a window
+        // neither reaches is disabled, not undercounted
         const retentionDays = computed(() => response.value?.meta.retentionDays ?? 0);
+        const coverage = computed(() => ({
+            retentionDays: retentionDays.value,
+            aggregateFrom: response.value?.meta.aggregateFrom,
+        }));
         const retentionTitle = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.STATS_WINDOW_RETAINED,
@@ -203,7 +207,7 @@ export default defineComponent({
                 },
             });
 
-            return computed(() => (windowEntry.value.granularity === StatsGranularity.HOUR ?
+            return computed(() => (windowEntry.value.unit === 'hour' ?
                 inHours.value :
                 inDays.value));
         };
@@ -309,7 +313,7 @@ export default defineComponent({
 
         const rows = computed(() => response.value?.data ?? []);
         const enabled = computed(() => response.value?.meta.enabled !== false);
-        const hourly = computed(() => response.value?.meta.granularity === StatsGranularity.HOUR);
+        const hourly = computed(() => response.value?.meta.bucket === 'hour');
         const axis = computed(() => (response.value ? buildBucketAxis(response.value.meta) : []));
 
         const labelFormat = computed(() => new Intl.DateTimeFormat(locale.value, hourly.value ?
@@ -379,7 +383,7 @@ export default defineComponent({
             titles,
             translations,
             window,
-            retentionDays,
+            coverage,
             retentionTitle,
         };
     },
@@ -401,7 +405,7 @@ export default defineComponent({
             </div>
             <StatsWindowSwitch
                 v-model="window"
-                :max-days="retentionDays"
+                :coverage="coverage"
                 :disabled-title="retentionTitle"
             />
         </div>

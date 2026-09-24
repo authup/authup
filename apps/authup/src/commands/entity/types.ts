@@ -20,6 +20,6 @@ export type EntityQueryArgs = {
 
 export type EntityStatsArgs = {
     filter?: string,
-    granularity?: string,
-    days?: string,
+    group?: string,
+    aggregate?: string,
 };

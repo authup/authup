@@ -303,6 +303,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             env: EnvironmentVariable.EVENT_LOG_ENTITY_RETENTION_DAYS,
             readEnv: readEnvInt,
         },
+        eventLogAggregateRetentionDays: {
+            type: nonNegativeNumberType,
+            default: 0,
+            description: 'Retention for the daily event rollups (auth_event_aggregates) in days. Zero keeps them forever. Rollups hold counts only, no personal data.',
+            env: EnvironmentVariable.EVENT_LOG_AGGREGATE_RETENTION_DAYS,
+            readEnv: readEnvInt,
+        },
         loginAttemptThrottleEnabled: {
             type: booleanType,
             default: false,

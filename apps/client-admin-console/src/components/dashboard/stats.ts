@@ -6,10 +6,7 @@
  */
 
 import type { EventName, EventScope } from '@authup/core-kit';
-import type { EntityStatsBucket, EventStatsBucket, EventStatsMeta } from '@authup/core-http-kit';
-
-const HOUR_IN_MS = 3_600_000;
-const DAY_IN_MS = 86_400_000;
+import type { EntityStatsRow, EventStatsMeta, EventStatsRow } from '@authup/core-http-kit';
 
 export type EventStatsRank = {
     scope: `${EventScope}`,
@@ -21,13 +18,19 @@ export type EventStatsRank = {
  * Every bucket start from the window start through the bucket holding the
  * window end, so a chart renders an empty bucket as a zero rather than a gap.
  */
-export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'granularity'>): string[] {
-    const step = meta.granularity === 'hour' ? HOUR_IN_MS : DAY_IN_MS;
+export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'bucket'>): string[] {
     const end = new Date(meta.to).getTime();
     const axis: string[] = [];
 
-    for (let at = new Date(meta.from).getTime(); at <= end; at += step) {
-        axis.push(new Date(at).toISOString());
+    for (const at = new Date(meta.from); at.getTime() <= end;) {
+        axis.push(at.toISOString());
+        if (meta.bucket === 'hour') {
+            at.setUTCHours(at.getUTCHours() + 1);
+        } else if (meta.bucket === 'day') {
+            at.setUTCDate(at.getUTCDate() + 1);
+        } else {
+            at.setUTCMonth(at.getUTCMonth() + 1);
+        }
     }
 
     return axis;
@@ -38,10 +41,10 @@ export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'gran
  * row: the whole of what a group-less entity read answers, and one group's
  * share of a grouped one once the caller narrowed the rows.
  */
-export function alignStats(data: Pick<EntityStatsBucket, 'bucket' | 'count'>[], axis: string[]): number[] {
+export function alignStats(data: Pick<EntityStatsRow, 'createdAt' | 'count'>[], axis: string[]): number[] {
     const byBucket = new Map<string, number>();
     for (const row of data) {
-        byBucket.set(row.bucket, (byBucket.get(row.bucket) ?? 0) + row.count);
+        byBucket.set(row.createdAt, (byBucket.get(row.createdAt) ?? 0) + row.count);
     }
 
     return axis.map((bucket) => byBucket.get(bucket) ?? 0);
@@ -50,25 +53,25 @@ export function alignStats(data: Pick<EntityStatsBucket, 'bucket' | 'count'>[], 
 /**
  * The rows created inside the window, whatever they are grouped by.
  */
-export function sumStats(data: Pick<EntityStatsBucket, 'count'>[]): number {
+export function sumStats(data: Pick<EntityStatsRow, 'count'>[]): number {
     return data.reduce((sum, row) => sum + row.count, 0);
 }
 
 /**
  * One event type's counts aligned onto the axis, zero where it has no row.
  */
-export function alignEventStats(data: EventStatsBucket[], axis: string[], name: `${EventName}`): number[] {
+export function alignEventStats(data: EventStatsRow[], axis: string[], name: `${EventName}`): number[] {
     return alignStats(data.filter((row) => row.name === name), axis);
 }
 
-export function sumEventStats(data: EventStatsBucket[], name?: `${EventName}`): number {
+export function sumEventStats(data: EventStatsRow[], name?: `${EventName}`): number {
     return sumStats(name ? data.filter((row) => row.name === name) : data);
 }
 
 /**
  * The window's totals per (scope, name), largest first.
  */
-export function rankEventStats(data: EventStatsBucket[]): EventStatsRank[] {
+export function rankEventStats(data: EventStatsRow[]): EventStatsRank[] {
     // the ranks are collected in an array as they appear rather than read
     // back out of the map: Map#values().toArray() is an Iterator Helpers
     // method the console's browser floor (Safari 16.4) does not have

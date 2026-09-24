@@ -47,18 +47,29 @@ curl -X GET 'http://localhost:3000/permissions' \
 
 ## GET Statistics
 
-Most collections answer grouped counts of the rows created per time bucket next to
-their rows, under `GET /<collection>/@stats`: realms, clients, scopes, identity
-providers, keys, trust anchors, users, paths, roles, policies, permissions, sessions and
-events. The admin console's dashboard and the activity boxes above each list read them.
-The rows to count are selected with the same `filter[...]` vocabulary the collection
-read takes, and the caller is gated exactly like that read;
-`granularity` (`hour` or `day`, default `day`) sets the bucket width and `days`
-(default `30`) the window, counted back from now. The window times the buckets per day
-may not exceed 744 (31 days of hours).
+Most collections answer grouped counts next to their rows, under
+`GET /<collection>/@stats`: realms, clients, scopes, identity providers, keys, trust
+anchors, users, paths, roles, policies, permissions, sessions and events. The admin
+console's dashboard and the activity boxes above each list read them. A statistic is a
+grouped read in the [query language](api-query-language.md): the rows to count are
+selected with the same `filter` vocabulary the collection read takes, `group` groups
+them and `aggregate` measures each group, and the caller is gated exactly like the
+collection read. Three rules apply on top:
+
+- the first group is `bucket(createdAt,<unit>)`, the unit `hour`, `day` or `month`;
+- the filter carries a lower bound on `createdAt` (an upper bound is optional, the
+  window otherwise ends now);
+- the window spans at most 744 buckets (31 days of hours, two years of days).
+
+Buckets are UTC. After the bucket, events may group by `scope`, `name` and `refType`;
+the other collections count per bucket only. `count` is the one aggregate.
 
 ```shell
-curl -X GET 'http://localhost:3000/events/@stats?filter[name]=login&days=7' \
+curl -G 'http://localhost:3000/events/@stats' \
+  --data-urlencode 'filter[name]=login' \
+  --data-urlencode 'filter[createdAt]=>=2026-09-16T00:00:00.000Z' \
+  --data-urlencode 'group=bucket(createdAt,day),scope,name' \
+  --data-urlencode 'aggregate=count' \
   -H 'Authorization: Bearer ***'
 ```
 
@@ -67,27 +78,37 @@ statistic of `users` cannot collide with a user named `stats`.
 
 ### Response
 
-Only buckets holding rows are listed; a consumer fills the gaps between `from` and `to`
-with zeros. The window holds exactly `days` times the buckets per day bucket starts, the
-last of them the bucket holding `to`, and `total` counts every row the filter admits,
-regardless of the window, so `GET /sessions/@stats?filter[expiresAt]=>2026-09-22T10:15:00.000Z`
-answers the active sessions. Events group their buckets by `scope` and `name` and add
-`enabled`, which says whether the deployment records events at all, plus `retentionDays`
-and `entityRetentionDays`, how long security events and entity create/update/delete
-events are kept (`0` = forever), so a client never offers a window past them. A reader without
-`event_read` is answered the counts of its own rows.
+One row per group, the bucket start under `createdAt`. Only buckets holding rows are
+listed; a consumer fills the gaps between `from` and `to` with zeros. `from` is the
+lower bound snapped onto the start of its bucket. `total` counts every row the filter
+admits without its window, so
+`GET /sessions/@stats?filter[expiresAt]=>2026-09-22T10:15:00.000Z&filter[createdAt]=>=2026-09-22T00:00:00.000Z&group=bucket(createdAt,day)&aggregate=count`
+answers the active sessions under `total`. Events add `enabled`, which says whether the
+deployment records events at all, `retentionDays` and `entityRetentionDays`, how long
+the events themselves are kept (`0` = forever, `entityRetentionDays` for
+`scope=entity`), and `aggregateFrom` and `entityAggregateFrom`, the oldest day the
+daily rollups hold for the same two classes (`null` when they hold none, or when the
+rollups cannot answer the read at all, such as own rows or a filter on `actorId`). Hour buckets
+read the events and are refused past their retention; day and month counts come from
+the rollups, so a day window is answered in full when either the retention covers it or
+the rollups start on or before its first day. A reader without `event_read` is answered the counts of its own
+rows. A reader whose `event_read` reaches some realms only (`realm_admin`) is answered
+the rollups of those realms plus its own events elsewhere, which only the events
+themselves hold, so that part reaches back only as far as their retention. The rollups
+keep a deleted realm's own history (its `created` and `deleted` rows) as global, so such a
+reader's day counts include it while its hour counts do not.
 
 ```json
 {
     "data": [
         {
-            "bucket": "2026-09-21T00:00:00.000Z",
+            "createdAt": "2026-09-21T00:00:00.000Z",
             "scope": "oauth2",
             "name": "login",
             "count": 41
         },
         {
-            "bucket": "2026-09-22T00:00:00.000Z",
+            "createdAt": "2026-09-22T00:00:00.000Z",
             "scope": "oauth2",
             "name": "login",
             "count": 17
@@ -96,12 +117,13 @@ events are kept (`0` = forever), so a client never offers a window past them. A 
     "meta": {
         "from": "2026-09-16T00:00:00.000Z",
         "to": "2026-09-22T10:15:00.000Z",
-        "granularity": "day",
-        "days": 7,
+        "bucket": "day",
         "total": 1283,
         "enabled": true,
         "retentionDays": 90,
         "entityRetentionDays": 7,
+        "aggregateFrom": "2025-10-02",
+        "entityAggregateFrom": "2025-10-02",
         "schema": {}
     }
 }

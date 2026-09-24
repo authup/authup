@@ -30,8 +30,8 @@ import type { Role } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import type { IEntityStatsService, IRoleService  } from '../../../../../core/index.ts';
 import {
-    FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
+    STATS_QUERY_PARAMETERS,
     describeQuerySchema, 
     roleSchema, 
 } from '../../../../../core/index.ts';
@@ -69,7 +69,7 @@ export class RoleController {
         return serveEntityStats(
             event,
             this.statsService,
-            describeQuerySchema(roleSchema, FILTERS_QUERY_PARAMETERS),
+            describeQuerySchema(roleSchema, STATS_QUERY_PARAMETERS),
         );
     }
 

@@ -10,24 +10,12 @@ import { buildQueryString } from '../../helpers';
 import type { EntityStatsQuery } from './types';
 
 /**
- * The `@stats` url of an entity collection: the filters travel like a list
- * read's, `granularity` and `days` as plain parameters next to them.
+ * The `@stats` url of an entity collection. Filters, groups and aggregates
+ * travel through the same codec as a list read.
  */
 export function buildStatsURL<T extends ObjectLiteral>(
     path: string,
     query: EntityStatsQuery<T> = {},
 ): string {
-    const filters = buildQueryString<T>(query.filters ? { filters: query.filters } : undefined);
-
-    const params = new URLSearchParams();
-    if (query.granularity) {
-        params.set('granularity', query.granularity);
-    }
-    if (typeof query.days !== 'undefined') {
-        params.set('days', `${query.days}`);
-    }
-
-    const search = [filters.replace(/^\?/, ''), params.toString()].filter(Boolean).join('&');
-
-    return `${path}/@stats${search ? `?${search}` : ''}`;
+    return `${path}/@stats${buildQueryString<T>(query)}`;
 }

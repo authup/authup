@@ -7,6 +7,7 @@
 
 import type { Component } from '../../../components/index.ts';
 import {
+    createEventAggregatorComponent,
     createEventCleanerComponent,
     createOAuth2CleanerComponent,
 } from '../../../components/index.ts';
@@ -77,6 +78,19 @@ export class ComponentsModule implements IModule {
             registry.push({
                 name: 'event-cleaner',
                 component: createEventCleanerComponent(dataSource, logger),
+            });
+        }
+
+        // Rollups are counts of the rows the audit log writes, so they
+        // exist exactly while it does, whatever the raw retention.
+        if (config.eventLogEnabled) {
+            registry.push({
+                name: 'event-aggregator',
+                component: createEventAggregatorComponent(
+                    dataSource,
+                    { retentionDays: config.eventLogAggregateRetentionDays },
+                    logger,
+                ),
             });
         }
 

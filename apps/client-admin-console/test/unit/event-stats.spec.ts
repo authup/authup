@@ -16,11 +16,11 @@ import { useEventStats } from '../../src/composables/event-stats';
 const REALM_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 const OTHER_REALM_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 
-function answer(days: number, granularity: 'hour' | 'day', count: number): EventStatsResponse {
+function answer(_days: number, bucket: 'hour' | 'day', count: number): EventStatsResponse {
     return {
         data: [
             {
-                bucket: '2026-09-22T00:00:00.000Z',
+                createdAt: '2026-09-22T00:00:00.000Z',
                 scope: 'oauth2',
                 name: 'login',
                 count,
@@ -29,12 +29,13 @@ function answer(days: number, granularity: 'hour' | 'day', count: number): Event
         meta: {
             from: '2026-09-15T00:00:00.000Z',
             to: '2026-09-22T10:00:00.000Z',
-            granularity,
-            days,
+            bucket,
             total: count,
             enabled: true,
             retentionDays: 90,
             entityRetentionDays: 7,
+            aggregateFrom: null,
+            entityAggregateFrom: null,
             schema: {} as EventStatsResponse['meta']['schema'],
         },
     };
@@ -91,14 +92,16 @@ describe('src/composables/event-stats', () => {
 
         expect(requests).toHaveLength(1);
         expect(requests[0]).toContain(`in(realmId,'${REALM_ID}',null)`);
-        expect(requests[0]).toContain('granularity=day');
-        expect(requests[0]).toContain('days=7');
+        expect(requests[0]).toContain('group=bucket(createdAt,day),scope,name');
+        expect(requests[0]).toContain('aggregate=count');
+        expect(requests[0]).toContain('gte(createdAt,');
+        expect(requests[0]).not.toContain('days=');
         expect(stats.response.value?.data[0].count).toEqual(3);
         expect(stats.busy.value).toBe(false);
     });
 
     it('asks for hour buckets on the 24 hour window', async () => {
-        const { stats, requests } = mountStats((url) => (url.includes('granularity=hour') ?
+        const { stats, requests } = mountStats((url) => (url.includes('bucket(createdAt,hour)') ?
             answer(1, 'hour', 9) :
             answer(7, 'day', 3)));
         await flushPromises();
@@ -107,9 +110,8 @@ describe('src/composables/event-stats', () => {
         await flushPromises();
 
         expect(requests).toHaveLength(2);
-        expect(requests[1]).toContain('granularity=hour');
-        expect(requests[1]).toContain('days=1');
-        expect(stats.response.value?.meta.granularity).toEqual('hour');
+        expect(requests[1]).toContain('group=bucket(createdAt,hour),scope,name');
+        expect(stats.response.value?.meta.bucket).toEqual('hour');
     });
 
     it('reloads when the realm changes', async () => {
@@ -179,7 +181,7 @@ describe('src/composables/event-stats', () => {
         pending[0](answer(7, 'day', 3));
         await flushPromises();
 
-        expect(stats.response.value?.meta.granularity).toEqual('hour');
+        expect(stats.response.value?.meta.bucket).toEqual('hour');
         expect(stats.response.value?.data[0].count).toEqual(9);
         expect(stats.busy.value).toBe(false);
     });

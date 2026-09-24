@@ -74,13 +74,13 @@ const DATA_ARGS = {
 
 const STATS_ARGS = {
     filter: QUERY_ARGS.filter,
-    granularity: {
+    group: {
         type: 'string',
-        description: 'The bucket width: hour or day.',
+        description: 'The groups, first a bucket over the date column: bucket(createdAt,day),name.',
     },
-    days: {
+    aggregate: {
         type: 'string',
-        description: 'The window, in whole days back from now.',
+        description: 'The aggregates: count.',
     },
 } satisfies ArgsDef;
 

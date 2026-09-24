@@ -51,6 +51,8 @@ export const pathSchema = defineSchema<Path>({
     },
     relations: { allowed: ['realm', 'parent'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'path', 'createdAt', 'updatedAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

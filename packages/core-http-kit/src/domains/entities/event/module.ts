@@ -16,7 +16,7 @@ import type { EventStatsQuery, EventStatsResponse, IEventAPI } from './types';
 
 export class EventAPI extends BaseAPI implements IEventAPI {
     async getStats(query: EventStatsQuery = {}): Promise<EventStatsResponse> {
-        const response = await this.client.get(buildStatsURL('events', query));
+        const response = await this.client.get(buildStatsURL<Event>('events', query));
 
         return response.data;
     }

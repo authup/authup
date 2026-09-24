@@ -5,15 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { StatsGranularity } from '@authup/core-http-kit';
 import type { EntityStatsQuery } from '@authup/core-http-kit';
 import { createURLCodec } from '@rapiq/codec-url';
-import type { IQuery } from '@rapiq/core';
+import type { CallBuildInput, IQuery } from '@rapiq/core';
 import type { EntityQueryArgs, EntityStatsArgs } from './types.ts';
 
 const codec = createURLCodec();
-
-const GRANULARITIES = Object.values(StatsGranularity) as string[];
 
 function readInteger(name: string, value: string | undefined) : string | undefined {
     if (value === undefined) {
@@ -27,8 +24,29 @@ function readInteger(name: string, value: string | undefined) : string | undefin
     return value;
 }
 
-function isStatsGranularity(value: string) : value is `${StatsGranularity}` {
-    return GRANULARITIES.includes(value);
+/**
+ * A `group` / `aggregate` parameter as the terms a caller builds: a
+ * schemaless decode keeps neither, so the wire syntax is split here
+ * (`bucket(createdAt,day),scope` into a call and a bare column) and the
+ * server decodes it against the entity's schema.
+ */
+function readTerms(name: string, value: string) : (string | CallBuildInput)[] {
+    const terms = value.match(/[^,()]+(\([^()]*\))?/g) ?? [];
+    if (terms.join(',') !== value) {
+        throw new Error(`Invalid --${name} "${value}": expected <column> or <function>(<args>), comma-separated.`);
+    }
+
+    return terms.map((term) => {
+        const open = term.indexOf('(');
+        if (open === -1) {
+            return term;
+        }
+
+        return {
+            name: term.slice(0, open),
+            params: term.slice(open + 1, -1).split(',').filter((part) => part.length > 0),
+        };
+    });
 }
 
 /**
@@ -79,8 +97,8 @@ export function readEntityQuery(args: EntityQueryArgs) : IQuery | undefined {
 }
 
 /**
- * The filter is decoded like a list read's; the window and the bucket
- * width travel as plain parameters next to it.
+ * The filter is decoded like a list read's; the groups and the aggregates
+ * are the same URL parameters the server documents.
  */
 export function readEntityStatsQuery<
     T extends Record<string, any> = Record<string, any>,
@@ -92,17 +110,12 @@ export function readEntityStatsQuery<
         query.filters = filters;
     }
 
-    if (args.granularity !== undefined) {
-        if (!isStatsGranularity(args.granularity)) {
-            throw new Error(`--granularity must be one of ${GRANULARITIES.join(', ')}.`);
-        }
-
-        query.granularity = args.granularity;
+    if (args.group) {
+        query.groups = readTerms('group', args.group) as EntityStatsQuery<T>['groups'];
     }
 
-    const days = readInteger('days', args.days);
-    if (days !== undefined) {
-        query.days = Number(days);
+    if (args.aggregate) {
+        query.aggregates = readTerms('aggregate', args.aggregate);
     }
 
     return query;

@@ -21,9 +21,9 @@ import type {
     RolePermission,
     Scope,
     UserAttribute,
-    UserAuthenticator as UserAuthenticatorModel, 
-    UserPermission, 
-    UserRole, 
+    UserAuthenticator as UserAuthenticatorModel,
+    UserPermission,
+    UserRole,
 } from '@authup/core-kit';
 import type { EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { EntityType } from '@authup/core-kit';
@@ -32,6 +32,7 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
+    EventAggregateEntity,
     EventEntity,
     IdentityProviderEntity,
     IdentityProviderRoleMappingEntity,
@@ -62,6 +63,7 @@ import {
     ClientScopeRepositoryAdapter,
     DatabaseInjectionKey,
     EntityStatsRepositoryAdapter,
+    EventAggregateRepositoryAdapter,
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
     PathRepositoryAdapter,
@@ -140,6 +142,7 @@ import {
     ClientService,
     ConsentService,
     CredentialsAuthenticator,
+    EVENT_AGGREGATE_COLUMNS,
     type EntityStatsDefinition,
     EntityStatsService,
     IdentityProviderAccountService,
@@ -186,9 +189,12 @@ import {
     permissionSchema,
     policySchema,
     realmSchema,
+    resolveEventRawHorizonDays,
     roleSchema,
     scopeSchema,
     sessionSchema,
+    translateEventAggregateQuery,
+    translateEventAggregateRow,
     trustAnchorSchema,
     userSchema,
 } from '../../../../core/index.ts';
@@ -1158,17 +1164,37 @@ export class HTTPControllerModule {
     createEventController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const service = container.resolve(DatabaseInjectionKey.EventService);
+        const aggregates = new EventAggregateRepositoryAdapter(container.resolve(DatabaseInjectionKey.DataSource));
         return new EventController({
             service,
             statsService: this.createStatsService<EventStatsGroups, EventStatsMetaExtra>(container, EventEntity, {
                 type: EntityType.EVENT,
                 schema: eventSchema,
                 scope: (query, actor) => service.scopeRead(query, actor),
-                groupBy: ['scope', 'name'],
-                meta: () => ({
+                rawHorizonDays: (query) => resolveEventRawHorizonDays(query, {
+                    retentionDays: config.eventLogRetentionDays,
+                    entityRetentionDays: config.eventLogEntityRetentionDays,
+                }),
+                rollup: {
+                    columns: EVENT_AGGREGATE_COLUMNS,
+                    repository: new EntityStatsRepositoryAdapter(
+                        container.resolve(DatabaseInjectionKey.DataSource),
+                        EventAggregateEntity,
+                        'eventAggregate',
+                    ),
+                    translate: translateEventAggregateQuery,
+                    translateRow: translateEventAggregateRow,
+                    horizonDays: () => config.eventLogAggregateRetentionDays,
+                },
+                // coverage only where the rollups can answer the read, so a
+                // client never offers a window the server then refuses
+                meta: async ({ routable }) => ({
                     enabled: config.eventLogEnabled !== false,
                     retentionDays: config.eventLogRetentionDays,
                     entityRetentionDays: config.eventLogEntityRetentionDays,
+                    ...(routable ?
+                        await aggregates.findCoverage() :
+                        { aggregateFrom: null, entityAggregateFrom: null }),
                 }),
             }),
         });

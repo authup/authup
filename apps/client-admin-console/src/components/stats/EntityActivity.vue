@@ -14,7 +14,6 @@ import {
     useTranslations,
 } from '@authup/client-web-kit';
 import type { EntityStatsQuery, EventStatsResponse } from '@authup/core-http-kit';
-import { StatsGranularity } from '@authup/core-http-kit';
 import { EntityDefaultEventName, EventScope, PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
@@ -95,6 +94,7 @@ export default defineComponent({
                 ...realmFilter(),
             }) as EntityStatsQuery['filters'],
             window: windowEntry,
+            groups: ['name'],
             paused: () => !canReadEvents.value,
         });
 
@@ -135,11 +135,15 @@ export default defineComponent({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.ACTIVITY_ALL_TIME,
         });
-        const windowHint = computed(() => (windowEntry.value.granularity === StatsGranularity.HOUR ?
+        const windowHint = computed(() => (windowEntry.value.unit === 'hour' ?
             inHours.value :
             inDays.value));
 
         const retentionDays = computed(() => eventStats.response.value?.meta.entityRetentionDays ?? 0);
+        const coverage = computed(() => ({
+            retentionDays: retentionDays.value,
+            aggregateFrom: eventStats.response.value?.meta.entityAggregateFrom,
+        }));
         const retentionTitle = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.STATS_WINDOW_RETAINED,
@@ -191,7 +195,7 @@ export default defineComponent({
             boxes,
             busy,
             hasOperations,
-            retentionDays,
+            coverage,
             retentionTitle,
             sourceLabel,
             window,
@@ -212,7 +216,7 @@ export default defineComponent({
             <span class="text-xs text-fg-muted">{{ sourceLabel }}</span>
             <StatsWindowSwitch
                 v-model="window"
-                :max-days="retentionDays"
+                :coverage="coverage"
                 :disabled-title="retentionTitle"
             />
         </div>

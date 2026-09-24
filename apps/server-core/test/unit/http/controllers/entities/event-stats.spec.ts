@@ -5,10 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EventName } from '@authup/core-kit';
-import type { EventStatsBucket } from '@authup/core-http-kit';
-import { Client as HTTPClient, StatsGranularity } from '@authup/core-http-kit';
+import { randomUUID } from 'node:crypto';
+import type { Event } from '@authup/core-kit';
+import {
+    EventName,
+    EventScope,
+    PermissionName,
+} from '@authup/core-kit';
+import type { EventStatsGroups, EventStatsQuery, EventStatsRow } from '@authup/core-http-kit';
+import { Client as HTTPClient, buildQueryString } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import { RealmScope } from '@authup/access';
+import { MemoryCache } from '@authup/server-kit';
+import { FakePermissionEvaluator } from '@authup/server-test-kit';
+import type { ICondition } from '@rapiq/core';
+import {
+    and,
+    eq,
+    gte,
+    inArray,
+    lt,
+} from '@rapiq/core';
+import type { DataSource } from 'typeorm';
 import {
     afterAll,
     beforeAll,
@@ -16,6 +34,13 @@ import {
     expect,
     it,
 } from 'vitest';
+import { EventAggregateEntity, EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/modules/database/index.ts';
+import {
+    EntityStatsRepositoryAdapter,
+    EventAggregateRepositoryAdapter,
+} from '../../../../../src/app/modules/database/repositories/index.ts';
+import { EntityStatsService, eventSchema } from '../../../../../src/core/index.ts';
 import { createTestApplication } from '../../../../app';
 import {
     createFakeRealm,
@@ -27,10 +52,49 @@ import {
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
 const HOUR_BUCKET = /^\d{4}-\d{2}-\d{2}T\d{2}:00:00\.000Z$/;
 
-function countOf(data: EventStatsBucket[], name: `${EventName}`): number {
+const HOUR_IN_MS = 3_600_000;
+const DAY_IN_MS = 86_400_000;
+
+function countOf(data: EventStatsRow[], name: `${EventName}`): number {
     return data
         .filter((row) => row.name === name)
         .reduce((sum, row) => sum + row.count, 0);
+}
+
+function toDay(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Roll the days a read covers up, as the event-aggregator would.
+ */
+async function recompute(dataSource: DataSource, ...dates: Date[]) {
+    const repository = new EventAggregateRepositoryAdapter(dataSource);
+    for (const date of dates) {
+        await repository.recompute(toDay(date));
+    }
+}
+
+function since(ms: number): string {
+    return new Date(Date.now() - ms).toISOString();
+}
+
+/**
+ * A statistic per (bucket, scope, name) since `from`, the other conditions
+ * ANDed onto the lower bound.
+ */
+function buildQuery(
+    unit: 'hour' | 'day',
+    from: string,
+    ...conditions: ICondition[]
+): EventStatsQuery {
+    const lower = gte('createdAt', from);
+
+    return {
+        filters: conditions.length > 0 ? and(lower, ...conditions) : lower,
+        groups: [{ name: 'bucket', params: ['createdAt', unit] }, 'scope', 'name'],
+        aggregates: ['count'],
+    };
 }
 
 describe('src/http/controllers/entities/event (stats)', () => {
@@ -41,9 +105,12 @@ describe('src/http/controllers/entities/event (stats)', () => {
     let masterRealmId: string;
     let realmBId: string;
     let selfClient: HTTPClient;
+    let dataSource: DataSource;
 
     beforeAll(async () => {
         await suite.setup();
+
+        dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
 
         const { data: master } = await suite.client.realm.getOne('master');
         masterRealmId = master.id;
@@ -76,17 +143,27 @@ describe('src/http/controllers/entities/event (stats)', () => {
             password: userB.password!,
             realm_id: realmB.id,
         });
+
+        // day reads over stored columns are answered from the rollups
+        await recompute(dataSource, new Date(), new Date(Date.now() - DAY_IN_MS));
     });
 
     afterAll(async () => {
         await suite.teardown();
     });
 
-    it('answers day buckets per (scope, name) over the default window', async () => {
-        const { data, meta } = await suite.client.event.getStats();
+    it('spells the grouped read on the wire as the documented contract', () => {
+        const url = decodeURIComponent(buildQueryString<Event>(buildQuery('day', '2026-09-01T00:00:00.000Z')));
 
-        expect(meta.granularity).toEqual(StatsGranularity.DAY);
-        expect(meta.days).toEqual(30);
+        expect(url).toContain('filter=gte(createdAt,\'2026-09-01T00:00:00.000Z\')');
+        expect(url).toContain('group=bucket(createdAt,day),scope,name');
+        expect(url).toContain('aggregate=count');
+    });
+
+    it('answers day buckets per (scope, name)', async () => {
+        const { data, meta } = await suite.client.event.getStats(buildQuery('day', since(30 * DAY_IN_MS)));
+
+        expect(meta.bucket).toEqual('day');
         expect(meta.enabled).toBe(true);
         expect(meta.from).toMatch(DAY_BUCKET);
         expect(new Date(meta.to).getTime()).toBeLessThanOrEqual(Date.now());
@@ -94,39 +171,68 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
         expect(data.length).toBeGreaterThan(0);
         for (const row of data) {
-            expect(row.bucket).toMatch(DAY_BUCKET);
+            expect(row.createdAt).toMatch(DAY_BUCKET);
             expect(row.count).toBeTypeOf('number');
             expect(row.count).toBeGreaterThan(0);
-            expect(new Date(row.bucket).getTime()).toBeGreaterThanOrEqual(new Date(meta.from).getTime());
+            expect(new Date(row.createdAt).getTime()).toBeGreaterThanOrEqual(new Date(meta.from).getTime());
         }
 
         expect(countOf(data, EventName.LOGIN)).toBeGreaterThanOrEqual(3);
     });
 
     it('answers hour buckets when asked to', async () => {
-        const { data, meta } = await suite.client.event.getStats({ granularity: 'hour', days: 1 });
+        const { data, meta } = await suite.client.event.getStats(buildQuery('hour', since(DAY_IN_MS)));
 
-        expect(meta.granularity).toEqual(StatsGranularity.HOUR);
+        expect(meta.bucket).toEqual('hour');
         expect(meta.from).toMatch(HOUR_BUCKET);
         for (const row of data) {
-            expect(row.bucket).toMatch(HOUR_BUCKET);
+            expect(row.createdAt).toMatch(HOUR_BUCKET);
         }
 
         expect(countOf(data, EventName.LOGIN)).toBeGreaterThanOrEqual(3);
     });
 
+    it('buckets a UTC day edge into the two days it separates', async () => {
+        const refId = randomUUID();
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const before = new Date(today.getTime() - 1000);
+
+        const repository = dataSource.getRepository<Event>(EventEntity);
+        for (const createdAt of [before, today]) {
+            const entity = await repository.save(repository.create({
+                id: randomUUID(),
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGOUT,
+                refType: 'edge',
+                refId,
+            }));
+            await repository.update({ id: entity.id }, { createdAt: createdAt.toISOString() });
+        }
+
+        const { data } = await suite.client.event.getStats(
+            buildQuery('day', new Date(today.getTime() - (2 * DAY_IN_MS)).toISOString(), eq('refId', refId)),
+        );
+
+        expect(data.map((row) => [row.createdAt, row.count]).sort()).toEqual([
+            [new Date(today.getTime() - DAY_IN_MS).toISOString(), 1],
+            [today.toISOString(), 1],
+        ]);
+    });
+
     it('decodes the filter through the event schema: the realm switcher scope', async () => {
-        const { data, meta } = await suite.client.event.getStats({ filters: { realmId: [realmBId, null] } });
+        const { data, meta } = await suite.client.event.getStats(
+            buildQuery('day', since(30 * DAY_IN_MS), inArray('realmId', [realmBId, null])),
+        );
 
         expect(countOf(data, EventName.LOGIN)).toEqual(1);
         expect(meta.schema.filters?.allowed).toContain('realmId');
     });
 
     it('decodes the filter through the event schema: one event type', async () => {
-        const { data } = await suite.client.event.getStats({
-            filters: { name: EventName.LOGIN },
-            days: 7,
-        });
+        const { data } = await suite.client.event.getStats(
+            buildQuery('day', since(7 * DAY_IN_MS), eq('name', EventName.LOGIN)),
+        );
 
         expect(data.length).toBeGreaterThan(0);
         expect(data.every((row) => row.name === EventName.LOGIN)).toBe(true);
@@ -135,47 +241,268 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
     it('refuses a filter key the event schema does not allow', async () => {
         await expectClientError(
-            () => suite.client.event.getStats({ filters: { requestUserAgent: 'curl' } }),
+            () => suite.client.event.getStats(
+                buildQuery('day', since(DAY_IN_MS), eq('requestUserAgent', 'curl')),
+            ),
             { status: 400 },
         );
     });
 
     it('takes the realm from the nested mount, by id and by name', async () => {
-        const byId = await httpRequest(suite, 'GET', `/realms/${realmBId}/events/@stats`, { headers: { Authorization: adminAuthorization } });
+        const query = buildQueryString<Event>(buildQuery('day', since(7 * DAY_IN_MS)));
+
+        const byId = await httpRequest(suite, 'GET', `/realms/${realmBId}/events/@stats${query}`, { headers: { Authorization: adminAuthorization } });
         expect(byId.status).toEqual(200);
         const { data: dataB } = await byId.json();
         expect(countOf(dataB, EventName.LOGIN)).toEqual(1);
 
-        const byName = await httpRequest(suite, 'GET', '/realms/master/events/@stats?days=7', { headers: { Authorization: adminAuthorization } });
+        const byName = await httpRequest(suite, 'GET', `/realms/master/events/@stats${query}`, { headers: { Authorization: adminAuthorization } });
         expect(byName.status).toEqual(200);
         const { data: dataMaster } = await byName.json();
         expect(countOf(dataMaster, EventName.LOGIN)).toBeGreaterThanOrEqual(2);
         expect(countOf(dataMaster, EventName.LOGIN)).toEqual(
-            countOf((await suite.client.event.getStats({ filters: { realmId: masterRealmId }, days: 7 })).data, EventName.LOGIN),
+            countOf((await suite.client.event.getStats(
+                buildQuery('day', since(7 * DAY_IN_MS), eq('realmId', masterRealmId)),
+            )).data, EventName.LOGIN),
         );
     });
 
     it('counts only the own rows of an actor without event_read', async () => {
-        const { data } = await selfClient.event.getStats();
+        const { data } = await selfClient.event.getStats(buildQuery('day', since(30 * DAY_IN_MS)));
 
         expect(data).toHaveLength(1);
         expect(data[0].name).toEqual(EventName.LOGIN);
         expect(data[0].count).toEqual(1);
     });
 
-    it('refuses a window past the bucket ceiling', async () => {
+    it('refuses a read without a lower bound on the date column', async () => {
         await expectClientError(
-            () => suite.client.event.getStats({ granularity: 'hour', days: 32 }),
-            { status: 400 },
-        );
-        await expectClientError(
-            () => suite.client.event.getStats({ days: 0 }),
-            { status: 400, code: ErrorCode.BAD_REQUEST },
+            () => suite.client.event.getStats({
+                groups: [{ name: 'bucket', params: ['createdAt', 'day'] }],
+                aggregates: ['count'],
+            }),
+            {
+                status: 400,
+                code: ErrorCode.BAD_REQUEST,
+                data: { message: 'The filter must carry a lower bound on createdAt.' },
+            },
         );
     });
 
+    it('refuses a window past the bucket ceiling', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(buildQuery('hour', since(745 * HOUR_IN_MS))),
+            { status: 400, data: { message: 'The window spans more than 744 buckets.' } },
+        );
+    });
+
+    it('refuses an unparsable bound next to a valid one on a day read', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS), lt('createdAt', 'nope'))),
+            { status: 400 },
+        );
+    });
+
+    it('bounds the window above by the filter', async () => {
+        const to = new Date();
+        to.setUTCHours(0, 0, 0, 0);
+        const { data, meta } = await suite.client.event.getStats(
+            buildQuery('day', new Date(to.getTime() - (7 * DAY_IN_MS)).toISOString(), lt('createdAt', to.toISOString())),
+        );
+
+        expect(meta.to).toEqual(to.toISOString());
+        for (const row of data) {
+            expect(new Date(row.createdAt).getTime()).toBeLessThan(to.getTime());
+        }
+    });
+
+    it('answers a rollup-routed read exactly like raw events, across a UTC day edge', async () => {
+        const refType = `parity-${randomUUID().slice(0, 8)}`;
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
+        const repository = dataSource.getRepository<Event>(EventEntity);
+        const instants = [
+            new Date(today.getTime() - (2 * DAY_IN_MS) + (12 * HOUR_IN_MS)),
+            new Date(today.getTime() - 1000),
+            new Date(today.getTime() - 1000),
+            today,
+        ];
+        for (const [index, createdAt] of instants.entries()) {
+            const entity = await repository.save(repository.create({
+                id: randomUUID(),
+                scope: EventScope.OAUTH2,
+                name: index % 2 === 0 ? EventName.LOGIN : EventName.LOGOUT,
+                refType,
+                realmId: masterRealmId,
+            }));
+            await repository.update({ id: entity.id }, { createdAt: createdAt.toISOString() });
+        }
+
+        await recompute(
+            dataSource,
+            new Date(today.getTime() - (2 * DAY_IN_MS)),
+            new Date(today.getTime() - DAY_IN_MS),
+            today,
+        );
+
+        const from = new Date(today.getTime() - (3 * DAY_IN_MS)).toISOString();
+        const query = buildQuery('day', from, eq('refType', refType));
+
+        const raw = new EntityStatsService<EventStatsGroups>({
+            definition: {
+                type: 'event-raw',
+                schema: eventSchema,
+                repository: new EntityStatsRepositoryAdapter(dataSource, EventEntity, 'event'),
+            },
+            cache: new MemoryCache(),
+        });
+        const expected = await raw.getMany(
+            Object.fromEntries(new URLSearchParams(buildQueryString<Event>(query).replace(/^\?/, ''))),
+            { permissionEvaluator: new FakePermissionEvaluator() },
+        );
+
+        const sort = (data: EventStatsRow[]) => data
+            .map((row) => [row.createdAt, row.scope, row.name, row.count])
+            .sort();
+
+        const { data, meta } = await suite.client.event.getStats(query);
+        expect(sort(data)).toEqual(sort(expected.data));
+        expect(sort(data)).toEqual([
+            [new Date(today.getTime() - (2 * DAY_IN_MS)).toISOString(), EventScope.OAUTH2, EventName.LOGIN, 1],
+            [new Date(today.getTime() - DAY_IN_MS).toISOString(), EventScope.OAUTH2, EventName.LOGIN, 1],
+            [new Date(today.getTime() - DAY_IN_MS).toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
+            [today.toISOString(), EventScope.OAUTH2, EventName.LOGOUT, 1],
+        ]);
+        expect(meta.retentionDays).toEqual(90);
+        // the rollups hold at least the days just recomputed
+        expect(meta.aggregateFrom! <= toDay(new Date(today.getTime() - (2 * DAY_IN_MS)))).toBe(true);
+
+        // an event the rollups have not seen yet proves the read was routed
+        await repository.save(repository.create({
+            id: randomUUID(),
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType,
+            realmId: masterRealmId,
+        }));
+        const { data: stale } = await suite.client.event.getStats(
+            buildQuery('day', new Date(today.getTime() - (4 * DAY_IN_MS)).toISOString(), eq('refType', refType)),
+        );
+        expect(countOf(stale, EventName.LOGIN)).toEqual(2);
+    });
+
+    it('answers the entity activity shape from the rollups', async () => {
+        // a day-aligned bound, as the console sends it: a rollup answers
+        // whole days only
+        const from = new Date(Date.now() - (30 * DAY_IN_MS));
+        from.setUTCHours(0, 0, 0, 0);
+
+        const { data } = await suite.client.event.getStats({
+            filters: and(
+                gte('createdAt', from.toISOString()),
+                eq('scope', EventScope.ENTITY),
+                eq('refType', 'user'),
+            ),
+            groups: [{ name: 'bucket', params: ['createdAt', 'day'] }, 'name'],
+            aggregates: ['count'],
+        });
+
+        expect(data.find((row) => row.name === 'created')?.count).toBeGreaterThanOrEqual(3);
+    });
+
+    it('keeps a deleted realm in the rollups of the realms page', async () => {
+        const read = async (days: number) => {
+            const from = new Date(Date.now() - (days * DAY_IN_MS));
+            from.setUTCHours(0, 0, 0, 0);
+
+            const { data } = await suite.client.event.getStats({
+                filters: and(
+                    gte('createdAt', from.toISOString()),
+                    eq('scope', EventScope.ENTITY),
+                    eq('refType', 'realm'),
+                ),
+                groups: [{ name: 'bucket', params: ['createdAt', 'day'] }, 'name'],
+                aggregates: ['count'],
+            });
+
+            return data
+                .filter((row) => row.name === 'deleted')
+                .reduce((sum, row) => sum + row.count, 0);
+        };
+
+        await recompute(dataSource, new Date());
+        const before = await read(30);
+
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        await suite.client.realm.delete(realm.id);
+        await recompute(dataSource, new Date());
+
+        expect(await read(31)).toEqual(before + 1);
+
+        // a delete the rollups have not seen yet proves the read was routed
+        const { data: other } = await suite.client.realm.create(createFakeRealm());
+        await suite.client.realm.delete(other.id);
+        expect(await read(32)).toEqual(before + 1);
+    });
+
+    it('answers a realm-bounded reader from the rollups plus its own events in a foreign realm', async () => {
+        const refType = `reach-${randomUUID().slice(0, 8)}`;
+        const password = 'start123-event-reach';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        // the reach a realm_admin reads with: its own realm plus the global rows
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
+
+        const repository = dataSource.getRepository<Event>(EventEntity);
+        const seedEvent = (realmId: string | null, actorId?: string) => repository.save(repository.create({
+            id: randomUUID(),
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType,
+            realmId,
+            ...(actorId ? { actorId, actorType: 'user' } : {}),
+        }));
+        // inside the reach, answered by the rollups
+        await seedEvent(masterRealmId);
+        await seedEvent(null);
+        await seedEvent(masterRealmId, user.id);
+        // the reader's own event outside its reach, answered by raw events
+        await seedEvent(realmBId, user.id);
+        // outside the reach and not its own
+        await seedEvent(realmBId);
+
+        await recompute(dataSource, new Date());
+
+        const from = new Date(Date.now() - (30 * DAY_IN_MS));
+        from.setUTCHours(0, 0, 0, 0);
+
+        const { data, meta } = await client.event.getStats(buildQuery('day', from.toISOString(), eq('refType', refType)));
+        const { meta: list } = await client.event.getMany({ filters: and(gte('createdAt', from.toISOString()), eq('refType', refType)) });
+
+        expect(list.total).toEqual(4);
+        expect(countOf(data, EventName.LOGIN)).toEqual(list.total);
+        expect(meta.total).toEqual(list.total);
+        expect(meta.retentionDays).toEqual(90);
+
+        // an event the rollups have not seen yet proves the reach was routed
+        await seedEvent(masterRealmId);
+        const { data: stale } = await client.event.getStats(
+            buildQuery('day', new Date(from.getTime() - DAY_IN_MS).toISOString(), eq('refType', refType)),
+        );
+        expect(countOf(stale, EventName.LOGIN)).toEqual(4);
+    });
+
     it('requires an identity', async () => {
-        const response = await httpRequest(suite, 'GET', '/events/@stats');
+        const query = buildQueryString<Event>(buildQuery('day', since(DAY_IN_MS)));
+        const response = await httpRequest(suite, 'GET', `/events/@stats${query}`);
         expect(response.status).toEqual(401);
     });
 });
@@ -186,6 +513,7 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
             config.eventLogEnabled = false;
             config.eventLogRetentionDays = 30;
             config.eventLogEntityRetentionDays = 3;
+            config.eventLogAggregateRetentionDays = 400;
         },
     });
 
@@ -198,15 +526,62 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
     });
 
     it('reports the disabled log', async () => {
-        const { meta } = await suite.client.event.getStats({ days: 7 });
+        const { meta } = await suite.client.event.getStats(buildQuery('day', since(7 * DAY_IN_MS)));
 
         expect(meta.enabled).toBe(false);
     });
 
-    it('reports both retentions, so a client never offers a window past them', async () => {
-        const { meta } = await suite.client.event.getStats({ days: 7 });
+    it('reports both raw retentions on a raw read, so a client never offers a window past them', async () => {
+        const { meta } = await suite.client.event.getStats(
+            buildQuery('day', since(2 * DAY_IN_MS), eq('actorType', 'user')),
+        );
 
         expect(meta.retentionDays).toEqual(30);
         expect(meta.entityRetentionDays).toEqual(3);
+    });
+
+    it('reports the raw retentions and the rollup coverage on a rollup-routed read', async () => {
+        const dataSource = suite.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const day = toDay(new Date(Date.now() - (100 * DAY_IN_MS)));
+        await dataSource.getRepository(EventAggregateEntity).insert({
+            date: day,
+            realmId: null,
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: randomUUID(),
+            count: 1,
+            createdAt: new Date().toISOString(),
+        });
+
+        const { meta } = await suite.client.event.getStats(buildQuery('day', since(6 * DAY_IN_MS)));
+
+        expect(meta.retentionDays).toEqual(30);
+        expect(meta.entityRetentionDays).toEqual(3);
+        expect(meta.entityAggregateFrom! <= day).toBe(true);
+    });
+
+    it('reports no rollup coverage on a read the rollups can never answer', async () => {
+        const { meta } = await suite.client.event.getStats(
+            buildQuery('day', since(2 * DAY_IN_MS), eq('actorType', 'client')),
+        );
+
+        expect(meta.aggregateFrom).toBeNull();
+        expect(meta.entityAggregateFrom).toBeNull();
+    });
+
+    it('refuses a raw read past the entity retention when it pins scope=entity', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(
+                buildQuery('day', since(7 * DAY_IN_MS), eq('scope', EventScope.ENTITY), eq('actorType', 'user')),
+            ),
+            { status: 400, data: { message: 'This filter reaches back past 3 days; rollups cannot answer it.' } },
+        );
+    });
+
+    it('refuses hour buckets past the raw retention', async () => {
+        await expectClientError(
+            () => suite.client.event.getStats(buildQuery('hour', since((30 * DAY_IN_MS) + (2 * HOUR_IN_MS)))),
+            { status: 400, data: { message: 'Hour buckets reach back 30 days.' } },
+        );
     });
 });

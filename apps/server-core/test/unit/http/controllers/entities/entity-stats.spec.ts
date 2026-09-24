@@ -7,7 +7,14 @@
 
 import type { EntityStatsResponse } from '@authup/core-http-kit';
 import { buildQueryString } from '@authup/core-http-kit';
-import { defineQuery, gt } from '@rapiq/core';
+import type { ICondition } from '@rapiq/core';
+import {
+    and,
+    defineQuery,
+    gt,
+    gte,
+    inArray,
+} from '@rapiq/core';
 import {
     afterAll,
     beforeAll,
@@ -21,6 +28,22 @@ import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils'
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
+
+const DAY_IN_MS = 86_400_000;
+
+/**
+ * A 30 day window of day buckets, the other conditions ANDed onto the
+ * lower bound.
+ */
+function buildStatsQuery(...conditions: ICondition[]): string {
+    const lower = gte('createdAt', new Date(Date.now() - (30 * DAY_IN_MS)).toISOString());
+
+    return buildQueryString(defineQuery({
+        filters: conditions.length > 0 ? and(lower, ...conditions) : lower,
+        groups: [{ name: 'bucket', params: ['createdAt', 'day'] }],
+        aggregates: ['count'],
+    }));
+}
 
 // every collection an admin-console section lists; `@stats` must reach the
 // statistic on each, never that controller's `/:id` read
@@ -77,47 +100,66 @@ describe('src/http/controllers/entities/* (@stats)', () => {
     });
 
     it.each(STATS_COLLECTIONS)('serves the statistic of %s', async (collection) => {
-        const { status, body } = await read(`/${collection}/@stats`);
+        const { status, body } = await read(`/${collection}/@stats${buildStatsQuery()}`);
 
         expect(status).toEqual(200);
         expect(typeof body.meta.total).toEqual('number');
-        expect(body.meta.days).toEqual(30);
-        expect(body.meta.schema).toBeDefined();
+        expect(body.meta.bucket).toEqual('day');
+        expect(body.meta.from).toMatch(DAY_BUCKET);
+        expect(body.meta.schema.groups).toBeDefined();
+        expect(body.meta.schema.aggregates).toBeDefined();
+    });
+
+    it('refuses a statistic without a lower bound on the date column', async () => {
+        const query = buildQueryString(defineQuery({
+            groups: [{ name: 'bucket', params: ['createdAt', 'day'] }],
+            aggregates: ['count'],
+        }));
+        const { status, body } = await read(`/users/@stats${query}`);
+
+        expect(status).toEqual(400);
+        expect((body as unknown as { message: string }).message).toEqual('The filter must carry a lower bound on createdAt.');
+    });
+
+    it('no longer reads granularity and days', async () => {
+        const { status, body } = await read('/users/@stats?granularity=day&days=30');
+
+        expect(status).toEqual(400);
+        expect((body as unknown as { message: string }).message).toMatch(/^The first group must be bucket\(createdAt/);
     });
 
     it('counts users created in the window, and every one of them in the total', async () => {
-        const { body } = await read(`/users/@stats${buildQueryString({ filters: { realmId } })}`);
+        const { body } = await read(`/users/@stats${buildStatsQuery(inArray('realmId', [realmId]))}`);
 
         expect(body.meta.total).toEqual(2);
         expect(body.data).toHaveLength(1);
-        expect(body.data[0].bucket).toMatch(DAY_BUCKET);
+        expect(body.data[0].createdAt).toMatch(DAY_BUCKET);
         expect(body.data[0].count).toEqual(2);
     });
 
     it('scopes the statistic to the route realm', async () => {
-        const nested = await read(`/realms/${realmId}/users/@stats`);
-        const flat = await read('/users/@stats');
+        const nested = await read(`/realms/${realmId}/users/@stats${buildStatsQuery()}`);
+        const flat = await read(`/users/@stats${buildStatsQuery()}`);
 
         expect(nested.body.meta.total).toEqual(2);
         expect(flat.body.meta.total).toBeGreaterThan(2);
     });
 
     it('counts the active sessions through a filter on their expiry', async () => {
-        const query = buildQueryString(defineQuery({ filters: gt('expiresAt', new Date().toISOString()) }));
-        const { body } = await read(`/sessions/@stats${query}`);
+        const { body } = await read(`/sessions/@stats${buildStatsQuery(gt('expiresAt', new Date().toISOString()))}`);
 
         expect(body.meta.total).toBeGreaterThanOrEqual(1);
     });
 
     it('counts an unprivileged user its own sessions only', async () => {
-        const { status, body } = await read('/sessions/@stats', `Bearer ${userToken}`);
+        const { status, body } = await read(`/sessions/@stats${buildStatsQuery()}`, `Bearer ${userToken}`);
 
         expect(status).toEqual(200);
         expect(body.meta.total).toEqual(1);
     });
 
     it('refuses an unprivileged user the user statistic, like the list', async () => {
-        const { status } = await read('/users/@stats', `Bearer ${userToken}`);
+        const { status } = await read(`/users/@stats${buildStatsQuery()}`, `Bearer ${userToken}`);
 
         // the user list pre-gates on USER_READ, and the statistic is gated
         // exactly like it
@@ -125,13 +167,13 @@ describe('src/http/controllers/entities/* (@stats)', () => {
     });
 
     it('refuses an anonymous caller where the list does', async () => {
-        const response = await httpRequest(suite, 'GET', '/users/@stats');
+        const response = await httpRequest(suite, 'GET', `/users/@stats${buildStatsQuery()}`);
 
         expect(response.status).toEqual(401);
     });
 
     it('answers an anonymous caller where the list does', async () => {
-        const response = await httpRequest(suite, 'GET', '/realms/@stats');
+        const response = await httpRequest(suite, 'GET', `/realms/@stats${buildStatsQuery()}`);
 
         expect(response.status).toEqual(200);
     });
@@ -149,7 +191,11 @@ describe('src/http/controllers/entities/* (@stats)', () => {
             ],
         });
 
-        const { status, body } = await read(`/policies/@stats?filter[name]=${name}&filter[children.type]=${BuiltInPolicyType.TIME}`);
+        const lower = encodeURIComponent(`>=${new Date(Date.now() - DAY_IN_MS).toISOString()}`);
+        const { status, body } = await read(
+            `/policies/@stats?filter[name]=${name}&filter[children.type]=${BuiltInPolicyType.TIME}` +
+            `&filter[createdAt]=${lower}&group=bucket(createdAt,day)&aggregate=count`,
+        );
 
         expect(status).toEqual(200);
         expect(body.meta.total).toEqual(1);

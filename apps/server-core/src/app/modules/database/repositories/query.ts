@@ -8,6 +8,7 @@
 import type { IQuery } from '@rapiq/core';
 import { Query, hasFieldConditions } from '@rapiq/core';
 import { applyFieldConditions } from '@rapiq/adapter-memory';
+import type { TypeormGroupedOutput } from '@rapiq/adapter-typeorm';
 import { TypeormAdapter } from '@rapiq/adapter-typeorm';
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import type { EntityRepositoryPaginationMeta } from '@authup/server-kit';
@@ -51,6 +52,22 @@ export function applyQuery(
     const { pagination } = adapter.execute(query ?? new Query({}));
 
     return { pagination };
+}
+
+/**
+ * Apply a decoded grouped query (groups and/or aggregates) to the given
+ * query builder. Run `getRawMany()` afterwards and hand the rows to the
+ * returned `normalize`. No join hook: the adapter never hydrates a
+ * relation on a grouped query, and renders a to-many filter as a
+ * correlated EXISTS, so no join row reaches the grouping.
+ */
+export function applyGroupedQuery(
+    queryBuilder: SelectQueryBuilder<any>,
+    query: IQuery,
+) : TypeormGroupedOutput {
+    const adapter = new TypeormAdapter({ queryBuilder });
+
+    return adapter.executeGrouped(query);
 }
 
 /**

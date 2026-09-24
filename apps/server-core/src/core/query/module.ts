@@ -169,5 +169,7 @@ export function appendQueryConditions(query: IQuery, ...conditions: ICondition[]
         relations: query.relations,
         pagination: query.pagination,
         sorts: query.sorts,
+        groups: query.groups,
+        aggregates: query.aggregates,
     });
 }

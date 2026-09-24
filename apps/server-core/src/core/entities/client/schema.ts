@@ -124,6 +124,8 @@ export const clientSchema = defineSchema<Client>({
     },
     relations: { allowed: ['realm', 'accessPolicy', 'path'], validate: createRelationsReadGate(schemaMapping) },
     sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
+    groups: { functions: { bucket: { allowed: ['createdAt'] } } },
+    aggregates: { functions: { count: {} } },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

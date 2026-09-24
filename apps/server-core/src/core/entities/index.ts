@@ -11,6 +11,7 @@ export * from './client-role/index.ts';
 export * from './client-scope/index.ts';
 export * from './consent/index.ts';
 export * from './event/index.ts';
+export * from './event-aggregate/index.ts';
 export * from './identity-provider/index.ts';
 export * from './identity-provider-account/index.ts';
 export * from './key/index.ts';

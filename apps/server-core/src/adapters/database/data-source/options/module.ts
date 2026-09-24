@@ -26,6 +26,7 @@ import {
     ClientSubscriber,
     ConsentEntity,
     ConsentEntitySubscriber,
+    EventAggregateEntity,
     EventEntity,
     IdentityProviderAccountEntity,
     IdentityProviderAccountSubscriber,
@@ -152,6 +153,7 @@ export class DataSourceOptionsBuilder {
                 KeyEntity,
 
                 EventEntity,
+                EventAggregateEntity,
 
                 SessionEntity,
                 SessionTokenEntity,

@@ -809,21 +809,35 @@ one nobody discovers.
 Thirteen entities answer grouped counts over their own table: realms, clients,
 scopes, identity providers, keys, trust anchors, users, paths, roles, policies,
 permissions, sessions and events (every admin-console section with a list).
-The response is `{ data: [{ bucket, count, ...groupKeys }], meta: { from, to,
-granularity, days, total, schema } }` (`EntityStatsResponse` in
-`@authup/core-http-kit`, not the entity envelope: a bucket is not an entity).
+A statistic is a rapiq GROUPED read (rapiq 2.4.0): the rows to count are the
+`filter`, the grouping is `group` and the measures are `aggregate`, e.g.
+`GET /events/@stats?filter[createdAt]=>=2026-09-01T00:00:00.000Z&group=bucket(createdAt,day),scope,name&aggregate=count`.
+The response is `{ data: [{ createdAt, count, ...groupKeys }], meta: { from,
+to, bucket, total, schema } }` (`EntityStatsResponse` in
+`@authup/core-http-kit`, not the entity envelope: a row is not an entity), one
+row per group, `createdAt` the bucket start as an ISO instant in UTC. Absent
+buckets hold no row; a consumer zero-fills between `from` and `to`.
 Composite statistics that span entities (distinct active users) get a root
 `GET /stats/<name>` family once the first exists; none does yet.
 
 - **One service, one adapter, a declaration per entity.**
   `EntityStatsService` (`core/stats/`) over an `EntityStatsDefinition` (the
-  entity's list schema, `dateColumn` defaulting to `createdAt`, `groupBy`, the
-  route-realm column, the list's gate as `scope`, extra `meta`), and one
-  `EntityStatsRepositoryAdapter` (`app/modules/database/repositories/stats/`)
-  over any TypeORM target. The definitions are wired in the HTTP controller
-  factory (`createStatsService`), because the cache lives in a module the
-  database module does not depend on. Adding an entity is a definition plus a
-  `@stats` method on its controller.
+  entity's list schema, `dateColumn` defaulting to `createdAt`, the
+  route-realm column, the list's gate as `scope`, extra `meta`, and for events
+  `rawHorizonDays` plus a `rollup`), and one `EntityStatsRepositoryAdapter`
+  (`app/modules/database/repositories/stats/`) over any TypeORM target, which
+  hands the query to `@rapiq/adapter-typeorm`'s `executeGrouped`
+  (`applyGroupedQuery`, `repositories/query.ts`) and normalizes the raw rows
+  back through it. The bucket expression per dialect, the UTC day edges and
+  the to-many filter (rendered as a correlated `EXISTS`, so a composite policy
+  matching three children is still one row) are the adapter's, not authup's.
+  What may be grouped and counted is the entity SCHEMA's own `groups` and
+  `aggregates` blocks: every statistic entity allows `bucket(createdAt)` and
+  `count`, events additionally group by `scope`, `name` and `refType`. The
+  definitions are wired in the HTTP controller factory (`createStatsService`),
+  because the cache lives in a module the database module does not depend on.
+  Adding an entity is the two schema blocks, a definition and a `@stats`
+  method on its controller.
 - **The gate is the list's, by construction.** Every converted list gates
   through `scopeReadQuery` (`core/query/scope.ts`: pre-gate, compile, the
   verdict lowered onto the query, an optional ownership term ORed in or
@@ -843,56 +857,210 @@ Composite statistics that span entities (distinct active users) get a root
   Three lists carry no compile: clients
   pre-gate only (`compile: false`; the secret is field-gated), realms and
   identity providers are anonymous (no `scope`).
-- **Filters and window.** The rows to count are an ordinary rapiq
-  `filter[...]` decoded through the entity schema with `parameters:
-  ['filters']` (the route carries `@DQuerySchema(<type>, 'stats')`, whose
-  shape contributes the filter plus `granularity` and `days` to the OpenAPI
-  document, and passes `describeQuerySchema(<schema>, FILTERS_QUERY_PARAMETERS)`
-  into `serveEntityStats`, so the OpenAPI coverage guard still checks marker
-  and schema name the same entity). `granularity` (`hour` | `day`, default `day`)
-  is a GROUP BY and `days` (default 30) names the window; both stay outside
-  rapiq until tada5hi/rapiq#938 (an aggregation parameter with a bucket
-  function) lands. The window is HALF-OPEN and holds exactly `days` times the
-  buckets per day bucket starts, appended onto the IR as `gte`/`lt` on the
-  date column (rapiq 2.3.0 binds a date operand in the column's storage form,
-  tada5hi/rapiq#939), so a consumer zero-fills between `from` and `to`. The
-  ceiling is `STATS_MAX_BUCKETS` (744, 31 days of hours; 400 past it). The
-  route realm (`/realms/:realmId/...`) is appended as a condition on the
-  definition's realm column. That makes a statistic under a realm mount
-  NARROWER than its list for the lists that ignore the route realm on read
-  (user, session, permission, policy, client, identity provider, a
-  pre-existing quirk of theirs): the console never uses the realm mount,
-  and narrower cannot disclose.
-- **`meta.total`** counts every row the filter and the gate admit, regardless
-  of the window, cached under the scope alone (`<key>:total`), so switching
-  the window reuses it instead of counting a table like `auth_events` again. "Active sessions" is therefore the
-  total under `filter[expiresAt]=>now`, no statistic of its own.
-- **One bucket expression.** The per-dialect string (`to_char` /
-  `DATE_FORMAT` / `strftime`, normalized back to an ISO instant) lives in the
-  adapter; all 13 date columns are `@CreateDateColumn`s. Buckets count
-  `DISTINCT id`: a filter through a to-many relation (`policy.children`) joins
-  one row per match, and a plain `COUNT(*)` counted a composite policy once
-  per matching child.
+- **Decode and the four window rules.** The query decodes through the entity
+  schema with `parameters: ['filters', 'groups', 'aggregates']`
+  (`STATS_QUERY_PARAMETERS`, `core/query/describe.ts`; the route carries
+  `@DQuerySchema(<type>, 'stats')`, whose shape contributes `filter`, `group`
+  and `aggregate` to the OpenAPI document, and passes
+  `describeQuerySchema(<schema>, STATS_QUERY_PARAMETERS)` into
+  `serveEntityStats`, so the OpenAPI coverage guard still checks marker and
+  schema name the same entity). No `pagination` parameter is decoded, on
+  purpose: a grouped read answers EVERY group row (90 days by twenty
+  `(scope, name)` pairs is 1800 rows), and a default page would silently
+  truncate the series. On top of the vocabulary `resolveStatsWindow`
+  (`core/stats/window.ts`) enforces four rules, each a 400 naming itself: the
+  first group is `bucket(<dateColumn>, hour|day|month)`; the filter carries a
+  TOP-LEVEL lower bound (`gte`/`gt`) on the date column; the window spans at
+  most `STATS_MAX_BUCKETS` (744, whatever the unit); and an hour bucket stays
+  inside the raw horizon. The lower bound is snapped onto its bucket start
+  (`meta.from`); the upper bound is the caller's `lt`/`lte` when it gave one,
+  else the read instant, appended as `lt` (`meta.to`). Date operands bind in
+  the column's storage form (tada5hi/rapiq#939). The route realm
+  (`/realms/:realmId/...`) is appended as a condition on the definition's
+  realm column. That makes a statistic under a realm mount NARROWER than its
+  list for the lists that ignore the route realm on read (user, session,
+  permission, policy, client, identity provider, a pre-existing quirk of
+  theirs): the console never uses the realm mount, and narrower cannot
+  disclose.
+- **`meta.total`** counts every row the filter and the gate admit without the
+  window: `stripWindowConditions` drops the TOP-LEVEL range conjuncts on the
+  date column and nothing else, so a range nested inside an `or` stays and
+  narrows the total. It is cached under that stripped query alone
+  (`<key>:total`), so switching the window or the unit reuses it instead of
+  counting a table like `auth_events` again. "Active sessions" is therefore
+  the total under `filter[expiresAt]=>now`, no statistic of its own.
 - **Cache.** `ICache`, `STATS_CACHE_TTL` (60s), keyed by the statistic, the
-  actor, the parameters and `queryCodec.encode` of the LOWERED query (taken
-  BEFORE the window is appended, since `to` moves with every request). The
-  whole gate runs before the lookup and what it produced is in the key: reach
-  is a property of the REQUEST (a token narrowed to its client, a bearer
-  without `global`), so two requests by one identity can lower differently and
-  a restricted one must never read the broad one's answer; two spellings of
-  one filter still share an answer.
+  actor, whether the read was routed to the rollups, and `queryCodec.encode`
+  of the LOWERED query (taken BEFORE an open window's upper bound is
+  appended, since it moves with every request; the console snaps its lower
+  bound onto the bucket start for the same reason). The whole gate runs
+  before the lookup and what it produced is in the key: reach is a property
+  of the REQUEST (a token narrowed to its client, a bearer without `global`),
+  so two requests by one identity can lower differently and a restricted one
+  must never read the broad one's answer; two spellings of one filter still
+  share an answer.
 - **Typed client and CLI.** `client.<entity>.getStats(query?)` on the 13
-  sub-APIs (`IEntityStatsAPI`); `EntityAPIDispatch` carries it as optional, so
-  the CLI derives `authup api <entity> stats` like its other verbs.
+  sub-APIs (`IEntityStatsAPI`), whose `EntityStatsQuery` is rapiq's own
+  `QueryBuildInput` picked to `filters` / `groups` / `aggregates`;
+  `EntityAPIDispatch` carries it as optional, so the CLI derives
+  `authup api <entity> stats --filter --group --aggregate` like its other
+  verbs.
+
+#### Event rollups (`auth_event_aggregates`)
+
+The event statistic alone is backed by persisted DAILY counts, so a
+dashboard window is not bounded by the raw retention and a 90-day read does
+not group ninety days of `auth_events`. There is deliberately no generic
+rollup mechanism: the other twelve tables are small, and their rows live
+until deleted.
+
+- **The table.** One row per `(date, realmId, scope, name, refType)` with a
+  `count`: `date` a `date` column holding the UTC calendar day (named for
+  what it holds; the `*At` suffix is reserved for timestamps, and
+  `createdAt` is the write stamp the finality rule reads), `realm_id`
+  nullable with an FK to `auth_realms` (`ON DELETE CASCADE`, so a deleted realm takes its counts with it, see
+  the recompute below for what comes back),
+  `ref_type` nullable, an index on `(date, realm_id)` and NO unique
+  constraint. Counts only, no actor, no client, no request data, so it
+  carries no personal data and is not a place to add any. The stored columns
+  are `EVENT_AGGREGATE_COLUMNS` (`core/entities/event-aggregate/`).
+- **The writer is the `event-aggregator` component** (scheduled by
+  `ComponentsModule` whenever `eventLogEnabled`, so it runs where the worker
+  runs). Every minute (`noOverlap`, so a tick outlasting the minute skips
+  the next fire instead of queueing another scan of the same days) it
+  recomputes today and yesterday, backfills up to
+  `EVENT_AGGREGATE_BACKFILL_DAYS` (7) missing days per tick walking a cursor
+  down toward the oldest raw event (a day without events yields no rows and
+  would read as missing forever, hence the cursor rather than a newest-missing
+  refill), and prunes rows older than
+  `core.eventLogAggregateRetentionDays` (`EVENT_LOG_AGGREGATE_RETENTION_DAYS`,
+  default 0 = forever). A failed pass is logged and retried next tick.
+  **A day counts as present only when its rollup was written after the day
+  ended** (`findDays`: `MAX(created_at) >= day + 1`, the recompute stamping
+  `created_at` with the process clock). A recompute of a day still open is
+  provisional, so a day whose aggregator was away for all of the next day
+  (a worker down over a weekend) is repaired by the walk instead of staying
+  short forever.
+- **A recompute replaces the day.** `EventAggregateRepositoryAdapter.recompute`
+  reads the day's grouped counts from `auth_events` (a grouped rapiq query
+  over the UTC day), then deletes the day's rows and inserts the new ones
+  (in chunks of 500, since one statement binds at most 65535 values on
+  postgres) in one transaction, all under `withDatabaseLock(queryRunner,
+  EVENT_AGGREGATE_DATABASE_LOCK, ...)` (typeorm-extension 4.2), so two
+  replicas recomputing one day leave exactly one day's counts. The grouped
+  read runs OUTSIDE the transaction: inside it, it would wait on a second
+  pooled connection while the first is pinned, the #3526 pool deadlock. The
+  lock name must stay stable across releases. On better-sqlite3 the lock is a
+  passthrough, and one adapter instance queues its recomputes because the
+  single shared connection refuses a second transaction. **Rows of a realm
+  that no longer exists are dropped before the insert, except the rows ABOUT
+  the realm (`refType: realm`), which are kept with `realmId` null**:
+  `auth_events` is FK-less by design and outlives its realms, while the
+  rollup's `realm_id` is an FK, so inserting a gone realm's id would fail the
+  recompute, and with it the whole tick, every minute. A realm's own entity
+  audit rows carry its own id, so dropping them too would leave the Realms
+  page's `Deleted` box at 0 forever; they are the deployment's history of
+  realms and the realm list is anonymous, so counting them as global
+  discloses nothing. The price is one place a routed answer differs from the
+  raw one: in the rollups those rows fall inside every `ownOrNull` reach and
+  every realm-plus-null filter, while the raw rows keep the gone id and fall
+  outside, so a `realm_admin`'s day read counts another realm's creation and
+  deletion that its hour read does not (accepted; keeping them off the
+  `ownOrNull` reach would take a marker column or a sentinel realm). A live
+  realm's rows keep its id, and two gone realms may share a null key, which
+  every reader sums. **What the cascade takes comes
+  back only where the tick recomputes**: the realm-delete cascade removes the
+  realm's rollup rows on EVERY day, and today and yesterday (the `deleted`
+  row among them) are recomputed within a minute, as null. An older day that
+  still holds other rows reads as final and is never recomputed, so the
+  realm's `created` / `updated` rows of that day stay gone; one the cascade
+  emptied reads as missing, but the backfill cursor has already passed it, so
+  it is restored only by the walk of a fresh process, and only while its raw
+  rows exist (`eventLogEntityRetentionDays`, default 7). That loss is the
+  accepted cost of the FK.
+- **Routing is by the query's shape AFTER the gate.** A `day` or `month` read
+  whose lowered query references stored columns only (filter leaves, groups,
+  aggregate fields) and whose aggregates are `count()` alone is translated
+  (`translateEventAggregateQuery`: `createdAt` becomes `date`, `count()`
+  becomes `sum(count)`) and answered from the rollups; the rows are
+  translated back, so the caller cannot tell (the one exception is a gone
+  realm's own rows, above). A rollup answers whole days,
+  so only a `gte` / `lt` bound at 00:00Z translates (an open window ends at
+  the next day boundary); a bound inside a day, or an unparsable one, reads
+  raw events instead of being widened, which is why the console snaps its
+  lower bound. Everything else reads raw events: every `hour` read, and every
+  reader whose query the gate lowered onto its own `actorId` ALONE (no
+  `EVENT_READ`, or a `post` / `deny` verdict), a column no rollup stores.
+  That is the property that keeps a reader of own rows from ever reading
+  other actors' counts, and it holds because routing inspects the lowered
+  query rather than the request.
+- **A realm-bounded reader is answered in two parts.** A `conditional`
+  verdict (a `realm_admin`'s `ownOrNull` reach) lowers to `or(ownership,
+  reach)`, which references `actorId` and would read raw. So `scopeReadQuery`
+  hands the compiled reach back on its own (`ReadScope.reach`), and when the
+  reach references stored columns only the statistic answers `and(filter,
+  reach)` from the rollups and `and(filter, ownership, not(reach))` from raw
+  events (rapiq's `not()` is null-inclusive, the complement of the reach
+  exactly), summing `count` per identical group row. The two parts are
+  disjoint, so the sum equals the raw count of the whole OR. `meta.total`
+  stays the raw count of the whole OR, and the cache key (the encoded OR plus
+  a `split` tag) covers both parts. The raw part is bounded by the raw
+  retention by nature and never refuses a window: it counts whatever raw rows
+  still exist, so the reader's own events in a foreign realm older than the
+  raw retention are counted nowhere, since the rollups never stored an
+  actor.
+- **Horizons.** A raw read past the raw retention is refused rather than
+  silently short: `rawHorizonDays` is `eventLogRetentionDays`, or
+  `eventLogEntityRetentionDays` alone when the filter pins `scope=entity`,
+  since entity rows are stamped on that clock only
+  (`resolveEventRawHorizonDays`). An hour read past it answers
+  400, and so does a day or month read the rollups cannot answer. A routable
+  read past the rollup retention (`eventLogAggregateRetentionDays`, whose
+  days the aggregator prunes) reads raw rows instead, and is refused only
+  past the raw horizon as well. The horizon is snapped onto the start of its
+  hour or day, so a window starting on the horizon's own bucket passes; a
+  month window is held to the horizon's day, since its first bucket would
+  otherwise silently miss up to a month of pruned rows (`isPastRawHorizon`,
+  which both horizons use). Every event statistic reports the RAW
+  retentions as `meta.retentionDays` / `meta.entityRetentionDays` (0 =
+  forever) and, next to them, the rollup coverage as `meta.aggregateFrom` /
+  `meta.entityAggregateFrom`: the oldest UTC day the rollups hold for the
+  non-entity scopes and for `scope=entity`, or null
+  (`IEventAggregateRepository.findCoverage`, two ordered one-row reads riding
+  the cached statistic through the definition's async `meta`). The coverage
+  is reported only when the rollups can answer the read's GATED scope at all,
+  whatever its bucket (`meta({ routable })`: the scoped query, or the reach
+  half of a split read, references stored columns only), and is null
+  otherwise: a reader of own rows (no `EVENT_READ`, a `post` / `deny`
+  verdict) or a filter on an unstored column would otherwise be offered a
+  day window past the raw retention that the server then refuses.
+  Overriding the retention with the rollup one on routable reads was
+  rejected: it made one key mean two things, and a rollup retention says
+  nothing about which days were actually backfilled. A routed read lags the
+  raw log by at most one aggregator tick plus the statistic cache.
 
 Pinned by `test/unit/core/query/scope.spec.ts` (the verdict matrix of the
-gate), `test/unit/core/stats/module.spec.ts` (window, ceiling, cache keys and
-partitioning, `total`, `post` without ownership, an ungated definition) and
+gate), `test/unit/core/stats/window.spec.ts` (the four rules, snapping, the
+ceiling, month buckets, the total's strip keeping a nested range),
+`test/unit/core/stats/module.spec.ts` (cache keys and partitioning, `total`,
+`post` without ownership, every group row returned, routing, an actor
+without `EVENT_READ` read from raw events, and the two-part read of a
+realm-bounded reader),
+`test/unit/components/event-aggregator.spec.ts` (recompute, backfill cursor,
+pruning, two concurrent recomputes of one day, a deleted realm's rows, a
+recompute over a deleted realm's events, a deleted realm's history kept as
+global and restored only on the days the tick recomputes, a provisional day
+repaired),
+`test/unit/adapters/database/event-aggregate.spec.ts`,
 `test/unit/http/controllers/entities/entity-stats.spec.ts` (all 13 routes
 reach the statistic rather than `/:id`, the realm filter and mount, the
 active-sessions filter, own sessions for an unprivileged user, the user list's
-403 and the anonymous realm read). The dialect expressions are what the
-mysql/psql runs exercise.
+403, the anonymous realm read, a to-many filter counted once) and
+`test/unit/http/controllers/entities/event-stats.spec.ts` (a routed read
+answering exactly like raw events across a UTC day edge, the entity activity
+shape from the rollups, the raw retentions and the rollup coverage on both paths, the horizon
+refusals, an `ownOrNull` reader's own foreign-realm event counted next to the
+rollups exactly like its list). The day edges are what the mysql/psql runs exercise.
 
 ### Adapter Implementation
 
@@ -4643,7 +4811,7 @@ deliberately omits it) and keeps every other value `pickEntityAPI` resolves on
 a `Client`, names the command in kebab-case and gives it the verbs its
 dispatch has (`list`/`get`/`create`/`update`/`delete`/`stats`/`schema` over
 `getMany`/`getOne`/`create`/`update`/`delete`/`getStats`/`getSchema`; `stats`
-takes `--filter`, `--granularity` and `--days`), so an entity-shaped sub-API
+takes `--filter`, `--group` and `--aggregate`), so an entity-shaped sub-API
 added to the kit is a command with no CLI edit. Query flags are the URL
 parameters the server documents, assembled and decoded through
 `@rapiq/codec-url` into the `IQuery` the typed APIs accept; several filter
@@ -8472,22 +8640,31 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   override list). Typed client: `client.event.getMany/getOne`.
 - **Dashboard statistics:** `GET /events/@stats` (+ `/realms/:realmId/events/@stats`)
   is the event instance of the generic entity statistic (see *Entity
-  statistics* below): grouped by `(bucket, scope, name)` (`groupBy`), realm
-  and everything else a FILTER, so the console's realm scope is the list's own
-  `filter[realmId]=<id>,null` and "logins only" is a filter rather than a group
-  dimension. `meta.enabled` mirrors `eventLogEnabled`, which is how the console
-  learns the log is off without that fact being published on the anonymous
-  `GET /`. The gate is the list's (`EventService.scopeRead`): no `EVENT_READ`
-  counts own rows only. Typed client: `client.event.getStats({ filters?,
-  granularity?, days? })`, answering `EventStatsResponse`. Pinned by
+  statistics*): a grouped read whose groups the caller picks from the event
+  schema (`bucket(createdAt, hour|day|month)` first, then any of `scope`,
+  `name`, `refType`), realm and everything else a FILTER, so the console's
+  realm scope is the list's own `filter[realmId]=<id>,null` and "logins only"
+  is a filter rather than a group dimension. Day and month reads over stored
+  columns are answered from the daily rollups in `auth_event_aggregates`
+  (*Entity statistics → Event rollups*). `meta.enabled` mirrors
+  `eventLogEnabled`, which is how the console learns the log is off without
+  that fact being published on the anonymous `GET /`; `meta.retentionDays` /
+  `meta.entityRetentionDays` report the raw retentions and
+  `meta.aggregateFrom` / `meta.entityAggregateFrom` the oldest day the
+  rollups hold (*Horizons* above). The gate is
+  the list's (`EventService.scopeRead`): no `EVENT_READ` counts own rows only,
+  always from raw events. Typed client: `client.event.getStats({ filters,
+  groups, aggregates })`, answering `EventStatsResponse`. Pinned by
   `test/unit/core/stats/module.spec.ts` (the event definition drives the gate
-  matrix) and `test/unit/http/controllers/entities/event-stats.spec.ts` (day
-  and hour buckets on a real database, both mounts, the own-rows scope, a
-  disallowed filter key, `enabled: false`).
+  matrix and the routing) and
+  `test/unit/http/controllers/entities/event-stats.spec.ts` (day and hour
+  buckets on a real database, both mounts, the own-rows scope, a disallowed
+  filter key, `enabled: false`, rollup and raw answering alike).
 - **Admin UI:** the landing page `apps/client-admin-console/src/pages/index.vue`
   is the dashboard over that read, scoped by the header realm switcher like
   every list page (`filters: { realmId: [<realm>, null] }`), with a 24h / 7d /
-  30d / 90d switch (`hour` for 24h, `day` otherwise), four tiles (logins,
+  30d / 90d switch (`ENTITY_STATS_WINDOWS`: 24 hour buckets for 24h, day
+  buckets otherwise), four tiles (logins,
   failed logins, authorizations, all events), a stacked column chart of
   `login` vs `loginFailed` per bucket
   (`components/dashboard/EventVolumeChart.vue`, chart.js through vue-chartjs,
@@ -8514,16 +8691,25 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   boxes need `event_read` (without it the event read answers own rows, so
   they are dropped and the read stays `paused`), and a 24h / 7d / 30d / 90d
   switch picks their window. That switch is `components/stats/StatsWindowSwitch.vue`,
-  shared with the dashboard: it disables a window longer than the retention
-  the event read reports (`meta.entityRetentionDays` on the entity page,
-  `meta.retentionDays` on the dashboard, 0 = forever), with the reason as its
-  title, instead of silently counting fewer rows than happened. Rejected: a
+  shared with the dashboard: it disables a window the event read does not
+  cover (`isStatsWindowCovered`, fed `meta.entityRetentionDays` /
+  `meta.entityAggregateFrom` on the entity page and `meta.retentionDays` /
+  `meta.aggregateFrom` on the dashboard), with the reason as its title,
+  instead of silently counting fewer rows than happened. An hour window is
+  covered by the raw retention alone; a day window by the raw retention (0 =
+  forever) or by rollups starting on or before its first day, so the 30d and
+  90d windows open where entity rows expire after 7 days once the aggregator
+  has backfilled that far. Rejected: a
   30-day trend strip of daily creation bars, which showed a shape but not the
   operations a reader of the list asks about. `useEntityStats`
   (`composables/entity-stats.ts`) is the shared read. It reloads on the
   ENCODED scope (`buildQueryString` of the filters plus the window), never on
-  object identity, so a page recomputing an equal filter does not refetch; it
-  waits while `paused` (the activity boxes pause their event read until
+  object identity, so a page recomputing an equal filter does not refetch.
+  It builds the grouped query itself: the caller's filters AND a lower bound
+  on `createdAt` snapped onto the first bucket start
+  (`buildStatsWindowStart`, so every read within one bucket asks the same
+  query and the server cache answers it), `bucket(createdAt, <unit>)` plus the
+  caller's group columns, and `count`. It waits while `paused` (the activity boxes pause their event read until
   `event_read` is known); it keeps the previous answer up, dimmed on `busy`, while a
   new scope loads and drops it only when that read fails; it drops a stale
   answer; and a 403 raises `forbidden` instead of calling `onError`. Tiles
