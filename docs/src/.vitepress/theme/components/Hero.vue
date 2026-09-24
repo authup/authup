@@ -51,14 +51,14 @@
                                 :class="copyButtonClass"
                                 @click="copy"
                             >
-                                {{ copied ? 'Copied' : 'Copy' }}
+                                {{ copyButtonLabel }}
                             </button>
                         </div>
                         <span
                             class="sr-only"
                             role="status"
                             aria-live="polite"
-                        >{{ copied ? 'Command copied to clipboard' : '' }}</span>
+                        >{{ copyStatusMessage }}</span>
 
                         <ul class="m-0 mt-4 flex list-none flex-col gap-[0.4rem] p-0">
                             <li
@@ -92,7 +92,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 
 // Quick Start, verbatim from the repo README (`npx authup@latest start`):
 // needs no configuration, falls back to SQLite for trying things out and
@@ -104,7 +104,13 @@ const OUTPUT_LINES = [
     { label: 'Admin console', value: 'http://localhost:3000/console/admin' },
 ];
 
-const PRIMARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-transparent bg-[var(--au-color-primary)] px-5 py-[0.65rem] text-[0.95rem] font-semibold text-white no-underline shadow-[0_8px_24px_-8px_var(--au-color-accent-a)] transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:bg-[var(--au-night-accent-1)]';
+/*
+ * White text only holds up on the darkened light-mode primary (5.72:1). The
+ * lightened accent — the hover background in light mode, and the resting
+ * background in dark mode — needs dark text instead: white on it is 1.93:1,
+ * the slate is 6.24:1.
+ */
+const PRIMARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-transparent bg-[var(--au-color-primary)] px-5 py-[0.65rem] text-[0.95rem] font-semibold text-white no-underline shadow-[0_8px_24px_-8px_var(--au-color-accent-a)] transition-[transform,background,border-color,color] duration-[120ms] ease-out hover:-translate-y-px hover:bg-[var(--au-night-accent-1)] hover:text-[var(--au-dark-bg)] dark:text-[var(--au-dark-bg)]';
 
 const SECONDARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-white/20 bg-white/5 px-5 py-[0.65rem] text-[0.95rem] font-semibold text-night-fg no-underline transition-[transform,background,border-color] duration-[120ms] ease-out hover:-translate-y-px hover:border-white/40';
 
@@ -116,29 +122,57 @@ export default defineComponent({
     name: 'AuthupHero',
     setup() {
         const copied = ref(false);
+        const copyFailed = ref(false);
 
         async function copy() {
+            copied.value = false;
+            copyFailed.value = false;
+
             try {
-                if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                    await navigator.clipboard.writeText(COMMAND);
-                    copied.value = true;
-                    setTimeout(() => {
-                        copied.value = false;
-                    }, 1500);
+                if (typeof navigator === 'undefined' || !navigator.clipboard) {
+                    throw new Error('clipboard unavailable');
                 }
+
+                await navigator.clipboard.writeText(COMMAND);
+                copied.value = true;
             } catch {
-                // ignore
+                // The API is missing (insecure context, older browser) or the
+                // write was refused. Either way the user pressed a button and
+                // has to learn that nothing landed in their clipboard.
+                copyFailed.value = true;
             }
+
+            setTimeout(() => {
+                copied.value = false;
+                copyFailed.value = false;
+            }, 1500);
         }
 
+        const copyButtonLabel = computed(() => {
+            if (copied.value) {
+                return 'Copied';
+            }
+
+            return copyFailed.value ? 'Copy failed' : 'Copy';
+        });
+
+        const copyStatusMessage = computed(() => {
+            if (copied.value) {
+                return 'Command copied to clipboard';
+            }
+
+            return copyFailed.value ? 'Unable to copy command' : '';
+        });
+
         return {
+            copyButtonLabel,
+            copyStatusMessage,
             primaryButtonClass: PRIMARY_BUTTON_CLASS,
             secondaryButtonClass: SECONDARY_BUTTON_CLASS,
             command: COMMAND,
             output: OUTPUT_LINES,
             cardBodyClass: CARD_BODY_CLASS,
             copyButtonClass: COPY_BUTTON_CLASS,
-            copied,
             copy,
         };
     },
