@@ -49,7 +49,7 @@ Authup's own consoles need no change.
 
 `auth_paths` is a realm-bound folder tree, and `user` and `client` gain a
 nullable `pathId`. It is organization only: a folder grants nothing, withholds
-nothing, and is not a reach axis. Migration `1789930726252-Paths.ts` runs on
+nothing, and is not a reach axis. Migration `1789930726252-PathsAndEventAggregates.ts` runs on
 both server dialects, applied by the next boot with migrations enabled or by
 `authup migration run`. **Existing users and clients come up unfiled**, so
 nothing moves on upgrade and no list changes shape.
@@ -166,7 +166,7 @@ which must carry a lower bound on `createdAt`, the first `group` is
 For events, day and month counts are answered from a new table,
 `auth_event_aggregates`, holding one count per day, realm, scope, event name
 and entity type, and no personal data. Migration
-`1790178321474-EventAggregates.ts` creates it on both server dialects, applied
+`1789930726252-PathsAndEventAggregates.ts` creates it on both server dialects, applied
 by the next boot with migrations enabled or by `authup migration run`. A
 background task fills it every minute wherever the worker sweeps run (the
 `start` process, or `authup start worker` when the API replicas hand them

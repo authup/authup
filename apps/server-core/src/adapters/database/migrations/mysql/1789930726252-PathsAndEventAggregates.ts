@@ -6,7 +6,7 @@
  */
 
 /**
- * Folders for users and clients.
+ * Folders for users and clients, and daily event rollups.
  *
  * `auth_paths` is the realm-bound folder tree: one segment `name`, a
  * `parent_id` self reference, and the full slash `path` the server derives
@@ -19,12 +19,20 @@
  * references into that tree. They delete SET NULL: a folder carries no
  * authorization, so removing one unfiles its users and clients rather than
  * deleting them.
+ *
+ * `auth_event_aggregates` holds one row per UTC calendar day (the `date`
+ * column) and (realm, scope, name, ref_type) with the number of
+ * `auth_events` rows it stands for, so a day or month statistic reads a few
+ * hundred rows instead of scanning the raw log. `realm_id` deletes CASCADE:
+ * a gone realm needs no history, global events keep theirs. There is no
+ * unique constraint: a recompute replaces a whole day under a database lock,
+ * so duplicate rows cannot arise.
  */
 
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Paths1789930726252 implements MigrationInterface {
-    name = 'Paths1789930726252';
+export class PathsAndEventAggregates1789930726252 implements MigrationInterface {
+    name = 'PathsAndEventAggregates1789930726252';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
@@ -79,9 +87,36 @@ export class Paths1789930726252 implements MigrationInterface {
             ADD CONSTRAINT \`FK_989d28ac7ffdf0536c240f12eba\` FOREIGN KEY (\`path_id\`) REFERENCES \`auth_paths\`(\`id\`) ON DELETE
             SET NULL ON UPDATE NO ACTION
         `);
+        await queryRunner.query(`
+            CREATE TABLE \`auth_event_aggregates\` (
+                \`id\` varchar(36) NOT NULL,
+                \`date\` date NOT NULL,
+                \`realm_id\` varchar(255) NULL,
+                \`scope\` varchar(64) NOT NULL,
+                \`name\` varchar(64) NOT NULL,
+                \`ref_type\` varchar(64) NULL,
+                \`count\` int NOT NULL,
+                \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+                INDEX \`IDX_dbc33a4d3f78297eacf707ab6e\` (\`date\`, \`realm_id\`),
+                PRIMARY KEY (\`id\`)
+            ) ENGINE = InnoDB
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_event_aggregates\`
+            ADD CONSTRAINT \`FK_2949cc65b187ad191fa381309ff\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
+            ALTER TABLE \`auth_event_aggregates\` DROP FOREIGN KEY \`FK_2949cc65b187ad191fa381309ff\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_dbc33a4d3f78297eacf707ab6e\` ON \`auth_event_aggregates\`
+        `);
+        await queryRunner.query(`
+            DROP TABLE \`auth_event_aggregates\`
+        `);
         await queryRunner.query(`
             ALTER TABLE \`auth_users\` DROP FOREIGN KEY \`FK_989d28ac7ffdf0536c240f12eba\`
         `);
