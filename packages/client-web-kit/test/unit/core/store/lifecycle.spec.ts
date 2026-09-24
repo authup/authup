@@ -8,7 +8,13 @@
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandler, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
-import { StoreDispatcherEventName, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import {
+    StoreAuthOrigin,
+    StoreAuthStatus,
+    StoreDispatcherEventName,
+    createStore,
+    createStoreDispatcher,
+} from '../../../../src/core/store';
 import { buildAuthorizationCatalog } from '../../../utils/authorization';
 
 const GRANT_RESPONSE = {
@@ -34,16 +40,6 @@ const INTROSPECTION_RESPONSE = {
 };
 
 const USER_RESPONSE = { id: 'user-1', name: 'admin' };
-
-const LIFECYCLE_EVENTS : string[] = [
-    StoreDispatcherEventName.LOGGING_IN,
-    StoreDispatcherEventName.LOGGED_IN,
-    StoreDispatcherEventName.LOGGING_OUT,
-    StoreDispatcherEventName.LOGGED_OUT,
-    StoreDispatcherEventName.SESSION_EXPIRED,
-    StoreDispatcherEventName.RESOLVING,
-    StoreDispatcherEventName.RESOLVED,
-];
 
 function buildStore(handlers: Record<string, FakeHandler> = {}) {
     const httpClient = createFakeClient({
@@ -84,13 +80,12 @@ function requestsTo(httpClient: FakeClient, method: string, path: string) : Fake
 }
 
 describe('core/store/lifecycle', () => {
-    it('emits the documented event order on login and never REALM_UPDATED', async () => {
+    it('emits the documented event order on login', async () => {
         const { store, events } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
 
         expect(events).toEqual([
-            StoreDispatcherEventName.LOGGING_IN,
             // login() clears any previous identity's state between the grant
             // succeeding and applying the response (plan 047.3 — a retained
             // id_token must not survive onto a new identity): cleanup()
@@ -100,7 +95,6 @@ describe('core/store/lifecycle', () => {
             StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
             StoreDispatcherEventName.ID_TOKEN_UPDATED,
             StoreDispatcherEventName.USER_UPDATED,
-            StoreDispatcherEventName.REALM_UPDATED,
             StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
             // applyTokenGrantResponse: expire date is set BEFORE the token
             // (the cookie maxAge computation depends on that ordering)
@@ -112,19 +106,13 @@ describe('core/store/lifecycle', () => {
             StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
             StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
             StoreDispatcherEventName.USER_UPDATED,
-            StoreDispatcherEventName.LOGGED_IN,
         ]);
 
-        // introspection writes realm.value directly, bypassing setRealm —
-        // REALM_UPDATED only ever fires as the cleanup unset, never with a
-        // non-null value
-        expect(
-            events.filter((event) => event === StoreDispatcherEventName.REALM_UPDATED),
-        ).toHaveLength(1);
         expect(store.realmId.value).toEqual('realm-1');
+        expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.LOGIN);
     });
 
-    it('leaves LOGGING_IN dangling when the password grant fails', async () => {
+    it('emits nothing and settles unauthenticated when the password grant fails', async () => {
         const { store, events } = buildStore({
             'POST /token': () => {
                 throw new Error('grant failed');
@@ -133,9 +121,9 @@ describe('core/store/lifecycle', () => {
 
         await expect(store.login({ name: 'admin', password: 'wrong' })).rejects.toThrow();
 
-        expect(events).toEqual([StoreDispatcherEventName.LOGGING_IN]);
+        expect(events).toEqual([]);
         expect(store.accessToken.value).toBeNull();
-        expect(store.loggedIn.value).toBe(false);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
     });
 
     // Deliberately flipped by the plan-045 atomic commit: previously the token
@@ -146,7 +134,6 @@ describe('core/store/lifecycle', () => {
         const {
             store, 
             httpClient, 
-            events, 
         } = buildStore({
             'POST /token/introspect': () => {
                 introspectCalls += 1;
@@ -160,9 +147,9 @@ describe('core/store/lifecycle', () => {
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
 
-        expect(store.loggedIn.value).toBe(false);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.accessToken.value).toBeNull();
-        expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
+        expect(store.lastAuthOrigin.value).toBeNull();
 
         // the granted-but-never-committed tokens were revoked best-effort —
         // otherwise the server session would be orphaned (unreachable by any
@@ -186,15 +173,14 @@ describe('core/store/lifecycle', () => {
         const {
             store, 
             httpClient, 
-            events, 
         } = buildStore({ 'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE, active: false }) });
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
 
-        expect(store.loggedIn.value).toBe(false);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.accessToken.value).toBeNull();
         expect(store.user.value).toBeNull();
-        expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
+        expect(store.lastAuthOrigin.value).toBeNull();
 
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
         expect(revokeRequests).toHaveLength(2);
@@ -214,16 +200,14 @@ describe('core/store/lifecycle', () => {
         await store.logout();
 
         expect(events).toEqual([
-            StoreDispatcherEventName.LOGGING_OUT,
             StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
             StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
             StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
             StoreDispatcherEventName.ID_TOKEN_UPDATED,
             StoreDispatcherEventName.USER_UPDATED,
-            StoreDispatcherEventName.REALM_UPDATED,
             StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
-            StoreDispatcherEventName.LOGGED_OUT,
         ]);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 
         const logoutRequests = httpClient.requests.slice(requestCount);
         expect(logoutRequests).toHaveLength(2);
@@ -279,25 +263,19 @@ describe('core/store/lifecycle', () => {
         expect(store.user.value).toBeNull();
     });
 
-    it('rejects and cleans up when the refresh grant fails: no RESOLVED', async () => {
-        const {
-            store, 
-            httpClient, 
-            events, 
-        } = buildStore({
+    it('rejects and cleans up when the refresh grant fails', async () => {
+        const { store, httpClient } = buildStore({
             'POST /token': () => {
                 throw new Error('invalid_grant');
             },
         });
 
-        store.setRefreshToken('rt-1');
-        events.length = 0;
+        store.refreshToken.value = 'rt-1';
 
         await expect(store.resolve()).rejects.toThrow();
 
-        expect(events).toContain(StoreDispatcherEventName.RESOLVING);
-        expect(events).not.toContain(StoreDispatcherEventName.RESOLVED);
         expect(store.refreshToken.value).toBeNull();
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 
         const tokenRequests = requestsTo(httpClient, 'POST', '/token');
         expect(tokenRequests).toHaveLength(1);
@@ -336,8 +314,8 @@ describe('core/store/lifecycle', () => {
             },
         });
 
-        store.setAccessToken('at-0');
-        store.setRefreshToken('rt-0');
+        store.accessToken.value = 'at-0';
+        store.refreshToken.value = 'rt-0';
         events.length = 0;
 
         await store.resolve();
@@ -347,11 +325,12 @@ describe('core/store/lifecycle', () => {
         expect(store.refreshToken.value).toEqual('rt-2');
         expect(store.realmId.value).toEqual('realm-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
-        expect(events.at(-1)).toEqual(StoreDispatcherEventName.RESOLVED);
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.RESTORE);
         expect(requestsTo(httpClient, 'POST', '/token')).toHaveLength(1);
     });
 
-    it('emits RESOLVING and RESOLVED even with no session at all', async () => {
+    it('resolves without a session and without a request', async () => {
         const {
             store, 
             httpClient, 
@@ -360,23 +339,16 @@ describe('core/store/lifecycle', () => {
 
         await store.resolve();
 
-        expect(events).toEqual([
-            StoreDispatcherEventName.RESOLVING,
-            StoreDispatcherEventName.RESOLVED,
-        ]);
+        expect(events).toEqual([]);
         expect(httpClient.requests).toHaveLength(0);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
     });
 
-    it('exchangeAuthorizationCode wipes the previous identity on success and emits no lifecycle events', async () => {
-        const {
-            store, 
-            httpClient, 
-            events, 
-        } = buildStore();
+    it('exchangeAuthorizationCode wipes the previous identity on success', async () => {
+        const { store, httpClient } = buildStore();
 
-        store.setAccessToken('old-at');
-        store.setRefreshToken('old-rt');
-        events.length = 0;
+        store.accessToken.value = 'old-at';
+        store.refreshToken.value = 'old-rt';
 
         await store.exchangeAuthorizationCode('code-1', {
             code_verifier: 'verifier-1',
@@ -405,8 +377,7 @@ describe('core/store/lifecycle', () => {
         expect(store.accessToken.value).toEqual('at-1');
         expect(store.idToken.value).toEqual('idt-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
-
-        expect(events.filter((event) => LIFECYCLE_EVENTS.includes(event))).toHaveLength(0);
+        expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.EXCHANGE);
     });
 
     it('leaves prior state intact when the code exchange fails', async () => {
@@ -416,8 +387,8 @@ describe('core/store/lifecycle', () => {
             },
         });
 
-        store.setAccessToken('old-at');
-        store.setRefreshToken('old-rt');
+        store.accessToken.value = 'old-at';
+        store.refreshToken.value = 'old-rt';
 
         await expect(store.exchangeAuthorizationCode('code-1')).rejects.toThrow();
 
@@ -436,8 +407,8 @@ describe('core/store/lifecycle', () => {
             }),
         });
 
-        store.setRefreshToken('rt-1');
-        store.setIdToken('previous-id-token');
+        store.refreshToken.value = 'rt-1';
+        store.idToken.value = 'previous-id-token';
 
         await store.resolve();
 
@@ -456,7 +427,7 @@ describe('core/store/lifecycle', () => {
     it('shares one in-flight resolution across concurrent resolve() calls', async () => {
         const { store, httpClient } = buildStore();
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
 
         await Promise.all([store.resolve(), store.resolve()]);
 
@@ -473,7 +444,6 @@ describe('core/store/lifecycle', () => {
             'POST /token/introspect': () => {
                 observed.push(
                     store.accessToken.value,
-                    store.loggedIn.value,
                     store.user.value,
                 );
 
@@ -484,7 +454,7 @@ describe('core/store/lifecycle', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         // the staged round-trip ran against an untouched store
-        expect(observed).toEqual([null, false, null]);
+        expect(observed).toEqual([null, null]);
         expect(store.accessToken.value).toEqual('at-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
     });
@@ -493,7 +463,6 @@ describe('core/store/lifecycle', () => {
         const {
             store, 
             httpClient, 
-            events, 
         } = buildStore({
             'POST /token/introspect': async () => {
                 await store.logout();
@@ -507,7 +476,7 @@ describe('core/store/lifecycle', () => {
         // the logout wins: nothing resurrected, staged tokens revoked
         expect(store.accessToken.value).toBeNull();
         expect(store.user.value).toBeNull();
-        expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
+        expect(store.lastAuthOrigin.value).toBeNull();
 
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
         expect(revokeRequests).toHaveLength(2);
@@ -533,7 +502,7 @@ describe('core/store/lifecycle', () => {
 
         // RT-only hydration (access-token cookie expired via maxAge, the
         // refresh-token session cookie survived) — resolve() starts a refresh
-        store.setRefreshToken('rt-0');
+        store.refreshToken.value = 'rt-0';
 
         const resolving = store.resolve();
 

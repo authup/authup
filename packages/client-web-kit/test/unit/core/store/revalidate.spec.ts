@@ -81,7 +81,7 @@ describe('core/store/revalidate', () => {
     it('builds the user from the introspection response', async () => {
         const { store, httpClient } = buildStore();
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
 
         await store.resolve();
 
@@ -106,7 +106,7 @@ describe('core/store/revalidate', () => {
     it('replaces a seeded user that is not the token subject', async () => {
         const { store, httpClient } = buildStore();
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
         store.setUser({
             id: 'someone-else',
             name: 'stale',
@@ -127,7 +127,7 @@ describe('core/store/revalidate', () => {
     it('holds no user for a non-user subject', async () => {
         const { store, httpClient } = buildStoreWithSubjectKind('client');
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
         store.setUser({
             id: TOKEN_SUBJECT,
             name: 'admin',
@@ -162,7 +162,7 @@ describe('core/store/revalidate', () => {
 
         const store = createStore({ httpClient, dispatcher: createStoreDispatcher() });
 
-        store.setAccessToken('at-1');
+        store.accessToken.value = 'at-1';
 
         await expect(store.resolve()).rejects.toThrow();
 
@@ -202,8 +202,8 @@ describe('core/store/revalidate', () => {
 
         const store = createStore({ httpClient, dispatcher: createStoreDispatcher() });
 
-        store.setAccessToken('at-1');
-        store.setRefreshToken('rt-1');
+        store.accessToken.value = 'at-1';
+        store.refreshToken.value = 'rt-1';
 
         await store.resolve();
 

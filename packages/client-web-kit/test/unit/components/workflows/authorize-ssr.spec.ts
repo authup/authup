@@ -86,8 +86,8 @@ async function render(
         // the state the auth console's router guard leaves after resolving
         // the forwarded access token
         const store = app.runWithContext(() => injectStore());
-        store.setAccessToken('access-token');
-        store.setRealm({ id: 'realm-1', name: 'master' });
+        store.accessToken = 'access-token';
+        store.realm = { id: 'realm-1', name: 'master' };
         store.sessionId = 'session-1';
         store.setUser({
             id: 'user-1', 

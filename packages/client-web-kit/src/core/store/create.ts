@@ -84,24 +84,13 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 export function createStore(context: StoreCreateContext) {
     const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
 
+    // State rather than a local flag, so a server-side cookie read is carried
+    // to the client in the pinia payload and not repeated there.
     const cookiesRead = ref<boolean>(false);
-    /**
-     * @deprecated Kit-internal hydration bookkeeping — not part of the supported surface.
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
-    const setCookiesRead = (value: boolean) => {
-        cookiesRead.value = value;
-    };
 
     // --------------------------------------------------------------------
 
     const accessToken = ref<string | null>(null);
-    /**
-     * @deprecated Raw token mutation — use login()/logout()/resolve() (or applyTokenGrantResponse for a grant response) instead.
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
     const setAccessToken = (input: string | null) => {
         accessToken.value = input;
 
@@ -114,11 +103,6 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const accessTokenExpireDate = ref<Date | null>(null);
-    /**
-     * @deprecated Raw token mutation — the expire date is derived from grant/introspection responses.
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
     const setAccessTokenExpireDate = (input: Date | number | string | null) => {
         if (typeof input === 'number' || typeof input === 'string') {
             accessTokenExpireDate.value = new Date(input); // verify microseconds or seconds
@@ -135,11 +119,6 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const refreshToken = ref<string | null>(null);
-    /**
-     * @deprecated Raw token mutation — use login()/logout()/resolve() (or applyTokenGrantResponse for a grant response) instead.
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
     const setRefreshToken = (input: string | null) => {
         refreshToken.value = input;
 
@@ -156,11 +135,6 @@ export function createStore(context: StoreCreateContext) {
     // the authup `end_session_endpoint` — otherwise every kit RP degrades to
     // the click-gated confirm page.
     const idToken = ref<string | null>(null);
-    /**
-     * @deprecated Raw token mutation — the id_token rides the grant response (applyTokenGrantResponse retains it across refreshes).
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
     const setIdToken = (input: string | null) => {
         idToken.value = input;
 
@@ -223,12 +197,7 @@ export function createStore(context: StoreCreateContext) {
         return false;
     });
 
-    /**
-     * @deprecated Raw identity mutation — the realm is derived from token introspection during resolve()/login().
-     * Kept as a working shim (kit cookie hydration + downstream seeding);
-     * slated for removal in a future major.
-     */
-    // Narrowed at the sink, not at the call sites: both realm refs are
+    // Narrowed at the sink, not at the call sites: the management realm is
     // cookie-persisted, and callers hand over whole entity rows (the realm
     // switcher passes the table row straight through), so the free-text
     // `description` column would ride the header of every request. The
@@ -238,12 +207,6 @@ export function createStore(context: StoreCreateContext) {
         name: input.name,
         ...(typeof input.displayName !== 'undefined' ? { displayName: input.displayName } : {}),
     });
-
-    const setRealm = (input: RealmMinimal | null) => {
-        realm.value = input ? pickRealm(input) : null;
-
-        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, realm.value);
-    };
 
     const realmManagement = ref<RealmMinimal | null>(null);
     const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
@@ -283,7 +246,7 @@ export function createStore(context: StoreCreateContext) {
     // a later resolve() never overwrites an interactive origin.
     const lastAuthOrigin = ref<`${StoreAuthOrigin}` | null>(null);
 
-    // Presence-derived on purpose: reachable from the raw setter surface and
+    // Presence-derived on purpose: reachable from cookie hydration and
     // from @pinia/nuxt payload hydration alike (an internal "resolved" flag
     // would desync from the transferred refs). AUTHENTICATED = the state is
     // complete, not "server-validated" — validation is resolve()'s job.
@@ -427,7 +390,7 @@ export function createStore(context: StoreCreateContext) {
         setUser(null);
         sessionId.value = null;
         acr.value = null;
-        setRealm(null);
+        realm.value = null;
         setRealmManagement(null);
 
         lastAuthOrigin.value = null;
@@ -956,9 +919,8 @@ export function createStore(context: StoreCreateContext) {
             ctx.introspection.realm_id &&
             ctx.introspection.realm_name
         ) {
-            // deliberate direct write (not setRealm): a REALM_UPDATED emit
-            // would start persisting a realm cookie for the first time and
-            // open a pre-resolve staleness surface (plan 045 review).
+            // Not persisted: a realm cookie would open a pre-resolve
+            // staleness surface.
             realm.value = {
                 id: ctx.introspection.realm_id,
                 name: ctx.introspection.realm_name,
@@ -1171,8 +1133,6 @@ export function createStore(context: StoreCreateContext) {
 
     // todo: rename to reload() ?
     const resolveInternal = async () : Promise<void> => {
-        context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
-
         if (context.cookieSession) {
             // Unconditional, unlike the bearer branch below: the credential is
             // an opaque cookie this code cannot inspect, the authentication
@@ -1188,7 +1148,6 @@ export function createStore(context: StoreCreateContext) {
                 lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
             }
 
-            context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
 
             return;
         }
@@ -1228,22 +1187,15 @@ export function createStore(context: StoreCreateContext) {
         }
 
         // A session found by resolve() with no origin set is a restore
-        // (cookie hydration / raw seeding); never overwrite an interactive
+        // (cookie hydration); never overwrite an interactive
         // origin — a later resolve() on a logged-in session is a no-op here.
         if (accessToken.value && !lastAuthOrigin.value) {
             lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
         }
-
-        context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
     };
 
     const resolve = createPromiseShareWrapperFn(resolveInternal);
 
-    /**
-     * @deprecated Coarse "a token exists" flag — read {@link status} instead
-     * (AUTHENTICATED additionally implies realm + user are present).
-     */
-    const loggedIn = computed<boolean>(() => !!accessToken.value);
     // Stage the introspection for a fresh grant, then commit
     // atomically. On failure or an aborted commit the staged tokens are
     // revoked best-effort — nothing was written, so nothing else could.
@@ -1280,8 +1232,6 @@ export function createStore(context: StoreCreateContext) {
     };
 
     const login = async (ctx: StoreLoginContext) => {
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
-
         interactionInFlight.value = StoreAuthOrigin.LOGIN;
 
         try {
@@ -1304,18 +1254,14 @@ export function createStore(context: StoreCreateContext) {
         } finally {
             interactionInFlight.value = null;
         }
-
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
     // Establish a session from an out-of-band grant response — the MFA-pending
     // ticket completion (issue #3242): the challenge verify returns the full
-    // grant, and applying it here keeps login semantics (LOGGING_IN/LOGGED_IN
-    // events, AUTHENTICATING status, lastAuthOrigin = login) identical to a
+    // grant, and applying it here keeps login semantics (AUTHENTICATING
+    // status, lastAuthOrigin = login) identical to a
     // password-grant login.
     const loginWithTokenGrant = async (response: OAuth2TokenGrantResponse) => {
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
-
         interactionInFlight.value = StoreAuthOrigin.LOGIN;
 
         try {
@@ -1325,8 +1271,6 @@ export function createStore(context: StoreCreateContext) {
         } finally {
             interactionInFlight.value = null;
         }
-
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
     const exchangeAuthorizationCode = async (
@@ -1378,7 +1322,6 @@ export function createStore(context: StoreCreateContext) {
     const logout = async (options: StoreLogoutOptions = {}) => {
         const revoke = options.revoke ?? true;
 
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
 
         if (revoke && context.cookieSession) {
             // The credential lives server-side, so the local teardown below
@@ -1394,13 +1337,10 @@ export function createStore(context: StoreCreateContext) {
         }
 
         await cleanup({ revokeTokens: options.revokeTokens });
-
-        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_OUT);
     };
 
     return {
         cookiesRead,
-        setCookiesRead,
 
         permissionEvaluator,
         permissionRevision,
@@ -1408,7 +1348,6 @@ export function createStore(context: StoreCreateContext) {
         login,
         loginWithTokenGrant,
         logout,
-        loggedIn,
         status,
         lastAuthOrigin,
         resolve,
@@ -1416,20 +1355,15 @@ export function createStore(context: StoreCreateContext) {
 
         applyTokenGrantResponse,
         accessToken,
-        setAccessToken,
         accessTokenExpireDate,
-        setAccessTokenExpireDate,
         refreshToken,
-        setRefreshToken,
 
         idToken,
-        setIdToken,
 
         realm,
         realmId,
         realmIsRoot,
         realmName,
-        setRealm,
 
         realmManagement,
         realmManagementId,

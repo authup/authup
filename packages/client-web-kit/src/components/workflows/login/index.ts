@@ -7,7 +7,3 @@
 
 export { default as ALoginForm } from './LoginForm.vue';
 
-/**
- * @deprecated Import `ALoginForm` instead.
- */
-export { default as ALogin } from './LoginForm.vue';

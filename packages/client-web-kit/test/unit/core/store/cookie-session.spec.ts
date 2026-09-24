@@ -243,7 +243,7 @@ describe('core/store/cookie-session', () => {
         const resolving = store.resolve();
 
         await store.logout({ revoke: false });
-        store.setRealm({ id: 'realm-new', name: 'new-realm' });
+        store.realm = { id: 'realm-new', name: 'new-realm' };
         store.setUser({
             id: 'user-new',
             name: 'new-user',
