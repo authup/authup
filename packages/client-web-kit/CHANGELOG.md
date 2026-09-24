@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+
+
+### Bug Fixes
+
+* bound authorization-check verdicts by a server-computed policy expiry ([#3653](https://github.com/authup/authup/issues/3653)) ([48f820b](https://github.com/authup/authup/commit/48f820bff9247b05f2a2474d5a1a4464c54c5496))
+* **deps:** bump the majorprod group with 6 updates ([#3658](https://github.com/authup/authup/issues/3658)) ([74531c4](https://github.com/authup/authup/commit/74531c46d741a23cf7e3ea4f89dfead1778adfca))
+* follow-ups of the per-realm folders feature ([#3645](https://github.com/authup/authup/issues/3645)) ([bb3a117](https://github.com/authup/authup/commit/bb3a117b965087204d6e7f1dd581bf50bf16d96f))
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-http-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/errors bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/i18n bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/specs bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

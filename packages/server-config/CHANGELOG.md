@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* EntityStatsQuery drops granularity/days in favour of rapiq groups/aggregates, StatsGranularity and EntityStatsBucket are removed (EntityStatsRow, EventStatsRow), and EntityStatsMeta carries bucket instead of granularity/days.
+* GET /schemas/:name is removed in favour of GET /<collection>/@schema, and client.schema.getOne(name) in favour of client.<entity>.getSchema(). The unreleased GET /events/stats moved to GET /events/@stats.
+
+### Features
+
+* grouped statistics on rapiq 2.4.0 and daily event rollups ([#3657](https://github.com/authup/authup/issues/3657)) ([c581906](https://github.com/authup/authup/commit/c581906c80e8c89440eb05f24d991aa38468cca7))
+* per-entity statistics and schema facets (/&lt;collection&gt;/[@stats](https://github.com/stats), /&lt;collection&gt;/[@schema](https://github.com/schema)) ([#3649](https://github.com/authup/authup/issues/3649)) ([7ab1869](https://github.com/authup/authup/commit/7ab1869cb69ceba77167f5b6d2dbe61ab19cf764))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-config-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

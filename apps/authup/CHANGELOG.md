@@ -1,5 +1,46 @@
 # Change Log
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* EntityStatsQuery drops granularity/days in favour of rapiq groups/aggregates, StatsGranularity and EntityStatsBucket are removed (EntityStatsRow, EventStatsRow), and EntityStatsMeta carries bucket instead of granularity/days.
+* GET /schemas/:name is removed in favour of GET /<collection>/@schema, and client.schema.getOne(name) in favour of client.<entity>.getSchema(). The unreleased GET /events/stats moved to GET /events/@stats.
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* grouped statistics on rapiq 2.4.0 and daily event rollups ([#3657](https://github.com/authup/authup/issues/3657)) ([c581906](https://github.com/authup/authup/commit/c581906c80e8c89440eb05f24d991aa38468cca7))
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+* per-entity statistics and schema facets (/&lt;collection&gt;/[@stats](https://github.com/stats), /&lt;collection&gt;/[@schema](https://github.com/schema)) ([#3649](https://github.com/authup/authup/issues/3649)) ([7ab1869](https://github.com/authup/authup/commit/7ab1869cb69ceba77167f5b6d2dbe61ab19cf764))
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group with 6 updates ([#3658](https://github.com/authup/authup/issues/3658)) ([74531c4](https://github.com/authup/authup/commit/74531c46d741a23cf7e3ea4f89dfead1778adfca))
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/errors bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-account-console bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-admin-console bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-auth-console bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-config bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-config-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-console-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/server-core bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/specs bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

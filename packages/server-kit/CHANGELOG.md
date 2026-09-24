@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+
+
+### Bug Fixes
+
+* evaluate UPDATE permissions against the stored row as well as the updated one ([#3655](https://github.com/authup/authup/issues/3655)) ([bbace32](https://github.com/authup/authup/commit/bbace32ad4f94607804eb1a1c974eb60188bae59))
+* **server-core:** answer the same status for a malformed uuid on every dialect ([#3651](https://github.com/authup/authup/issues/3651)) ([34c22d3](https://github.com/authup/authup/commit/34c22d3e1900a076f40f149a733c3839110a8efe)), closes [#3650](https://github.com/authup/authup/issues/3650)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/kit bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+    * @authup/specs bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 

@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* GET /schemas/:name is removed in favour of GET /<collection>/@schema, and client.schema.getOne(name) in favour of client.<entity>.getSchema(). The unreleased GET /events/stats moved to GET /events/@stats.
+
+### Features
+
+* grouped event counts behind GET /events/stats and the admin console dashboard ([#3638](https://github.com/authup/authup/issues/3638)) ([2ef361b](https://github.com/authup/authup/commit/2ef361bbfbcc73ef38f0c3c919e6ac84b970d383))
+* organize users and clients in per-realm folders (paths) ([#3615](https://github.com/authup/authup/issues/3615)) ([672a92a](https://github.com/authup/authup/commit/672a92a574340b31b7558d8d8f17a9c89d018647))
+* per-entity statistics and schema facets (/&lt;collection&gt;/[@stats](https://github.com/stats), /&lt;collection&gt;/[@schema](https://github.com/schema)) ([#3649](https://github.com/authup/authup/issues/3649)) ([7ab1869](https://github.com/authup/authup/commit/7ab1869cb69ceba77167f5b6d2dbe61ab19cf764))
+
+
+### Bug Fixes
+
+* follow-ups of the per-realm folders feature ([#3645](https://github.com/authup/authup/issues/3645)) ([bb3a117](https://github.com/authup/authup/commit/bb3a117b965087204d6e7f1dd581bf50bf16d96f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.66 to ^1.0.0-beta.67
+
 ## [1.0.0-beta.66](https://github.com/authup/authup/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2026-09-21)
 
 
