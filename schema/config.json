@@ -115,6 +115,14 @@
                             "description": "Run the worker (the background cron sweeps) in this process. Under the default mode the API runs it alongside itself; set false on API replicas when a dedicated `authup start worker` process runs it. Worker mode refuses to start when this is false.",
                             "default": true,
                             "x-authup-env": "WORKER_ENABLED"
+                        },
+                        "port": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 65535,
+                            "description": "TCP port the health listener of `authup start worker` binds. Inherits `core.port` (PORT) when unset (0); set it only to run the worker and the API on one host. The listener binds `core.host`.",
+                            "default": 0,
+                            "x-authup-env": "WORKER_PORT"
                         }
                     }
                 },
