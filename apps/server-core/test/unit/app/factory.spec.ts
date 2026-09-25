@@ -11,7 +11,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { ModuleStatus } from 'orkos';
-import { describe, expect, it } from 'vitest';
+import {
+    describe, 
+    expect, 
+    it, 
+    vi,
+} from 'vitest';
 import {
     ConfigModule,
     DatabaseInjectionKey,
@@ -37,6 +42,9 @@ const DATABASE_PATH = path.join(
 async function buildWorkerConfig(input: Partial<Config> = {}): Promise<Config> {
     const config = await normalizeConfig({
         eventLogEnabled: false,
+        // 0 inherits into core.worker.port, so the health listener takes an
+        // ephemeral port
+        port: 0,
         ...input,
     });
 
@@ -80,11 +88,11 @@ describe('app/factory', () => {
             ModuleName.CACHE,
             ModuleName.DATABASE,
             ModuleName.COMPONENTS,
+            // the health listener, and nothing else that serves a request
+            ModuleName.HTTP,
         ]);
 
-        // nothing that serves a request, and nothing that writes the
-        // provisioning graph.
-        expect(names).not.toContain(ModuleName.HTTP);
+        // nothing that writes the provisioning graph.
         expect(names).not.toContain(ModuleName.PROVISIONING);
         expect(names).not.toContain(ModuleName.MAIL);
         expect(names).not.toContain(ModuleName.OAUTH2);
@@ -117,6 +125,30 @@ describe('app/factory', () => {
             }
 
             expect(lines.some((line) => line.startsWith('Background components started: oauth2-cleaner'))).toBeTruthy();
+
+            // the boot line names the bound port, which is ephemeral here
+            const listening = lines.find((line) => line.startsWith('Worker health listener on port '));
+            const baseURL = `http://127.0.0.1:${listening!.replace(/\D/g, '')}`;
+
+            // the first sweep runs right after start; wait for it to land
+            await vi.waitFor(async () => {
+                const body = await (await fetch(`${baseURL}/`)).json();
+                expect(body.components[0].lastSuccessAt).not.toBeNull();
+            });
+
+            const response = await fetch(`${baseURL}/`);
+            expect(response.status).toEqual(200);
+            expect(await response.json()).toMatchObject({
+                healthy: true,
+                components: [{ name: 'oauth2-cleaner', overdue: false }],
+            });
+
+            // wget --spider, the image healthcheck, sends HEAD
+            expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(200);
+
+            // nothing else is mounted
+            expect((await fetch(`${baseURL}/users`)).status).toEqual(404);
+            expect((await fetch(`${baseURL}/token`, { method: 'POST' })).status).toEqual(404);
         } finally {
             await app.teardown();
         }
@@ -131,7 +163,7 @@ describe('app/factory', () => {
 
         // a process started for nothing but the sweeps must not come up idle:
         // worker mode requires core.worker.enabled rather than ignoring it.
-        const app = createWorkerApplication({ config: new ConfigModule(() => buildWorkerConfig({ worker: { enabled: false } })) });
+        const app = createWorkerApplication({ config: new ConfigModule(() => buildWorkerConfig({ worker: { enabled: false, port: 0 } })) });
         app.container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
         try {

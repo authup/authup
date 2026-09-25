@@ -7,6 +7,17 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.67)
 
+### The worker opens a health port
+
+`authup start worker` now answers `GET /` on `core.worker.port`
+(`WORKER_PORT`), which defaults to `PORT`: 200 while its sweeps succeed, 503
+once one has gone five minutes without a successful pass. In a container
+nothing changes except that the image healthcheck now works, so drop a
+`healthcheck: disable: true` override from the worker service. A host that
+runs `authup start` (or `start core`) and `authup start worker` from one
+environment must now set `WORKER_PORT` on the worker, or it fails to boot
+with `EADDRINUSE`. See [Worker](./worker.md#health).
+
 ### Removed kit APIs
 
 `@authup/client-web-kit` drops the store API that was deprecated in favour of
@@ -755,7 +766,7 @@ No action required.
 |---|---|
 | `authup start` | the API and every enabled console on one listener (unchanged) |
 | `authup start core` | the API and the IdP alone, mounting no console |
-| `authup start worker` | the background sweeps alone: no listener, no migrations |
+| `authup start worker` | the background sweeps alone: a health listener only, no migrations |
 | `authup start console [admin\|account\|auth]` | one console service, or every enabled one, each on its own port |
 
 There is no `worker` or `core` subcommand, no top-level `console` subcommand

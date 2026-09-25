@@ -33,6 +33,13 @@ export type CoreWorkerConfig = {
      * default: true
      */
     enabled: boolean,
+    /**
+     * TCP port the health listener of `authup start worker` binds. Inherits
+     * `core.port` (PORT) unless it names its own, so only two roles on one
+     * host need to set it. The listener binds `core.host`.
+     * default: core.port
+     */
+    port: number,
 };
 
 export type CoreConfig = {

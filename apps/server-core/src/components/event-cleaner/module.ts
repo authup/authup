@@ -20,6 +20,7 @@ export function createEventCleanerComponent(
 ) : Component {
     let task : ScheduledTask | undefined;
     let stopped = false;
+    let lastSuccessAt : number | undefined;
 
     return {
         async start() {
@@ -35,6 +36,7 @@ export function createEventCleanerComponent(
                     // Rows carry a per-row expires_at stamped at write time from
                     // eventLogRetentionDays; null = keep forever.
                     await repository.deleteExpired(new Date().toISOString());
+                    lastSuccessAt = Date.now();
                 } catch (e) {
                     logger?.warn('Sweeping expired audit events failed.');
                     logger?.warn(e);
@@ -59,5 +61,6 @@ export function createEventCleanerComponent(
                 task = undefined;
             }
         },
+        lastSuccessAt: () => lastSuccessAt,
     };
 }

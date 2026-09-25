@@ -4916,8 +4916,8 @@ it as an unknown operation before anything is touched (pinned in
 
 The other shapes are ROLES of that one verb, passed as its positional:
 `authup start core` (the API and the IdP alone, mounting nothing and reading
-no console config), `authup start worker` (the background worker alone: no
-listener, no migrations, refused while `core.worker.enabled` is false) and
+no console config), `authup start worker` (the background worker alone: only a
+health listener, no migrations, refused while `core.worker.enabled` is false) and
 `authup start console [admin|account|auth]` (one console service, or every
 enabled one, each on its own port). A role rather than a subcommand per
 shape, because they are one thing started differently: every role reads the
@@ -4975,11 +4975,11 @@ is `/var/log/authup` (the one directory written to).
 `HOST=0.0.0.0` and `PORT=3000` are image `ENV` defaults rather than
 unconditional exports, so `-e PORT=4000` reaches the server, and the
 `HEALTHCHECK` probes `http://127.0.0.1:${PORT}/`; `CMD ["start"]` is the
-default command. That probe fits `start` and `start core` only: a `start
-worker` container opens no port and a `start console` container binds the
-console ports, so those roles disable or override it in their own deployment
-(the compose snippets in `worker.md` and `console-replicas.md`; the console
-one probes the auth console, which cannot be disabled). An empty or unknown
+default command. That probe fits `start`, `start core` and `start worker`
+(whose health listener binds `PORT` by default); a `start console` container
+binds the console ports, so that role overrides it in its own deployment (the
+compose snippet in `console-replicas.md` probes the auth console, which cannot
+be disabled). An empty or unknown
 command is the CLI's to refuse, with its usage and exit 1.
 
 Each console IS its own service, so a shared listener would be the one place
@@ -5056,8 +5056,8 @@ config section is not read.
 **Worker mode** is the same binary and the same image,
 started as `authup start worker` (container command: `start worker`). It is
 `createWorkerApplication()` in `app/factory.ts`:
-config, logger, cache, database and components, and nothing else, so it opens
-no port and serves no request. Two config keys move the work:
+config, logger, cache, database, components and a health listener, and
+nothing else, so it serves no API request. Two config keys move the work:
 `core.worker.enabled` (`WORKER_ENABLED`) says whether THIS process runs the
 cron sweeps, and `migrationEnabled` (`MIGRATION_ENABLED`) turns boot-time DDL
 off so one process owns the schema. The key reads the same in both modes: the
@@ -5077,6 +5077,25 @@ sqlite worker boots against no schema. So "never migrates" is exact and
 one info line naming what it registered, which on a worker is the only line a
 healthy boot writes (the sweeps log nothing per tick and the schema-verify
 lines are debug).
+
+**The worker health listener** is `WorkerHealthModule`
+(`app/modules/components/health.ts`), a bare `node:http` server in the HTTP
+slot of `createWorkerApplication`: no routing, no auth. `GET /` and `HEAD /`
+(the image's `wget --spider` sends HEAD) answer `{ healthy, components }` with
+200, or 503 while any component is overdue; every other request is 404. The
+body is `ComponentsModule.getHealth()`: per component its `name`, its
+`lastSuccessAt` (ISO, or null) and `overdue`, which means no successful pass
+for `COMPONENT_OVERDUE_AFTER` (five minutes, five missed one-minute ticks),
+counted from setup until the first success; before setup and after teardown
+`healthy` is false. It binds `core.worker.port` (`WORKER_PORT`) on
+`core.host`; the port defaults to 0, meaning unset, and resolves to
+`core.port` (`PORT`), the same inheritance `core.host` takes from the root
+`host`. So the image `HEALTHCHECK` and `authup healthcheck`, which both probe
+`PORT`, work for a worker container unchanged, and neither follows a
+`WORKER_PORT` override: set it only to run two roles on one host, where no
+image check runs. A database outage answers 503, which a restart cannot fix,
+so in Kubernetes it is a readiness probe, never a liveness one (the pod would
+restart-loop for the length of the outage).
 
 **Console replica sets.**
 Every served console lives under the one `/console` prefix

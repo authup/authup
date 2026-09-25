@@ -225,8 +225,6 @@ export function renderCompose(answers: Answers, version: string): Rendered {
                 ...dependsOnBlock,
                 // the worker needs no url of its own; without one the CLI derives it and warns on every start
                 ...block('environment', [env('PUBLIC_URL', answers.publicUrl), ...dbEnv]),
-                '# the image healthcheck probes an HTTP port this process never opens',
-                ...block('healthcheck', ['disable: true']),
                 'command: start worker',
             ]),
         );

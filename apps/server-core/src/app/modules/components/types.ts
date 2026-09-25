@@ -15,3 +15,15 @@ export type ComponentsModuleOptions = {
      */
     required?: boolean
 };
+
+export type ComponentHealth = {
+    name: string,
+    /** ISO timestamp of the last successful pass, null before the first. */
+    lastSuccessAt: string | null,
+    overdue: boolean,
+};
+
+export type ComponentsHealth = {
+    healthy: boolean,
+    components: ComponentHealth[],
+};

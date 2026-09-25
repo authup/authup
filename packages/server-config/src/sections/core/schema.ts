@@ -88,6 +88,16 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
                 env: EnvironmentVariable.WORKER_ENABLED,
                 readEnv: readEnvBoolStrict,
             },
+            port: {
+                type: nonNegativeNumberType,
+                // 0 means unset, the `core.host` pattern: a real default
+                // would BE the value, and `core.port` could never reach it.
+                default: 0,
+                description: 'TCP port the health listener of `authup start worker` binds. Inherits `core.port` (PORT) when unset (0); set it only to run the worker and the API on one host. The listener binds `core.host`.',
+                env: EnvironmentVariable.WORKER_PORT,
+                readEnv: readEnvInt,
+                resolve: ({ value, get }) => (value as number) || get('core.port') as number,
+            },
         }, { pathPrefix: 'core.worker' }),
         migrationEnabled: {
             type: booleanType,

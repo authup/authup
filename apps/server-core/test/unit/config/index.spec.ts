@@ -118,7 +118,7 @@ describe('src/config/*.ts', () => {
 
         it('should accept boolean process role keys and reject non-boolean values', async () => {
             const config = await parseConfig({
-                worker: { enabled: false },
+                worker: { enabled: false, port: 0 },
                 migrationEnabled: false,
             });
 
@@ -338,12 +338,17 @@ describe('src/config/*.ts', () => {
 
         it('should accept the process role keys', async () => {
             const config = await normalizeConfig({
-                worker: { enabled: false },
+                worker: { enabled: false, port: 0 },
                 migrationEnabled: false,
             });
 
             expect(config.worker?.enabled).toEqual(false);
             expect(config.migrationEnabled).toEqual(false);
+        });
+
+        it('should let the worker port inherit the listener port unless it names its own', async () => {
+            expect((await normalizeConfig({ port: 4001 })).worker.port).toEqual(4001);
+            expect((await normalizeConfig({ port: 4001, worker: { enabled: true, port: 4002 } })).worker.port).toEqual(4002);
         });
 
         it('should read WORKER_ENABLED and MIGRATION_ENABLED from the environment', () => {

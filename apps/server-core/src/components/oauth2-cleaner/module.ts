@@ -22,6 +22,7 @@ export function createOAuth2CleanerComponent(
 ) : Component {
     let task : ScheduledTask | undefined;
     let stopped = false;
+    let lastSuccessAt : number | undefined;
 
     return {
         async start() {
@@ -47,6 +48,7 @@ export function createOAuth2CleanerComponent(
                     await sessionTokenRepository.deleteExpired(isoDate);
 
                     await sessionRepository.deleteExpired(isoDate);
+                    lastSuccessAt = Date.now();
                 } catch (e) {
                     logger?.warn('Sweeping expired sessions failed.');
                     logger?.warn(e);
@@ -71,5 +73,6 @@ export function createOAuth2CleanerComponent(
                 task = undefined;
             }
         },
+        lastSuccessAt: () => lastSuccessAt,
     };
 }
