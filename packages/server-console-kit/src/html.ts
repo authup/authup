@@ -81,6 +81,15 @@ export function injectHeadContent(html: string, content: string) : string {
 }
 
 /**
+ * Remove every favicon link (`rel="icon"` / `rel="shortcut icon"`) from a
+ * document, so a replacement is the only one left: with several, which one
+ * a browser shows is its own choice.
+ */
+export function removeFaviconLinks(html: string) : string {
+    return html.replace(/<link\b(?=[^>]*\srel\s*=\s*["']?(?:shortcut\s+)?icon["'\s>/])[^>]*>\s*/gi, '');
+}
+
+/**
  * Replace the document title. The value must already be HTML-escaped by
  * the caller; matched by pattern so a reformatted tag still hits.
  */

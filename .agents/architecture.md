@@ -3215,6 +3215,12 @@ which the hosted auth pages rendered unthemed.
   the ONE part that does not apply to already-published console packages:
   the kit theme CSS ships raw and is inlined by each console's Tailwind
   build.
+- **`favicon` REPLACES the console's own icon.** Every console bundle ships
+  a default `src/favicon.svg` (the logo mark) linked from its `index.html`,
+  so vite emits it as a hashed asset under the bundle's base. When the
+  manifest names a `favicon`, `applyTheme` strips the shell's icon links
+  (`removeFaviconLinks`) before injecting the theme head, because with
+  several `rel="icon"` links which one a browser shows is its own choice.
 - **The theme asset route is hand-written, NOT `@routup/assets`**
   (`theme/assets.ts`). It is mounted per console SERVICE under that
   console's own base (`THEME_ASSET_MOUNT_PATH`, `theme`) rather than at one
@@ -5391,7 +5397,12 @@ today's behaviour:
   loads `src/server.ts` through `vite.ssrLoadModule`, and calls the same
   payload assembly and splice chain the built render uses, minus
   `rebaseAssetURLs` (the dev html already carries the base vite was given,
-  so rebasing it would be a no-op done the hard way).
+  so rebasing it would be a no-op done the hard way). It additionally inlines every stylesheet the SSR entry reaches as the
+  `<style data-vite-dev-id>` tag vite's client would create itself: a build
+  links the CSS through the manifest, dev has none, so the markup otherwise
+  paints unstyled until the client modules load (visible on every fast
+  reload). The attribute is what vite's client adopts a sheet by, so hot
+  updates replace these tags rather than adding a second copy.
 - server-core itself runs from TypeScript via an `authup-source` export
   condition on `@authup/server-core`'s `package.json`
   (`"authup-source": "./src/index.ts"`), reached by

@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
-import type { ViteDevServer } from 'vite';
+import type { EnvironmentModuleGraph, EnvironmentModuleNode, ViteDevServer } from 'vite';
 import {
     afterAll,
     beforeAll,
@@ -34,7 +34,19 @@ let config : Config;
 type ViteRenderContext = Pick<
     ViteDevServer,
 'transformIndexHtml' | 'ssrLoadModule' | 'ssrFixStacktrace'
->;
+> & {
+    environments: { ssr: { moduleGraph: Pick<EnvironmentModuleGraph, 'getModuleByUrl'> } },
+};
+
+type FakeModule = {
+    id: string | null, 
+    url: string, 
+    importedModules: Set<FakeModule> 
+};
+
+function createModuleGraph(entry?: FakeModule) : ViteRenderContext['environments'] {
+    return { ssr: { moduleGraph: { getModuleByUrl: async () => entry as EnvironmentModuleNode | undefined } } };
+}
 
 /**
  * The render reads the locale and color-mode cookies through
@@ -66,6 +78,7 @@ describe('createViteRender', () => {
                 },
             }),
             ssrFixStacktrace: () => undefined,
+            environments: createModuleGraph(),
         };
 
         const render = createViteRender(vite, root);
@@ -90,6 +103,7 @@ describe('createViteRender', () => {
                 },
             }),
             ssrFixStacktrace: () => { fixed = true; },
+            environments: createModuleGraph(),
         };
 
         const render = createViteRender(vite, root);
@@ -109,6 +123,7 @@ describe('createViteRender', () => {
                 throw new Error('entry is broken');
             },
             ssrFixStacktrace: () => { fixed = true; },
+            environments: createModuleGraph(),
         };
 
         const render = createViteRender(vite, root);
@@ -117,5 +132,95 @@ describe('createViteRender', () => {
             .rejects.toThrow('entry is broken');
 
         expect(fixed).toBe(true);
+    });
+
+    it('inlines the stylesheets the entry imports, so the markup paints styled before the client runs', async () => {
+        const css : FakeModule = {
+            id: '/repo/src/tailwind.css', 
+            url: '/src/tailwind.css', 
+            importedModules: new Set(), 
+        };
+        const app : FakeModule = {
+            id: '/repo/src/app.ts', 
+            url: '/src/app.ts', 
+            importedModules: new Set([css]), 
+        };
+        const entry : FakeModule = {
+            id: '/repo/src/server.ts', 
+            url: '/src/server.ts', 
+            importedModules: new Set([app, css]), 
+        };
+        app.importedModules.add(entry);
+
+        const loaded : string[] = [];
+
+        const vite : ViteRenderContext = {
+            transformIndexHtml: async (_url, html) => html,
+            ssrLoadModule: async (url) => {
+                loaded.push(url);
+                if (url === '/src/tailwind.css?inline') {
+                    return { default: 'body{color:red}</style>' };
+                }
+
+                return { render: async () : Promise<RenderResult> => ['<p>page</p>', ''] };
+            },
+            ssrFixStacktrace: () => undefined,
+            environments: createModuleGraph(entry),
+        };
+
+        const render = createViteRender(vite, root);
+
+        const html = await render(event, config, { url: '/logout', data: {} });
+
+        expect(html).toContain('<style type="text/css" data-vite-dev-id="/repo/src/tailwind.css">body{color:red}<\\/style></style>');
+        expect(loaded.filter((url) => url.endsWith('?inline'))).toEqual(['/src/tailwind.css?inline']);
+    });
+
+    it('keeps the stylesheets in evaluation order and keeps their query', async () => {
+        const base : FakeModule = {
+            id: '/repo/src/base.css', 
+            url: '/src/base.css', 
+            importedModules: new Set(), 
+        };
+        const app : FakeModule = {
+            id: '/repo/src/app.ts', 
+            url: '/src/app.ts', 
+            importedModules: new Set([base]), 
+        };
+        const overrides : FakeModule = {
+            id: '/repo/src/overrides.css?v=2', 
+            url: '/src/overrides.css?v=2', 
+            importedModules: new Set(), 
+        };
+        const entry : FakeModule = {
+            id: '/repo/src/server.ts', 
+            url: '/src/server.ts', 
+            importedModules: new Set([app, overrides]), 
+        };
+
+        const loaded : string[] = [];
+
+        const vite : ViteRenderContext = {
+            transformIndexHtml: async (_url, html) => html,
+            ssrLoadModule: async (url) => {
+                loaded.push(url);
+                if (url.includes('inline')) {
+                    return { default: url };
+                }
+
+                return { render: async () : Promise<RenderResult> => ['<p>page</p>', ''] };
+            },
+            ssrFixStacktrace: () => undefined,
+            environments: createModuleGraph(entry),
+        };
+
+        const html = await createViteRender(vite, root)(event, config, { url: '/logout', data: {} });
+
+        expect(loaded.filter((url) => url.includes('inline'))).toEqual([
+            '/src/base.css?inline',
+            '/src/overrides.css?v=2&inline',
+        ]);
+        expect(html.indexOf('data-vite-dev-id="/repo/src/base.css"'))
+            .toBeLessThan(html.indexOf('data-vite-dev-id="/repo/src/overrides.css?v=2"'));
     });
 });
