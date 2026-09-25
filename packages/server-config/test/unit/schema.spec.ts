@@ -164,6 +164,17 @@ describe('SCHEMA', () => {
         }
     });
 
+    it('accepts only TCP ports or zero for the worker listener', () => {
+        const { type } = DECLARATIONS.find(({ key }) => key === 'core.worker.port')!.entry;
+
+        for (const port of [0, 1, 4001, 65535]) {
+            expect(type.safeParse(port).success).toBe(true);
+        }
+        for (const port of [-1, 4001.5, 65536]) {
+            expect(type.safeParse(port).success).toBe(false);
+        }
+    });
+
     it('reads every key at the path the document spells', () => {
         const tree = {
             publicUrl: 'https://idp.example.com',

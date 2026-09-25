@@ -89,7 +89,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
                 readEnv: readEnvBoolStrict,
             },
             port: {
-                type: nonNegativeNumberType,
+                type: z.number().int().nonnegative().max(65535),
                 // 0 means unset, the `core.host` pattern: a real default
                 // would BE the value, and `core.port` could never reach it.
                 default: 0,
