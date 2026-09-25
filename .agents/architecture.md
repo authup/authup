@@ -5084,10 +5084,13 @@ slot of `createWorkerApplication`: no routing, no auth. `GET /` and `HEAD /`
 (the image's `wget --spider` sends HEAD) answer `{ healthy, components }` with
 200, or 503 while any component is overdue; every other request is 404. The
 body is `ComponentsModule.getHealth()`: per component its `name`, its
-`lastSuccessAt` (ISO, or null) and `overdue`, which means no successful pass
-for `COMPONENT_OVERDUE_AFTER` (five minutes, five missed one-minute ticks),
-counted from setup until the first success; before setup and after teardown
-`healthy` is false. It binds `core.worker.port` (`WORKER_PORT`) on
+`lastSuccessAt` and `runningSince` (ISO, or null) and `overdue`, which means
+no successful pass for `COMPONENT_OVERDUE_AFTER` (five minutes, five missed
+one-minute ticks), counted from setup until the first success, unless a pass
+is in flight and younger than `COMPONENT_HUNG_AFTER` (30 minutes): a batched
+drain may outlast five minutes while working, a hung query may not. Every
+component's cron runs `noOverlap`, so `runningSince` names one pass. Before
+setup and after teardown `healthy` is false. It binds `core.worker.port` (`WORKER_PORT`) on
 `core.host`; the port defaults to 0, meaning unset, and resolves to
 `core.port` (`PORT`), the same inheritance `core.host` takes from the root
 `host`. So the image `HEALTHCHECK` and `authup healthcheck`, which both probe

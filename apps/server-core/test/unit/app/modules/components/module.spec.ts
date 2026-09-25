@@ -197,6 +197,7 @@ describe('app/modules/components', () => {
         expect(healthy.components).toEqual([{
             name: 'oauth2-cleaner',
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            runningSince: null,
             overdue: false,
         }]);
 
@@ -212,6 +213,7 @@ describe('app/modules/components', () => {
         expect(overdue.components[0]).toEqual({
             name: 'oauth2-cleaner',
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            runningSince: null,
             overdue: true,
         });
 
@@ -247,9 +249,72 @@ describe('app/modules/components', () => {
             components: [{
                 name: 'oauth2-cleaner', 
                 lastSuccessAt: null, 
+                runningSince: null, 
                 overdue: true, 
             }],
         });
+
+        await module.teardown(container);
+    });
+
+    it('should count a pass in flight as progress until it has run too long', async () => {
+        const config = await normalizeConfig({ eventLogEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        // the next pass never returns, as a large drain or a hung query would
+        findMock.mockReturnValue(new Promise(() => {}));
+        await vi.advanceTimersByTimeAsync(60_000);
+
+        await vi.advanceTimersByTimeAsync(10 * 60_000);
+        expect(module.getHealth()).toEqual({
+            healthy: true,
+            components: [{
+                name: 'oauth2-cleaner',
+                lastSuccessAt: '2026-01-01T00:00:30.000Z',
+                runningSince: '2026-01-01T00:01:00.000Z',
+                overdue: false,
+            }],
+        });
+
+        // past the hang ceiling it is overdue, even though it is still running
+        await vi.advanceTimersByTimeAsync(25 * 60_000);
+        expect(module.getHealth().healthy).toBeFalsy();
+        expect(module.getHealth().components[0].overdue).toBeTruthy();
+
+        await module.teardown(container);
+    });
+
+    it('should be unhealthy when one of several components is overdue', async () => {
+        const config = await normalizeConfig({});
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        // the cleaners succeed against the mocked data source, while the
+        // aggregator's reads are not mocked, so every one of its passes fails
+        const { container } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        await vi.advanceTimersByTimeAsync(6 * 60_000);
+
+        const health = module.getHealth();
+        expect(health.healthy).toBeFalsy();
+        expect(health.components.map((c) => [c.name, c.overdue])).toEqual([
+            ['oauth2-cleaner', false],
+            ['event-cleaner', false],
+            ['event-aggregator', true],
+        ]);
 
         await module.teardown(container);
     });

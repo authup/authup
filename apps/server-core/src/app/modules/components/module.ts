@@ -18,7 +18,7 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
-import { COMPONENT_OVERDUE_AFTER } from './constants.ts';
+import { COMPONENT_HUNG_AFTER, COMPONENT_OVERDUE_AFTER } from './constants.ts';
 import type { ComponentsHealth, ComponentsModuleOptions } from './types.ts';
 
 export class ComponentsModule implements IModule {
@@ -138,19 +138,26 @@ export class ComponentsModule implements IModule {
 
     /**
      * A component is overdue once it has gone COMPONENT_OVERDUE_AFTER without
-     * a successful pass, counted from setup until its first one. A sweep
+     * a successful pass, counted from setup until its first one, unless a
+     * pass is running and has not yet run for COMPONENT_HUNG_AFTER. A sweep
      * that keeps failing is caught and retried inside the component, so this
      * is the only place such a worker stops looking healthy.
      */
     getHealth(now: number = Date.now()): ComponentsHealth {
+        const toISO = (value?: number) => (typeof value === 'number' ? new Date(value).toISOString() : null);
+
         const components = this.registry.map((entry) => {
-            const lastSuccessAt = entry.component.lastSuccessAt();
-            const since = lastSuccessAt ?? this.startedAt ?? now;
+            const { lastSuccessAt, runningSince } = entry.component.status();
+
+            const overdue = typeof runningSince === 'number' ?
+                now - runningSince > COMPONENT_HUNG_AFTER :
+                now - (lastSuccessAt ?? this.startedAt ?? now) > COMPONENT_OVERDUE_AFTER;
 
             return {
                 name: entry.name,
-                lastSuccessAt: typeof lastSuccessAt === 'number' ? new Date(lastSuccessAt).toISOString() : null,
-                overdue: now - since > COMPONENT_OVERDUE_AFTER,
+                lastSuccessAt: toISO(lastSuccessAt),
+                runningSince: toISO(runningSince),
+                overdue,
             };
         });
 

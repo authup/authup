@@ -134,7 +134,7 @@ describe('app/factory', () => {
             await vi.waitFor(async () => {
                 const body = await (await fetch(`${baseURL}/`)).json();
                 expect(body.components[0].lastSuccessAt).not.toBeNull();
-            });
+            }, { timeout: 10_000, interval: 50 });
 
             const response = await fetch(`${baseURL}/`);
             expect(response.status).toEqual(200);

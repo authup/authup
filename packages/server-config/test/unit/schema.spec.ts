@@ -151,11 +151,16 @@ describe('SCHEMA', () => {
         const file = readSchemaFromFileTree<AuthupConfig>({ core: { port: 4001, worker: { port: 4002 } } }, SCHEMA);
         expect((resolve(file) as any).core.worker.port).toEqual(4002);
 
+        const previous = process.env.WORKER_PORT;
         process.env.WORKER_PORT = '4003';
         try {
             expect((resolve(file, readSchemaFromEnv<AuthupConfig>(SCHEMA)) as any).core.worker.port).toEqual(4003);
         } finally {
-            delete process.env.WORKER_PORT;
+            if (typeof previous === 'undefined') {
+                delete process.env.WORKER_PORT;
+            } else {
+                process.env.WORKER_PORT = previous;
+            }
         }
     });
 

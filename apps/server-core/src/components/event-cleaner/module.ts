@@ -21,6 +21,7 @@ export function createEventCleanerComponent(
     let task : ScheduledTask | undefined;
     let stopped = false;
     let lastSuccessAt : number | undefined;
+    let runningSince : number | undefined;
 
     return {
         async start() {
@@ -32,6 +33,7 @@ export function createEventCleanerComponent(
             // fire-and-forget → an uncaught rejection is fatal on modern
             // node); the next tick simply retries.
             const execute = async () => {
+                runningSince = Date.now();
                 try {
                     // Rows carry a per-row expires_at stamped at write time from
                     // eventLogRetentionDays; null = keep forever.
@@ -40,6 +42,8 @@ export function createEventCleanerComponent(
                 } catch (e) {
                     logger?.warn('Sweeping expired audit events failed.');
                     logger?.warn(e);
+                } finally {
+                    runningSince = undefined;
                 }
             };
 
@@ -51,7 +55,7 @@ export function createEventCleanerComponent(
 
             task = cron.schedule('* * * * *', async () => {
                 await execute();
-            });
+            }, { noOverlap: true });
         },
         async stop() {
             stopped = true;
@@ -61,6 +65,6 @@ export function createEventCleanerComponent(
                 task = undefined;
             }
         },
-        lastSuccessAt: () => lastSuccessAt,
+        status: () => ({ lastSuccessAt, runningSince }),
     };
 }

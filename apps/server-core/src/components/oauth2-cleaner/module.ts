@@ -23,6 +23,7 @@ export function createOAuth2CleanerComponent(
     let task : ScheduledTask | undefined;
     let stopped = false;
     let lastSuccessAt : number | undefined;
+    let runningSince : number | undefined;
 
     return {
         async start() {
@@ -39,6 +40,7 @@ export function createOAuth2CleanerComponent(
             // fire-and-forget → an uncaught rejection is fatal on modern
             // node); the next tick simply retries.
             const execute = async () => {
+                runningSince = Date.now();
                 try {
                     const isoDate = new Date().toISOString();
 
@@ -52,6 +54,8 @@ export function createOAuth2CleanerComponent(
                 } catch (e) {
                     logger?.warn('Sweeping expired sessions failed.');
                     logger?.warn(e);
+                } finally {
+                    runningSince = undefined;
                 }
             };
 
@@ -63,7 +67,7 @@ export function createOAuth2CleanerComponent(
 
             task = cron.schedule('* * * * *', async () => {
                 await execute();
-            });
+            }, { noOverlap: true });
         },
         async stop() {
             stopped = true;
@@ -73,6 +77,6 @@ export function createOAuth2CleanerComponent(
                 task = undefined;
             }
         },
-        lastSuccessAt: () => lastSuccessAt,
+        status: () => ({ lastSuccessAt, runningSince }),
     };
 }

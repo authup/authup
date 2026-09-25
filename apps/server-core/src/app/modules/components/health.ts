@@ -71,6 +71,13 @@ export class WorkerHealthModule implements IModule {
             });
         });
 
+        // an error after listen (e.g. EMFILE on accept) must not become an
+        // uncaught exception that takes the sweeps down with the listener
+        server.on('error', (e) => {
+            logger.warn('The worker health listener failed.');
+            logger.warn(e);
+        });
+
         this.server = server;
 
         const address = server.address();

@@ -38,6 +38,7 @@ describe('app/modules/components/health', () => {
             components: [{
                 name: 'oauth2-cleaner', 
                 lastSuccessAt: null, 
+                runningSince: null, 
                 overdue: true, 
             }],
         };

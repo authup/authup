@@ -73,7 +73,7 @@ authentication behind it.
 {
     "healthy": true,
     "components": [
-        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "overdue": false }
+        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false }
     ]
 }
 ```
@@ -81,7 +81,10 @@ authentication behind it.
 The status is 200 while every sweep has completed a pass within the last five
 minutes, and 503 once one has not (five missed one-minute ticks, counted from
 startup until the first success). A sweep that keeps failing, for example
-because the database is unreachable, turns the worker unhealthy.
+because the database is unreachable, turns the worker unhealthy. A pass that
+is still running (`runningSince`) counts as progress for up to 30 minutes, so a
+large drain after lowering a retention window does not read as a failure,
+while a pass that never returns still does.
 
 The port is `core.worker.port` (env `WORKER_PORT`), bound on `core.host`.
 Unset, it is the same port as `core.port` (env `PORT`), which is what the
@@ -155,6 +158,10 @@ to apply the same migration.
 The worker is the same image and the same configuration as the API. Give it
 the database and Redis settings the API has and add the command. The image
 healthcheck works unchanged, since it probes the worker's health listener.
+Plain Compose only reports an unhealthy container; under Docker Swarm or an
+autoheal container, which replace unhealthy ones, a database outage would
+restart the worker in a loop, so disable the healthcheck there for the reason
+the Kubernetes section gives.
 
 ```yaml
 version: '3.8'
