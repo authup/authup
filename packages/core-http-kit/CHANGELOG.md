@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-web-kit:** `loggedIn`, `setAccessToken`, `setRefreshToken`, `setAccessTokenExpireDate`, `setIdToken`, `setRealm`, `setCookiesRead`, the LOGGING_IN/LOGGED_IN/LOGGING_OUT/LOGGED_OUT/RESOLVING/RESOLVED and REALM_UPDATED dispatcher events, `ALogin`, `LanguageSwitcherDropdown`, `registerIconCollections()` and `CookieName.USER` are removed. See the "Removed kit APIs" upgrading note for the replacements.
+
+### Features
+
+* **client-web-kit:** remove deprecated store API ([#3666](https://github.com/authup/authup/issues/3666)) ([50b27a0](https://github.com/authup/authup/commit/50b27a00c85cf83d6206e9fe4d1dae1f547957b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

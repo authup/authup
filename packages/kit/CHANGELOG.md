@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### Bug Fixes
+
+* **kit:** keep the type of a serialized string ([#3673](https://github.com/authup/authup/issues/3673)) ([e4fc61a](https://github.com/authup/authup/commit/e4fc61a73c37bc237545e49103cca378beaaa34c)), closes [#3671](https://github.com/authup/authup/issues/3671)
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 
