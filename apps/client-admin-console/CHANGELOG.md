@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.68) (2026-09-25)
+
+
+### Bug Fixes
+
+* remove some unnecessary sidebar items ([802ecd2](https://github.com/authup/authup/commit/802ecd2a00f9388e417ec045baefa20d9924b6eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/client-web-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/client-web-theme bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/core-http-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/i18n bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
