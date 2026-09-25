@@ -12,4 +12,3 @@ export * from './domain-event';
 export * from './logger';
 export * from './redis';
 export * from './utils';
-
