@@ -15,6 +15,7 @@ import {
     HTTPModule,
     LoggerInjectionKey,
     ProvisionerModule,
+    WorkerHealthModule,
     verifySchemaOrSynchronize,
 } from './modules/index.ts';
 import type { CreateApplicationContext } from './types.ts';
@@ -51,9 +52,9 @@ async function migrateWorkerSchema(container: IContainer, dataSource: DataSource
 
 /**
  * Worker mode: the background components and the modules they stand on,
- * and nothing else. No http, oauth2, identity, authentication, ldap, mail or
- * provisioning module, so the process serves no request and writes no
- * provisioning graph.
+ * plus a health listener. No API, oauth2, identity, authentication, ldap,
+ * mail or provisioning module, so the process serves nothing but its own
+ * health and writes no provisioning graph.
  *
  * `core.worker.enabled` is REQUIRED here: a process started for nothing but
  * the sweeps refuses to boot with them off, rather than coming up idle.
@@ -65,5 +66,6 @@ export function createWorkerApplication(context: CreateApplicationContext = {}) 
         .withCache()
         .withDatabase(new DatabaseModule({ migrate: migrateWorkerSchema }))
         .withComponents(new ComponentsModule({ required: true }))
+        .withHTTP(new WorkerHealthModule())
         .build({ container: context.container });
 }

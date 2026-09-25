@@ -20,7 +20,7 @@ import { buildInternalUrl } from '../console/api-url.ts';
 
 export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
-        meta: { name: 'healthcheck', description: 'Probe the API listener and exit non-zero when it does not answer.' },
+        meta: { name: 'healthcheck', description: 'Probe the listener on core.port (the API, or the worker health listener) and exit non-zero when it does not answer.' },
         async setup() {
             const { tree } = await readConfigFileTree(options);
             const config = mergeSchemaData<AuthupConfig>(

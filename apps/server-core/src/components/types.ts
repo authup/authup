@@ -8,4 +8,10 @@
 export type Component = {
     start: () => Promise<void>;
     stop: () => Promise<void>;
+    /**
+     * Epoch millis of the last pass that completed without an error, and of
+     * the start of the pass in flight; each undefined while there is none.
+     * The worker health listener reads it.
+     */
+    status: () => { lastSuccessAt?: number, runningSince?: number };
 };

@@ -84,6 +84,8 @@ export function createEventAggregatorComponent(
 ) : Component {
     let task : ScheduledTask | undefined;
     let stopped = false;
+    let lastSuccessAt : number | undefined;
+    let runningSince : number | undefined;
 
     return {
         async start() {
@@ -92,11 +94,15 @@ export function createEventAggregatorComponent(
             // a failed pass must never take the process down (start() is
             // fire-and-forget); the next tick retries
             const execute = async () => {
+                runningSince = Date.now();
                 try {
                     await tick();
+                    lastSuccessAt = Date.now();
                 } catch (e) {
                     logger?.warn('Aggregating audit events failed.');
                     logger?.warn(e);
+                } finally {
+                    runningSince = undefined;
                 }
             };
 
@@ -120,5 +126,6 @@ export function createEventAggregatorComponent(
                 task = undefined;
             }
         },
+        status: () => ({ lastSuccessAt, runningSince }),
     };
 }

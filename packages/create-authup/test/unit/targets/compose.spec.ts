@@ -199,7 +199,8 @@ describe('renderCompose', () => {
 
         const worker = serviceBlock(compose, 'authup-worker');
         expect(worker).toContain('    command: start worker');
-        expect(worker).toContain('    # the image healthcheck probes an HTTP port this process never opens\n    healthcheck:\n      disable: true\n');
+        // the image healthcheck applies: the worker answers its health on PORT
+        expect(worker).not.toContain('healthcheck');
         expect(worker).toContain('    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_started\n');
         expect(worker).toContain('- "DB_HOST=postgres"');
         expect(worker).toContain('- "DB_PASSWORD=${DB_PASSWORD}"');

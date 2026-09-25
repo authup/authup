@@ -18,7 +18,8 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
-import type { ComponentsModuleOptions } from './types.ts';
+import { COMPONENT_HUNG_AFTER, COMPONENT_OVERDUE_AFTER, ComponentsInjectionKey } from './constants.ts';
+import type { ComponentsHealth, ComponentsModuleOptions } from './types.ts';
 
 export class ComponentsModule implements IModule {
     readonly name: string;
@@ -27,7 +28,9 @@ export class ComponentsModule implements IModule {
 
     protected options: ComponentsModuleOptions;
 
-    protected components: Component[];
+    protected registry: { name: string, component: Component }[];
+
+    protected startedAt: number | undefined;
 
     constructor(options: ComponentsModuleOptions = {}) {
         this.name = ModuleName.COMPONENTS;
@@ -38,13 +41,15 @@ export class ComponentsModule implements IModule {
             ModuleName.DATABASE,
         ];
         this.options = options;
-        this.components = [];
+        this.registry = [];
     }
 
     async setup(container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const logger = container.resolve(LoggerInjectionKey);
+
+        container.register(ComponentsInjectionKey, { useValue: this });
 
         // worker mode requires it; the default mode follows the config, so an
         // API replica can hand the sweeps to a dedicated worker process.
@@ -95,7 +100,8 @@ export class ComponentsModule implements IModule {
         }
 
         const components = registry.map((entry) => entry.component);
-        this.components = components;
+        this.registry = registry;
+        this.startedAt = Date.now();
 
         // start() is deliberately fire-and-forget, so a rejection must be
         // caught here — an unhandled rejection is fatal on modern node.
@@ -116,8 +122,9 @@ export class ComponentsModule implements IModule {
     async teardown(container: IContainer): Promise<void> {
         const logger = container.tryResolve(LoggerInjectionKey);
 
-        const { components } = this;
-        this.components = [];
+        const components = this.registry.map((entry) => entry.component);
+        this.registry = [];
+        this.startedAt = undefined;
 
         for (const component of components) {
             try {
@@ -131,5 +138,34 @@ export class ComponentsModule implements IModule {
         }
     }
 
-    // ----------------------------------------------------
+    /**
+     * A component is overdue once it has gone COMPONENT_OVERDUE_AFTER without
+     * a successful pass, counted from setup until its first one, unless a
+     * pass is running and has not yet run for COMPONENT_HUNG_AFTER. A sweep
+     * that keeps failing is caught and retried inside the component, so this
+     * is the only place such a worker stops looking healthy.
+     */
+    getHealth(now: number = Date.now()): ComponentsHealth {
+        const toISO = (value?: number) => (typeof value === 'number' ? new Date(value).toISOString() : null);
+
+        const components = this.registry.map((entry) => {
+            const { lastSuccessAt, runningSince } = entry.component.status();
+
+            const overdue = typeof runningSince === 'number' ?
+                now - runningSince > COMPONENT_HUNG_AFTER :
+                now - (lastSuccessAt ?? this.startedAt ?? now) > COMPONENT_OVERDUE_AFTER;
+
+            return {
+                name: entry.name,
+                lastSuccessAt: toISO(lastSuccessAt),
+                runningSince: toISO(runningSince),
+                overdue,
+            };
+        });
+
+        return {
+            healthy: typeof this.startedAt === 'number' && components.every((component) => !component.overdue),
+            components,
+        };
+    }
 }

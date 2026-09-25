@@ -279,6 +279,16 @@ export default {
              * default: true
              */
             enabled: true,
+
+            /**
+             * The port of the worker's health listener in worker mode
+             * (`authup start worker`). 0 means unset: it inherits `port`.
+             * Set it only when the worker shares a host with another role;
+             * the image healthcheck and `authup healthcheck` probe `port`.
+             * env: WORKER_PORT
+             * default: 0
+             */
+            port: 0,
         },
 
         /**
@@ -686,6 +696,7 @@ core:
   provisioningDirectoryPath: provisioning
   worker:
     enabled: true
+    port: 0
   migrationEnabled: true
   port: 3000
   host: 0.0.0.0
@@ -732,6 +743,7 @@ PROVISIONING_DIRECTORY_PATH=provisioning
 THEME_DIRECTORY_PATH=/etc/authup/theme
 THEME_FRAGMENTS_ENABLED=false
 WORKER_ENABLED=true
+WORKER_PORT=0
 MIGRATION_ENABLED=true
 PORT=3000
 HOST=0.0.0.0

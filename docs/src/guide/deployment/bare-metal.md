@@ -158,7 +158,7 @@ $ authup start core
 $ authup start console
 $ authup start console admin
 
-# run the background sweeps alone, with no HTTP listener
+# run the background sweeps alone, with a health listener only
 $ authup start worker
 
 # apply / inspect / undo database migrations
@@ -170,9 +170,11 @@ $ authup migration revert
 $ authup healthcheck
 ```
 
-`worker` is the role with no listener. It runs the cron sweeps and opens no
-port, so API replicas can hand them over, and it refuses to start while
-`core.worker.enabled` is false. See [Worker](./worker.md).
+`worker` runs the cron sweeps alone, so API replicas can hand them over, and
+refuses to start while `core.worker.enabled` is false. It serves no API
+request; its only listener answers a health report on `core.worker.port`
+(env `WORKER_PORT`, defaulting to `PORT`). Give it its own `WORKER_PORT` when
+it runs next to another role on the same host. See [Worker](./worker.md).
 
 All commands honor `--configDirectory` / `--configFile`, and `migration`
 finds its migration files wherever it is started from. The `migration`

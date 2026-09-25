@@ -29,20 +29,22 @@ runs the worker alongside itself.
 ## What it runs
 
 The worker process boots the background sweeps and the modules they stand on,
-and nothing else. There is no HTTP listener, so it serves no request and
-opens no port.
+plus one small health listener (see [Health](#health)). It serves no API
+request and runs no migration.
 
-Two sweeps run today, both once a minute:
+Three components run today, each once a minute:
 
-| Sweep | What it removes |
-|-------|-----------------|
-| OAuth2 cleaner | Expired rows from `auth_sessions` and `auth_session_tokens` |
-| Event cleaner | Expired rows from `auth_events`, per the retention settings |
+| Component | What it does |
+|-----------|--------------|
+| OAuth2 cleaner | Removes expired rows from `auth_sessions` and `auth_session_tokens` |
+| Event cleaner | Removes expired rows from `auth_events`, per the retention settings |
+| Event aggregator | Writes the daily counts in `auth_event_aggregates` the dashboard reads |
 
 The event cleaner is only scheduled while the audit log is on and at least one
 applicable retention window is greater than zero; the entity-event window only
-counts when `EVENT_LOG_ENTITY_ENABLED` is true as well. A deployment with
-`EVENT_LOG_ENABLED=false` runs the OAuth2 cleaner alone.
+counts when `EVENT_LOG_ENTITY_ENABLED` is true as well. The event aggregator
+runs while the audit log is on. A deployment with `EVENT_LOG_ENABLED=false`
+runs the OAuth2 cleaner alone.
 
 Both delete in bounded batches and stop when another process already removed
 the rows they selected, so running the sweeps in more than one process is
@@ -60,6 +62,36 @@ already runs the sweeps, and so does every replica of it.
 Deploy a worker when you run more than one API replica and want the sweeps to
 happen once rather than N times, or when you want the API replicas to hold no
 scheduled work at all, so scaling them up and down never affects retention.
+
+## Health
+
+The worker answers `GET /` (and `HEAD /`) on its own port with a JSON report
+of its sweeps, and every other path with 404. There is no routing and no
+authentication behind it.
+
+```json
+{
+    "healthy": true,
+    "components": [
+        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false }
+    ]
+}
+```
+
+The status is 200 while every sweep has completed a pass within the last five
+minutes, and 503 once one has not (five missed one-minute ticks, counted from
+startup until the first success). A sweep that keeps failing, for example
+because the database is unreachable, turns the worker unhealthy. A pass that
+is still running (`runningSince`) counts as progress for up to 30 minutes, so a
+large drain after lowering a retention window does not read as a failure,
+while a pass that never returns still does.
+
+The port is `core.worker.port` (env `WORKER_PORT`), bound on `core.host`.
+Unset, it is the same port as `core.port` (env `PORT`), which is what the
+image healthcheck and `authup healthcheck` probe, so a worker container needs
+nothing extra. Set `WORKER_PORT` only when the worker runs on the same host
+as another role and needs a port of its own; neither probe follows it, so do
+not set it in a container that relies on the image healthcheck.
 
 ## Turning the sweeps off in the API
 
@@ -124,9 +156,12 @@ to apply the same migration.
 ## Docker Compose
 
 The worker is the same image and the same configuration as the API. Give it
-the database and Redis settings the API has, add the command, and take away
-the healthcheck: the image probes an HTTP port the worker does not open, so
-the container would be reported unhealthy forever.
+the database and Redis settings the API has and add the command. The image
+healthcheck works unchanged, since it probes the worker's health listener.
+Plain Compose only reports an unhealthy container; under Docker Swarm or an
+autoheal container, which replace unhealthy ones, a database outage would
+restart the worker in a loop, so disable the healthcheck there for the reason
+the Kubernetes section gives.
 
 ```yaml
 version: '3.8'
@@ -164,9 +199,6 @@ services:
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
-        # the image healthcheck probes an HTTP port this process never opens
-        healthcheck:
-            disable: true
         command: start worker
 ```
 
@@ -189,13 +221,23 @@ The same split, with the migration step as its own object:
 - The API `Deployment`, with `WORKER_ENABLED=false` and
   `MIGRATION_ENABLED=false`. Any number of replicas.
 - The worker `Deployment`, `replicas: 1`, command
-  `start worker`, with no readiness or liveness HTTP probe.
+  `start worker`, with an `httpGet` readiness probe on `/` at the worker port
+  and no liveness probe.
   Give it `WORKER_ENABLED=true` when it shares the API's `ConfigMap`, which
   sets that key to false.
 
-Leaving the worker without probes is deliberate. There is no port to probe, and
-a liveness probe over `exec` would add little: the sweeps are scheduled inside
-the process, and a process that dies is restarted by the kubelet regardless.
-What is worth watching is the log, since a sweep that keeps failing (a lost
-database connection, for example) is caught and retried on the next tick rather
-than crashing the process.
+```yaml
+readinessProbe:
+    httpGet:
+        path: /
+        port: 3000
+    periodSeconds: 30
+```
+
+Use the health endpoint for readiness, not liveness. Its most likely 503 is a
+database the sweeps cannot reach, which a restart does not fix: as a liveness
+probe it would put the pod into a restart loop for as long as the database is
+down. As a readiness probe it marks the worker not ready, which surfaces the
+failure without killing the process, and the sweeps resume on the next tick
+once the database is back. A process that dies is restarted by the kubelet
+regardless.

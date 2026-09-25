@@ -48,8 +48,9 @@ function isConsoleName(value: string) : value is ConsoleName {
  *            console path answers the 404 server-core has served since plan
  *            101 D2-3, and the hosted page GETs still redirect because that
  *            is a controller reading `<name>Console.url`, not a mount
- * - worker:  the background sweeps alone: no listener, no migrations, and a
- *            refusal at boot while `core.worker.enabled` is false
+ * - worker:  the background sweeps alone: no API, no migrations, and a
+ *            refusal at boot while `core.worker.enabled` is false; its one
+ *            listener is the health probe on `core.worker.port`
  * - console: one console service, or every enabled one, each on its own port
  *
  * citty validates neither positional (a positional's `options` are

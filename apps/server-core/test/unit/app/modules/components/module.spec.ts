@@ -117,7 +117,7 @@ describe('app/modules/components', () => {
     });
 
     it('should register no components when they are disabled by config', async () => {
-        const config = await normalizeConfig({ worker: { enabled: false } });
+        const config = await normalizeConfig({ worker: { enabled: false, port: 0 } });
 
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
@@ -146,7 +146,7 @@ describe('app/modules/components', () => {
     });
 
     it('should refuse to boot when required and the worker is disabled', async () => {
-        const config = await normalizeConfig({ worker: { enabled: false } });
+        const config = await normalizeConfig({ worker: { enabled: false, port: 0 } });
 
         const { container, findMock } = createContext(config);
 
@@ -174,6 +174,147 @@ describe('app/modules/components', () => {
         await flushMicrotasks();
 
         expect(infoLines).toContain('Background components started: oauth2-cleaner, event-cleaner, event-aggregator.');
+
+        await module.teardown(container);
+    });
+
+    it('should report an overdue component once its sweeps keep failing', async () => {
+        const config = await normalizeConfig({ eventLogEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        const module = new ComponentsModule();
+        expect(module.getHealth().healthy).toBeFalsy();
+
+        await module.setup(container);
+        await flushMicrotasks();
+
+        const healthy = module.getHealth();
+        expect(healthy.healthy).toBeTruthy();
+        expect(healthy.components).toEqual([{
+            name: 'oauth2-cleaner',
+            lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            runningSince: null,
+            overdue: false,
+        }]);
+
+        // the database goes away after boot: every tick fails and is retried
+        findMock.mockRejectedValue(new Error('database gone'));
+
+        await vi.advanceTimersByTimeAsync(4 * 60_000);
+        expect(module.getHealth().healthy).toBeTruthy();
+
+        await vi.advanceTimersByTimeAsync(2 * 60_000);
+        const overdue = module.getHealth();
+        expect(overdue.healthy).toBeFalsy();
+        expect(overdue.components[0]).toEqual({
+            name: 'oauth2-cleaner',
+            lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            runningSince: null,
+            overdue: true,
+        });
+
+        // one successful tick brings it back
+        findMock.mockResolvedValue([]);
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(module.getHealth().healthy).toBeTruthy();
+
+        await module.teardown(container);
+        expect(module.getHealth().healthy).toBeFalsy();
+    });
+
+    it('should report an overdue component that never succeeded, counted from setup', async () => {
+        const config = await normalizeConfig({ eventLogEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        // the database is unreachable from boot
+        findMock.mockRejectedValue(new Error('database gone'));
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        expect(module.getHealth().healthy).toBeTruthy();
+
+        await vi.advanceTimersByTimeAsync(6 * 60_000);
+        expect(module.getHealth()).toEqual({
+            healthy: false,
+            components: [{
+                name: 'oauth2-cleaner', 
+                lastSuccessAt: null, 
+                runningSince: null, 
+                overdue: true, 
+            }],
+        });
+
+        await module.teardown(container);
+    });
+
+    it('should count a pass in flight as progress until it has run too long', async () => {
+        const config = await normalizeConfig({ eventLogEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        // the next pass never returns, as a large drain or a hung query would
+        findMock.mockReturnValue(new Promise(() => {}));
+        await vi.advanceTimersByTimeAsync(60_000);
+
+        await vi.advanceTimersByTimeAsync(10 * 60_000);
+        expect(module.getHealth()).toEqual({
+            healthy: true,
+            components: [{
+                name: 'oauth2-cleaner',
+                lastSuccessAt: '2026-01-01T00:00:30.000Z',
+                runningSince: '2026-01-01T00:01:00.000Z',
+                overdue: false,
+            }],
+        });
+
+        // past the hang ceiling it is overdue, even though it is still running
+        await vi.advanceTimersByTimeAsync(25 * 60_000);
+        expect(module.getHealth().healthy).toBeFalsy();
+        expect(module.getHealth().components[0].overdue).toBeTruthy();
+
+        await module.teardown(container);
+    });
+
+    it('should be unhealthy when one of several components is overdue', async () => {
+        const config = await normalizeConfig({});
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        // the cleaners succeed against the mocked data source, while the
+        // aggregator's reads are not mocked, so every one of its passes fails
+        const { container } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        await vi.advanceTimersByTimeAsync(6 * 60_000);
+
+        const health = module.getHealth();
+        expect(health.healthy).toBeFalsy();
+        expect(health.components.map((c) => [c.name, c.overdue])).toEqual([
+            ['oauth2-cleaner', false],
+            ['event-cleaner', false],
+            ['event-aggregator', true],
+        ]);
 
         await module.teardown(container);
     });

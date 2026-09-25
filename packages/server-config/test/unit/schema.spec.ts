@@ -12,9 +12,11 @@ import {
     isSchemaEntryInput,
     isSchemaInput,
     mergeSchemaData,
+    readSchemaFromEnv,
     readSchemaFromFileTree,
     resolveSchemaData,
 } from '@authup/server-config-kit';
+import process from 'node:process';
 import { describe, expect, it } from 'vitest';
 import {
     CORE_SCHEMA,
@@ -136,6 +138,41 @@ describe('SCHEMA', () => {
 
         expect((named as any).adminConsole.host).toEqual('127.0.0.1');
         expect((named as any).core.host).toEqual('10.0.0.5');
+    });
+
+    it('lets the worker port inherit core.port unless it names its own', () => {
+        const resolve = (...layers: Partial<AuthupConfig>[]) => resolveSchemaData<AuthupConfig>(
+            SCHEMA,
+            mergeSchemaData<AuthupConfig>(SCHEMA, buildSchemaDefaults<AuthupConfig>(SCHEMA), ...layers),
+        );
+
+        expect((resolve({ core: { port: 4001 } } as Partial<AuthupConfig>) as any).core.worker.port).toEqual(4001);
+
+        const file = readSchemaFromFileTree<AuthupConfig>({ core: { port: 4001, worker: { port: 4002 } } }, SCHEMA);
+        expect((resolve(file) as any).core.worker.port).toEqual(4002);
+
+        const previous = process.env.WORKER_PORT;
+        process.env.WORKER_PORT = '4003';
+        try {
+            expect((resolve(file, readSchemaFromEnv<AuthupConfig>(SCHEMA)) as any).core.worker.port).toEqual(4003);
+        } finally {
+            if (typeof previous === 'undefined') {
+                delete process.env.WORKER_PORT;
+            } else {
+                process.env.WORKER_PORT = previous;
+            }
+        }
+    });
+
+    it('accepts only TCP ports or zero for the worker listener', () => {
+        const { type } = DECLARATIONS.find(({ key }) => key === 'core.worker.port')!.entry;
+
+        for (const port of [0, 1, 4001, 65535]) {
+            expect(type.safeParse(port).success).toBe(true);
+        }
+        for (const port of [-1, 4001.5, 65536]) {
+            expect(type.safeParse(port).success).toBe(false);
+        }
     });
 
     it('reads every key at the path the document spells', () => {
