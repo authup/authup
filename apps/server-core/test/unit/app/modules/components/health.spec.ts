@@ -9,7 +9,7 @@ import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import { describe, expect, it } from 'vitest';
 import type { ComponentsHealth, ComponentsModule } from '../../../../../src/app/modules/components';
-import { WorkerHealthModule } from '../../../../../src/app/modules/components';
+import { ComponentsInjectionKey, WorkerHealthModule } from '../../../../../src/app/modules/components';
 import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
 import { normalizeConfig } from '../../../../../src/app/modules/config/read';
 import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
@@ -20,7 +20,9 @@ async function serve(health: ComponentsHealth) {
     container.register(ConfigInjectionKey, { useValue: await normalizeConfig({ port: 0, host: '127.0.0.1' }) });
     container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
-    const module = new WorkerHealthModule({ getHealth: () => health } as ComponentsModule);
+    container.register(ComponentsInjectionKey, { useValue: { getHealth: () => health } as ComponentsModule });
+
+    const module = new WorkerHealthModule();
     await module.setup(container);
 
     const address = module.server!.address();

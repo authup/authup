@@ -12,7 +12,7 @@ import type { IModule } from 'orkos';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { ModuleName } from '../constants.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
-import type { ComponentsModule } from './module.ts';
+import { ComponentsInjectionKey } from './constants.ts';
 
 /**
  * The worker role's only listener: `GET /` (and `HEAD /`, which the image
@@ -27,23 +27,21 @@ export class WorkerHealthModule implements IModule {
 
     readonly dependencies: string[];
 
-    protected components: ComponentsModule;
-
     server: Server | undefined;
 
-    constructor(components: ComponentsModule) {
+    constructor() {
         this.name = ModuleName.HTTP;
         this.dependencies = [
             ModuleName.CONFIG,
             ModuleName.LOGGER,
             ModuleName.COMPONENTS,
         ];
-        this.components = components;
     }
 
     async setup(container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
+        const components = container.resolve(ComponentsInjectionKey);
 
         const server = createServer((req, res) => {
             const path = (req.url || '').split('?')[0];
@@ -53,7 +51,7 @@ export class WorkerHealthModule implements IModule {
                 return;
             }
 
-            const health = this.components.getHealth();
+            const health = components.getHealth();
             const body = JSON.stringify(health);
 
             res.statusCode = health.healthy ? 200 : 503;

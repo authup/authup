@@ -5,6 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TypedToken } from 'eldin';
+import type { ComponentsModule } from './module.ts';
+
+export const ComponentsInjectionKey = new TypedToken<ComponentsModule>('Components');
+
 /**
  * Every component ticks once a minute, so five missed ticks in a row.
  */

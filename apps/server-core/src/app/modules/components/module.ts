@@ -18,7 +18,7 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
-import { COMPONENT_HUNG_AFTER, COMPONENT_OVERDUE_AFTER } from './constants.ts';
+import { COMPONENT_HUNG_AFTER, COMPONENT_OVERDUE_AFTER, ComponentsInjectionKey } from './constants.ts';
 import type { ComponentsHealth, ComponentsModuleOptions } from './types.ts';
 
 export class ComponentsModule implements IModule {
@@ -48,6 +48,8 @@ export class ComponentsModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const logger = container.resolve(LoggerInjectionKey);
+
+        container.register(ComponentsInjectionKey, { useValue: this });
 
         // worker mode requires it; the default mode follows the config, so an
         // API replica can hand the sweeps to a dedicated worker process.

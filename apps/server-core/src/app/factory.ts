@@ -60,14 +60,12 @@ async function migrateWorkerSchema(container: IContainer, dataSource: DataSource
  * the sweeps refuses to boot with them off, rather than coming up idle.
  */
 export function createWorkerApplication(context: CreateApplicationContext = {}) {
-    const components = new ComponentsModule({ required: true });
-
     return new ApplicationBuilder()
         .withConfig(context.config)
         .withLogger()
         .withCache()
         .withDatabase(new DatabaseModule({ migrate: migrateWorkerSchema }))
-        .withComponents(components)
-        .withHTTP(new WorkerHealthModule(components))
+        .withComponents(new ComponentsModule({ required: true }))
+        .withHTTP(new WorkerHealthModule())
         .build({ container: context.container });
 }
