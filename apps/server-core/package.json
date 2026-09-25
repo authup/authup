@@ -146,8 +146,8 @@
         "supertest": "^7.2.2",
         "testcontainers": "^12.1.0",
         "ts-node": "^10.8.2",
-        "unplugin-swc": "^1.6.0",
-        "vitest": "^4.0.14"
+        "unplugin-swc": "^2.0.0",
+        "vitest": "^5.0.1"
     },
     "publishConfig": {
         "access": "public"
