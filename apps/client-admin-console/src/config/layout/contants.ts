@@ -8,7 +8,6 @@
 import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
 import {
-    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
@@ -184,39 +183,4 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
             PermissionName.EVENT_READ,
         ],
     }),
-    {
-        name: 'Other',
-        type: 'separator',
-        meta: { i18n: { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.OTHER } },
-    },
-    {
-        name: 'Login',
-        type: 'link',
-        url: '/login',
-        icon: 'fa6-solid:right-to-bracket',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_OUT]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.LOGIN },
-        },
-    },
-    {
-        name: 'Settings',
-        type: 'link',
-        url: '/settings',
-        icon: 'fa6-solid:gear',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SETTINGS },
-        },
-    },
-    {
-        name: 'Logout',
-        type: 'link',
-        url: '/logout',
-        icon: 'fa6-solid:power-off',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.LOGOUT },
-        },
-    },
 ];
