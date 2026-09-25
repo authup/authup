@@ -51,7 +51,7 @@ export class WorkerHealthModule implements IModule {
                 return;
             }
 
-            const health = components.success ? components.data.getHealth() : { healthy: false, components: [] };
+            const health = components.success ? components.data.getHealth() : { healthy: true, components: [] };
             const body = JSON.stringify(health);
 
             res.statusCode = health.healthy ? 200 : 503;

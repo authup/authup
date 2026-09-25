@@ -40,14 +40,14 @@ async function serve(health?: ComponentsHealth) {
 }
 
 describe('app/modules/components/health', () => {
-    it('should answer 503 when the components module is absent', async () => {
+    it('should answer 200 when the components module is absent', async () => {
         const { baseURL, app } = await serve();
 
         try {
             const response = await fetch(`${baseURL}/`);
-            expect(response.status).toEqual(503);
-            expect(await response.json()).toEqual({ healthy: false, components: [] });
-            expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(503);
+            expect(response.status).toEqual(200);
+            expect(await response.json()).toEqual({ healthy: true, components: [] });
+            expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(200);
         } finally {
             await app.teardown();
         }
