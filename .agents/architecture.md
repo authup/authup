@@ -7057,12 +7057,20 @@ plus a `<uuid>@example.com` placeholder (#3434).
   `protocol: oauth2` provider whose remote client has no `openid` scope
   bound (no `openid` scope, no id_token), and it is what stops the
   admin-editable `userInfoUrl` field being silently inert.
-- **`identity.data` is deliberately still the access-token payload alone.**
-  Mappers (`IIdentityProviderMapper`) pattern-match over it, so merging the
-  richer claims in would change every existing mapper's input.
+- **`identity.data` is the merged claim set** (#3674), the same one the
+  candidates read: the attribute, role and permission mappers pattern-match
+  over it, so a mapping on a claim the provider carries in the `id_token` or
+  userinfo only (`email_verified` in Google's `id_token`) fires. On a shared
+  key the `id_token` and userinfo win over the access token. Because those
+  claims now drive grants, an `id_token` or userinfo response whose `sub`
+  differs from the access token's is dropped whole, and so is a userinfo
+  response carrying no `sub` (OIDC Core 3.1.3.7, 5.3.2). A role or permission
+  mapping on a userinfo-only claim is removed on a login whose userinfo request
+  fails (enrichment never blocks a login), and restored on the next.
 - There is no `IdentityProviderOpenIDAuthenticator` override: the base
   ladder covers it. The five presets (github, facebook,
-  instagram, paypal, google) still override the builder and are untouched.
+  instagram, paypal, google) still override the builder; google merges its
+  `id_token` into `data` so its mappers see `email_verified` too.
 - **Forward-only for the name, verification-aware for the email.** The
   account manager's UPDATE branch never rewrites `user.name` (it is
   `nameLocked` at creation), so users already provisioned under a UUID keep
@@ -7142,14 +7150,9 @@ controls an email claim at the provider would inherit the local account; the
 Connect flow, where the signed-in owner links, is the honest version), a
 separate require-verified-email switch (one `attributes` policy over
 `emailVerified` covers it once the upstream `email_verified` claim is mapped
-onto that column), and any matching-mode enum. One caveat predates this work
-and is documented rather than fixed: an attribute mapping reads
-`identity.data`, which is the ACCESS-token payload alone (`resolveClaims`
-merges the `id_token` and userinfo into the name and email CANDIDATES only), so
-an `email_verified` mapping is blind to a claim present only in the `id_token`
-or userinfo, which is where Google-style opaque access tokens put it; the fix
-is feeding the mapper the merged claims, which changes every existing mapper's
-input and is its own change (#3674).
+onto that column), and any matching-mode enum. The `email_verified` mapping reads the merged
+claims (see *Federated Identity Claims*), so it works for a provider that
+carries the claim in the `id_token` or userinfo only.
 
 ## Identity-Provider Account Linking
 

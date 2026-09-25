@@ -5,14 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import type { OAuth2IdentityProvider, OpenIDIdentityProvider, Realm } from '@authup/core-kit';
+import type {
+    IdentityProviderAttributeMapping, 
+    OAuth2IdentityProvider, 
+    OpenIDIdentityProvider, 
+    Realm,
+} from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { ValidationError, isValidationError } from '@authup/errors';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { IIdentityProviderAccountManager, IdentityProviderIdentity } from '../../../../../src/core';
 import {
+    IdentityProviderAttributeMapper,
     IdentityProviderGoogleAuthenticator,
+    IdentityProviderMapperOperation,
     IdentityProviderOAuth2Authenticator,
     IdentityProviderOpenIDAuthenticator,
 } from '../../../../../src/core';
@@ -296,9 +303,31 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         expect(identity.id).toEqual('external-user-1');
     });
 
+    it('should map a claim the id_token alone carries (#3674)', async () => {
+        // an access token carrying no email_verified (Google puts it in the
+        // id_token): the mappers must read the merged claims
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({ sub: 'external-user-1', email_verified: true }),
+        } as TokenGrantResponse);
+
+        const mapping = {
+            name: 'email_verified',
+            value: '^true$',
+            valueIsRegex: true,
+            targetName: 'emailVerified',
+            targetValue: null,
+        } as IdentityProviderAttributeMapping;
+        const mapper = new IdentityProviderAttributeMapper({ findByProviderId: async () => [mapping] });
+
+        const [element] = await mapper.execute(identity);
+        expect(element.operation).toEqual(IdentityProviderMapperOperation.CREATE);
+        expect(element.value).toEqual([true]);
+    });
+
     it('should let userinfo claims win over the id_token', async () => {
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
-        authenticator.stubUserInfo({ preferred_username: 'userinfo-user' });
+        authenticator.stubUserInfo({ sub: 'external-user-1', preferred_username: 'userinfo-user' });
 
         const identity = await authenticator.buildIdentity({
             access_token: ACCESS_TOKEN,
@@ -327,6 +356,29 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
 
         expect(identity.attributeCandidates?.name).not.toContain('somebody-else');
         expect(identity.attributeCandidates?.email).toEqual(['peter@example.com']);
+    });
+
+    it('should discard a userinfo document without a subject', async () => {
+        const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+        authenticator.stubUserInfo({ groups: ['admins'] });
+
+        const identity = await authenticator.buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
+
+        expect(identity.data.groups).toBeUndefined();
+    });
+
+    it('should discard an id_token whose subject does not match', async () => {
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({
+                sub: 'somebody-else', 
+                name: 'somebody-else', 
+                groups: ['admins'], 
+            }),
+        } as TokenGrantResponse);
+
+        expect(identity.data.groups).toBeUndefined();
+        expect(identity.attributeCandidates?.name).not.toContain('somebody-else');
     });
 
     it('should read an id_token whose claims are not ASCII', async () => {

@@ -28,12 +28,15 @@ export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2A
         const payload = extractTokenPayload(input.access_token);
 
         const attributeCandidates : Record<keyof User, unknown[]> = {};
+        let data : Record<string, any> = payload;
 
         /**
          * @see https://developers.google.com/identity/openid-connect/openid-connect?hl=de#server-flow
          */
         if (input.id_token) {
             const idTokenPayload = extractTokenPayload(input.id_token) as OpenIDTokenPayload;
+            // the mappers read `data`: Google carries email_verified here (#3674)
+            data = { ...payload, ...idTokenPayload };
 
             attributeCandidates.name = [
                 idTokenPayload.name,
@@ -54,7 +57,7 @@ export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2A
         return {
             id: payload.sub!,
             attributeCandidates,
-            data: payload,
+            data,
             provider: this.provider,
         };
     }

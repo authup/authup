@@ -153,10 +153,16 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
         if (typeof input.id_token === 'string') {
             try {
-                claims = {
-                    ...claims,
-                    ...extractTokenPayload(input.id_token),
-                };
+                const idToken = extractTokenPayload(input.id_token);
+                // OIDC Core 3.1.3.7: the claims now drive mapped roles and
+                // permissions, so an id_token about another subject is dropped
+                if (typeof idToken.sub === 'string' && idToken.sub !== payload.sub) {
+                    this.logger?.warn(
+                        `The identity provider (${this.provider.id}) id_token subject does not match the token subject.`,
+                    );
+                } else {
+                    claims = { ...claims, ...idToken };
+                }
             } catch (e) {
                 // an encrypted (five-segment JWE) id_token is not decodable
                 // here, and was ignored outright before it was read at all.
@@ -182,12 +188,9 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
                 // match the token's MUST NOT be used. Without this a
                 // mis-routed response (a multi-tenant gateway, a token
                 // mix-up) would name and, worse, EMAIL the local user after
-                // somebody else.
-                if (
-                    typeof userInfo.sub === 'string' &&
-                    typeof payload.sub === 'string' &&
-                    userInfo.sub !== payload.sub
-                ) {
+                // somebody else. sub MUST be present, so a response without
+                // one is dropped too: its claims feed the mappers.
+                if (userInfo.sub !== payload.sub) {
                     this.logger?.warn(
                         `The identity provider (${this.provider.id}) userinfo subject does not match the token subject.`,
                     );
@@ -245,7 +248,9 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
                     claims.email,
                 ],
             },
-            data: payload,
+            // the mappers read this: the id_token and userinfo win over the
+            // (opaque by contract) access token on a shared key
+            data: claims,
             provider: this.provider,
         };
     }
