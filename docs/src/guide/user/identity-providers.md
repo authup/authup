@@ -98,12 +98,13 @@ and a missing `emailVerified` fails the rule, so the login is refused. Attribute
 mappings have no page in the admin console yet; the row goes into the
 `auth_identity_provider_attribute_mappings` table.
 
-One caveat applies to that mapping and to every other one: **a mapping reads
-the claims of the provider's access token**, not its `id_token` and not its
-userinfo response. Google and other providers whose access token is opaque put
-`email_verified` in the `id_token` alone, so the mapping never sees it there
-and every new user is refused. Sign in once and check where the provider
-carries the claim before relying on it.
+A mapping reads the claims of the access token, the `id_token` and, when the
+provider declares a userinfo endpoint, the userinfo response, so it also works
+for Google and other providers that carry `email_verified` in the `id_token`
+alone. On a claim present in more than one of them, the `id_token` and userinfo
+win. A role or permission mapping on a claim only the userinfo response carries
+is removed on a login whose userinfo request fails, and granted again on the
+next one that succeeds.
 
 ## Multi-factor authentication
 
