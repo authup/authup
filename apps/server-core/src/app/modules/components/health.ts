@@ -8,7 +8,7 @@
 import type { Server } from 'node:http';
 import { createServer } from 'node:http';
 import type { IContainer } from 'eldin';
-import type { IModule } from 'orkos';
+import type { IModule, ModuleDependency } from 'orkos';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { ModuleName } from '../constants.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -25,7 +25,7 @@ import { ComponentsInjectionKey } from './constants.ts';
 export class WorkerHealthModule implements IModule {
     readonly name: string;
 
-    readonly dependencies: string[];
+    readonly dependencies: (string | ModuleDependency)[];
 
     server: Server | undefined;
 
@@ -34,14 +34,14 @@ export class WorkerHealthModule implements IModule {
         this.dependencies = [
             ModuleName.CONFIG,
             ModuleName.LOGGER,
-            ModuleName.COMPONENTS,
+            { name: ModuleName.COMPONENTS, optional: true },
         ];
     }
 
     async setup(container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
-        const components = container.resolve(ComponentsInjectionKey);
+        const components = container.tryResolve(ComponentsInjectionKey);
 
         const server = createServer((req, res) => {
             const path = (req.url || '').split('?')[0];
@@ -51,7 +51,7 @@ export class WorkerHealthModule implements IModule {
                 return;
             }
 
-            const health = components.getHealth();
+            const health = components.success ? components.data.getHealth() : { healthy: false, components: [] };
             const body = JSON.stringify(health);
 
             res.statusCode = health.healthy ? 200 : 503;

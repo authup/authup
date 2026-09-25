@@ -8,32 +8,51 @@
 import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import { describe, expect, it } from 'vitest';
+import { ApplicationBuilder } from '../../../../../src/app/builder';
 import type { ComponentsHealth, ComponentsModule } from '../../../../../src/app/modules/components';
 import { ComponentsInjectionKey, WorkerHealthModule } from '../../../../../src/app/modules/components';
-import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
+import { ConfigModule } from '../../../../../src/app/modules/config';
 import { normalizeConfig } from '../../../../../src/app/modules/config/read';
 import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
 
-async function serve(health: ComponentsHealth) {
+async function serve(health?: ComponentsHealth) {
     const container = new Container();
-    // 0 inherits into core.worker.port: an ephemeral port
-    container.register(ConfigInjectionKey, { useValue: await normalizeConfig({ port: 0, host: '127.0.0.1' }) });
     container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
-    container.register(ComponentsInjectionKey, { useValue: { getHealth: () => health } as ComponentsModule });
+    if (health) {
+        container.register(ComponentsInjectionKey, { useValue: { getHealth: () => health } as ComponentsModule });
+    }
 
     const module = new WorkerHealthModule();
-    await module.setup(container);
+    const app = new ApplicationBuilder()
+        .withConfig(new ConfigModule(() => normalizeConfig({ port: 0, host: '127.0.0.1' })))
+        .withLogger()
+        .withHTTP(module)
+        .build({ container });
+    await app.setup();
 
     const address = module.server!.address();
 
     return {
         baseURL: `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}`,
-        module,
+        app,
     };
 }
 
 describe('app/modules/components/health', () => {
+    it('should answer 503 when the components module is absent', async () => {
+        const { baseURL, app } = await serve();
+
+        try {
+            const response = await fetch(`${baseURL}/`);
+            expect(response.status).toEqual(503);
+            expect(await response.json()).toEqual({ healthy: false, components: [] });
+            expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(503);
+        } finally {
+            await app.teardown();
+        }
+    });
+
     it('should answer 503 with the overdue component while unhealthy', async () => {
         const health : ComponentsHealth = {
             healthy: false,
@@ -45,7 +64,7 @@ describe('app/modules/components/health', () => {
             }],
         };
 
-        const { baseURL, module } = await serve(health);
+        const { baseURL, app } = await serve(health);
 
         try {
             const response = await fetch(`${baseURL}/`);
@@ -54,19 +73,19 @@ describe('app/modules/components/health', () => {
 
             expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(503);
         } finally {
-            await module.teardown();
+            await app.teardown();
         }
     });
 
     it('should answer 200 while healthy and 404 for anything else', async () => {
-        const { baseURL, module } = await serve({ healthy: true, components: [] });
+        const { baseURL, app } = await serve({ healthy: true, components: [] });
 
         try {
             expect((await fetch(`${baseURL}/?probe=1`)).status).toEqual(200);
             expect((await fetch(`${baseURL}/`, { method: 'POST' })).status).toEqual(404);
             expect((await fetch(`${baseURL}/health`)).status).toEqual(404);
         } finally {
-            await module.teardown();
+            await app.teardown();
         }
     });
 });
