@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### Features
+
+* identity-provider enrollment gating ([#3675](https://github.com/authup/authup/issues/3675)) ([8ce62e2](https://github.com/authup/authup/commit/8ce62e2f66bff7cd1c3992d50aeefb65e21a2cbd))
+* localized built-in names, shared console config, admin page harness, provisioning backfill batch ([#3661](https://github.com/authup/authup/issues/3661)) ([34d963f](https://github.com/authup/authup/commit/34d963f12c65c51dabee8316fc5c80ee1c0f3570))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/errors bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

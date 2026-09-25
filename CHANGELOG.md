@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-web-kit:** `loggedIn`, `setAccessToken`, `setRefreshToken`, `setAccessTokenExpireDate`, `setIdToken`, `setRealm`, `setCookiesRead`, the LOGGING_IN/LOGGED_IN/LOGGING_OUT/LOGGED_OUT/RESOLVING/RESOLVED and REALM_UPDATED dispatcher events, `ALogin`, `LanguageSwitcherDropdown`, `registerIconCollections()` and `CookieName.USER` are removed. See the "Removed kit APIs" upgrading note for the replacements.
+
+### Features
+
+* **client-web-kit:** remove deprecated store API ([#3666](https://github.com/authup/authup/issues/3666)) ([50b27a0](https://github.com/authup/authup/commit/50b27a00c85cf83d6206e9fe4d1dae1f547957b1))
+* identity-provider enrollment gating ([#3675](https://github.com/authup/authup/issues/3675)) ([8ce62e2](https://github.com/authup/authup/commit/8ce62e2f66bff7cd1c3992d50aeefb65e21a2cbd))
+* localized built-in names, shared console config, admin page harness, provisioning backfill batch ([#3661](https://github.com/authup/authup/issues/3661)) ([34d963f](https://github.com/authup/authup/commit/34d963f12c65c51dabee8316fc5c80ee1c0f3570))
+* **server-auth-console:** render the visitor's session on /authorize ([#3662](https://github.com/authup/authup/issues/3662)) ([0f7f50a](https://github.com/authup/authup/commit/0f7f50a55e03baeb9019627aa48cc15cd2987e7a))
+* **server-core:** health endpoint for the worker role ([#3682](https://github.com/authup/authup/issues/3682)) ([e0f3462](https://github.com/authup/authup/commit/e0f3462731d5b49027bb7b37f06fd722505e9be4))
+
+
+### Bug Fixes
+
+* **authup:** inline dev stylesheets; ship a default console favicon ([#3677](https://github.com/authup/authup/issues/3677)) ([929b008](https://github.com/authup/authup/commit/929b008b33699aafcbfe0cb0f27e3ced794349ca))
+* ensure consistent version for release ([45e6080](https://github.com/authup/authup/commit/45e6080bacdf9bc65874a0b65e420dd22bf1a5fd))
+* **kit:** keep the type of a serialized string ([#3673](https://github.com/authup/authup/issues/3673)) ([e4fc61a](https://github.com/authup/authup/commit/e4fc61a73c37bc237545e49103cca378beaaa34c)), closes [#3671](https://github.com/authup/authup/issues/3671)
+* **server-core:** feed identity-provider mappers the merged claims ([#3680](https://github.com/authup/authup/issues/3680)) ([688f87f](https://github.com/authup/authup/commit/688f87fda40a3cc98852f63faf883ff69f9607c2)), closes [#3674](https://github.com/authup/authup/issues/3674)
+* **server-core:** harden the extra-attribute writer ([#3672](https://github.com/authup/authup/issues/3672)) ([4a200c2](https://github.com/authup/authup/commit/4a200c25011ec931b025a17c45a10028e193a443)), closes [#3670](https://github.com/authup/authup/issues/3670)
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

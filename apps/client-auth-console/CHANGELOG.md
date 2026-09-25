@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-web-kit:** `loggedIn`, `setAccessToken`, `setRefreshToken`, `setAccessTokenExpireDate`, `setIdToken`, `setRealm`, `setCookiesRead`, the LOGGING_IN/LOGGED_IN/LOGGING_OUT/LOGGED_OUT/RESOLVING/RESOLVED and REALM_UPDATED dispatcher events, `ALogin`, `LanguageSwitcherDropdown`, `registerIconCollections()` and `CookieName.USER` are removed. See the "Removed kit APIs" upgrading note for the replacements.
+
+### Features
+
+* **client-web-kit:** remove deprecated store API ([#3666](https://github.com/authup/authup/issues/3666)) ([50b27a0](https://github.com/authup/authup/commit/50b27a00c85cf83d6206e9fe4d1dae1f547957b1))
+* **server-auth-console:** render the visitor's session on /authorize ([#3662](https://github.com/authup/authup/issues/3662)) ([0f7f50a](https://github.com/authup/authup/commit/0f7f50a55e03baeb9019627aa48cc15cd2987e7a))
+
+
+### Bug Fixes
+
+* **authup:** inline dev stylesheets; ship a default console favicon ([#3677](https://github.com/authup/authup/issues/3677)) ([929b008](https://github.com/authup/authup/commit/929b008b33699aafcbfe0cb0f27e3ced794349ca))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/client-web-theme bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/i18n bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

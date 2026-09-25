@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### Bug Fixes
+
+* **authup:** inline dev stylesheets; ship a default console favicon ([#3677](https://github.com/authup/authup/issues/3677)) ([929b008](https://github.com/authup/authup/commit/929b008b33699aafcbfe0cb0f27e3ced794349ca))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

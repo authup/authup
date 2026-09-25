@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### Features
+
+* **server-auth-console:** render the visitor's session on /authorize ([#3662](https://github.com/authup/authup/issues/3662)) ([0f7f50a](https://github.com/authup/authup/commit/0f7f50a55e03baeb9019627aa48cc15cd2987e7a))
+* **server-core:** health endpoint for the worker role ([#3682](https://github.com/authup/authup/issues/3682)) ([e0f3462](https://github.com/authup/authup/commit/e0f3462731d5b49027bb7b37f06fd722505e9be4))
+
+
+### Bug Fixes
+
+* **authup:** inline dev stylesheets; ship a default console favicon ([#3677](https://github.com/authup/authup/issues/3677)) ([929b008](https://github.com/authup/authup/commit/929b008b33699aafcbfe0cb0f27e3ced794349ca))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/errors bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-account-console bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-admin-console bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-auth-console bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-config bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-config-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-console-kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/server-core bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 

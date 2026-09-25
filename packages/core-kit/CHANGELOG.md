@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
+
+
+### Features
+
+* identity-provider enrollment gating ([#3675](https://github.com/authup/authup/issues/3675)) ([8ce62e2](https://github.com/authup/authup/commit/8ce62e2f66bff7cd1c3992d50aeefb65e21a2cbd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/kit bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.67 to ^1.0.0-beta.68
+
 ## [1.0.0-beta.67](https://github.com/authup/authup/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2026-09-24)
 
 
