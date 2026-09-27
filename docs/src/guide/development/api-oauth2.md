@@ -164,8 +164,8 @@ curl -X POST 'http://localhost:3000/token' \
 ```
 
 The user is resolved within a single realm. Pass `realm_id` or `realm_name`
-(both accept a realm UUID or name) to select it; when neither is provided —
-or the provided value does not match any realm — the **master** realm is
+(both accept a realm UUID or name) to select it; when neither is provided
+(or the provided value does not match any realm), the **master** realm is
 used. In multi-realm deployments, users outside the master realm must
 therefore include a realm parameter:
 
@@ -180,7 +180,7 @@ curl -X POST 'http://localhost:3000/token' \
 
 A confidential client authenticating on this grant by **name** must belong to
 the same realm as the user; clients identified by UUID are unaffected. The
-realm parameter constrains **name** resolution only — a UUID-identified user
+realm parameter constrains **name** resolution only. A UUID-identified user
 is resolved globally by primary key, and the issued token always carries the
 user's actual realm.
 
@@ -188,7 +188,7 @@ The same `realm_id` / `realm_name` semantic (master fallback included) applies
 on the `authorization_code` and `refresh_token` grants, where it scopes
 client-by-name resolution: a client identified by **name** on those grants
 resolves within the hinted realm (master when no hint is given). Pass the
-realm parameter — or the client's UUID — when the client lives outside the
+realm parameter (or the client's UUID) when the client lives outside the
 master realm.
 
 #### Response
@@ -249,7 +249,7 @@ curl -X POST 'http://localhost:3000/token' \
 
 Browser-based applications redirect the user to Authup's hosted `/authorize` page, which handles login and consent. On success the browser is redirected back to the `redirect_uri` with a `code`, which is then exchanged at `/token` (`grant_type=authorization_code`). Public clients must use PKCE (`code_challenge` / `code_verifier`) and `state`.
 
-`response_type=code` is the **only** supported response type (OAuth 2.1 posture): the implicit and hybrid response types (`token`, `id_token`, `none`) are rejected with `unsupported_response_type` — tokens are never delivered via the redirect URL. RPs still relying on implicit must migrate to the code flow with PKCE.
+`response_type=code` is the **only** supported response type (OAuth 2.1 posture): the implicit and hybrid response types (`token`, `id_token`, `none`) are rejected with `unsupported_response_type`: tokens are never delivered via the redirect URL. RPs still relying on implicit must migrate to the code flow with PKCE.
 
 #### Authorize request
 
@@ -269,7 +269,7 @@ The following [OpenID Connect Core §3.1.2.1](https://openid.net/specs/openid-co
 
 | Parameter | Description |
 |---|---|
-| `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `none` performs silent authentication (no UI): a `built_in` client with a valid, realm-matching session is auto-consented and redirected with a `code`; otherwise the OIDC error (`login_required`, `consent_required`, or `interaction_required`) is redirected to the `redirect_uri`. **`prompt=none` must be driven as a top-level navigation, not a hidden iframe** — the authorize page sends `X-Frame-Options: DENY` / `frame-ancestors 'none'`, so the classic iframe silent-renew pattern is blocked. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication (with a banner); `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
+| `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `none` performs silent authentication (no UI): a `built_in` client with a valid, realm-matching session is auto-consented and redirected with a `code`; otherwise the OIDC error (`login_required`, `consent_required`, or `interaction_required`) is redirected to the `redirect_uri`. **`prompt=none` must be driven as a top-level navigation, not a hidden iframe**. The authorize page sends `X-Frame-Options: DENY` / `frame-ancestors 'none'`, so the classic iframe silent-renew pattern is blocked. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication (with a banner); `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
 | `max_age` | Maximum acceptable age (seconds) of the authentication. If the session is older, the user is asked to re-authenticate (`max_age=0` forces it). |
 | `login_hint` | Pre-fills the identifier on the login form. |
 | `ui_locales` | Space-delimited BCP47 language tags, most preferred first. The hosted pages open in the first well-formed tag, so a visitor arriving from an application rendered in French is not dropped into their browser's language. A tag Authup has no catalog for renders the fallback catalog rather than failing; the languages worth sending are advertised as `ui_locales_supported`. |
@@ -388,8 +388,8 @@ GET http://localhost:3000/logout
 
 | Parameter | Description |
 |---|---|
-| `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted — bounded by `endSessionHintGracePeriod` / `END_SESSION_HINT_GRACE_PERIOD` when configured, unbounded by default) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
-| `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present — note `aud` carries the client's **id**, so a name-identified `client_id` will not match a hint's `aud`. |
+| `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted: bounded by `endSessionHintGracePeriod` / `END_SESSION_HINT_GRACE_PERIOD` when configured, unbounded by default) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
+| `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present. Note `aud` carries the client's **id**, so a name-identified `client_id` will not match a hint's `aud`. |
 | `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `post_logout_redirect_uri` patterns (a dedicated allow-list, separate from the login `redirect_uri`; same comma-separated wildcard syntax; open-redirect guard); otherwise ignored. |
 | `state` | Opaque value echoed back on the redirect (only alongside a validated `post_logout_redirect_uri`). |
 

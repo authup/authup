@@ -15,17 +15,17 @@ name mismatches between source and target types.
 
 ## What to look for
 
-1. **`as SomeType` casts** — Resolve both the source expression's shape and the
+1. **`as SomeType` casts**: Resolve both the source expression's shape and the
    target type's properties. Flag when property names differ (e.g. source has
    `realmId` but target expects `realm_id`).
 
-2. **`pickRecord()` / `pick()` calls** — Check that the picked keys exist on the
+2. **`pickRecord()` / `pick()` calls**: Check that the picked keys exist on the
    source AND match what the consuming type expects.
 
-3. **Spread into typed variables** — `const x: SomeType = { ...obj }` where `obj`
+3. **Spread into typed variables**: `const x: SomeType = { ...obj }` where `obj`
    has different property names than `SomeType`.
 
-4. **Cross-package boundary assignments** — Where a value from one package's type
+4. **Cross-package boundary assignments**: Where a value from one package's type
    is assigned to another package's type without explicit mapping.
 
 ## Naming convention boundaries in this project
@@ -43,7 +43,7 @@ These boundaries are where mismatches are most likely to occur.
 1. Search for `as \w+` casts across all `.ts` files (exclude `node_modules`, `dist`)
 2. For each cast, read the surrounding code to understand the source expression
 3. Read the target type definition
-4. Compare property names — flag any mismatch
+4. Compare property names: flag any mismatch
 5. Also search for `pickRecord(`, `pick(` calls and verify key alignment
 6. Report findings grouped by file with specific line numbers
 
@@ -54,8 +54,8 @@ For each finding, report:
 ```
 ### <file-path>:<line>
 - **Pattern:** `as SomeType` / `pickRecord()` / spread
-- **Source:** <source type> — properties: <list>
-- **Target:** <target type> — properties: <list>
+- **Source:** <source type>: properties: <list>
+- **Target:** <target type>: properties: <list>
 - **Mismatch:** <source prop> ≠ <target prop>
 - **Risk:** <what could go wrong at runtime>
 ```

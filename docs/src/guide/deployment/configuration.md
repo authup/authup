@@ -12,7 +12,7 @@ Configuration is layered. From lowest to highest precedence:
 
 1. **Built-in defaults**
 2. **Configuration file(s)**
-3. **Environment variables** — an environment variable always beats the file value for the same option.
+3. **Environment variables**: an environment variable always beats the file value for the same option.
 
 A variable set to an empty value counts as unset, so it leaves the file value (or
 the default) standing rather than overriding it with nothing. To turn an optional

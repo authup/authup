@@ -20,7 +20,7 @@ and calls a handler callback with the verification data (realm, permissions, use
 
 The `createMiddleware` method accepts a configuration object with a `tokenVerifier` (from `@authup/server-adapter-kit`)
 and a `tokenVerifierHandler` callback. The optional `tokenByRequest` callback lets you fall back to an alternative source
-(e.g. a cookie) when the `Authorization` header is missing — the consumer chooses how to extract the value.
+(e.g. a cookie) when the `Authorization` header is missing: the consumer chooses how to extract the value.
 
 For certificate-bound tokens, provide `certificateThumbprintByRequest`. It must
 return the base64url SHA-256 thumbprint of the leaf certificate's DER encoding.
@@ -43,7 +43,7 @@ Behind a proxy, derive the value from the proxy's authenticated certificate
 contract instead. Never hash an unchecked public header; the proxy must remove
 and overwrite it, and the backend listener must be private.
 
-Enforcement lives inside `TokenVerifier.verify()` itself — the middleware only
+Enforcement lives inside `TokenVerifier.verify()` itself: the middleware only
 forwards a lazy thumbprint provider. Calling `verify(token)` directly on a
 bound token therefore also fails closed; pass the presented thumbprint via
 `verify(token, { certificateThumbprint })`.
@@ -90,8 +90,8 @@ creator's own client need no grant.
 
 ## verifyRequest primitive
 
-If you need direct control over the response — for example to short-circuit unauthenticated requests with a custom
-error body — `verifyRequest` is available as a transport-neutral primitive. It mirrors the
+If you need direct control over the response (for example to short-circuit unauthenticated requests with a custom
+error body), `verifyRequest` is available as a transport-neutral primitive. It mirrors the
 `@authup/server-adapter-web` shape:
 
 ```typescript

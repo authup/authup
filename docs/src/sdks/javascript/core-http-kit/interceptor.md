@@ -54,8 +54,8 @@ The hook extends `EventEmitter` and emits the following events:
 |---|---|---|
 | `refreshFinished` | `TokenGrantResponse` | A token refresh completed successfully. |
 | `refreshFailed` | `ClientError \| null` | A token refresh failed. |
-| `headerSet` | — | The authorization header was set on all clients. |
-| `headerRemoved` | — | The authorization header was removed from all clients. |
+| `headerSet` | - | The authorization header was set on all clients. |
+| `headerRemoved` | - | The authorization header was removed from all clients. |
 
 ```typescript
 hook.on('refreshFinished', (response) => {

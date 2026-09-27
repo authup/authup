@@ -40,17 +40,17 @@ call-shape assertions.
 ### Caveats
 
 - The default fallback returns a **collection** shape. Endpoints with another
-  wire shape — the `{ data, meta }` record envelope, token payloads (e.g.
-  session resolution) — need explicit handlers, or the consuming code will
+  wire shape (the `{ data, meta }` record envelope, token payloads, e.g.
+  session resolution) need explicit handlers, or the consuming code will
   see a misshapen value.
 - A throwing handler rejects the in-flight request. For code paths that fire
   requests without awaiting them (fire-and-forget), this surfaces as an
-  unhandled rejection — only throw in handlers exercised by awaited flows.
+  unhandled rejection. Only throw in handlers exercised by awaited flows.
 
 ## Injection via `install()`
 
 `@authup/client-web-kit`'s `install()` accepts a pre-built `httpClient`. It is
-used instead of constructing one from `baseURL` — by the provided client, the
+used (instead of constructing one from `baseURL`) by the provided client, the
 session store, and the authentication hook alike:
 
 ```typescript
@@ -66,5 +66,5 @@ install(app, {
 
 The option is not test-only: any pre-configured `Client` (custom retry policy,
 internal network base URL) can be injected the same way. The authentication
-hook (token refresh on 401) is attached to injected clients too — it is simply
+hook (token refresh on 401) is attached to injected clients too. It is simply
 inert on a fake that never produces error responses.

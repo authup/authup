@@ -73,7 +73,7 @@ const data = await verifySocket(socket, { tokenVerifier });
 // the underlying verifier error.
 ```
 
-The optional `tokenBySocket` callback runs when `socket.handshake.auth.token` is missing — useful
+The optional `tokenBySocket` callback runs when `socket.handshake.auth.token` is missing: useful
 when you want to pull the token from `socket.handshake.headers.authorization`, the query string,
 or any other source.
 
@@ -93,7 +93,7 @@ Bound tokens fail closed when the callback or certificate is absent. Treat the
 callback as a TLS/proxy trust boundary; do not accept an unchecked thumbprint
 sent in `handshake.auth` by the public caller.
 
-Enforcement lives inside `TokenVerifier.verify()` itself — the helper only
+Enforcement lives inside `TokenVerifier.verify()` itself: the helper only
 forwards a lazy thumbprint provider. Calling `verify(token)` directly on a
 bound token therefore also fails closed; pass the presented thumbprint via
 `verify(token, { certificateThumbprint })`.

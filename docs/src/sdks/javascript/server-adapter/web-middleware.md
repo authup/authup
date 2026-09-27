@@ -3,8 +3,8 @@
 The Web server adapter provides a transport-neutral primitive for HTTP services that operate on the standard
 `Request` object (routup v5, Hono, Elysia, Bun.serve, raw Web `fetch` handlers, ...).
 
-It does **not** ship a middleware factory. The package exposes a single `verifyRequest(request, options)` helper —
-your handler decides what to do with the result.
+It does **not** ship a middleware factory. The package exposes a single `verifyRequest(request, options)` helper.
+Your handler decides what to do with the result.
 
 ## Installation
 
@@ -47,7 +47,7 @@ Contract:
 | `tokenVerifier.verify` rejects       | rejects with the underlying verifier error     |
 
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
-extracts the token from wherever they like (cookie, custom header, query string) — the adapter does not parse cookies.
+extracts the token from wherever they like (cookie, custom header, query string): the adapter does not parse cookies.
 
 ## Certificate-bound tokens
 
@@ -69,7 +69,7 @@ removes and overwrites; do not return an unchecked public request header. The
 adapter compares the thumbprint only and deliberately does not repeat the
 authorization server's certificate-chain validation.
 
-Enforcement lives inside `TokenVerifier.verify()` itself — the helper only
+Enforcement lives inside `TokenVerifier.verify()` itself: the helper only
 forwards a lazy thumbprint provider. Calling `verify(token)` directly on a
 bound token therefore also fails closed; pass the presented thumbprint via
 `verify(token, { certificateThumbprint })` (a value or a provider, invoked

@@ -1,6 +1,6 @@
 # Licensing
 
-Authup uses a dual-licensing model. The monorepo contains components under two different licenses —
+Authup uses a dual-licensing model. The monorepo contains components under two different licenses:
 each application and package directory carries its own `LICENSE` file, which is authoritative for the
 code in that directory.
 
@@ -33,9 +33,9 @@ to users over a network, the AGPL requires you to publish your modifications und
 ### Integrating with an Authup server
 
 Client libraries, SDKs, server adapters, and shared kits under `packages/` are Apache-2.0. Building
-a (closed-source, commercial, or otherwise proprietary) application that *talks to* an Authup server —
-via `@authup/core-http-kit`, the `@authup/server-adapter-*` middlewares, `@authup/client-web-kit`,
-or any other published package — does **not** subject your application to the AGPL.
+a (closed-source, commercial, or otherwise proprietary) application that *talks to* an Authup server
+(via `@authup/core-http-kit`, the `@authup/server-adapter-*` middlewares, `@authup/client-web-kit`,
+or any other published package) does **not** subject your application to the AGPL.
 
 ### Commercial use of the applications
 
@@ -50,7 +50,7 @@ then a commercial license is available. Contact **contact@tada5hi.net** for term
 ## Prior versions
 
 All versions published **up to and including `v1.0.0-beta.46`** were released under the
-Apache-2.0 license and remain so — a license change is never retroactive. The dual-licensing model
+Apache-2.0 license and remain so: a license change is never retroactive. The dual-licensing model
 applies to all subsequent releases.
 
 ## Contributions
@@ -58,5 +58,5 @@ applies to all subsequent releases.
 Contributions are accepted under the project's
 [Contributor License Agreement](https://gist.github.com/tada5hi/0777b868a51c7a6e4080b9d1b19c8192),
 enforced via CLA Assistant on every pull request. The CLA grants the project maintainer the rights
-required to distribute contributions under both the open-source and commercial license — contributors
+required to distribute contributions under both the open-source and commercial license; contributors
 retain ownership of their work.

@@ -120,8 +120,8 @@ accepts, are documented at the REST level under
 covers only how the client reads that vocabulary back off a response.
 
 Every query-capable `GET` describes its own queryable vocabulary under
-`meta.schema` — which `filter`, `fields`, `sort` and `include` keys the
-endpoint accepts, plus the pagination cap — so a consumer never has to
+`meta.schema`: which `filter`, `fields`, `sort` and `include` keys the
+endpoint accepts, plus the pagination cap, so a consumer never has to
 inspect server source to build a query:
 
 ```typescript
@@ -141,11 +141,11 @@ console.log(meta.schema);
 
 Reading rules:
 
-- the shape is **normalized** — every described parameter carries every
+- the shape is **normalized**: every described parameter carries every
   constraint key: a **`null`** constraint was never declared (no explicit
   allow-list); an **empty array** is an explicit "nothing allowed".
 - relation vocabulary is **referenced, not expanded**: `relations.schemas`
-  names the schema governing each relation — dotted keys like
+  names the schema governing each relation: dotted keys like
   `filter[client.id]` follow the `client` entity's own description, found
   on its own endpoints.
 - single-record `GET`s carry the subset a record read processes
@@ -155,6 +155,6 @@ Reading rules:
   `relations` describes `?include`, and `sorts` describes `?sort`. The
   `sorts` key was named `sort` before rapiq 2.1.0; the URL parameter is
   unchanged.
-- the description is the **static upper bound** — actor-dependent
+- the description is the **static upper bound**: actor-dependent
   authorization gates may still strip individual keys per request.
 

@@ -282,7 +282,7 @@ it may attempt, which is none of the identity-bound ones.
 Nothing is disclosed that was not already an answer this route gives. Everything bound to
 the built-in `system.default` policy denies without an identity, so a default deployment
 answers an anonymous caller an **empty set**. A permission passes only when its whole
-policy layer reads no identity — a `date` or `time` window, or no policy at all — which
+policy layer reads no identity (a `date` or `time` window, or no policy at all), which
 is a permission anybody may attempt by construction.
 
 No action is required. If you relied on the `401` as a coarse "is anyone signed in"
@@ -318,7 +318,7 @@ One shared-origin deployment can notice this as an extra sign-in prompt: an appl
 embeds `@authup/client-web-kit` on the same origin as the hosted auth pages, under a wider
 cookie path, writes the session cookies the hosted page reads, so that page can pick up the
 application's own token and then asks the visitor to sign in once. That is the same collision
-[`cookiePrefix`](../../sdks/javascript/client-web-nuxt/index.md) already exists for — give the
+[`cookiePrefix`](../../sdks/javascript/client-web-nuxt/index.md) already exists for. Give the
 embedding application its own cookie namespace.
 
 ### A user's client-owned grants apply only through that client's tokens
@@ -839,10 +839,10 @@ activation and for a user who was never asked to verify, so no existing row can
 be proven verified.
 
 **Action required if a relying party reads the claim.** Anything gating on
-`email_verified: true` — account linking by email address is the usual case —
+`email_verified: true` (account linking by email address is the usual case)
 stops matching until the addresses are verified again, or vouched for. The field
-is admin-settable (`POST /users/:id` with `{"emailVerified": true}` — the update verb
-authup serves is POST, not PATCH — and a
+is admin-settable (`POST /users/:id` with `{"emailVerified": true}`; the update verb
+authup serves is POST, not PATCH; and a
 switch in the admin console's user form), so an operator can restore it for
 addresses they trust. It is on the `system.user-names-self-manage` denylist, so a
 user cannot set it on themselves, and it is cleared automatically when a user's
@@ -1597,8 +1597,8 @@ column could never name all of them: it was last-writer-wins and accurate for
 none. Per-application attribution moved one level down, onto
 `auth_session_tokens.client_id`.
 
-`auth_sessions.client_id` now means what its foreign key always implied — the
-subject of a **client** session — and is `NULL` for a user's session. Nothing
+`auth_sessions.client_id` now means what its foreign key always implied (the
+subject of a **client** session) and is `NULL` for a user's session. Nothing
 writes the authorizing application there anymore.
 
 - **Runbooks that sign an identity out of one application must change**:
@@ -1651,7 +1651,7 @@ URL parameter is unchanged.
 Filters and sorts are also index-anchored now: every key an endpoint allows
 is backed by a real index, so single-key filters and sorts behave exactly as
 before. The one narrowing is a **multi-key sort** with no matching composite
-index prefix, which is now dropped whole rather than executed — the request
+index prefix, which is now dropped whole rather than executed: the request
 still succeeds, unsorted.
 
 ## v1.0.0-beta.59
@@ -1740,7 +1740,7 @@ the leftover `web` rows. `CLIENT_WEB_NAME` was removed from
 
 ## v1.0.0-beta.52 (was: next release after v1.0.0-beta.51)
 
-### Login redirect allowlist — set `TRUSTED_ORIGINS`
+### Login redirect allowlist: set `TRUSTED_ORIGINS`
 
 Interactive login runs through the authorization-code flow against a per-realm `web` client
 whose redirect allowlist is built from the origin of `PUBLIC_URL` plus every entry in
@@ -1758,14 +1758,14 @@ bare hosts (expanded to both `http` and `https`) or full origins; comma-separate
 
 ::: warning Security
 Each trusted origin is added to a `builtIn` (auto-consent) client carrying the `global`
-scope — an allowlisted origin can obtain full-permission user tokens. Only list origins you
+scope: an allowlisted origin can obtain full-permission user tokens. Only list origins you
 control.
 :::
 
 ### Refresh-token rotation (hard cutover)
 
 Every `refresh_token` grant now rotates: the presented token is retired and a fresh pair is
-issued. Refresh tokens minted **before** the upgrade are rejected with `invalid_grant` —
+issued. Refresh tokens minted **before** the upgrade are rejected with `invalid_grant`:
 active users have to sign in once after the upgrade. Replaying an already-consumed refresh
 token revokes the whole session family (RFC 6819 §5.2.2.3). A multi-tab tolerance window can
 be configured via `TOKEN_REFRESH_GRACE_PERIOD` (seconds, default `0` = strict).
@@ -1778,7 +1778,7 @@ Shrinks the revocation blind spot for stateless JWKS-verifying adapters. Overrid
 ### Authorize & token flows are realm-bound
 
 An identity can only authorize (or redeem a code / refresh a token) against a client in
-**its own realm** — a cross-realm attempt yields `login_required` / `invalid_grant`.
+**its own realm**: a cross-realm attempt yields `login_required` / `invalid_grant`.
 Consequences:
 
 - Master-realm admins can no longer sign into other realms' applications through the
@@ -1798,7 +1798,7 @@ RPs still using `token` / `id_token` / hybrid response types must migrate to the
   document). Downstream apps should end the shared authup session by redirecting there with
   an `id_token_hint`.
 - `post_logout_redirect_uri` is honored only when it matches the client's **new, separate**
-  `post_logout_redirect_uri` column — a URI matching only the login `redirect_uri` is
+  `post_logout_redirect_uri` column: a URI matching only the login `redirect_uri` is
   rejected. Set the column for clients that use post-logout redirects (the provisioned
   `web` client is populated automatically).
 - Discovery `revocation_endpoint` was corrected from `…/token` to `…/token/revoke`
@@ -1807,7 +1807,7 @@ RPs still using `token` / `id_token` / hybrid response types must migrate to the
 ### Minimum password length raised to 10
 
 New password writes (user create/update, registration, password reset) reject values shorter
-than 10 characters — configurable via `PASSWORD_MIN_LENGTH`. Existing password hashes keep
+than 10 characters (configurable via `PASSWORD_MIN_LENGTH`). Existing password hashes keep
 verifying; nobody is forced to reset. File-provisioned users whose configured password is
 shorter than the floor now fail provisioning validation at startup.
 
@@ -1816,7 +1816,7 @@ shorter than the floor now fail provisioning validation at startup.
 A non-null `grantTypes` value (space- or comma-delimited) acts as an allowlist at the
 `/token` grants and the `/authorize` code request; violations fail with
 `unauthorized_client`. `null` keeps allow-all semantics, so only clients that *set* the
-column are affected — review clients that stored decorative values (e.g. a client listing
+column are affected: review clients that stored decorative values (e.g. a client listing
 only `authorization_code` will fail token refreshes until `refresh_token` is added). The
 provisioned per-realm `web` client already lists `authorization_code refresh_token`.
 

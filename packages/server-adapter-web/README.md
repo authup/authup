@@ -39,7 +39,7 @@ app.use('*', async (c, next) => {
 });
 ```
 
-The optional `tokenByRequest` callback is invoked when no `Authorization` header is present — the consumer
+The optional `tokenByRequest` callback is invoked when no `Authorization` header is present: the consumer
 chooses what fallback source to read (cookie, custom header, query string) and the adapter does not parse
 cookies on its own.
 

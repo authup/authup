@@ -78,7 +78,7 @@
                 </div>
 
                 <p class="mt-4 max-w-[42ch] text-[0.9rem] leading-[1.5] text-night-fg-muted">
-                    The fastest way to try Authup — no database required, SQLite storage only. Not for production.
+                    The fastest way to try Authup: no database required, SQLite storage only. Not for production.
                     <a
                         class="inline-block font-semibold text-night-accent-1 no-underline transition-transform duration-[120ms] ease-out hover:translate-x-[3px]"
                         href="/guide/deployment/"
@@ -96,7 +96,7 @@ import { computed, defineComponent, ref } from 'vue';
 
 // Quick Start, verbatim from the repo README (`npx authup@latest start`):
 // needs no configuration, falls back to SQLite for trying things out and
-// local development — not production — and serves the API and both consoles.
+// local development (not production) and serves the API and both consoles.
 const COMMAND = 'npx authup@latest start';
 
 const OUTPUT_LINES = [
@@ -106,8 +106,8 @@ const OUTPUT_LINES = [
 
 /*
  * White text only holds up on the darkened light-mode primary (5.72:1). The
- * lightened accent — the hover background in light mode, and the resting
- * background in dark mode — needs dark text instead: white on it is 1.93:1,
+ * lightened accent (the hover background in light mode, and the resting
+ * background in dark mode) needs dark text instead: white on it is 1.93:1,
  * the slate is 6.24:1.
  */
 const PRIMARY_BUTTON_CLASS = 'inline-flex items-center justify-center rounded-[var(--au-radius-sm)] border border-transparent bg-[var(--au-color-primary)] px-5 py-[0.65rem] text-[0.95rem] font-semibold text-white no-underline shadow-[0_8px_24px_-8px_var(--au-color-accent-a)] transition-[transform,background,border-color,color] duration-[120ms] ease-out hover:-translate-y-px hover:bg-[var(--au-night-accent-1)] hover:text-[var(--au-dark-bg)] dark:text-[var(--au-dark-bg)]';

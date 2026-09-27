@@ -38,11 +38,11 @@ returns a sink keeping the earliest one under `next`, which is when a cached ans
 built from those evaluations stops being current.
 
 `pendingPolicies` controls how a grant whose policy evaluation is **pending** (a required
-data key is absent from the bag — see
+data key is absent from the bag; see
 [Pending & data availability](./policies.md#pending--data-availability)) is treated:
 
-- `'deny'` (default) — pending counts as failure; the semantics of a full `evaluate()`.
-- `'permit'` — pending counts as pass; this is what `preEvaluate()` passes internally,
+- `'deny'` (default): pending counts as failure; the semantics of a full `evaluate()`.
+- `'permit'`: pending counts as pass; this is what `preEvaluate()` passes internally,
   so the pre-flight gate only denies on policies that settle false with the data
   available at that point.
 

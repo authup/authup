@@ -48,7 +48,7 @@ Their attributes are fixed (identical for both, except `name`):
 | Attribute         | Value                                                              |
 |-------------------|--------------------------------------------------------------------|
 | `name`            | `admin-console` / `account-console`                                |
-| `authMethod`      | `none` (public — no secret, PKCE required)                        |
+| `authMethod`      | `none` (public: no secret, PKCE required)                        |
 | `tokenBindingMethod` | `none`                                                         |
 | `builtIn`         | `true`                                                            |
 | `grantTypes`      | `authorization_code refresh_token`                                |
@@ -57,8 +57,8 @@ Their attributes are fixed (identical for both, except `name`):
 | `postLogoutRedirectUri` | the same `<origin>/**` patterns                             |
 
 Because the system clients are built-in and `builtIn` is stripped from any
-client you create yourself, their names (and `system`) are reserved —
-attempting to create or rename a client to one of them returns a
+client you create yourself, their names (and `system`) are reserved.
+Attempting to create or rename a client to one of them returns a
 `400 Bad Request`.
 
 ::: tip Restricting the admin console
@@ -75,7 +75,7 @@ signed in. To sign one identity out everywhere instead, revoke its sessions
 
 One more caveat: the gate evaluates identity data only (realm, identity
 type, time windows, compositions thereof); role-membership conditions are
-not expressible there yet. Regular users do not need the admin console —
+not expressible there yet. Regular users do not need the admin console:
 password, MFA, session and application self-service live on the
 [account console](./account-console.md) (`<publicUrl>/console/account`), so
 restricting the admin console to your administrators is a reasonable
@@ -90,7 +90,7 @@ file or through the API, is reverted at the next boot and no error is
 raised. Redirect patterns in particular are configured through
 `trustedOrigins` (below), not per client.
 
-Every other attribute is left untouched and survives a restart —
+Every other attribute is left untouched and survives a restart.
 `displayName` is seeded once at creation (`Admin Console`,
 `Account Console`) and then belongs to you. A provisioning file may
 therefore declare a system client to set `displayName`, `description`,
@@ -121,9 +121,9 @@ The `redirectUri` allowlist is derived from the set of trusted app origins:
 the origin of `publicUrl` plus every entry in `trustedOrigins`
 (`TRUSTED_ORIGINS`). An entry may be a full http(s) origin
 (`https://app.example.com`; other protocols are rejected) or a bare host
-(`hub.local`, `hub.local:8080`) — a bare host expands to both its http and
+(`hub.local`, `hub.local:8080`): a bare host expands to both its http and
 https origin; pass a full origin to restrict to one scheme. Each origin contributes one `<origin>/**` redirect
-pattern. (CORS is independent of this list — the API reflects any origin by
+pattern. (CORS is independent of this list: the API reflects any origin by
 default, since OAuth2 clients are registered at runtime on domains unknown at
 startup; an explicit allowlist can be configured via the `middlewareCors`
 options.)
@@ -254,7 +254,7 @@ set `builtIn: true` on policies, permissions, scopes, roles, realms, and
 clients, and a user's `email` is optional (a placeholder is generated).
 
 Attribute keys use **camelCase** (`realmId`, `displayName`, `authMethod`, …).
-Snake_case keys (`realm_id`, `display_name`, …) are not accepted — unmounted
+Snake_case keys (`realm_id`, `display_name`, …) are not accepted: unmounted
 keys are stripped by the validator, so a stale snake_case key is silently
 dropped. Write provisioning files in camelCase.
 
@@ -376,7 +376,7 @@ The top-level object has five optional arrays. Items at this level are **global*
 
 ### Policy Extra Attributes
 
-Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **camelCase** (the policy `type` values, e.g. `realm_match`, remain snake_case — they are enum values, not property keys).
+Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **camelCase** (the policy `type` values, e.g. `realm_match`, remain snake_case: they are enum values, not property keys).
 
 | Policy Type | Attribute | Type | Description |
 |---|---|---|---|
@@ -389,7 +389,7 @@ Policies use `extraAttributes` for their type-specific configuration. All attrib
 | `time` | `start` | `string` | ISO 8601 start datetime |
 | `time` | `end` | `string` | ISO 8601 end datetime |
 
-Example — defining a realm-match policy with custom settings:
+Example: defining a realm-match policy with custom settings:
 
 ```yaml
 policies:
@@ -406,8 +406,8 @@ policies:
 ```
 
 ::: warning Upgrading from a pre-camelCase release
-Policy `extraAttributes` persisted **before** the camelCase release — both the attribute keys and
-the entity-property names referenced inside `names`, `query`, and `attributeName` — are **not**
+Policy `extraAttributes` persisted **before** the camelCase release (both the attribute keys and
+the entity-property names referenced inside `names`, `query`, and `attributeName`) are **not**
 migrated automatically; the data migration deliberately leaves `auth_policy_attributes` untouched.
 Built-in `system.*` policies self-heal (the provisioner rewrites them to camelCase on every
 startup), but **user-authored** policies do not.
@@ -415,14 +415,14 @@ startup), but **user-authored** policies do not.
 A stale `snake_case` policy silently changes meaning:
 
 - an `invert: true` `attribute_names` denylist (e.g. `["name_locked", "status_message"]`) or an
-  `invert: true` `attributes` policy (e.g. `{ realm_id: … }`) **fails open** — the camelCase
+  `invert: true` `attributes` policy (e.g. `{ realm_id: … }`) **fails open**: the camelCase
   attribute keys no longer match, so the deny never fires;
 - a non-inverted `attributes` / attribute-mode `realm_match` constraint **stops matching** (denying
   legitimate access, or silently dropping the realm constraint).
 
 **Action:** after upgrading, re-save every custom (non-built-in) `attribute_names`, `attributes`, or
-attribute-mode `realm_match` policy — via `PUT /policies/:id`, the admin UI, or a provisioning
-`replace` — using camelCase field references. Re-saving re-serializes the stored configuration under
+attribute-mode `realm_match` policy (via `PUT /policies/:id`, the admin UI, or a provisioning
+`replace`) using camelCase field references. Re-saving re-serializes the stored configuration under
 the current contract and restores the intended decision.
 :::
 
@@ -721,8 +721,8 @@ roles: [
 
 This creates a `realm_admin` role that:
 - Has all permissions except realm management
-- Defaults to `system.realm-or-global` — can read global entities and assign them to own-realm entities
-- Overrides to `system.realm-bound` for entity CUD — cannot create/modify/delete global roles, permissions, or scopes
+- Defaults to `system.realm-or-global`: can read global entities and assign them to own-realm entities
+- Overrides to `system.realm-bound` for entity CUD: cannot create/modify/delete global roles, permissions, or scopes
 
 ## Merging Behavior
 

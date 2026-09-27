@@ -6,7 +6,7 @@ the file lookup and the `--configDirectory`/`--configFile` CLI flags).
 
 Most options can also be provided as environment variables (shown in the `.env` tab below).
 **An environment variable always overrides the file value** for the same option.
-A few options are file-only and have no environment variable — they are marked as such.
+A few options are file-only and have no environment variable: they are marked as such.
 
 Not every option below sits under `core`. `env`, `host`, `rootPath`,
 `publicUrl`, `internalUrl` and `trustedOrigins` are top-level, the two theme options are
@@ -31,7 +31,7 @@ full per-console option list.
 The admin password and the `system` client secret both default to `start123`.
 Set your own values (`userAdminPassword` / `clientSystemSecret`, or the
 `USER_ADMIN_PASSWORD` / `CLIENT_SYSTEM_SECRET` environment variables) before
-deploying to production — the examples below carry placeholders, never copy a
+deploying to production: the examples below carry placeholders, never copy a
 credential out of documentation.
 :::
 
@@ -69,7 +69,7 @@ export default {
      * URLs and links of the served consoles are rebased onto it
      * automatically.
      * env: PUBLIC_URL
-     * default: derived from host & port — http://localhost:3000
+     * default: derived from host & port (http://localhost:3000)
      * (a wildcard bind address renders as localhost)
      */
     publicUrl: 'http://localhost:3000',
@@ -103,7 +103,7 @@ export default {
      * Additional trusted origins. Entries are http(s) origins
      * (e.g. https://app.example.com; other protocols are rejected) or
      * bare hosts (e.g. hub.local, hub.local:8080); a bare host expands
-     * to both its http and https origin — pass a full origin to
+     * to both its http and https origin; pass a full origin to
      * restrict to one scheme.
      * Each origin is added to the redirect-URI allowlist of the per-realm
      * public system clients (as `<origin>/**`).
@@ -115,7 +115,7 @@ export default {
      *
      * Security: the system clients are built-in with global scope, so any
      * allowlisted origin can complete a login and obtain a full-permission
-     * token — only add origins you control. A wildcard host trusts every
+     * token: only add origins you control. A wildcard host trusts every
      * subdomain, so use one only where you control the whole domain.
      * The consoles authup serves need no entry: they are on the
      * publicUrl origin. In non-production, a console's standalone vite dev
@@ -348,7 +348,7 @@ export default {
          * presets loopback, linklocal, uniquelocal.
          *
          * Security: with `true` (the default), a DIRECT client can spoof
-         * its IP via X-Forwarded-For — login-throttle keys, audit events,
+         * its IP via X-Forwarded-For: login-throttle keys, audit events,
          * the access log, and the session inventory then record the forged
          * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
          * proxy) when the listener is reachable without a proxy or exact
@@ -401,14 +401,14 @@ export default {
          * still accepted, minting new chain-linked tokens instead of triggering
          * replay detection. Absorbs multi-tab / mobile refresh races.
          * env: TOKEN_REFRESH_GRACE_PERIOD
-         * default: 0 (strict — first-use-wins)
+         * default: 0 (strict: first-use-wins)
          */
         tokenRefreshGracePeriod: 0,
 
         /**
          * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
          * authorize request accepts before forcing re-authentication. Judged against
-         * the session's creation time — a stateless approximation.
+         * the session's creation time (a stateless approximation).
          * env: PROMPT_LOGIN_MAX_AGE
          * default: 60
          */
@@ -421,7 +421,7 @@ export default {
          * replayable remote logout; beyond the window the click-gated confirm
          * page still works.
          * env: END_SESSION_HINT_GRACE_PERIOD
-         * default: 0 (unbounded — spec/Keycloak parity)
+         * default: 0 (unbounded: spec/Keycloak parity)
          */
         endSessionHintGracePeriod: 0,
 
@@ -484,7 +484,7 @@ export default {
         eventLogEntityEnabled: true,
 
         /**
-         * Retention for entity create/update/delete events in days —
+         * Retention for entity create/update/delete events in days:
          * deliberately short so entity churn self-prunes. 0 = keep forever.
          * env: EVENT_LOG_ENTITY_RETENTION_DAYS
          * default: 7
@@ -503,7 +503,7 @@ export default {
         /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
          * loginFailed events. Requires eventLogEnabled.
-         * The IP half of the key follows `trustProxy` — pin it to the actual
+         * The IP half of the key follows `trustProxy`: pin it to the actual
          * proxy (hops or allowlist) so a direct client cannot spoof the IP
          * via X-Forwarded-For.
          * env: LOGIN_ATTEMPT_THROTTLE_ENABLED
@@ -528,7 +528,7 @@ export default {
 
         /**
          * Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the
-         * realm key store's material at rest — the per-realm JWT signing
+         * realm key store's material at rest: the per-realm JWT signing
          * private keys and the auto-generated per-realm encryption keys
          * that protect MFA seeds, client secrets stored in encrypted
          * mode and identity-provider secrets (the OAuth2 client secret,
@@ -538,7 +538,7 @@ export default {
          * or:
          * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
          * Must be standard base64 (+, /, = padding) decoding to exactly
-         * 32 bytes — base64url or any other length is rejected at startup.
+         * 32 bytes; base64url or any other length is rejected at startup.
          * Unset, key material is stored unwrapped in the database (the
          * Keycloak/authentik posture). Setting it later wraps existing
          * rows lazily on read; removing it while wrapped rows exist fails
@@ -553,7 +553,7 @@ export default {
          * devices (TOTP app, recovery codes); a user holding a confirmed
          * device must present a second factor on interactive authorization
          * and on the password grant (otp parameter). Seed-encryption keys
-         * are generated per realm automatically — no further configuration
+         * are generated per realm automatically: no further configuration
          * is required.
          * env: MFA_ENABLED
          * default: false
@@ -581,7 +581,7 @@ export default {
         /**
          * Lifetime (seconds) of the MFA-pending login ticket a fresh
          * interactive login receives when its second factor needs an
-         * interactive challenge (email / WebAuthn) — and of the pending
+         * interactive challenge (email / WebAuthn), and of the pending
          * session backing it.
          * env: MFA_TICKET_MAX_AGE
          * default: 600
@@ -662,7 +662,7 @@ export default {
         /**
          * Auto-assign the system.default policy to new permissions
          * created without an explicit policyId.
-         * Transitional option — will be removed in the next major release.
+         * Transitional option: will be removed in the next major release.
          * Set to false to opt into the allow-by-default model.
          * env: PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT
          * default: true
@@ -792,7 +792,7 @@ PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=true
 
 ::: tip File-only options
 `rootPath`, `logger` and the `middleware*` options have no environment
-variable — set them in a configuration file. Middleware *options objects*
+variable: set them in a configuration file. Middleware *options objects*
 (e.g. an explicit CORS allowlist) additionally require the `js`/`ts` file
 variant, since they cannot be expressed as flat strings.
 :::

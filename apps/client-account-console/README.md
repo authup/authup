@@ -48,7 +48,7 @@ The dev server needs a running authup server to talk to.
    API URL from its own location, which is wrong under the vite dev
    server.)
 
-3. Open <http://localhost:5173/console/account> — the app is mounted under its
+3. Open <http://localhost:5173/console/account>: the app is mounted under its
    canonical `/console/account` base path in dev too.
 
 Sign-in leaves the dev origin for the server's hosted login and returns
@@ -67,5 +67,5 @@ Emits the static bundle to `dist/` (the artifact this package ships).
 Made with 💚
 
 Published under the [AGPL-3.0 License](./LICENSE).
-A commercial license is available for organizations that cannot meet the AGPL's conditions —
+A commercial license is available for organizations that cannot meet the AGPL's conditions:
 see [LICENSING.md](../../LICENSING.md) or contact **contact@tada5hi.net**.

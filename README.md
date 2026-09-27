@@ -199,10 +199,10 @@ These guidelines will help to ensure that contributions are made effectively and
 ## Citation
 
 If you use Authup in academic work, please cite it. Citation metadata is maintained in
-[`CITATION.cff`](./CITATION.cff) — GitHub renders a **"Cite this repository"** button from it.
+[`CITATION.cff`](./CITATION.cff): GitHub renders a **"Cite this repository"** button from it.
 
 Authup is archived on [Zenodo](https://doi.org/10.5281/zenodo.20836542), which mints a DOI for
-each release. The badge below resolves to the **concept DOI** — it always points to the latest
+each release. The badge below resolves to the **concept DOI**: it always points to the latest
 version; to cite a specific release, use that version's DOI from the
 [Zenodo record](https://doi.org/10.5281/zenodo.20836542).
 
@@ -226,12 +226,12 @@ Made with 💚
 
 Authup is dual-licensed:
 
-- All **applications** under [apps/](apps) — the CLI, core and console services,
-  and client bundles — are published under the [AGPL-3.0](./LICENSE). A
+- All **applications** under [apps/](apps) (the CLI, core and console services,
+  and client bundles) are published under the [AGPL-3.0](./LICENSE). A
   commercial license is available for organizations that cannot meet the AGPL's
   conditions.
 - All **packages** under [packages/](packages) (client libraries, SDKs, server adapters, shared kits)
-  remain under the permissive [Apache 2.0 License](packages/kit/LICENSE) — integrating your own
+  remain under the permissive [Apache 2.0 License](packages/kit/LICENSE): integrating your own
   application with an Authup server never subjects it to the AGPL.
 
 See [LICENSING.md](./LICENSING.md) for details, or contact **contact@tada5hi.net** for commercial licensing.
