@@ -17,22 +17,22 @@ Plans live in `.agents/plans/*.md`. Each plan has phases with checklist items.
 
 ## How to check status
 
-### Step 1 — List plans
+### Step 1: List plans
 Read all `.md` files in `.agents/plans/`. For each, extract the title and phases.
 
-### Step 2 — Parse phases and tasks
+### Step 2: Parse phases and tasks
 Plans follow this structure:
 ```markdown
 # Plan: Title
 
-### Phase N — Name
+### Phase N: Name
 - [ ] Unchecked task
 - [x] Completed task
 ```
 
 Handle variations: numbered/unnumbered phases, nested checklists, tables with status columns.
 
-### Step 3 — Verify completion against codebase
+### Step 3: Verify completion against codebase
 
 For each task, try to verify if it's actually done:
 
@@ -46,14 +46,14 @@ For each task, try to verify if it's actually done:
 If a task references specific files or patterns, verify them. If a task is too abstract
 to verify (e.g. "Design the approach"), rely on the checklist state.
 
-### Step 4 — Determine phase status
+### Step 4: Determine phase status
 
-- **DONE** — All tasks verified complete
-- **IN PROGRESS** — Some tasks complete, some remaining
-- **NOT STARTED** — No tasks complete
-- **BLOCKED** — Depends on an incomplete earlier phase
+- **DONE**: All tasks verified complete
+- **IN PROGRESS**: Some tasks complete, some remaining
+- **NOT STARTED**: No tasks complete
+- **BLOCKED**: Depends on an incomplete earlier phase
 
-### Step 5 — Report
+### Step 5: Report
 
 ## Output format
 
@@ -62,19 +62,19 @@ to verify (e.g. "Design the approach"), rely on the checklist state.
 
 | Plan | Status | Current Phase |
 |------|--------|---------------|
-| plan-name.md | IN PROGRESS | Phase 2 — Name |
+| plan-name.md | IN PROGRESS | Phase 2: Name |
 
 ---
 
-## plan-name.md — Title
+## plan-name.md: Title
 
-### Phase 1 — Name (DONE)
-- [x] Task 1 — verified: <evidence>
-- [x] Task 2 — verified: <evidence>
+### Phase 1: Name (DONE)
+- [x] Task 1: verified: <evidence>
+- [x] Task 2: verified: <evidence>
 
-### Phase 2 — Name (IN PROGRESS)
-- [x] Task 3 — verified: <evidence>
-- [ ] Task 4 — NOT DONE: <what's missing>
+### Phase 2: Name (IN PROGRESS)
+- [x] Task 3: verified: <evidence>
+- [ ] Task 4: NOT DONE: <what's missing>
 
 ### Next action
 <specific, actionable next step with file paths>
@@ -82,7 +82,7 @@ to verify (e.g. "Design the approach"), rely on the checklist state.
 
 ## When invoked with a specific plan
 
-If the user specifies a plan file name, only report on that plan but in more detail —
+If the user specifies a plan file name, only report on that plan but in more detail:
 include file-level evidence for each verification.
 
 ## When invoked without arguments

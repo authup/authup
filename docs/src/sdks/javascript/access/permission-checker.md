@@ -83,7 +83,7 @@ Each method throws a `PermissionError` on denial and resolves on success.
 `preEvaluate` is the **pre-flight gate**: it runs before the data a policy needs is
 fully known (e.g. before the target row is loaded or the request payload is validated).
 It is derived from **data availability**: a policy whose required data keys are absent
-from the bag stays *pending* and passes the gate — only a policy that settles **false**
+from the bag stays *pending* and passes the gate: only a policy that settles **false**
 with the data available at that point denies. The later `evaluate()` call with the
 complete data remains the authority (there, pending counts as a denial).
 
@@ -91,7 +91,7 @@ complete data remains the authority (there, pending counts as a denial).
 await evaluator.preEvaluate({
     name: 'user_update',
 });
-// success — the attributeNames policy needs `attributes` (or `attributeNames`),
+// success: the attributeNames policy needs `attributes` (or `attributeNames`),
 // neither of which is available yet: it stays pending and passes the gate
 
 const data = new PolicyData();
@@ -101,7 +101,7 @@ await evaluator.evaluate({
     name: 'user_update',
     data,
 });
-// fails — with the data present, the policy settles false
+// fails: with the data present, the policy settles false
 ```
 
 This also holds under `invert` and inside composite trees: an unknown child is never
@@ -116,27 +116,27 @@ permission names passes (affirmative decision strategy).
 `compile` is the **query-build** counterpart of `evaluate`: instead of deciding a
 single access request, it expresses the permission's restrictions as a condition over
 row attributes (a rapiq `ICondition`), so list endpoints can enforce authorization in
-the database query itself — keeping pagination and totals exact.
+the database query itself, keeping pagination and totals exact.
 
 ```typescript
 const result = await evaluator.compile({ name: 'user_update' });
 
 switch (result.verdict) {
-    case 'allow':        // no restriction — every row passes
+    case 'allow':        // no restriction: every row passes
         break;
     case 'deny':         // no row can pass
         break;
     case 'conditional':  // push result.condition into the row query (WHERE)
         break;
-    case 'post':         // not expressible — load rows and evaluate() per row
+    case 'post':         // not expressible: load rows and evaluate() per row
         break;
 }
 ```
 
 Multiple names compile as a disjunction (`evaluateOneOf` semantics): any unrestricted
 name yields `allow`, and a single non-expressible name degrades the whole result to
-`post` — pushing only part of a disjunction would wrongly exclude rows.
+`post`: pushing only part of a disjunction would wrongly exclude rows.
 
 A `conditional` result is **exact**: a row satisfies the condition if and only if a
 full `evaluate()` with that row's attributes would pass. When it cannot be guaranteed,
-`compile` returns `post` instead — falling back to per-row evaluation is always sound.
+`compile` returns `post` instead. Falling back to per-row evaluation is always sound.

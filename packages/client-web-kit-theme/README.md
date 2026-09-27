@@ -12,7 +12,7 @@ npm install @authup/client-web-kit-theme tailwindcss @tailwindcss/vite
 
 ## Usage
 
-In your Vue app entry — register side-by-side with the app-level theme:
+In your Vue app entry: register side-by-side with the app-level theme:
 
 ```ts
 import vuecs from '@vuecs/core';

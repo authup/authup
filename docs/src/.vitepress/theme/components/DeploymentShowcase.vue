@@ -7,7 +7,7 @@
                     Pick your deployment
                 </h2>
                 <p class="au-lede mx-auto max-w-[56ch]">
-                    Run Authup the way that fits your stack — from a single Docker container to a clustered, externally-backed deployment.
+                    Run Authup the way that fits your stack: from a single Docker container to a clustered, externally-backed deployment.
                 </p>
             </header>
 
@@ -67,7 +67,7 @@ export default defineComponent({
         const targets: Target[] = [
             {
                 title: 'Docker Compose',
-                summary: 'The fastest way to a working Authup stack — server, UI and database wired up.',
+                summary: 'The fastest way to a working Authup stack: server, UI and database wired up.',
                 bullets: [
                     'Single yaml file, two services',
                     'PostgreSQL / MySQL / Redis ready',
@@ -89,7 +89,7 @@ export default defineComponent({
             },
             {
                 title: 'Bare Metal',
-                summary: 'Install on any host that runs Node.js — no container runtime required.',
+                summary: 'Install on any host that runs Node.js: no container runtime required.',
                 bullets: [
                     'Node.js 20+ on Linux / macOS / Windows',
                     'CLI-driven start and migrate',

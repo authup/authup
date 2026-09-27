@@ -12,7 +12,7 @@
   already loaded, and the `globalSetup` file runs in an isolated context
   so its own `import 'reflect-metadata'` does not reach test-file
   contexts. Any spec importing `src/core` transitively loads x509 (via the
-  client-certificate module), so this must stay — do not remove it.
+  client-certificate module), so this must stay: do not remove it.
 - **Per-worker sqlite isolation (server-core, issue #3405)**: spec files run
   in parallel vitest workers, so a shared database file made the suite flake
   on a different spec each run. The global setup provisions a template
@@ -53,7 +53,7 @@
   round-trips on top; vitest's default budget is 10s, which the sqlite runs
   clear and the mysql one does not, since it shares one server with every other
   spec file and runs with file parallelism off. A second two-instance spec
-  needs the same treatment — the symptom is a `Hook timed out in 10000ms` with
+  needs the same treatment: the symptom is a `Hook timed out in 10000ms` with
   every test in the file reported as PASSING, because it is the hook and not an
   assertion that ran out of clock.
 
@@ -143,21 +143,21 @@ Location: `test/unit/core/entities/{entity}/service.spec.ts`
 Test business logic in isolation using fake repositories (in-memory) and mock permission checkers. No HTTP, database, or Docker required. Tests run in ~1ms each.
 
 Generic fakes from `@authup/server-test-kit`:
-- `FakeEntityRepository<T>` — in-memory `IEntityRepository` backed by an array
-- `FakePermissionEvaluator` — `IPermissionEvaluator` implementation with call recording (`evaluateCalls`, `preEvaluateCalls`, etc.) and configurable behavior (`setBehavior(fn)`, `denyAll()`, `deny(method)`)
-- `createAllowAllActor()` / `createDenyAllActor()` — `FakeActorContext` for permission testing
-- `createMasterRealmActor(realmId?)` / `createNonMasterRealmActor(realmId?)` — presets with identity for realm defaulting tests
+- `FakeEntityRepository<T>`: in-memory `IEntityRepository` backed by an array
+- `FakePermissionEvaluator`: `IPermissionEvaluator` implementation with call recording (`evaluateCalls`, `preEvaluateCalls`, etc.) and configurable behavior (`setBehavior(fn)`, `denyAll()`, `deny(method)`)
+- `createAllowAllActor()` / `createDenyAllActor()`: `FakeActorContext` for permission testing
+- `createMasterRealmActor(realmId?)` / `createNonMasterRealmActor(realmId?)`: presets with identity for realm defaulting tests
 
 Domain fakes colocated under each entity's test dir as `test/unit/core/entities/<entity>/fake-repository.ts`:
 - `FakeRoleRepository`, `FakeRealmRepository` (pre-seeds master realm + `resolve()` helper), `FakePolicyRepository`, `FakePermissionRepository`
 - `FakeUserRepository`, `FakeClientRepository`
 
 Workflow / orchestration helpers still in `test/unit/core/helpers/`:
-- `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeOAuth2KeyRepository`, `FakeOAuth2TokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeOAuth2TokenVerifier`, `FakeSessionManager`, `FakeSessionTokenRepository` (in-memory `ISessionTokenRepository` for refresh-rotation grant tests — `create`/`markRefreshConsumed`/`hasConsumedChild`/`revokeBySessionId`/... with call recording). `helpers/index.ts` also re-exports everything from `@authup/server-test-kit` for terse spec imports.
+- `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeOAuth2KeyRepository`, `FakeOAuth2TokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeOAuth2TokenVerifier`, `FakeSessionManager`, `FakeSessionTokenRepository` (in-memory `ISessionTokenRepository` for refresh-rotation grant tests: `create`/`markRefreshConsumed`/`hasConsumedChild`/`revokeBySessionId`/... with call recording). `helpers/index.ts` also re-exports everything from `@authup/server-test-kit` for terse spec imports.
 
 What to test: permission gates, validation, realm defaulting, uniqueness, built-in entity protection, upsert behavior, error paths.
 
-**Writing philosophy:** Tests should assert *expected* behavior based on the service contract and architecture docs — not merely confirm what the implementation currently does. If a test fails, it may surface a real bug in the implementation rather than a test error. When a test failure seems like it could be a legitimate implementation issue, flag it to the user before "fixing" the test. The tests are a verification tool, not a rubber stamp.
+**Writing philosophy:** Tests should assert *expected* behavior based on the service contract and architecture docs, not merely confirm what the implementation currently does. If a test fails, it may surface a real bug in the implementation rather than a test error. When a test failure seems like it could be a legitimate implementation issue, flag it to the user before "fixing" the test. The tests are a verification tool, not a rubber stamp.
 
 **Important:** The vitest config lives at `test/vitest.config.ts`, not the project root. Running `npx vitest run` directly from the workspace directory will **not** find the config and **skips the global setup** (`test/setup.ts`), which provisions the master realm and starts Docker containers.
 
@@ -172,14 +172,14 @@ Location: `test/unit/http/controllers/entities/{entity}.spec.ts`
 Integration tests that spin up the full application (database, HTTP server). Test HTTP client compatibility (`core-http-kit`), request/response shaping, middleware pipeline, and end-to-end wiring. Require Docker services.
 
 `test/app/http.ts` exposes:
-- `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
-- `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
+- `suite.client`: a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
+- `suite.baseURL`: the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
 
 ### HTTP test helpers
 
 `test/utils/` exports two helpers tuned for HTTP integration tests:
 
-**`expectClientError(fn, { status?, code?, data? })`** — asserts the supplied async call rejects with a hapic `ClientError` matching the given shape. Replaces the `expect.assertions(N) + try/catch + isClientError` boilerplate. `code` is shorthand for `data.code`; pass `data` for arbitrary `response.data` field assertions (e.g. OAuth2 errors carrying both `code` and `error`).
+**`expectClientError(fn, { status?, code?, data? })`**: asserts the supplied async call rejects with a hapic `ClientError` matching the given shape. Replaces the `expect.assertions(N) + try/catch + isClientError` boilerplate. `code` is shorthand for `data.code`; pass `data` for arbitrary `response.data` field assertions (e.g. OAuth2 errors carrying both `code` and `error`).
 
 ```typescript
 import { expectClientError } from '../../../utils';
@@ -200,7 +200,7 @@ await expectClientError(
 );
 ```
 
-**`httpRequest(suite, method, path, { form?, body?, headers? })`** — raw `fetch()` against the test server, for tests that need to bypass the typed `Client` (raw HTML bodies, OAuth2 redirect payloads, RFC 6749 edge cases the typed client deletes). Returns the native `Response`; caller controls status / body parsing. `form: Record<string, string>` is shorthand for urlencoded body + auto Content-Type.
+**`httpRequest(suite, method, path, { form?, body?, headers? })`**: raw `fetch()` against the test server, for tests that need to bypass the typed `Client` (raw HTML bodies, OAuth2 redirect payloads, RFC 6749 edge cases the typed client deletes). Returns the native `Response`; caller controls status / body parsing. `form: Record<string, string>` is shorthand for urlencoded body + auto Content-Type.
 
 ```typescript
 import { httpRequest } from '../../../utils';
@@ -368,36 +368,36 @@ than installing the kit.
 - The payload symbol is `Symbol.for('HYDRATION_PAYLOAD')` (`src/di.ts`), so it
   is provided by description, no import needed.
 - A page calling `useToast()` needs a manager under
-  `Symbol.for('VCToastManager')` — `{ entries: ref([]), generateId: () => '…' }`
+  `Symbol.for('VCToastManager')`: `{ entries: ref([]), generateId: () => '…' }`
   is enough; the full `@vuecs/overlays` install is not.
 
 ## Component Tests (packages/client-web-kit)
 
 The kit has a vitest + `@vue/test-utils` + `happy-dom` setup
 (`test/vitest.config.ts`, `@vitejs/plugin-vue` for SFC compilation). Run with
-`npm run test --workspace=packages/client-web-kit` — the package script passes
+`npm run test --workspace=packages/client-web-kit`: the package script passes
 `--config test/vitest.config.ts` explicitly, which is **mandatory**: vitest
 does NOT auto-discover a config under `test/` (packages/access carries a dead
-config as a cautionary example — its plain `vitest run` script never loads it).
+config as a cautionary example: its plain `vitest run` script never loads it).
 
-Mounting a kit component needs the same wiring a consumer app does —
+Mounting a kit component needs the same wiring a consumer app does:
 `test/utils/index.ts` exports a `mountLoginForm(props?, handlers?)` harness
 that assembles it: fresh `createPinia()` + `createFakeClient` (from
 `@authup/core-http-kit/testing`, records every request in `.requests` with
 URLSearchParams bodies normalized to plain objects) per mount, `app.use(vuecs,
-{})` (ThemeManager + DefaultsManager — `useSubmitButton`/`VC*` throw without
+{})` (ThemeManager + DefaultsManager: `useSubmitButton`/`VC*` throw without
 them), and the kit `install(app, { baseURL, httpClient, pinia, isServer:
 true, cookieGet/cookieSet/cookieUnset })` (`isServer: true` disables the
 auth-hook refresh timer; cookie stubs avoid `useCookies`). The only global
 component lookup in the login subtree is `resolveComponent('VCIcon')` in
-`ATitle` — stub via `global.components`.
+`ATitle`: stub via `global.components`.
 
 The realm-plumbing regression suite pins the interactive-login contract at two
 layers: `test/unit/components/workflows/login-form.spec.ts` (picker-selected
 realm transmitted; `codeRequest.realm_id` transmitted incl. late-arriving prop
 via `setProps`; empty realm omitted from the grant body) and
 `test/unit/core/store/login.spec.ts` (the `store.login()` gate forwards
-`ctx.realmId` even though the store's own realm ref is null pre-login — the
+`ctx.realmId` even though the store's own realm ref is null pre-login: the
 original one-line bug).
 
 **Server-render specs.** The SSR data handoff (architecture.md → *SSR data
@@ -568,7 +568,7 @@ npm run test:coverage --workspace=apps/server-core
 
 This runs all tests with coverage collection and outputs:
 - Console summary table (truncated folder names, hard to read for specific files)
-- `apps/server-core/coverage/coverage-final.json` — detailed JSON report
+- `apps/server-core/coverage/coverage-final.json`: detailed JSON report
 
 ### Query coverage for specific modules
 
@@ -579,10 +579,10 @@ node -e 'var cov=JSON.parse(require("fs").readFileSync("./coverage/coverage-fina
 ```
 
 Replace `PATTERN` with a path fragment to filter files. Examples:
-- `core\\\\entities` — all entity service/type files
-- `core\\\\oauth2` — OAuth2 module
-- `core\\\\identity` — registration and password recovery
-- `core\\\\entities.*service` — only service implementation files
+- `core\\\\entities`: all entity service/type files
+- `core\\\\oauth2`: OAuth2 module
+- `core\\\\identity`: registration and password recovery
+- `core\\\\entities.*service`: only service implementation files
 
 **Note:** Windows paths use `\\\\` (double-escaped backslash) in the filter string.
 
@@ -593,7 +593,7 @@ Replace `PATTERN` with a path fragment to filter files. Examples:
 | Core entity services (`core/entities/*/service.ts`) | 95-100% | Maintain |
 | Workflow services (`core/identity/*/service.ts`) | 94-100% | Maintain |
 | OAuth2 module (`core/oauth2/`) | Mixed (0-100%) | Improve with service-level tests |
-| HTTP controllers, adapters | Covered by HTTP integration tests | — |
+| HTTP controllers, adapters | Covered by HTTP integration tests | - |
 
 ## Docker Services
 
@@ -609,29 +609,29 @@ Integration tests use Docker services defined in `docker-compose.yml`:
 
 ## Migration Tests
 
-The `tests-server-core` CI job runs the integration suite against MySQL and PostgreSQL, but the schema is built via `dataSource.synchronize()` (see `apps/server-core/test/app/database.ts`) — migrations in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` are NOT exercised by that suite.
+The `tests-server-core` CI job runs the integration suite against MySQL and PostgreSQL, but the schema is built via `dataSource.synchronize()` (see `apps/server-core/test/app/database.ts`): migrations in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` are NOT exercised by that suite.
 
 A separate `tests-migrations` CI job runs the migration CLI end-to-end against a fresh MySQL and PostgreSQL container:
 
-1. `migration run` — applies all migrations forward
-2. `migration revert` × N — undoes every migration in reverse order (verifies every `down()` works)
-3. `migration run` — re-applies the full chain (verifies idempotency)
-4. `npm run test:schema-drift` — asserts the migrated schema matches the entity metadata (see below)
+1. `migration run`: applies all migrations forward
+2. `migration revert` × N: undoes every migration in reverse order (verifies every `down()` works)
+3. `migration run`: re-applies the full chain (verifies idempotency)
+4. `npm run test:schema-drift`: asserts the migrated schema matches the entity metadata (see below)
 
-This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressions across every migration. It does **not** catch data-correctness bugs in `UPDATE`/`INSERT` migrations against pre-existing rows — the schema is empty throughout, so anything that only fails with rows present (a foreign key re-validating existing data, a column rewrite losing values, a narrowing type change truncating) passes here. Use the populated round-trip below for those.
+This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressions across every migration. It does **not** catch data-correctness bugs in `UPDATE`/`INSERT` migrations against pre-existing rows: the schema is empty throughout, so anything that only fails with rows present (a foreign key re-validating existing data, a column rewrite losing values, a narrowing type change truncating) passes here. Use the populated round-trip below for those.
 
 ### Schema-drift gate (`npm run test:schema-drift`)
 
-`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement — i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785871780234-AlignSchemaWithEntityMetadata`.
+`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement: i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785871780234-AlignSchemaWithEntityMetadata`.
 
-The rule that keeps the gate green is in [conventions.md](conventions.md#database-migrations): **DDL is generated with `migration generate`, never hand-written.** A green gate is the normal state — with the chain applied, `migration generate` writes no file at all.
+The rule that keeps the gate green is in [conventions.md](conventions.md#database-migrations): **DDL is generated with `migration generate`, never hand-written.** A green gate is the normal state: with the chain applied, `migration generate` writes no file at all.
 
 The two traps below are why. Both are invisible while hand-writing DDL and cannot occur when generating it:
 
 - **Constraint names are derived, not chosen.** typeorm names indexes and foreign keys from a table+column hash (`IDX_<hash>` / `FK_<hash>`). A readable `IDX_auth_events_actor_name` reads better and diverges permanently from the model.
-- **uuid columns are `varchar(255)` on MySQL.** MySQL has no uuid type, and `MysqlDriver.getColumnLength` only shortens to 36 for columns typeorm generates itself (`@PrimaryGeneratedColumn('uuid')`); a plain `@Column({ type: 'uuid' })` falls through to the generic varchar default. Writing `varchar(36)` holds a uuid perfectly well but drifts — and the next generated migration then emits `DROP COLUMN`, data loss that reads as routine in review. Pinning `length: 36` on the entity is **not** an escape: `uuid` is not in Postgres's `withLengthColumnTypes`, so `EntityMetadataValidator` throws `Column X of Entity Y does not support length property.` at `DataSource.initialize()` — the app would not boot on Postgres at all.
+- **uuid columns are `varchar(255)` on MySQL.** MySQL has no uuid type, and `MysqlDriver.getColumnLength` only shortens to 36 for columns typeorm generates itself (`@PrimaryGeneratedColumn('uuid')`); a plain `@Column({ type: 'uuid' })` falls through to the generic varchar default. Writing `varchar(36)` holds a uuid perfectly well but drifts, and the next generated migration then emits `DROP COLUMN`, data loss that reads as routine in review. Pinning `length: 36` on the entity is **not** an escape: `uuid` is not in Postgres's `withLengthColumnTypes`, so `EntityMetadataValidator` throws `Column X of Entity Y does not support length property.` at `DataSource.initialize()`: the app would not boot on Postgres at all.
 
-When the gate does fail, its output is the list of statements needed to reconcile the two — read it as "the entities changed without a migration" or "a migration wrote something the entities do not describe", and fix whichever is wrong before regenerating.
+When the gate does fail, its output is the list of statements needed to reconcile the two: read it as "the entities changed without a migration" or "a migration wrote something the entities do not describe", and fix whichever is wrong before regenerating.
 
 ### Populated round-trip (`npm run test:migration-latest`)
 
@@ -642,7 +642,7 @@ DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD
     DB_DATABASE=scratch npm run test:migration-latest --workspace=apps/server-core
 ```
 
-It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows — the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
+It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows: the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
 
 The value comparison exempts the columns the newest migration itself changed, in both directions. Columns it ADDED are keys present before and absent after the revert; columns it DROPPED are keys present after the revert and absent before, which the revert brings back as keys the before-snapshot never had. Only the first kind was exempt until #3355 dropped `auth_clients.scope` and `root_url`, at which point *column values unchanged after revert* failed by construction. The script now compares the after-revert values without the dropped columns against the before values without the added ones, and additionally checks that the re-run drops them again.
 

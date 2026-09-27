@@ -14,7 +14,7 @@ The following built-in policies are available:
 - [Time](#time)
 
 Every policy configuration additionally accepts `invert?: boolean`, which flips the
-evaluation outcome (allow ⇄ deny). Inversion applies only to genuine outcomes — a
+evaluation outcome (allow ⇄ deny). Inversion applies only to genuine outcomes: a
 policy that could not be evaluated (see
 [Pending & data availability](#pending--data-availability)) is never inverted.
 
@@ -22,7 +22,7 @@ policy that could not be evaluated (see
 
 Policy evaluation is **tri-state**: a policy settles *true*, settles *false*, or stays
 **pending** when the data it needs is not present in the `PolicyData` bag yet. Each
-evaluator declares its data needs via `requires(value)` — for example, the attributes
+evaluator declares its data needs via `requires(value)`: for example, the attributes
 evaluator requires the `attributes` key. When a required key is absent, the engine
 returns:
 
@@ -37,7 +37,7 @@ Composite policies treat pending children as *unknown*: they are never counted t
 the decision and never masked to a settled value, and `invert` is never applied to a
 pending result. This is what makes pre-flight checks
 ([`preEvaluate`](./permission-checker.md#pre-evaluate)) safe: a policy that cannot be
-evaluated yet does not deny at the gate — it is re-evaluated later with the full data.
+evaluated yet does not deny at the gate: it is re-evaluated later with the full data.
 
 ## Attributes
 
@@ -121,8 +121,8 @@ The list of supported operators:
 The Attribute Names Policy restricts a set of attribute names. It evaluates whichever
 policy-data source is available:
 
-- the `attributeNames` data key — a plain list of attribute names (a projection / fieldset)
-- the `attributes` data key — the keys of an attribute record
+- the `attributeNames` data key: a plain list of attribute names (a projection / fieldset)
+- the `attributes` data key: the keys of an attribute record
 
 When both keys are present, both are enforced; when neither is present, the policy stays
 pending.
@@ -132,7 +132,7 @@ pending.
 export interface AttributeNamesPolicy {
     names: string[],
     /**
-     * default: false — treat `names` as a denylist instead of an allowlist.
+     * default: false; treat `names` as a denylist instead of an allowlist.
      */
     invert?: boolean | null,
 }
@@ -159,7 +159,7 @@ evaluator.evaluate(
 ```
 
 With the `attributeNames` data key the same policy evaluates a list of attribute names
-instead of an attribute record — useful to answer *"may this actor project these field
+instead of an attribute record: useful to answer *"may this actor project these field
 names?"* before any row data exists (e.g. validating a requested fieldset):
 
 ```typescript
@@ -227,7 +227,7 @@ export interface IdentityPolicy {
 ## Permission Binding
 
 The PermissionBinding Policy verifies that the acting identity actually **holds** the
-permission being evaluated — the binding rides the `permissionBinding` key of the
+permission being evaluated: the binding rides the `permissionBinding` key of the
 policy data. Authup's server attaches this policy to every managed permission through
 the built-in `system.permission-binding` policy, whose server-side evaluator also
 enforces each grant's realm reach (`realmScope`) and optional junction policy. The
@@ -250,7 +250,7 @@ It operates in one of two modes:
 
 - **Scope mode** (`scope` set): matches the resource realm supplied under the
   `realmMatch` policy-data key against the identity's realm using a coarse,
-  actor-relative reach — `own` (identity's own realm only), `ownOrNull` (own realm or
+  actor-relative reach: `own` (identity's own realm only), `ownOrNull` (own realm or
   global/null resources), `any`, `none`. When no `realmMatch` key is present, the
   policy does not apply and passes neutrally. This mode powers the `realmScope`
   column on permission grants.
@@ -368,7 +368,7 @@ export interface IPolicyEvaluator {
 
     /**
      * Express the policy as a condition over row attributes (rapiq ICondition)
-     * instead of waiting for the row — enables WHERE pushdown. Only attempted
+     * instead of waiting for the row: enables WHERE pushdown. Only attempted
      * on pending subtrees when the evaluation context sets `withConditions`.
      * Return null when the configuration is not expressible; it then stays
      * a per-row post-check.
@@ -398,4 +398,4 @@ Guidelines:
   passes (policy does not apply) and pending results stay as they are.
 - **`toCondition` must be exact.** A row satisfies the returned condition if and only
   if the policy would settle true with that row as its attributes. When in doubt,
-  return `null` — a per-row check is always sound.
+  return `null`: a per-row check is always sound.

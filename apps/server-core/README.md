@@ -21,5 +21,5 @@ To read the docs, visit [https://authup.org/](https://authup.org/)
 Made with 💚
 
 Published under the [AGPL-3.0 License](./LICENSE).
-A commercial license is available for organizations that cannot meet the AGPL's conditions —
+A commercial license is available for organizations that cannot meet the AGPL's conditions:
 see [LICENSING.md](../../LICENSING.md) or contact **contact@tada5hi.net**.

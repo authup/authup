@@ -34,7 +34,7 @@ Search `docs/**/*.md` for references to the changed code. Look for:
 - Feature or module names related to the changes
 - Configuration keys or environment variables that changed
 
-Use grep/search to find all doc files that reference the affected code — do not rely on a fixed mapping.
+Use grep/search to find all doc files that reference the affected code: do not rely on a fixed mapping.
 
 ## Step 3: Read and Understand
 
@@ -60,7 +60,7 @@ Apply minimal, accurate updates to each affected doc file:
 ### Rules
 
 - Match the existing style and formatting of each doc file.
-- Keep code examples using the public API — do not expose internals.
+- Keep code examples using the public API: do not expose internals.
 - Update import paths if package structure changed.
 - Do not add sections for internal/private APIs.
 - Do not create new doc files unless a wholly new package or app was added.

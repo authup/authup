@@ -58,8 +58,8 @@ export type ActorContext = {
 };
 ```
 
-- `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`).
-- `identity` — the actor's identity (`user`, `client`), present on authenticated requests.
+- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`).
+- `identity`: the actor's identity (`user`, `client`), present on authenticated requests.
 
 **Example**
 ```ts
@@ -83,8 +83,8 @@ export abstract class AbstractEntityService {
 }
 ```
 
-- `isActorMasterRealmMember(actor)` — `true` when the actor's identity belongs to the master realm.
-- `getActorRealmId(actor)` — extracts the actor's realm id, checking both `data.realmId` and `data.realm.id`.
+- `isActorMasterRealmMember(actor)`: `true` when the actor's identity belongs to the master realm.
+- `getActorRealmId(actor)`: extracts the actor's realm id, checking both `data.realmId` and `data.realm.id`.
 
 **Example**
 ```ts
