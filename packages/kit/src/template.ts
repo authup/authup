@@ -23,7 +23,7 @@ export function template(
                 hasOwnProperty(data, key) &&
                 typeof data[key] !== 'undefined'
             ) {
-                return acc.replace(match[0], data[key]);
+                return acc.replace(match[0], () => String(data[key]));
             }
 
             return acc;

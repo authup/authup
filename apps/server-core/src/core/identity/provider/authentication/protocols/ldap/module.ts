@@ -17,6 +17,14 @@ import type { IIdentityProviderAccountManager } from '../../../account/index.ts'
 import type { IdentityProviderIdentity } from '../../../types.ts';
 import type { IdentityProviderLdapAuthenticatorContext } from './types.ts';
 
+/**
+ * Escape a value for an LDAP search filter (RFC 4515), so a substituted
+ * value can never add filter syntax to an operator's template.
+ */
+function escapeFilterValue(value: unknown) : string {
+    return String(value).replace(/[\\*()\0]/g, (char) => `\\${char.charCodeAt(0).toString(16).padStart(2, '0')}`);
+}
+
 export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthenticator<User> {
     protected provider : LdapIdentityProvider;
 
@@ -141,7 +149,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         if (this.provider.userFilter) {
             filter = template(this.provider.userFilter, {
-                input,
+                input: escapeFilterValue(input),
                 name_attribute: this.provider.userNameAttribute || 'cn',
                 mail_attribute: this.provider.userMailAttribute || 'mail',
                 display_name_attribute: this.provider.userDisplayNameAttribute || 'cn',
@@ -190,7 +198,9 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         let filter : Filter | string;
         if (this.provider.groupFilter) {
             filter = template(this.provider.groupFilter, {
-                ...user,
+                ...Object.fromEntries(
+                    Object.entries(user).map(([key, value]) => [key, escapeFilterValue(value)]),
+                ),
                 name_attribute: nameAttribute,
                 member_attribute: memberAttribute,
             });
