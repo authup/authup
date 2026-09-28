@@ -25,6 +25,8 @@ import {
     ScopeName, 
 } from '@authup/core-kit';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { EntityNotFoundError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
@@ -44,6 +46,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
+    IRealmRepository,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import { resolveIntrospectionSubject } from '../../../../../core/index.ts';
@@ -62,6 +65,7 @@ import {
 import type { CertificateSource } from '../../../request/index.ts';
 import {
     buildActorContext,
+    getRequestRealmID,
     setRequestIdentity,
     setRequestScopes,
     useRequestIdentity,
@@ -70,7 +74,7 @@ import {
 import { extractTokenFromRequest } from './utils/index.ts';
 
 @DTags('auth')
-@DController('/token')
+@DController(['/token', '/realms/:realmId/token'])
 export class TokenController {
     protected refreshTokenIssuer: IOAuth2TokenIssuer;
 
@@ -92,6 +96,8 @@ export class TokenController {
 
     protected logger? : Logger;
 
+    protected realmRepository : IRealmRepository;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -107,6 +113,7 @@ export class TokenController {
         this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
         this.certificateSource = ctx.certificateSource;
         this.logger = ctx.logger;
+        this.realmRepository = ctx.realmRepository;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -187,6 +194,7 @@ export class TokenController {
     async postIntrospect(
         @DContext() event: IAppEvent,
     ): Promise<OAuth2TokenIntrospectionResponse> {
+        await this.applyRouteRealm(event);
         await this.assertIntrospectionAuthorized(event);
 
         try {
@@ -417,6 +425,8 @@ export class TokenController {
     async revokeToken(
         @DContext() event: IAppEvent,
     ): Promise<null> {
+        await this.applyRouteRealm(event);
+
         try {
             const token = await extractTokenFromRequest(event);
 
@@ -462,6 +472,8 @@ export class TokenController {
 
     @DPost('', [])
     async createToken(@DContext() event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
+        await this.applyRouteRealm(event);
+
         const grantType = await guessOauth2GrantTypeByRequest(event);
         if (!grantType) {
             throw OAuth2GrantTypeError.unsupported();
@@ -477,5 +489,39 @@ export class TokenController {
         this.metrics?.recordTokenGrant(grantType);
 
         return response;
+    }
+
+    // ----------------------------------------------------------
+
+    /**
+     * Under `/realms/:realmId/token` the route realm IS the realm hint and
+     * wins silently over a body `realm_id` / `realm_name`, the same rule the
+     * dual-mounted entity controllers apply. The body is cached per request,
+     * so every grant reads the stamped value.
+     *
+     * The route realm must exist: the resolver passes a UUID through
+     * unchecked, and the body hint would otherwise fall back to master.
+     * It scopes NAME resolution only, like the body hint; a user or client
+     * addressed by UUID still resolves in its own realm.
+     */
+    protected async applyRouteRealm(event: IAppEvent) : Promise<void> {
+        const realmId = getRequestRealmID(event);
+        if (!realmId) {
+            return;
+        }
+
+        const realm = await this.realmRepository.resolve(realmId);
+        if (!realm) {
+            throw new EntityNotFoundError(`realm '${realmId}' not found`);
+        }
+
+        // an array body parses (strict mode only refuses primitives) but is
+        // no parameter set; refusing it keeps the route realm authoritative
+        const body = await readRequestBody(event);
+        if (!isObject(body)) {
+            throw OAuth2RequestError.malformed('The request body must be an object.');
+        }
+
+        body.realm_id = realm.id;
     }
 }

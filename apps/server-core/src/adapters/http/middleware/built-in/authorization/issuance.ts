@@ -67,7 +67,8 @@ export function normalizeRequestPath(input: string) : string {
  * later mount adds under these prefixes).
  */
 export function isOAuth2IssuancePath(input: string) : boolean {
-    const path = normalizeRequestPath(input);
+    // the realm-scoped mount (`/realms/:realmId/token`) is the same surface
+    const path = normalizeRequestPath(input).replace(/^\/realms\/[^/]+(?=\/)/, '');
 
     for (const entry of OAUTH2_ISSUANCE_PATHS) {
         if (path === entry || path.startsWith(`${entry}/`)) {
