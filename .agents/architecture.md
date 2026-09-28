@@ -8512,8 +8512,11 @@ immutable, status is not), so disabling an enc key is an immediate,
 closed, never a 500). The verifier serves a token it has seen before from the
 signature-keyed claims cache (`TOKEN_CLAIMS`) without consulting its key, so
 disabling or deleting a SIGNATURE key marks it in the cache
-(`IOAuth2TokenRepository.setKeyInactive`, one entry per key id, no ttl, lifted
-by `dropKeyInactive` when the key verifies again), and `verify()` reads the
+(`IOAuth2TokenRepository.setKeyInactive`, one entry per key id, lifted by
+`dropKeyInactive` when the key verifies again; it lives for the longest token
+lifetime the config allows and at least the claims cache's 1h fallback, so it
+outlives every claims entry it guards; an evicting Redis policy can still
+drop it ahead of them, which only `noeviction` rules out), and `verify()` reads the
 token header and refuses a marked `kid` BEFORE the cache lookup: the tokens
 that key signed stop verifying at once rather than at their `exp`, including a
 cache entry a verify that resolved the key just before wrote just after. It is
