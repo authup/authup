@@ -17,7 +17,7 @@ function createAuthenticator(
     provider: Partial<LdapIdentityProvider>,
     entries: Record<string, any>[],
 ) {
-    const filters : string[] = [];
+    const filters : any[] = [];
 
     const client : ILdapClient = {
         connected: true,
@@ -27,7 +27,7 @@ function createAuthenticator(
         add: async () => undefined,
         del: async () => undefined,
         search: async (options: SearchOptions) => {
-            filters.push(String(options.filter));
+            filters.push(options.filter);
             return filters.length === 1 ? entries : [];
         },
         resolveDn: (...input) => input.find((el) => !!el),
@@ -55,23 +55,63 @@ function createAuthenticator(
     return { authenticator, filters };
 }
 
+/**
+ * The value a leaf of the filter puts on the wire. ldapjs sends a filter
+ * object's leaf values verbatim, so this is what the directory compares.
+ */
+function wireValue(filter: any) : string {
+    const { buffer } = filter.toBer();
+    return buffer.subarray(buffer.length - Buffer.byteLength(filter.value)).toString();
+}
+
 describe('core/identity/provider/ldap — search filter', () => {
-    it('should escape the name in a user filter template', async () => {
+    it('should put the name into the user filter as a value, never as syntax', async () => {
         const { authenticator, filters } = createAuthenticator({ userFilter: '(&(objectClass=person)(uid={{input}}))' }, []);
 
-        await expect(authenticator.authenticate('alice)(description=S*', 'pw')).rejects.toThrow();
+        await expect(authenticator.authenticate('alice)(description=S*\\', 'pw')).rejects.toThrow();
 
-        expect(filters[0]).toEqual('(&(objectClass=person)(uid=alice\\29\\28description=S\\2a))');
+        const [objectClass, uid] = filters[0].clauses;
+        expect(filters[0].clauses).toHaveLength(2);
+        expect(objectClass.value).toEqual('person');
+        expect(uid.attribute).toEqual('uid');
+        expect(wireValue(uid)).toEqual('alice)(description=S*\\');
     });
 
-    it('should escape the entry values in a group filter template', async () => {
+    it('should fill the operator attribute names into the template', async () => {
+        const { authenticator, filters } = createAuthenticator({
+            userFilter: '({{name_attribute}}={{input}})',
+            userNameAttribute: 'sAMAccountName',
+        }, []);
+
+        await expect(authenticator.authenticate('alice', 'pw')).rejects.toThrow();
+
+        expect(filters[0].attribute).toEqual('sAMAccountName');
+        expect(filters[0].value).toEqual('alice');
+    });
+
+    it('should put a substituted value into a substring as a literal', async () => {
+        const { authenticator, filters } = createAuthenticator({ userFilter: '(uid={{input}}*)' }, []);
+
+        await expect(authenticator.authenticate('a*b', 'pw')).rejects.toThrow();
+
+        expect(filters[0].initial).toEqual('a*b');
+        expect(filters[0].any).toEqual([]);
+    });
+
+    it.each([
+        'cn=Smith\\, John,dc=example,dc=com',
+        'cn=J\\c3\\bcrgen,dc=example,dc=com',
+        'cn=a*b(c),dc=example,dc=com',
+    ])('should send the entry value %s unchanged in a group filter', async (dn) => {
         const { authenticator, filters } = createAuthenticator({
             userFilter: '(uid={{input}})',
             groupFilter: '(&(objectClass=group)(member={{dn}}))',
-        }, [{ dn: 'cn=a*b(c),dc=example,dc=com', uid: 'alice' }]);
+        }, [{ dn, uid: 'alice' }]);
 
         await authenticator.authenticate('alice', 'pw');
 
-        expect(filters[1]).toEqual('(&(objectClass=group)(member=cn=a\\2ab\\28c\\29,dc=example,dc=com))');
+        const member = filters[1].clauses[1];
+        expect(member.attribute).toEqual('member');
+        expect(wireValue(member)).toEqual(dn);
     });
 });
