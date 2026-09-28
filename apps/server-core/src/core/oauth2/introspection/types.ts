@@ -37,7 +37,7 @@ export type OAuth2IntrospectionSubject = {
     identity: Identity,
     claims: OpenIDTokenPayload,
     /**
-     * Present only for an `active` input.
+     * Present only for an `active` input whose identity is active.
      */
     permissions?: OAuth2TokenPermission[],
 };
