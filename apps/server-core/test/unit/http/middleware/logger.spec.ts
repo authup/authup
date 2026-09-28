@@ -42,6 +42,17 @@ describe('redactSensitiveURLParams', () => {
         expect(redacted).not.toContain('x1y2');
     });
 
+    it('should redact the parameters that carry an encoded authorize request', () => {
+        const codeRequest = Buffer.from(JSON.stringify({ login_hint: 'a@b.c' })).toString('base64');
+        const redacted = redactSensitiveURLParams(`/identity-providers/x/authorize-out?codeRequest=${codeRequest}` +
+            '&redirect=%2Fauthorize%3Flogin_hint%3Da%2540b.c');
+
+        expect(redacted).toContain('codeRequest=***');
+        expect(redacted).toContain('redirect=***');
+        expect(redacted).not.toContain(codeRequest);
+        expect(redacted).not.toContain('a%2540b.c');
+    });
+
     it('should redact every occurrence of a repeated sensitive param', () => {
         const redacted = redactSensitiveURLParams('/logout?id_token_hint=a&id_token_hint=b');
 

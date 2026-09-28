@@ -18,7 +18,8 @@ type LoggerMiddlewareOptions = {
 
 // Query params whose values are credentials/tokens or personal data — the
 // access log must never persist them (a GET /logout?id_token_hint=<jwt> would
-// otherwise write a signature-valid token into the log, a login_hint an email).
+// otherwise write a signature-valid token into the log, a login_hint an email;
+// codeRequest and redirect carry a whole authorize request, login_hint included).
 const SENSITIVE_QUERY_PARAMS = [
     'id_token_hint',
     'id_token',
@@ -31,6 +32,8 @@ const SENSITIVE_QUERY_PARAMS = [
     'client_secret',
     'login_hint',
     'linkHandle',
+    'codeRequest',
+    'redirect',
 ];
 
 export function redactSensitiveURLParams(url: string): string {
