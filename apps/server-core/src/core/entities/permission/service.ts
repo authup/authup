@@ -32,43 +32,7 @@ import type { IPermissionRepository, IPermissionService } from './types.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { permissionSchema } from './schema.ts';
-
-const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
-    PermissionName.REALM_CREATE,
-    PermissionName.REALM_UPDATE,
-    PermissionName.REALM_DELETE,
-];
-
-/**
- * Direct-entity CUD permissions that realm_admin grants at `realmScope: own`
- * (strictly the actor's own realm — see line 372). Every other realm_admin
- * permission defaults to `ownOrNull` (own realm OR global/null resources) so it
- * can act on global building blocks.
- *
- * Junction CUD (e.g. user_role, role_permission) is intentionally NOT listed here:
- * it stays `ownOrNull` because a junction can legitimately reference a global
- * side (realmId: null) — a strict `own` would reject those.
- */
-const REALM_ADMIN_BOUND_PERMISSIONS = [
-    PermissionName.CLIENT_CREATE,
-    PermissionName.CLIENT_UPDATE,
-    PermissionName.CLIENT_DELETE,
-    PermissionName.IDENTITY_PROVIDER_CREATE,
-    PermissionName.IDENTITY_PROVIDER_UPDATE,
-    PermissionName.IDENTITY_PROVIDER_DELETE,
-    PermissionName.PERMISSION_CREATE,
-    PermissionName.PERMISSION_UPDATE,
-    PermissionName.PERMISSION_DELETE,
-    PermissionName.ROLE_CREATE,
-    PermissionName.ROLE_UPDATE,
-    PermissionName.ROLE_DELETE,
-    PermissionName.SCOPE_CREATE,
-    PermissionName.SCOPE_UPDATE,
-    PermissionName.SCOPE_DELETE,
-    PermissionName.USER_CREATE,
-    PermissionName.USER_UPDATE,
-    PermissionName.USER_DELETE,
-];
+import { REALM_ADMIN_EXCLUDED_PERMISSIONS, REALM_ADMIN_OWN_REACH_PERMISSIONS } from './constants.ts';
 
 export type PermissionServiceContext = {
     repository: IPermissionRepository;
@@ -426,7 +390,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      * - Custom global permissions (non-built-in with realmId: null)
      */
     private async assignToRealmAdminRoles(permission: Permission): Promise<void> {
-        if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name as PermissionName)) {
+        if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name)) {
             return;
         }
 
@@ -435,7 +399,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             return;
         }
 
-        const realmScope = REALM_ADMIN_BOUND_PERMISSIONS.includes(permission.name as PermissionName) ?
+        const realmScope = REALM_ADMIN_OWN_REACH_PERMISSIONS.includes(permission.name) ?
             RealmScope.OWN :
             RealmScope.OWN_OR_NULL;
 
