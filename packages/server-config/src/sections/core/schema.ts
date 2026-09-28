@@ -448,7 +448,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             default: true,
             description: 'Provision the default admin user.',
             env: EnvironmentVariable.USER_ADMIN_ENABLED,
-            readEnv: readEnvBool,
+            readEnv: readEnvBoolStrict,
         },
         userAdminPassword: {
             type: secretType,
