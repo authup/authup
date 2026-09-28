@@ -23,7 +23,10 @@ the ones that can break an existing setup come first.
   import them. A resource server verifying tokens locally against the JWKS
   trusts the subject of any key of the token's realm. Signature keys imported
   under the earlier rules stay trusted: review imported signature keys and
-  disable or rotate any a realm administrator imported.
+  disable or rotate any a realm administrator imported. On a Redis cache, drop
+  the `oauth2_token_claims*` keys once after the upgrade: a token verified
+  before it is served from that cache without the new key check until it
+  expires. An in-memory cache is cleared by the restart.
 - **Provisioning `createOnly`.** A user, client or role entry binds its
   declared roles, permissions and scopes only when it creates the row. An
   existing row under that name receives none of them. Use `strategy: merge`
