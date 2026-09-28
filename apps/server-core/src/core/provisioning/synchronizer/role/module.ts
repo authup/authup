@@ -54,6 +54,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
+        let created = false;
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:
@@ -73,9 +74,17 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
         } else {
             attributes = await this.repository.save(this.repository.create(input.attributes));
+            created = true;
         }
 
-        if (!input.relations) {
+        // createOnly leaves a row it did not create alone, its permission
+        // bindings included, unless the row is built in: only provisioning
+        // writes one, so its bindings are the file's to extend.
+        const bindRelations = created ||
+            !!attributes.builtIn ||
+            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
+
+        if (!bindRelations || !input.relations) {
             return {
                 ...input,
                 attributes,
