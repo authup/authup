@@ -137,6 +137,31 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
         expect(suite.tokenVerifier.verifyCalls).toHaveLength(1);
     });
 
+    it('refuses a token naming another subject than its session', async () => {
+        const suite = createSuite();
+
+        const realmId = randomUUID();
+        const other = {
+            id: randomUUID(), 
+            name: 'other', 
+            realmId, 
+        } as User;
+        const session = await suite.sessionManager.create({ sub: randomUUID(), subKind: IdentityType.USER });
+        suite.tokenVerifier.seed(TOKEN, {
+            kind: OAuth2TokenKind.ACCESS,
+            realm_id: realmId,
+            session_id: session.id,
+            sub: other.id,
+            sub_kind: OAuth2SubKind.USER,
+        });
+        suite.identityResolver.setIdentity({ type: IdentityType.USER, data: other });
+
+        const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+
+        await expect(suite.middleware.run(event)).rejects.toSatisfy(isJWTError);
+        expect(useRequestIdentity(event)).toBeUndefined();
+    });
+
     it('keeps separate requests independently verified', async () => {
         const suite = createSuite();
 
