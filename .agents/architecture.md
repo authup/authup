@@ -4405,7 +4405,11 @@ than guarded:
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
   Such a change reaches a user's grants after the 60 s owned-roles / owned-permissions
-  query cache.
+  query cache. Removing a user's role or permission junction takes effect at
+  once (its subscriber drops those keys), and so does deleting a role, whose
+  subscriber drops the role's owned-permissions key because the junction rows
+  go by cascade without a subscriber of their own; deleting a whole permission
+  may still lag up to the 60 s query cache.
 
 ### Policy engine evaluators are per engine
 
