@@ -8,6 +8,7 @@
 import { RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { isBCryptHash } from '@authup/kit';
+import { gte } from '@rapiq/core';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -31,8 +32,10 @@ import {
  * secret authorization applies wherever the CLIENT SCHEMA governs a
  * projection — the `/clients` root and the `fields[client]` positions
  * of client-permission / client-role / client-scope, which are served
- * by other services and never ran `ClientService`'s read gate. Rows
- * are never dropped; an unauthorized plaintext value is redacted.
+ * by other services and never ran `ClientService`'s read gate. The
+ * gate never drops a row, it redacts an unauthorized value. The `/clients`
+ * root additionally lists only the rows within the reader's realm reach,
+ * so a foreign row is absent there rather than redacted.
  *
  * Both request shapes exercise the gate: `fields[client]=id,secret`
  * WITHOUT an explicit include (the dotted field auto-joins the
@@ -50,7 +53,9 @@ describe('http/controllers (client secret projection)', () => {
     let foreignHashedClientId: string;
     let ownEncryptedClientId: string;
     let foreignEncryptedClientId: string;
+    let foreignPublicClientId: string;
     let ownHashedClientId: string;
+    let statsFrom: string;
 
     const ownClientSecret = 'secret-projection-own';
     const foreignClientSecret = 'secret-projection-foreign';
@@ -119,6 +124,15 @@ describe('http/controllers (client secret projection)', () => {
             secretEncrypted: true,
         });
         foreignEncryptedClientId = foreignEncryptedClient.id;
+
+        const { data: foreignPublicClient } = await suite.client.client.create({
+            ...createFakeClient(),
+            realmId: realmB.id,
+            authMethod: 'none',
+        });
+        foreignPublicClientId = foreignPublicClient.id;
+
+        statsFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
         // global relation targets, bindable to clients of any realm
         const { data: permission } = await suite.client.permission.create({
@@ -199,48 +213,63 @@ describe('http/controllers (client secret projection)', () => {
         expect(byId.get(foreignClientId)!.secret).toEqual(foreignClientSecret);
     });
 
-    it('redacts a foreign plaintext secret at the root without dropping the row', async () => {
+    it('lists an own-realm plaintext secret and no foreign row at the root', async () => {
         const response = await restrictedActor.client.getMany({
             fields: ['+secret'],
             filters: { id: [ownClientId, foreignClientId] },
         });
 
-        // both rows keep listing — the gate hides the value, never the row
-        expect(response.data).toHaveLength(2);
-        const byId = new Map(response.data.map((row) => [row.id, row]));
-        expect(byId.get(ownClientId)!.secret).toEqual(ownClientSecret);
-        expect(byId.get(foreignClientId)!.secret).toBeUndefined();
+        expect(response.data).toHaveLength(1);
+        expect(response.meta.total).toEqual(1);
+        expect(response.data[0].id).toEqual(ownClientId);
+        expect(response.data[0].secret).toEqual(ownClientSecret);
     });
 
-    it('redacts a foreign plaintext secret under a bare replace-projection', async () => {
+    it('keeps the realm reach under a bare replace-projection', async () => {
         // `fields=id,secret` REPLACES the default projection — the adapter
-        // force-selects the columns the gate condition reads (storage flags,
-        // realmId), otherwise the redaction would evaluate against missing
-        // columns and fail open
+        // force-selects the columns the gates read (storage flags, realmId),
+        // otherwise they would evaluate against missing columns and fail open
         const response = await restrictedActor.client.getMany({
             fields: ['id', 'secret'],
             filters: { id: [ownClientId, foreignClientId] },
         });
 
-        expect(response.data).toHaveLength(2);
-        const byId = new Map(response.data.map((row) => [row.id, row]));
-        expect(byId.get(ownClientId)!.secret).toEqual(ownClientSecret);
-        expect(byId.get(foreignClientId)!.secret).toBeUndefined();
+        expect(response.data).toHaveLength(1);
+        expect(response.data[0].id).toEqual(ownClientId);
+        expect(response.data[0].secret).toEqual(ownClientSecret);
     });
 
-    it('keeps an own-realm HASHED secret visible and redacts a foreign one', async () => {
+    it('keeps an own-realm HASHED secret visible and lists no foreign one', async () => {
         const response = await restrictedActor.client.getMany({
             fields: ['+secret'],
             filters: { id: [ownHashedClientId, foreignHashedClientId] },
         });
 
-        expect(response.data).toHaveLength(2);
-        const byId = new Map(response.data.map((row) => [row.id, row]));
-        // a covered reader gets the hash, never the plaintext; a foreign
-        // realm's hash is offline-crackable and is redacted (#3328)
-        expect(isBCryptHash(byId.get(ownHashedClientId)!.secret!)).toBe(true);
-        expect(byId.get(ownHashedClientId)!.secret).not.toEqual(ownHashedSecret);
-        expect(byId.get(foreignHashedClientId)!.secret).toBeUndefined();
+        // a covered reader gets the hash, never the plaintext
+        expect(response.data).toHaveLength(1);
+        expect(isBCryptHash(response.data[0].secret!)).toBe(true);
+        expect(response.data[0].secret).not.toEqual(ownHashedSecret);
+    });
+
+    it('denies a foreign client record read without a secret projection', async () => {
+        await expectClientError(
+            () => restrictedActor.client.getOne(foreignClientId),
+            { status: 403 },
+        );
+        await expectClientError(
+            () => restrictedActor.client.getOne(foreignPublicClientId),
+            { status: 403 },
+        );
+    });
+
+    it('counts no foreign client in the statistic', async () => {
+        const [restricted, admin] = await Promise.all([restrictedActor, suite.client].map((client) => client.client.getStats({
+            filters: gte('createdAt', statsFrom),
+            groups: [{ name: 'bucket', params: ['createdAt', 'day'] }],
+            aggregates: ['count'],
+        })));
+
+        expect(admin.meta.total).toBeGreaterThan(restricted.meta.total);
     });
 
     it('serves an own-realm hashed secret on a single read and denies a foreign one', async () => {
@@ -255,16 +284,15 @@ describe('http/controllers (client secret projection)', () => {
         );
     });
 
-    it('decrypts an own encrypted secret and redacts a foreign one', async () => {
+    it('decrypts an own encrypted secret and lists no foreign one', async () => {
         const response = await restrictedActor.client.getMany({
             fields: ['+secret'],
             filters: { id: [ownEncryptedClientId, foreignEncryptedClientId] },
         });
 
-        expect(response.data).toHaveLength(2);
-        const byId = new Map(response.data.map((row) => [row.id, row]));
-        expect(byId.get(ownEncryptedClientId)!.secret).toEqual(ownEncryptedSecret);
-        expect(byId.get(foreignEncryptedClientId)!.secret).toBeUndefined();
+        expect(response.data).toHaveLength(1);
+        expect(response.data[0].id).toEqual(ownEncryptedClientId);
+        expect(response.data[0].secret).toEqual(ownEncryptedSecret);
     });
 
     it('gates the client-permission fields[client] projection', async () => {

@@ -233,14 +233,18 @@ usable at the service level and nothing in core depends on TypeORM:
   serves ciphertext (see *Client secret storage and rotation*). SYSTEM
   decodes (no actor)
   pass ungated; a gate failure
-  strips the field. `ClientService.getMany` composes no secret WHERE and no
-  per-row loop: rows are not dropped when `secret` is selected, and a `post`
-  verdict strips plaintext values rather than evaluating per row
-  (fail-closed). `getOne` keeps its isMe bypass and post-fetch per-row check
-  as the authoritative single-read path, and depends on the operand
-  projection: without it a bare `fields=id,secret` replace-projection strips
-  `realmId`/flags, the check's `resourceRealmMatch` neutral-passes and a
-  foreign plaintext secret ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
+  strips the field. `ClientService.getMany` composes no secret WHERE: the
+  ROWS are narrowed by the realm reach like every other realm-bound list
+  (compiled WHERE, per-row drop loop on `post`), and within them the secret
+  gate redacts values rather than dropping rows, a `post` verdict stripping
+  plaintext values rather than evaluating per row (fail-closed). The gate
+  still matters on the `/clients` root for a reach the row WHERE covers but
+  the secret condition does not, and it is the only gate under the junction
+  `fields[client]` positions. `getOne` keeps its isMe bypass and evaluates
+  the realm reach on every foreign row whatever the projection, and depends
+  on the adapter's `realmScope` force-select: without it a bare
+  `fields=id,secret` replace-projection strips `realmId`, the check's
+  `resourceRealmMatch` neutral-passes and a foreign row ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
   included relation is NARROWED to its per-relation fieldset (bare
   `include=` → the target schema's `fields.default`/allowed
   projection), so the explicit-include and auto-join forms behave
@@ -849,14 +853,13 @@ Composite statistics that span entities (distinct active users) get a root
   nothing (`narrowReadScope`): a grouped count has no row to evaluate, and
   failing closed cannot over-disclose. The price is that a reader whose
   grant carries a non-lowering policy sees a full list next to a statistic of 0 on the
-  seven entities without an ownership term (role, scope, permission, policy,
-  key, trust anchor, path). Moving the gate into `scopeRead` also moved the
+  eight entities without an ownership term (client, role, scope, permission,
+  policy, key, trust anchor, path). Moving the gate into `scopeRead` also moved the
   decode ahead of the pre-gate in the services that pre-gated first, so an
   unpermitted caller sending a malformed filter now gets 400 rather than 403;
   the vocabulary is public (`/docs/openapi.json`), so nothing is disclosed.
-  Three lists carry no compile: clients
-  pre-gate only (`compile: false`; the secret is field-gated), realms and
-  identity providers are anonymous (no `scope`).
+  Two lists carry no compile: realms and identity providers are anonymous
+  (no `scope`).
 - **Decode and the four window rules.** The query decodes through the entity
   schema with `parameters: ['filters', 'groups', 'aggregates']`
   (`STATS_QUERY_PARAMETERS`, `core/query/describe.ts`; the route carries
@@ -1079,9 +1082,9 @@ export class UserRoleRepositoryAdapter extends EntityRepositoryAdapter<UserRole>
 }
 ```
 
-The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. client and identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
+The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
 
-- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is not gated on realm reach unless a secret is present, by design, so its adapter sets no `realmScope`.
+- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is gated on realm reach for every foreign row, so its adapter sets `realmScope` too.
 - **Extension runs on reads that answer a caller, never on the read a write loads through.** `findMany`, `findOneById`, `findOneByName` and the protected `findOneWithQuery` call the overridable `extendMany` / `extendOne` (no-ops by default); `findOneBy` and `findManyBy` never do. That is the extra-attribute read/write rule as structure rather than convention: policy and user load their attributes there, identity-provider loads and decrypts its secrets on single reads only, since its list is the anonymous login surface.
 - **A name lookup scoped to an unknown realm matches nothing** (`IRealmRepository.resolveId`, fail closed), and a non-uuid id is "no row" before the query (`hasUnmatchableId`, #3650: every by-id lookup returns `null` for it, so every dialect answers 404 where postgres would otherwise refuse the bind with `22P02`; filter operands get the same treatment from the rapiq adapter, #3647).
 - **Every write answers a unique-index refusal with `EntityConflictError` (409)**, the losing side of a race `checkUniqueness` cannot close. `save` runs through the protected `persist(write)`, and so does every write an adapter adds besides it (policy and identity-provider `saveWithEA`, which the services and the policy provisioner write through); a new write that skips `persist` answers the race with a 500 again. Recognizable by `isEntityConflictError`, which `ensurePath` and the federated account manager rely on to re-read the winner. `checkUniqueness` throws the same error, so a caller sees one conflict type whichever of the two caught the duplicate.

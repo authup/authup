@@ -32,10 +32,6 @@ export type ClientRepositoryAdapterOptions = {
     lockRows?: boolean,
 };
 
-/**
- * No `realmScope`: the list is not gated per row, the secret is gated by the
- * client schema's field condition instead (issue #3322).
- */
 export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> implements IClientRepository {
     constructor(ctx: ClientRepositoryAdapterContext, options: ClientRepositoryAdapterOptions = {}) {
         super(ctx.repository, {
@@ -43,6 +39,7 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
             target: ClientEntity,
             entity: 'client',
             realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmScope: {},
             lockRows: options.lockRows,
         });
     }

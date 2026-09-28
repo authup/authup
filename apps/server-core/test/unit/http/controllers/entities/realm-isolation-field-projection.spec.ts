@@ -185,18 +185,15 @@ describe('realm isolation (field projection)', () => {
         await expect(readerActor.user.getOne(foreignUserId, { fields: ['name'] })).rejects.toThrow();
     });
 
-    it('keeps a foreign-realm plaintext client secret hidden even when realmId and the secret flags are projected away', async () => {
+    it('keeps a foreign-realm client hidden even when realmId and the secret flags are projected away', async () => {
         const own = await actor.client.getMany({ filters: { id: ownClientId }, fields: ['id', 'secret'] });
         const ownEntity = own.data.find((entity) => entity.id === ownClientId);
         expect(ownEntity).toBeDefined();
         expect(ownEntity!.secret).toEqual(ownClientSecret);
 
-        // since #3322 the schema-level gate REDACTS the secret instead of
-        // dropping the row — the list stays complete, the value stays hidden
         const foreign = await actor.client.getMany({ filters: { id: foreignClientId }, fields: ['id', 'secret'] });
-        const foreignEntity = foreign.data.find((entity) => entity.id === foreignClientId);
-        expect(foreignEntity).toBeDefined();
-        expect(foreignEntity!.secret).toBeUndefined();
+        expect(foreign.data.some((entity) => entity.id === foreignClientId)).toBe(false);
+        await expect(actor.client.getOne(foreignClientId, { fields: ['id'] })).rejects.toThrow();
     });
 
     it('keeps a foreign-realm role-attribute hidden even when a field projection is attempted', async () => {
