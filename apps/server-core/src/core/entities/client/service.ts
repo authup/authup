@@ -328,7 +328,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await this.assertPathRealm(validated.pathId, entity.realmId);
         }
 
-        if (entity) {
+        // Only a changed reference is checked: an edit echoing a binding an
+        // older release accepted must still save.
+        if (entity && validated.accessPolicyId !== entity.accessPolicyId) {
             this.assertAccessPolicyRealm(validated, entity.realmId);
         }
 

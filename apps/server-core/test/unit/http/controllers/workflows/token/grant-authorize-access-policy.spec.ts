@@ -21,9 +21,11 @@ import {
     OAuth2ErrorCode,
     OAuth2TokenGrant,
 } from '@authup/specs';
+import { ClientEntity } from '../../../../../../src/adapters/database/domains/client/entity.ts';
 import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import {
     createFakeClient,
+    createFakeRealm,
     createFakeUser,
     expectClientError,
 } from '../../../../../utils';
@@ -154,5 +156,38 @@ describe('grant-authorize (access policy backstop)', () => {
         });
 
         expect(tokenResponse.access_token).toBeDefined();
+    });
+
+    it('should reject a pre-policy code when the attached policy belongs to another realm', async () => {
+        const secret = generateOAuth2CodeVerifier();
+        const client = await createClientWithScope(secret);
+
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreignPolicy } = await suite.client.policy.createBuiltIn({
+            name: 'token-access-allow-foreign',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: false,
+            realmId: realm.id,
+        });
+
+        const code = await issueCode(client.id);
+
+        // a binding the API refuses, written the way an older release stored it
+        await suite.dataSource
+            .getRepository(ClientEntity)
+            .save({ id: client.id, accessPolicyId: foreignPolicy.id });
+
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: client.id,
+                client_secret: secret,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+            }),
+            {
+                status: 400,
+                data: { error: OAuth2ErrorCode.INVALID_GRANT },
+            },
+        );
     });
 });
