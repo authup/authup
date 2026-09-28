@@ -9,11 +9,14 @@ import { randomUUID } from 'node:crypto';
 import type { Key, OAuth2AuthorizationCode } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import {
-    JWKType, 
-    JWKUse, 
-    JWTAlgorithm, 
+    JWKType,
+    JWKUse,
+    JWTAlgorithm,
+    JWTError,
     OAuth2SubKind,
+    isOAuth2Error,
 } from '@authup/specs';
+import { ErrorCode } from '@authup/errors';
 import {
     beforeEach,
     describe,
@@ -190,6 +193,29 @@ describe('OAuth2AuthorizeGrant', () => {
         const payload = expect.objectContaining({ session_id: sessionId, client_id: clientId });
         expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
+    });
+
+    it('should answer invalid_grant when the reused session ends before it is refreshed', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+        });
+        sessionManager.refresh = async () => {
+            throw JWTError.expired();
+        };
+
+        let error: unknown;
+        try {
+            await grant.runWith(buildCode({ session_id: sessionId }));
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
     });
 
     it('should fall back to create when the referenced session does not exist', async () => {

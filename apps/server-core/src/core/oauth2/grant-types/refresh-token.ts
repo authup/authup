@@ -6,7 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWTError, OAuth2GrantError, OAuth2TokenKind } from '@authup/specs';
+import {
+    JWTError,
+    OAuth2GrantError,
+    OAuth2TokenKind,
+    isJWTError,
+} from '@authup/specs';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
@@ -132,7 +137,17 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // session as an unknown device, and would have shown a genuinely foreign
         // session as theirs. `refresh()` still slides refreshedAt / seenAt /
         // expiresAt, so "last active" stays accurate.
-        await this.sessionManager.refresh(session);
+        // A session revoked concurrently fails the refresh with a JWT error;
+        // the token endpoint answers that as invalid_grant (RFC 6749 §5.2).
+        try {
+            await this.sessionManager.refresh(session);
+        } catch (e) {
+            if (isJWTError(e)) {
+                throw OAuth2GrantError.invalid('the session has been revoked');
+            }
+
+            throw e;
+        }
 
         // The session was resolved above, but nothing holds it. A concurrent
         // request can revoke it (a replay reaction on this same family, an

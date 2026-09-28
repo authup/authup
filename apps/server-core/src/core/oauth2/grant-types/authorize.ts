@@ -6,7 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWKUse, hasOAuth2Scopes } from '@authup/specs';
+import {
+    JWKUse,
+    OAuth2GrantError,
+    hasOAuth2Scopes,
+    isJWTError,
+} from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { buildOAuth2TokenHash, deriveAmrAcr } from '../authorization/helpers.ts';
@@ -143,7 +148,17 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 // Which application authorized is recorded per token, on
                 // `auth_session_tokens.client_id`, where a session serving
                 // several applications can say so.
-                return this.sessionManager.refresh(existing);
+                // A session revoked concurrently fails the refresh with a JWT
+                // error, which the token endpoint answers as invalid_grant.
+                try {
+                    return await this.sessionManager.refresh(existing);
+                } catch (e) {
+                    if (isJWTError(e)) {
+                        throw OAuth2GrantError.invalid('the session has been revoked');
+                    }
+
+                    throw e;
+                }
             }
         }
 
