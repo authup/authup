@@ -3770,8 +3770,12 @@ folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
 An update under such a grant is checked against the stored AND the updated row
 (`evaluateUpdate`, #3654), so a delegate can neither refile a row into its
 folder nor move one out of it.
-`$regex` must never appear in such a policy: the sqlite preset declares no
-`regexp`, so it throws and 500s every list read under the test dialect. Only a
+`$regex` cannot appear in such a policy: `PolicyAttributesValidator` refuses
+it at any depth of an `attributes` query on every `/policies` write (a pattern
+runs synchronously against caller-supplied values on the one event loop every
+realm shares, and the sqlite preset declares no `regexp` either). Provisioning
+files are operator-owned and not checked, and a row stored before the rule
+keeps evaluating. The `@authup/access` library still evaluates `$regex`. Only a
 global admin can author one, since `applyJunctionCreateGrant` nulls a requested
 `policyId` unless the actor holds an uncapped, policy-free grant, which is the
 #3158 / #3159 / #3160 fail-closed rule and means a `sales` administrator cannot
