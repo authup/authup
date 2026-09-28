@@ -31,7 +31,11 @@ export interface IOAuth2AccessPolicyEvaluator {
      * true = access permitted. A present-but-unresolvable policy id,
      * a load failure, or an evaluation failure all yield false (fail closed).
      */
-    evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean>;
+    evaluate(
+        policyId: string,
+        subject: IdentityPolicyData,
+        options?: OAuth2AccessPolicyEvaluateDataOptions,
+    ): Promise<boolean>;
 
     /**
      * The same fail-closed load and evaluation over a caller-built bag, for

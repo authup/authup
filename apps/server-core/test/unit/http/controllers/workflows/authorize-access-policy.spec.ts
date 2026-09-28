@@ -17,8 +17,14 @@ import type { Policy, Realm, Scope } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
+import { ClientEntity } from '../../../../../src/adapters/database/domains/client/entity.ts';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
-import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakeRealm,
+    createFakeUser,
+    expectClientError,
+} from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('http/controllers/workflows/authorize (access policy, plan 052)', () => {
@@ -131,5 +137,62 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         const url = new URL(response.url);
         expect(url.searchParams.get('error')).toBeNull();
         expect(url.searchParams.get('code')).toBeTruthy();
+    });
+
+    describe('a policy of another realm', () => {
+        let foreignPolicy: Policy;
+
+        beforeAll(async () => {
+            const { data: master } = await suite.client.realm.getOne('master');
+            foreignPolicy = (await suite.client.policy.createBuiltIn({
+                name: 'authorize-access-allow-foreign',
+                type: BuiltInPolicyType.IDENTITY,
+                invert: false,
+                realmId: master.id,
+            })).data;
+        });
+
+        // a binding the API refuses, written the way an older release stored it
+        const bindForeign = async () => {
+            const client = await createGatedClient(null);
+            await suite.dataSource
+                .getRepository(ClientEntity)
+                .save({ id: client.id, accessPolicyId: foreignPolicy.id });
+            return client;
+        };
+
+        it('should deny when the bound policy belongs to another realm', async () => {
+            const client = await bindForeign();
+
+            const response = await confirm(client.id, generateOAuth2CodeVerifier());
+
+            const url = new URL(response.url);
+            expect(url.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+            expect(url.searchParams.get('code')).toBeNull();
+        });
+
+        it('should update a client carrying such a binding when the binding is unchanged', async () => {
+            const client = await bindForeign();
+
+            const { data: updated } = await suite.client.client.update(client.id, {
+                displayName: 'renamed',
+                accessPolicyId: foreignPolicy.id,
+            });
+
+            expect(updated.displayName).toEqual('renamed');
+        });
+
+        it('should refuse binding it on create and on update', async () => {
+            await expectClientError(
+                () => createGatedClient(foreignPolicy.id),
+                { status: 400 },
+            );
+
+            const client = await createGatedClient(null);
+            await expectClientError(
+                () => suite.client.client.update(client.id, { accessPolicyId: foreignPolicy.id }),
+                { status: 400 },
+            );
+        });
     });
 });

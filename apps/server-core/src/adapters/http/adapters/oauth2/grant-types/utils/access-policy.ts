@@ -50,7 +50,11 @@ export async function assertAccessPolicyBackstop(input: AccessPolicyBackstopInpu
     }
 
     const allowed = input.evaluator ?
-        await input.evaluator.evaluate(input.client.accessPolicyId, input.subject) :
+        await input.evaluator.evaluate(
+            input.client.accessPolicyId,
+            input.subject,
+            { realmId: input.client.realmId ?? null },
+        ) :
         false;
     if (allowed) {
         return;

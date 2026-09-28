@@ -34,8 +34,12 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
         this.logger = ctx.logger;
     }
 
-    async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
-        return this.evaluateData(policyId, new PolicyData({ [BuiltInPolicyType.IDENTITY]: subject }));
+    async evaluate(
+        policyId: string,
+        subject: IdentityPolicyData,
+        options: OAuth2AccessPolicyEvaluateDataOptions = {},
+    ): Promise<boolean> {
+        return this.evaluateData(policyId, new PolicyData({ [BuiltInPolicyType.IDENTITY]: subject }), options);
     }
 
     async evaluateData(
