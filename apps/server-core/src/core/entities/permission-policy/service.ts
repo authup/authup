@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { inArray } from '@rapiq/core';
-import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
+import { EntityConflictError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
@@ -132,6 +132,13 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
 
         if (validated.policy) {
             validated.policyRealmId = validated.policy.realmId;
+
+            if (
+                validated.policyRealmId &&
+                validated.policyRealmId !== validated.permissionRealmId
+            ) {
+                throw new ValidationError('It is not possible to bind a policy of another realm to a permission.');
+            }
         }
 
         // Stamp the owner (permission) realm so the realmScope factor gates cross-realm writes.
