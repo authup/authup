@@ -8444,7 +8444,8 @@ else: `sub`, `session_id` and `client_id` are whatever its holder signed. So
 every server-side consumer also binds the token's SUBJECT and SESSION to that
 realm (`isTokenSubject` / `isTokenSubjectActive` / `isTokenSession`,
 `core/oauth2/token/subject.ts`): the bearer middleware and its MFA-ticket
-branch (401), the refresh grant (`invalid_grant`), introspection (a subject of
+branch (401), the refresh grant (`invalid_grant`, checked before the token is consumed),
+token revocation (answers 200 and revokes nothing), introspection (a subject of
 another realm is reported bare, a session of another subject or realm
 inactive) and the end-session revoke (no revoke). Every issuer stamps the
 subject's own realm, so no issued token is refused. A verifier outside the
