@@ -647,8 +647,13 @@ export default {
 
         /**
          * Enable default admin user. Setting it to false deactivates an
-         * existing admin user on the next start. The environment value
-         * must be a recognized boolean, anything else fails the start.
+         * existing admin user on the next start. Setting it back to true
+         * does NOT reactivate that user (an admin deactivated through the
+         * API stays deactivated): another admin updates it, or a
+         * provisioning file declares the master realm's `admin` user with
+         * `active: true` and `strategy: { type: merge, attributes: [active] }`
+         * for one start. The environment value must be a recognized
+         * boolean, anything else fails the start.
          * env: USER_ADMIN_ENABLED
          * default: true
          */
