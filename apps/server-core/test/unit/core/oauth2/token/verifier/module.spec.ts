@@ -90,6 +90,33 @@ describe('OAuth2TokenVerifier', () => {
     });
 
     describe('verify - cache path', () => {
+        beforeEach(() => {
+            extractTokenHeader.mockReturnValue({ kid: 'cached-kid' });
+        });
+
+        it('should refuse a cached payload whose key no longer verifies', async () => {
+            const tokenRepo = new FakeOAuth2TokenRepository();
+            await tokenRepo.setKeyInactive('cached-kid');
+            // written after the key was marked, e.g. by a verify that resolved
+            // the key before it was disabled
+            tokenRepo.seedSignature('cached-token', createPayload());
+            const verifier = new OAuth2TokenVerifier(new FakeKeyStore(), tokenRepo);
+
+            await expect(verifier.verify('cached-token', { skipActiveCheck: true })).rejects.toThrow(JWTError);
+            expect(tokenRepo.findOneBySignatureCalls).toHaveLength(0);
+        });
+
+        it('should verify a cached payload again once its key verifies again', async () => {
+            const payload = createPayload();
+            const tokenRepo = new FakeOAuth2TokenRepository();
+            await tokenRepo.setKeyInactive('cached-kid');
+            await tokenRepo.dropKeyInactive('cached-kid');
+            tokenRepo.seedSignature('cached-token', payload);
+            const verifier = new OAuth2TokenVerifier(new FakeKeyStore(), tokenRepo);
+
+            expect(await verifier.verify('cached-token')).toBe(payload);
+        });
+
         it('should return cached payload when found by signature', async () => {
             const payload = createPayload();
             const tokenRepo = new FakeOAuth2TokenRepository();

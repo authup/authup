@@ -14,3 +14,12 @@
  * drains by looping.
  */
 export const SESSION_EXPIRY_SWEEP_BATCH_SIZE = 1000;
+
+/**
+ * Sessions revoked at once by a bulk revoke. Every revoke waits for its
+ * back-channel deliveries, so one at a time costs a hanging RP one timeout
+ * per session, while all at once is an unbounded burst of row deletes and
+ * outbound requests. Below the default pool of ten: every revoke holds a
+ * connection.
+ */
+export const SESSION_REVOKE_CONCURRENCY = 5;

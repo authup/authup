@@ -7,7 +7,7 @@
 
 import type { Client, Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
-import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
 
 export type SessionOwner = {
     sub: string,
@@ -27,6 +27,8 @@ export const SESSION_FILTER_KEYS = [
     'clientId',
     'realmId',
 ] as const;
+
+export type SessionUpdatePatch = Partial<Pick<Session, 'expiresAt' | 'refreshedAt' | 'seenAt' | 'mfaAt'>>;
 
 export type SessionFindManyOptions = {
     /**
@@ -82,7 +84,21 @@ export interface ISessionRepository {
      */
     findAllByQuery(query: IQuery): Promise<Session[]>;
 
+    /**
+     * Create a session.
+     */
     save(session: Partial<Session>): Promise<Session>;
+
+    /**
+     * Move the sliding columns of an existing session, and nothing else: a
+     * concurrent write to another of them (a second factor stamped, an
+     * expiry slid) is kept. A session revoked in the meantime is never
+     * brought back. The patch is applied to `session` as well, which is
+     * returned.
+     *
+     * @throws JWTError when the session no longer exists
+     */
+    update(session: Session, patch: SessionUpdatePatch): Promise<Session>;
 
     removeById(id: string): Promise<void>;
 
@@ -139,6 +155,10 @@ export type SessionManagerContext = {
      * Optional so a fake-backed spec constructs the manager without one.
      */
     revokeNotifier?: ISessionRevokeNotifier,
+    /**
+     * Where a bulk revoke reports a session it could not revoke.
+     */
+    logger?: Logger,
 };
 
 export interface ISessionManager {
@@ -199,10 +219,20 @@ export interface ISessionManager {
 
     /**
      * Revoke every session of one subject, optionally keeping one (the
-     * caller's own). Each goes through `revoke`.
+     * caller's own), through `revokeMany`.
      *
      * @param owner
      * @param exceptId
      */
     revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void>;
+
+    /**
+     * Revoke sessions in bounded batches (SESSION_REVOKE_CONCURRENCY), each
+     * through `revoke`. A session that fails is logged and the rest are
+     * still revoked; the call itself does not fail, since its caller has
+     * usually committed the write that asked for the revoke.
+     *
+     * @param ids
+     */
+    revokeMany(ids: string[]): Promise<void>;
 }

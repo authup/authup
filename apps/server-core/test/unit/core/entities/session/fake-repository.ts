@@ -11,10 +11,12 @@ import { Query } from '@rapiq/core';
 import { applyQuery, compileFilters } from '@rapiq/adapter-memory';
 import type { Session } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import { JWTError } from '@authup/specs';
 import type {
     ISessionRepository,
     SessionFindManyOptions,
     SessionOwner,
+    SessionUpdatePatch,
 } from '../../../../../src/core/index.ts';
 
 export class FakeSessionRepository implements ISessionRepository {
@@ -94,6 +96,16 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async save(input: Partial<Session>): Promise<Session> {
         return this.seed(input);
+    }
+
+    async update(session: Session, patch: SessionUpdatePatch): Promise<Session> {
+        const current = this.sessions.get(session.id);
+        if (!current) {
+            throw JWTError.expired();
+        }
+
+        Object.assign(current, patch);
+        return Object.assign(session, patch);
     }
 
     async remove(session: Session): Promise<void> {

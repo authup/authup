@@ -27,6 +27,7 @@ export type OAuth2EndSessionResult = {
     hintVerified: boolean,
     sub?: string,
     subKind?: string,
+    realmId?: string,
     sessionId?: string,
     clientId?: string,
     clientName?: string,
@@ -60,8 +61,8 @@ export interface IOAuth2EndSessionService {
     verify(data: OAuth2EndSessionRequest): Promise<OAuth2EndSessionResult>;
 
     /**
-     * Revoke the session ONLY when it belongs to the hint's subject.
+     * Revoke the session ONLY when it belongs to the hint's subject and realm.
      * @returns whether a session was revoked.
      */
-    revoke(sessionId: string, sub: string, subKind: string): Promise<boolean>;
+    revoke(sessionId: string, sub: string, subKind: string, realmId: string): Promise<boolean>;
 }

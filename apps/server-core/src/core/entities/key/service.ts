@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -200,6 +201,19 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }),
         });
 
+        // Caller-supplied signature material vouches for whatever the caller
+        // signs with it, and a verifier that trusts the key by its id alone
+        // cannot tell which realm's administrator chose it. Importing one is
+        // therefore reserved to a KEY_CREATE reaching beyond the actor's own
+        // realm, probed with a realm the actor cannot own; generating one
+        // stays at the grant's own reach.
+        if (use === JWKUse.SIGNATURE && validated.decryptionKey) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.KEY_CREATE,
+                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: this.buildForeignRealmId(actor) }),
+            });
+        }
+
         if (!validated.name) {
             validated.name = `${use}-${createNanoID(10)}`;
         }
@@ -298,8 +312,12 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
-        if (previous.status !== KeyStatus.DISABLED && entity.status === KeyStatus.DISABLED) {
-            await this.dropVerifiedClaims(entity);
+        if (entity.use === JWKUse.SIGNATURE && previous.status !== entity.status) {
+            if (entity.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.setKeyInactive(entity.id);
+            } else if (previous.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.dropKeyInactive(entity.id);
+            }
         }
 
         entity.decryptionKey = null;
@@ -346,7 +364,9 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryptionKey = null;
 
-        await this.dropVerifiedClaims(entity);
+        if (entity.use === JWKUse.SIGNATURE) {
+            await this.tokenRepository?.setKeyInactive(entity.id);
+        }
 
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
@@ -358,16 +378,14 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     // ------------------------------------------------------------------
 
-    /**
-     * A verified token's payload is cached by its signature and served
-     * without consulting its key again, so a signature key that stops
-     * verifying drops that cache: every token is checked against its key on
-     * its next use.
-     */
-    protected async dropVerifiedClaims(entity: Key): Promise<void> {
-        if (entity.use === JWKUse.SIGNATURE) {
-            await this.tokenRepository?.dropAllClaims();
+    protected buildForeignRealmId(actor: ActorContext): string {
+        const actorRealmId = this.getActorRealmId(actor);
+        let realmId = randomUUID();
+        while (realmId === actorRealmId) {
+            realmId = randomUUID();
         }
+
+        return realmId;
     }
 
     /**

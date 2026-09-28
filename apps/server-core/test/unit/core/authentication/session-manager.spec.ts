@@ -169,6 +169,55 @@ describe('SessionManager', () => {
         });
     });
 
+    describe('revokeByOwner', () => {
+        it('revokes every session of the owner but the kept one, in bounded batches', async () => {
+            const sub = randomUUID();
+            const sessions = Array.from({ length: 12 }, () => seedSession({ sub }));
+            const other = seedSession();
+
+            let inFlight = 0;
+            let peak = 0;
+            const notifier : ISessionRevokeNotifier = {
+                resolve: async () => [createClient()],
+                notify: async () => {
+                    inFlight++;
+                    peak = Math.max(peak, inFlight);
+                    await new Promise((resolve) => { setTimeout(resolve, 5); });
+                    inFlight--;
+                },
+            };
+
+            await buildManager(notifier).revokeByOwner({ sub, subKind: IdentityType.USER }, sessions[0].id);
+
+            expect(repository.removeCalls.map((row) => row.id).sort())
+                .toEqual(sessions.slice(1).map((row) => row.id).sort());
+            expect(await repository.findOneById(other.id)).not.toBeNull();
+            expect(peak).toBeGreaterThan(1);
+            expect(peak).toBeLessThanOrEqual(5);
+        });
+
+        it('keeps revoking when one revoke fails', async () => {
+            const sub = randomUUID();
+            const sessions = Array.from({ length: 3 }, () => seedSession({ sub }));
+
+            const notifier : ISessionRevokeNotifier = {
+                resolve: async (session) => {
+                    if (session.id === sessions[0].id) {
+                        throw new Error('unavailable');
+                    }
+
+                    return [];
+                },
+                notify: async () => undefined,
+            };
+
+            await buildManager(notifier).revokeByOwner({ sub, subKind: IdentityType.USER });
+
+            expect(repository.removeCalls.map((row) => row.id).sort())
+                .toEqual(sessions.slice(1).map((row) => row.id).sort());
+        });
+    });
+
     describe('verify', () => {
         it('drops an expired session without a delivery', async () => {
             const session = seedSession({ expiresAt: new Date(Date.now() - 1_000).toISOString() });

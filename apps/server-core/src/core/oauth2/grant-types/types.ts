@@ -9,6 +9,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
+import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IKeyStore } from '../../key/index.ts';
@@ -33,6 +34,7 @@ export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
      * the at_hash digest (OIDC Core §3.1.3.6).
      */
     keyStore: IKeyStore,
+    identityResolver: IIdentityResolver,
 };
 
 export type OAuth2IdentityGrantContext = BaseGrantContext & {
@@ -56,6 +58,7 @@ export type OAuth2RefreshTokenGrantOptions = {
 
 export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
     refreshTokenIssuer: IOAuth2TokenIssuer,
+    identityResolver: IIdentityResolver,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRepository: IOAuth2TokenRepository,
     sessionTokenRepository: ISessionTokenRepository,

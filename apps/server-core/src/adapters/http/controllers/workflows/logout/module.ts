@@ -130,11 +130,12 @@ export class LogoutController {
         // hint's subject). Without a hint we mutate nothing; the page's
         // sign-out is a click-gated, bearer-authenticated action.
         let serverRevoked = false;
-        if (result.hintVerified && result.sessionId && result.sub && result.subKind) {
+        if (result.hintVerified && result.sessionId && result.sub && result.subKind && result.realmId) {
             serverRevoked = await this.endSessionService.revoke(
                 result.sessionId,
                 result.sub,
                 result.subKind,
+                result.realmId,
             );
         }
 

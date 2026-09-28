@@ -47,7 +47,7 @@ import type {
     ISessionManager,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
-import { resolveIntrospectionSubject } from '../../../../../core/index.ts';
+import { isTokenSession, resolveIntrospectionSubject } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
@@ -120,6 +120,7 @@ export class TokenController {
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 openIdTokenIssuer: ctx.openIdTokenIssuer,
                 keyStore: ctx.keyStore,
+                identityResolver: ctx.identityResolver,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
@@ -171,6 +172,7 @@ export class TokenController {
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 openIdTokenIssuer: ctx.openIdTokenIssuer,
                 keyStore: ctx.keyStore,
+                identityResolver: ctx.identityResolver,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
@@ -257,9 +259,11 @@ export class TokenController {
             }
 
             // A token outlives neither its session nor its subject's
-            // activation, whichever path ended them.
+            // activation, whichever path ended them, and only rides a session
+            // of its own subject and realm.
             if (active && payload.session_id) {
-                active = !!await this.sessionManager.findOneById(payload.session_id);
+                const session = await this.sessionManager.findOneById(payload.session_id);
+                active = !!session && isTokenSession(session, payload);
             }
 
             // An inactive token reports WHO it belonged to and nothing about
@@ -276,21 +280,24 @@ export class TokenController {
                 token: {
                     sub: payload.sub,
                     sub_kind: payload.sub_kind,
+                    realm_id: payload.realm_id,
                     // the INTROSPECTED token's client, never the caller's
                     client_id: payload.client_id,
                 },
                 active,
             });
 
-            if (!subject.identity.data.active) {
-                active = false;
+            // A subject of another realm than the token names: the token is
+            // no report about anyone, so it is reported bare.
+            if (!subject) {
+                return { active: false };
             }
 
-            if (!active) {
+            if (!subject.active) {
                 const response: OAuth2TokenIntrospectionResponse = {
                     ...payload,
                     ...subject.claims,
-                    active,
+                    active: false,
                 };
                 delete response.permissions;
                 return response;
@@ -299,7 +306,7 @@ export class TokenController {
             return {
                 ...payload,
                 ...subject.claims,
-                active,
+                active: true,
                 permissions: subject.permissions,
             };
         } catch (e) {
