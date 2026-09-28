@@ -2699,6 +2699,18 @@ rather than trusted until `exp`.
   `SameSite=None`, and it is a different, larger trust ("act on this
   origin's requests with the user's live session" versus "send a code here
   after the user consented").
+- **The gate judges the request presenting the cookie, not the host that set
+  it.** Another host of the same site can set a same-named cookie through a
+  `Domain` attribute, and the browser sends it alongside the real one on
+  same-origin requests. So an https deployment served at the root of its host
+  names the credential `__Host-authup_session` (`buildSessionCookieName`,
+  `adapters/http/cookie/session.ts`, used by every reader and writer), which a
+  browser accepts only from the host itself, `Secure`, `Path=/` and without a
+  `Domain`, and the plain name is not read there at all. An http or sub-path
+  deployment cannot carry the prefix (not `Secure`, or scoped to the base
+  path) and keeps the plain name; there a sibling host of the same site
+  remains inside the trust boundary, which is the reason to give the IdP a
+  site of its own.
 - **The header always wins, and the cookie is never even read when one is
   present.** The middleware's cookie branch replaces the existing
   `if (!headerValue) return`; nothing between the header parse and the Basic

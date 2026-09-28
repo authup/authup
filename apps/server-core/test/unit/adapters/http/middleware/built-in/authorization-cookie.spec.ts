@@ -33,6 +33,8 @@ import { FakeSessionRepository } from '../../../../core/entities/session/fake-re
 import { createFakeEvent } from '../../request/fake-event.ts';
 
 const BASE_URL = 'https://authup.test';
+// an https root deployment names the credential with the `__Host-` prefix
+const COOKIE = `__Host-${SESSION_COOKIE}`;
 const SECRET = 'console-session-secret';
 const BEARER = 'bearer-token-under-test';
 
@@ -133,7 +135,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -142,6 +144,44 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         expect(useRequestIdentity(event)?.id).toEqual(user.id);
         expect(useRequestSessionId(event)).toEqual(session.id);
         expect(useRequestScopes(event)).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
+    });
+
+    it('ignores the unprefixed cookie name on an https root deployment', async () => {
+        const realmId = randomUUID();
+        const user = createUser(realmId);
+        const session = createUserSession(user);
+        const suite = createSuite(session, user);
+
+        const event = createFakeEvent({
+            path: '/users/@me',
+            cookies: { [SESSION_COOKIE]: SECRET },
+            headers: { 'sec-fetch-site': 'same-origin' },
+        });
+
+        await suite.middleware.run(event);
+
+        expect(useRequestIdentity(event)).toBeUndefined();
+        expect(suite.sessionRepository.findOneBySecretCalls).toHaveLength(0);
+    });
+
+    it.each([
+        ['http://authup.test'],
+        ['https://authup.test/auth'],
+    ])('keeps the unprefixed cookie name under %s', async (baseURL) => {
+        const realmId = randomUUID();
+        const user = createUser(realmId);
+        const session = createUserSession(user);
+        const suite = createSuite(session, user, { baseURL });
+
+        const event = createFakeEvent({
+            path: '/users/@me',
+            cookies: { [SESSION_COOKIE]: SECRET },
+            headers: { 'sec-fetch-site': 'same-origin' },
+        });
+
+        await suite.middleware.run(event);
+
+        expect(useRequestIdentity(event)?.id).toEqual(user.id);
     });
 
     it('takes the bearer path and never reads the store when both are present', async () => {
@@ -164,7 +204,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: {
                 'sec-fetch-site': 'same-origin',
                 authorization: `Bearer ${BEARER}`,
@@ -194,7 +234,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': value },
         });
 
@@ -211,7 +251,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
         });
 
         await suite.middleware.run(event);
@@ -227,7 +267,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const event = createFakeEvent({
             path: '/users/@me',
             method: 'POST',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: {
                 'sec-fetch-site': 'same-origin',
                 origin: 'https://evil.authup.test',
@@ -258,7 +298,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const event = createFakeEvent({
             path,
             method: 'POST',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: {
                 'sec-fetch-site': 'same-origin',
                 origin: BASE_URL,
@@ -281,7 +321,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -302,7 +342,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -322,7 +362,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -339,7 +379,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: 'not-the-secret' },
+            cookies: { [COOKIE]: 'not-the-secret' },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -361,7 +401,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         // sign-out leaves behind
         const gone = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -374,7 +414,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const alive = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -403,7 +443,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -413,7 +453,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const setCookie = `${event.response.headers.get('set-cookie') ?? ''}`;
 
-        expect(setCookie).toContain(`${SESSION_COOKIE}=${SECRET}`);
+        expect(setCookie).toContain(`${COOKIE}=${SECRET}`);
         expect(setCookie).toContain('HttpOnly');
         expect(setCookie).toContain('SameSite=Strict');
 
@@ -436,7 +476,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
@@ -457,7 +497,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
 
         const event = createFakeEvent({
             path: '/users/@me',
-            cookies: { [SESSION_COOKIE]: SECRET },
+            cookies: { [COOKIE]: SECRET },
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 

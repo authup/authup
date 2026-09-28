@@ -29,11 +29,10 @@ import {
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
 } from 'hapic';
-import { setSessionCookie } from '../../../cookie/index.ts';
+import { buildSessionCookieName, setSessionCookie } from '../../../cookie/index.ts';
 import {
     ClientAuthenticator,
     PolicyEngine,
-    SESSION_COOKIE,
     SESSION_REFRESH_THROTTLE,
     SYSTEM_CLIENT_SCOPE_NAMES,
     UserAuthenticator,
@@ -215,7 +214,7 @@ export class AuthorizationMiddleware {
                 return;
             }
 
-            const secret = useRequestCookie(event, SESSION_COOKIE);
+            const secret = useRequestCookie(event, buildSessionCookieName(baseURL));
             if (typeof secret !== 'string' || secret.length === 0) {
                 return;
             }
