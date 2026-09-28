@@ -6247,9 +6247,10 @@ other RP on that session that it ended.
   timeout per batch rather than one per session, a realm-wide sweep never
   turns into an unbounded burst of row deletes and outbound requests, and one
   bulk revoke cannot starve every concurrent request of a connection. `POST /token/introspect` answers the
-  bare `{ active: false }` for a token whose `kind` is `logout_token`: it
-  verifies (same realm key) but is a notification, not a credential, and RFC
-  7662 reports rather than raises.
+  bare `{ active: false }` for a token whose `kind` is `logout_token`, as for
+  every kind but an access or refresh token: it verifies (same realm key) but
+  is a notification, not a credential, and RFC 7662 reports rather than
+  raises.
 - **SSRF residual, stated.** The server POSTs to an admin-chosen URL from
   inside the deployment, so the value can name an internal address. It is in
   the same trust class as `redirectUri`: written by an actor holding
@@ -8353,12 +8354,31 @@ survives all paths.
 
 **Lifecycle enforcement:** signer + `RealmCipher.encrypt` use
 `resolveOrCreate` (active only); verifier rejects a `kid` whose key is
-non-sig OR `disabled` (passive still verifies); both JWKS surfaces filter
+non-sig OR `disabled` (passive still verifies) OR belongs to a realm other
+than the payload's `realm_id` (the signer always signs with the key of that
+realm, so no issued token is affected, and a key a realm's own
+administrator imported can never vouch for another realm's subject;
+`@authup/server-adapter-kit`'s local mode reads the key from the same realm,
+`GET /realms/<realm_id>/jwks/<kid>`, and refuses a non-uuid `kid` before any
+request). The residual is in-realm by design: whoever holds `KEY_CREATE` in a
+realm can import a key and sign tokens for that realm's subjects, power equal
+to the password and secret resets `USER_UPDATE` / `CLIENT_UPDATE` already
+grant there; both JWKS surfaces filter
 `status IN (active, passive)`; `RealmCipher.decrypt` re-resolves the key row
 on every call (only the imported `SymmetricCipher` is cached — material is
 immutable, status is not), so disabling an enc key is an immediate,
 **reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
-closed, never a 500).
+closed, never a 500). The verifier serves a token it has seen before from the
+signature-keyed claims cache (`TOKEN_CLAIMS`) without consulting its key, so
+disabling or deleting a SIGNATURE key drops that whole cache
+(`IOAuth2TokenRepository.dropAllClaims`, called by `KeyService`): every token
+is checked against its key on its next use, and the tokens that key signed
+stop verifying at once rather than at their `exp`. Re-checking the key on
+every cache hit was rejected, since it is an uncached read plus a KEK unwrap
+on the hottest path. The drop reaches every replica only through a shared
+Redis cache; with the in-process memory cache it clears the replica that
+served the key change, and the others honour the key within a token's
+lifetime.
 
 **Management API:** `KeyService`
 (`core/entities/key/`) + `KeyController` dual-mounted

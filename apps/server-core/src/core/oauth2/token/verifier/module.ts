@@ -146,6 +146,13 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             throw JWTError.payloadPropertyInvalid('jti');
         }
 
+        // A token is verified only by a key of the realm it names: the signer
+        // always signs with the key of `payload.realm_id`, and a key belongs
+        // to exactly one realm, so a key of another realm vouches for nothing.
+        if (!payload.realm_id || key.realmId !== payload.realm_id) {
+            throw JWTError.headerPropertyInvalid('kid');
+        }
+
         // Never populate the shared signature-keyed claims cache on the
         // exp-ignoring path. An expired token verified with `ignoreExpiry`
         // (the RP-initiated-logout id_token_hint) would otherwise be re-cached

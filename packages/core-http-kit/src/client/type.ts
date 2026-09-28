@@ -154,7 +154,7 @@ export interface IClient extends IBaseClient {
 
     getJwks() : Promise<{ keys: OAuth2JsonWebKey[] }>;
 
-    getJwk(id: string) : Promise<OAuth2JsonWebKey>;
+    getJwk(id: string, realmId?: string) : Promise<OAuth2JsonWebKey>;
 
     getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata>;
 }

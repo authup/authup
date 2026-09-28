@@ -572,6 +572,22 @@ describe('token-introspect authorization', () => {
         expect(response.status).toEqual(401);
     });
 
+    // RFC 7662 §2.1: the token travels in the form body, never in the url,
+    // where access logs and proxies would keep it.
+    it('should refuse a token passed in the query string', async () => {
+        const basic = Buffer.from('admin:start123').toString('base64');
+        const response = await httpRequest(suite, 'GET', `/token/introspect?token=${encodeURIComponent(accessToken)}`, { headers: { Authorization: `Basic ${basic}` } });
+
+        expect(response.status).toEqual(400);
+    });
+
+    it('should introspect the bearer itself on the GET variant', async () => {
+        const response = await httpRequest(suite, 'GET', '/token/introspect', { headers: { Authorization: `Bearer ${accessToken}` } });
+
+        expect(response.status).toEqual(200);
+        expect((await response.json()).active).toBe(true);
+    });
+
     it('should refuse a bare public client_id as authorization', async () => {
         // identification is not authentication: anyone knows `admin-console`
         // (the realm hint rides `readRealmHint`: `realm_id` or `realm_name`,

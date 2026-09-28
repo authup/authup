@@ -30,6 +30,15 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         );
     }
 
+    async dropAllClaims(): Promise<void> {
+        await this.cache.clear({
+            prefix: buildCacheKey({
+                prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
+                key: '',
+            }),
+        });
+    }
+
     async findOneById(id: string): Promise<OAuth2TokenPayload | null> {
         return this.cache.get<OAuth2TokenPayload>(
             buildCacheKey({

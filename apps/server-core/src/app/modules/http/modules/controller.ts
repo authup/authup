@@ -930,6 +930,7 @@ export class HTTPControllerModule {
         // a fresh adapter here.
         const service = new KeyService({
             repository: container.resolve(OAuth2InjectionToken.KeyStore),
+            tokenRepository: container.resolve(OAuth2InjectionToken.TokenRepository),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
