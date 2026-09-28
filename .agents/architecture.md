@@ -7104,7 +7104,8 @@ plus a `<uuid>@example.com` placeholder (#3434).
 - **Forward-only for the name, verification-aware for the email.** The
   account manager's UPDATE branch never rewrites `user.name` (it is
   `nameLocked` at creation), so users already provisioned under a UUID keep
-  it. It MAY rewrite `email` through an operator attribute mapping
+  it; the name-collision retry of `saveUser` is CREATE-only, so a failed
+  update save fails the login instead of renaming the user. It MAY rewrite `email` through an operator attribute mapping
   (`targetName: email`), and a mapped address that differs from the stored
   one clears `emailVerified`, the #3519 rule `UserService.save` applies,
   unless the mapping asserts `emailVerified` itself. The stored address is
