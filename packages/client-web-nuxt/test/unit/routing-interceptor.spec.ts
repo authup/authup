@@ -137,9 +137,9 @@ describe('RoutingInterceptor', () => {
                 createRoute({
                     path: '/login/callback',
                     query: {
-                        code: 'the-code', 
-                        state: 'the-state', 
-                        redirect: '/users?page=2#row-7', 
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users?page=2#row-7',
                     },
                 }),
                 createRoute({ path: '/' }),
@@ -157,9 +157,9 @@ describe('RoutingInterceptor', () => {
                 createRoute({
                     path: '/login/callback',
                     query: {
-                        code: 'the-code', 
-                        state: 'the-state', 
-                        redirect: '/users?tag=a&tag=b', 
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users?tag=a&tag=b',
                     },
                 }),
                 createRoute({ path: '/' }),
