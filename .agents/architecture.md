@@ -1523,7 +1523,8 @@ API. The six page GETs became a stateless hop:
   **Rate-limit cost on a split deployment.** server-core's limiter runs
   before authentication and keys on the source address alone (its
   per-identity `max` never sees an identity; the address is the one
-  `trustProxy` resolves, taken as given, port included, so under the
+  `trustProxy` resolves, with a trailing port dropped so one host is one
+  bucket however many connections it opens; under the
   trust-all default a direct client picks its own key, and a forwarded
   loopback behind a same-host proxy is skipped as the deployment's own
   traffic), and the service forwards no

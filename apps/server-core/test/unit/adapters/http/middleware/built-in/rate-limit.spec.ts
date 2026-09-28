@@ -96,4 +96,19 @@ describe('registerRateLimitMiddleware', () => {
 
         expect(statuses).toEqual([200, 200, 200]);
     });
+
+    it.each([
+        ['198.51.100.1:5001', '198.51.100.1:5002', '198.51.100.1:5003'],
+        ['[2001:db8::3]:443', '[2001:db8::3]:444', '2001:db8::3'],
+    ])('should share one bucket for one host on rotating ports', async (...forwarded) => {
+        const app = createApp({ options: { trustProxy: true } });
+        const statuses : number[] = [];
+
+        for (const value of forwarded) {
+            const response = await app.fetch(createRequest('10.0.0.5', { 'x-forwarded-for': value }));
+            statuses.push(response.status);
+        }
+
+        expect(statuses).toEqual([200, 200, 429]);
+    });
 });
