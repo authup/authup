@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createHash } from 'node:crypto';
 import { faker } from '@faker-js/faker';
 import {
     beforeEach,
@@ -66,7 +67,7 @@ describe('core/identity/password-recovery/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.EMAIL_VERIFICATION_REQUIRED });
         });
 
-        it('should throw NotFoundError when user does not exist', async () => {
+        it('should answer an unknown user like a known one, without mail', async () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
@@ -78,9 +79,9 @@ describe('core/identity/password-recovery/service', () => {
                 realmRepository,
             });
 
-            await expect(
-                service.forgotPassword({ email: 'nonexistent@example.com' }),
-            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+            const result = await service.forgotPassword({ email: 'nonexistent@example.com' });
+            expect(result.resetExpires).toBeDefined();
+            expect(mailClient.sent).toHaveLength(0);
         });
 
         it('should set resetHash and resetExpires and send email', async () => {
@@ -117,6 +118,43 @@ describe('core/identity/password-recovery/service', () => {
             expect(user!.resetHash).toBeDefined();
             expect(user!.resetHash).not.toBeNull();
             expect(user!.resetExpires).toBeDefined();
+        });
+
+        it('should store only a digest of the mailed reset code', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            const entity = repository.seed(createFakeUser({
+                name: 'digest-user',
+                realmId: masterRealm.id,
+            }));
+
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await service.forgotPassword({ name: 'digest-user' });
+
+            const code = mailClient.sent[0].text!.match(/[0-9a-f]{64}/)![0];
+            const saved = await repository.findOneById(entity.id);
+            expect(saved!.resetHash).toEqual(createHash('sha256').update(code).digest('hex'));
+
+            await expect(service.resetPassword({
+                name: 'digest-user',
+                token: saved!.resetHash!,
+                password: 'newpass12345',
+            })).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+
+            await expect(service.resetPassword({
+                name: 'digest-user',
+                token: code,
+                password: 'newpass12345',
+            })).resolves.toBeDefined();
         });
 
         it('should accept name instead of email for lookup', async () => {
@@ -252,7 +290,7 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'reset-user',
                 email: 'reset@example.com',
-                resetHash: 'valid-token',
+                resetHash: createHash('sha256').update('valid-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             })]);
@@ -282,7 +320,7 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'expired-user',
                 email: 'expired@example.com',
-                resetHash: 'expired-token',
+                resetHash: createHash('sha256').update('expired-token').digest('hex'),
                 resetExpires: new Date(Date.now() - 60000).toISOString(),
                 realmId: masterRealm.id,
             })]);
@@ -312,7 +350,7 @@ describe('core/identity/password-recovery/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'valid-user',
                 email: 'valid@example.com',
-                resetHash: 'valid-token',
+                resetHash: createHash('sha256').update('valid-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             }));
@@ -348,7 +386,7 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'short-pass-user',
                 email: 'short-pass@example.com',
-                resetHash: 'short-pass-token',
+                resetHash: createHash('sha256').update('short-pass-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             })]);
@@ -378,7 +416,7 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'strict-pass-user',
                 email: 'strict-pass@example.com',
-                resetHash: 'strict-pass-token',
+                resetHash: createHash('sha256').update('strict-pass-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             })]);
@@ -415,7 +453,7 @@ describe('core/identity/password-recovery/service', () => {
             const masterRealm = realmRepository.getMasterRealm();
             const entity = repository.seed(createFakeUser({
                 name: 'name-reset-user',
-                resetHash: 'name-token',
+                resetHash: createHash('sha256').update('name-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             }));
@@ -448,7 +486,7 @@ describe('core/identity/password-recovery/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'session-reset-user',
                 email: 'session-reset@example.com',
-                resetHash: 'session-token',
+                resetHash: createHash('sha256').update('session-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             }));

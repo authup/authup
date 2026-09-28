@@ -134,7 +134,9 @@ The flow:
 1. The login form links to `/password-forgot`. The user enters their user name
    or email address.
 2. Authup mails a reset code, valid for 30 minutes. The mail links to
-   `<publicUrl>/password-reset?token=<code>&realmId=<realm>`.
+   `<publicUrl>/password-reset?token=<code>&realmId=<realm>`. The request is
+   answered the same way whether or not the account exists; no mail is sent
+   for an unknown name or address.
 3. On `/password-reset` the user enters their user name or email address again
    and chooses a new password (at least `core.passwordMinLength` characters).
    Every existing session of the user ends, so each device and application

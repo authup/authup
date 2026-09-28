@@ -107,6 +107,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             };
         }
 
+        let created = false;
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE: {
@@ -135,9 +136,19 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                     break;
             }
         } else {
+            created = true;
             await this.resolvePath(input);
             attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
         }
+
+        // createOnly leaves a row it did not create alone, and that includes
+        // its role, permission and scope bindings, unless the row is built in:
+        // only provisioning writes one, so its bindings are the file's to
+        // extend. The containers below are the client's own roles and
+        // permissions and stay in sync.
+        const bindRelations = created ||
+            !!attributes.builtIn ||
+            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
         // Permissions (Global + Realm)
         const permissions = [
@@ -152,7 +163,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 []),
         ];
 
-        if (permissions.length > 0) {
+        if (bindRelations && permissions.length > 0) {
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
@@ -174,7 +185,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 []),
         ];
 
-        if (roles.length > 0) {
+        if (bindRelations && roles.length > 0) {
             await this.roleJunction.synchronize(
                 attributes,
                 roles,
@@ -197,7 +208,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 []),
         ];
 
-        if (scopes.length > 0) {
+        if (bindRelations && scopes.length > 0) {
             await this.scopeJunction.synchronize(
                 attributes,
                 scopes,

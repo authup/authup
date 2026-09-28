@@ -284,6 +284,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     verified.client.accessPolicyId,
                     subject,
+                    { realmId: verified.client.realmId ?? null },
                 );
             }
 

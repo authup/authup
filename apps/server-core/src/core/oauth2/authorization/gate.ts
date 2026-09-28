@@ -199,6 +199,7 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     options.client.accessPolicyId,
                     subject,
+                    { realmId: options.client.realmId ?? null },
                 );
             }
 

@@ -17,6 +17,51 @@ import type { IIdentityProviderAccountManager } from '../../../account/index.ts'
 import type { IdentityProviderIdentity } from '../../../types.ts';
 import type { IdentityProviderLdapAuthenticatorContext } from './types.ts';
 
+type FilterNode = Filter & {
+    attribute: string,
+    value?: unknown,
+    clauses: FilterNode[],
+    initial?: string,
+    any?: string[],
+    final?: string,
+};
+
+function fillFilterNode(node: FilterNode, values: Record<string, unknown>) : FilterNode {
+    if (node instanceof ldap.SubstringFilter) {
+        return new ldap.SubstringFilter({
+            attribute: node.attribute,
+            initial: template(node.initial || '', values),
+            any: (node.any || []).map((el) => template(el, values)),
+            final: template(node.final || '', values),
+        }) as FilterNode;
+    }
+
+    for (let i = 0; i < node.clauses.length; i++) {
+        node.clauses[i] = fillFilterNode(node.clauses[i], values);
+    }
+
+    if (typeof node.value === 'string') {
+        node.value = template(node.value, values);
+    }
+
+    return node;
+}
+
+/**
+ * Build a search filter from an operator's template. The template is parsed
+ * with only the configured attribute names filled in, and the values are then
+ * placed into the leaves of the parsed filter as they are: a value never
+ * passes through the filter parser, so it can neither add filter syntax nor
+ * be altered by an escape.
+ */
+function buildFilter(
+    input: string,
+    attributes: Record<string, string>,
+    values: Record<string, unknown>,
+) : Filter {
+    return fillFilterNode(ldap.parseFilter(template(input, attributes)) as FilterNode, values);
+}
+
 export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthenticator<User> {
     protected provider : LdapIdentityProvider;
 
@@ -137,15 +182,14 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     }
 
     protected async findOneByName(input: string) : Promise<Record<string, any> | null> {
-        let filter : Filter | string;
+        let filter : Filter;
 
         if (this.provider.userFilter) {
-            filter = template(this.provider.userFilter, {
-                input,
+            filter = buildFilter(this.provider.userFilter, {
                 name_attribute: this.provider.userNameAttribute || 'cn',
                 mail_attribute: this.provider.userMailAttribute || 'mail',
                 display_name_attribute: this.provider.userDisplayNameAttribute || 'cn',
-            });
+            }, { input });
         } else if (this.provider.userNameAttribute) {
             filter = new ldap.EqualityFilter({
                 attribute: this.provider.userNameAttribute,
@@ -187,13 +231,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         const nameAttribute = this.provider.groupNameAttribute || 'cn';
         const memberAttribute = this.provider.groupMemberAttribute || 'member';
 
-        let filter : Filter | string;
+        let filter : Filter;
         if (this.provider.groupFilter) {
-            filter = template(this.provider.groupFilter, {
-                ...user,
+            filter = buildFilter(this.provider.groupFilter, {
                 name_attribute: nameAttribute,
                 member_attribute: memberAttribute,
-            });
+            }, user);
         } else {
             filter = new ldap.AndFilter({
                 filters: [

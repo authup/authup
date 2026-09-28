@@ -354,6 +354,38 @@ describe('global-capable entities (realm isolation)', () => {
         expect(binding.roleId).toEqual(realmBRoleId);
     });
 
+    it('refuses a realm_admin a write to a global role\'s permission binding', async () => {
+        const { data: globalRole } = await suite.client.role.create(
+            createFakeRole({ realmId: null }),
+        );
+        const { data: readPermission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+        const { data: otherPermission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: binding } = await suite.client.rolePermission.create({
+            roleId: globalRole.id,
+            permissionId: readPermission.id,
+            realmScope: RealmScope.ANY,
+        });
+
+        await expectClientError(
+            () => realmAdmin.rolePermission.create({
+                roleId: globalRole.id,
+                permissionId: otherPermission.id,
+            }),
+            { status: 403 },
+        );
+        await expectClientError(
+            () => realmAdmin.rolePermission.update(binding.id, { realmScope: RealmScope.OWN }),
+            { status: 403 },
+        );
+        await expectClientError(
+            () => realmAdmin.rolePermission.delete(binding.id),
+            { status: 403 },
+        );
+
+        const { data: stored } = await suite.client.rolePermission.getOne(binding.id);
+        expect(stored.realmScope).toEqual(RealmScope.ANY);
+    });
+
     it('still keeps another realm out of reach for a realm_admin', async () => {
         // the master-realm rows created above are foreign to realm B
         const foreign = await realmAdmin.role.getMany({ filters: { id: ownRoleId } });

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './digest.ts';
 export * from './error.ts';
 export * from './self-id.ts';
 export * from './url.ts';

@@ -14,7 +14,7 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../../app';
-import { createFakeUser, httpRequest } from '../../../../../utils';
+import { createFakeRealm, createFakeUser, httpRequest } from '../../../../../utils';
 
 const THRESHOLD = 3;
 const WINDOW_SECONDS = 900;
@@ -40,12 +40,13 @@ describe('src/http/controllers/token (login throttle)', () => {
         await suite.teardown();
     });
 
-    function passwordAttempt(username: string, password: string): Promise<Response> {
+    function passwordAttempt(username: string, password: string, realmId?: string): Promise<Response> {
         return httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: 'password',
                 username,
                 password,
+                ...(realmId ? { realm_id: realmId } : {}),
             },
         });
     }
@@ -82,5 +83,35 @@ describe('src/http/controllers/token (login throttle)', () => {
 
         const body = await response.json();
         expect(body.access_token).toBeDefined();
+    });
+
+    it('counts concurrent attempts against the threshold', async () => {
+        const target = createFakeUser();
+        await suite.client.user.create(target);
+
+        const responses = await Promise.all(
+            Array.from({ length: 20 }, () => passwordAttempt(target.name, 'definitely-wrong-password')),
+        );
+
+        const checked = responses.filter((response) => response.status === 400);
+        const throttled = responses.filter((response) => response.status === 429);
+        expect(checked.length).toBeLessThanOrEqual(THRESHOLD);
+        expect(checked.length + throttled.length).toEqual(responses.length);
+
+        const after = await passwordAttempt(target.name, target.password!);
+        expect(after.status).toEqual(429);
+    });
+
+    it('keys a user id on the account, whatever realm the request names', async () => {
+        const { data: target } = await suite.client.user.create(createFakeUser());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
+        for (let i = 0; i < THRESHOLD; i++) {
+            const response = await passwordAttempt(target.id, 'definitely-wrong-password');
+            expect(response.status).toEqual(400);
+        }
+
+        const throttled = await passwordAttempt(target.id, 'definitely-wrong-password', realm.id);
+        expect(throttled.status).toEqual(429);
     });
 });

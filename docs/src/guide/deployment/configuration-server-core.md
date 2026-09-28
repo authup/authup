@@ -32,7 +32,10 @@ The admin password and the `system` client secret both default to `start123`.
 Set your own values (`userAdminPassword` / `clientSystemSecret`, or the
 `USER_ADMIN_PASSWORD` / `CLIENT_SYSTEM_SECRET` environment variables) before
 deploying to production: the examples below carry placeholders, never copy a
-credential out of documentation.
+credential out of documentation. The admin password is applied only when the
+admin user is created: to change it on an existing deployment, also set
+`userAdminPasswordReset` (`USER_ADMIN_PASSWORD_RESET=true`). A production
+process still running the default admin password logs a warning on startup.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
@@ -502,7 +505,11 @@ export default {
 
         /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
-         * loginFailed events. Requires eventLogEnabled.
+         * loginFailed events plus the attempts still in flight, so a
+         * concurrent burst is held to the threshold too: attempts beyond it
+         * are refused while the others run, successful ones included, with
+         * a retryAfter of 1 second. A user id is counted across realms.
+         * Requires eventLogEnabled.
          * The IP half of the key follows `trustProxy`: pin it to the actual
          * proxy (hops or allowlist) so a direct client cannot spoof the IP
          * via X-Forwarded-For.
@@ -623,14 +630,22 @@ export default {
 
         /**
          * Permit HTTP Basic authentication with user credentials
-         * against the management API.
+         * against the management API. With MFA enabled, a user
+         * holding a confirmed authenticator is refused.
          * env: USER_AUTH_BASIC
          * default: false
          */
         userAuthBasic: false,
 
         /**
-         * Enable default admin user.
+         * Enable default admin user. Setting it to false deactivates an
+         * existing admin user on the next start. Setting it back to true
+         * does NOT reactivate that user (an admin deactivated through the
+         * API stays deactivated): another admin updates it, or a
+         * provisioning file declares the master realm's `admin` user with
+         * `active: true` and `strategy: { type: merge, attributes: [active] }`
+         * for one start. The environment value must be a recognized
+         * boolean, anything else fails the start.
          * env: USER_ADMIN_ENABLED
          * default: true
          */

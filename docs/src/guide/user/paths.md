@@ -208,9 +208,9 @@ Two limits are worth knowing before relying on this:
   folder-scoped administrator can pass on its own policy unchanged and nothing
   narrower, so a `sales` administrator cannot mint a `sales/emea` one. Folder
   delegation cannot be sub-delegated.
-- **Never use `$regex`.** It is not portable across the databases Authup
-  supports and fails the query outright on SQLite. Use `$in` over folder ids,
-  or `$startsWith` over a folder path.
+- **`$regex` is refused.** Authup rejects an attributes policy whose query
+  uses it with a 400. Use `$in` over folder ids, or `$startsWith` over a
+  folder path.
 
 ## When you do not need paths
 

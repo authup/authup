@@ -7,11 +7,17 @@
 
 import { EventName } from '@authup/core-kit';
 import { LoginThrottledError } from '@authup/errors';
+import type { ICache, Logger } from '@authup/server-kit';
 // direct file import — the entities barrel reaches every entity service, and a
 // value import of it from here would pull that graph in at module init.
 import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../entities/event/constants.ts';
 import type { IEventRepository } from '../../entities/index.ts';
-import type { ILoginThrottleService, LoginThrottleServiceContext, LoginThrottleServiceOptions } from './types.ts';
+import type {
+    ILoginThrottleService,
+    LoginThrottleContext,
+    LoginThrottleServiceContext,
+    LoginThrottleServiceOptions,
+} from './types.ts';
 
 const DEFAULT_THRESHOLD = 5;
 const DEFAULT_WINDOW_SECONDS = 900;
@@ -19,20 +25,20 @@ const DEFAULT_WINDOW_SECONDS = 900;
 export class LoginThrottleService implements ILoginThrottleService {
     protected repository: IEventRepository;
 
+    protected cache?: ICache;
+
+    protected logger?: Logger;
+
     protected options: LoginThrottleServiceOptions;
 
     constructor(ctx: LoginThrottleServiceContext) {
         this.repository = ctx.repository;
+        this.cache = ctx.cache;
+        this.logger = ctx.logger;
         this.options = ctx.options ?? {};
     }
 
-    async assertNotThrottled(
-        ctx: {
-            identifier: string, 
-            ipAddress?: string, 
-            realmId?: string | null 
-        },
-    ): Promise<void> {
+    async assertNotThrottled(ctx: LoginThrottleContext): Promise<void> {
         if (!this.options.enabled) {
             return;
         }
@@ -48,19 +54,62 @@ export class LoginThrottleService implements ILoginThrottleService {
         const threshold = this.options.threshold ?? DEFAULT_THRESHOLD;
         const windowSeconds = this.options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
 
-        const count = await this.repository.countRecent({
-            name: EventName.LOGIN_FAILED,
-            // the loginFailed rows are persisted with the actor name truncated
-            // to the column bound — an untruncated key would never match its
-            // own rows, silently failing open for over-long identifiers.
-            actorName: ctx.identifier.slice(0, EVENT_ACTOR_NAME_MAX_LENGTH),
-            requestIpAddress: ctx.ipAddress,
-            realmId: ctx.realmId,
-            since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),
-        });
+        // reserve the attempt BEFORE counting: an attempt that already ended
+        // has recorded its row before releasing, so each attempt is seen
+        // either as a row or as in flight, never as neither.
+        const inflight = this.cache ?
+            (await this.cache.increment(this.buildKey(ctx), 1, { ttl: windowSeconds * 1_000 })) - 1 :
+            0;
+
+        let count : number;
+        try {
+            count = await this.repository.countRecent({
+                name: EventName.LOGIN_FAILED,
+                // the loginFailed rows are persisted with the actor name truncated
+                // to the column bound — an untruncated key would never match its
+                // own rows, silently failing open for over-long identifiers.
+                actorName: ctx.identifier.slice(0, EVENT_ACTOR_NAME_MAX_LENGTH),
+                requestIpAddress: ctx.ipAddress,
+                realmId: ctx.realmId,
+                since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),
+            });
+        } catch (e) {
+            await this.release(ctx);
+            throw e;
+        }
 
         if (count >= threshold) {
+            await this.release(ctx);
             throw new LoginThrottledError({ retryAfter: windowSeconds });
         }
+
+        // the threshold is only full of attempts still running: those end
+        // within moments, so the caller may retry almost at once.
+        if (count + inflight >= threshold) {
+            await this.release(ctx);
+            throw new LoginThrottledError({
+                message: 'Too many concurrent login attempts. Please try again.',
+                retryAfter: 1,
+            });
+        }
+    }
+
+    async release(ctx: LoginThrottleContext): Promise<void> {
+        if (!this.options.enabled || !ctx.ipAddress || !this.cache) {
+            return;
+        }
+
+        // best effort: the outcome of the attempt must reach the caller, and
+        // a slot not returned only lapses with the window.
+        const windowSeconds = this.options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
+        try {
+            await this.cache.increment(this.buildKey(ctx), -1, { ttl: windowSeconds * 1_000 });
+        } catch (e) {
+            this.logger?.warn(`Could not release a login attempt: ${e instanceof Error ? e.message : String(e)}`);
+        }
+    }
+
+    protected buildKey(ctx: LoginThrottleContext): string {
+        return `loginAttempt:${ctx.realmId ?? ''}:${ctx.identifier}:${ctx.ipAddress}`;
     }
 }

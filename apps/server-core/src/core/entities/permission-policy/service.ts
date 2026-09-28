@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { inArray } from '@rapiq/core';
-import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
+import { EntityConflictError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
@@ -16,6 +16,7 @@ import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { permissionPolicySchema } from './schema.ts';
+import { isPolicyOfRealm } from '../policy/realm.ts';
 
 const READ_PERMISSION_NAMES = [
     PermissionName.PERMISSION_READ,
@@ -132,6 +133,10 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
 
         if (validated.policy) {
             validated.policyRealmId = validated.policy.realmId;
+
+            if (!isPolicyOfRealm(validated.policy, validated.permissionRealmId ?? null)) {
+                throw new ValidationError('It is not possible to bind a policy of another realm to a permission.');
+            }
         }
 
         // Stamp the owner (permission) realm so the realmScope factor gates cross-realm writes.

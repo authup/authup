@@ -110,13 +110,15 @@ It is **fail-closed**: a grant with no explicit `realmScope` defaults to `own`. 
 The two built-in admin roles are expressed purely through this reach:
 
 - **`admin`**: every permission at `any`, so it acts on all realms (and global resources) **from an identity in any realm**.
-- **`realm_admin`**: direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities.
+- **`realm_admin`**: direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities. Permission bindings of a role are written at `own` as well, so it changes those of its own realm's roles only, never those of a global role such as `admin`.
 
 There is no special "master realm" privilege.
 
 ### Cross-realm protection for assignments
 
 Realm reach also gates **assignments** (granting a role to a user, a permission to a role, a scope to a client, …): the write is gated by the realm of the **owner** entity (the user / role / client whose access you are changing). So a `realm_admin` in realm A cannot grant a role to a user in realm B, even with an otherwise-valid permission.
+
+A policy bound to a permission must be global or belong to the permission's own realm. Binding a policy of another realm is refused with `400` for every caller, `admin` included, because that realm's administrators could otherwise change or delete a restriction on a permission they do not administer.
 
 ### Setting a custom reach
 

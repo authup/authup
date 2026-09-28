@@ -76,8 +76,8 @@ claim. Create an `attributes` policy with the query
 
 and pick it as the provider's **New-user policy**. Addresses are stored in
 lowercase, so write the domain in lowercase. `$endsWith`, `$startsWith`, `$in`
-and plain equality are the operators to reach for; `$regex` is not portable
-across the databases Authup supports and must not be used in a policy. A login
+and plain equality are the operators to reach for; Authup refuses a policy
+whose query uses `$regex` with a 400. A login
 whose token carries no address at all gets a placeholder under `example.com`
 and is denied by the same rule.
 

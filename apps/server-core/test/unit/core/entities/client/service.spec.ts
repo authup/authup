@@ -88,7 +88,7 @@ describe('core/entities/client/service', () => {
             expect(result.data).toHaveLength(1);
         });
 
-        it('should list plaintext-secret rows without per-record evaluation (secret gate lives on the schema)', async () => {
+        it('should list rows without per-record evaluation on an allow verdict (secret gate lives on the schema)', async () => {
             repository.seed([
                 createFakeClient({
                     name: 'safe',
@@ -103,12 +103,37 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
             actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(2);
             expect(result.meta.total).toBe(2);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('should drop rows outside the realm reach on a post verdict', async () => {
+            const realmA = randomUUID();
+            repository.seed([
+                createFakeClient({ name: 'own', realmId: realmA }),
+                createFakeClient({ name: 'foreign', realmId: randomUUID() }),
+            ]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method !== 'evaluateOneOf') {
+                    return;
+                }
+
+                const attributes = call.ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+                if (!attributes || attributes.realmId !== realmA) {
+                    throw new Error('denied');
+                }
+            });
+
+            const result = await service.getMany({}, actor);
+            expect(result.data.map((row) => row.name)).toEqual(['own']);
+            expect(result.meta.total).toBe(1);
         });
 
         it('does not evaluate the secret gate for the default projection (secret unselected)', async () => {
@@ -123,20 +148,21 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
 
             const spy = vi.spyOn(repository, 'findMany');
             await service.getMany({}, actor);
 
             // secret is not part of the default projection, so the schema gate
-            // never fires — no compile, no condition, both rows list
+            // never fires: the one compile is the row reach, both rows list
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
             expect(applied.data).toHaveLength(2);
-            expect(actor.permissionEvaluator.compileCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.compileCalls).toHaveLength(1);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('redacts uncovered plaintext and hashed secrets instead of dropping rows when the projection selects secret', async () => {
+        it('narrows rows to the realm reach and keeps a covered secret when the projection selects secret', async () => {
             const realmA = randomUUID();
             const realmB = randomUUID();
             const rows = repository.seed([
@@ -177,20 +203,17 @@ describe('core/entities/client/service', () => {
             const spy = vi.spyOn(repository, 'findMany');
             await service.getMany({ fields: '+secret' }, actor);
 
-            // the schema gate rides the decoded query as a field visibility
-            // condition — replaying it drops the uncovered PLAINTEXT value
-            // while every row keeps listing; a secret-less row keeps its null,
-            // and a foreign HASHED value is redacted like a plaintext (#3328)
+            // the reach rides the decoded query as a row condition, so the
+            // foreign rows are not listed at all; the schema's secret gate
+            // keeps a covered value and a secret-less row keeps its null
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
             expect(applied.data.map((row) => row.name).sort())
-                .toEqual(['hashed-foreign', 'plain-covered', 'plain-foreign', 'safe']);
+                .toEqual(['plain-covered', 'safe']);
 
             const byName = new Map(applied.data.map((row) => [row.name, row]));
             expect(byName.get('safe')).toHaveProperty('secret', null);
             expect(byName.get('plain-covered')).toHaveProperty('secret', 'mysecret');
-            expect(byName.get('plain-foreign')).not.toHaveProperty('secret');
-            expect(byName.get('hashed-foreign')).not.toHaveProperty('secret');
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 

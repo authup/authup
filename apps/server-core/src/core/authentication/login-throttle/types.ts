@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICache, Logger } from '@authup/server-kit';
 import type { IEventRepository } from '../../entities/index.ts';
 
 export type LoginThrottleServiceOptions = {
@@ -27,17 +28,32 @@ export type LoginThrottleServiceOptions = {
 
 export type LoginThrottleServiceContext = {
     repository: IEventRepository,
+    /**
+     * Holds the attempts in flight per (identifier, ip) pair, so concurrent
+     * attempts count against the threshold before their audit rows exist.
+     */
+    cache?: ICache,
+    logger?: Logger,
     options?: LoginThrottleServiceOptions,
+};
+
+export type LoginThrottleContext = {
+    identifier: string,
+    ipAddress?: string,
+    realmId?: string | null,
 };
 
 export interface ILoginThrottleService {
     /**
-     * Throw LoginThrottledError when recent LOGIN_FAILED audit events for the
-     * (identifier, ip) pair hit the threshold.
+     * Throw LoginThrottledError when recent LOGIN_FAILED audit events plus
+     * the attempts still in flight for the (identifier, ip) pair hit the
+     * threshold. An admitted attempt must be ended with release().
      */
-    assertNotThrottled(ctx: {
-        identifier: string, 
-        ipAddress?: string, 
-        realmId?: string | null 
-    }): Promise<void>;
+    assertNotThrottled(ctx: LoginThrottleContext): Promise<void>;
+
+    /**
+     * End an attempt admitted by assertNotThrottled, after its outcome has
+     * been recorded. Never throws.
+     */
+    release(ctx: LoginThrottleContext): Promise<void>;
 }

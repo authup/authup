@@ -24,6 +24,7 @@ import { isValidupError, stringifyPath } from 'validup';
 import type { Logger } from '@authup/server-kit';
 import { describeError } from '../../../../utils/index.ts';
 import { ensurePath } from '../../../entities/path/helpers.ts';
+import { assertPreferenceValue } from '../../../entities/user-attribute/preferences.ts';
 import type { IPathRepository } from '../../../entities/path/types.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../../../oauth2/access-policy/types.ts';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
@@ -369,6 +370,17 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             attributesExtra[entityKey] = entity[entityKey];
         }
 
+        // The reserved preference attributes ride every signed token of the
+        // subject, so a mapped value they would refuse is dropped rather than
+        // stored. A cosmetic claim never fails the login.
+        for (const key of Object.keys(attributesExtra)) {
+            try {
+                assertPreferenceValue(key, attributesExtra[key]);
+            } catch {
+                delete attributesExtra[key];
+            }
+        }
+
         if (
             user &&
             typeof attributesSelf.email === 'string' &&
@@ -399,7 +411,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             try {
                 // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
                 return await this.userRepository.saveOneWithEA(output, attributesExtra);
-            } catch {
+            } catch (e) {
+                // A linked user keeps its name: only a first login may pick
+                // another candidate, so an update failure fails the login.
+                if (user) {
+                    throw e;
+                }
+
                 const names = identity.attributeCandidates?.name || [];
                 if (names.length > 0) {
                     while (names.length > 0) {
