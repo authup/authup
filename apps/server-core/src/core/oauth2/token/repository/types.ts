@@ -49,6 +49,12 @@ export interface IOAuth2TokenRepository {
      */
     findOneBySignature(token: string) : Promise<OAuth2TokenPayload | null>;
 
+    /**
+     * Drop every cached payload stored by signature, so each token is
+     * verified against its key again on its next use.
+     */
+    dropAllClaims() : Promise<void>;
+
     // -----------------------------------------------------
 
     /**
