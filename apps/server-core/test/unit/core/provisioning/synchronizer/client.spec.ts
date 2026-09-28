@@ -250,4 +250,28 @@ describe('core/provisioning/synchronizer/client', () => {
             expect.objectContaining({ clientId: stored!.id, roleId: role.id }),
         ]);
     });
+
+    it('should bind the declared role to an existing built-in client under createOnly', async () => {
+        const role = roleRepository.seed({
+            name: 'admin',
+            realmId: null,
+            clientId: null,
+        });
+        const existing = clientRepository.seed({
+            name: 'admin-console',
+            realmId,
+            authMethod: 'none',
+            builtIn: true,
+        });
+
+        await synchronizer.synchronize({
+            ...buildInput({ name: 'admin-console', authMethod: 'none' }),
+            strategy: { type: ProvisioningEntityStrategyType.CREATE_ONLY },
+            relations: { globalRoles: ['*'] },
+        } as ClientProvisioningEntity);
+
+        expect(clientRoleRepository.getAll()).toEqual([
+            expect.objectContaining({ clientId: existing.id, roleId: role.id }),
+        ]);
+    });
 });
