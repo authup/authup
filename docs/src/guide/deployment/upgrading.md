@@ -56,6 +56,87 @@ reads as a number or a boolean until it is written again.
 `abc`). `deserialize` reads both forms, so a round trip is unchanged; only code
 that reads the stored text directly sees the quotes.
 
+### Security hardening that changes behaviour
+
+This release tightens a number of defaults and checks. Most need no action;
+the ones that can break an existing setup come first.
+
+**May need action**
+
+- **Provisioning `createOnly`.** A user or client entry binds its declared
+  roles, permissions and scopes only when it creates the row. An existing row
+  under that name receives none of them. Use `strategy: merge` where relations
+  must be applied to an existing user or client.
+- **`realm_admin` and global roles.** The built-in `realm_admin` holds the
+  role-permission write permissions at `own` reach, so it can no longer change
+  the permission bindings of global roles. A data migration narrows existing
+  deployments; a reach an operator customized to something other than
+  `ownOrNull` is left alone.
+- **Client reads are realm-gated.** `GET /clients`, `GET /clients/:id` and
+  `GET /clients/@stats` honour the reader's realm reach like every other
+  realm-bound entity. A grant at `own` / `ownOrNull` no longer sees another
+  realm's clients, and a foreign client record answers 403.
+- **Cross-realm policy references are refused.** `POST /permission-policies`
+  and a client's `accessPolicyId` accept only a global policy or one of the
+  permission's (client's) own realm (400 otherwise). Existing bindings are
+  unchanged.
+- **SMTP verifies the relay certificate** for the object and `smtp: true`
+  forms as well. A relay with a self-signed or untrusted certificate needs
+  `rejectUnauthorized: false` in the `smtp` object.
+- **Request bodies are capped at 1mb** after decompression, and
+  `middlewareBody`, `middlewareCookie` and `middlewareQuery` are now honoured.
+  An options object for `middlewareBody` replaces the default limit, so set a
+  `limit` per parser there.
+- **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
+  fails the start), and `false` now deactivates an existing default admin on
+  the next start. A production process still using the default admin password
+  logs a warning.
+- **HTTP Basic and MFA.** With `userAuthBasic` and `mfaEnabled` both on, Basic
+  user credentials are refused for a user holding a confirmed authenticator.
+  Scripts acting as such a user must authenticate as a confidential client.
+- **Token parameters travel in the body.** `/token/introspect` and
+  `/token/revoke` refuse a `token` query parameter (400).
+- **Attributes policies** can no longer be written with a `$regex` operator in
+  their query (400). Use `$startsWith`, `$endsWith`, `$in` or equality.
+  Existing policies are unaffected.
+- **Authorization codes** are 256-bit and expire after 5 minutes, independent
+  of the access-token lifetime.
+- **Server adapters (local mode)** fetch the signing key from the token's own
+  realm (`/realms/<realm_id>/jwks/<kid>`) and refuse a token without
+  `realm_id` or with a non-uuid `kid`.
+
+**Users sign in again, sessions end**
+
+- A token verifies only against a signing key of the realm it names.
+  Disabling or deleting a signature key ends the tokens it signed immediately
+  (with the in-memory cache on several replicas, only on the replica that
+  handled the change).
+- Resetting a password ends every session of the user; changing a password
+  ends every other session.
+- Deactivating a user or client ends its sessions and refuses its access
+  tokens right away. Resource servers verifying locally against the JWKS still
+  accept an issued access token until it expires.
+- On https deployments served at the root of their host, the console session
+  cookie is named `__Host-authup_session`, so console users sign in once more
+  after upgrading. http and sub-path deployments keep `authup_session`.
+- The kit store writes its token cookies with `SameSite=Lax` and, on https
+  pages, `Secure`. Send `Strict-Transport-Security` from your reverse proxy.
+
+**No action**
+
+- Activation and password-reset codes are stored as a SHA-256 digest; a data
+  migration converts codes already issued, so mailed links keep working.
+- `POST /password-forgot` answers an unknown user or address with the same
+  `202` as a known one (no mail is sent).
+- Token introspection reports only access and refresh tokens; an id_token or
+  an MFA login ticket answers a bare `{ active: false }`.
+- Entity events on the realtime bus no longer carry columns the API never
+  returns (secrets, password and reset hashes, email), and entity audit rows
+  no longer record email changes.
+- A client managing itself can no longer change its own `grantTypes`.
+- LDAP `userFilter` / `groupFilter` values are escaped per RFC 4515.
+- The failed-login throttle also counts attempts still in flight.
+
 ## v1.0.0-beta.67 (was: next release after v1.0.0-beta.66)
 
 ### `GET /schemas/:name` moved to `GET /<collection>/@schema`
