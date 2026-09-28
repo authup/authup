@@ -7439,6 +7439,19 @@ The three realm-resolving grants (`password`, `authorization_code`,
   wins). Each accepts a realm UUID **or** name. The hint is canonicalized at
   the ingress (`trim().toLowerCase()`, per *Canonical Identifier Form* layer
   3) since no validator runs on the token body.
+- **`/realms/:realmId/token` is the same controller, dual-mounted**, and the
+  route realm IS the hint: `TokenController.applyRouteRealm` stamps the
+  resolved route realm onto the cached body as `realm_id`, so it wins silently
+  over a body `realm_id` / `realm_name` for every grant and for introspection's
+  client authentication (the entity controllers' route-wins rule). A route
+  realm that does not exist answers 404 (a name from the resolver, a UUID
+  from the handler, since the resolver passes UUIDs through) instead of the
+  body hint's fallback to master. Like the body hint it scopes NAME
+  resolution only: a user or client addressed by UUID still resolves in its
+  own realm, and a token of another realm still introspects and refreshes,
+  so the mount is a naming convenience, not a confinement. `isOAuth2IssuancePath` strips a leading
+  `/realms/<key>` segment, so the console cookie is denied there as on
+  `/token`. Discovery keeps advertising the flat `/token`.
 - The hint is resolved once via `IRealmRepository.resolve(hint, true)`:
   **defaults to the master realm** when the hint is absent (or unknown; same
   fallback convention as registration / password-recovery; a missing master
