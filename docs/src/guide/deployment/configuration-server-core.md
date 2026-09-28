@@ -35,7 +35,7 @@ deploying to production — the examples below carry placeholders, never copy a
 credential out of documentation. The admin password is applied only when the
 admin user is created: to change it on an existing deployment, also set
 `userAdminPasswordReset` (`USER_ADMIN_PASSWORD_RESET=true`). A production
-process still running the default admin password logs a warning on startup.
+process configured with the default admin password logs a warning on startup.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,

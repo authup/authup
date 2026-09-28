@@ -72,15 +72,18 @@ the ones that can break an existing setup come first.
   role-permission write permissions at `own` reach, so it can no longer change
   the permission bindings of global roles. A data migration narrows existing
   deployments; a reach an operator customized to something other than
-  `ownOrNull` is left alone.
+  `ownOrNull` is left alone. sqlite databases run no migrations, so they keep
+  the old reach until they are provisioned from scratch.
 - **Client reads are realm-gated.** `GET /clients`, `GET /clients/:id` and
   `GET /clients/@stats` honour the reader's realm reach like every other
   realm-bound entity. A grant at `own` / `ownOrNull` no longer sees another
   realm's clients, and a foreign client record answers 403.
 - **Cross-realm policy references are refused.** `POST /permission-policies`
   and a client's `accessPolicyId` accept only a global policy or one of the
-  permission's (client's) own realm (400 otherwise). Existing bindings are
-  unchanged.
+  permission's (client's) own realm (400 otherwise). A client still saves while
+  its existing binding is left as it is, but an `accessPolicyId` naming
+  another realm's policy now denies every login to that client. Rebind such
+  clients to a global policy or one of their own realm.
 - **SMTP verifies the relay certificate** for the object and `smtp: true`
   forms as well. A relay with a self-signed or untrusted certificate needs
   `rejectUnauthorized: false` in the `smtp` object.
@@ -90,8 +93,8 @@ the ones that can break an existing setup come first.
   `limit` per parser there.
 - **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
   fails the start), and `false` now deactivates an existing default admin on
-  the next start. A production process still using the default admin password
-  logs a warning.
+  the next start. A production process configured with the default admin
+  password logs a warning.
 - **HTTP Basic and MFA.** With `userAuthBasic` and `mfaEnabled` both on, Basic
   user credentials are refused for a user holding a confirmed authenticator.
   Scripts acting as such a user must authenticate as a confidential client.
@@ -102,6 +105,11 @@ the ones that can break an existing setup come first.
   Existing policies are unaffected.
 - **Authorization codes** are 256-bit and expire after 5 minutes, independent
   of the access-token lifetime.
+- **Realtime bus payloads.** Entity events on the redis and socket.io bus no
+  longer carry the columns withheld from default reads (`select: false`: user
+  email, password and reset hashes, client and authenticator secrets), and
+  entity audit rows no longer record email changes. A bus consumer that
+  mirrors an email or a secret from these events must read it through the API.
 - **Server adapters (local mode)** fetch the signing key from the token's own
   realm (`/realms/<realm_id>/jwks/<kid>`) and refuse a token without
   `realm_id` or with a non-uuid `kid`.
@@ -115,8 +123,12 @@ the ones that can break an existing setup come first.
 - Resetting a password ends every session of the user; changing a password
   ends every other session.
 - Deactivating a user or client ends its sessions and refuses its access
-  tokens right away. Resource servers verifying locally against the JWKS still
-  accept an issued access token until it expires.
+  tokens right away. Whatever wrote the deactivation (the API, or a
+  provisioning MERGE such as `USER_ADMIN_ENABLED=false`), the token endpoint
+  refuses to refresh the subject's tokens (`invalid_grant`) and introspection
+  reports them `active: false`, as it does for a token whose session has
+  ended. Resource servers verifying locally against the JWKS still accept an
+  issued access token until it expires.
 - On https deployments served at the root of their host, the console session
   cookie is named `__Host-authup_session`, so console users sign in once more
   after upgrading. http and sub-path deployments keep `authup_session`.
@@ -128,12 +140,9 @@ the ones that can break an existing setup come first.
 - Activation and password-reset codes are stored as a SHA-256 digest; a data
   migration converts codes already issued, so mailed links keep working.
 - `POST /password-forgot` answers an unknown user or address with the same
-  `202` as a known one (no mail is sent).
+  `202` and body as a known one (no mail is sent).
 - Token introspection reports only access and refresh tokens; an id_token or
   an MFA login ticket answers a bare `{ active: false }`.
-- Entity events on the realtime bus no longer carry columns the API never
-  returns (secrets, password and reset hashes, email), and entity audit rows
-  no longer record email changes.
 - A client managing itself can no longer change its own `grantTypes`.
 - LDAP `userFilter` / `groupFilter` values are escaped per RFC 4515.
 - The failed-login throttle also counts attempts still in flight.
