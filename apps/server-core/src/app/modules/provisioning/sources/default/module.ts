@@ -39,6 +39,10 @@ import type { ScopeProvisioningEntity } from '../../../../../core/provisioning/e
 import type { ProvisioningEntityStrategy } from '../../../../../core/provisioning/strategy/index.ts';
 import { ProvisioningEntityStrategyType } from '../../../../../core/provisioning/strategy/index.ts';
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
+import {
+    REALM_ADMIN_EXCLUDED_PERMISSIONS,
+    REALM_ADMIN_OWN_REACH_PERMISSIONS,
+} from '../../../../../core/entities/permission/constants.ts';
 
 export class DefaultProvisioningSource implements IProvisioningSource {
     buildPolicies(): PolicyProvisioningEntity[] {
@@ -204,52 +208,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 },
                 relations: {
                     globalPermissions: ['*'],
-                    globalPermissionsExclude: [
-                        PermissionName.REALM_CREATE,
-                        PermissionName.REALM_UPDATE,
-                        PermissionName.REALM_DELETE,
-                    ],
+                    globalPermissionsExclude: REALM_ADMIN_EXCLUDED_PERMISSIONS,
                     // realm_admin: own realm + null/global by default (so it can
                     // read/assign global building blocks), but strictly own-realm for
                     // direct entity CUD (cannot create/modify global entities).
                     globalPermissionsRealmScope: RealmScope.OWN_OR_NULL,
-                    globalPermissionsRealmScopeOverrides: {
-                        [RealmScope.OWN]: [
-                            PermissionName.CLIENT_CREATE,
-                            PermissionName.CLIENT_UPDATE,
-                            PermissionName.CLIENT_DELETE,
-                            PermissionName.CONSENT_DELETE,
-                            PermissionName.IDENTITY_PROVIDER_CREATE,
-                            PermissionName.IDENTITY_PROVIDER_UPDATE,
-                            PermissionName.IDENTITY_PROVIDER_DELETE,
-                            PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE,
-                            PermissionName.KEY_CREATE,
-                            PermissionName.KEY_UPDATE,
-                            PermissionName.KEY_DELETE,
-                            PermissionName.PATH_CREATE,
-                            PermissionName.PATH_UPDATE,
-                            PermissionName.PATH_DELETE,
-                            PermissionName.PERMISSION_CREATE,
-                            PermissionName.PERMISSION_UPDATE,
-                            PermissionName.PERMISSION_DELETE,
-                            PermissionName.ROLE_CREATE,
-                            PermissionName.ROLE_UPDATE,
-                            PermissionName.ROLE_DELETE,
-                            PermissionName.ROLE_PERMISSION_CREATE,
-                            PermissionName.ROLE_PERMISSION_UPDATE,
-                            PermissionName.ROLE_PERMISSION_DELETE,
-                            PermissionName.SCOPE_CREATE,
-                            PermissionName.SCOPE_UPDATE,
-                            PermissionName.SCOPE_DELETE,
-                            PermissionName.SESSION_DELETE,
-                            PermissionName.USER_CREATE,
-                            PermissionName.USER_UPDATE,
-                            PermissionName.USER_DELETE,
-                            PermissionName.USER_AUTHENTICATOR_CREATE,
-                            PermissionName.USER_AUTHENTICATOR_UPDATE,
-                            PermissionName.USER_AUTHENTICATOR_DELETE,
-                        ],
-                    },
+                    globalPermissionsRealmScopeOverrides: { [RealmScope.OWN]: REALM_ADMIN_OWN_REACH_PERMISSIONS },
                 },
             },
         ];

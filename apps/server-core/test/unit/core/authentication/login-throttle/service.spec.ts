@@ -229,4 +229,60 @@ describe('LoginThrottleService', () => {
         await service.release(ctx);
         await expect(service.assertNotThrottled(ctx)).resolves.toBeUndefined();
     });
+
+    it('asks for a short retry when only attempts in flight fill the threshold', async () => {
+        const service = new LoginThrottleService({
+            repository,
+            cache: new MemoryCache(),
+            options: {
+                enabled: true,
+                threshold: THRESHOLD,
+                windowSeconds: WINDOW_SECONDS,
+            },
+        });
+        const ctx = {
+            identifier: IDENTIFIER,
+            ipAddress: IP,
+            realmId,
+        };
+
+        for (let i = 0; i < THRESHOLD; i++) {
+            await service.assertNotThrottled(ctx);
+        }
+
+        let error: unknown;
+        try {
+            await service.assertNotThrottled(ctx);
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isLoginThrottledError(error)).toBe(true);
+        if (isLoginThrottledError(error)) {
+            expect(error.data?.retryAfter).toEqual(1);
+            expect(error.message).not.toMatch(/failed/i);
+        }
+    });
+
+    it('never lets a failing release throw over the attempt it ends', async () => {
+        const cache = new MemoryCache();
+        const service = new LoginThrottleService({
+            repository,
+            cache,
+            options: {
+                enabled: true,
+                threshold: THRESHOLD,
+                windowSeconds: WINDOW_SECONDS,
+            },
+        });
+        cache.increment = async () => {
+            throw new Error('cache unavailable');
+        };
+
+        await expect(service.release({
+            identifier: IDENTIFIER,
+            ipAddress: IP,
+            realmId,
+        })).resolves.toBeUndefined();
+    });
 });

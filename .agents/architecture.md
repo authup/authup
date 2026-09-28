@@ -1522,7 +1522,11 @@ API. The six page GETs became a stateless hop:
   The response already carries `Vary: Cookie` and `no-store`.
   **Rate-limit cost on a split deployment.** server-core's limiter runs
   before authentication and keys on the source address alone (its
-  per-identity `max` never sees an identity), and the service forwards no
+  per-identity `max` never sees an identity; the address is the one
+  `trustProxy` resolves, taken as given, port included, so under the
+  trust-all default a direct client picks its own key, and a forwarded
+  loopback behind a same-host proxy is skipped as the deployment's own
+  traffic), and the service forwards no
   visitor address. So on a split topology every server-side call of every
   render counts against the console's ONE address at the anonymous 1200/min,
   and a signed-in `/authorize` render makes about five (the authorize info,
@@ -9092,7 +9096,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
   refuses when rows plus the other attempts in flight reach the threshold; the
   grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
-  written, so every attempt is seen as a row or as in flight. A user-id
+  written, so every attempt is seen as a row or as in flight. A refusal the
+  rows alone justify carries `retryAfter` = the window; one filled only by
+  attempts in flight (a burst of correct logins included) carries
+  `retryAfter: 1` and a message that claims no failures. `release()` is best
+  effort and never throws over the attempt's own outcome; a slot it could not
+  return lapses with the window. A user-id
   identifier drops the realm from the key and from the count, since
   `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;

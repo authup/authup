@@ -45,4 +45,13 @@ describe('app/modules/mail/smtp', () => {
 
         expect(createTransport.mock.calls[0][0]).toMatchObject({ tls: { rejectUnauthorized: false } });
     });
+
+    it('should honour rejectUnauthorized next to a connection string', () => {
+        expect(new SMTPMailClientAdapter({ connectionString: 'smtps://relay.example.com', rejectUnauthorized: false })).toBeDefined();
+
+        expect(createTransport.mock.calls[0][0]).toEqual({
+            url: 'smtps://relay.example.com',
+            tls: { rejectUnauthorized: false },
+        });
+    });
 });

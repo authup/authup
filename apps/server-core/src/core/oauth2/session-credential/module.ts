@@ -44,3 +44,14 @@ export function createSessionSecret() : string {
 export function hashSessionSecret(secret: string) : string {
     return createHash('sha256').update(secret).digest('hex');
 }
+
+/**
+ * The value stored for a mailed one-time code (account activation, password
+ * reset). The code itself only travels in the mail, so a read of the table
+ * yields nothing that completes the workflow. The writer and the lookup both
+ * go through this function, so they cannot disagree. A plain SHA-256 for the
+ * reason `hashSessionSecret` gives: the code is 32 random bytes.
+ */
+export function digestOneTimeCode(code: string) : string {
+    return createHash('sha256').update(code).digest('hex');
+}

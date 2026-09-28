@@ -353,9 +353,13 @@ export default {
          * Security: with `true` (the default), a DIRECT client can spoof
          * its IP via X-Forwarded-For — login-throttle keys, audit events,
          * the access log, and the session inventory then record the forged
-         * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
-         * proxy) when the listener is reachable without a proxy or exact
-         * attribution matters. String forms are canonicalized: "1" means
+         * value. The rate limiter keys on the same address, so such a
+         * client can also spread its requests over many keys, and behind a
+         * same-host proxy a forwarded 127.0.0.1 is treated as the
+         * deployment's own traffic and not counted at all. Pin the actual
+         * proxy (e.g. 1, or loopback for a same-host proxy) when the
+         * listener is reachable without a proxy or exact attribution
+         * matters. String forms are canonicalized: "1" means
          * one trusted hop (never trust-all), "true"/"false" parse as
          * booleans, anything else is a comma-separated allowlist. Allowlist
          * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
@@ -374,12 +378,13 @@ export default {
          * File-only (no environment variables).
          * default: true (each)
          */
-        middlewareBody: true,       // request body parsing; `true` caps json
-                                    // and url-encoded bodies at 1mb, measured
+        middlewareBody: true,       // request body parsing; caps json and
+                                    // url-encoded bodies at 1mb, measured
                                     // after decompression. An options object
-                                    // replaces that default, so give it a
-                                    // `limit` per parser
-                                    // ({ json: { limit: '1mb' }, urlEncoded: { limit: '1mb' } }).
+                                    // is applied per parser on top of that:
+                                    // both stay on at 1mb unless it sets one
+                                    // to false or names its own `limit`
+                                    // ({ json: { limit: '5mb' } }).
         middlewareCookie: true,     // cookie parsing
         middlewareCors: true,       // CORS (reflects any origin by default;
                                     // pass options for an explicit allowlist)
@@ -511,8 +516,10 @@ export default {
         /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
          * loginFailed events plus the attempts still in flight, so a
-         * concurrent burst is held to the threshold too. A user id is counted
-         * across realms. Requires eventLogEnabled.
+         * concurrent burst is held to the threshold too: attempts beyond it
+         * are refused while the others run, successful ones included, with
+         * a retryAfter of 1 second. A user id is counted across realms.
+         * Requires eventLogEnabled.
          * The IP half of the key follows `trustProxy` — pin it to the actual
          * proxy (hops or allowlist) so a direct client cannot spoof the IP
          * via X-Forwarded-For.
@@ -642,8 +649,13 @@ export default {
 
         /**
          * Enable default admin user. Setting it to false deactivates an
-         * existing admin user on the next start. The environment value
-         * must be a recognized boolean, anything else fails the start.
+         * existing admin user on the next start. Setting it back to true
+         * does NOT reactivate that user (an admin deactivated through the
+         * API stays deactivated): another admin updates it, or a
+         * provisioning file declares the master realm's `admin` user with
+         * `active: true` and `strategy: { type: merge, attributes: [active] }`
+         * for one start. The environment value must be a recognized
+         * boolean, anything else fails the start.
          * env: USER_ADMIN_ENABLED
          * default: true
          */
