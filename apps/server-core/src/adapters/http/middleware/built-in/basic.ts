@@ -9,6 +9,11 @@ import type { Options } from '@routup/basic';
 import { basic } from '@routup/basic';
 import type { IApp } from 'routup';
 
+export const BODY_OPTIONS_DEFAULT = {
+    json: { limit: '1mb' },
+    urlEncoded: { limit: '1mb' },
+} satisfies Options['body'];
+
 export function registerBasicMiddleware(router: IApp, input?: Options) {
     router.use(basic(input));
 }
