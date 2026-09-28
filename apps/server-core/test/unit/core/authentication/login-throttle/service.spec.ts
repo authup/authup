@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import { EventName, EventScope } from '@authup/core-kit';
 import { isLoginThrottledError } from '@authup/errors';
+import { MemoryCache } from '@authup/server-kit';
 import {
     beforeEach,
     describe,
@@ -200,5 +201,32 @@ describe('LoginThrottleService', () => {
         if (isLoginThrottledError(error)) {
             expect(error.data?.retryAfter).toEqual(WINDOW_SECONDS);
         }
+    });
+
+    it('counts attempts in flight until they are released', async () => {
+        seedFailures(THRESHOLD - 2);
+
+        const service = new LoginThrottleService({
+            repository,
+            cache: new MemoryCache(),
+            options: {
+                enabled: true,
+                threshold: THRESHOLD,
+                windowSeconds: WINDOW_SECONDS,
+            },
+        });
+        const ctx = {
+            identifier: IDENTIFIER,
+            ipAddress: IP,
+            realmId,
+        };
+
+        await service.assertNotThrottled(ctx);
+        await service.assertNotThrottled(ctx);
+        await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
+
+        await service.release(ctx);
+        await service.release(ctx);
+        await expect(service.assertNotThrottled(ctx)).resolves.toBeUndefined();
     });
 });

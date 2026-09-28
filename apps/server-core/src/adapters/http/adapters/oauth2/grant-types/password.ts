@@ -107,11 +107,12 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         // a user id resolves regardless of the realm hint, so the hint must
         // not split its attempts across one bucket per realm.
-        await this.loginThrottleService?.assertNotThrottled({
+        const throttle = {
             identifier,
             ipAddress,
             realmId: isUUID(identifier) ? undefined : realm.id,
-        });
+        };
+        await this.loginThrottleService?.assertNotThrottled(throttle);
 
         let user : User;
         try {
@@ -136,6 +137,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             }
 
             throw e;
+        } finally {
+            await this.loginThrottleService?.release(throttle);
         }
 
         const mfaVerifiedAt = await this.verifySecondFactor(user, body, {
