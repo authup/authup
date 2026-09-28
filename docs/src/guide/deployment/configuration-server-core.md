@@ -353,9 +353,13 @@ export default {
          * Security: with `true` (the default), a DIRECT client can spoof
          * its IP via X-Forwarded-For — login-throttle keys, audit events,
          * the access log, and the session inventory then record the forged
-         * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
-         * proxy) when the listener is reachable without a proxy or exact
-         * attribution matters. String forms are canonicalized: "1" means
+         * value. The rate limiter keys on the same address, so such a
+         * client can also spread its requests over many keys, and behind a
+         * same-host proxy a forwarded 127.0.0.1 is treated as the
+         * deployment's own traffic and not counted at all. Pin the actual
+         * proxy (e.g. 1, or loopback for a same-host proxy) when the
+         * listener is reachable without a proxy or exact attribution
+         * matters. String forms are canonicalized: "1" means
          * one trusted hop (never trust-all), "true"/"false" parse as
          * booleans, anything else is a comma-separated allowlist. Allowlist
          * entries are trimmed and lowercased, so " LOOPBACK " is accepted;

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isIP } from 'node:net';
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { IApp, IAppEvent } from 'routup';
@@ -38,18 +37,11 @@ export function registerRateLimitMiddleware(router: IApp, input?: OptionsInput) 
     let options : OptionsInput = {
         // @routup/rate-limit's default keyGenerator hardcodes
         // `{ trustProxy: true }`; deriving the key here instead lets it
-        // follow the app-level trust contract (config `trustProxy`). A
-        // forwarded value that is not an address falls back to the socket
-        // address: the key indexes a plain object, and a name such as
-        // `constructor` would never count up to the limit.
-        keyGenerator: (event) => {
-            const ip = getRequestIP(event);
-            if (ip && isIP(ip)) {
-                return ip;
-            }
-
-            return getRequestIP(event, { trustProxy: false }) || '127.0.0.1';
-        },
+        // follow the app-level trust contract (config `trustProxy`). The
+        // value is used as given (a proxy may append the source port), and
+        // prefixed because the key indexes a plain object, where a name such
+        // as `constructor` would never count up to the limit.
+        keyGenerator: (event) => `ip:${getRequestIP(event) || '127.0.0.1'}`,
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so
