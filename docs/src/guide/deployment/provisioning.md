@@ -648,7 +648,9 @@ For a user or a client that includes its bindings: the roles, permissions and
 scopes it declares are bound only when the entry creates the row, and a row
 that already exists (created through the API, registration or an earlier boot)
 receives none of them. Declare `merge` to bind them onto an existing row, which
-also re-asserts them on every boot.
+also re-asserts them on every boot. A built-in client (`admin-console`,
+`account-console`) is the exception: only provisioning writes one, so its
+declared bindings are applied under `createOnly` too.
 
 ```yaml
 strategy:

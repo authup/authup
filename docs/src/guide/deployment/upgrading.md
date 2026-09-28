@@ -66,7 +66,8 @@ the ones that can break an existing setup come first.
 - **Provisioning `createOnly`.** A user or client entry binds its declared
   roles, permissions and scopes only when it creates the row. An existing row
   under that name receives none of them. Use `strategy: merge` where relations
-  must be applied to an existing user or client.
+  must be applied to an existing user or client. The built-in system clients
+  are the exception and keep receiving the bindings their entry declares.
 - **`realm_admin` and global roles.** The built-in `realm_admin` holds the
   role-permission write permissions at `own` reach, so it can no longer change
   the permission bindings of global roles. A data migration narrows existing

@@ -142,9 +142,13 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         }
 
         // createOnly leaves a row it did not create alone, and that includes
-        // its role, permission and scope bindings. The containers below are
-        // the client's own roles and permissions and stay in sync.
-        const bindRelations = created || strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
+        // its role, permission and scope bindings, unless the row is built in:
+        // only provisioning writes one, so its bindings are the file's to
+        // extend. The containers below are the client's own roles and
+        // permissions and stay in sync.
+        const bindRelations = created ||
+            !!attributes.builtIn ||
+            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
         // Permissions (Global + Realm)
         const permissions = [
