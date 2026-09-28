@@ -15,8 +15,10 @@ import {
 import { createNanoID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { RegistrationDisabledError } from './error.ts';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
+// direct file import: the oauth2 barrel reaches back into identity.
+import { digestOneTimeCode } from '../../oauth2/session-credential/module.ts';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
     IRegistrationService,
@@ -71,7 +73,7 @@ export class RegistrationService implements IRegistrationService {
         if (this.options.emailVerificationEnabled) {
             validated.active = false;
             activateCode = randomBytes(32).toString('hex');
-            validated.activateHash = createHash('sha256').update(activateCode).digest('hex');
+            validated.activateHash = digestOneTimeCode(activateCode);
         } else {
             validated.active = true;
         }
@@ -124,7 +126,7 @@ export class RegistrationService implements IRegistrationService {
     }
 
     async activate(data: { token: string }): Promise<void> {
-        const entity = await this.repository.findOneBy({ activateHash: createHash('sha256').update(data.token).digest('hex') });
+        const entity = await this.repository.findOneBy({ activateHash: digestOneTimeCode(data.token) });
 
         if (!entity) {
             throw new EntityNotFoundError();
