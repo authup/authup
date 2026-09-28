@@ -33,7 +33,6 @@ import type {
 } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
-    SESSION_COOKIE,
     STATS_QUERY_PARAMETERS, 
     deriveAmrAcr, 
     describeQuerySchema, 
@@ -53,7 +52,7 @@ import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { OAuth2SubKind, serializeOAuth2Scope } from '@authup/specs';
 import { useRequestCookie } from '@routup/basic/cookie';
 import { SYSTEM_CLIENT_SCOPE_NAMES } from '../../../../../core/entities/client/system-clients.ts';
-import { unsetSessionCookie } from '../../../cookie/index.ts';
+import { buildSessionCookieName, unsetSessionCookie } from '../../../cookie/index.ts';
 import { serveEntityStats } from '../stats.ts';
 
 export type SessionControllerContext = {
@@ -278,7 +277,7 @@ export class SessionController {
         if (
             this.baseURL &&
             resolvedId === useRequestSessionId(event) &&
-            useRequestCookie(event, SESSION_COOKIE)
+            useRequestCookie(event, buildSessionCookieName(this.baseURL))
         ) {
             unsetSessionCookie(event, this.baseURL);
         }
