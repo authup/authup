@@ -5997,7 +5997,7 @@ below). Both are `OAuth2TokenPayload` fields.
 the id_token is minted inside the `authorization_code` grant
 (`OAuth2AuthorizeGrant.runWith`) **after** `resolveSession`, so its `sid` is
 **authoritative**: it references the real backing session in the reuse branch,
-the fallback-create branch, and the **federated IdP** flow alike (that flow
+the session-less create branch, and the **federated IdP** flow alike (that flow
 reaches `authorize()` through the hosted page, so it carries a real
 `session_id` too). `OAuth2Authorization.authorize()` does not mint the
 id_token and holds no `openIdTokenIssuer` / `identityResolver`; it stamps the
@@ -6680,8 +6680,8 @@ rotation are inherited rather than written. There is deliberately no core grant 
 
 **Session semantics.** The approval binds the hosted page's bearer session, so a lingering
 hosted login approves under its existing session and the redemption reuses that row
-(`resolveSession`: `session_id` present and `sub` / `subKind` / `realmId` equal); otherwise a
-session is created from the DEVICE's request with the blob's `auth_method`.
+(`resolveSession`: `sub` / `subKind` / `realmId` equal); a device code whose session ended
+between approval and redemption is refused with `invalid_grant`, like an authorization code.
 `auth_sessions.client_id` is never written (subject FK); each token row carries the device
 client under `auth_session_tokens.client_id`, so back-channel logout reaches the device's RP.
 One consequence: the device's tokens share the approver's browser session, so ending that
@@ -7971,10 +7971,16 @@ auth-code blob:
   the authenticated bearer, server-derived, never client input) and threads it
   `OAuth2Authorization.authorize(data, identity, { sessionId })` →
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
-- `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
-  still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth) and `sessionManager.refresh()`es it. It does NOT write
-  `clientId`.
+- `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session and
+  `sessionManager.refresh()`es it. A code whose session is gone or no longer
+  matches its `sub` / `sub_kind` / `realm_id` is refused with `invalid_grant`
+  rather than redeemed into a fresh session: a revoke between issue and
+  redemption (a sign-out, a password change, a deactivation) has to reach a
+  code pocketed before it. Before any of that the grant resolves the code's
+  subject and refuses one that no longer resolves, is inactive or belongs to
+  another realm (`isTokenSubjectActive`), which is what stops a deactivation
+  written outside the services (a provisioning MERGE) that revoked no session.
+  It does NOT write `clientId`.
 
   **Session subject foreign keys.** `auth_sessions` carries a nullable
   `user_id` AND a nullable `client_id`, and `SessionManager.create` populates
@@ -7986,15 +7992,16 @@ auth-code blob:
   application deleted a USER's session and, through
   `auth_session_tokens.session_id`, every other application's tokens on it.
   Per-app attribution is `auth_session_tokens.client_id`; the session column
-  is the subject FK and nothing else. Any mismatch, or a **session-less** authorize
-  flow (external-IdP callback: `IdentityProviderController` issues its code with
-  no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
-  preserving prior behavior.
+  is the subject FK and nothing else. Only a **session-less** authorize flow
+  (HTTP Basic, whose request carries no session) creates a session at
+  redemption.
 
-Covered by `test/unit/core/oauth2/grant-types/authorize.spec.ts` (reuse vs.
-fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
+Covered by `test/unit/core/oauth2/grant-types/authorize.spec.ts` (reuse,
+the refusal of a gone or mismatched session and of an unusable subject) and
+the end-to-end
 `test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
-(login → authorize → exchange asserts a single session survives).
+(login → authorize → exchange asserts a single session survives; a code
+pocketed before a password change or a deactivation is refused).
 
 ## MFA: Authenticator Devices
 
@@ -8669,7 +8676,7 @@ locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 currently stamps `pwd` for both, the LDAP distinction is deferred).
 Every session-creation site stamps it: password grant (`pwd`), identity grant
 (`ext`, threaded through the code blob's `auth_method`, which the
-authorization_code grant's fallback-create inherits; the reuse branch inherits
+authorization_code grant's session-less create inherits; the reuse branch inherits
 from the bearer session row) + the federated IdP callback, which
 creates the session itself with `ext` and the exchange reuses it, client
 credentials (`client`, session-inventory only). Pre-column sessions

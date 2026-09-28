@@ -18,6 +18,7 @@ import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import {
     createFakeClient,
     createFakeUser,
+    httpRequest,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
@@ -107,5 +108,68 @@ describe('grant-authorize session reuse', () => {
         // session's subject is a user, so it stays null. Which application
         // authorized is on the token rows.
         expect(own[0].clientId).toBeNull();
+    });
+
+    describe('a code minted before its session was revoked', () => {
+        async function pocketCode() {
+            const password = 'authorize-session-revoked-pw';
+            const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+            const secret = generateOAuth2CodeVerifier();
+            const { data: client } = await suite.client
+                .client
+                .create(createFakeClient({
+                    secret,
+                    secretHashed: false,
+                    secretEncrypted: false,
+                    authMethod: 'secret',
+                    tokenBindingMethod: 'none',
+                }));
+            const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+            await suite.client.clientScope.create({
+                scopeId: scope.id,
+                clientId: client.id,
+            });
+
+            const login = await suite.client.token.createWithPassword({ username: user.name, password });
+            const userClient = new HTTPClient({ baseURL: suite.baseURL });
+            userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+            const { url } = await userClient.authorize.confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: client.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: ScopeName.GLOBAL,
+                state: generateOAuth2CodeVerifier(),
+            });
+
+            const redeem = () => httpRequest(suite, 'POST', '/token', {
+                form: {
+                    grant_type: 'authorization_code',
+                    client_id: client.id,
+                    client_secret: secret,
+                    redirect_uri: 'https://example.com/redirect',
+                    code: new URL(url).searchParams.get('code')!,
+                },
+            });
+
+            return { user, redeem };
+        }
+
+        it('is refused after a password change', async () => {
+            const { user, redeem } = await pocketCode();
+
+            await suite.client.user.update(user.id, { password: 'authorize-session-revoked-new-pw' });
+
+            expect((await redeem()).status).toEqual(400);
+        });
+
+        it('is refused after a deactivation', async () => {
+            const { user, redeem } = await pocketCode();
+
+            await suite.client.user.update(user.id, { active: false });
+
+            expect((await redeem()).status).toEqual(400);
+        });
     });
 });
