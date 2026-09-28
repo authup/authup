@@ -6,25 +6,14 @@
  */
 
 import { UserAuthenticatorKind } from '@authup/core-kit';
-import { getRandomValues } from 'uncrypto';
+import { createNanoID } from '@authup/kit';
 
 // no ambiguous characters (0/o, 1/l/i) — codes get typed by hand
 const RECOVERY_CODE_ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz';
 const RECOVERY_CODE_GROUP_LENGTH = 5;
 
 export function generateRecoveryCode(): string {
-    const size = RECOVERY_CODE_GROUP_LENGTH * 2;
-    const bytes = getRandomValues(new Uint8Array(size));
-
-    let output = '';
-    for (let i = 0; i < size; i++) {
-        if (i === RECOVERY_CODE_GROUP_LENGTH) {
-            output += '-';
-        }
-        output += RECOVERY_CODE_ALPHABET[bytes[i] % RECOVERY_CODE_ALPHABET.length];
-    }
-
-    return output;
+    return `${createNanoID(RECOVERY_CODE_ALPHABET, RECOVERY_CODE_GROUP_LENGTH)}-${createNanoID(RECOVERY_CODE_ALPHABET, RECOVERY_CODE_GROUP_LENGTH)}`;
 }
 
 /**
@@ -39,12 +28,5 @@ export function guessUserAuthenticatorKindByResponse(response: string): `${UserA
 }
 
 export function generateNumericCode(length: number): string {
-    const bytes = getRandomValues(new Uint8Array(length));
-
-    let output = '';
-    for (let i = 0; i < length; i++) {
-        output += String(bytes[i] % 10);
-    }
-
-    return output;
+    return createNanoID('0123456789', length);
 }

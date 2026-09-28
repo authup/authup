@@ -3765,8 +3765,12 @@ folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
 An update under such a grant is checked against the stored AND the updated row
 (`evaluateUpdate`, #3654), so a delegate can neither refile a row into its
 folder nor move one out of it.
-`$regex` must never appear in such a policy: the sqlite preset declares no
-`regexp`, so it throws and 500s every list read under the test dialect. Only a
+`$regex` cannot appear in such a policy: `PolicyAttributesValidator` refuses
+it at any depth of an `attributes` query on every `/policies` write (a pattern
+runs synchronously against caller-supplied values on the one event loop every
+realm shares, and the sqlite preset declares no `regexp` either). Provisioning
+files are operator-owned and not checked, and a row stored before the rule
+keeps evaluating. The `@authup/access` library still evaluates `$regex`. Only a
 global admin can author one, since `applyJunctionCreateGrant` nulls a requested
 `policyId` unless the actor holds an uncapped, policy-free grant, which is the
 #3158 / #3159 / #3160 fail-closed rule and means a `sales` administrator cannot
@@ -5865,6 +5869,10 @@ in `UserAttributeService.create` and in `update` over the PAIR the row will
 hold (`data.name ?? entity.name`, `data.value ?? entity.value`), so a
 reserved row cannot be fed junk by a body that omits the name and an
 unchecked row cannot be renamed into a reserved one to slip its value past.
+The federated write path runs the same check: `IdentityProviderAccountManager.saveUser`
+DROPS a mapped `locale` / `colorMode` the rule refuses before `saveOneWithEA`
+(a cosmetic claim never fails a login), so an attribute mapping onto either
+name cannot store what the API would refuse.
 `locale` is checked for BCP47 SHAPE and never narrowed to a catalog authup
 has, since the attribute is the user's preference for every RP that reads the
 claim, but it is BOUNDED (subtags of at most 8 characters, 35 characters in
@@ -7164,7 +7172,8 @@ plus a `<uuid>@example.com` placeholder (#3434).
 - **Forward-only for the name, verification-aware for the email.** The
   account manager's UPDATE branch never rewrites `user.name` (it is
   `nameLocked` at creation), so users already provisioned under a UUID keep
-  it. It MAY rewrite `email` through an operator attribute mapping
+  it; the name-collision retry of `saveUser` is CREATE-only, so a failed
+  update save fails the login instead of renaming the user. It MAY rewrite `email` through an operator attribute mapping
   (`targetName: email`), and a mapped address that differs from the stored
   one clears `emailVerified`, the #3519 rule `UserService.save` applies,
   unless the mapping asserts `emailVerified` itself. The stored address is
