@@ -166,6 +166,7 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
             id: randomUUID(), 
             name: 'jdoe', 
             realmId, 
+            active: true,
         } as User;
 
         const session = await suite.sessionManager.create({ sub: user.id, subKind: IdentityType.USER });

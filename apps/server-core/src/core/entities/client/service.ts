@@ -35,6 +35,7 @@ import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
 import type { IQuery } from '@rapiq/core';
+import type { ISessionManager } from '../../authentication/session/types.ts';
 
 export type ClientServiceContext = {
     repository: IClientRepository;
@@ -52,6 +53,10 @@ export type ClientServiceContext = {
     cipher?: IRealmCipher;
     eventService?: IEventService;
     requestContext?: () => EventRequestContext | undefined;
+    /**
+     * Ends the client's sessions when it is deactivated.
+     */
+    sessionManager?: ISessionManager;
 };
 
 export class ClientService extends AbstractEntityService implements IClientService {
@@ -71,6 +76,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
     protected requestContext?: () => EventRequestContext | undefined;
 
+    protected sessionManager?: ISessionManager;
+
     constructor(ctx: ClientServiceContext) {
         super();
         this.repository = ctx.repository;
@@ -81,6 +88,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         this.cipher = ctx.cipher;
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
+        this.sessionManager = ctx.sessionManager;
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
@@ -381,6 +389,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
                 return repository.save(merged);
             });
+
+            if (patch.active === false) {
+                await this.sessionManager?.revokeByOwner({ sub: id, subKind: 'client' });
+            }
 
             return {
                 entity,

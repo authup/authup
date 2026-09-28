@@ -399,10 +399,13 @@ export class UserService extends AbstractEntityService implements IUserService {
                 return repository.save(merged);
             });
 
-            // A new password ends every other session of the user; a user
-            // changing its own keeps the session it did so with.
-            if (validated.password && this.sessionManager) {
-                const self = actor.identity?.type === 'user' && actor.identity.data.id === id;
+            // A deactivation ends every session of the user, and a new
+            // password every other one: a user changing its own keeps the
+            // session it did so with.
+            if (this.sessionManager && (patch.active === false || validated.password)) {
+                const self = patch.active !== false &&
+                    actor.identity?.type === 'user' &&
+                    actor.identity.data.id === id;
                 await this.sessionManager.revokeByOwner(
                     { sub: id, subKind: 'user' },
                     self ? this.requestContext?.()?.sessionId ?? undefined : undefined,
