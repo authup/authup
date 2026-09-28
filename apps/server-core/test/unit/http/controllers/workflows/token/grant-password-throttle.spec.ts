@@ -85,6 +85,23 @@ describe('src/http/controllers/token (login throttle)', () => {
         expect(body.access_token).toBeDefined();
     });
 
+    it('counts concurrent attempts against the threshold', async () => {
+        const target = createFakeUser();
+        await suite.client.user.create(target);
+
+        const responses = await Promise.all(
+            Array.from({ length: 20 }, () => passwordAttempt(target.name, 'definitely-wrong-password')),
+        );
+
+        const checked = responses.filter((response) => response.status === 400);
+        const throttled = responses.filter((response) => response.status === 429);
+        expect(checked.length).toBeLessThanOrEqual(THRESHOLD);
+        expect(checked.length + throttled.length).toEqual(responses.length);
+
+        const after = await passwordAttempt(target.name, target.password!);
+        expect(after.status).toEqual(429);
+    });
+
     it('keys a user id on the account, whatever realm the request names', async () => {
         const { data: target } = await suite.client.user.create(createFakeUser());
         const { data: realm } = await suite.client.realm.create(createFakeRealm());

@@ -8934,7 +8934,15 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `EVENT_ACTOR_NAME_MAX_LENGTH` — the same bound `EventService.record` applies
   to the persisted `actorName`. A reader that matches stored rows by actor name
   must normalize exactly like the writer, or an over-long identifier never
-  matches its own rows and the throttle silently fails open for it. Config
+  matches its own rows and the throttle silently fails open for it. The count
+  alone is check-then-act (the row lands only after bcrypt), so the service
+  also reserves each attempt in the cache (`ICache.increment` on
+  `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
+  refuses when rows plus the other attempts in flight reach the threshold; the
+  grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
+  written, so every attempt is seen as a row or as in flight. A user-id
+  identifier drops the realm from the key and from the count, since
+  `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;
   enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).
