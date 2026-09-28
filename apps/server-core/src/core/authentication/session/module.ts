@@ -72,31 +72,27 @@ export class SessionManager implements ISessionManager {
             }
         }
 
-        session.seenAt = new Date().toISOString();
-
-        return this.repository.save(session);
+        return this.repository.update(session, { seenAt: new Date().toISOString() });
     }
 
     // -----------------------------------------------------
 
     async refresh(session: Session): Promise<Session> {
         const now = new Date().toISOString();
-        session.refreshedAt = now;
-        session.seenAt = now;
 
-        session.expiresAt = new Date(
-            Date.now() + (this.options.maxAge * 1_000),
-        ).toISOString();
-
-        return this.repository.save(session);
+        return this.repository.update(session, {
+            refreshedAt: now,
+            seenAt: now,
+            expiresAt: new Date(
+                Date.now() + (this.options.maxAge * 1_000),
+            ).toISOString(),
+        });
     }
 
     // -----------------------------------------------------
 
     async markMfaVerified(session: Session): Promise<Session> {
-        session.mfaAt = new Date().toISOString();
-
-        return this.repository.save(session);
+        return this.repository.update(session, { mfaAt: new Date().toISOString() });
     }
 
     // -----------------------------------------------------

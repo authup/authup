@@ -28,6 +28,8 @@ export const SESSION_FILTER_KEYS = [
     'realmId',
 ] as const;
 
+export type SessionUpdatePatch = Partial<Pick<Session, 'expiresAt' | 'refreshedAt' | 'seenAt' | 'mfaAt'>>;
+
 export type SessionFindManyOptions = {
     /**
      * Force the result to a single subject (self-service). Applied as a
@@ -82,7 +84,21 @@ export interface ISessionRepository {
      */
     findAllByQuery(query: IQuery): Promise<Session[]>;
 
+    /**
+     * Create a session.
+     */
     save(session: Partial<Session>): Promise<Session>;
+
+    /**
+     * Move the sliding columns of an existing session, and nothing else: a
+     * concurrent write to another of them (a second factor stamped, an
+     * expiry slid) is kept. A session revoked in the meantime is never
+     * brought back. The patch is applied to `session` as well, which is
+     * returned.
+     *
+     * @throws JWTError when the session no longer exists
+     */
+    update(session: Session, patch: SessionUpdatePatch): Promise<Session>;
 
     removeById(id: string): Promise<void>;
 
