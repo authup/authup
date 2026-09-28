@@ -63,6 +63,10 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
         return this.bySignature.get(token) ?? null;
     }
 
+    async dropAllClaims(): Promise<void> {
+        this.bySignature.clear();
+    }
+
     async removeById(id: string): Promise<void> {
         this.removeByIdCalls.push(id);
         this.byId.delete(id);

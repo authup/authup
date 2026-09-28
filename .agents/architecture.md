@@ -8367,7 +8367,17 @@ grant there; both JWKS surfaces filter
 on every call (only the imported `SymmetricCipher` is cached — material is
 immutable, status is not), so disabling an enc key is an immediate,
 **reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
-closed, never a 500).
+closed, never a 500). The verifier serves a token it has seen before from the
+signature-keyed claims cache (`TOKEN_CLAIMS`) without consulting its key, so
+disabling or deleting a SIGNATURE key drops that whole cache
+(`IOAuth2TokenRepository.dropAllClaims`, called by `KeyService`): every token
+is checked against its key on its next use, and the tokens that key signed
+stop verifying at once rather than at their `exp`. Re-checking the key on
+every cache hit was rejected, since it is an uncached read plus a KEK unwrap
+on the hottest path. The drop reaches every replica only through a shared
+Redis cache; with the in-process memory cache it clears the replica that
+served the key change, and the others honour the key within a token's
+lifetime.
 
 **Management API:** `KeyService`
 (`core/entities/key/`) + `KeyController` dual-mounted

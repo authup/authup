@@ -36,6 +36,7 @@ import { getRandomValues } from 'uncrypto';
 import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
+import type { IOAuth2TokenRepository } from '../../oauth2/token/repository/types.ts';
 import type {
     IKeyRepository, 
     IKeyService, 
@@ -48,6 +49,7 @@ import { keySchema } from './schema.ts';
 
 export type KeyServiceContext = {
     repository: IKeyRepository;
+    tokenRepository?: IOAuth2TokenRepository;
     eventService?: IEventService;
     requestContext?: () => EventRequestContext | undefined;
 };
@@ -63,6 +65,8 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     protected validator: KeyValidator;
 
+    protected tokenRepository?: IOAuth2TokenRepository;
+
     protected eventService?: IEventService;
 
     protected requestContext?: () => EventRequestContext | undefined;
@@ -70,6 +74,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     constructor(ctx: KeyServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.tokenRepository = ctx.tokenRepository;
         this.validator = new KeyValidator();
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
@@ -293,6 +298,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
+        if (previous.status !== KeyStatus.DISABLED && entity.status === KeyStatus.DISABLED) {
+            await this.dropVerifiedClaims(entity);
+        }
+
         entity.decryptionKey = null;
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
@@ -337,6 +346,8 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryptionKey = null;
 
+        await this.dropVerifiedClaims(entity);
+
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
         const forcedCryptoShred = entity.use === JWKUse.ENCRYPTION && !!options.force;
@@ -346,6 +357,18 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }
 
     // ------------------------------------------------------------------
+
+    /**
+     * A verified token's payload is cached by its signature and served
+     * without consulting its key again, so a signature key that stops
+     * verifying drops that cache: every token is checked against its key on
+     * its next use.
+     */
+    protected async dropVerifiedClaims(entity: Key): Promise<void> {
+        if (entity.use === JWKUse.SIGNATURE) {
+            await this.tokenRepository?.dropAllClaims();
+        }
+    }
 
     /**
      * Metadata-only audit trail for key lifecycle operations (issue #3269) —
