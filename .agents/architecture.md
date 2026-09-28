@@ -2836,15 +2836,23 @@ rather than trusted until `exp`.
   moves only `seenAt`). Otherwise an active user would be signed out
   mid-task once the session reached its lifetime. It costs no extra write
   (`ping` already saved the row). **A session write never re-creates a
-  row**: `SessionRepository.save` inserts only for a new session (no id);
-  for an existing one it runs a conditional `UPDATE` of the four sliding
-  columns (`expiresAt`, `refreshedAt`, `seenAt`, `mfaAt`), and zero affected
-  rows drops the cache entry and throws `JWTError.expired()`. So `ping`,
-  `refresh` and `markMfaVerified` on a copy read before a concurrent revoke
-  fail (401 on a resource route, an aborted MFA verify) instead of bringing
-  the revoked session back. At `/token` the refresh grant and the
-  authorization-code grant's session reuse catch that JWT error around
-  `refresh()` and answer `invalid_grant`, as the token endpoint must.
+  row**: `SessionRepository.save` only creates; `update(session, patch)` is
+  a conditional `UPDATE` of exactly the columns the write moves (`ping` its
+  `seenAt`, `refresh` `refreshedAt` / `seenAt` / `expiresAt`,
+  `markMfaVerified` its `mfaAt`), so a stale copy never reverts what a
+  concurrent write stamped, and zero affected rows drops the cache entry and
+  throws `JWTError.expired()`. The cache entry is written BEFORE the
+  `UPDATE`, from the freshest copy the cache holds: a revoke (row removed,
+  then entry dropped) landing anywhere in the write then ends with no entry,
+  where writing it after the `UPDATE` could put a revoked session back for
+  its whole lifetime. So `ping`, `refresh` and `markMfaVerified` on a copy
+  read before a concurrent revoke fail (401 on a resource route, an aborted
+  MFA verify) instead of bringing the revoked session back. At `/token` the
+  refresh grant and the authorization-code grant's session reuse catch that
+  JWT error around `refresh()` and answer `invalid_grant`, as the token
+  endpoint must. Two writes racing on one session can still leave a stale
+  column in the CACHED copy (never in the row), which fails closed (a
+  spurious `mfa_required`) until the entry is written again.
 - **`Allow-Credentials` narrowed to publicUrl's origin** in the same change
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets
