@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -200,6 +201,19 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }),
         });
 
+        // Caller-supplied signature material vouches for whatever the caller
+        // signs with it, and a verifier that trusts the key by its id alone
+        // cannot tell which realm's administrator chose it. Importing one is
+        // therefore reserved to a KEY_CREATE reaching beyond the actor's own
+        // realm, probed with a realm the actor cannot own; generating one
+        // stays at the grant's own reach.
+        if (use === JWKUse.SIGNATURE && validated.decryptionKey) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.KEY_CREATE,
+                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: this.buildForeignRealmId(actor) }),
+            });
+        }
+
         if (!validated.name) {
             validated.name = `${use}-${createNanoID(10)}`;
         }
@@ -357,6 +371,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }
 
     // ------------------------------------------------------------------
+
+    protected buildForeignRealmId(actor: ActorContext): string {
+        const actorRealmId = this.getActorRealmId(actor);
+        let realmId = randomUUID();
+        while (realmId === actorRealmId) {
+            realmId = randomUUID();
+        }
+
+        return realmId;
+    }
 
     /**
      * A verified token's payload is cached by its signature and served

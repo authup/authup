@@ -18,7 +18,6 @@ import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2RefreshTokenGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
-    IIdentityResolver,
     IOAuth2TokenVerifier,
     IRealmRepository,
     OAuth2ClientAuthenticator,
@@ -38,8 +37,6 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
 
     protected realmRepository : IRealmRepository;
 
-    protected identityResolver : IIdentityResolver;
-
     protected certificateSource: CertificateSource;
 
     constructor(ctx: HTTPOAuth2RefreshTokenGrantContext) {
@@ -48,7 +45,6 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.refreshTokenVerifier = ctx.tokenVerifier;
         this.realmRepository = ctx.realmRepository;
-        this.identityResolver = ctx.identityResolver;
         this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
@@ -160,16 +156,6 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             payload.realm_id &&
             payload.realm_id !== client.realmId
         ) {
-            throw OAuth2GrantError.invalid();
-        }
-
-        // The subject must still exist and be active. Deactivation revokes the
-        // subject's sessions on the API path, but a row written elsewhere (a
-        // provisioning MERGE) does not, so the chain is stopped here too.
-        const identity = payload.sub && payload.sub_kind ?
-            await this.identityResolver.resolve(payload.sub_kind, payload.sub) :
-            null;
-        if (!identity || !identity.data.active) {
             throw OAuth2GrantError.invalid();
         }
 

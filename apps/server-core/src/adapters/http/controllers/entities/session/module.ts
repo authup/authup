@@ -148,10 +148,14 @@ export class SessionController {
             token: {
                 sub: identity.id,
                 sub_kind: identity.type,
+                realm_id: identity.realmId,
                 client_id: useRequestTokenPayload(event)?.client_id,
             },
             active: true,
         });
+        if (!subject) {
+            return { active: false };
+        }
 
         return {
             active: true,
