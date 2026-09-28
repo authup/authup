@@ -268,9 +268,12 @@ export class TokenController {
 
             // A token outlives neither its session nor its subject's
             // activation, whichever path ended them, and only rides a session
-            // of its own subject and realm.
-            if (active && payload.session_id) {
-                const session = await this.sessionManager.findOneById(payload.session_id);
+            // of its own subject and realm. Every grant issues a session, so a
+            // token without one is refused here as on a resource route.
+            if (active) {
+                const session = payload.session_id ?
+                    await this.sessionManager.findOneById(payload.session_id) :
+                    null;
                 active = !!session && isTokenSession(session, payload);
             }
 
