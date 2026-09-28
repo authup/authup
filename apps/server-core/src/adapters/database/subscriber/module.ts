@@ -23,6 +23,7 @@ import type {
     TransactionCommitEvent,
     UpdateEvent,
 } from 'typeorm';
+import { getMetadataArgsStorage } from 'typeorm';
 import type { EntitySubscriberContext } from './types.ts';
 
 export function buildEntityDestinations<T extends ObjectLiteral>(
@@ -59,9 +60,20 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
 
     protected publisher? : IDomainEventPublisher;
 
+    /**
+     * `select: false` columns (secrets, password and reset hashes, email)
+     * are withheld from every read, so they are withheld from the domain
+     * event payload too: `select` governs projection only, and the hook
+     * receives the object that was saved, with those columns still set.
+     */
+    protected hiddenColumns : string[];
+
     constructor(ctx: EntitySubscriberContext<T>) {
         this.ctx = ctx;
         this.publisher = ctx.publisher;
+        this.hiddenColumns = getMetadataArgsStorage().columns
+            .filter((column) => column.target === ctx.target && column.options.select === false)
+            .map((column) => column.propertyName);
     }
 
     setPublisher(publisher: IDomainEventPublisher) : void {
@@ -158,6 +170,11 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             return;
         }
 
+        data = this.withoutHiddenColumns(data);
+        if (dataPrevious) {
+            dataPrevious = this.withoutHiddenColumns(dataPrevious);
+        }
+
         await this.publisher.safePublish({
             content: {
                 type: this.ctx.type,
@@ -168,5 +185,18 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             ...(dataPrevious ? { dataPrevious } : {}),
             transaction,
         });
+    }
+
+    protected withoutHiddenColumns(data: T) : T {
+        if (this.hiddenColumns.length === 0) {
+            return data;
+        }
+
+        const output = { ...data };
+        for (const column of this.hiddenColumns) {
+            delete output[column];
+        }
+
+        return output;
     }
 }

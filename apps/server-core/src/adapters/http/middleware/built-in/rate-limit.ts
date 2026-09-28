@@ -33,12 +33,23 @@ function isLoopbackRequest(event: IAppEvent) : boolean {
         LOOPBACK_IP.test(getRequestIP(event) || '');
 }
 
+// A proxy may append the client's source port, which changes with every
+// connection, so the port is dropped: one host is one bucket.
+function stripPort(ip: string) : string {
+    return ip.match(/^\[([^\]]+)\]:\d+$/)?.[1] ??
+        ip.match(/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/)?.[1] ??
+        ip;
+}
+
 export function registerRateLimitMiddleware(router: IApp, input?: OptionsInput) {
     let options : OptionsInput = {
         // @routup/rate-limit's default keyGenerator hardcodes
         // `{ trustProxy: true }`; deriving the key here instead lets it
-        // follow the app-level trust contract (config `trustProxy`).
-        keyGenerator: (event) => getRequestIP(event) || '127.0.0.1',
+        // follow the app-level trust contract (config `trustProxy`). A
+        // trailing port is dropped, and the key is prefixed because it
+        // indexes a plain object, where a name such as `constructor` would
+        // never count up to the limit.
+        keyGenerator: (event) => `ip:${stripPort(getRequestIP(event) || '127.0.0.1')}`,
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so

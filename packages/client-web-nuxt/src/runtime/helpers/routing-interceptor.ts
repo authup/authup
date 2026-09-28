@@ -84,21 +84,23 @@ export class RoutingInterceptor {
                 undefined;
 
             try {
-                if (request) {
-                    const state = typeof to.query.state === 'string' ? to.query.state : undefined;
-                    if (request.state !== state) {
-                        throw new Error('The authorization request state does not match.');
-                    }
-
-                    await this.store.exchangeAuthorizationCode(code, {
-                        code_verifier: request.code_verifier,
-                        redirect_uri: request.redirect_uri,
-                        client_id: request.client_id,
-                        realm_id: request.realm_id,
-                    });
-                } else {
-                    await this.store.exchangeAuthorizationCode(code);
+                // A code this browser did not ask for has no request to
+                // match its state against, so it is dropped like a mismatch.
+                if (!request) {
+                    throw new Error('No authorization request is pending.');
                 }
+
+                const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+                if (request.state !== state) {
+                    throw new Error('The authorization request state does not match.');
+                }
+
+                await this.store.exchangeAuthorizationCode(code, {
+                    code_verifier: request.code_verifier,
+                    redirect_uri: request.redirect_uri,
+                    client_id: request.client_id,
+                    realm_id: request.realm_id,
+                });
 
                 clearAuthorizationRequest();
 

@@ -11,6 +11,7 @@ import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
 import type { Realm, UserAuthenticator } from '@authup/core-kit';
 import {
+    buildBodyOptions,
     createAuthorizationMiddleware,
     createLoggerMiddleware,
     createRealmResolverMiddleware,
@@ -47,7 +48,7 @@ export class HTTPMiddlewareModule {
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
         await this.mountInternalHttpClient(router, container);
-        await this.mountBasic(router);
+        await this.mountBasic(router, container);
         await this.mountRateLimit(router, container);
 
         await this.mountSwagger(router, container);
@@ -92,8 +93,14 @@ export class HTTPMiddlewareModule {
         registerInternalHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.InternalHttpClient));
     }
 
-    async mountBasic(router: IApp): Promise<void> {
-        registerBasicMiddleware(router);
+    async mountBasic(router: IApp, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        registerBasicMiddleware(router, {
+            body: buildBodyOptions(config.middlewareBody),
+            cookie: config.middlewareCookie,
+            query: config.middlewareQuery,
+        });
     }
 
     async mountPrometheus(router: IApp, container: IContainer): Promise<void> {

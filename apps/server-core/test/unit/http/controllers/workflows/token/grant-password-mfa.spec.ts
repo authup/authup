@@ -64,9 +64,9 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         // Basic credentials authenticate a user holding no confirmed factor
         const basic = new HTTPClient({ baseURL: suite.baseURL });
         basic.setAuthorizationHeader({
-            type: 'Basic', 
-            username: user.name, 
-            password, 
+            type: 'Basic',
+            username: user.name,
+            password,
         });
         const basicMe = await basic.user.getOne('@me');
         expect(basicMe.data.id).toEqual(user.id);

@@ -84,16 +84,16 @@ describe('token verification: subject realm binding', () => {
         };
 
         const { data: realmKey } = await suite.client.key.create({
-            ...material, 
-            name: `binding-${Date.now()}`, 
-            realmId, 
+            ...material,
+            name: `binding-${Date.now()}`,
+            realmId,
         });
         realmKeyId = realmKey.id;
 
         const { data: masterKey } = await suite.client.key.create({
-            ...material, 
-            name: `binding-m-${Date.now()}`, 
-            realmId: admin.realm_id, 
+            ...material,
+            name: `binding-m-${Date.now()}`,
+            realmId: admin.realm_id,
         });
         masterKeyId = masterKey.id;
     });

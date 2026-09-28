@@ -135,6 +135,10 @@ export default defineComponent({
         // A login_required from AuthorizeForm's auto-consent (the server
         // max_age/freshness backstop) — silent requests redirect the error;
         // interactive prompt=login shows the login form with a re-auth banner.
+        // The lingering session is kept: a request alone must not end it, and
+        // the person's own login replaces it. What this page confirmed for it
+        // is dropped instead, so the login form takes over; the new login
+        // stamps both confirmations again.
         const handleLoginRequired = () => {
             const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
             // Only redirect the OIDC error to a *verified* redirect_uri; an
@@ -146,7 +150,8 @@ export default defineComponent({
             }
 
             reauthRequired.value = true;
-            store.logout();
+            accountConfirmedLocal.value = false;
+            mfaSatisfiedLocal.value = false;
         };
 
         // prompt=select_account chooser: once the user picks "continue as",

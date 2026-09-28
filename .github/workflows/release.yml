@@ -39,13 +39,16 @@ jobs:
 
             -   name: Set publish flags
                 id: flags
+                env:
+                    VERSION_INPUT: ${{ inputs.version }}
+                    RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
                 run: |
                     if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
                         echo "should_publish=true" >> "$GITHUB_OUTPUT"
-                        VERSION="${{ inputs.version }}"
+                        VERSION="$VERSION_INPUT"
                     else
                         echo "should_publish=${{ steps.release.outputs.releases_created }}" >> "$GITHUB_OUTPUT"
-                        VERSION="${{ steps.release.outputs.tag_name }}"
+                        VERSION="$RELEASE_TAG"
                     fi
                     VERSION="${VERSION#v}"
                     echo "version=$VERSION" >> "$GITHUB_OUTPUT"
