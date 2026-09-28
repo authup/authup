@@ -8515,9 +8515,9 @@ which blocked Redis with a keyspace scan, emptied every realm's cache on any
 realm's key change, and lost to that very race. The mark reaches every
 replica only through a shared Redis cache; with the in-process memory cache
 it applies on the replica that served the key change, and the others honour
-the key within a token's lifetime. The claims prefix is versioned
-(`oauth2_token_claims_v2`), so an entry an older release cached is never
-read. A local-mode resource server keeps its own verified-token cache and
+the key within a token's lifetime. An entry cached before the key realm
+check existed is served without it until it expires, so the upgrade notes
+ask a Redis deployment to drop the `oauth2_token_claims*` keys once. A local-mode resource server keeps its own verified-token cache and
 accepts such a token until that entry or the token expires.
 
 **Management API:** `KeyService`
