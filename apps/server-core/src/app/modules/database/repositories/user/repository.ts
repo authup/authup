@@ -62,9 +62,13 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
 
 
 
+    // Also re-selects the password-recovery columns: they are select:false, so a
+    // plain findOneBy never loads them, and a save cannot clear a column it did
+    // not load.
     async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
         qb.addSelect('user.email');
+        qb.addSelect(['user.resetHash', 'user.resetExpires']);
 
         const translated = translateWhereConditions(where);
         qb.where(translated);
