@@ -2775,9 +2775,14 @@ rather than trusted until `exp`.
   cookie branch calls `refresh()` on a throttle rather than `ping()` (which
   moves only `seenAt`). Otherwise an active user would be signed out
   mid-task once the session reached its lifetime. It costs no extra write
-  (`ping` already saved the row) and it re-reads the row first: `save`
-  upserts by primary key, so writing the row read at the top of the request
-  would RESURRECT a session a concurrent sign-out deleted.
+  (`ping` already saved the row). **A session write never re-creates a
+  row**: `SessionRepository.save` inserts only for a new session (no id);
+  for an existing one it runs a conditional `UPDATE` of the four sliding
+  columns (`expiresAt`, `refreshedAt`, `seenAt`, `mfaAt`), and zero affected
+  rows drops the cache entry and throws `JWTError.expired()`. So `ping`,
+  `refresh` and `markMfaVerified` on a copy read before a concurrent revoke
+  fail (401 on a resource route, `invalid_grant` at `/token`, an aborted MFA
+  verify) instead of bringing the revoked session back.
 - **`Allow-Credentials` narrowed to publicUrl's origin** in the same change
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets

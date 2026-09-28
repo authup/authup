@@ -10,6 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
+import { JWTError } from '@authup/specs';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../../database/repositories/query.ts';
@@ -146,7 +147,36 @@ export class SessionRepository implements ISessionRepository {
 
     async save(input: Partial<Session>): Promise<Session> {
         const session = this.repository.create(input);
-        await this.repository.save(session);
+
+        if (input.id) {
+            // An existing session is only ever UPDATED, never upserted: the
+            // caller holds a copy read earlier in its request, and writing it
+            // back through `save()` would re-insert a row a concurrent revoke
+            // deleted in between. No row means the session is gone.
+            // Only the columns a live session moves: the rest is pinned at
+            // creation (`secret` has its own writer, `updateSecret`).
+            const { id } = session;
+            const patch : Partial<Session> = {
+                expiresAt: session.expiresAt,
+                refreshedAt: session.refreshedAt,
+                seenAt: session.seenAt,
+                mfaAt: session.mfaAt,
+            };
+
+            const { affected } = await this.repository.update({ id }, patch);
+            if (!affected) {
+                await this.cache.drop(
+                    buildCacheKey({
+                        prefix: AuthenticationCachePrefix.SESSION,
+                        key: id,
+                    }),
+                );
+
+                throw JWTError.expired();
+            }
+        } else {
+            await this.repository.save(session);
+        }
 
         // The cookie handle must never enter the cache. `findOneById` serves
         // the cached object verbatim, and an owner reads its own session

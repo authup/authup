@@ -298,11 +298,9 @@ export class AuthorizationMiddleware {
             }
         }
 
-        // `repository.save` upserts by primary key, so writing the row read at
-        // the top of this request would RESURRECT a session a concurrent
-        // sign-out deleted in between. Re-read first: the sign-out drops both
-        // the row and its cache entry, so a miss here means the session is
-        // gone and there is nothing to slide.
+        // Re-read first: the sign-out drops both the row and its cache entry,
+        // so a miss here means the session is gone and there is nothing to
+        // slide (the write itself would refuse a gone row as well).
         const current = await this.sessionManager.findOneById(session.id);
         if (!current) {
             return;
