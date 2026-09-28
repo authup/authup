@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache } from '@authup/server-kit';
+import type { ICache, Logger } from '@authup/server-kit';
 import type { IEventRepository } from '../../entities/index.ts';
 
 export type LoginThrottleServiceOptions = {
@@ -33,6 +33,7 @@ export type LoginThrottleServiceContext = {
      * attempts count against the threshold before their audit rows exist.
      */
     cache?: ICache,
+    logger?: Logger,
     options?: LoginThrottleServiceOptions,
 };
 
@@ -52,7 +53,7 @@ export interface ILoginThrottleService {
 
     /**
      * End an attempt admitted by assertNotThrottled, after its outcome has
-     * been recorded.
+     * been recorded. Never throws.
      */
     release(ctx: LoginThrottleContext): Promise<void>;
 }

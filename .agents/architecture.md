@@ -9096,7 +9096,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
   refuses when rows plus the other attempts in flight reach the threshold; the
   grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
-  written, so every attempt is seen as a row or as in flight. A user-id
+  written, so every attempt is seen as a row or as in flight. A refusal the
+  rows alone justify carries `retryAfter` = the window; one filled only by
+  attempts in flight (a burst of correct logins included) carries
+  `retryAfter: 1` and a message that claims no failures. `release()` is best
+  effort and never throws over the attempt's own outcome; a slot it could not
+  return lapses with the window. A user-id
   identifier drops the realm from the key and from the count, since
   `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;
