@@ -3693,7 +3693,7 @@ ignored: no widen via attach/detach). `isSuperset` additionally requires the par
 | Role | Scope | Realm reach (junction `realmScope`) |
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | `any`: acts on all realms + `null` global, **from an identity in ANY realm** |
-| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads) / `own` (direct entity CUD) |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads, assignments) / `own` (direct entity CUD and role-permission writes, so a global role's bindings are out of reach) |
 
 ### Nested Route Mounting
 
