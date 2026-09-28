@@ -19,8 +19,10 @@ type ErrorMiddlewareOptions = {
 export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOptions = {}) {
     router.use(defineErrorHandler((error, event) => {
         // routup wraps whatever a handler threw into an AppError carrying it
-        // as `cause`, so this is the error as it was actually raised.
-        const original = error.cause ?? error;
+        // as `cause`, so this is the error as it was actually raised. An
+        // AppError routup built from an options bag (a body parser's 413)
+        // carries that bag as `cause`, and only the AppError holds its status.
+        const original = error.cause instanceof Error ? error.cause : error;
 
         const next = sanitizeError(original);
         const status = httpStatusFromCode(next.code);
