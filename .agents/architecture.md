@@ -2018,7 +2018,9 @@ alias token, so it must be quoted (`name: "*"`).
   `RealmProvisioningValidator.run` on the literal name; a partial pattern
   like `tenant-*` fails the regular name check). Child strategies keep the
   full vocabulary: `createOnly` (default — seed once, realm admins own the
-  row), `merge`/`replace` (reassert per boot on every realm), `absent`
+  row; a user or client binds its declared roles, permissions and scopes
+  only on the pass that creates it, never onto a row that already existed),
+  `merge`/`replace` (reassert per boot on every realm), `absent`
   (sweep the named entity out of every realm).
 - **Mechanism (expansion + fan-out):** `ProvisionerModule.setup` extracts
   the wildcard entries after the composite load (folding multiples via the

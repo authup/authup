@@ -37,21 +37,25 @@ describe('core/provisioning/synchronizer/user', () => {
 
     let userRepository: FakeUserRepository;
     let pathRepository: FakePathRepository;
+    let roleRepository: FakeEntityRepository<Role>;
+    let userRoleRepository: FakeEntityRepository<UserRole>;
     let synchronizer: UserProvisioningSynchronizer;
 
     beforeEach(() => {
         userRepository = new FakeUserRepository();
         pathRepository = new FakePathRepository();
+        roleRepository = new FakeEntityRepository<Role>();
+        userRoleRepository = new FakeEntityRepository<UserRole>();
         synchronizer = new UserProvisioningSynchronizer({
             userRepository,
             pathRepository,
-            userRoleRepository: new FakeEntityRepository<UserRole>() as
+            userRoleRepository: userRoleRepository as
                 FakeEntityRepository<UserRole> & IUserRoleRepository,
             userPermissionRepository: new FakeEntityRepository<UserPermission>() as
                 FakeEntityRepository<UserPermission> & IUserPermissionRepository,
             clientRepository: new FakeEntityRepository<Client>() as
                 FakeEntityRepository<Client> & IClientRepository,
-            roleRepository: new FakeEntityRepository<Role>() as
+            roleRepository: roleRepository as
                 FakeEntityRepository<Role> & IRoleRepository,
             permissionRepository: new FakeEntityRepository<Permission>() as
                 FakeEntityRepository<Permission> & IPermissionRepository,
@@ -108,5 +112,58 @@ describe('core/provisioning/synchronizer/user', () => {
 
         const user = await userRepository.findOneBy({ id: existing.id });
         expect(user!.pathId ?? null).toBeNull();
+    });
+
+    it('should bind no role to an existing user under createOnly', async () => {
+        roleRepository.seed({
+            name: 'realm_admin', 
+            realmId: null, 
+            clientId: null, 
+        });
+        userRepository.seed({ name: 'realm-admin', realmId });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'realm-admin', realmId },
+            relations: { globalRoles: ['*'] },
+        });
+
+        expect(userRoleRepository.getAll()).toHaveLength(0);
+    });
+
+    it('should bind the declared role to a user it creates', async () => {
+        const role = roleRepository.seed({
+            name: 'realm_admin', 
+            realmId: null, 
+            clientId: null, 
+        });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'realm-admin', realmId },
+            relations: { globalRoles: ['*'] },
+        });
+
+        const user = await userRepository.findOneBy({ name: 'realm-admin', realmId });
+        expect(userRoleRepository.getAll()).toEqual([
+            expect.objectContaining({ userId: user!.id, roleId: role.id }),
+        ]);
+    });
+
+    it('should bind the declared role to an existing user under merge', async () => {
+        const role = roleRepository.seed({
+            name: 'realm_admin', 
+            realmId: null, 
+            clientId: null, 
+        });
+        const existing = userRepository.seed({ name: 'realm-admin', realmId });
+
+        await synchronizer.synchronize({
+            strategy: { type: ProvisioningEntityStrategyType.MERGE, attributes: ['displayName'] },
+            attributes: { name: 'realm-admin', realmId },
+            relations: { globalRoles: ['*'] },
+        });
+
+        expect(userRoleRepository.getAll()).toEqual([
+            expect.objectContaining({ userId: existing.id, roleId: role.id }),
+        ]);
     });
 });

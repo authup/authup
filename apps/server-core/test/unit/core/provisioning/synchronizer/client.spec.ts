@@ -49,6 +49,8 @@ import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 describe('core/provisioning/synchronizer/client', () => {
     let clientRepository: FakeClientRepository;
     let pathRepository: FakePathRepository;
+    let roleRepository: FakeEntityRepository<Role>;
+    let clientRoleRepository: FakeEntityRepository<ClientRole>;
     let synchronizer: ClientProvisioningSynchronizer;
     const realmId = randomUUID();
     const cipher = createFakeRealmCipher(realmId);
@@ -56,17 +58,19 @@ describe('core/provisioning/synchronizer/client', () => {
     beforeEach(() => {
         clientRepository = new FakeClientRepository();
         pathRepository = new FakePathRepository();
+        roleRepository = new FakeEntityRepository<Role>();
+        clientRoleRepository = new FakeEntityRepository<ClientRole>();
         synchronizer = new ClientProvisioningSynchronizer({
             clientRepository,
             pathRepository,
             cipher,
-            clientRoleRepository: new FakeEntityRepository<ClientRole>() as
+            clientRoleRepository: clientRoleRepository as
                 FakeEntityRepository<ClientRole> & IClientRoleRepository,
             clientPermissionRepository: new FakeEntityRepository<ClientPermission>() as
                 FakeEntityRepository<ClientPermission> & IClientPermissionRepository,
             clientScopeRepository: new FakeEntityRepository<ClientScope>() as
                 FakeEntityRepository<ClientScope> & IClientScopeRepository,
-            roleRepository: new FakeEntityRepository<Role>() as
+            roleRepository: roleRepository as
                 FakeEntityRepository<Role> & IRoleRepository,
             permissionRepository: new FakeEntityRepository<Permission>() as
                 FakeEntityRepository<Permission> & IPermissionRepository,
@@ -205,5 +209,45 @@ describe('core/provisioning/synchronizer/client', () => {
 
         const stored = await clientRepository.findOneBy({ id: existing.id });
         expect(stored!.pathId ?? null).toBeNull();
+    });
+
+    it('should bind no role to an existing client under createOnly', async () => {
+        roleRepository.seed({
+            name: 'admin', 
+            realmId: null, 
+            clientId: null, 
+        });
+        clientRepository.seed({
+            name: 'gitops',
+            realmId,
+            authMethod: 'none',
+        });
+
+        await synchronizer.synchronize({
+            ...buildInput({ authMethod: 'none' }),
+            strategy: { type: ProvisioningEntityStrategyType.CREATE_ONLY },
+            relations: { globalRoles: ['*'] },
+        } as ClientProvisioningEntity);
+
+        expect(clientRoleRepository.getAll()).toHaveLength(0);
+    });
+
+    it('should bind the declared role to a client it creates', async () => {
+        const role = roleRepository.seed({
+            name: 'admin', 
+            realmId: null, 
+            clientId: null, 
+        });
+
+        await synchronizer.synchronize({
+            ...buildInput({ authMethod: 'none' }),
+            strategy: { type: ProvisioningEntityStrategyType.CREATE_ONLY },
+            relations: { globalRoles: ['*'] },
+        } as ClientProvisioningEntity);
+
+        const stored = await clientRepository.findOneBy({ name: 'gitops', realmId });
+        expect(clientRoleRepository.getAll()).toEqual([
+            expect.objectContaining({ clientId: stored!.id, roleId: role.id }),
+        ]);
     });
 });
