@@ -501,6 +501,33 @@ describe('core/identity/provider/account', () => {
         await mappings.remove(created);
     });
 
+    it('should not rename a linked user when the update save fails', async () => {
+        const account = await accountManager.save({
+            data: claims,
+            id: 'rename-guard',
+            attributeCandidates: { name: ['rename-guard'] },
+            provider,
+        });
+        expect(account.user.name).toEqual('rename-guard');
+
+        const spy = vi.spyOn(accountManagerContext.userRepository, 'saveOneWithEA')
+            .mockRejectedValueOnce(new Error('transient'));
+
+        try {
+            await expect(accountManager.save({
+                data: claims,
+                id: 'rename-guard',
+                attributeCandidates: { name: ['rename-guard-other'] },
+                provider,
+            })).rejects.toThrow('transient');
+        } finally {
+            spy.mockRestore();
+        }
+
+        const user = await accountManagerContext.userRepository.findOneById(account.user.id);
+        expect(user?.name).toEqual('rename-guard');
+    });
+
     it('should file a provisioned user under sources/<provider>', async () => {
         const account = await accountManager.save({
             data: claims,

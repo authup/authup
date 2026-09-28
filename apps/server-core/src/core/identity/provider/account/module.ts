@@ -411,7 +411,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             try {
                 // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
                 return await this.userRepository.saveOneWithEA(output, attributesExtra);
-            } catch {
+            } catch (e) {
+                // A linked user keeps its name: only a first login may pick
+                // another candidate, so an update failure fails the login.
+                if (user) {
+                    throw e;
+                }
+
                 const names = identity.attributeCandidates?.name || [];
                 if (names.length > 0) {
                     while (names.length > 0) {
