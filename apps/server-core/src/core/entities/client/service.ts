@@ -302,6 +302,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await this.assertPathRealm(validated.pathId, entity.realmId);
         }
 
+        if (entity) {
+            this.assertAccessPolicyRealm(validated, entity.realmId);
+        }
+
         const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
 
         if (entity) {
@@ -399,6 +403,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await this.assertPathRealm(validated.pathId, validated.realmId ?? null);
         }
 
+        this.assertAccessPolicyRealm(validated, validated.realmId ?? null);
+
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
             data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
@@ -447,6 +453,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (path.realmId !== realmId) {
             throw new ValidationError('The path belongs to another realm.');
+        }
+    }
+
+    // validateJoinColumns loads the referenced policy onto the input. It may
+    // be global or of the client's own realm, never of another realm.
+    protected assertAccessPolicyRealm(data: Partial<Client>, realmId: string | null): void {
+        const policy = data.accessPolicyId ? data.accessPolicy : undefined;
+        if (policy && policy.realmId && policy.realmId !== realmId) {
+            throw new ValidationError('The access policy belongs to another realm.');
         }
     }
 
