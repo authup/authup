@@ -1803,9 +1803,11 @@ threads instances through constructor/context args:
   simply stays silent (`this.logger?.warn(...)` guard style).
 - **Domain events** — `DomainEventPublisher` (from `@authup/server-kit`,
   optional `logger` ctx) aggregates `IDomainEventHandler`s
-  (`DomainEventRedisHandler`, `DomainEventSocketHandler`); `safePublish`
-  catches + logs so an event-bus failure never fails the originating DB
-  transaction. `DatabaseModule.registerEventPublisher` creates it, registers
+  (`DomainEventRedisHandler`, `DomainEventSocketHandler`, the entity audit
+  mirror). `publish` runs every handler even when an earlier one throws and
+  then rejects with the first error, so a redis outage cannot drop the audit
+  row of a committed write; `safePublish` catches + logs that rejection so an
+  event-bus failure never fails the originating DB transaction. `DatabaseModule.registerEventPublisher` creates it, registers
   it under `DatabaseInjectionKey.DomainEventPublisher`, and injects it into
   every TypeORM subscriber instance via `setPublisher()` after
   `dataSource.initialize()` (TypeORM instantiates the subscriber classes from
@@ -1822,7 +1824,14 @@ threads instances through constructor/context args:
   whose cache is keyed by the owner id). Every `after*` hook hands its
   `event.manager` to the publish as the opaque `transaction`, because the
   hooks run inside the persist transaction and a handler that persists must
-  ride it (#3539). A subscriber without an injected publisher publishes
+  ride it (#3539). The base strips every `select: false` column of its
+  `target` (read once from typeorm's metadata-args storage) from both the
+  payload and the previous payload, on a copy, never on the saved entity:
+  the hook receives the object `save()` was handed, with the client secret,
+  the password and reset/activate hashes, `email` and the token columns
+  still set, and `select` only governs projection. So nothing a read withholds
+  reaches redis, socket.io or the entity audit diff (which therefore records
+  no `email` change). A subscriber without an injected publisher publishes
   nothing (tests / migration CLI runs).
 - **typeorm-extension's global registry is unused** — `setDataSource` /
   `useDataSource` / `unsetDataSource` have no call sites; repositories that
@@ -8841,9 +8850,11 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   types): their payload column is literally called `value`, so a key-name
   denylist cannot see that it holds an identity provider's `clientSecret` or
   LDAP bind password. The same reasoning applies one layer out, on the
-  realtime bus: `IdentityProviderAttributeSubscriber` overrides `publish` to
-  null the `value` on both the current and previous payload, since the
-  domain-event content is shipped verbatim to redis and socket consumers. Created/deleted rows carry
+  realtime bus: `value` is not a `select: false` column, so the base
+  subscriber's hidden-column strip does not cover it, and
+  `IdentityProviderAttributeSubscriber` overrides `publish` to null it on
+  both the current and previous payload, since the domain-event content is
+  shipped to redis and socket consumers. Created/deleted rows carry
   `data: null` (no column dumps). Rows self-prune on a short per-row TTL via
   `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
   `true` / `eventLogEntityRetentionDays` default `7` days, env

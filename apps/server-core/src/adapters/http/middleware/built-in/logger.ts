@@ -16,9 +16,9 @@ type LoggerMiddlewareOptions = {
     logger: Logger
 };
 
-// Query params whose values are credentials/tokens — the access log must never
-// persist them (a GET /logout?id_token_hint=<jwt> would otherwise write a
-// signature-valid token into the log).
+// Query params whose values are credentials/tokens or personal data — the
+// access log must never persist them (a GET /logout?id_token_hint=<jwt> would
+// otherwise write a signature-valid token into the log, a login_hint an email).
 const SENSITIVE_QUERY_PARAMS = [
     'id_token_hint',
     'id_token',
@@ -29,6 +29,8 @@ const SENSITIVE_QUERY_PARAMS = [
     'device_code',
     'user_code',
     'client_secret',
+    'login_hint',
+    'linkHandle',
 ];
 
 export function redactSensitiveURLParams(url: string): string {
