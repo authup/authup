@@ -371,7 +371,12 @@ export default {
          * File-only (no environment variables).
          * default: true (each)
          */
-        middlewareBody: true,       // request body parsing
+        middlewareBody: true,       // request body parsing; `true` caps json
+                                    // and url-encoded bodies at 1mb, measured
+                                    // after decompression. An options object
+                                    // replaces that default, so give it a
+                                    // `limit` per parser
+                                    // ({ json: { limit: '1mb' }, urlEncoded: { limit: '1mb' } }).
         middlewareCookie: true,     // cookie parsing
         middlewareCors: true,       // CORS (reflects any origin by default;
                                     // pass options for an explicit allowlist)
