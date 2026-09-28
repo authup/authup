@@ -73,7 +73,7 @@ describe('registerRateLimitMiddleware', () => {
         '__proto__',
         'toString',
         'not-an-ip',
-    ])('should key a forwarded %s on the socket address', async (forwarded) => {
+    ])('should count a forwarded %s like any other key', async (forwarded) => {
         const app = createApp({ options: { trustProxy: true } });
         const statuses : number[] = [];
 
@@ -83,5 +83,17 @@ describe('registerRateLimitMiddleware', () => {
         }
 
         expect(statuses).toEqual([200, 200, 429]);
+    });
+
+    it('should give each client behind a port-appending proxy its own bucket', async () => {
+        const app = createApp({ options: { trustProxy: true } });
+        const statuses : number[] = [];
+
+        for (const forwarded of ['198.51.100.1:5001', '198.51.100.2:6002', '[2001:db8::3]:443']) {
+            const response = await app.fetch(createRequest('10.0.0.5', { 'x-forwarded-for': forwarded }));
+            statuses.push(response.status);
+        }
+
+        expect(statuses).toEqual([200, 200, 200]);
     });
 });

@@ -1522,7 +1522,11 @@ API. The six page GETs became a stateless hop:
   The response already carries `Vary: Cookie` and `no-store`.
   **Rate-limit cost on a split deployment.** server-core's limiter runs
   before authentication and keys on the source address alone (its
-  per-identity `max` never sees an identity), and the service forwards no
+  per-identity `max` never sees an identity; the address is the one
+  `trustProxy` resolves, taken as given, port included, so under the
+  trust-all default a direct client picks its own key, and a forwarded
+  loopback behind a same-host proxy is skipped as the deployment's own
+  traffic), and the service forwards no
   visitor address. So on a split topology every server-side call of every
   render counts against the console's ONE address at the anonymous 1200/min,
   and a signed-in `/authorize` render makes about five (the authorize info,
