@@ -77,11 +77,14 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     const cookiePath = options.cookiePath || COOKIE_PATH;
 
     // The stored values are bearer credentials, so an https document never
-    // lets them ride a plaintext request to the same host.
+    // lets them ride a plaintext request to the same host. A server render has
+    // no window to ask, so its host says so through `cookieSecure`.
+    const cookieSecure = options.cookieSecure ??
+        (typeof window !== 'undefined' && window.location?.protocol === 'https:');
     const cookieOptions : CookieOptions = {
         path: cookiePath,
         sameSite: 'lax',
-        ...(typeof window !== 'undefined' && window.location?.protocol === 'https:' ? { secure: true } : {}),
+        ...(cookieSecure ? { secure: true } : {}),
     };
 
     /**

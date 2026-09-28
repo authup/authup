@@ -9224,12 +9224,15 @@ cannot replace any of this, because the server never sees it.
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
 introspects on every store instantiation regardless. Every write carries
-`SameSite=Lax`, and `Secure` whenever the writing document is https
-(`installStore`'s `cookieOptions`), since the values are bearer credentials.
-A Nuxt server-side write carries `SameSite=Lax` but not `Secure`, since it has
-no document to ask; the next client write replaces it. The Nuxt plugin's
-`cookieSet` spreads the host's own cookie options last, so they win over the
-kit's. HSTS is the proxy's job and documented as such.
+`SameSite=Lax`, and `Secure` whenever the request is https, since the values
+are bearer credentials. `installStore` asks `window.location` unless the host
+passes `cookieSecure`, which a server-side writer must: a render has no
+document, and the Nuxt interceptor's refresh during SSR rotates the refresh
+token, so a write without the flag would replace the `Secure` cookie for as
+long as the token lives. The Nuxt plugin passes `useRequestURL()`'s scheme,
+which h3 reads from `X-Forwarded-Proto` behind a proxy. Its `cookieSet`
+spreads the host's own cookie options last, so they win over the kit's. HSTS
+is the proxy's job and documented as such.
 
 **A session is only committed for a token the endpoint reports as
 `active`.** The introspection answers 200 with the full payload for a token it
