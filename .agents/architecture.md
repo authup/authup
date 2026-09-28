@@ -6247,9 +6247,10 @@ other RP on that session that it ended.
   timeout per batch rather than one per session, a realm-wide sweep never
   turns into an unbounded burst of row deletes and outbound requests, and one
   bulk revoke cannot starve every concurrent request of a connection. `POST /token/introspect` answers the
-  bare `{ active: false }` for a token whose `kind` is `logout_token`: it
-  verifies (same realm key) but is a notification, not a credential, and RFC
-  7662 reports rather than raises.
+  bare `{ active: false }` for a token whose `kind` is `logout_token`, as for
+  every kind but an access or refresh token: it verifies (same realm key) but
+  is a notification, not a credential, and RFC 7662 reports rather than
+  raises.
 - **SSRF residual, stated.** The server POSTs to an admin-chosen URL from
   inside the deployment, so the value can name an internal address. It is in
   the same trust class as `redirectUri`: written by an actor holding
