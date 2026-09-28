@@ -1782,9 +1782,11 @@ threads instances through constructor/context args:
   simply stays silent (`this.logger?.warn(...)` guard style).
 - **Domain events** — `DomainEventPublisher` (from `@authup/server-kit`,
   optional `logger` ctx) aggregates `IDomainEventHandler`s
-  (`DomainEventRedisHandler`, `DomainEventSocketHandler`); `safePublish`
-  catches + logs so an event-bus failure never fails the originating DB
-  transaction. `DatabaseModule.registerEventPublisher` creates it, registers
+  (`DomainEventRedisHandler`, `DomainEventSocketHandler`, the entity audit
+  mirror). `publish` runs every handler even when an earlier one throws and
+  then rejects with the first error, so a redis outage cannot drop the audit
+  row of a committed write; `safePublish` catches + logs that rejection so an
+  event-bus failure never fails the originating DB transaction. `DatabaseModule.registerEventPublisher` creates it, registers
   it under `DatabaseInjectionKey.DomainEventPublisher`, and injects it into
   every TypeORM subscriber instance via `setPublisher()` after
   `dataSource.initialize()` (TypeORM instantiates the subscriber classes from
