@@ -90,7 +90,13 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.TokenRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
-                return new OAuth2TokenRepository(cache);
+                return new OAuth2TokenRepository(cache, {
+                    keyInactiveMaxAge: Math.max(
+                        config.tokenRefreshMaxAge,
+                        config.tokenAccessMaxAge,
+                        config.mfaTicketMaxAge,
+                    ),
+                });
             },
         });
 
