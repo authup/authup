@@ -18,8 +18,9 @@ import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
 import { ResetTokenExpiredError } from './token-expired.ts';
 import { createValidator } from '@validup/zod';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
+import { digestSHA256 } from '../../../utils/digest.ts';
 import { z } from 'zod';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
@@ -97,7 +98,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const resetCode = randomBytes(32).toString('hex');
         const merged = this.repository.merge(entity, {
             resetExpires,
-            resetHash: createHash('sha256').update(resetCode).digest('hex'),
+            resetHash: digestSHA256(resetCode),
         });
 
         await this.repository.save(merged);
@@ -165,7 +166,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const where: Record<string, any> = {
             ...(validated.name ? { name: validated.name } : {}),
             ...(validated.email ? { email: validated.email } : {}),
-            resetHash: createHash('sha256').update(validated.token).digest('hex'),
+            resetHash: digestSHA256(validated.token),
             realmId: realm.id,
         };
 
