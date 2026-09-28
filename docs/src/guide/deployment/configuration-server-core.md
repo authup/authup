@@ -510,7 +510,9 @@ export default {
 
         /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
-         * loginFailed events. Requires eventLogEnabled.
+         * loginFailed events plus the attempts still in flight, so a
+         * concurrent burst is held to the threshold too. A user id is counted
+         * across realms. Requires eventLogEnabled.
          * The IP half of the key follows `trustProxy` — pin it to the actual
          * proxy (hops or allowlist) so a direct client cannot spoof the IP
          * via X-Forwarded-For.
@@ -631,7 +633,8 @@ export default {
 
         /**
          * Permit HTTP Basic authentication with user credentials
-         * against the management API.
+         * against the management API. With MFA enabled, a user
+         * holding a confirmed authenticator is refused.
          * env: USER_AUTH_BASIC
          * default: false
          */

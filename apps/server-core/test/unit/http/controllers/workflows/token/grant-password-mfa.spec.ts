@@ -61,6 +61,16 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         let challenge = await bearer.userAuthenticator.challenge();
         expect(challenge.required).toBeFalsy();
 
+        // Basic credentials authenticate a user holding no confirmed factor
+        const basic = new HTTPClient({ baseURL: suite.baseURL });
+        basic.setAuthorizationHeader({
+            type: 'Basic', 
+            username: user.name, 
+            password, 
+        });
+        const basicMe = await basic.user.getOne('@me');
+        expect(basicMe.data.id).toEqual(user.id);
+
         // 2) enroll + confirm a TOTP device on @me
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
         expect(enrolled.meta.secret).toBeDefined();
@@ -96,6 +106,10 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         // the challengeable kinds ride the error so the hosted login form can
         // present the right second-factor step (single-POST otp vs interactive).
         expect(withoutOtpBody.kinds).toEqual([UserAuthenticatorKind.TOTP]);
+
+        // ... and Basic credentials no longer authenticate that user at all:
+        // a password alone cannot stand in for the second factor.
+        await expectClientError(() => basic.user.getOne('@me'), { status: 401 });
 
         // 4) ... and accepts password + otp. Use the PREVIOUS step's code (valid
         // via the ±1 window) so the consumed step stays behind the challenge

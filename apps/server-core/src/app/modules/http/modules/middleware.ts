@@ -10,7 +10,7 @@ import type { IApp } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
-import type { Realm } from '@authup/core-kit';
+import type { Realm, UserAuthenticator } from '@authup/core-kit';
 import {
     BODY_OPTIONS_DEFAULT,
     createAuthorizationMiddleware,
@@ -33,8 +33,8 @@ import { ConfigInjectionKey } from '../../config/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { RealmEntity } from '../../../../adapters/database/domains/index.ts';
-import { RealmRepositoryAdapter } from '../../database/repositories/index.ts';
+import { RealmEntity, UserAuthenticatorEntity } from '../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter, UserAuthenticatorRepositoryAdapter } from '../../database/repositories/index.ts';
 import {
     DatabaseInjectionKey,
     PermissionDatabaseProvider,
@@ -178,6 +178,11 @@ export class HTTPMiddlewareModule {
             sessionManager,
             sessionRepository,
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
+            userAuthenticatorRepository: config.mfaEnabled ?
+                new UserAuthenticatorRepositoryAdapter(
+                    container.resolve<Repository<UserAuthenticator>>(UserAuthenticatorEntity),
+                ) :
+                undefined,
             logger: container.resolve(LoggerInjectionKey),
             options: {
                 clientAuthBasic: config.clientAuthBasic,

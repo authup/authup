@@ -1247,7 +1247,7 @@ Non-entity workflows live under `core/identity/`:
 | Service | Location | Responsibility |
 |---|---|---|
 | `RegistrationService` | `core/identity/registration/` | User registration (`register`) and account activation (`activate`) |
-| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`) and reset password (`resetPassword`) |
+| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`, which answers an unknown account with the same `{ resetExpires }` and sends nothing, so it is no account oracle) and reset password (`resetPassword`) |
 
 These services own their own validation (inline validators, not from `@authup/core-kit`), and accept `Record<string, any>` raw data.
 
@@ -1352,13 +1352,18 @@ content is assertable via `FakeMailClient` (see
 every template × locale).
 
 **Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
-param — `<publicUrl>/activate?token=<hash>` for activation and
-`<publicUrl>/password-reset?token=<hash>&realmId=<id>` for reset (the
+param — `<publicUrl>/activate?token=<code>` for activation and
+`<publicUrl>/password-reset?token=<code>&realmId=<id>` for reset (the
 `realmId` is required so a non-master user's reset link resolves the right
 realm) — rendered as the call-to-action link. Both land on backend-served SSR
 pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
-into the URL (the reset form asks for email/name).
+into the URL (the reset form asks for email/name). Only the mail carries the
+code: `auth_users.activate_hash` / `reset_hash` store its SHA-256 digest and
+the lookup digests the presented code, the console-session-secret rule, so a
+read of the table yields nothing that activates an account or resets a
+password. The activation code carries no expiry of its own (a column the
+schema does not have yet).
 
 #### Auth Workflow UI (the auth console service) + Status Endpoint
 
@@ -8095,7 +8100,7 @@ never expose a user's factor secret to an admin). The kit `AUserAuthenticatorEnr
 mirrors this — when `userId !== '@me'` it offers only the email button
 (`canOfferKind`).
 
-**Enforcement — two chokepoints, both server-side:**
+**Enforcement — three chokepoints, all server-side:**
 
 1. **Interactive `/authorize`**: the proof is session-bound — `auth_sessions.mfa_at`
    is stamped by `POST /authenticators/challenge` (bearer-scoped; via the
@@ -8106,8 +8111,7 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required` — a dedicated
    code, deliberately NOT `login_required`, so RPs can tell "log in again" from
    "complete the challenge") when the user holds a confirmed device and the
-   backing session carries no `mfaAt`. A session-less flow (HTTP Basic) fails
-   closed the same way. `GET /authenticators/challenge` reports
+   backing session carries no `mfaAt`. `GET /authenticators/challenge` reports
    `{ required, enrollmentRequired, kinds, challenge? }` — the kind-generic wire
    shape (the optional `challenge` payload carries WebAuthn request options)
    that drives the kit ladder.
@@ -8123,6 +8127,12 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
    the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
+3. **User Basic auth** (`userAuthBasic`): a Basic credential carries no
+   factor, so the authorization middleware leaves the request anonymous for a
+   user holding a confirmed device (`userAuthenticatorRepository
+   .hasConfirmedByUser`, wired only while `mfaEnabled`), the same answer a
+   wrong password gets. Automation acting for such a user authenticates as a
+   confidential client.
 
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
 the upstream provider as the authentication authority, and that trust is
@@ -9001,7 +9011,15 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `EVENT_ACTOR_NAME_MAX_LENGTH` — the same bound `EventService.record` applies
   to the persisted `actorName`. A reader that matches stored rows by actor name
   must normalize exactly like the writer, or an over-long identifier never
-  matches its own rows and the throttle silently fails open for it. Config
+  matches its own rows and the throttle silently fails open for it. The count
+  alone is check-then-act (the row lands only after bcrypt), so the service
+  also reserves each attempt in the cache (`ICache.increment` on
+  `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
+  refuses when rows plus the other attempts in flight reach the threshold; the
+  grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
+  written, so every attempt is seen as a row or as in flight. A user-id
+  identifier drops the realm from the key and from the count, since
+  `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;
   enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).

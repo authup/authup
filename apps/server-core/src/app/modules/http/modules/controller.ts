@@ -368,6 +368,7 @@ export class HTTPControllerModule {
 
         const loginThrottleService = new LoginThrottleService({
             repository: container.resolve(DatabaseInjectionKey.EventRepository),
+            cache: container.resolve(CacheInjectionKey),
             options: {
                 enabled: config.loginAttemptThrottleEnabled,
                 threshold: config.loginAttemptThreshold,
