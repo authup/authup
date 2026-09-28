@@ -6426,7 +6426,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
-  admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
+  admins can set/clear it. `ClientService.save` refuses (400) a policy owned by
+  another realm than the client's (`assertAccessPolicyRealm`, over the row
+  `validateJoinColumns` loads onto the input); a global policy (`realmId`
+  null) stays allowed. `buildSystemClientAttributes` deliberately omits the
   key: the provisioner MERGE would otherwise wipe an admin-set policy on
   each per-realm system client (`admin-console`, `account-console`)
   every boot. The admin form binds it via

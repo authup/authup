@@ -15,7 +15,13 @@ import {
     it,
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
-import { createFakeClient, expectPropertiesEqualToSrc, httpRequest } from '../../../../utils';
+import {
+    createFakeClient, 
+    createFakeRealm, 
+    expectClientError, 
+    expectPropertiesEqualToSrc, 
+    httpRequest,
+} from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 import { createTestApplication } from '../../../../app';
 
@@ -205,6 +211,28 @@ describe('http/controllers/client', () => {
 
         read = (await suite.client.client.getOne(created.id)).data;
         expect(read.accessPolicyId).toBeNull();
+    });
+
+    it('should refuse an accessPolicyId of another realm and accept a global one', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreign } = await suite.client.policy.create(createFakeTimePolicy({ realmId: realm.id }));
+        const { data: global } = await suite.client.policy.create(createFakeTimePolicy({ realmId: null }));
+
+        await expectClientError(
+            () => suite.client.client.create(createFakeClient({ accessPolicyId: foreign.id })),
+            { status: 400 },
+        );
+
+        const { data: created } = await suite.client.client.create(createFakeClient({ accessPolicyId: global.id }));
+        expect(created.accessPolicyId).toEqual(global.id);
+
+        await expectClientError(
+            () => suite.client.client.update(created.id, { accessPolicyId: foreign.id }),
+            { status: 400 },
+        );
+
+        const { data: read } = await suite.client.client.getOne(created.id);
+        expect(read.accessPolicyId).toEqual(global.id);
     });
 
     // `scope` and `rootUrl` were dropped (issue #3355): the validator strips
