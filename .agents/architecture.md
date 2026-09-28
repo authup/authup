@@ -1247,7 +1247,7 @@ Non-entity workflows live under `core/identity/`:
 | Service | Location | Responsibility |
 |---|---|---|
 | `RegistrationService` | `core/identity/registration/` | User registration (`register`) and account activation (`activate`) |
-| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`) and reset password (`resetPassword`) |
+| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`, which answers an unknown account with the same `{ resetExpires }` and sends nothing, so it is no account oracle) and reset password (`resetPassword`) |
 
 These services own their own validation (inline validators, not from `@authup/core-kit`), and accept `Record<string, any>` raw data.
 

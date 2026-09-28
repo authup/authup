@@ -66,7 +66,7 @@ describe('core/identity/password-recovery/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.EMAIL_VERIFICATION_REQUIRED });
         });
 
-        it('should throw NotFoundError when user does not exist', async () => {
+        it('should answer an unknown user like a known one, without mail', async () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
@@ -78,9 +78,9 @@ describe('core/identity/password-recovery/service', () => {
                 realmRepository,
             });
 
-            await expect(
-                service.forgotPassword({ email: 'nonexistent@example.com' }),
-            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+            const result = await service.forgotPassword({ email: 'nonexistent@example.com' });
+            expect(result.resetExpires).toBeDefined();
+            expect(mailClient.sent).toHaveLength(0);
         });
 
         it('should set resetHash and resetExpires and send email', async () => {
