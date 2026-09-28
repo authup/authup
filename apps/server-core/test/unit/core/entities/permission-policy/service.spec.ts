@@ -70,12 +70,11 @@ describe('core/entities/permission-policy/service', () => {
 
     describe('create', () => {
         it('should create entity and propagate realm ids', async () => {
-            const permissionRealmId = randomUUID();
-            const policyRealmId = randomUUID();
+            const realmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.permission = { realmId: permissionRealmId };
-                data.policy = { realmId: policyRealmId };
+                data.permission = { realmId };
+                data.policy = { realmId };
             });
 
             const data = {
@@ -85,8 +84,38 @@ describe('core/entities/permission-policy/service', () => {
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.permissionRealmId).toBe(permissionRealmId);
-            expect(result.policyRealmId).toBe(policyRealmId);
+            expect(result.permissionRealmId).toBe(realmId);
+            expect(result.policyRealmId).toBe(realmId);
+        });
+
+        it('should bind a global policy to a realm permission', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.permission = { realmId: randomUUID() };
+                data.policy = { realmId: null };
+            });
+
+            const result = await service.create({
+                permissionId: randomUUID(),
+                policyId: randomUUID(),
+            }, createAllowAllActor());
+            expect(result.policyRealmId).toBeNull();
+        });
+
+        it.each([
+            ['a realm permission', randomUUID()],
+            ['a global permission', null],
+        ])('should reject a policy of another realm on %s', async (_label, permissionRealmId) => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.permission = { realmId: permissionRealmId };
+                data.policy = { realmId: randomUUID() };
+            });
+
+            await expect(
+                service.create({
+                    permissionId: randomUUID(),
+                    policyId: randomUUID(),
+                }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should call preEvaluate with PERMISSION_UPDATE', async () => {

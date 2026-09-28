@@ -118,6 +118,8 @@ There is no special "master realm" privilege.
 
 Realm reach also gates **assignments** (granting a role to a user, a permission to a role, a scope to a client, …): the write is gated by the realm of the **owner** entity (the user / role / client whose access you are changing). So a `realm_admin` in realm A cannot grant a role to a user in realm B, even with an otherwise-valid permission.
 
+A policy bound to a permission must be global or belong to the permission's own realm. Binding a policy of another realm is refused with `400` for every caller, `admin` included, because that realm's administrators could otherwise change or delete a restriction on a permission they do not administer.
+
 ### Setting a custom reach
 
 When an `admin` assigns a permission, the realm reach can be set per grant: via the API (`realmScope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling**: it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realmScope: any` and attach a `policyId` ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` on top.
