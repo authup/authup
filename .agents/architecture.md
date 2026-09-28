@@ -8353,7 +8353,16 @@ survives all paths.
 
 **Lifecycle enforcement:** signer + `RealmCipher.encrypt` use
 `resolveOrCreate` (active only); verifier rejects a `kid` whose key is
-non-sig OR `disabled` (passive still verifies); both JWKS surfaces filter
+non-sig OR `disabled` (passive still verifies) OR belongs to a realm other
+than the payload's `realm_id` (the signer always signs with the key of that
+realm, so no issued token is affected, and a key a realm's own
+administrator imported can never vouch for another realm's subject;
+`@authup/server-adapter-kit`'s local mode reads the key from the same realm,
+`GET /realms/<realm_id>/jwks/<kid>`, and refuses a non-uuid `kid` before any
+request). The residual is in-realm by design: whoever holds `KEY_CREATE` in a
+realm can import a key and sign tokens for that realm's subjects, power equal
+to the password and secret resets `USER_UPDATE` / `CLIENT_UPDATE` already
+grant there; both JWKS surfaces filter
 `status IN (active, passive)`; `RealmCipher.decrypt` re-resolves the key row
 on every call (only the imported `SymmetricCipher` is cached — material is
 immutable, status is not), so disabling an enc key is an immediate,

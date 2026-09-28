@@ -13,6 +13,8 @@ import {
     signToken,
 } from '@authup/server-kit';
 
+export const FAKER_KEY_ID = '6f1f4ad2-3b0e-4a1c-9e57-2c8d6b1e0a44';
+
 export class Faker {
     protected keyPair: CryptoKeyPair | undefined;
 
@@ -41,12 +43,12 @@ export class Faker {
         return this.jwk;
     }
 
-    async sign(payload: Record<string, any>) {
+    async sign(payload: Record<string, any>, keyId: string = FAKER_KEY_ID) {
         const keyPair = await this.useKeyPair();
         return signToken(payload, {
             type: 'rsa',
             key: keyPair.privateKey,
-            keyId: 'foo',
+            keyId,
         });
     }
 }
