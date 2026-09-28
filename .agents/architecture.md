@@ -2989,7 +2989,9 @@ bootstrap. What differs from the account console, and why:
   `layout`, typed by a `RouteMeta` augmentation). `src/guard.ts`
   (`createRoutingGuard({ store, config })`, mounted via `router.beforeEach`)
   is the port of `client-web-nuxt`'s `RoutingInterceptor`: resolve, the
-  bearer-mode code exchange, then the three gates over `route.matched`, so
+  bearer-mode code exchange (both redeem a code only against the saved
+  authorization request and its `state`, and drop one that arrives without
+  it), then the three gates over `route.matched`, so
   nested children inherit their parent's protection. Two cookie-mode rules
   come from the account console: a failed or settled-`RESTORING` resolve
   logs out with `revoke: false` (a transient failure is not an intent to

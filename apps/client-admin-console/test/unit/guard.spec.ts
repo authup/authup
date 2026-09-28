@@ -236,7 +236,7 @@ describe('src/guard', () => {
             expect(result).toMatchObject({ path: '/login/callback', query: {} });
         });
 
-        it('should exchange a bare code when no request was saved', async () => {
+        it('should drop a code when no request was saved', async () => {
             const { guard, store } = createGuard();
 
             const result = await guard(
@@ -251,8 +251,8 @@ describe('src/guard', () => {
                 createRoute({ path: '/' }),
             );
 
-            expect(store.exchangeAuthorizationCode).toHaveBeenCalledWith('the-code');
-            expect(result).toMatchObject({ path: '/users' });
+            expect(store.exchangeAuthorizationCode).not.toHaveBeenCalled();
+            expect(result).toMatchObject({ path: '/login/callback', query: {} });
         });
 
         it.each([
