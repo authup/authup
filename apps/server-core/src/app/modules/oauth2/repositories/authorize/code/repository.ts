@@ -50,7 +50,7 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         const ttl = (options.maxAge || 300) * 1_000;
 
         if (!input.id) {
-            input.id = randomBytes(10).toString('hex');
+            input.id = randomBytes(32).toString('hex');
         }
 
         await this.cache.set(buildCacheKey({

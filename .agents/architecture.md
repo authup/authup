@@ -2954,7 +2954,9 @@ bootstrap. What differs from the account console, and why:
   `layout`, typed by a `RouteMeta` augmentation). `src/guard.ts`
   (`createRoutingGuard({ store, config })`, mounted via `router.beforeEach`)
   is the port of `client-web-nuxt`'s `RoutingInterceptor`: resolve, the
-  bearer-mode code exchange, then the three gates over `route.matched`, so
+  bearer-mode code exchange (both redeem a code only against the saved
+  authorization request and its `state`, and drop one that arrives without
+  it), then the three gates over `route.matched`, so
   nested children inherit their parent's protection. Two cookie-mode rules
   come from the account console: a failed or settled-`RESTORING` resolve
   logs out with `revoke: false` (a transient failure is not an intent to
@@ -4526,13 +4528,14 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
+| `system.client-names-self-manage` | `active, realmId, pathId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted, grantTypes, accessPolicyId` |
 | `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId, emailVerified` |
 
 The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
 `secretEncrypted` storage flags (downgrading either would persist the secret
-in plaintext). FK fields like `realmId` are usually validator-stripped on
+in plaintext), and the two admission controls `grantTypes` (the per-client
+grant allowlist) and `accessPolicyId`, which are the operator's to set. FK fields like `realmId` are usually validator-stripped on
 UPDATE already, but stay in the denylist as defense in depth. A
 self-managing client rotates its own secret through
 `POST /clients/@me/secret`: the service hands the policy the two
@@ -6390,7 +6393,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
-  admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
+  admins can set/clear it. `ClientService.save` refuses (400) a policy owned by
+  another realm than the client's (`assertAccessPolicyRealm`, over the row
+  `validateJoinColumns` loads onto the input); a global policy (`realmId`
+  null) stays allowed. `buildSystemClientAttributes` deliberately omits the
   key — the provisioner MERGE would otherwise wipe an admin-set policy on
   each per-realm system client (`admin-console`, `account-console`)
   every boot. The admin form binds it via
