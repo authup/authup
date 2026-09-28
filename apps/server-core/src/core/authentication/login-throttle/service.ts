@@ -7,7 +7,7 @@
 
 import { EventName } from '@authup/core-kit';
 import { LoginThrottledError } from '@authup/errors';
-import type { ICache } from '@authup/server-kit';
+import type { ICache, Logger } from '@authup/server-kit';
 // direct file import — the entities barrel reaches every entity service, and a
 // value import of it from here would pull that graph in at module init.
 import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../entities/event/constants.ts';
@@ -27,11 +27,14 @@ export class LoginThrottleService implements ILoginThrottleService {
 
     protected cache?: ICache;
 
+    protected logger?: Logger;
+
     protected options: LoginThrottleServiceOptions;
 
     constructor(ctx: LoginThrottleServiceContext) {
         this.repository = ctx.repository;
         this.cache = ctx.cache;
+        this.logger = ctx.logger;
         this.options = ctx.options ?? {};
     }
 
@@ -75,9 +78,19 @@ export class LoginThrottleService implements ILoginThrottleService {
             throw e;
         }
 
-        if (count + inflight >= threshold) {
+        if (count >= threshold) {
             await this.release(ctx);
             throw new LoginThrottledError({ retryAfter: windowSeconds });
+        }
+
+        // the threshold is only full of attempts still running: those end
+        // within moments, so the caller may retry almost at once.
+        if (count + inflight >= threshold) {
+            await this.release(ctx);
+            throw new LoginThrottledError({
+                message: 'Too many concurrent login attempts. Please try again.',
+                retryAfter: 1,
+            });
         }
     }
 
@@ -86,8 +99,14 @@ export class LoginThrottleService implements ILoginThrottleService {
             return;
         }
 
+        // best effort: the outcome of the attempt must reach the caller, and
+        // a slot not returned only lapses with the window.
         const windowSeconds = this.options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
-        await this.cache.increment(this.buildKey(ctx), -1, { ttl: windowSeconds * 1_000 });
+        try {
+            await this.cache.increment(this.buildKey(ctx), -1, { ttl: windowSeconds * 1_000 });
+        } catch (e) {
+            this.logger?.warn(`Could not release a login attempt: ${e instanceof Error ? e.message : String(e)}`);
+        }
     }
 
     protected buildKey(ctx: LoginThrottleContext): string {

@@ -516,8 +516,10 @@ export default {
         /**
          * Throttle failed logins per (identifier, ip) pair by counting recent
          * loginFailed events plus the attempts still in flight, so a
-         * concurrent burst is held to the threshold too. A user id is counted
-         * across realms. Requires eventLogEnabled.
+         * concurrent burst is held to the threshold too: attempts beyond it
+         * are refused while the others run, successful ones included, with
+         * a retryAfter of 1 second. A user id is counted across realms.
+         * Requires eventLogEnabled.
          * The IP half of the key follows `trustProxy` — pin it to the actual
          * proxy (hops or allowlist) so a direct client cannot spoof the IP
          * via X-Forwarded-For.
