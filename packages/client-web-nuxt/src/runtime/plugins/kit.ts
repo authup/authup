@@ -159,6 +159,7 @@ export default defineNuxtPlugin({
         const runtimeConfig = useRuntimeConfig();
 
         const baseURL = buildApiUrl(runtimeConfig);
+        // The host's configured cookie options win over the kit's defaults.
         const cookieOptions = buildCookieOptions(runtimeConfig);
         // One function for all three, because a prefix on the write but not on
         // the read is a session the app can never hydrate again.
@@ -171,8 +172,8 @@ export default defineNuxtPlugin({
                 const app = tryUseNuxtApp();
                 if (app) {
                     const cookie = useCookie(cookieName(key), {
-                        ...cookieOptions,
                         ...(options || {}),
+                        ...cookieOptions,
                     });
                     cookie.value = value;
                 }
@@ -181,8 +182,8 @@ export default defineNuxtPlugin({
                 const app = tryUseNuxtApp();
                 if (app) {
                     const cookie = useCookie(cookieName(key), {
-                        ...cookieOptions,
                         ...(options || {}),
+                        ...cookieOptions,
                     });
                     cookie.value = null;
                 }
