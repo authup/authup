@@ -312,8 +312,12 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
-        if (previous.status !== KeyStatus.DISABLED && entity.status === KeyStatus.DISABLED) {
-            await this.dropVerifiedClaims(entity);
+        if (entity.use === JWKUse.SIGNATURE && previous.status !== entity.status) {
+            if (entity.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.setKeyInactive(entity.id);
+            } else if (previous.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.dropKeyInactive(entity.id);
+            }
         }
 
         entity.decryptionKey = null;
@@ -360,7 +364,9 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryptionKey = null;
 
-        await this.dropVerifiedClaims(entity);
+        if (entity.use === JWKUse.SIGNATURE) {
+            await this.tokenRepository?.setKeyInactive(entity.id);
+        }
 
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
@@ -380,18 +386,6 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         return realmId;
-    }
-
-    /**
-     * A verified token's payload is cached by its signature and served
-     * without consulting its key again, so a signature key that stops
-     * verifying drops that cache: every token is checked against its key on
-     * its next use.
-     */
-    protected async dropVerifiedClaims(entity: Key): Promise<void> {
-        if (entity.use === JWKUse.SIGNATURE) {
-            await this.tokenRepository?.dropAllClaims();
-        }
     }
 
     /**

@@ -8476,17 +8476,23 @@ immutable, status is not), so disabling an enc key is an immediate,
 **reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
 closed, never a 500). The verifier serves a token it has seen before from the
 signature-keyed claims cache (`TOKEN_CLAIMS`) without consulting its key, so
-disabling or deleting a SIGNATURE key drops that whole cache
-(`IOAuth2TokenRepository.dropAllClaims`, called by `KeyService`): every token
-is checked against its key on its next use, and the tokens that key signed
-stop verifying at once rather than at their `exp`. Re-checking the key on
-every cache hit was rejected, since it is an uncached read plus a KEK unwrap
-on the hottest path. The drop reaches every replica only through a shared
-Redis cache; with the in-process memory cache it clears the replica that
-served the key change, and the others honour the key within a token's
-lifetime. A small window remains on one replica too: a token minted or
-verified on the key concurrently with its disable can write its cache entry
-after the drop and stays cached until its `exp`.
+disabling or deleting a SIGNATURE key marks it in the cache
+(`IOAuth2TokenRepository.setKeyInactive`, one entry per key id, no ttl, lifted
+by `dropKeyInactive` when the key verifies again), and `verify()` reads the
+token header and refuses a marked `kid` BEFORE the cache lookup: the tokens
+that key signed stop verifying at once rather than at their `exp`, including a
+cache entry a verify that resolved the key just before wrote just after. It is
+one cache read per verify, next to the `jti` blocklist read. Re-checking the
+key row on every cache hit was rejected, since it is an uncached read plus a
+KEK unwrap on the hottest path, and so was a flush of the whole claims cache,
+which blocked Redis with a keyspace scan, emptied every realm's cache on any
+realm's key change, and lost to that very race. The mark reaches every
+replica only through a shared Redis cache; with the in-process memory cache
+it applies on the replica that served the key change, and the others honour
+the key within a token's lifetime. The claims prefix is versioned
+(`oauth2_token_claims_v2`), so an entry an older release cached is never
+read. A local-mode resource server keeps its own verified-token cache and
+accepts such a token until that entry or the token expires.
 
 **Management API:** `KeyService`
 (`core/entities/key/`) + `KeyController` dual-mounted

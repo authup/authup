@@ -30,13 +30,35 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         );
     }
 
-    async dropAllClaims(): Promise<void> {
-        await this.cache.clear({
-            prefix: buildCacheKey({
-                prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
-                key: '',
+    async setKeyInactive(kid: string): Promise<void> {
+        // No ttl: a payload cached by signature lives as long as the token
+        // it was verified from, which the token's own `exp` decides.
+        await this.cache.set(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
             }),
-        });
+            true,
+            {},
+        );
+    }
+
+    async dropKeyInactive(kid: string): Promise<void> {
+        await this.cache.drop(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
+            }),
+        );
+    }
+
+    async isKeyInactive(kid: string): Promise<boolean> {
+        return this.cache.has(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
+            }),
+        );
     }
 
     async findOneById(id: string): Promise<OAuth2TokenPayload | null> {
