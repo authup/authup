@@ -367,6 +367,14 @@ export class AuthorizationMiddleware {
             throw JWTError.expired();
         }
 
+        // the session must belong to the subject the token names.
+        if (
+            session.sub !== payload.sub ||
+            session.subKind !== payload.sub_kind
+        ) {
+            throw JWTError.expired();
+        }
+
         await this.sessionManager.ping(session);
 
         setRequestSessionId(event, payload.session_id);
@@ -418,8 +426,8 @@ export class AuthorizationMiddleware {
     }
 
     /**
-     * An "MFA-pending" login ticket (issue #3242). Verified with the same
-     * rigor as an access token (session existence + subject match), but
+     * An "MFA-pending" login ticket (issue #3242). Verified like an access
+     * token (session existence + subject match), but
      * stashed on a DEDICATED request slot — the main identity / scope /
      * session slots stay empty, so every identity-gated route rejects a
      * ticket bearer (default-deny); only the challenge routes opt in via
