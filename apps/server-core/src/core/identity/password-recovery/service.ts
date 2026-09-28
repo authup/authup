@@ -169,7 +169,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             realmId: realm.id,
         };
 
-        const entity = await this.repository.findOneBy(where);
+        const entity = await this.repository.findOneByWithEmail(where);
         if (!entity) {
             throw new EntityNotFoundError();
         }

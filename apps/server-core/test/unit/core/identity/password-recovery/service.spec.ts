@@ -486,7 +486,7 @@ describe('core/identity/password-recovery/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'session-reset-user',
                 email: 'session-reset@example.com',
-                resetHash: 'session-token',
+                resetHash: createHash('sha256').update('session-token').digest('hex'),
                 resetExpires: new Date(Date.now() + 60000).toISOString(),
                 realmId: masterRealm.id,
             }));
