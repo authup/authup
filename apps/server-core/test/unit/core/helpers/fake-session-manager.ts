@@ -81,6 +81,12 @@ export class FakeSessionManager implements ISessionManager {
         this.sessions.delete(id);
     }
 
+    async revokeMany(ids: string[]): Promise<void> {
+        for (const id of ids) {
+            await this.revoke(id);
+        }
+    }
+
     async revokeByOwner(owner: { sub: string, subKind: string }, exceptId?: string): Promise<void> {
         this.revokeByOwnerCalls.push({ ...owner, exceptId });
         for (const session of [...this.sessions.values()]) {
