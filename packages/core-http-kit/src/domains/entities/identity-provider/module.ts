@@ -53,7 +53,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     }
 
     async createLinkRequest(id: IdentityProvider['id']): Promise<IdentityProviderLinkRequestResponse> {
-        const response = await this.client.post(`identity-providers/${id}/link-request`);
+        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/link-request`);
 
         return response.data;
     }
@@ -61,7 +61,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     async completeLogin(id: IdentityProvider['id']): Promise<OAuth2TokenGrantResponse> {
         // No payload: the pending login rides a cookie the callback set, which
         // the browser sends with this same-origin request.
-        const response = await this.client.post(`identity-providers/${id}/login-complete`);
+        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/login-complete`);
 
         return response.data;
     }
@@ -71,7 +71,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         handle: string,
     ): Promise<EntityRecordResponse<IdentityProviderAccount>> {
         const payload : IdentityProviderLinkConfirmPayload = { handle };
-        const response = await this.client.post(`identity-providers/${id}/link-confirm`, payload);
+        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/link-confirm`, payload);
 
         return response.data;
     }
