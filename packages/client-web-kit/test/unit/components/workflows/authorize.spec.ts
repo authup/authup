@@ -505,6 +505,22 @@ describe('AAuthorize prompt=none (silent)', () => {
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
     });
 
+    it('keeps the lingering session when login_required asks for re-authentication', async () => {
+        const { wrapper, store } = mountAuthorize({
+            prompt: '',
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+
+        expect(store().accessToken).not.toBeNull();
+
+        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+        expect(store().accessToken).not.toBeNull();
+    });
+
     it('degrades to interactive UI when the redirect_uri is not verified', async () => {
         const { wrapper } = mountAuthorize({
             prompt: OAuth2AuthorizationPrompt.NONE,
