@@ -31,6 +31,26 @@ describe('src/http/controllers/token', () => {
         await suite.teardown();
     });
 
+    // sqlite compares the uuid column byte for byte, so only a server
+    // dialect resolves a case variant of the id at all.
+    it.skipIf(!['mysql', 'postgres'].includes(process.env.DB_TYPE ?? ''))(
+        'should not accept the old password through a case variant of the id',
+        async () => {
+            const password = 'case-variant-old-password';
+            const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+            const username = user.id.toUpperCase();
+
+            await suite.client.token.createWithPassword({ username, password });
+
+            await suite.client.user.update(user.id, { password: 'case-variant-new-password' });
+
+            await expectClientError(
+                () => suite.client.token.createWithPassword({ username, password }),
+                { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+            );
+        },
+    );
+
     it('should grant token with password', async () => {
         const response = await suite.client
             .token
