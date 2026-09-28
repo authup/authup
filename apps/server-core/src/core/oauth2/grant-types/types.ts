@@ -34,6 +34,7 @@ export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
      * the at_hash digest (OIDC Core §3.1.3.6).
      */
     keyStore: IKeyStore,
+    identityResolver: IIdentityResolver,
 };
 
 export type OAuth2IdentityGrantContext = BaseGrantContext & {
