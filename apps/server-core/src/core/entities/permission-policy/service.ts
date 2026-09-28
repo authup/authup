@@ -16,6 +16,7 @@ import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { permissionPolicySchema } from './schema.ts';
+import { isPolicyOfRealm } from '../policy/realm.ts';
 
 const READ_PERMISSION_NAMES = [
     PermissionName.PERMISSION_READ,
@@ -133,10 +134,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         if (validated.policy) {
             validated.policyRealmId = validated.policy.realmId;
 
-            if (
-                validated.policyRealmId &&
-                validated.policyRealmId !== validated.permissionRealmId
-            ) {
+            if (!isPolicyOfRealm(validated.policy, validated.permissionRealmId ?? null)) {
                 throw new ValidationError('It is not possible to bind a policy of another realm to a permission.');
             }
         }
