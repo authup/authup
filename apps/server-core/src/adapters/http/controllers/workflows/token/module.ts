@@ -216,11 +216,18 @@ export class TokenController {
                 skipActiveCheck: true,
             });
 
-            if (payload.kind === OAuth2TokenKind.LOGOUT) {
-                // A back-channel logout token verifies (it is signed with the
-                // realm key) but is a notification, never a credential: no
-                // endpoint accepts it as a bearer, so it is reported dead
-                // rather than raised (RFC 7662 §2.2), bare like any other.
+            if (
+                payload.kind !== OAuth2TokenKind.ACCESS &&
+                payload.kind !== OAuth2TokenKind.REFRESH
+            ) {
+                // Only an access token or a refresh token (RFC 7662 §2.1) is
+                // a credential introspection reports on. Every other kind
+                // verifies, since it is signed with the realm key, but is no
+                // bearer: an id_token is an assertion to its client, the MFA
+                // login ticket is honoured by the challenge routes alone, and
+                // a back-channel logout token is a notification. Each is
+                // reported dead rather than raised (RFC 7662 §2.2), bare like
+                // any other.
                 return { active: false };
             }
 

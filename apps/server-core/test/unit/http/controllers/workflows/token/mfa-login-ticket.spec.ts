@@ -295,4 +295,29 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         expect(body.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
         expect(body.token).toBeUndefined();
     });
+
+    // A ticket is not a credential for anyone but the challenge routes, so
+    // introspection reports it dead rather than naming its subject.
+    it('reports an mfa ticket as inactive on introspection', async () => {
+        const password = 'ticket-introspect-password';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+        const preLogin = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+        });
+        const bearer = new HTTPClient({ baseURL: suite.baseURL });
+        bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
+        await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
+
+        const rejected = await passwordGrant({ username: user.name, password });
+        const rejectedBody = await rejected.json();
+        expect(typeof rejectedBody.mfa_token).toEqual('string');
+
+        const introspection = await suite.client.token.introspect(
+            { token: rejectedBody.mfa_token },
+            { authorizationHeaderInherit: true },
+        );
+        expect(introspection).toEqual({ active: false });
+    });
 });
