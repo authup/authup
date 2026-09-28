@@ -147,13 +147,7 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const codeRepository = c.resolve(OAuth2InjectionToken.AuthorizationCodeRepository);
 
-                return new OAuth2AuthorizationCodeIssuer(
-                    codeRepository,
-                    {
-                        // todo: own constant here
-                        maxAge: config.tokenAccessMaxAge,
-                    },
-                );
+                return new OAuth2AuthorizationCodeIssuer(codeRepository);
             },
         });
         container.register(OAuth2InjectionToken.AuthorizationCodeVerifier, {
