@@ -3608,7 +3608,10 @@ key — junction ATTRIBUTES carry only genuine columns. So a junction write to a
 entity is realm-gated like a direct entity write — a `realm_admin` in realm A cannot bind a
 permission/role/scope onto a realm-B role/user/client even though the permission itself is
 global. (The *member* side — the permission/role being attached — is gated separately by the
-superset `preEvaluate`.) Setting a `null` owner (a global entity) under `own` correctly
+superset `preEvaluate`; two junctions also refuse a member of a FOREIGN realm outright,
+whoever asks: `identity-provider-role-mapping` a role of another realm than the provider's,
+and `permission-policy` a realm-bound policy of another realm than the permission's, so a
+policy another realm administers can never restrict this realm's or a global permission.) Setting a `null` owner (a global entity) under `own` correctly
 denies, consistent with a `realm_admin` not being able to write a global base entity.
 
 > **One evaluator, no ATTRIBUTES pollution:** the resource realm rides the dedicated
