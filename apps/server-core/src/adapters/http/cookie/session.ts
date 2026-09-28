@@ -86,5 +86,10 @@ export function setSessionCookie(
 }
 
 export function unsetSessionCookie(event: IAppEvent, baseURL: string) : void {
-    unsetResponseCookie(event, buildSessionCookieName(baseURL), { path: buildSessionCookiePath(baseURL) });
+    unsetResponseCookie(event, buildSessionCookieName(baseURL), {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: isSecureBaseURL(baseURL),
+        path: buildSessionCookiePath(baseURL),
+    });
 }
