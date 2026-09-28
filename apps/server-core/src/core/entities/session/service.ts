@@ -256,9 +256,9 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         const toRevoke = sessions.filter((session) => !currentSessionId || session.id !== currentSessionId);
 
-        await this.sessionManager.revokeMany(toRevoke.map((session) => session.id));
+        const failed = await this.sessionManager.revokeMany(toRevoke.map((session) => session.id));
 
-        return { count: toRevoke.length };
+        return { count: toRevoke.length - failed.length };
     }
 
     /**
@@ -317,8 +317,8 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             toRevoke.push(session);
         }
 
-        await this.sessionManager.revokeMany(toRevoke.map((session) => session.id));
+        const failed = await this.sessionManager.revokeMany(toRevoke.map((session) => session.id));
 
-        return { count: toRevoke.length };
+        return { count: toRevoke.length - failed.length };
     }
 }

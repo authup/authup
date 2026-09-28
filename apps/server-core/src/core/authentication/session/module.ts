@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Session } from '@authup/core-kit';
+import type { Client, Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { JWTError } from '@authup/specs';
@@ -123,10 +123,17 @@ export class SessionManager implements ISessionManager {
         // The audience is read BEFORE the row goes: it derives from the
         // session's token rows, which cascade-delete with it. Delivery waits
         // until AFTER, so a client is never told about a session that still
-        // exists.
-        const clients = this.revokeNotifier ?
-            await this.revokeNotifier.resolve(session) :
-            [];
+        // exists. A failed read costs the notification, never the removal.
+        let clients : Client[] = [];
+        if (this.revokeNotifier) {
+            try {
+                clients = await this.revokeNotifier.resolve(session);
+            } catch (e) {
+                this.logger?.warn(`Resolving the logout audience of session ${session.id} failed: ${
+                    e instanceof Error ? e.message : String(e)
+                }`);
+            }
+        }
 
         // A copy goes to the repository: TypeORM unsets the primary key on
         // the entity it removed, and the notifier still needs `sid`.
@@ -137,25 +144,35 @@ export class SessionManager implements ISessionManager {
         }
     }
 
-    async revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void> {
+    async revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<string[]> {
         const sessions = await this.repository.findAllByOwner(owner);
-        await this.revokeMany(sessions
+        const failed = await this.revokeMany(sessions
             .filter((session) => session.id !== exceptId)
             .map((session) => session.id));
+
+        if (failed.length > 0) {
+            this.logger?.error(`${failed.length} session(s) of ${owner.subKind} ${owner.sub} could not be revoked`);
+        }
+
+        return failed;
     }
 
-    async revokeMany(ids: string[]): Promise<void> {
+    async revokeMany(ids: string[]): Promise<string[]> {
+        const failed : string[] = [];
         for (let i = 0; i < ids.length; i += SESSION_REVOKE_CONCURRENCY) {
             const batch = ids.slice(i, i + SESSION_REVOKE_CONCURRENCY);
             const results = await Promise.allSettled(batch.map((id) => this.revoke(id)));
             for (const [j, result] of results.entries()) {
                 if (result.status === 'rejected') {
+                    failed.push(batch[j]);
                     this.logger?.warn(`Revoking session ${batch[j]} failed: ${
                         result.reason instanceof Error ? result.reason.message : String(result.reason)
                     }`);
                 }
             }
         }
+
+        return failed;
     }
 
     // -----------------------------------------------------
