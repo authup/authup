@@ -33,6 +33,7 @@ import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import { MailTemplateName } from '../../mail/index.ts';
 import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
+import type { ISessionManager } from '../../authentication/session/types.ts';
 import { PASSWORD_RESET_EXPIRES_IN_MINUTES } from './constants.ts';
 
 export class PasswordRecoveryService implements IPasswordRecoveryService {
@@ -48,6 +49,8 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
     protected eventService?: IEventService;
 
+    protected sessionManager?: ISessionManager;
+
     constructor(ctx: PasswordRecoveryServiceContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
@@ -55,6 +58,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.eventService = ctx.eventService;
+        this.sessionManager = ctx.sessionManager;
     }
 
     async forgotPassword(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<PasswordForgotResult> {
@@ -178,6 +182,8 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         });
 
         await this.repository.save(merged);
+
+        await this.sessionManager?.revokeByOwner({ sub: merged.id, subKind: IdentityType.USER });
 
         await this.eventService?.record({
             scope: EventScope.IDENTITY,

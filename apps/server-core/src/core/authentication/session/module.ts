@@ -14,6 +14,7 @@ import type {
     ISessionRevokeNotifier, 
     SessionManagerContext, 
     SessionManagerOptions, 
+    SessionOwner,
 } from './types.ts';
 
 export class SessionManager implements ISessionManager {
@@ -132,6 +133,15 @@ export class SessionManager implements ISessionManager {
 
         if (this.revokeNotifier && clients.length > 0) {
             await this.revokeNotifier.notify(session, clients);
+        }
+    }
+
+    async revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void> {
+        const sessions = await this.repository.findAllByOwner(owner);
+        for (const session of sessions) {
+            if (session.id !== exceptId) {
+                await this.revoke(session.id);
+            }
         }
     }
 
