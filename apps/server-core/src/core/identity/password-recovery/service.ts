@@ -76,16 +76,20 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             realmId: realm.id,
         };
 
+        const resetExpires = new Date(
+            Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
+        ).toISOString();
+
         const entity = await this.repository.findOneByWithEmail(where);
 
+        // an unknown account is answered like a known one, so the endpoint
+        // does not tell which names and addresses exist.
         if (!entity) {
-            throw new EntityNotFoundError();
+            return { resetExpires };
         }
 
         const merged = this.repository.merge(entity, {
-            resetExpires: new Date(
-                Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
-            ).toISOString(),
+            resetExpires,
             resetHash: randomBytes(32).toString('hex'),
         });
 
