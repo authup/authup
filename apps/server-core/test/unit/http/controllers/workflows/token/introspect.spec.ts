@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+
 import { randomUUID } from 'node:crypto';
 import {
     afterAll,
@@ -101,6 +102,39 @@ describe('token-introspect', () => {
 
         // ...and nothing about what that account may do (RFC 7662 §2.2 / §4:
         // no more than needed about an inactive token).
+        expect(introspection.permissions).toBeUndefined();
+    });
+
+    it('should report a current token without a session as inactive', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const payload = await suite.client
+            .token
+            .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const now = Math.floor(Date.now() / 1000);
+        const sessionless = await signer.sign({
+            jti: randomUUID(),
+            sub: payload.sub,
+            sub_kind: payload.sub_kind,
+            realm_id: payload.realm_id,
+            client_id: payload.client_id,
+            kind: payload.kind,
+            iat: now,
+            exp: now + 3600,
+        });
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token: sessionless }, { authorizationHeaderInherit: true });
+
+        expect(introspection.active).toBe(false);
         expect(introspection.permissions).toBeUndefined();
     });
 
