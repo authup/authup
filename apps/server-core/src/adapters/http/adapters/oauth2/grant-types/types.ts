@@ -14,6 +14,7 @@ import type {
     IAuthFlowMetrics,
     ICredentialsAuthenticator,
     IEventService,
+    IIdentityResolver,
     ILoginThrottleService,
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
@@ -70,6 +71,7 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {
     clientAuthenticator: OAuth2ClientAuthenticator,
+    identityResolver: IIdentityResolver,
     realmRepository: IRealmRepository,
     certificateSource: CertificateSource,
 };

@@ -44,6 +44,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
+    ISessionManager,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import { resolveIntrospectionSubject } from '../../../../../core/index.ts';
@@ -84,6 +85,8 @@ export class TokenController {
 
     protected identityPermissionProvider : IIdentityPermissionProvider;
 
+    protected sessionManager : ISessionManager;
+
     protected metrics? : IAuthFlowMetrics;
 
     protected clientAuthenticator : OAuth2ClientAuthenticator;
@@ -103,6 +106,7 @@ export class TokenController {
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.sessionManager = ctx.sessionManager;
         this.metrics = ctx.metrics;
         this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
         this.certificateSource = ctx.certificateSource;
@@ -152,6 +156,7 @@ export class TokenController {
                 sessionTokenRepository: ctx.sessionTokenRepository,
                 sessionManager: ctx.sessionManager,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
+                identityResolver: ctx.identityResolver,
                 realmRepository: ctx.realmRepository,
                 eventService: ctx.eventService,
                 metrics: ctx.metrics,
@@ -251,6 +256,12 @@ export class TokenController {
                 active = false;
             }
 
+            // A token outlives neither its session nor its subject's
+            // activation, whichever path ended them.
+            if (active && payload.session_id) {
+                active = !!await this.sessionManager.findOneById(payload.session_id);
+            }
+
             // An inactive token reports WHO it belonged to and nothing about
             // what they may do (RFC 7662 §2.2 / §4): naming the subject is the
             // point of reading an expired token at all, handing over their
@@ -270,6 +281,10 @@ export class TokenController {
                 },
                 active,
             });
+
+            if (!subject.identity.data.active) {
+                active = false;
+            }
 
             if (!active) {
                 const response: OAuth2TokenIntrospectionResponse = {

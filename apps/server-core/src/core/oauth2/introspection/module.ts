@@ -53,7 +53,8 @@ export async function resolveIntrospectionSubject(
     const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
     const claims = claimsBuilder.fromIdentity(identity);
 
-    if (!input.active) {
+    // A deactivated subject's credentials are reported like a dead one's.
+    if (!input.active || !identity.data.active) {
         return {
             identity,
             claims,
