@@ -10,12 +10,16 @@ only a **boolean** or a connecting **string** can be specified.
 
 :::
 
+The server certificate of the SMTP relay is verified, whichever form is used.
+A relay presenting a self-signed or otherwise untrusted certificate is only accepted
+when the configuration object sets `rejectUnauthorized: false`.
+
 The environment variables in the .env file variant can also be provided via runtime environment.
 
 
 ::: code-group
 
-```typescript{3-18} [authup.ts]
+```typescript{3-19} [authup.ts]
 
 export default {
     // ...
@@ -30,6 +34,7 @@ export default {
         password: '', 
         ssl: false, 
         starttls: false, 
+        rejectUnauthorized: true, 
         from: 'no-reply@example.com', 
         fromDisplayName: 'Authup', 
         replyTo: 'contact@example.com', 
@@ -47,6 +52,7 @@ smtp:
   password: ''
   ssl: false
   starttls: false
+  rejectUnauthorized: true
   from: no-reply@example.com
   fromDisplayName: Authup
   replyTo: contact@example.com

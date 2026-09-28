@@ -22,6 +22,8 @@ export type SMTPOptions = {
 
     starttls?: boolean,
 
+    rejectUnauthorized?: boolean,
+
     from?: string,
 
     fromDisplayName?: string,
