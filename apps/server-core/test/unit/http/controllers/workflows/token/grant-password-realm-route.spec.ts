@@ -12,6 +12,7 @@ import {
     it,
 } from 'vitest';
 import {
+    createFakeClient,
     createFakeRealm,
     createFakeUser,
     httpRequest,
@@ -101,6 +102,62 @@ describe('src/http/controllers/token (realm route)', () => {
                 password: 'start123',
             },
         });
+
+        expect(response.status).toEqual(404);
+    });
+
+    it('should refuse a body that cannot carry the route realm', async () => {
+        const response = await httpRequest(suite, 'POST', '/realms/master/token?grant_type=authorization_code&code=unknown', {
+            headers: { 'Content-Type': 'application/json' },
+            body: '[]',
+        });
+
+        expect(response.status).toEqual(400);
+        const body = await response.json();
+        expect(body.message).toEqual('The request body must be an object.');
+    });
+
+    it('should resolve a client name in the route realm for client credentials and introspection', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
+        const input = createFakeClient();
+        input.active = true;
+        input.authMethod = 'secret';
+        input.tokenBindingMethod = 'none';
+        input.secretHashed = false;
+        input.secretEncrypted = false;
+        input.realmId = realm.id;
+        const { data: client } = await suite.client.client.create(input);
+
+        let response = await httpRequest(suite, 'POST', `/realms/${realm.name}/token`, {
+            form: {
+                grant_type: 'client_credentials',
+                client_id: client.name,
+                client_secret: client.secret!,
+                realm_name: 'master',
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        const { access_token: token } = await response.json();
+        expect(decodePayload(token).realm_id).toEqual(realm.id);
+
+        response = await httpRequest(suite, 'POST', `/realms/${realm.name}/token/introspect`, {
+            form: {
+                token,
+                client_id: client.name,
+                client_secret: client.secret!,
+                realm_name: 'master',
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        const introspection = await response.json();
+        expect(introspection.active).toEqual(true);
+    });
+
+    it('should answer 404 on revoke for an unknown route realm id', async () => {
+        const response = await httpRequest(suite, 'POST', '/realms/00000000-0000-4000-8000-000000000000/token/revoke', { form: { token: 'unknown' } });
 
         expect(response.status).toEqual(404);
     });

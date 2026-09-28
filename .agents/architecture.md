@@ -7444,9 +7444,11 @@ The three realm-resolving grants (`password`, `authorization_code`,
   resolved route realm onto the cached body as `realm_id`, so it wins silently
   over a body `realm_id` / `realm_name` for every grant and for introspection's
   client authentication (the entity controllers' route-wins rule). A route
-  realm that does not exist answers 404 (a name from the resolver, a UUID
-  from the handler, since the resolver passes UUIDs through) instead of the
-  body hint's fallback to master. Like the body hint it scopes NAME
+  realm that does not exist answers 404 on every route of the mount, revoke
+  included (a name from the resolver, a UUID from the handler, since the
+  resolver passes UUIDs through) instead of the body hint's fallback to
+  master. An array body is refused (`invalid_request`), since it could not
+  carry the stamp. Like the body hint it scopes NAME
   resolution only: a user or client addressed by UUID still resolves in its
   own realm, and a token of another realm still introspects and refreshes,
   so the mount is a naming convenience, not a confinement. `isOAuth2IssuancePath` strips a leading

@@ -26,6 +26,7 @@ import {
 } from '@authup/core-kit';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
@@ -424,6 +425,8 @@ export class TokenController {
     async revokeToken(
         @DContext() event: IAppEvent,
     ): Promise<null> {
+        await this.applyRouteRealm(event);
+
         try {
             const token = await extractTokenFromRequest(event);
 
@@ -512,7 +515,13 @@ export class TokenController {
             throw new EntityNotFoundError(`realm '${realmId}' not found`);
         }
 
+        // an array body parses (strict mode only refuses primitives) but is
+        // no parameter set; refusing it keeps the route realm authoritative
         const body = await readRequestBody(event);
+        if (!isObject(body)) {
+            throw OAuth2RequestError.malformed('The request body must be an object.');
+        }
+
         body.realm_id = realm.id;
     }
 }
