@@ -21,7 +21,9 @@ the ones that can break an existing setup come first.
   key-create grant that reaches beyond your own realm (the global `admin` role
   has it); realm administrators can still generate signature keys but no longer
   import them. A resource server verifying tokens locally against the JWKS
-  trusts the subject of any key of the token's realm.
+  trusts the subject of any key of the token's realm. Signature keys imported
+  under the earlier rules stay trusted: review imported signature keys and
+  disable or rotate any a realm administrator imported.
 - **Provisioning `createOnly`.** A user, client or role entry binds its
   declared roles, permissions and scopes only when it creates the row. An
   existing row under that name receives none of them. Use `strategy: merge`
