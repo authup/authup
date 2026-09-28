@@ -17,8 +17,7 @@ import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { RegistrationDisabledError } from './error.ts';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
-// direct file import: the oauth2 barrel reaches back into identity.
-import { digestOneTimeCode } from '../../oauth2/session-credential/module.ts';
+import { digestSHA256 } from '../../../utils/digest.ts';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
     IRegistrationService,
@@ -73,7 +72,7 @@ export class RegistrationService implements IRegistrationService {
         if (this.options.emailVerificationEnabled) {
             validated.active = false;
             activateCode = randomBytes(32).toString('hex');
-            validated.activateHash = digestOneTimeCode(activateCode);
+            validated.activateHash = digestSHA256(activateCode);
         } else {
             validated.active = true;
         }
@@ -126,7 +125,7 @@ export class RegistrationService implements IRegistrationService {
     }
 
     async activate(data: { token: string }): Promise<void> {
-        const entity = await this.repository.findOneBy({ activateHash: digestOneTimeCode(data.token) });
+        const entity = await this.repository.findOneBy({ activateHash: digestSHA256(data.token) });
 
         if (!entity) {
             throw new EntityNotFoundError();

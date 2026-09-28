@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createHash } from 'node:crypto';
 import { createNanoID } from '@authup/kit';
+import { digestSHA256 } from '../../../utils/digest.ts';
 import { SESSION_SECRET_LENGTH } from './constants.ts';
 
 /**
@@ -42,16 +42,5 @@ export function createSessionSecret() : string {
  * exactly 64 characters, which is the column's width.
  */
 export function hashSessionSecret(secret: string) : string {
-    return createHash('sha256').update(secret).digest('hex');
-}
-
-/**
- * The value stored for a mailed one-time code (account activation, password
- * reset). The code itself only travels in the mail, so a read of the table
- * yields nothing that completes the workflow. The writer and the lookup both
- * go through this function, so they cannot disagree. A plain SHA-256 for the
- * reason `hashSessionSecret` gives: the code is 32 random bytes.
- */
-export function digestOneTimeCode(code: string) : string {
-    return createHash('sha256').update(code).digest('hex');
+    return digestSHA256(secret);
 }
