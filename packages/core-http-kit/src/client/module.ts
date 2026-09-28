@@ -222,8 +222,9 @@ export class Client extends BaseClient implements IClient {
         return response.data;
     }
 
-    async getJwk(id: string) : Promise<OAuth2JsonWebKey> {
-        const response = await this.get(`jwks/${id}`);
+    async getJwk(id: string, realmId?: string) : Promise<OAuth2JsonWebKey> {
+        const path = `jwks/${encodeURIComponent(id)}`;
+        const response = await this.get(realmId ? `realms/${encodeURIComponent(realmId)}/${path}` : path);
 
         return response.data;
     }

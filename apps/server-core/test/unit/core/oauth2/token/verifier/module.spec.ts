@@ -27,8 +27,10 @@ vi.mock('@authup/server-kit', () => ({
 
 const TIMESTAMP = '2026-01-01T00:00:00.000Z';
 
+const REALM_ID = randomUUID();
+
 function createKey(type: `${JWKType}`, overrides: Partial<Key> = {}): Key {
-    const realmId = randomUUID();
+    const realmId = overrides.realmId ?? REALM_ID;
 
     return {
         id: randomUUID(),
@@ -60,6 +62,7 @@ function createPayload(overrides: Partial<OAuth2TokenPayload> = {}): OAuth2Token
     return {
         jti: randomUUID(),
         sub: 'u1',
+        realm_id: REALM_ID,
         ...overrides,
     };
 }
@@ -176,6 +179,26 @@ describe('OAuth2TokenVerifier', () => {
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), new FakeOAuth2TokenRepository());
 
             expect(await verifier.verify('raw-token')).toEqual(payload);
+        });
+
+        it('should reject a token signed with a key of another realm', async () => {
+            const key = createKey(JWKType.OCT, { decryptionKey: 'secret', realmId: randomUUID() });
+            const tokenRepo = new FakeOAuth2TokenRepository();
+            extractTokenHeader.mockReturnValue({ kid: key.id });
+            verifyToken.mockResolvedValue(createPayload());
+
+            const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), tokenRepo);
+            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
+            expect(tokenRepo.saveWithSignatureCalls).toHaveLength(0);
+        });
+
+        it('should reject a token naming no realm', async () => {
+            const key = createKey(JWKType.OCT, { decryptionKey: 'secret' });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
+            verifyToken.mockResolvedValue(createPayload({ realm_id: undefined }));
+
+            const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), new FakeOAuth2TokenRepository());
+            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
         it('should verify OCT token and cache result', async () => {

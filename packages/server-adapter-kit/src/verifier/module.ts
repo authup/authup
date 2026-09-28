@@ -10,7 +10,7 @@ import {
     ClientAuthenticationHook,
 } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
-import { isObject } from '@authup/kit';
+import { isObject, isUUID } from '@authup/kit';
 import {
     JWKType,
     JWTError,
@@ -24,6 +24,7 @@ import type {
 } from '@authup/specs';
 import {
     extractTokenHeader,
+    extractTokenPayload,
     verifyToken,
 } from '@authup/server-kit';
 import { importJWK } from 'jose';
@@ -100,15 +101,23 @@ export class TokenVerifier implements ITokenVerifier {
             throw JWTError.headerInvalid('The token header could not be extracted.');
         }
 
-        if (!header.kid) {
+        if (!header.kid || !isUUID(header.kid)) {
             throw JWTError.headerPropertyInvalid('kid');
+        }
+
+        // The key is read from the realm the token names, so a key of
+        // another realm can never verify it; the signature check below then
+        // proves the claim it was looked up by.
+        const { realm_id: realmId } = extractTokenPayload(token);
+        if (typeof realmId !== 'string' || !realmId) {
+            throw JWTError.payloadPropertyInvalid('realm_id');
         }
 
         let jwk : OAuth2JsonWebKey;
 
         try {
             // todo: this should be cached as well :)
-            jwk = await this.client.getJwk(header.kid);
+            jwk = await this.client.getJwk(header.kid, realmId);
         } catch (e) {
             if (isObject(e) && isObject(e.response) && e.response.status === 404) {
                 throw JWTError.payloadPropertyInvalid('kid');
