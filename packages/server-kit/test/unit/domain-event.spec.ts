@@ -11,9 +11,9 @@ import type { DomainEventPublishContext } from '../../src';
 
 const ctx : DomainEventPublishContext = {
     content: {
-        type: 'user', 
-        event: 'created', 
-        data: { id: '1' }, 
+        type: 'user',
+        event: 'created',
+        data: { id: '1' },
     },
     destinations: [],
 };

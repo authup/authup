@@ -25,9 +25,9 @@ describe('app/modules/mail/smtp', () => {
 
     it('should verify the server certificate for an object configuration', () => {
         expect(new SMTPMailClientAdapter({
-            host: 'smtp.example.com', 
-            port: 465, 
-            ssl: true, 
+            host: 'smtp.example.com',
+            port: 465,
+            ssl: true,
         })).toBeDefined();
 
         expect(createTransport).toHaveBeenCalledTimes(1);

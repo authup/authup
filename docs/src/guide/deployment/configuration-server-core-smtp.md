@@ -36,7 +36,7 @@ export default {
         password: '', 
         ssl: false, 
         starttls: false, 
-        rejectUnauthorized: true, 
+        rejectUnauthorized: true,
         from: 'no-reply@example.com', 
         fromDisplayName: 'Authup', 
         replyTo: 'contact@example.com', 
