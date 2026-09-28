@@ -5,14 +5,13 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { Options } from '@routup/basic';
 import type { IApp } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
 import type { Realm, UserAuthenticator } from '@authup/core-kit';
 import {
-    BODY_OPTIONS_DEFAULT,
+    buildBodyOptions,
     createAuthorizationMiddleware,
     createLoggerMiddleware,
     createRealmResolverMiddleware,
@@ -98,9 +97,7 @@ export class HTTPMiddlewareModule {
         const config = container.resolve(ConfigInjectionKey);
 
         registerBasicMiddleware(router, {
-            body: config.middlewareBody === true ?
-                BODY_OPTIONS_DEFAULT :
-                config.middlewareBody as Options['body'],
+            body: buildBodyOptions(config.middlewareBody),
             cookie: config.middlewareCookie,
             query: config.middlewareQuery,
         });
