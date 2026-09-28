@@ -23,6 +23,7 @@ import {
     defineNuxtPlugin,
     tryUseNuxtApp,
     useCookie,
+    useRequestURL,
     useRuntimeConfig,
 } from '#imports';
 import type { RuntimeOptions } from '../types';
@@ -168,6 +169,9 @@ export default defineNuxtPlugin({
         install(ctx.vueApp, {
             pinia: ctx.$pinia as Pinia,
             baseURL,
+            // A refresh during the server render rotates the token cookies
+            // too, and the kit cannot see the scheme without a window.
+            cookieSecure: useRequestURL().protocol === 'https:',
             cookieSet: (key, value, options) => {
                 const app = tryUseNuxtApp();
                 if (app) {
