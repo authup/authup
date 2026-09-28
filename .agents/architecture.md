@@ -5805,6 +5805,10 @@ in `UserAttributeService.create` and in `update` over the PAIR the row will
 hold (`data.name ?? entity.name`, `data.value ?? entity.value`), so a
 reserved row cannot be fed junk by a body that omits the name and an
 unchecked row cannot be renamed into a reserved one to slip its value past.
+The federated write path runs the same check: `IdentityProviderAccountManager.saveUser`
+DROPS a mapped `locale` / `colorMode` the rule refuses before `saveOneWithEA`
+(a cosmetic claim never fails a login), so an attribute mapping onto either
+name cannot store what the API would refuse.
 `locale` is checked for BCP47 SHAPE and never narrowed to a catalog authup
 has, since the attribute is the user's preference for every RP that reads the
 claim, but it is BOUNDED (subtags of at most 8 characters, 35 characters in
