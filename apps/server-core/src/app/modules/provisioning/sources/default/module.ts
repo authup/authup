@@ -231,6 +231,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             PermissionName.ROLE_CREATE,
                             PermissionName.ROLE_UPDATE,
                             PermissionName.ROLE_DELETE,
+                            PermissionName.ROLE_PERMISSION_CREATE,
+                            PermissionName.ROLE_PERMISSION_UPDATE,
+                            PermissionName.ROLE_PERMISSION_DELETE,
                             PermissionName.SCOPE_CREATE,
                             PermissionName.SCOPE_UPDATE,
                             PermissionName.SCOPE_DELETE,
@@ -263,11 +266,18 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const userCredentialsService = new UserCredentialsService();
 
+        // Disabling the admin is re-asserted on every boot, enabling is not:
+        // an admin deactivated through the API stays deactivated.
+        const userAttributes : (keyof User)[] = [
+            ...(config.userAdminPasswordReset ? ['password' as const] : []),
+            ...(config.userAdminEnabled ? [] : ['active' as const]),
+        ];
+
         let userStrategy : ProvisioningEntityStrategy<User> | undefined;
-        if (config.userAdminPasswordReset) {
+        if (userAttributes.length > 0) {
             userStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['password'],
+                attributes: userAttributes,
             };
         }
 

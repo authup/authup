@@ -2018,7 +2018,9 @@ alias token, so it must be quoted (`name: "*"`).
   `RealmProvisioningValidator.run` on the literal name; a partial pattern
   like `tenant-*` fails the regular name check). Child strategies keep the
   full vocabulary: `createOnly` (default — seed once, realm admins own the
-  row), `merge`/`replace` (reassert per boot on every realm), `absent`
+  row; a user or client binds its declared roles, permissions and scopes
+  only on the pass that creates it, never onto a row that already existed),
+  `merge`/`replace` (reassert per boot on every realm), `absent`
   (sweep the named entity out of every realm).
 - **Mechanism (expansion + fan-out):** `ProvisionerModule.setup` extracts
   the wildcard entries after the composite load (folding multiples via the
@@ -3640,7 +3642,7 @@ ignored — no widen via attach/detach). `isSuperset` additionally requires the 
 | Role | Scope | Realm reach (junction `realmScope`) |
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | `any` — acts on all realms + `null` global, **from an identity in ANY realm** |
-| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads) / `own` (direct entity CUD) |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads, assignments) / `own` (direct entity CUD and role-permission writes, so a global role's bindings are out of reach) |
 
 ### Nested Route Mounting
 
@@ -5301,10 +5303,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the eight security toggles
+**Env semantics are per entry, not per type**: the nine security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`, `userAdminEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.

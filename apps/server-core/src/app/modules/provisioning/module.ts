@@ -134,6 +134,18 @@ export class ProvisionerModule implements IModule {
 
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
+        if (
+            config.env === 'production' &&
+            config.userAdminEnabled &&
+            config.userAdminPassword === 'start123'
+        ) {
+            logger.warn(
+                'The default admin user is enabled with the default password; ' +
+                'set USER_ADMIN_PASSWORD (with USER_ADMIN_PASSWORD_RESET=true once the admin exists) ' +
+                'or USER_ADMIN_ENABLED=false.',
+            );
+        }
+
         const provisioningDir = config.provisioningDirectoryPath;
         if (fs.existsSync(provisioningDir)) {
             sources.push(new FileProvisioningSource({ cwd: provisioningDir, logger }));

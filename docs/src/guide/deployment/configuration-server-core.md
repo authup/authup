@@ -32,7 +32,10 @@ The admin password and the `system` client secret both default to `start123`.
 Set your own values (`userAdminPassword` / `clientSystemSecret`, or the
 `USER_ADMIN_PASSWORD` / `CLIENT_SYSTEM_SECRET` environment variables) before
 deploying to production — the examples below carry placeholders, never copy a
-credential out of documentation.
+credential out of documentation. The admin password is applied only when the
+admin user is created: to change it on an existing deployment, also set
+`userAdminPasswordReset` (`USER_ADMIN_PASSWORD_RESET=true`). A production
+process still running the default admin password logs a warning on startup.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
@@ -630,7 +633,9 @@ export default {
         userAuthBasic: false,
 
         /**
-         * Enable default admin user.
+         * Enable default admin user. Setting it to false deactivates an
+         * existing admin user on the next start. The environment value
+         * must be a recognized boolean, anything else fails the start.
          * env: USER_ADMIN_ENABLED
          * default: true
          */
