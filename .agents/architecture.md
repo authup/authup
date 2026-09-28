@@ -2773,16 +2773,20 @@ rather than trusted until `exp`.
   it from being a silent escalation. Do not narrow it.
 - **The residual, stated accurately.** An ambient origin cookie means an XSS
   on the IdP origin can act as the user against the API for as long as the
-  page lives. For a user who cannot mint credentials through the API, no
-  PORTABLE credential can be exfiltrated. For a privileged one it still can:
-  a user holding `CLIENT_CREATE` can be driven, through ordinary same-origin
-  CRUD the console legitimately needs, to `POST /clients` with a
-  caller-chosen `secret`, have roles bound to it, and obtain a
-  `client_credentials` grant, which authenticates the client from the
-  request BODY, so no cookie and no denied route is involved at any point.
-  No deny-list can close that, because the console needs entity CRUD to
-  function. Do not restate the wider claim in docs or release notes. The
-  revocation and header-weight benefits are unaffected and unqualified.
+  page lives, and can also leave with a PORTABLE credential, for every
+  user rather than only a privileged one. Self-service is enough:
+  `USER_SELF_MANAGE` lets `POST /users/@me` set a new password without the
+  current one, and a password is a credential the password grant accepts
+  from anywhere. The change ends the user's other sessions and keeps the
+  one it was made with, so the page's own session survives it. A user
+  holding `CLIENT_CREATE` has a second route: `POST /clients` with a
+  caller-chosen `secret`, roles bound to it, then a `client_credentials`
+  grant, which authenticates the client from the request BODY, so no cookie
+  and no denied route is involved at any point. No deny-list can close
+  either, because the consoles need self-service and entity CRUD to
+  function. So `HttpOnly` keeps the TOKENS out of script, not the account:
+  do not claim more in docs or release notes. The revocation and
+  header-weight benefits are unaffected and unqualified.
 - **Four routes, and only two of them are still on server-core.**
   `GET /console/account/login/start` mints PKCE + `state`, parks them behind
   a 5-minute `SameSite=Lax` login cookie (Lax, not Strict: the return leg may
@@ -9200,12 +9204,15 @@ cannot replace any of this, because the server never sees it.
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
 introspects on every store instantiation regardless. Every write carries
-`SameSite=Lax`, and `Secure` whenever the writing document is https
-(`installStore`'s `cookieOptions`), since the values are bearer credentials.
-A Nuxt server-side write carries `SameSite=Lax` but not `Secure`, since it has
-no document to ask; the next client write replaces it. The Nuxt plugin's
-`cookieSet` spreads the host's own cookie options last, so they win over the
-kit's. HSTS is the proxy's job and documented as such.
+`SameSite=Lax`, and `Secure` whenever the request is https, since the values
+are bearer credentials. `installStore` asks `window.location` unless the host
+passes `cookieSecure`, which a server-side writer must: a render has no
+document, and the Nuxt interceptor's refresh during SSR rotates the refresh
+token, so a write without the flag would replace the `Secure` cookie for as
+long as the token lives. The Nuxt plugin passes `useRequestURL()`'s scheme,
+which h3 reads from `X-Forwarded-Proto` behind a proxy. Its `cookieSet`
+spreads the host's own cookie options last, so they win over the kit's. HSTS
+is the proxy's job and documented as such.
 
 **A session is only committed for a token the endpoint reports as
 `active`.** The introspection answers 200 with the full payload for a token it

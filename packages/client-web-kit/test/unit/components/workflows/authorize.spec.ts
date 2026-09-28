@@ -368,6 +368,23 @@ describe('AAuthorize prompt=select_account', () => {
         expect(hasChooser(wrapper)).toBe(false);
     });
 
+    it('shows the login form when the POST answers login_required after continue-as', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+
+        wrapper.findComponent(AAccountPrompt).vm.$emit('continue');
+        await flushPromises();
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+
+        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+    });
+
     it('keeps the chooser when only a session restore settles (lastAuthOrigin=restore)', async () => {
         const { wrapper, store } = mountAuthorize();
         await flushPromises();
@@ -708,6 +725,22 @@ describe('AAuthorize prompt=login (re-auth)', () => {
 
         // re-auth satisfied → the built_in auto-consent form renders
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+    });
+
+    it('shows the login form again when login_required follows a fresh on-page login', async () => {
+        const { wrapper, store } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.LOGIN,
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+
+        store().lastAuthOrigin = StoreAuthOrigin.LOGIN;
+        await flushPromises();
+
+        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
     });
 });
 

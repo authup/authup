@@ -107,6 +107,13 @@ export type StoreInstallOptions = {
      */
     cookiePath?: string,
     /**
+     * Mark the store cookies `Secure`. Defaults to whether the document is
+     * served over https, which a server render cannot tell, so a host that
+     * writes the cookies during a render (a Nuxt `useCookie` writer) passes
+     * the request's own scheme.
+     */
+    cookieSecure?: boolean,
+    /**
      * Authenticate on an opaque, `HttpOnly` session cookie the server issues
      * instead of on a token pair held in JavaScript (plan 088).
      *

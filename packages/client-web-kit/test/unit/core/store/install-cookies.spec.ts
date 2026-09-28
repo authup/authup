@@ -54,7 +54,7 @@ type CookieUnsetCall = {
     options: CookieOptions
 };
 
-function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
+function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cookieSecure?: boolean) {
     const jar = new Map<string, unknown>(Object.entries(seed));
     const setCalls : CookieSetCall[] = [];
     const unsetCalls : CookieUnsetCall[] = [];
@@ -75,6 +75,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
 
     installStore(app, {
         cookiePath,
+        cookieSecure,
         httpClient,
         pinia,
         cookieGet: (key) => jar.get(key),
@@ -355,6 +356,18 @@ describe('core/store/install-cookies attributes', () => {
         for (const call of setCalls) {
             expect(call.options.secure).toBe(true);
             expect(call.options.sameSite).toEqual('lax');
+        }
+    });
+
+    it('marks every stored cookie secure when the host says the request is https', async () => {
+        setLocation('http:');
+
+        const { store, setCalls } = buildApp({}, undefined, true);
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(setCalls).not.toHaveLength(0);
+        for (const call of setCalls) {
+            expect(call.options.secure).toBe(true);
         }
     });
 
