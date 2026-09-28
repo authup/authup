@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
+import { PermissionName, ROLE_ADMIN_NAME, ROLE_REALM_ADMIN_NAME } from '@authup/core-kit';
 import type {
     PermissionPolicy,
     RolePermission,
@@ -169,6 +169,25 @@ describe('core/entities/permission/service', () => {
             const adminGrant = grants.find((g) => g.permissionId === permission.id);
             expect(adminGrant).toBeDefined();
             expect(adminGrant!.realmScope).toBe(RealmScope.ANY);
+        });
+
+        it.each([
+            PermissionName.ROLE_PERMISSION_UPDATE,
+            PermissionName.KEY_CREATE,
+            PermissionName.SESSION_DELETE,
+        ])('should grant %s to realm_admin at the reach provisioning gives it', async (name) => {
+            const realmAdmin = roleRepository.seed({
+                id: randomUUID(),
+                name: ROLE_REALM_ADMIN_NAME,
+                builtIn: true,
+                realmId: null,
+            });
+
+            const permission = await service.create({ name }, createAllowAllActor());
+
+            const grant = rolePermissionRepository.getAll()
+                .find((g) => g.permissionId === permission.id && g.roleId === realmAdmin.id);
+            expect(grant!.realmScope).toBe(RealmScope.OWN);
         });
 
         it('should throw when the admin role is not provisioned', async () => {
