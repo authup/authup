@@ -12,7 +12,9 @@ only a **boolean** or a connecting **string** can be specified.
 
 The server certificate of the SMTP relay is verified, whichever form is used.
 A relay presenting a self-signed or otherwise untrusted certificate is only accepted
-when the configuration object sets `rejectUnauthorized: false`.
+when the configuration object sets `rejectUnauthorized: false` (next to either the
+connection fields or a `connectionString`), or when a connection string carries
+`?tls.rejectUnauthorized=false`, which is the only way to say it through the environment.
 
 The environment variables in the .env file variant can also be provided via runtime environment.
 
