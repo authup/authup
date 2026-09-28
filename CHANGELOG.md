@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.68) (2026-09-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690))
+
+### Features
+
+* **server-core:** realm-scoped token endpoint ([#3686](https://github.com/authup/authup/issues/3686)) ([9c43a11](https://github.com/authup/authup/commit/9c43a11e51e3aa4466dc6dc56041c1b5fcec8ab6))
+
+
+### Bug Fixes
+
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690)) ([3d031be](https://github.com/authup/authup/commit/3d031be98f5a0848c663c30521e83d0bf18dedac))
+* remove some unnecessary sidebar items ([802ecd2](https://github.com/authup/authup/commit/802ecd2a00f9388e417ec045baefa20d9924b6eb))
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
