@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createHash } from 'node:crypto';
 import { faker } from '@faker-js/faker';
 import {
     beforeEach,
@@ -279,12 +280,38 @@ describe('core/identity/registration/service', () => {
     });
 
     describe('activate', () => {
+        it('should store only a digest of the mailed activation code', async () => {
+            const service = new RegistrationService({
+                options: {
+                    registrationEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            const data = createValidRegistrationData();
+            await service.register(data);
+
+            const code = mailClient.sent[0].text!.match(/[0-9a-f]{64}/)![0];
+            const saved = await repository.findOneByName(data.name);
+            expect(saved!.activateHash).toEqual(createHash('sha256').update(code).digest('hex'));
+
+            await expect(service.activate({ token: saved!.activateHash! }))
+                .rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+
+            await service.activate({ token: code });
+            expect((await repository.findOneByName(data.name))!.active).toBe(true);
+        });
+
         it('should activate a user by token', async () => {
             const activateHash = 'test-token-123';
             const entity = repository.seed(createFakeUser({
                 name: 'inactive-user',
                 active: false,
-                activateHash,
+                activateHash: createHash('sha256').update(activateHash).digest('hex'),
             }));
 
             const service = new RegistrationService({

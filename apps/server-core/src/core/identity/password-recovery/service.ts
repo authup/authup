@@ -18,7 +18,7 @@ import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
 import { ResetTokenExpiredError } from './token-expired.ts';
 import { createValidator } from '@validup/zod';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
@@ -92,9 +92,12 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             return { resetExpires };
         }
 
+        // the code is mailed, only its digest is stored, so reading the table
+        // yields nothing that resets a password.
+        const resetCode = randomBytes(32).toString('hex');
         const merged = this.repository.merge(entity, {
             resetExpires,
-            resetHash: randomBytes(32).toString('hex'),
+            resetHash: createHash('sha256').update(resetCode).digest('hex'),
         });
 
         await this.repository.save(merged);
@@ -106,14 +109,14 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             // non-master user.
             const resetUrl = this.options.publicUrl ?
                 `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset` +
-                `?token=${encodeURIComponent(merged.resetHash!)}` +
+                `?token=${encodeURIComponent(resetCode)}` +
                 `&realmId=${encodeURIComponent(entity.realmId)}` :
                 undefined;
 
             const mail = await this.mailTemplateRenderer.render({
                 template: MailTemplateName.PASSWORD_RESET,
                 params: {
-                    code: merged.resetHash!,
+                    code: resetCode,
                     url: resetUrl,
                     expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES,
                 },
@@ -162,7 +165,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const where: Record<string, any> = {
             ...(validated.name ? { name: validated.name } : {}),
             ...(validated.email ? { email: validated.email } : {}),
-            resetHash: validated.token,
+            resetHash: createHash('sha256').update(validated.token).digest('hex'),
             realmId: realm.id,
         };
 

@@ -15,7 +15,7 @@ import {
 import { createNanoID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { RegistrationDisabledError } from './error.ts';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { Container } from 'validup';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
@@ -65,9 +65,13 @@ export class RegistrationService implements IRegistrationService {
 
         await this.repository.validateJoinColumns(validated);
 
+        // the code is mailed, only its digest is stored, so reading the table
+        // yields nothing that activates an account.
+        let activateCode : string | undefined;
         if (this.options.emailVerificationEnabled) {
             validated.active = false;
-            validated.activateHash = randomBytes(32).toString('hex');
+            activateCode = randomBytes(32).toString('hex');
+            validated.activateHash = createHash('sha256').update(activateCode).digest('hex');
         } else {
             validated.active = true;
         }
@@ -86,12 +90,12 @@ export class RegistrationService implements IRegistrationService {
         if (this.options.emailVerificationEnabled) {
             try {
                 const activateUrl = this.options.publicUrl ?
-                    `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activateHash}` :
+                    `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${activateCode}` :
                     undefined;
 
                 const mail = await this.mailTemplateRenderer.render({
                     template: MailTemplateName.REGISTRATION_ACTIVATION,
-                    params: { code: entity.activateHash!, url: activateUrl },
+                    params: { code: activateCode!, url: activateUrl },
                     locale: context?.locale,
                 });
 
@@ -120,7 +124,7 @@ export class RegistrationService implements IRegistrationService {
     }
 
     async activate(data: { token: string }): Promise<void> {
-        const entity = await this.repository.findOneBy({ activateHash: data.token });
+        const entity = await this.repository.findOneBy({ activateHash: createHash('sha256').update(data.token).digest('hex') });
 
         if (!entity) {
             throw new EntityNotFoundError();

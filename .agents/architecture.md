@@ -1358,13 +1358,18 @@ content is assertable via `FakeMailClient` (see
 every template × locale).
 
 **Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
-param: `<publicUrl>/activate?token=<hash>` for activation and
-`<publicUrl>/password-reset?token=<hash>&realmId=<id>` for reset (the
+param: `<publicUrl>/activate?token=<code>` for activation and
+`<publicUrl>/password-reset?token=<code>&realmId=<id>` for reset (the
 `realmId` is required so a non-master user's reset link resolves the right
 realm): rendered as the call-to-action link. Both land on backend-served SSR
 pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
-into the URL (the reset form asks for email/name).
+into the URL (the reset form asks for email/name). Only the mail carries the
+code: `auth_users.activate_hash` / `reset_hash` store its SHA-256 digest and
+the lookup digests the presented code, the console-session-secret rule, so a
+read of the table yields nothing that activates an account or resets a
+password. The activation code carries no expiry of its own (a column the
+schema does not have yet).
 
 #### Auth Workflow UI (the auth console service) + Status Endpoint
 
