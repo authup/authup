@@ -467,6 +467,40 @@ describe('core/identity/provider/account', () => {
         await mappings.remove(mapping);
     });
 
+    it('should drop a mapped locale that is not a BCP47 tag', async () => {
+        const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const created = await mappings.save([
+            mappings.create({
+                synchronizationMode: 'always',
+                targetName: 'locale',
+                targetValue: 'x'.repeat(100),
+                providerId: provider.id,
+                providerRealmId: provider.realmId,
+            }),
+            mappings.create({
+                synchronizationMode: 'always',
+                targetName: 'colorMode',
+                targetValue: 'dark',
+                providerId: provider.id,
+                providerRealmId: provider.realmId,
+            }),
+        ]);
+
+        const account = await accountManager.save({
+            data: claims,
+            id: 'preferences',
+            attributeCandidates: { name: ['preferences'] },
+            provider,
+        });
+
+        const user = await accountManagerContext.userRepository.findOneById(account.user.id);
+        expect(user).toBeDefined();
+        expect((user as Record<string, any>).locale).toBeUndefined();
+        expect((user as Record<string, any>).colorMode).toEqual('dark');
+
+        await mappings.remove(created);
+    });
+
     it('should file a provisioned user under sources/<provider>', async () => {
         const account = await accountManager.save({
             data: claims,
