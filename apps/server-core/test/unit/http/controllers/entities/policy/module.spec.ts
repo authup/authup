@@ -63,6 +63,26 @@ describe('src/http/controllers/policy', () => {
         );
     });
 
+    it('should refuse an attributes policy whose query uses $regex', async () => {
+        await expectClientError(
+            () => suite.client.policy.create({
+                name: 'attributes-regex',
+                type: BuiltInPolicyType.ATTRIBUTES,
+                query: { name: { $regex: '/^(a+)+$/' } },
+            }),
+            { status: 400 },
+        );
+
+        await expectClientError(
+            () => suite.client.policy.create({
+                name: 'attributes-regex-nested',
+                type: BuiltInPolicyType.ATTRIBUTES,
+                query: { $or: [{ name: { $not: { $regex: 'a+' } } }] },
+            }),
+            { status: 400 },
+        );
+    });
+
     it('should create group policy', async () => {
         const { data: response } = await suite.client
             .policy.createBuiltIn({

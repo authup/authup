@@ -95,7 +95,7 @@ The list of supported operators:
 6. [$size]\
    Checks if the array length is equal to the specified value. Can be used for arrays only.
 7. [$regex]\
-   Allows to test object's property value using [regular expression](https://en.wikipedia.org/wiki/Regular_expression). Can be used for strings only.
+   Allows to test object's property value using [regular expression](https://en.wikipedia.org/wiki/Regular_expression). Can be used for strings only. The library evaluates it, but an Authup server refuses to store an attributes policy whose query uses it.
 8. [$exists]\
    Checks if the property exists in the object.
 9. [$elemMatch]\
