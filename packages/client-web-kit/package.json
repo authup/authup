@@ -100,7 +100,7 @@
         "happy-dom": "^20.14.5",
         "ilingo": "^6.2.0",
         "pinia": "^4.0.3",
-        "socket.io-client": "^4.8.3",
+        "socket.io-client": "^4.8.4",
         "validup": "^2.0.1",
         "vitest": "^4.0.14",
         "vue": "^3.5.43",
@@ -125,7 +125,7 @@
         "@vuecs/tree": "^1.0.0",
         "ilingo": "^6.2.0",
         "pinia": "^4.0.3",
-        "socket.io-client": "^4.8.3",
+        "socket.io-client": "^4.8.4",
         "validup": "^2.0.1",
         "vue": "^3.5.43",
         "vue-router": "^5.3.1"
