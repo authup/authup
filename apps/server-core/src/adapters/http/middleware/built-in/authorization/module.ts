@@ -256,7 +256,7 @@ export class AuthorizationMiddleware {
                 IdentityType.USER,
                 session.sub,
             );
-            if (!identity) {
+            if (!identity || !identity.data.active) {
                 return;
             }
 
@@ -393,6 +393,11 @@ export class AuthorizationMiddleware {
         );
 
         if (identity) {
+            // A deactivated subject is refused like a gone session.
+            if (!identity.data.active) {
+                throw JWTError.expired();
+            }
+
             setRequestIdentity(event, identity);
             setRequestTokenPayload(event, payload);
         }
@@ -479,7 +484,7 @@ export class AuthorizationMiddleware {
             payload.sub_kind,
             payload.sub,
         );
-        if (!identity) {
+        if (!identity || !identity.data.active) {
             throw JWTError.expired();
         }
 

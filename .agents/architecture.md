@@ -1278,15 +1278,23 @@ controller factories. Un-threaded `UserValidator` sites (IdP account
 provisioning, file provisioning, the kit's client-side form) keep the
 default 10. No composition rules: length only (NIST 800-63B).
 
-**A new password ends the user's sessions.** `PasswordRecoveryService.resetPassword`
-revokes every session of the user after the save, and `UserService.save` does
-the same on an update carrying `password`, keeping only the session the user
-changed its own password with (read from the injected `requestContext`); an
-administrator's change keeps none. Both go through
-`ISessionManager.revokeByOwner`, so the refresh tokens (cascade) and the
-back-channel logout follow, and both run after the write, never inside the
-#3526 transaction. The session manager is an optional ctx member, so the
-fake-backed specs construct the services without one.
+**A new password or a deactivation ends the subject's sessions.**
+`PasswordRecoveryService.resetPassword` revokes every session of the user after
+the save, and `UserService.save` does the same on an update carrying
+`password`, keeping only the session the user changed its own password with
+(read from the injected `requestContext`); an administrator's change keeps
+none. An update flipping `active` to false (`UserService` and `ClientService`)
+revokes every session of that subject, and the authorization middleware treats
+a resolved identity that is not `active` as no credential at all: the bearer
+branch and the MFA ticket answer 401, the console cookie leaves the request
+anonymous. So a deactivation ends a live bearer on its next request and a
+refresh token with its session, where before it only stopped new logins. All
+of it goes through `ISessionManager.revokeByOwner`, so the refresh tokens
+(cascade) and the back-channel logout follow, and it runs after the write,
+never inside the #3526 transaction. The session manager is an optional ctx
+member, so the fake-backed specs construct the services without one. A
+resource server verifying tokens locally against the JWKS still accepts an
+issued access token until its `exp`.
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw. Don't leave orphaned records.
 
