@@ -26,6 +26,12 @@ export class RoleSubscriber extends EntitySubscriber<Role> {
                         prefix: CachePrefix.ROLE,
                         key: data.id,
                     }),
+                    // the role's permission junctions go by cascade, which
+                    // runs no subscriber of their own
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+                        key: data.id,
+                    }),
                 ],
             },
         });
