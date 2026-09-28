@@ -110,7 +110,7 @@ It is **fail-closed**: a grant with no explicit `realmScope` defaults to `own`. 
 The two built-in admin roles are expressed purely through this reach:
 
 - **`admin`** — every permission at `any`, so it acts on all realms (and global resources) **from an identity in any realm**.
-- **`realm_admin`** — direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities.
+- **`realm_admin`** — direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities. Permission bindings of a role are written at `own` as well, so it changes those of its own realm's roles only, never those of a global role such as `admin`.
 
 There is no special "master realm" privilege.
 
