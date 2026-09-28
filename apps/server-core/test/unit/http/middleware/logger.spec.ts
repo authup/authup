@@ -33,6 +33,15 @@ describe('redactSensitiveURLParams', () => {
         expect(redacted).not.toContain('BCDF-GHJK');
     });
 
+    it('should redact a login hint and an account link handle', () => {
+        const redacted = redactSensitiveURLParams('/authorize?login_hint=a%40b.c&linkHandle=x1y2');
+
+        expect(redacted).toContain('login_hint=***');
+        expect(redacted).toContain('linkHandle=***');
+        expect(redacted).not.toContain('a%40b.c');
+        expect(redacted).not.toContain('x1y2');
+    });
+
     it('should redact every occurrence of a repeated sensitive param', () => {
         const redacted = redactSensitiveURLParams('/logout?id_token_hint=a&id_token_hint=b');
 
