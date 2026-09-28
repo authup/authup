@@ -626,7 +626,8 @@ export default {
 
         /**
          * Permit HTTP Basic authentication with user credentials
-         * against the management API.
+         * against the management API. With MFA enabled, a user
+         * holding a confirmed authenticator is refused.
          * env: USER_AUTH_BASIC
          * default: false
          */

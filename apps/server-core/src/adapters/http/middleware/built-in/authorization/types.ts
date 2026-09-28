@@ -14,6 +14,7 @@ import type {
     IOAuth2TokenVerifier,
     ISessionManager,
     ISessionRepository,
+    IUserAuthenticatorRepository,
 } from '../../../../../core/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 import type { IRealmCipher } from '../../../../../core/key/index.ts';
@@ -47,6 +48,13 @@ export type HTTPAuthorizationMiddlewareContext = {
      * encrypted mode; without it such a client cannot authenticate here.
      */
     cipher?: IRealmCipher,
+
+    /**
+     * Set when MFA is enabled. A user holding a confirmed second factor is
+     * never authenticated by Basic credentials, since a password alone
+     * cannot stand in for that factor.
+     */
+    userAuthenticatorRepository?: Pick<IUserAuthenticatorRepository, 'hasConfirmedByUser'>,
 
     /**
      * Reports a cookie presented from an origin that is not publicUrl's, once
