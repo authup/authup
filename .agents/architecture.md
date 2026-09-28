@@ -7699,8 +7699,10 @@ revocation on the reused session).
 ### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
 
 `findOneById(jti)` → reject (`invalid_grant`) if **missing** (expired-and-swept or
-hard-cutover legacy, no `legacyRefresh`), **wrong kind**, or **`revokedAt` set**
-→ `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
+hard-cutover legacy, no `legacyRefresh`), **wrong kind**, **`revokedAt` set**, or
+naming a session that is not the token's subject's in its realm (`isTokenSession`,
+checked BEFORE anything is consumed or revoked, so such a token leaves that
+session alone) → `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
 `consumed_at IS NULL AND revoked_at IS NULL AND kind='refresh'`). On success:
 blocklist the old jti in cache (`setInactive(jti, exp)`: cache-only, **not** a
 DB revoke, so grace stays intact), refresh the session, issue RT (`parentId =

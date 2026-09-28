@@ -117,6 +117,18 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             throw OAuth2GrantError.invalid('refresh token session mismatch');
         }
 
+        // The session must belong to the token's subject and realm before
+        // anything is consumed or revoked, so a token naming another
+        // subject's session leaves that session untouched.
+        const session = await this.sessionManager.findOneById(payload.session_id);
+        if (!session) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        if (!isTokenSession(session, payload)) {
+            throw OAuth2GrantError.invalid('refresh token session mismatch');
+        }
+
         const now = new Date();
         const nowISO = now.toISOString();
 
@@ -136,15 +148,6 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // reports it inactive. Deliberately NOT a DB revoke — that would set
         // revoked_at and break the grace window.
         await this.tokenRepository.setInactive(payload.jti, payload.exp);
-
-        const session = await this.sessionManager.findOneById(payload.session_id);
-        if (!session) {
-            throw JWTError.payloadPropertyInvalid('session_id');
-        }
-
-        if (!isTokenSession(session, payload)) {
-            throw OAuth2GrantError.invalid('refresh token session mismatch');
-        }
 
         await this.sessionManager.verify(session);
 
