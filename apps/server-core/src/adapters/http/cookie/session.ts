@@ -38,6 +38,24 @@ function isSecureBaseURL(baseURL: string) : boolean {
 }
 
 /**
+ * The console session cookie's name. An https deployment served at the root
+ * of its host prefixes it with `__Host-`, which a browser only accepts from
+ * that host itself, `Secure`, at `Path=/` and without a `Domain`. A sibling
+ * host of the same site can therefore never place a cookie under this name,
+ * and a same-named cookie set through a `Domain` attribute is not read.
+ *
+ * The prefix cannot apply to an http or a sub-path deployment (the cookie is
+ * then not `Secure`, or scoped to the base path), which keeps the plain name.
+ */
+export function buildSessionCookieName(baseURL: string) : string {
+    if (isSecureBaseURL(baseURL) && buildSessionCookiePath(baseURL) === '/') {
+        return `__Host-${SESSION_COOKIE}`;
+    }
+
+    return SESSION_COOKIE;
+}
+
+/**
  * Write the console session cookie.
  *
  * `ttl` is the session's REMAINING lifetime in milliseconds; `Max-Age` is
@@ -58,7 +76,7 @@ export function setSessionCookie(
     value: string,
     ttl: number,
 ) : void {
-    setResponseCookie(event, SESSION_COOKIE, value, {
+    setResponseCookie(event, buildSessionCookieName(baseURL), value, {
         httpOnly: true,
         sameSite: 'strict',
         secure: isSecureBaseURL(baseURL),
@@ -68,5 +86,5 @@ export function setSessionCookie(
 }
 
 export function unsetSessionCookie(event: IAppEvent, baseURL: string) : void {
-    unsetResponseCookie(event, SESSION_COOKIE, { path: buildSessionCookiePath(baseURL) });
+    unsetResponseCookie(event, buildSessionCookieName(baseURL), { path: buildSessionCookiePath(baseURL) });
 }

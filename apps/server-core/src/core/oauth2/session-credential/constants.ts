@@ -13,7 +13,8 @@
  * `HttpOnly`, `Secure` under an https publicUrl, and `SameSite=Strict`: it is
  * an ambient credential for the whole API, so it must never ride a cross-site
  * request. See plan 088 for the full gate (`Strict` + `Origin` + a mandatory
- * `Sec-Fetch-Site: same-origin`).
+ * `Sec-Fetch-Site: same-origin`). An https root deployment prefixes the name
+ * with `__Host-` (see `buildSessionCookieName`).
  */
 export const SESSION_COOKIE = 'authup_session';
 

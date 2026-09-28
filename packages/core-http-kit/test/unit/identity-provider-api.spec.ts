@@ -43,4 +43,20 @@ describe('src/domains/entities/identity-provider', () => {
         expect(client.identityProvider.getAuthorizeUri('provider-1'))
             .toEqual('http://fake.test/identity-providers/provider-1/authorize-out');
     });
+
+    it.each([
+        ['createLinkRequest', 'link-request'],
+        ['completeLogin', 'login-complete'],
+        ['confirmLinkRequest', 'link-confirm'],
+    ] as const)('should keep the id of %s one path segment', async (method, action) => {
+        const transport = new MemoryTransport({ fetch: () => ({ body: {} }) });
+        const client = new Client({ baseURL: 'http://fake.test/', transport });
+        const id = '../../clients/11111111-1111-1111-1111-111111111111/secret#';
+
+        await client.identityProvider[method](id, 'x');
+
+        expect(transport.requests).toHaveLength(1);
+        expect(new URL(transport.requests[0].url).pathname)
+            .toEqual(`/identity-providers/${encodeURIComponent(id)}/${action}`);
+    });
 });

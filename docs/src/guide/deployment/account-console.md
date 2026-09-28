@@ -35,6 +35,12 @@ session cookie naming the session row. Those two routes are the only
 console service. The admin console signs in the same way, and both surfaces
 share the single session on that origin.
 
+On an `https` public URL without a path, that cookie is named
+`__Host-authup_session`: a browser accepts it only from the IdP host itself,
+so no other host of the same site can set a session cookie the API reads. An
+`http` or sub-path deployment keeps the plain `authup_session` name, and every
+host of the same site then shares that trust.
+
 The flow is an authorization-code flow with PKCE either way, against the
 per-realm `account-console` system client (see
 [Provisioning](./provisioning.md#per-realm-system-clients)). What the
