@@ -9,7 +9,12 @@ import { randomUUID } from 'node:crypto';
 import type { Session } from '@authup/core-kit';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2SubKind, OAuth2TokenKind, isOAuth2Error } from '@authup/specs';
+import {
+    JWTError,
+    OAuth2SubKind,
+    OAuth2TokenKind,
+    isOAuth2Error,
+} from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import {
     beforeEach,
@@ -376,6 +381,25 @@ describe('OAuth2RefreshTokenGrant', () => {
     // violates a foreign key. The client must see `invalid_grant` and
     // re-authenticate, not a 500 it will treat as retryable with a token that
     // is already consumed.
+    it('should answer invalid_grant when the session ends before it is refreshed', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        sessionManager.refresh = async () => {
+            throw JWTError.expired();
+        };
+
+        let error: unknown;
+        try {
+            await grant.runWith(payload);
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+    });
+
     it('should answer invalid_grant when a referenced row is gone before the refresh token is issued', async () => {
         const payload = await seed();
         const grant = build();
