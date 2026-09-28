@@ -1278,6 +1278,16 @@ controller factories. Un-threaded `UserValidator` sites (IdP account
 provisioning, file provisioning, the kit's client-side form) keep the
 default 10. No composition rules — length only (NIST 800-63B).
 
+**A new password ends the user's sessions.** `PasswordRecoveryService.resetPassword`
+revokes every session of the user after the save, and `UserService.save` does
+the same on an update carrying `password`, keeping only the session the user
+changed its own password with (read from the injected `requestContext`); an
+administrator's change keeps none. Both go through
+`ISessionManager.revokeByOwner`, so the refresh tokens (cascade) and the
+back-channel logout follow, and both run after the write, never inside the
+#3526 transaction. The session manager is an optional ctx member, so the
+fake-backed specs construct the services without one.
+
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
 
 **Mail templates:** workflow services do **not** build mail HTML inline —

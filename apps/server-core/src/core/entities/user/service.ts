@@ -18,6 +18,8 @@ import type { User } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository } from '../path/types.ts';
+import type { EventRequestContext } from '../event/types.ts';
+import type { ISessionManager } from '../../authentication/session/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
@@ -35,6 +37,11 @@ export type UserServiceContext = {
      */
     pathRepository?: IPathRepository;
     passwordMinLength?: number;
+    /**
+     * Ends the user's other sessions when its password changes.
+     */
+    sessionManager?: ISessionManager;
+    requestContext?: () => EventRequestContext | undefined;
 };
 
 export class UserService extends AbstractEntityService implements IUserService {
@@ -46,12 +53,18 @@ export class UserService extends AbstractEntityService implements IUserService {
 
     protected validator: UserValidator;
 
+    protected sessionManager?: ISessionManager;
+
+    protected requestContext?: () => EventRequestContext | undefined;
+
     constructor(ctx: UserServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.pathRepository = ctx.pathRepository;
         this.validator = new UserValidator({ passwordMinLength: ctx.passwordMinLength });
+        this.sessionManager = ctx.sessionManager;
+        this.requestContext = ctx.requestContext;
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
@@ -385,6 +398,16 @@ export class UserService extends AbstractEntityService implements IUserService {
 
                 return repository.save(merged);
             });
+
+            // A new password ends every other session of the user; a user
+            // changing its own keeps the session it did so with.
+            if (validated.password && this.sessionManager) {
+                const self = actor.identity?.type === 'user' && actor.identity.data.id === id;
+                await this.sessionManager.revokeByOwner(
+                    { sub: id, subKind: 'user' },
+                    self ? this.requestContext?.()?.sessionId ?? undefined : undefined,
+                );
+            }
 
             return {
                 entity,

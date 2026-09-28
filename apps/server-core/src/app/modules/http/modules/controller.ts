@@ -499,6 +499,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
             options: {
                 passwordRecoveryEnabled: config.passwordRecoveryEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
@@ -1217,6 +1218,8 @@ export class HTTPControllerModule {
                 realmRepository,
             }),
             passwordMinLength: config.passwordMinLength,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            requestContext: useRequestEventContext,
         });
     }
 
