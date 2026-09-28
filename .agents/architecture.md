@@ -9199,7 +9199,11 @@ cannot replace any of this, because the server never sees it.
 
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
-introspects on every store instantiation regardless.
+introspects on every store instantiation regardless. Every write carries
+`SameSite=Lax`, and `Secure` whenever the writing document is https
+(`installStore`'s `cookieOptions`), since the values are bearer credentials;
+a Nuxt server-side write has no document to ask and carries neither, which the
+next client write replaces. HSTS is the proxy's job and documented as such.
 
 **A session is only committed for a token the endpoint reports as
 `active`.** The introspection answers 200 with the full payload for a token it

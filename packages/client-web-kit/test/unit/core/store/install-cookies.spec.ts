@@ -331,3 +331,43 @@ describe('core/store/install-cookies path', () => {
         }
     });
 });
+
+describe('core/store/install-cookies attributes', () => {
+    const setLocation = (protocol: string) => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { pathname: '/', protocol },
+        });
+    };
+
+    afterEach(() => {
+        setLocation('http:');
+    });
+
+    it('marks every stored cookie secure on an https origin', async () => {
+        setLocation('https:');
+
+        const { store, setCalls } = buildApp();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(setCalls).not.toHaveLength(0);
+        for (const call of setCalls) {
+            expect(call.options.secure).toBe(true);
+            expect(call.options.sameSite).toEqual('lax');
+        }
+    });
+
+    it('leaves secure off on a plain http origin', async () => {
+        setLocation('http:');
+
+        const { store, setCalls } = buildApp();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(setCalls).not.toHaveLength(0);
+        for (const call of setCalls) {
+            expect(call.options.secure).toBeUndefined();
+            expect(call.options.sameSite).toEqual('lax');
+        }
+    });
+});
