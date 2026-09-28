@@ -164,6 +164,22 @@ describe('OAuth2RefreshTokenGrant', () => {
         expect(refreshTokenIssuer.issueCalls).toHaveLength(0);
     });
 
+    it('should leave a session of another subject untouched', async () => {
+        const payload = await seed();
+        const session = await sessionManager.findOneById(sessionId);
+        session!.sub = randomUUID();
+
+        const grant = build();
+        await expect(grant.runWith(payload)).rejects.toThrow();
+        await expect(grant.runWith(payload)).rejects.toThrow();
+
+        const row = await sessionTokenRepository.findOneById(refreshJti);
+        expect(row?.consumedAt).toBeNull();
+        expect(row?.revokedAt).toBeFalsy();
+        expect(sessionManager.revokeCalls).toHaveLength(0);
+        expect(tokenRepository.setInactiveCalls).toHaveLength(0);
+    });
+
     it('should rotate on the first refresh and link the new token pair', async () => {
         const payload = await seed();
         const grant = build();
