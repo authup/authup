@@ -170,6 +170,44 @@ describe('token verification: subject realm binding', () => {
         expect(response.status).toEqual(400);
     });
 
+    it('should leave another subject\'s session alone on a refresh or revoke naming it', async () => {
+        const victim = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const victimRefresh = await suite.client.token.introspect(
+            { token: victim.refresh_token! },
+            { authorizationHeaderInherit: true },
+        );
+
+        const token = await sign(realmKeyId, {
+            kind: OAuth2TokenKind.REFRESH,
+            sub: member.sub,
+            sub_kind: member.sub_kind,
+            realm_id: realmId,
+            session_id: victimRefresh.session_id,
+            jti: victimRefresh.jti,
+        });
+
+        for (let i = 0; i < 2; i++) {
+            const refreshed = await httpRequest(suite, 'POST', '/token', {
+                form: {
+                    grant_type: 'refresh_token',
+                    refresh_token: token,
+                },
+            });
+            expect(refreshed.status).toEqual(400);
+        }
+
+        const revoked = await httpRequest(suite, 'POST', '/token/revoke', { form: { token } });
+        expect(revoked.status).toEqual(200);
+
+        const response = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: 'refresh_token',
+                refresh_token: victim.refresh_token!,
+            },
+        });
+        expect(response.status).toEqual(200);
+    });
+
     it('should not import signature key material at own-realm reach', async () => {
         await expectClientError(
             () => realmAdmin.key.create({

@@ -464,7 +464,14 @@ export class TokenController {
                 skipActiveCheck: true,
             });
 
-            await this.tokenRevoker.revoke(payload);
+            // The key proves the realm, not the session: revoke only a token
+            // riding its own subject's session, and answer the same either way.
+            const session = payload.session_id ?
+                await this.sessionManager.findOneById(payload.session_id) :
+                null;
+            if (session && isTokenSession(session, payload)) {
+                await this.tokenRevoker.revoke(payload);
+            }
 
             // RFC 7009 §2.2 names 200 for a successful revocation. This was a
             // 202 - within the 2xx family, so a client reading the class was
