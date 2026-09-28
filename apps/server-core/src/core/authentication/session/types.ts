@@ -219,20 +219,22 @@ export interface ISessionManager {
 
     /**
      * Revoke every session of one subject, optionally keeping one (the
-     * caller's own), through `revokeMany`.
+     * caller's own), through `revokeMany`. Sessions that could not be
+     * revoked are logged at error level and returned.
      *
      * @param owner
      * @param exceptId
      */
-    revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void>;
+    revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<string[]>;
 
     /**
      * Revoke sessions in bounded batches (SESSION_REVOKE_CONCURRENCY), each
      * through `revoke`. A session that fails is logged and the rest are
      * still revoked; the call itself does not fail, since its caller has
-     * usually committed the write that asked for the revoke.
+     * usually committed the write that asked for the revoke, and it answers
+     * the ids it could not revoke.
      *
      * @param ids
      */
-    revokeMany(ids: string[]): Promise<void>;
+    revokeMany(ids: string[]): Promise<string[]>;
 }

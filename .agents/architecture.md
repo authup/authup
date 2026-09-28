@@ -6305,7 +6305,10 @@ other RP on that session that it ended.
   revoke cannot starve every concurrent request of a connection. A session
   whose revoke fails is logged and the rest are still revoked; the call does
   not fail, since its caller has usually committed the write that asked for
-  it. `POST /token/introspect` answers the
+  it, and answers the ids it could not revoke: `DELETE /sessions` reports
+  only the sessions actually ended, and `revokeByOwner` logs the remainder at
+  error level with the subject. The audience read never gates the removal: a
+  failed read is logged and the row is removed without a notification. `POST /token/introspect` answers the
   bare `{ active: false }` for a token whose `kind` is `logout_token`, as for
   every kind but an access or refresh token: it verifies (same realm key) but
   is a notification, not a credential, and RFC 7662 reports rather than
