@@ -5358,10 +5358,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the eight security toggles
+**Env semantics are per entry, not per type**: the nine security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`, `userAdminEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.
