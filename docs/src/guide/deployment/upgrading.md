@@ -5,7 +5,132 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.67)
+## Next release (after v1.0.0-beta.68)
+
+### Security hardening that changes behaviour
+
+This release tightens a number of defaults and checks. Most need no action;
+the ones that can break an existing setup come first.
+
+**May need action**
+
+- **Tokens are bound to their realm.** A token is accepted only when its
+  subject and its session belong to the realm the token names (API requests,
+  the refresh grant, introspection, RP-initiated logout). Tokens authup issues
+  always meet this. Importing your own signature key material now needs a
+  key-create grant that reaches beyond your own realm (the global `admin` role
+  has it); realm administrators can still generate signature keys but no longer
+  import them. A resource server verifying tokens locally against the JWKS
+  trusts the subject of any key of the token's realm.
+- **Provisioning `createOnly`.** A user, client or role entry binds its
+  declared roles, permissions and scopes only when it creates the row. An
+  existing row under that name receives none of them. Use `strategy: merge`
+  where relations must be applied to an existing row. Built-in rows (the system
+  clients, `admin`, `realm_admin`) are the exception.
+- **`realm_admin` and global roles.** The built-in `realm_admin` holds the
+  role-permission write permissions at `own` reach, so it can no longer change
+  the permission bindings of global roles. A data migration narrows existing
+  deployments; a reach an operator customized to something other than
+  `ownOrNull` is left alone. sqlite databases run no migrations, so they keep
+  the old reach until they are provisioned from scratch.
+- **Client reads are realm-gated.** `GET /clients`, `GET /clients/:id` and
+  `GET /clients/@stats` honour the reader's realm reach like every other
+  realm-bound entity. A grant at `own` / `ownOrNull` no longer sees another
+  realm's clients, and a foreign client record answers 403.
+- **Cross-realm policy references are refused.** `POST /permission-policies`
+  and a client's `accessPolicyId` accept only a global policy or one of the
+  permission's (client's) own realm (400 otherwise). A client still saves while
+  its existing binding is left as it is, but an `accessPolicyId` naming
+  another realm's policy now denies every login to that client. Rebind such
+  clients to a global policy or one of their own realm.
+- **SMTP verifies the relay certificate** for every form. A relay with a
+  self-signed or untrusted certificate needs `rejectUnauthorized: false` in the
+  `smtp` object (next to `connectionString` too), or
+  `?tls.rejectUnauthorized=false` on a connection URL given through the
+  environment.
+- **Request bodies are capped at 1mb** after decompression, and
+  `middlewareBody`, `middlewareCookie` and `middlewareQuery` are now honoured.
+  A `middlewareBody` object applies per parser on top of the default: a parser
+  stays on and capped unless the object turns it off (`false`) or names its own
+  `limit`.
+- **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
+  fails the start), and `false` now deactivates an existing default admin on
+  the next start. Setting it back to `true` does not reactivate the admin:
+  reactivate it through another admin, or provision the master realm's `admin`
+  user with `active: true` and `strategy: { type: merge, attributes: [active] }`
+  for one start. A production process configured with the default admin
+  password logs a warning.
+- **HTTP Basic and MFA.** With `userAuthBasic` and `mfaEnabled` both on, Basic
+  user credentials are refused for a user holding a confirmed authenticator.
+  Scripts acting as such a user must authenticate as a confidential client.
+- **Token parameters travel in the body.** `/token/introspect` and
+  `/token/revoke` refuse a `token` query parameter (400).
+- **Attributes policies** can no longer be written with a `$regex` operator in
+  their query (400). Use `$startsWith`, `$endsWith`, `$in` or equality.
+  Existing policies are unaffected.
+- **Authorization codes** are 256-bit and expire after 5 minutes, independent
+  of the access-token lifetime.
+- **Realtime bus payloads.** Entity events on the redis and socket.io bus no
+  longer carry the columns withheld from default reads (`select: false`: user
+  email, password and reset hashes, client and authenticator secrets), and
+  entity audit rows no longer record email changes. A bus consumer that
+  mirrors an email or a secret from these events must read it through the API.
+- **Server adapters (local mode)** fetch the signing key from the token's own
+  realm (`/realms/<realm_id>/jwks/<kid>`) and refuse a token without
+  `realm_id` or with a non-uuid `kid`.
+- **Rate limiting behind a proxy.** With `trustProxy: true` (the default) the
+  limiter keys on the `X-Forwarded-For` value a client sends. Pin `trustProxy`
+  to the hop count or proxy address of your deployment.
+- **Activation and reset codes** are stored as a SHA-256 digest, and a data
+  migration converts codes already issued. On sqlite (no migrations), and for
+  codes an older replica writes during a rolling upgrade, a link mailed before
+  the upgrade stops working: activate such users through an admin and ask for a
+  new reset mail. Stop older replicas before newer ones serve activation and
+  reset.
+
+**Users sign in again, sessions end**
+
+- Disabling or deleting a signature key ends the tokens it signed at once (a
+  per-key mark checked on every verification; re-enabling the key makes its
+  unexpired tokens valid again). Without a shared Redis cache the mark applies
+  on the replica that handled the change. Token verifications cached by an
+  older release are ignored after upgrading.
+- Resetting a password ends every session of the user; changing a password
+  ends every other session. An authorization or device code minted before a
+  sign-out, password change or deactivation can no longer be redeemed.
+- Deactivating a user or client ends its sessions and refuses its access
+  tokens right away. Whatever wrote the deactivation (the API, or a
+  provisioning MERGE such as `USER_ADMIN_ENABLED=false`), the token endpoint
+  refuses to refresh or redeem for the subject (`invalid_grant`) and
+  introspection reports its tokens `active: false`, as it does for a token
+  whose session has ended. Resource servers verifying locally against the JWKS
+  still accept an issued access token until it expires.
+- On https deployments served at the root of their host, the console session
+  cookie is named `__Host-authup_session`, so console users sign in once more
+  after upgrading. http and sub-path deployments keep `authup_session`.
+- The kit store writes its token cookies with `SameSite=Lax` and, on https
+  pages, `Secure`; `@authup/client-web-nuxt` sets `Secure` on server-side
+  writes too when the request is https (behind a TLS-terminating proxy, send
+  `X-Forwarded-Proto: https`). Send `Strict-Transport-Security` from your
+  reverse proxy.
+
+**No action**
+
+- `POST /password-forgot` answers an unknown user or address with the same
+  `202` and body as a known one (no mail is sent).
+- Token introspection reports only access and refresh tokens; an id_token or
+  an MFA login ticket answers a bare `{ active: false }`.
+- A client managing itself can no longer change its own `grantTypes`.
+- LDAP `userFilter` / `groupFilter` templates insert the login name and entry
+  values as literal filter values, so special characters never change the
+  filter.
+- With the failed-login throttle on, concurrent attempts for one account from
+  one address beyond the threshold are refused while the others run
+  (`retryAfter: 1`); only failed attempts lead to the full-window refusal.
+- The access log no longer records the `codeRequest` and `redirect` query
+  parameters.
+
+## v1.0.0-beta.68 (was: next release after v1.0.0-beta.67)
 
 ### The worker opens a health port
 
@@ -55,97 +180,6 @@ reads as a number or a boolean until it is written again.
 `serialize` from `@authup/kit` now writes a string JSON-quoted (`"abc"` instead of
 `abc`). `deserialize` reads both forms, so a round trip is unchanged; only code
 that reads the stored text directly sees the quotes.
-
-### Security hardening that changes behaviour
-
-This release tightens a number of defaults and checks. Most need no action;
-the ones that can break an existing setup come first.
-
-**May need action**
-
-- **Provisioning `createOnly`.** A user or client entry binds its declared
-  roles, permissions and scopes only when it creates the row. An existing row
-  under that name receives none of them. Use `strategy: merge` where relations
-  must be applied to an existing user or client. The built-in system clients
-  are the exception and keep receiving the bindings their entry declares.
-- **`realm_admin` and global roles.** The built-in `realm_admin` holds the
-  role-permission write permissions at `own` reach, so it can no longer change
-  the permission bindings of global roles. A data migration narrows existing
-  deployments; a reach an operator customized to something other than
-  `ownOrNull` is left alone. sqlite databases run no migrations, so they keep
-  the old reach until they are provisioned from scratch.
-- **Client reads are realm-gated.** `GET /clients`, `GET /clients/:id` and
-  `GET /clients/@stats` honour the reader's realm reach like every other
-  realm-bound entity. A grant at `own` / `ownOrNull` no longer sees another
-  realm's clients, and a foreign client record answers 403.
-- **Cross-realm policy references are refused.** `POST /permission-policies`
-  and a client's `accessPolicyId` accept only a global policy or one of the
-  permission's (client's) own realm (400 otherwise). A client still saves while
-  its existing binding is left as it is, but an `accessPolicyId` naming
-  another realm's policy now denies every login to that client. Rebind such
-  clients to a global policy or one of their own realm.
-- **SMTP verifies the relay certificate** for the object and `smtp: true`
-  forms as well. A relay with a self-signed or untrusted certificate needs
-  `rejectUnauthorized: false` in the `smtp` object.
-- **Request bodies are capped at 1mb** after decompression, and
-  `middlewareBody`, `middlewareCookie` and `middlewareQuery` are now honoured.
-  An options object for `middlewareBody` replaces the default limit, so set a
-  `limit` per parser there.
-- **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
-  fails the start), and `false` now deactivates an existing default admin on
-  the next start. A production process configured with the default admin
-  password logs a warning.
-- **HTTP Basic and MFA.** With `userAuthBasic` and `mfaEnabled` both on, Basic
-  user credentials are refused for a user holding a confirmed authenticator.
-  Scripts acting as such a user must authenticate as a confidential client.
-- **Token parameters travel in the body.** `/token/introspect` and
-  `/token/revoke` refuse a `token` query parameter (400).
-- **Attributes policies** can no longer be written with a `$regex` operator in
-  their query (400). Use `$startsWith`, `$endsWith`, `$in` or equality.
-  Existing policies are unaffected.
-- **Authorization codes** are 256-bit and expire after 5 minutes, independent
-  of the access-token lifetime.
-- **Realtime bus payloads.** Entity events on the redis and socket.io bus no
-  longer carry the columns withheld from default reads (`select: false`: user
-  email, password and reset hashes, client and authenticator secrets), and
-  entity audit rows no longer record email changes. A bus consumer that
-  mirrors an email or a secret from these events must read it through the API.
-- **Server adapters (local mode)** fetch the signing key from the token's own
-  realm (`/realms/<realm_id>/jwks/<kid>`) and refuse a token without
-  `realm_id` or with a non-uuid `kid`.
-
-**Users sign in again, sessions end**
-
-- A token verifies only against a signing key of the realm it names.
-  Disabling or deleting a signature key ends the tokens it signed immediately
-  (with the in-memory cache on several replicas, only on the replica that
-  handled the change).
-- Resetting a password ends every session of the user; changing a password
-  ends every other session.
-- Deactivating a user or client ends its sessions and refuses its access
-  tokens right away. Whatever wrote the deactivation (the API, or a
-  provisioning MERGE such as `USER_ADMIN_ENABLED=false`), the token endpoint
-  refuses to refresh the subject's tokens (`invalid_grant`) and introspection
-  reports them `active: false`, as it does for a token whose session has
-  ended. Resource servers verifying locally against the JWKS still accept an
-  issued access token until it expires.
-- On https deployments served at the root of their host, the console session
-  cookie is named `__Host-authup_session`, so console users sign in once more
-  after upgrading. http and sub-path deployments keep `authup_session`.
-- The kit store writes its token cookies with `SameSite=Lax` and, on https
-  pages, `Secure`. Send `Strict-Transport-Security` from your reverse proxy.
-
-**No action**
-
-- Activation and password-reset codes are stored as a SHA-256 digest; a data
-  migration converts codes already issued, so mailed links keep working.
-- `POST /password-forgot` answers an unknown user or address with the same
-  `202` and body as a known one (no mail is sent).
-- Token introspection reports only access and refresh tokens; an id_token or
-  an MFA login ticket answers a bare `{ active: false }`.
-- A client managing itself can no longer change its own `grantTypes`.
-- LDAP `userFilter` / `groupFilter` values are escaped per RFC 4515.
-- The failed-login throttle also counts attempts still in flight.
 
 ## v1.0.0-beta.67 (was: next release after v1.0.0-beta.66)
 
