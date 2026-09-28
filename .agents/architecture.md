@@ -1297,7 +1297,8 @@ token endpoint checks the subject itself: the refresh grant answers
 `invalid_grant` when the token's subject no longer resolves or is inactive,
 and `POST /token/introspect` reports a token `active: false` once its subject
 is inactive or its session is gone. The revocation above goes through
-`ISessionManager.revokeByOwner`, so the refresh tokens
+`ISessionManager.revokeByOwner` (batched and failure-isolated, see
+*Back-channel logout*), so the refresh tokens
 (cascade) and the back-channel logout follow, and it runs after the write,
 never inside the #3526 transaction. The session manager is an optional ctx
 member, so the fake-backed specs construct the services without one. A
@@ -6332,14 +6333,18 @@ other RP on that session that it ended.
   down cannot block a logout and the status of the API call that ended the
   session is unaffected. The response body is never read and is cancelled
   (`response.body?.cancel()`) once the status is known, since an unread body
-  pins the keep-alive socket. The bulk paths (`SessionService.deleteManyForSelf`
-  / `deleteManyByQuery`) collect the sessions that pass their checks first
-  and then revoke them in batches of five (`SESSION_REVOKE_CONCURRENCY`,
-  deliberately below the default pool of ten, since every revoke holds a
-  pooled connection for its resolve and remove), so a hanging RP costs one
-  timeout per batch rather than one per session, a realm-wide sweep never
-  turns into an unbounded burst of row deletes and outbound requests, and one
-  bulk revoke cannot starve every concurrent request of a connection. `POST /token/introspect` answers the
+  pins the keep-alive socket. Every bulk revoke (`SessionService.deleteManyForSelf`
+  / `deleteManyByQuery`, and `revokeByOwner` behind a password change, a
+  reset and a deactivation) goes through `SessionManager.revokeMany`, which
+  revokes in batches of five (`SESSION_REVOKE_CONCURRENCY`, deliberately
+  below the default pool of ten, since every revoke holds a pooled
+  connection for its resolve and remove), so a hanging RP costs one timeout
+  per batch rather than one per session, a realm-wide sweep never turns
+  into an unbounded burst of row deletes and outbound requests, and one bulk
+  revoke cannot starve every concurrent request of a connection. A session
+  whose revoke fails is logged and the rest are still revoked; the call does
+  not fail, since its caller has usually committed the write that asked for
+  it. `POST /token/introspect` answers the
   bare `{ active: false }` for a token whose `kind` is `logout_token`, as for
   every kind but an access or refresh token: it verifies (same realm key) but
   is a notification, not a credential, and RFC 7662 reports rather than

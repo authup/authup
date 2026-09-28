@@ -7,7 +7,9 @@
 
 import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import { JWTError } from '@authup/specs';
+import { SESSION_REVOKE_CONCURRENCY } from './constants.ts';
 import type { 
     ISessionManager, 
     ISessionRepository, 
@@ -24,12 +26,15 @@ export class SessionManager implements ISessionManager {
 
     protected revokeNotifier?: ISessionRevokeNotifier;
 
+    protected logger?: Logger;
+
     // -----------------------------------------------------
 
     constructor(ctx: SessionManagerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.revokeNotifier = ctx.revokeNotifier;
+        this.logger = ctx.logger;
     }
 
     // -----------------------------------------------------
@@ -134,9 +139,21 @@ export class SessionManager implements ISessionManager {
 
     async revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void> {
         const sessions = await this.repository.findAllByOwner(owner);
-        for (const session of sessions) {
-            if (session.id !== exceptId) {
-                await this.revoke(session.id);
+        await this.revokeMany(sessions
+            .filter((session) => session.id !== exceptId)
+            .map((session) => session.id));
+    }
+
+    async revokeMany(ids: string[]): Promise<void> {
+        for (let i = 0; i < ids.length; i += SESSION_REVOKE_CONCURRENCY) {
+            const batch = ids.slice(i, i + SESSION_REVOKE_CONCURRENCY);
+            const results = await Promise.allSettled(batch.map((id) => this.revoke(id)));
+            for (const [j, result] of results.entries()) {
+                if (result.status === 'rejected') {
+                    this.logger?.warn(`Revoking session ${batch[j]} failed: ${
+                        result.reason instanceof Error ? result.reason.message : String(result.reason)
+                    }`);
+                }
             }
         }
     }
