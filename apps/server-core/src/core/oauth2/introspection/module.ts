@@ -10,6 +10,7 @@ import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
+import { isTokenSubject } from '../token/subject.ts';
 import type {
     OAuth2IntrospectionSubject,
     OAuth2IntrospectionSubjectContext,
@@ -38,25 +39,34 @@ import type {
  * own evaluator resolves: a user's grants owned by another client are absent
  * (#3597).
  *
+ * @returns null when the subject is not of the token's realm.
  * @throws OAuth2RequestError when the subject no longer resolves.
  */
 export async function resolveIntrospectionSubject(
     ctx: OAuth2IntrospectionSubjectContext,
     input: OAuth2IntrospectionSubjectInput,
-) : Promise<OAuth2IntrospectionSubject> {
+) : Promise<OAuth2IntrospectionSubject | null> {
     const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
     if (!identity) {
         // todo: differentiate between client & user
         throw OAuth2RequestError.identityInvalid();
     }
 
+    // A subject of another realm than the token names is not the token's
+    // subject at all, so nothing about it may be reported.
+    if (!isTokenSubject(identity, input.token)) {
+        return null;
+    }
+
     const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
     const claims = claimsBuilder.fromIdentity(identity);
 
-    if (!input.active) {
+    // A deactivated subject's credentials are reported like a dead one's.
+    if (!input.active || !identity.data.active) {
         return {
             identity,
             claims,
+            active: false,
         };
     }
 
@@ -90,6 +100,7 @@ export async function resolveIntrospectionSubject(
     return {
         identity,
         claims,
+        active: true,
         permissions,
     };
 }

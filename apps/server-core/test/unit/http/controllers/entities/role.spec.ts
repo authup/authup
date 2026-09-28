@@ -13,7 +13,14 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeRole, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils';
+import { PermissionName } from '@authup/core-kit';
+import {
+    createFakeRole,
+    createFakeUser,
+    expectClientError,
+    expectPropertiesEqualToSrc,
+    httpRequest,
+} from '../../../../utils';
 
 describe('src/http/controllers/role', () => {
     const suite = createTestApplication();
@@ -124,6 +131,25 @@ describe('src/http/controllers/role', () => {
             .delete(details.id!);
 
         expect(response.id).toBeDefined();
+    });
+
+    it('should remove the grants of a deleted role immediately', async () => {
+        const password = 'role-holder-password';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+
+        await suite.client.rolePermission.create({ roleId: role.id, permissionId: permission.id });
+        await suite.client.userRole.create({ userId: user.id, roleId: role.id });
+
+        const token = await suite.client.token.createWithPassword({ username: user.name, password });
+        const read = () => httpRequest(suite, 'GET', '/permissions', { headers: { Authorization: `Bearer ${token.access_token}` } });
+
+        expect((await read()).status).toEqual(200);
+
+        await suite.client.role.delete(role.id);
+
+        expect((await read()).status).toEqual(403);
     });
 
     it('should create and update resource with put', async () => {

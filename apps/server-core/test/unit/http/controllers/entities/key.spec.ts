@@ -18,9 +18,10 @@ import type { Realm } from '@authup/core-kit';
 import { KeyStatus } from '@authup/core-kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWKType, JWKUse } from '@authup/specs';
+import { extractTokenHeader } from '@authup/server-kit';
 import { KeyEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { createTestApplication } from '../../../../app';
-import { expectClientError } from '../../../../utils';
+import { expectClientError, httpRequest } from '../../../../utils';
 
 const CERTIFICATE = readFileSync(
     new URL('../../../../data/certificates/certificate.pem', import.meta.url),
@@ -294,5 +295,53 @@ describe('src/http/controllers/key', () => {
 
         const updatedRow = data.find((row) => row.name === 'updated');
         expect(updatedRow!.data!.diff).toEqual({ status: { next: KeyStatus.PASSIVE, previous: KeyStatus.ACTIVE } });
+    });
+    describe.each([
+        ['disabled', (id: string) => suite.client.key.update(id, { status: KeyStatus.DISABLED })],
+        ['deleted', (id: string) => suite.client.key.delete(id)],
+    ])('a signature key once %s', (_, retire) => {
+        it('should stop verifying the tokens it signed', async () => {
+            const { data: master } = await suite.client.realm.getOne('master');
+            const { data: key } = await suite.client.key.create({
+                use: JWKUse.SIGNATURE,
+                realmId: master.id,
+            });
+
+            const { access_token: token } = await suite.client.token.createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+            expect(extractTokenHeader(token).kid).toEqual(key.id);
+
+            const request = () => httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+            expect((await request()).status).toEqual(200);
+
+            await retire(key.id);
+
+            expect((await request()).status).toEqual(401);
+        });
+    });
+
+    it('should verify the tokens of a disabled signature key again once it is passive', async () => {
+        const { data: master } = await suite.client.realm.getOne('master');
+        const { data: key } = await suite.client.key.create({
+            use: JWKUse.SIGNATURE,
+            realmId: master.id,
+        });
+
+        const { access_token: token } = await suite.client.token.createWithPassword({
+            username: 'admin',
+            password: 'start123',
+        });
+        expect(extractTokenHeader(token).kid).toEqual(key.id);
+
+        const request = () => httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+        expect((await request()).status).toEqual(200);
+
+        await suite.client.key.update(key.id, { status: KeyStatus.DISABLED });
+        expect((await request()).status).toEqual(401);
+
+        await suite.client.key.update(key.id, { status: KeyStatus.PASSIVE });
+        expect((await request()).status).toEqual(200);
     });
 });

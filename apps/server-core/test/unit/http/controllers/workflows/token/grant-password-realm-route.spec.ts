@@ -156,6 +156,21 @@ describe('src/http/controllers/token (realm route)', () => {
         expect(introspection.active).toEqual(true);
     });
 
+    // RFC 7662 §2.1 / RFC 7009 §2.1: the realm mount reads the token from
+    // the form body only, like the flat one.
+    it('should refuse a token passed in the query string on the realm route', async () => {
+        const basic = Buffer.from('admin:start123').toString('base64');
+
+        let response = await httpRequest(suite, 'POST', '/realms/master/token/introspect?token=value', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: { realm_name: 'master' },
+        });
+        expect(response.status).toEqual(400);
+
+        response = await httpRequest(suite, 'POST', '/realms/master/token/revoke?token=value', { form: { realm_name: 'master' } });
+        expect(response.status).toEqual(400);
+    });
+
     it('should answer 404 on revoke for an unknown route realm id', async () => {
         const response = await httpRequest(suite, 'POST', '/realms/00000000-0000-4000-8000-000000000000/token/revoke', { form: { token: 'unknown' } });
 

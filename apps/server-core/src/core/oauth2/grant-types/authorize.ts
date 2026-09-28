@@ -6,12 +6,19 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWKUse, hasOAuth2Scopes } from '@authup/specs';
+import {
+    JWKUse,
+    OAuth2GrantError,
+    hasOAuth2Scopes,
+    isJWTError,
+} from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { buildOAuth2TokenHash, deriveAmrAcr } from '../authorization/helpers.ts';
 import type { IKeyStore } from '../../key/index.ts';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
+import { isTokenSession, isTokenSubjectActive } from '../token/subject.ts';
+import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
 import type { OAuth2BearerResponseBuildContext } from '../response/index.ts';
@@ -24,6 +31,8 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
     protected keyStore : IKeyStore;
 
+    protected identityResolver : IIdentityResolver;
+
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
@@ -33,12 +42,22 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.keyStore = ctx.keyStore;
+        this.identityResolver = ctx.identityResolver;
     }
 
     async runWith(
         authorizationCode: OAuth2AuthorizationCode,
         options: OAuth2GrantRunWIthOptions = {},
     ) : Promise<OAuth2TokenGrantResponse> {
+        // A code outlives nothing its subject lost in between: the subject
+        // must still exist, be active and belong to the code's realm.
+        const identity = authorizationCode.sub && authorizationCode.sub_kind ?
+            await this.identityResolver.resolve(authorizationCode.sub_kind, authorizationCode.sub) :
+            null;
+        if (!isTokenSubjectActive(identity, authorizationCode)) {
+            throw OAuth2GrantError.invalid();
+        }
+
         const session = await this.resolveSession(authorizationCode, options);
 
         // amr/acr derive from the RESOLVED session (authMethod + mfaAt) —
@@ -71,8 +90,8 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         };
 
         // The id_token is minted HERE — after resolveSession — so its `sid`
-        // references the real backing session for the reuse branch, the
-        // fallback branch, and session-less (federated IdP) codes alike.
+        // references the real backing session for the reuse branch and for
+        // session-less codes alike.
         // `auth_time` is the authentication instant captured on the code.
         if (
             authorizationCode.scope &&
@@ -111,12 +130,11 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
      * interactive login would create a second session (the abandoned bearer
      * session that authenticated `POST /authorize`, plus this one).
      *
-     * The reuse is gated on the session still existing and belonging to the
-     * same subject/realm as the code (defense in depth — the id is
-     * server-derived from the authenticated bearer, never client input). Any
-     * mismatch, or a session-less authorize flow (external IdP, non-interactive
-     * clients), falls back to creating a fresh session — preserving prior
-     * behavior.
+     * A code that names a session is redeemed only while that session still
+     * exists and belongs to the code's subject and realm: a revoke between
+     * issue and redemption (a sign-out, a password change, a deactivation)
+     * refuses the code instead of minting a fresh session for it. Only a
+     * session-less authorize flow (HTTP Basic) creates one.
      */
     protected async resolveSession(
         authorizationCode: OAuth2AuthorizationCode,
@@ -124,26 +142,33 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
     ) : Promise<Session> {
         if (authorizationCode.session_id) {
             const existing = await this.sessionManager.findOneById(authorizationCode.session_id);
-            if (
-                existing &&
-                existing.sub === authorizationCode.sub &&
-                existing.subKind === authorizationCode.sub_kind &&
-                existing.realmId === authorizationCode.realm_id
-            ) {
-                // `auth_sessions.client_id` is deliberately NOT touched. It
-                // is the client-SUBJECT foreign key, the counterpart of
-                // `user_id` that `SessionManager.create` populates from `sub`
-                // when `subKind` is client, and its ON DELETE CASCADE means
-                // "this client owns this row". Writing the authorizing
-                // application into it put an unrelated id behind that cascade,
-                // so deleting that application deleted a USER's session and,
-                // through `auth_session_tokens.session_id`, every other
-                // application's tokens on it.
-                //
-                // Which application authorized is recorded per token, on
-                // `auth_session_tokens.client_id`, where a session serving
-                // several applications can say so.
-                return this.sessionManager.refresh(existing);
+            if (!existing || !isTokenSession(existing, authorizationCode)) {
+                throw OAuth2GrantError.invalid('the session has been revoked');
+            }
+
+            // `auth_sessions.client_id` is deliberately NOT touched. It
+            // is the client-SUBJECT foreign key, the counterpart of
+            // `user_id` that `SessionManager.create` populates from `sub`
+            // when `subKind` is client, and its ON DELETE CASCADE means
+            // "this client owns this row". Writing the authorizing
+            // application into it put an unrelated id behind that cascade,
+            // so deleting that application deleted a USER's session and,
+            // through `auth_session_tokens.session_id`, every other
+            // application's tokens on it.
+            //
+            // Which application authorized is recorded per token, on
+            // `auth_session_tokens.client_id`, where a session serving
+            // several applications can say so.
+            // A session revoked concurrently fails the refresh with a JWT
+            // error, which the token endpoint answers as invalid_grant.
+            try {
+                return await this.sessionManager.refresh(existing);
+            } catch (e) {
+                if (isJWTError(e)) {
+                    throw OAuth2GrantError.invalid('the session has been revoked');
+                }
+
+                throw e;
             }
         }
 

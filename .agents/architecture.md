@@ -1278,6 +1278,30 @@ controller factories. Un-threaded `UserValidator` sites (IdP account
 provisioning, file provisioning, the kit's client-side form) keep the
 default 10. No composition rules: length only (NIST 800-63B).
 
+**A new password or a deactivation ends the subject's sessions.**
+`PasswordRecoveryService.resetPassword` revokes every session of the user after
+the save, and `UserService.save` does the same on an update carrying
+`password`, keeping only the session the user changed its own password with
+(read from the injected `requestContext`); an administrator's change keeps
+none. An update flipping `active` to false (`UserService` and `ClientService`)
+revokes every session of that subject, and the authorization middleware treats
+a resolved identity that is not `active` as no credential at all: the bearer
+branch and the MFA ticket answer 401, the console cookie leaves the request
+anonymous. So a deactivation ends a live bearer on its next request and a
+refresh token with its session. A deactivation written outside these services
+(a provisioning MERGE of `USER_ADMIN_ENABLED=false`) revokes nothing, so the
+token endpoint checks the subject itself: the refresh grant answers
+`invalid_grant` when the token's subject no longer resolves or is inactive,
+and `POST /token/introspect` reports a token `active: false` once its subject
+is inactive or its session is gone. The revocation above goes through
+`ISessionManager.revokeByOwner` (batched and failure-isolated, see
+*Back-channel logout*), so the refresh tokens
+(cascade) and the back-channel logout follow, and it runs after the write,
+never inside the #3526 transaction. The session manager is an optional ctx
+member, so the fake-backed specs construct the services without one. A
+resource server verifying tokens locally against the JWKS still accepts an
+issued access token until its `exp`.
+
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw. Don't leave orphaned records.
 
 **Mail templates:** workflow services do **not** build mail HTML inline:
@@ -2681,6 +2705,18 @@ rather than trusted until `exp`.
   `SameSite=None`, and it is a different, larger trust ("act on this
   origin's requests with the user's live session" versus "send a code here
   after the user consented").
+- **The gate judges the request presenting the cookie, not the host that set
+  it.** Another host of the same site can set a same-named cookie through a
+  `Domain` attribute, and the browser sends it alongside the real one on
+  same-origin requests. So an https deployment served at the root of its host
+  names the credential `__Host-authup_session` (`buildSessionCookieName`,
+  `adapters/http/cookie/session.ts`, used by every reader and writer), which a
+  browser accepts only from the host itself, `Secure`, `Path=/` and without a
+  `Domain`, and the plain name is not read there at all. An http or sub-path
+  deployment cannot carry the prefix (not `Secure`, or scoped to the base
+  path) and keeps the plain name; there a sibling host of the same site
+  remains inside the trust boundary, which is the reason to give the IdP a
+  site of its own.
 - **The header always wins, and the cookie is never even read when one is
   present.** The middleware's cookie branch replaces the existing
   `if (!headerValue) return`; nothing between the header parse and the Basic
@@ -2775,9 +2811,24 @@ rather than trusted until `exp`.
   cookie branch calls `refresh()` on a throttle rather than `ping()` (which
   moves only `seenAt`). Otherwise an active user would be signed out
   mid-task once the session reached its lifetime. It costs no extra write
-  (`ping` already saved the row) and it re-reads the row first: `save`
-  upserts by primary key, so writing the row read at the top of the request
-  would RESURRECT a session a concurrent sign-out deleted.
+  (`ping` already saved the row). **A session write never re-creates a
+  row**: `SessionRepository.save` only creates; `update(session, patch)` is
+  a conditional `UPDATE` of exactly the columns the write moves (`ping` its
+  `seenAt`, `refresh` `refreshedAt` / `seenAt` / `expiresAt`,
+  `markMfaVerified` its `mfaAt`), so a stale copy never reverts what a
+  concurrent write stamped, and zero affected rows drops the cache entry and
+  throws `JWTError.expired()`. The cache entry is written BEFORE the
+  `UPDATE`, from the freshest copy the cache holds: a revoke (row removed,
+  then entry dropped) landing anywhere in the write then ends with no entry,
+  where writing it after the `UPDATE` could put a revoked session back for
+  its whole lifetime. So `ping`, `refresh` and `markMfaVerified` on a copy
+  read before a concurrent revoke fail (401 on a resource route, an aborted
+  MFA verify) instead of bringing the revoked session back. At `/token` the
+  refresh grant and the authorization-code grant's session reuse catch that
+  JWT error around `refresh()` and answer `invalid_grant`, as the token
+  endpoint must. Two writes racing on one session can still leave a stale
+  column in the CACHED copy (never in the row), which fails closed (a
+  spurious `mfa_required`) until the entry is written again.
 - **`Allow-Credentials` narrowed to publicUrl's origin** in the same change
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets
@@ -4382,7 +4433,11 @@ than guarded:
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
   Such a change reaches a user's grants after the 60 s owned-roles / owned-permissions
-  query cache.
+  query cache. Removing a user's role or permission junction takes effect at
+  once (its subscriber drops those keys), and so does deleting a role, whose
+  subscriber drops the role's owned-permissions key because the junction rows
+  go by cascade without a subscriber of their own; deleting a whole permission
+  may still lag up to the 60 s query cache.
 
 ### Policy engine evaluators are per engine
 
@@ -5958,7 +6013,7 @@ below). Both are `OAuth2TokenPayload` fields.
 the id_token is minted inside the `authorization_code` grant
 (`OAuth2AuthorizeGrant.runWith`) **after** `resolveSession`, so its `sid` is
 **authoritative**: it references the real backing session in the reuse branch,
-the fallback-create branch, and the **federated IdP** flow alike (that flow
+the session-less create branch, and the **federated IdP** flow alike (that flow
 reaches `authorize()` through the hosted page, so it carries a real
 `session_id` too). `OAuth2Authorization.authorize()` does not mint the
 id_token and holds no `openIdTokenIssuer` / `identityResolver`; it stamps the
@@ -6239,17 +6294,25 @@ other RP on that session that it ended.
   down cannot block a logout and the status of the API call that ended the
   session is unaffected. The response body is never read and is cancelled
   (`response.body?.cancel()`) once the status is known, since an unread body
-  pins the keep-alive socket. The bulk paths (`SessionService.deleteManyForSelf`
-  / `deleteManyByQuery`) collect the sessions that pass their checks first
-  and then revoke them in batches of five (`SESSION_REVOKE_CONCURRENCY`,
-  deliberately below the default pool of ten, since every revoke holds a
-  pooled connection for its resolve and remove), so a hanging RP costs one
-  timeout per batch rather than one per session, a realm-wide sweep never
-  turns into an unbounded burst of row deletes and outbound requests, and one
-  bulk revoke cannot starve every concurrent request of a connection. `POST /token/introspect` answers the
-  bare `{ active: false }` for a token whose `kind` is `logout_token`: it
-  verifies (same realm key) but is a notification, not a credential, and RFC
-  7662 reports rather than raises.
+  pins the keep-alive socket. Every bulk revoke (`SessionService.deleteManyForSelf`
+  / `deleteManyByQuery`, and `revokeByOwner` behind a password change, a
+  reset and a deactivation) goes through `SessionManager.revokeMany`, which
+  revokes in batches of five (`SESSION_REVOKE_CONCURRENCY`, deliberately
+  below the default pool of ten, since every revoke holds a pooled
+  connection for its resolve and remove), so a hanging RP costs one timeout
+  per batch rather than one per session, a realm-wide sweep never turns
+  into an unbounded burst of row deletes and outbound requests, and one bulk
+  revoke cannot starve every concurrent request of a connection. A session
+  whose revoke fails is logged and the rest are still revoked; the call does
+  not fail, since its caller has usually committed the write that asked for
+  it, and answers the ids it could not revoke: `DELETE /sessions` reports
+  only the sessions actually ended, and `revokeByOwner` logs the remainder at
+  error level with the subject. The audience read never gates the removal: a
+  failed read is logged and the row is removed without a notification. `POST /token/introspect` answers the
+  bare `{ active: false }` for a token whose `kind` is `logout_token`, as for
+  every kind but an access or refresh token: it verifies (same realm key) but
+  is a notification, not a credential, and RFC 7662 reports rather than
+  raises.
 - **SSRF residual, stated.** The server POSTs to an admin-chosen URL from
   inside the deployment, so the value can name an internal address. It is in
   the same trust class as `redirectUri`: written by an actor holding
@@ -6640,8 +6703,8 @@ rotation are inherited rather than written. There is deliberately no core grant 
 
 **Session semantics.** The approval binds the hosted page's bearer session, so a lingering
 hosted login approves under its existing session and the redemption reuses that row
-(`resolveSession`: `session_id` present and `sub` / `subKind` / `realmId` equal); otherwise a
-session is created from the DEVICE's request with the blob's `auth_method`.
+(`resolveSession`: `sub` / `subKind` / `realmId` equal); a device code whose session ended
+between approval and redemption is refused with `invalid_grant`, like an authorization code.
 `auth_sessions.client_id` is never written (subject FK); each token row carries the device
 client under `auth_session_tokens.client_id`, so back-channel logout reaches the device's RP.
 One consequence: the device's tokens share the approver's browser session, so ending that
@@ -7639,8 +7702,10 @@ revocation on the reused session).
 ### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
 
 `findOneById(jti)` → reject (`invalid_grant`) if **missing** (expired-and-swept or
-hard-cutover legacy, no `legacyRefresh`), **wrong kind**, or **`revokedAt` set**
-→ `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
+hard-cutover legacy, no `legacyRefresh`), **wrong kind**, **`revokedAt` set**, or
+naming a session that is not the token's subject's in its realm (`isTokenSession`,
+checked BEFORE anything is consumed or revoked, so such a token leaves that
+session alone) → `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
 `consumed_at IS NULL AND revoked_at IS NULL AND kind='refresh'`). On success:
 blocklist the old jti in cache (`setInactive(jti, exp)`: cache-only, **not** a
 DB revoke, so grace stays intact), refresh the session, issue RT (`parentId =
@@ -7931,10 +7996,16 @@ auth-code blob:
   the authenticated bearer, server-derived, never client input) and threads it
   `OAuth2Authorization.authorize(data, identity, { sessionId })` →
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
-- `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
-  still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth) and `sessionManager.refresh()`es it. It does NOT write
-  `clientId`.
+- `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session and
+  `sessionManager.refresh()`es it. A code whose session is gone or no longer
+  matches its `sub` / `sub_kind` / `realm_id` is refused with `invalid_grant`
+  rather than redeemed into a fresh session: a revoke between issue and
+  redemption (a sign-out, a password change, a deactivation) has to reach a
+  code pocketed before it. Before any of that the grant resolves the code's
+  subject and refuses one that no longer resolves, is inactive or belongs to
+  another realm (`isTokenSubjectActive`), which is what stops a deactivation
+  written outside the services (a provisioning MERGE) that revoked no session.
+  It does NOT write `clientId`.
 
   **Session subject foreign keys.** `auth_sessions` carries a nullable
   `user_id` AND a nullable `client_id`, and `SessionManager.create` populates
@@ -7946,15 +8017,16 @@ auth-code blob:
   application deleted a USER's session and, through
   `auth_session_tokens.session_id`, every other application's tokens on it.
   Per-app attribution is `auth_session_tokens.client_id`; the session column
-  is the subject FK and nothing else. Any mismatch, or a **session-less** authorize
-  flow (external-IdP callback: `IdentityProviderController` issues its code with
-  no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
-  preserving prior behavior.
+  is the subject FK and nothing else. Only a **session-less** authorize flow
+  (HTTP Basic, whose request carries no session) creates a session at
+  redemption.
 
-Covered by `test/unit/core/oauth2/grant-types/authorize.spec.ts` (reuse vs.
-fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
+Covered by `test/unit/core/oauth2/grant-types/authorize.spec.ts` (reuse,
+the refusal of a gone or mismatched session and of an unusable subject) and
+the end-to-end
 `test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
-(login → authorize → exchange asserts a single session survives).
+(login → authorize → exchange asserts a single session survives; a code
+pocketed before a password change or a deactivation is refused).
 
 ## MFA: Authenticator Devices
 
@@ -8368,12 +8440,52 @@ survives all paths.
 
 **Lifecycle enforcement:** signer + `RealmCipher.encrypt` use
 `resolveOrCreate` (active only); verifier rejects a `kid` whose key is
-non-sig OR `disabled` (passive still verifies); both JWKS surfaces filter
+non-sig OR `disabled` (passive still verifies) OR belongs to a realm other
+than the payload's `realm_id` (the signer always signs with the key of that
+realm, so no issued token is affected). The key proves the realm and nothing
+else: `sub`, `session_id` and `client_id` are whatever its holder signed. So
+every server-side consumer also binds the token's SUBJECT and SESSION to that
+realm (`isTokenSubject` / `isTokenSubjectActive` / `isTokenSession`,
+`core/oauth2/token/subject.ts`): the bearer middleware and its MFA-ticket
+branch (401), the refresh grant (`invalid_grant`, checked before the token is consumed),
+token revocation (answers 200 and revokes nothing), introspection (a subject of
+another realm is reported bare, a session of another subject or realm
+inactive) and the end-session revoke (no revoke). Every issuer stamps the
+subject's own realm, so no issued token is refused. A verifier outside the
+server sees no sessions: `@authup/server-adapter-kit`'s local mode reads the
+key from the token's own realm (`GET /realms/<realm_id>/jwks/<kid>`, a
+non-uuid `kid` refused before any request) and trusts the `sub` that key
+signed. That is why IMPORTING signature material requires a `KEY_CREATE`
+grant that reaches beyond the actor's own realm (evaluated against a random
+foreign realm, the `EventService` reach probe): a `realm_admin` may generate
+signature keys, never supply one, and a holder of the wider grant is trusted
+with every realm's subjects already. Both JWKS surfaces filter
 `status IN (active, passive)`; `RealmCipher.decrypt` re-resolves the key row
 on every call (only the imported `SymmetricCipher` is cached; material is
 immutable, status is not), so disabling an enc key is an immediate,
 **reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
-closed, never a 500).
+closed, never a 500). The verifier serves a token it has seen before from the
+signature-keyed claims cache (`TOKEN_CLAIMS`) without consulting its key, so
+disabling or deleting a SIGNATURE key marks it in the cache
+(`IOAuth2TokenRepository.setKeyInactive`, one entry per key id, lifted by
+`dropKeyInactive` when the key verifies again; it lives for the longest token
+lifetime the config allows and at least the claims cache's 1h fallback, so it
+outlives every claims entry it guards; an evicting Redis policy can still
+drop it ahead of them, which only `noeviction` rules out), and `verify()` reads the
+token header and refuses a marked `kid` BEFORE the cache lookup: the tokens
+that key signed stop verifying at once rather than at their `exp`, including a
+cache entry a verify that resolved the key just before wrote just after. It is
+one cache read per verify, next to the `jti` blocklist read. Re-checking the
+key row on every cache hit was rejected, since it is an uncached read plus a
+KEK unwrap on the hottest path, and so was a flush of the whole claims cache,
+which blocked Redis with a keyspace scan, emptied every realm's cache on any
+realm's key change, and lost to that very race. The mark reaches every
+replica only through a shared Redis cache; with the in-process memory cache
+it applies on the replica that served the key change, and the others honour
+the key within a token's lifetime. The claims prefix is versioned
+(`oauth2_token_claims_v2`), so an entry an older release cached is never
+read. A local-mode resource server keeps its own verified-token cache and
+accepts such a token until that entry or the token expires.
 
 **Management API:** `KeyService`
 (`core/entities/key/`) + `KeyController` dual-mounted
@@ -8385,6 +8497,7 @@ CUD via the OWN-override list) with per-row `resourceRealmMatch` drops in
 RS256/384/512 + ES256/384/512 (HS* rejected: JWKS cannot publish shared
 secrets) with `priority = max+1` default so **generate doubles as rotate**;
 import takes pkcs8+spki (base64 or PEM, both validated by importing) for sig
+(only under a `KEY_CREATE` reaching beyond the actor's realm, see above)
 and 32 base64 bytes for enc. Update mounts only `name`/`priority`/`status`
 (material, `use`, `type`, realm immutable). DELETE on an enc key with live
 blob references answers **409 + `data.references`** unless `?force=true`
@@ -8592,7 +8705,7 @@ locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 currently stamps `pwd` for both, the LDAP distinction is deferred).
 Every session-creation site stamps it: password grant (`pwd`), identity grant
 (`ext`, threaded through the code blob's `auth_method`, which the
-authorization_code grant's fallback-create inherits; the reuse branch inherits
+authorization_code grant's session-less create inherits; the reuse branch inherits
 from the bearer session row) + the federated IdP callback, which
 creates the session itself with `ext` and the exchange reuses it, client
 credentials (`client`, session-inventory only). Pre-column sessions
@@ -9010,7 +9123,7 @@ Canonical form is enforced at four boundaries (defense-in-depth):
 1. **Validator transform**: every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex**: the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
 3. **External boundary canonicalization**: when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
-4. **Repository-level lookup canonicalization**: name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only: write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
+4. **Repository-level lookup canonicalization**: name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, the name, a realm-name filter and a uuid key, which is lowercased so its 60 s query-cache key is the one the entity subscriber drops), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only: write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
 
 ### Adding a new identifier column
 

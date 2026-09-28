@@ -30,6 +30,8 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
 
     private inactiveIds = new Set<string>();
 
+    private inactiveKeyIds = new Set<string>();
+
     private bySignature = new Map<string, OAuth2TokenPayload>();
 
     private byId = new Map<string, OAuth2TokenPayload>();
@@ -61,6 +63,18 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
     async findOneBySignature(token: string): Promise<OAuth2TokenPayload | null> {
         this.findOneBySignatureCalls.push(token);
         return this.bySignature.get(token) ?? null;
+    }
+
+    async setKeyInactive(kid: string): Promise<void> {
+        this.inactiveKeyIds.add(kid);
+    }
+
+    async dropKeyInactive(kid: string): Promise<void> {
+        this.inactiveKeyIds.delete(kid);
+    }
+
+    async isKeyInactive(kid: string): Promise<boolean> {
+        return this.inactiveKeyIds.has(kid);
     }
 
     async removeById(id: string): Promise<void> {

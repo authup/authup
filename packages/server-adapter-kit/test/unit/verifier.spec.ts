@@ -24,14 +24,16 @@ import {
     TokenPayload,
     introspectToken,
 } from '../data/token';
-import { Faker } from '../utils';
+import { FAKER_KEY_ID, Faker } from '../utils';
 
 describe('verifier', () => {
+    let faker : Faker;
     let token : string;
     let mfaToken : string;
     let boundToken : string;
+    let getJwk : ReturnType<typeof vitest.spyOn>;
     beforeAll(async () => {
-        const faker = new Faker();
+        faker = new Faker();
 
         token = await faker.sign(TokenPayload);
         mfaToken = await faker.sign({
@@ -41,7 +43,7 @@ describe('verifier', () => {
         boundToken = await faker.sign(BoundTokenPayload);
 
         vitest.spyOn(TokenAPI.prototype, 'introspect').mockImplementation((options) => introspectToken(options));
-        vitest.spyOn(Client.prototype, 'getJwk').mockReturnValue(faker.useJwk());
+        getJwk = vitest.spyOn(Client.prototype, 'getJwk').mockReturnValue(faker.useJwk());
     });
 
     it('should verify token local', async () => {
@@ -67,6 +69,35 @@ describe('verifier', () => {
         } catch (e) {
             expect(e).toBeInstanceOf(JWTError);
         }
+    });
+
+    it('should resolve the key of the realm the token names', async () => {
+        getJwk.mockClear();
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+
+        await tokenVerifier.verifyLocal(token);
+
+        expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
+    });
+
+    it('should not verify a token naming no realm local', async () => {
+        getJwk.mockClear();
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+        const payload = { ...TokenPayload };
+        delete payload.realm_id;
+
+        await expect(tokenVerifier.verifyLocal(await faker.sign(payload)))
+            .rejects.toBeInstanceOf(JWTError);
+        expect(getJwk).not.toHaveBeenCalled();
+    });
+
+    it('should not fetch a key for a kid that is no uuid', async () => {
+        getJwk.mockClear();
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+
+        await expect(tokenVerifier.verifyLocal(await faker.sign(TokenPayload, '../users')))
+            .rejects.toBeInstanceOf(JWTError);
+        expect(getJwk).not.toHaveBeenCalled();
     });
 
     // A bearer must be an ACCESS token: authup signs other kinds with the

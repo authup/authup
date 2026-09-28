@@ -66,6 +66,7 @@ export class AuthenticationModule implements IModule {
                         eventService: c.resolve(DatabaseInjectionKey.EventService),
                         logger: c.resolve(LoggerInjectionKey),
                     }),
+                    logger: c.resolve(LoggerInjectionKey),
                 });
             },
         });

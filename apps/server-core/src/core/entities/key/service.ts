@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -36,6 +37,7 @@ import { getRandomValues } from 'uncrypto';
 import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
+import type { IOAuth2TokenRepository } from '../../oauth2/token/repository/types.ts';
 import type {
     IKeyRepository, 
     IKeyService, 
@@ -48,6 +50,7 @@ import { keySchema } from './schema.ts';
 
 export type KeyServiceContext = {
     repository: IKeyRepository;
+    tokenRepository?: IOAuth2TokenRepository;
     eventService?: IEventService;
     requestContext?: () => EventRequestContext | undefined;
 };
@@ -63,6 +66,8 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     protected validator: KeyValidator;
 
+    protected tokenRepository?: IOAuth2TokenRepository;
+
     protected eventService?: IEventService;
 
     protected requestContext?: () => EventRequestContext | undefined;
@@ -70,6 +75,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     constructor(ctx: KeyServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.tokenRepository = ctx.tokenRepository;
         this.validator = new KeyValidator();
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
@@ -195,6 +201,19 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }),
         });
 
+        // Caller-supplied signature material vouches for whatever the caller
+        // signs with it, and a verifier that trusts the key by its id alone
+        // cannot tell which realm's administrator chose it. Importing one is
+        // therefore reserved to a KEY_CREATE reaching beyond the actor's own
+        // realm, probed with a realm the actor cannot own; generating one
+        // stays at the grant's own reach.
+        if (use === JWKUse.SIGNATURE && validated.decryptionKey) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.KEY_CREATE,
+                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: this.buildForeignRealmId(actor) }),
+            });
+        }
+
         if (!validated.name) {
             validated.name = `${use}-${createNanoID(10)}`;
         }
@@ -293,6 +312,14 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
+        if (entity.use === JWKUse.SIGNATURE && previous.status !== entity.status) {
+            if (entity.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.setKeyInactive(entity.id);
+            } else if (previous.status === KeyStatus.DISABLED) {
+                await this.tokenRepository?.dropKeyInactive(entity.id);
+            }
+        }
+
         entity.decryptionKey = null;
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
@@ -337,6 +364,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryptionKey = null;
 
+        if (entity.use === JWKUse.SIGNATURE) {
+            await this.tokenRepository?.setKeyInactive(entity.id);
+        }
+
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
         const forcedCryptoShred = entity.use === JWKUse.ENCRYPTION && !!options.force;
@@ -346,6 +377,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }
 
     // ------------------------------------------------------------------
+
+    protected buildForeignRealmId(actor: ActorContext): string {
+        const actorRealmId = this.getActorRealmId(actor);
+        let realmId = randomUUID();
+        while (realmId === actorRealmId) {
+            realmId = randomUUID();
+        }
+
+        return realmId;
+    }
 
     /**
      * Metadata-only audit trail for key lifecycle operations (issue #3269) —

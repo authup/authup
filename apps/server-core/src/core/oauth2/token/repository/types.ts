@@ -49,6 +49,29 @@ export interface IOAuth2TokenRepository {
      */
     findOneBySignature(token: string) : Promise<OAuth2TokenPayload | null>;
 
+    /**
+     * Mark a signing key as no longer verifying, so a payload cached by
+     * signature is refused as well (the cache serves a hit without
+     * consulting the key). Kept until the key verifies again.
+     *
+     * @param kid Key id
+     */
+    setKeyInactive(kid: string) : Promise<void>;
+
+    /**
+     * Lift the mark setKeyInactive set.
+     *
+     * @param kid Key id
+     */
+    dropKeyInactive(kid: string) : Promise<void>;
+
+    /**
+     * Check whether a signing key is marked as no longer verifying.
+     *
+     * @param kid Key id
+     */
+    isKeyInactive(kid: string) : Promise<boolean>;
+
     // -----------------------------------------------------
 
     /**

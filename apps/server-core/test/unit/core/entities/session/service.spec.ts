@@ -249,6 +249,24 @@ describe('SessionService', () => {
             expect(removed).not.toContain(current.id);
         });
 
+        it('counts only the sessions actually revoked', async () => {
+            const s1 = seedOwn();
+            seedOwn();
+
+            const remove = repository.remove.bind(repository);
+            repository.remove = async (session: Session) => {
+                if (session.id === s1.id) {
+                    throw new Error('unavailable');
+                }
+
+                return remove(session);
+            };
+
+            const { count } = await service.deleteMany(makeActor({ allow: false }));
+
+            expect(count).toEqual(1);
+        });
+
         it('revokes all own sessions when no current session is given', async () => {
             seedOwn();
             seedOwn();

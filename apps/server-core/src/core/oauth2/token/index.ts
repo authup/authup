@@ -10,3 +10,4 @@ export * from './revoker/index.ts';
 export * from './signer/index.ts';
 export * from './verifier/index.ts';
 export * from './repository/index.ts';
+export * from './subject.ts';

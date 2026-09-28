@@ -8,6 +8,7 @@
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
+import type { ISessionManager } from '../../authentication/session/types.ts';
 
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
@@ -23,6 +24,10 @@ export type PasswordRecoveryServiceContext = {
     repository: IUserRepository,
     realmRepository: IRealmRepository,
     eventService?: IEventService,
+    /**
+     * Ends every session of the user once its password is reset.
+     */
+    sessionManager?: ISessionManager,
 };
 
 export type PasswordForgotResult = {

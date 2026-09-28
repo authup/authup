@@ -16,6 +16,9 @@ export enum CacheOAuth2Prefix {
     DEVICE_LOOKUP_ATTEMPT = 'oauth2_device_lookup_attempt',
     FEDERATED_LOGIN = 'oauth2_federated_login',
     TOKEN = 'oauth2_token',
-    TOKEN_CLAIMS = 'oauth2_token_claims',
+    // versioned: an entry an older release cached is never read, since it
+    // was stored before the key and subject checks its reader now relies on
+    TOKEN_CLAIMS = 'oauth2_token_claims_v2',
+    KEY_INACTIVE = 'oauth2_key_blocked',
     TOKEN_INACTIVE = 'oauth2_token_blocked',
 }

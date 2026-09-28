@@ -499,6 +499,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
             options: {
                 passwordRecoveryEnabled: config.passwordRecoveryEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
@@ -715,6 +716,7 @@ export class HTTPControllerModule {
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
         });
         return new ClientController({
             service,
@@ -930,6 +932,7 @@ export class HTTPControllerModule {
         // a fresh adapter here.
         const service = new KeyService({
             repository: container.resolve(OAuth2InjectionToken.KeyStore),
+            tokenRepository: container.resolve(OAuth2InjectionToken.TokenRepository),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
@@ -1217,6 +1220,8 @@ export class HTTPControllerModule {
                 realmRepository,
             }),
             passwordMinLength: config.passwordMinLength,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            requestContext: useRequestEventContext,
         });
     }
 

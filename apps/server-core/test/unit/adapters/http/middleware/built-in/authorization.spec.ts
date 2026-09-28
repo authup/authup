@@ -102,7 +102,11 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             path: null,
         };
 
-        const session = await suite.sessionManager.create({ sub: user.id, subKind: IdentityType.USER });
+        const session = await suite.sessionManager.create({
+            sub: user.id, 
+            subKind: IdentityType.USER, 
+            realmId, 
+        });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -137,6 +141,95 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
         expect(suite.tokenVerifier.verifyCalls).toHaveLength(1);
     });
 
+    it('refuses a token naming another subject than its session', async () => {
+        const suite = createSuite();
+
+        const realmId = randomUUID();
+        const other = {
+            id: randomUUID(), 
+            name: 'other', 
+            realmId, 
+        } as User;
+        const session = await suite.sessionManager.create({
+            sub: randomUUID(), 
+            subKind: IdentityType.USER, 
+            realmId, 
+        });
+        suite.tokenVerifier.seed(TOKEN, {
+            kind: OAuth2TokenKind.ACCESS,
+            realm_id: realmId,
+            session_id: session.id,
+            sub: other.id,
+            sub_kind: OAuth2SubKind.USER,
+        });
+        suite.identityResolver.setIdentity({ type: IdentityType.USER, data: other });
+
+        const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+
+        await expect(suite.middleware.run(event)).rejects.toSatisfy(isJWTError);
+        expect(useRequestIdentity(event)).toBeUndefined();
+    });
+
+    it('refuses a token naming a subject of another realm', async () => {
+        const suite = createSuite();
+
+        const realmId = randomUUID();
+        const foreign = {
+            id: randomUUID(),
+            name: 'foreign',
+            realmId: randomUUID(),
+            active: true,
+        } as User;
+        const session = await suite.sessionManager.create({
+            sub: foreign.id, 
+            subKind: IdentityType.USER, 
+            realmId, 
+        });
+        suite.tokenVerifier.seed(TOKEN, {
+            kind: OAuth2TokenKind.ACCESS,
+            realm_id: realmId,
+            session_id: session.id,
+            sub: foreign.id,
+            sub_kind: OAuth2SubKind.USER,
+        });
+        suite.identityResolver.setIdentity({ type: IdentityType.USER, data: foreign });
+
+        const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+
+        await expect(suite.middleware.run(event)).rejects.toSatisfy(isJWTError);
+        expect(useRequestIdentity(event)).toBeUndefined();
+    });
+
+    it('refuses a token bound to a session of another realm', async () => {
+        const suite = createSuite();
+
+        const realmId = randomUUID();
+        const user = {
+            id: randomUUID(),
+            name: 'user',
+            realmId,
+            active: true,
+        } as User;
+        const session = await suite.sessionManager.create({
+            sub: user.id, 
+            subKind: IdentityType.USER, 
+            realmId: randomUUID(), 
+        });
+        suite.tokenVerifier.seed(TOKEN, {
+            kind: OAuth2TokenKind.ACCESS,
+            realm_id: realmId,
+            session_id: session.id,
+            sub: user.id,
+            sub_kind: OAuth2SubKind.USER,
+        });
+        suite.identityResolver.setIdentity({ type: IdentityType.USER, data: user });
+
+        const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+
+        await expect(suite.middleware.run(event)).rejects.toSatisfy(isJWTError);
+        expect(useRequestIdentity(event)).toBeUndefined();
+    });
+
     it('keeps separate requests independently verified', async () => {
         const suite = createSuite();
 
@@ -166,9 +259,14 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
             id: randomUUID(), 
             name: 'jdoe', 
             realmId, 
+            active: true,
         } as User;
 
-        const session = await suite.sessionManager.create({ sub: user.id, subKind: IdentityType.USER });
+        const session = await suite.sessionManager.create({
+            sub: user.id, 
+            subKind: IdentityType.USER, 
+            realmId, 
+        });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,

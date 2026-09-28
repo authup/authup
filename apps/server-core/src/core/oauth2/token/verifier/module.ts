@@ -41,6 +41,19 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
     }
 
     async verify(token: string, options: OAuth2TokenVerifyOptions = {}) : Promise<OAuth2TokenPayload> {
+        const header = extractTokenHeader(token);
+        if (!header.kid) {
+            throw JWTError.headerPropertyInvalid('kid');
+        }
+
+        // Checked ahead of the cache: a payload cached by signature is served
+        // without consulting its key, so a key that stopped verifying
+        // (disabled or deleted) has to be refused here, including an entry a
+        // verify that resolved the key just before wrote just after.
+        if (await this.tokenRepository.isKeyInactive(header.kid)) {
+            throw JWTError.headerPropertyInvalid('kid');
+        }
+
         let payload = await this.tokenRepository.findOneBySignature(token);
         if (payload) {
             if (!payload.jti) {
@@ -55,11 +68,6 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             }
 
             return payload;
-        }
-
-        const header = extractTokenHeader(token);
-        if (!header.kid) {
-            throw JWTError.headerPropertyInvalid('kid');
         }
 
         // A `kid` that resolves to no usable verification key is a property of
@@ -144,6 +152,13 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         if (!payload.jti) {
             throw JWTError.payloadPropertyInvalid('jti');
+        }
+
+        // A token is verified only by a key of the realm it names: the signer
+        // always signs with the key of `payload.realm_id`, and a key belongs
+        // to exactly one realm, so a key of another realm vouches for nothing.
+        if (!payload.realm_id || key.realmId !== payload.realm_id) {
+            throw JWTError.headerPropertyInvalid('kid');
         }
 
         // Never populate the shared signature-keyed claims cache on the

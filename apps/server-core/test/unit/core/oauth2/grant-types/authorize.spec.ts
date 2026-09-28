@@ -6,14 +6,17 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Key, OAuth2AuthorizationCode } from '@authup/core-kit';
+import type { Key, OAuth2AuthorizationCode, User } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import {
-    JWKType, 
-    JWKUse, 
-    JWTAlgorithm, 
+    JWKType,
+    JWKUse,
+    JWTAlgorithm,
+    JWTError,
     OAuth2SubKind,
+    isOAuth2Error,
 } from '@authup/specs';
+import { ErrorCode } from '@authup/errors';
 import {
     beforeEach,
     describe,
@@ -25,6 +28,7 @@ import { FakeKeyStore } from '../../helpers/fake-key-store.ts';
 import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-token-issuer.ts';
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
+import { FakeIdentityResolver } from '../../helpers/fake-identity-resolver.ts';
 
 describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
@@ -32,6 +36,7 @@ describe('OAuth2AuthorizeGrant', () => {
     let openIdTokenIssuer: FakeOAuth2OpenIDTokenIssuer;
     let keyStore: FakeKeyStore;
     let sessionManager: FakeSessionManager;
+    let identityResolver: FakeIdentityResolver;
     let grant: OAuth2AuthorizeGrant;
 
     const realmId = randomUUID();
@@ -82,11 +87,21 @@ describe('OAuth2AuthorizeGrant', () => {
         openIdTokenIssuer = new FakeOAuth2OpenIDTokenIssuer();
         keyStore = new FakeKeyStore(buildKey());
         sessionManager = new FakeSessionManager();
+        identityResolver = new FakeIdentityResolver();
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId, 
+                active: true, 
+            } as User,
+        });
         grant = new OAuth2AuthorizeGrant({
             accessTokenIssuer,
             refreshTokenIssuer,
             openIdTokenIssuer,
             keyStore,
+            identityResolver,
             sessionManager,
         });
     });
@@ -192,14 +207,49 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
     });
 
-    it('should fall back to create when the referenced session does not exist', async () => {
-        await grant.runWith(buildCode({ session_id: randomUUID() }));
+    it('should answer invalid_grant when the reused session ends before it is refreshed', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+        });
+        sessionManager.refresh = async () => {
+            throw JWTError.expired();
+        };
 
-        expect(sessionManager.createCalls).toHaveLength(1);
+        let error: unknown;
+        try {
+            await grant.runWith(buildCode({ session_id: sessionId }));
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+    });
+
+    async function expectInvalidGrant(promise: Promise<unknown>) {
+        let error: unknown;
+        try {
+            await promise;
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+    }
+
+    it('should refuse the code when the referenced session does not exist', async () => {
+        await expectInvalidGrant(grant.runWith(buildCode({ session_id: randomUUID() })));
+
+        expect(sessionManager.createCalls).toHaveLength(0);
         expect(sessionManager.refreshCalls).toHaveLength(0);
     });
 
-    it('should fall back to create when the referenced session belongs to another subject', async () => {
+    it('should refuse the code when the referenced session belongs to another subject', async () => {
         const sessionId = randomUUID();
         await sessionManager.create({
             id: sessionId,
@@ -210,13 +260,13 @@ describe('OAuth2AuthorizeGrant', () => {
         });
         sessionManager.createCalls.length = 0;
 
-        await grant.runWith(buildCode({ session_id: sessionId }));
+        await expectInvalidGrant(grant.runWith(buildCode({ session_id: sessionId })));
 
         expect(sessionManager.refreshCalls).toHaveLength(0);
-        expect(sessionManager.createCalls).toHaveLength(1);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
-    it('should fall back to create when the referenced session belongs to another realm', async () => {
+    it('should refuse the code when the referenced session belongs to another realm', async () => {
         const sessionId = randomUUID();
         await sessionManager.create({
             id: sessionId,
@@ -227,10 +277,44 @@ describe('OAuth2AuthorizeGrant', () => {
         });
         sessionManager.createCalls.length = 0;
 
-        await grant.runWith(buildCode({ session_id: sessionId }));
+        await expectInvalidGrant(grant.runWith(buildCode({ session_id: sessionId })));
 
         expect(sessionManager.refreshCalls).toHaveLength(0);
-        expect(sessionManager.createCalls).toHaveLength(1);
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should refuse the code of an inactive subject', async () => {
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId, 
+                active: false, 
+            } as User,
+        });
+
+        await expectInvalidGrant(grant.runWith(buildCode()));
+
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should refuse the code of a subject that no longer resolves', async () => {
+        identityResolver.setIdentity(null);
+
+        await expectInvalidGrant(grant.runWith(buildCode()));
+    });
+
+    it('should refuse the code of a subject of another realm', async () => {
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId: randomUUID(), 
+                active: true, 
+            } as User,
+        });
+
+        await expectInvalidGrant(grant.runWith(buildCode()));
     });
 
     // plan 042 item 6: the id_token is minted at the exchange (not at authorize)
@@ -269,24 +353,6 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(idTokenPayload.auth_time).toEqual(authTime);
         expect(idTokenPayload.nonce).toEqual('n-123');
         expect(idTokenPayload.at_hash).toBeDefined();
-        expect(result).toHaveProperty('id_token');
-    });
-
-    it('should mint an id_token with sid = the freshly-created session on fallback', async () => {
-        // session_id references a deleted session → resolveSession creates a new
-        // one; the id_token's sid must be that NEW session, not the stale code id
-        const staleSessionId = randomUUID();
-
-        const result = await grant.runWith(buildCode({
-            session_id: staleSessionId,
-            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
-        }));
-
-        expect(sessionManager.createCalls).toHaveLength(1);
-        expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
-        const idTokenPayload = openIdTokenIssuer.issueCalls[0];
-        expect(idTokenPayload.sid).toBeDefined();
-        expect(idTokenPayload.sid).not.toEqual(staleSessionId);
         expect(result).toHaveProperty('id_token');
     });
 

@@ -10,6 +10,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import type { Client, OAuth2AuthorizationCodeRequest, Realm } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
@@ -30,6 +31,7 @@ import {
     httpRequest,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
+import { CacheInjectionKey } from '../../../../../../src/app/index.ts';
 
 describe('grant-authorize', () => {
     let confidentialClient : Client;
@@ -103,6 +105,32 @@ describe('grant-authorize', () => {
         const codeVerifier = 'Li5PBcECIXmMuuDsWHjexHnr6LNK6BWKKkcuJaAjeSkeux7p';
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
         expect(codeChallenge).toEqual('lFtvTpirsB96UMQJgoRhKofsa0w7ShdPkJ3eJ6MgYVY');
+    });
+
+    it('should issue a 256-bit authorization code living at most ten minutes', async () => {
+        const cache = suite.container.resolve(CacheInjectionKey);
+        const set = vi.spyOn(cache, 'set');
+
+        try {
+            const response = await suite.client
+                .authorize
+                .confirm({
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                    client_id: confidentialClient.id,
+                    redirect_uri: 'https://example.com/redirect',
+                    scope: ScopeName.GLOBAL,
+                    state: generateOAuth2CodeVerifier(),
+                });
+
+            const code = new URL(response.url).searchParams.get('code');
+            expect(code).toMatch(/^[0-9a-f]{64}$/);
+
+            const call = set.mock.calls.find(([key]) => String(key).includes(code!));
+            expect(call).toBeDefined();
+            expect(call![2]?.ttl).toBeLessThanOrEqual(600_000);
+        } finally {
+            set.mockRestore();
+        }
     });
 
     it('should work with authorize grant for confidential client', async () => {

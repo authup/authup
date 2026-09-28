@@ -6,7 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWTError, OAuth2GrantError, OAuth2TokenKind } from '@authup/specs';
+import {
+    JWTError,
+    OAuth2GrantError,
+    OAuth2TokenKind,
+    isJWTError,
+} from '@authup/specs';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
@@ -15,6 +20,8 @@ import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import { isSessionTokenRelationMissingError } from '../session-token/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRepository, IOAuth2TokenVerifier } from '../token/index.ts';
+import { isTokenSession, isTokenSubjectActive } from '../token/subject.ts';
+import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2GrantRunWIthOptions, OAuth2RefreshTokenGrantContext } from './types.ts';
 
@@ -22,6 +29,8 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     protected tokenVerifier : IOAuth2TokenVerifier;
+
+    protected identityResolver : IIdentityResolver;
 
     protected tokenRepository : IOAuth2TokenRepository;
 
@@ -43,6 +52,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.tokenVerifier = ctx.tokenVerifier;
+        this.identityResolver = ctx.identityResolver;
         this.tokenRepository = ctx.tokenRepository;
         this.sessionTokenRepository = ctx.sessionTokenRepository;
         this.eventService = ctx.eventService;
@@ -80,6 +90,17 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             throw OAuth2GrantError.invalid('unexpected token kind');
         }
 
+        // The subject must still exist, be active and belong to the token's
+        // realm. Deactivation revokes the subject's sessions on the API path,
+        // but a row written elsewhere (a provisioning MERGE) does not, so the
+        // chain is stopped here too.
+        const identity = payload.sub && payload.sub_kind ?
+            await this.identityResolver.resolve(payload.sub_kind, payload.sub) :
+            null;
+        if (!isTokenSubjectActive(identity, payload)) {
+            throw OAuth2GrantError.invalid();
+        }
+
         const row = await this.sessionTokenRepository.findOneById(payload.jti);
         if (!row || row.kind !== 'refresh') {
             // Row missing = expired-and-swept or a pre-rotation legacy token
@@ -93,6 +114,18 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             // The row is written with the token's own session_id and jti is
             // globally unique, so a mismatch means corruption / jti reuse — fail
             // closed rather than refresh or revoke against the wrong session.
+            throw OAuth2GrantError.invalid('refresh token session mismatch');
+        }
+
+        // The session must belong to the token's subject and realm before
+        // anything is consumed or revoked, so a token naming another
+        // subject's session leaves that session untouched.
+        const session = await this.sessionManager.findOneById(payload.session_id);
+        if (!session) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        if (!isTokenSession(session, payload)) {
             throw OAuth2GrantError.invalid('refresh token session mismatch');
         }
 
@@ -116,11 +149,6 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // revoked_at and break the grace window.
         await this.tokenRepository.setInactive(payload.jti, payload.exp);
 
-        const session = await this.sessionManager.findOneById(payload.session_id);
-        if (!session) {
-            throw JWTError.payloadPropertyInvalid('session_id');
-        }
-
         await this.sessionManager.verify(session);
 
         // `userAgent` / `ipAddress` are pinned at creation and deliberately NOT
@@ -132,7 +160,17 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // session as an unknown device, and would have shown a genuinely foreign
         // session as theirs. `refresh()` still slides refreshedAt / seenAt /
         // expiresAt, so "last active" stays accurate.
-        await this.sessionManager.refresh(session);
+        // A session revoked concurrently fails the refresh with a JWT error;
+        // the token endpoint answers that as invalid_grant (RFC 6749 §5.2).
+        try {
+            await this.sessionManager.refresh(session);
+        } catch (e) {
+            if (isJWTError(e)) {
+                throw OAuth2GrantError.invalid('the session has been revoked');
+            }
+
+            throw e;
+        }
 
         // The session was resolved above, but nothing holds it. A concurrent
         // request can revoke it (a replay reaction on this same family, an

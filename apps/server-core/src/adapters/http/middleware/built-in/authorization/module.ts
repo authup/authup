@@ -29,15 +29,16 @@ import {
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
 } from 'hapic';
-import { setSessionCookie } from '../../../cookie/index.ts';
+import { buildSessionCookieName, setSessionCookie } from '../../../cookie/index.ts';
 import {
     ClientAuthenticator,
     PolicyEngine,
-    SESSION_COOKIE,
     SESSION_REFRESH_THROTTLE,
     SYSTEM_CLIENT_SCOPE_NAMES,
     UserAuthenticator,
     assertClientCertificateEvidenceValidForBinding,
+    isTokenSession,
+    isTokenSubjectActive,
 } from '../../../../../core/index.ts';
 import type {
     ICredentialsAuthenticator,
@@ -215,7 +216,7 @@ export class AuthorizationMiddleware {
                 return;
             }
 
-            const secret = useRequestCookie(event, SESSION_COOKIE);
+            const secret = useRequestCookie(event, buildSessionCookieName(baseURL));
             if (typeof secret !== 'string' || secret.length === 0) {
                 return;
             }
@@ -256,7 +257,7 @@ export class AuthorizationMiddleware {
                 IdentityType.USER,
                 session.sub,
             );
-            if (!identity) {
+            if (!isTokenSubjectActive(identity, { realm_id: session.realmId })) {
                 return;
             }
 
@@ -298,11 +299,9 @@ export class AuthorizationMiddleware {
             }
         }
 
-        // `repository.save` upserts by primary key, so writing the row read at
-        // the top of this request would RESURRECT a session a concurrent
-        // sign-out deleted in between. Re-read first: the sign-out drops both
-        // the row and its cache entry, so a miss here means the session is
-        // gone and there is nothing to slide.
+        // Re-read first: the sign-out drops both the row and its cache entry,
+        // so a miss here means the session is gone and there is nothing to
+        // slide (the write itself would refuse a gone row as well).
         const current = await this.sessionManager.findOneById(session.id);
         if (!current) {
             return;
@@ -367,6 +366,11 @@ export class AuthorizationMiddleware {
             throw JWTError.expired();
         }
 
+        // the session must belong to the subject and realm the token names.
+        if (!isTokenSession(session, payload)) {
+            throw JWTError.expired();
+        }
+
         await this.sessionManager.ping(session);
 
         setRequestSessionId(event, payload.session_id);
@@ -387,6 +391,12 @@ export class AuthorizationMiddleware {
         );
 
         if (identity) {
+            // A deactivated subject, or one of another realm than the token
+            // names, is refused like a gone session.
+            if (!isTokenSubjectActive(identity, payload)) {
+                throw JWTError.expired();
+            }
+
             setRequestIdentity(event, identity);
             setRequestTokenPayload(event, payload);
         }
@@ -418,8 +428,8 @@ export class AuthorizationMiddleware {
     }
 
     /**
-     * An "MFA-pending" login ticket (issue #3242). Verified with the same
-     * rigor as an access token (session existence + subject match), but
+     * An "MFA-pending" login ticket (issue #3242). Verified like an access
+     * token (session existence + subject match), but
      * stashed on a DEDICATED request slot — the main identity / scope /
      * session slots stay empty, so every identity-gated route rejects a
      * ticket bearer (default-deny); only the challenge routes opt in via
@@ -459,11 +469,8 @@ export class AuthorizationMiddleware {
         }
 
         // defense in depth — the pending session must still belong to the
-        // ticket subject.
-        if (
-            session.sub !== payload.sub ||
-            session.subKind !== IdentityType.USER
-        ) {
+        // ticket subject and realm.
+        if (!isTokenSession(session, payload)) {
             throw JWTError.expired();
         }
 
@@ -473,7 +480,7 @@ export class AuthorizationMiddleware {
             payload.sub_kind,
             payload.sub,
         );
-        if (!identity) {
+        if (!isTokenSubjectActive(identity, payload)) {
             throw JWTError.expired();
         }
 

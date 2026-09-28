@@ -12,11 +12,24 @@ import { randomUUID } from 'node:crypto';
 import type { IOAuth2TokenRepository } from '../../../../../core/index.ts';
 import { CacheOAuth2Prefix } from '../constants.ts';
 
+// The ttl a cached payload gets when its token carries no usable `exp`.
+const CLAIMS_FALLBACK_TTL = 3_600 * 1000;
+
+export type OAuth2TokenRepositoryOptions = {
+    /**
+     * The longest lifetime (in seconds) of a token this server issues.
+     */
+    keyInactiveMaxAge?: number,
+};
+
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     protected cache : ICache;
 
-    constructor(cache: ICache) {
+    protected options : OAuth2TokenRepositoryOptions;
+
+    constructor(cache: ICache, options: OAuth2TokenRepositoryOptions = {}) {
         this.cache = cache;
+        this.options = options;
     }
 
     // -----------------------------------------------------
@@ -26,6 +39,42 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
                 key: signature, 
+            }),
+        );
+    }
+
+    async setKeyInactive(kid: string): Promise<void> {
+        // A payload cached by signature lives until its token's `exp` (or the
+        // fallback), so the mark only has to outlive the longest token.
+        await this.cache.set(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
+            }),
+            true,
+            {
+                ttl: Math.max(
+                    (this.options.keyInactiveMaxAge ?? 0) * 1000,
+                    CLAIMS_FALLBACK_TTL,
+                ),
+            },
+        );
+    }
+
+    async dropKeyInactive(kid: string): Promise<void> {
+        await this.cache.drop(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
+            }),
+        );
+    }
+
+    async isKeyInactive(kid: string): Promise<boolean> {
+        return this.cache.has(
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.KEY_INACTIVE,
+                key: kid,
             }),
         );
     }
@@ -158,6 +207,6 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             }
         }
 
-        return 3_600 * 1000;
+        return CLAIMS_FALLBACK_TTL;
     }
 }

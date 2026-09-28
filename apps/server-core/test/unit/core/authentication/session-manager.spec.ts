@@ -169,6 +169,76 @@ describe('SessionManager', () => {
         });
     });
 
+    describe('revokeByOwner', () => {
+        it('revokes every session of the owner but the kept one, in bounded batches', async () => {
+            const sub = randomUUID();
+            const sessions = Array.from({ length: 12 }, () => seedSession({ sub }));
+            const other = seedSession();
+
+            let inFlight = 0;
+            let peak = 0;
+            const notifier : ISessionRevokeNotifier = {
+                resolve: async () => [createClient()],
+                notify: async () => {
+                    inFlight++;
+                    peak = Math.max(peak, inFlight);
+                    await new Promise((resolve) => { setTimeout(resolve, 5); });
+                    inFlight--;
+                },
+            };
+
+            await buildManager(notifier).revokeByOwner({ sub, subKind: IdentityType.USER }, sessions[0].id);
+
+            expect(repository.removeCalls.map((row) => row.id).sort())
+                .toEqual(sessions.slice(1).map((row) => row.id).sort());
+            expect(await repository.findOneById(other.id)).not.toBeNull();
+            expect(peak).toBeGreaterThan(1);
+            expect(peak).toBeLessThanOrEqual(5);
+        });
+
+        it('removes a session whose audience cannot be read', async () => {
+            const sub = randomUUID();
+            const sessions = Array.from({ length: 3 }, () => seedSession({ sub }));
+
+            const notifier : ISessionRevokeNotifier = {
+                resolve: async (session) => {
+                    if (session.id === sessions[0].id) {
+                        throw new Error('unavailable');
+                    }
+
+                    return [];
+                },
+                notify: async () => undefined,
+            };
+
+            const failed = await buildManager(notifier).revokeByOwner({ sub, subKind: IdentityType.USER });
+
+            expect(failed).toEqual([]);
+            expect(repository.removeCalls.map((row) => row.id).sort())
+                .toEqual(sessions.map((row) => row.id).sort());
+        });
+
+        it('reports the sessions it could not remove', async () => {
+            const sub = randomUUID();
+            const sessions = Array.from({ length: 3 }, () => seedSession({ sub }));
+
+            const remove = repository.remove.bind(repository);
+            repository.remove = async (session: Session) => {
+                if (session.id === sessions[0].id) {
+                    throw new Error('unavailable');
+                }
+
+                return remove(session);
+            };
+
+            const failed = await buildManager().revokeMany(sessions.map((row) => row.id));
+
+            expect(failed).toEqual([sessions[0].id]);
+            expect(await repository.findOneById(sessions[1].id)).toBeNull();
+            expect(await repository.findOneById(sessions[2].id)).toBeNull();
+        });
+    });
+
     describe('verify', () => {
         it('drops an expired session without a delivery', async () => {
             const session = seedSession({ expiresAt: new Date(Date.now() - 1_000).toISOString() });

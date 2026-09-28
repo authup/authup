@@ -14,6 +14,7 @@ import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IOAuth2ClientRepository } from '../client/index.ts';
 import type { IOAuth2TokenVerifier } from '../token/index.ts';
+import { isTokenSession } from '../token/subject.ts';
 import type {
     IOAuth2EndSessionService,
     OAuth2EndSessionRequest,
@@ -123,6 +124,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                 sub = undefined;
                 subKind = undefined;
                 sessionId = undefined;
+                hintRealmId = undefined;
             }
         }
 
@@ -147,6 +149,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             ...(hintVerified ? {
                 sub,
                 subKind,
+                realmId: hintRealmId,
                 sessionId,
             } : {}),
             ...(clientId ? { clientId } : {}),
@@ -155,14 +158,19 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         };
     }
 
-    async revoke(sessionId: string, sub: string, subKind: string): Promise<boolean> {
+    async revoke(sessionId: string, sub: string, subKind: string, realmId: string): Promise<boolean> {
         const session = await this.sessionManager.findOneById(sessionId);
         if (!session) {
             return false;
         }
 
-        // Never revoke a session that does not belong to the hint's subject.
-        if (session.sub !== sub || session.subKind !== subKind) {
+        // Never revoke a session that does not belong to the hint's subject
+        // and realm.
+        if (!isTokenSession(session, {
+            sub, 
+            sub_kind: subKind as OAuth2TokenPayload['sub_kind'], 
+            realm_id: realmId, 
+        })) {
             return false;
         }
 

@@ -21,7 +21,7 @@ import {
 } from 'vitest';
 import { DataSourceOptionsBuilder } from '../../../../../src/adapters/database/data-source/options/module.ts';
 import { RealmEntity, SessionEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { SESSION_EXPIRY_SWEEP_BATCH_SIZE } from '../../../../../src/core/index.ts';
+import { SESSION_EXPIRY_SWEEP_BATCH_SIZE, SessionManager } from '../../../../../src/core/index.ts';
 import { SessionRepository } from '../../../../../src/app/modules/authentication/repositories/session.ts';
 
 describe('app/modules/authentication/repositories/session', () => {
@@ -184,6 +184,126 @@ describe('app/modules/authentication/repositories/session', () => {
             expect(deleted).toEqual(0);
 
             vi.restoreAllMocks();
+        });
+    });
+    describe('write after revoke', () => {
+        const writes : [string, (manager: SessionManager, session: Session) => Promise<Session>][] = [
+            ['ping', (manager, session) => manager.ping(session)],
+            ['refresh', (manager, session) => manager.refresh(session)],
+            ['markMfaVerified', (manager, session) => manager.markMfaVerified(session)],
+        ];
+
+        it.each(writes)('%s does not bring a revoked session back', async (_name, write) => {
+            const repository = createRepository();
+            const manager = new SessionManager({ repository, options: { maxAge: 3600 } });
+
+            const created = await repository.save({
+                sub: randomUUID(),
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                ipAddress: '203.0.113.10',
+                userAgent: 'test-agent',
+                expiresAt: new Date(Date.now() + 600_000).toISOString(),
+            });
+
+            // The copy an in-flight request read before the revoke.
+            const stale = { ...(await repository.findOneById(created.id)) as Session };
+            stale.seenAt = new Date(Date.now() - 10_000).toISOString();
+
+            await manager.revoke(created.id);
+
+            await expect(write(manager, stale)).rejects.toThrow();
+
+            expect(await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id })).toBeNull();
+            expect(await repository.findOneById(created.id)).toBeNull();
+        });
+
+        it('does not bring a session back that is revoked while the write is in flight', async () => {
+            const repository = createRepository();
+            const manager = new SessionManager({ repository, options: { maxAge: 3600 } });
+
+            const created = await repository.save({
+                sub: randomUUID(),
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                ipAddress: '203.0.113.10',
+                userAgent: 'test-agent',
+                expiresAt: new Date(Date.now() + 600_000).toISOString(),
+            });
+
+            const stale = { ...(await repository.findOneById(created.id)) as Session };
+            stale.seenAt = new Date(Date.now() - 60_000).toISOString();
+
+            // the revoke lands inside the write's own cache step
+            const { cache } = (repository as unknown as { cache: MemoryCache });
+            const set = cache.set.bind(cache);
+            let once = true;
+            cache.set = async (...args: Parameters<MemoryCache['set']>) => {
+                if (once) {
+                    once = false;
+                    await manager.revoke(created.id);
+                }
+
+                return set(...args);
+            };
+
+            await manager.ping(stale).catch(() => undefined);
+
+            expect(await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id })).toBeNull();
+            expect(await repository.findOneById(created.id)).toBeNull();
+        });
+
+        it('does not revert a column another write moved', async () => {
+            const repository = createRepository();
+            const manager = new SessionManager({ repository, options: { maxAge: 3600 } });
+
+            const created = await repository.save({
+                sub: randomUUID(),
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                ipAddress: '203.0.113.10',
+                userAgent: 'test-agent',
+                expiresAt: new Date(Date.now() + 60_000).toISOString(),
+            });
+
+            // a copy an earlier request read, about to ping
+            const stale = { ...(await repository.findOneById(created.id)) as Session };
+            stale.seenAt = new Date(Date.now() - 60_000).toISOString();
+
+            const current = { ...(await repository.findOneById(created.id)) as Session };
+            const verified = await manager.markMfaVerified(current);
+            const refreshed = await manager.refresh(verified);
+
+            await manager.ping(stale);
+
+            const row = await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id });
+            expect(row?.mfaAt).toEqual(verified.mfaAt);
+            expect(row?.expiresAt).toEqual(refreshed.expiresAt);
+
+            const cached = await repository.findOneById(created.id);
+            expect(cached?.mfaAt).toEqual(verified.mfaAt);
+            expect(cached?.expiresAt).toEqual(refreshed.expiresAt);
+        });
+
+        it('keeps writing a live session', async () => {
+            const repository = createRepository();
+            const manager = new SessionManager({ repository, options: { maxAge: 3600 } });
+
+            const created = await repository.save({
+                sub: randomUUID(),
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                ipAddress: '203.0.113.10',
+                userAgent: 'test-agent',
+                expiresAt: new Date(Date.now() + 600_000).toISOString(),
+            });
+
+            const refreshed = await manager.markMfaVerified({ ...created });
+            expect(refreshed.mfaAt).toBeTruthy();
+
+            const row = await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id });
+            expect(row?.mfaAt).toEqual(refreshed.mfaAt);
+            expect((await repository.findOneById(created.id))?.mfaAt).toEqual(refreshed.mfaAt);
         });
     });
 });

@@ -23,7 +23,11 @@ export type OAuth2IntrospectionSubjectInput = {
      * issued to, whose grants it carries (#3597). A console session is
      * described by its subject alone.
      */
-    token: IdentityToken & { sub: string, sub_kind: `${IdentityType}` },
+    token: IdentityToken & {
+        sub: string,
+        sub_kind: `${IdentityType}`,
+        realm_id: string | undefined,
+    },
     /**
      * Whether the credential the projection describes is usable. Permissions
      * are resolved ONLY when it is: an inactive credential reports who it
@@ -37,7 +41,11 @@ export type OAuth2IntrospectionSubject = {
     identity: Identity,
     claims: OpenIDTokenPayload,
     /**
-     * Present only for an `active` input.
+     * The input's `active`, and false when the identity is not active.
+     */
+    active: boolean,
+    /**
+     * Present only when `active`.
      */
     permissions?: OAuth2TokenPermission[],
 };

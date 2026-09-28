@@ -47,9 +47,10 @@ import type {
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     IRealmRepository,
+    ISessionManager,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
-import { resolveIntrospectionSubject } from '../../../../../core/index.ts';
+import { isTokenSession, resolveIntrospectionSubject } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
@@ -88,6 +89,8 @@ export class TokenController {
 
     protected identityPermissionProvider : IIdentityPermissionProvider;
 
+    protected sessionManager : ISessionManager;
+
     protected metrics? : IAuthFlowMetrics;
 
     protected clientAuthenticator : OAuth2ClientAuthenticator;
@@ -109,6 +112,7 @@ export class TokenController {
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.sessionManager = ctx.sessionManager;
         this.metrics = ctx.metrics;
         this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
         this.certificateSource = ctx.certificateSource;
@@ -123,6 +127,7 @@ export class TokenController {
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 openIdTokenIssuer: ctx.openIdTokenIssuer,
                 keyStore: ctx.keyStore,
+                identityResolver: ctx.identityResolver,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
@@ -159,6 +164,7 @@ export class TokenController {
                 sessionTokenRepository: ctx.sessionTokenRepository,
                 sessionManager: ctx.sessionManager,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
+                identityResolver: ctx.identityResolver,
                 realmRepository: ctx.realmRepository,
                 eventService: ctx.eventService,
                 metrics: ctx.metrics,
@@ -173,6 +179,7 @@ export class TokenController {
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 openIdTokenIssuer: ctx.openIdTokenIssuer,
                 keyStore: ctx.keyStore,
+                identityResolver: ctx.identityResolver,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
@@ -216,11 +223,18 @@ export class TokenController {
                 skipActiveCheck: true,
             });
 
-            if (payload.kind === OAuth2TokenKind.LOGOUT) {
-                // A back-channel logout token verifies (it is signed with the
-                // realm key) but is a notification, never a credential: no
-                // endpoint accepts it as a bearer, so it is reported dead
-                // rather than raised (RFC 7662 §2.2), bare like any other.
+            if (
+                payload.kind !== OAuth2TokenKind.ACCESS &&
+                payload.kind !== OAuth2TokenKind.REFRESH
+            ) {
+                // Only an access token or a refresh token (RFC 7662 §2.1) is
+                // a credential introspection reports on. Every other kind
+                // verifies, since it is signed with the realm key, but is no
+                // bearer: an id_token is an assertion to its client, the MFA
+                // login ticket is honoured by the challenge routes alone, and
+                // a back-channel logout token is a notification. Each is
+                // reported dead rather than raised (RFC 7662 §2.2), bare like
+                // any other.
                 return { active: false };
             }
 
@@ -252,6 +266,17 @@ export class TokenController {
                 active = false;
             }
 
+            // A token outlives neither its session nor its subject's
+            // activation, whichever path ended them, and only rides a session
+            // of its own subject and realm. Every grant issues a session, so a
+            // token without one is refused here as on a resource route.
+            if (active) {
+                const session = payload.session_id ?
+                    await this.sessionManager.findOneById(payload.session_id) :
+                    null;
+                active = !!session && isTokenSession(session, payload);
+            }
+
             // An inactive token reports WHO it belonged to and nothing about
             // what they may do (RFC 7662 §2.2 / §4): naming the subject is the
             // point of reading an expired token at all, handing over their
@@ -266,17 +291,24 @@ export class TokenController {
                 token: {
                     sub: payload.sub,
                     sub_kind: payload.sub_kind,
+                    realm_id: payload.realm_id,
                     // the INTROSPECTED token's client, never the caller's
                     client_id: payload.client_id,
                 },
                 active,
             });
 
-            if (!active) {
+            // A subject of another realm than the token names: the token is
+            // no report about anyone, so it is reported bare.
+            if (!subject) {
+                return { active: false };
+            }
+
+            if (!subject.active) {
                 const response: OAuth2TokenIntrospectionResponse = {
                     ...payload,
                     ...subject.claims,
-                    active,
+                    active: false,
                 };
                 delete response.permissions;
                 return response;
@@ -285,7 +317,7 @@ export class TokenController {
             return {
                 ...payload,
                 ...subject.claims,
-                active,
+                active: true,
                 permissions: subject.permissions,
             };
         } catch (e) {
@@ -445,7 +477,14 @@ export class TokenController {
                 skipActiveCheck: true,
             });
 
-            await this.tokenRevoker.revoke(payload);
+            // The key proves the realm, not the session: revoke only a token
+            // riding its own subject's session, and answer the same either way.
+            const session = payload.session_id ?
+                await this.sessionManager.findOneById(payload.session_id) :
+                null;
+            if (session && isTokenSession(session, payload)) {
+                await this.tokenRevoker.revoke(payload);
+            }
 
             // RFC 7009 §2.2 names 200 for a successful revocation. This was a
             // 202 - within the 2xx family, so a client reading the class was

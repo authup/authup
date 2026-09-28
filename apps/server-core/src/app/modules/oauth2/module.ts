@@ -90,7 +90,13 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.TokenRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
-                return new OAuth2TokenRepository(cache);
+                return new OAuth2TokenRepository(cache, {
+                    keyInactiveMaxAge: Math.max(
+                        config.tokenRefreshMaxAge,
+                        config.tokenAccessMaxAge,
+                        config.mfaTicketMaxAge,
+                    ),
+                });
             },
         });
 
@@ -147,13 +153,7 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const codeRepository = c.resolve(OAuth2InjectionToken.AuthorizationCodeRepository);
 
-                return new OAuth2AuthorizationCodeIssuer(
-                    codeRepository,
-                    {
-                        // todo: own constant here
-                        maxAge: config.tokenAccessMaxAge,
-                    },
-                );
+                return new OAuth2AuthorizationCodeIssuer(codeRepository);
             },
         });
         container.register(OAuth2InjectionToken.AuthorizationCodeVerifier, {

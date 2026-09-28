@@ -10,6 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
+import { JWTError } from '@authup/specs';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../../database/repositories/query.ts';
@@ -19,6 +20,7 @@ import type {
     SessionDeleteExpiredOptions,
     SessionFindManyOptions,
     SessionOwner,
+    SessionUpdatePatch,
 } from '../../../../core/index.ts';
 import {
     applyRealmScopeSelect,
@@ -147,28 +149,64 @@ export class SessionRepository implements ISessionRepository {
     async save(input: Partial<Session>): Promise<Session> {
         const session = this.repository.create(input);
         await this.repository.save(session);
-
-        // The cookie handle must never enter the cache. `findOneById` serves
-        // the cached object verbatim, and an owner reads its own session
-        // through `GET /sessions/:id` with no permission at all, so a cached
-        // secret would be published where a `select: false` column is
-        // otherwise absent by construction. Omitted rather than nulled: a
-        // cached `secret: null` fed back through `save()` (ping / refresh both
-        // do exactly that) would clear the column and kill a live console
-        // session on its first request.
-        const cacheable : Session = { ...session };
-        delete cacheable.secret;
-
         await this.cache.set(
-            buildCacheKey({
-                prefix: AuthenticationCachePrefix.SESSION,
-                key: session.id,
-            }),
-            cacheable,
+            this.buildCacheKey(session.id),
+            this.toCacheable(session),
             { ttl: new Date(session.expiresAt).getTime() - Date.now() },
         );
 
         return session;
+    }
+
+    async update(session: Session, patch: SessionUpdatePatch): Promise<Session> {
+        const key = this.buildCacheKey(session.id);
+
+        // The cache is written BEFORE the row and from the freshest copy it
+        // holds: a revoke (row removed, then the entry dropped) landing at any
+        // point then ends with no entry, since a write after the drop is
+        // followed by the refused UPDATE below, and a concurrent write to
+        // another column keeps its value.
+        const cached = await this.cache.get<Session>(key);
+        const next : Session = { ...(cached ?? session), ...patch };
+        await this.cache.set(
+            key,
+            this.toCacheable(next),
+            { ttl: new Date(next.expiresAt).getTime() - Date.now() },
+        );
+
+        // Only the columns this write moves: the rest of the caller's copy may
+        // be older than the row. No row means the session is gone, and it is
+        // never re-inserted.
+        const { affected } = await this.repository.update({ id: session.id }, patch);
+        if (!affected) {
+            await this.cache.drop(key);
+
+            throw JWTError.expired();
+        }
+
+        // applied to the caller's copy too, which it keeps using
+        return Object.assign(session, patch);
+    }
+
+    /**
+     * The cookie handle must never enter the cache. `findOneById` serves
+     * the cached object verbatim, and an owner reads its own session
+     * through `GET /sessions/:id` with no permission at all, so a cached
+     * secret would be published where a `select: false` column is
+     * otherwise absent by construction.
+     */
+    protected toCacheable(session: Session): Session {
+        const cacheable : Session = { ...session };
+        delete cacheable.secret;
+
+        return cacheable;
+    }
+
+    protected buildCacheKey(id: string): string {
+        return buildCacheKey({
+            prefix: AuthenticationCachePrefix.SESSION,
+            key: id,
+        });
     }
 
     // -----------------------------------------------------

@@ -18,6 +18,7 @@ import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
 import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
+import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 describe('core/identity/password-recovery/service', () => {
@@ -440,6 +441,44 @@ describe('core/identity/password-recovery/service', () => {
 
             const user = await repository.findOneById(entity.id);
             expect(user!.resetHash).toBeNull();
+        });
+
+        it('should end every session of the user', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            const entity = repository.seed(createFakeUser({
+                name: 'session-reset-user',
+                email: 'session-reset@example.com',
+                resetHash: 'session-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
+            }));
+
+            const sessionManager = new FakeSessionManager();
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+                sessionManager,
+            });
+
+            await service.resetPassword({
+                name: 'session-reset-user',
+                token: 'session-token',
+                password: 'newpass789',
+            });
+
+            expect(sessionManager.revokeByOwnerCalls).toEqual([
+                {
+                    sub: entity.id, 
+                    subKind: 'user', 
+                    exceptId: undefined, 
+                },
+            ]);
         });
     });
 });
