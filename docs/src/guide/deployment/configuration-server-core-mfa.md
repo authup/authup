@@ -25,6 +25,12 @@ second factor once that session has completed a challenge, at login or on the
 `mfaRequired` additionally routes a user without a confirmed authenticator
 through inline enrollment on both hosted pages.
 
+HTTP Basic authentication with user credentials (`userAuthBasic`) cannot carry a
+second factor, so it refuses every user holding a confirmed authenticator: the
+request is answered as unauthenticated, exactly as for a wrong password.
+Automation acting for such a user authenticates as a confidential client
+instead.
+
 The following boundaries are intentional:
 
 - A federated identity-provider login is authenticated by the external

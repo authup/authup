@@ -8044,7 +8044,7 @@ never expose a user's factor secret to an admin). The kit `AUserAuthenticatorEnr
 mirrors this — when `userId !== '@me'` it offers only the email button
 (`canOfferKind`).
 
-**Enforcement — two chokepoints, both server-side:**
+**Enforcement — three chokepoints, all server-side:**
 
 1. **Interactive `/authorize`**: the proof is session-bound — `auth_sessions.mfa_at`
    is stamped by `POST /authenticators/challenge` (bearer-scoped; via the
@@ -8055,8 +8055,7 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required` — a dedicated
    code, deliberately NOT `login_required`, so RPs can tell "log in again" from
    "complete the challenge") when the user holds a confirmed device and the
-   backing session carries no `mfaAt`. A session-less flow (HTTP Basic) fails
-   closed the same way. `GET /authenticators/challenge` reports
+   backing session carries no `mfaAt`. `GET /authenticators/challenge` reports
    `{ required, enrollmentRequired, kinds, challenge? }` — the kind-generic wire
    shape (the optional `challenge` payload carries WebAuthn request options)
    that drives the kit ladder.
@@ -8072,6 +8071,12 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
    the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
+3. **User Basic auth** (`userAuthBasic`): a Basic credential carries no
+   factor, so the authorization middleware leaves the request anonymous for a
+   user holding a confirmed device (`userAuthenticatorRepository
+   .hasConfirmedByUser`, wired only while `mfaEnabled`), the same answer a
+   wrong password gets. Automation acting for such a user authenticates as a
+   confidential client.
 
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
 the upstream provider as the authentication authority, and that trust is
