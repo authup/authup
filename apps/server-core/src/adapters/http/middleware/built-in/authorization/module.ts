@@ -37,6 +37,8 @@ import {
     SYSTEM_CLIENT_SCOPE_NAMES,
     UserAuthenticator,
     assertClientCertificateEvidenceValidForBinding,
+    isTokenSession,
+    isTokenSubjectActive,
 } from '../../../../../core/index.ts';
 import type {
     ICredentialsAuthenticator,
@@ -255,7 +257,7 @@ export class AuthorizationMiddleware {
                 IdentityType.USER,
                 session.sub,
             );
-            if (!identity || !identity.data.active) {
+            if (!isTokenSubjectActive(identity, { realm_id: session.realmId })) {
                 return;
             }
 
@@ -364,11 +366,8 @@ export class AuthorizationMiddleware {
             throw JWTError.expired();
         }
 
-        // the session must belong to the subject the token names.
-        if (
-            session.sub !== payload.sub ||
-            session.subKind !== payload.sub_kind
-        ) {
+        // the session must belong to the subject and realm the token names.
+        if (!isTokenSession(session, payload)) {
             throw JWTError.expired();
         }
 
@@ -392,8 +391,9 @@ export class AuthorizationMiddleware {
         );
 
         if (identity) {
-            // A deactivated subject is refused like a gone session.
-            if (!identity.data.active) {
+            // A deactivated subject, or one of another realm than the token
+            // names, is refused like a gone session.
+            if (!isTokenSubjectActive(identity, payload)) {
                 throw JWTError.expired();
             }
 
@@ -469,11 +469,8 @@ export class AuthorizationMiddleware {
         }
 
         // defense in depth — the pending session must still belong to the
-        // ticket subject.
-        if (
-            session.sub !== payload.sub ||
-            session.subKind !== IdentityType.USER
-        ) {
+        // ticket subject and realm.
+        if (!isTokenSession(session, payload)) {
             throw JWTError.expired();
         }
 
@@ -483,7 +480,7 @@ export class AuthorizationMiddleware {
             payload.sub_kind,
             payload.sub,
         );
-        if (!identity || !identity.data.active) {
+        if (!isTokenSubjectActive(identity, payload)) {
             throw JWTError.expired();
         }
 

@@ -193,6 +193,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const bearerSession = await suite.sessionManager.create({
             sub: user.id,
             subKind: IdentityType.USER,
+            realmId,
         });
         suite.tokenVerifier.seed(BEARER, {
             kind: OAuth2TokenKind.ACCESS,

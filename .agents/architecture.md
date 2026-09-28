@@ -8410,14 +8410,23 @@ survives all paths.
 `resolveOrCreate` (active only); verifier rejects a `kid` whose key is
 non-sig OR `disabled` (passive still verifies) OR belongs to a realm other
 than the payload's `realm_id` (the signer always signs with the key of that
-realm, so no issued token is affected, and a key a realm's own
-administrator imported can never vouch for another realm's subject;
-`@authup/server-adapter-kit`'s local mode reads the key from the same realm,
-`GET /realms/<realm_id>/jwks/<kid>`, and refuses a non-uuid `kid` before any
-request). The residual is in-realm by design: whoever holds `KEY_CREATE` in a
-realm can import a key and sign tokens for that realm's subjects, power equal
-to the password and secret resets `USER_UPDATE` / `CLIENT_UPDATE` already
-grant there; both JWKS surfaces filter
+realm, so no issued token is affected). The key proves the realm and nothing
+else: `sub`, `session_id` and `client_id` are whatever its holder signed. So
+every server-side consumer also binds the token's SUBJECT and SESSION to that
+realm (`isTokenSubject` / `isTokenSubjectActive` / `isTokenSession`,
+`core/oauth2/token/subject.ts`): the bearer middleware and its MFA-ticket
+branch (401), the refresh grant (`invalid_grant`), introspection (a subject of
+another realm is reported bare, a session of another subject or realm
+inactive) and the end-session revoke (no revoke). Every issuer stamps the
+subject's own realm, so no issued token is refused. A verifier outside the
+server sees no sessions: `@authup/server-adapter-kit`'s local mode reads the
+key from the token's own realm (`GET /realms/<realm_id>/jwks/<kid>`, a
+non-uuid `kid` refused before any request) and trusts the `sub` that key
+signed. That is why IMPORTING signature material requires a `KEY_CREATE`
+grant that reaches beyond the actor's own realm (evaluated against a random
+foreign realm, the `EventService` reach probe): a `realm_admin` may generate
+signature keys, never supply one, and a holder of the wider grant is trusted
+with every realm's subjects already. Both JWKS surfaces filter
 `status IN (active, passive)`; `RealmCipher.decrypt` re-resolves the key row
 on every call (only the imported `SymmetricCipher` is cached; material is
 immutable, status is not), so disabling an enc key is an immediate,
@@ -8444,6 +8453,7 @@ CUD via the OWN-override list) with per-row `resourceRealmMatch` drops in
 RS256/384/512 + ES256/384/512 (HS* rejected: JWKS cannot publish shared
 secrets) with `priority = max+1` default so **generate doubles as rotate**;
 import takes pkcs8+spki (base64 or PEM, both validated by importing) for sig
+(only under a `KEY_CREATE` reaching beyond the actor's realm, see above)
 and 32 base64 bytes for enc. Update mounts only `name`/`priority`/`status`
 (material, `use`, `type`, realm immutable). DELETE on an enc key with live
 blob references answers **409 + `data.references`** unless `?force=true`

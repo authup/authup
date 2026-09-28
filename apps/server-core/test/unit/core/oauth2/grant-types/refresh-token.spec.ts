@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Session } from '@authup/core-kit';
+import type { Session, User } from '@authup/core-kit';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
@@ -33,6 +33,7 @@ import {
     FakeSessionManager,
     FakeSessionTokenRepository,
 } from '../../helpers/index.ts';
+import { FakeIdentityResolver } from '../../helpers/fake-identity-resolver.ts';
 
 describe('OAuth2RefreshTokenGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
@@ -42,6 +43,7 @@ describe('OAuth2RefreshTokenGrant', () => {
     let sessionTokenRepository: FakeSessionTokenRepository;
     let sessionManager: FakeSessionManager;
     let eventService: FakeEventService;
+    let identityResolver: FakeIdentityResolver;
     let metrics: FakeAuthFlowMetrics;
 
     const realmId = randomUUID();
@@ -59,6 +61,7 @@ describe('OAuth2RefreshTokenGrant', () => {
             tokenRepository,
             sessionTokenRepository,
             sessionManager,
+            identityResolver,
             eventService,
             metrics,
             options,
@@ -109,6 +112,56 @@ describe('OAuth2RefreshTokenGrant', () => {
         sessionManager = new FakeSessionManager();
         eventService = new FakeEventService();
         metrics = new FakeAuthFlowMetrics();
+        identityResolver = new FakeIdentityResolver();
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId, 
+                active: true, 
+            } as User,
+        });
+    });
+
+    it('should refuse a subject of another realm than the token names', async () => {
+        const payload = await seed();
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId: randomUUID(), 
+                active: true, 
+            } as User,
+        });
+
+        await expect(build().runWith(payload)).rejects.toThrow();
+        expect(refreshTokenIssuer.issueCalls).toHaveLength(0);
+        const row = await sessionTokenRepository.findOneById(refreshJti);
+        expect(row?.consumedAt).toBeNull();
+    });
+
+    it('should refuse an inactive subject', async () => {
+        const payload = await seed();
+        identityResolver.setIdentity({
+            type: 'user',
+            data: {
+                id: userId, 
+                realmId, 
+                active: false, 
+            } as User,
+        });
+
+        await expect(build().runWith(payload)).rejects.toThrow();
+        expect(refreshTokenIssuer.issueCalls).toHaveLength(0);
+    });
+
+    it('should refuse a session of another realm than the token names', async () => {
+        const payload = await seed();
+        const session = await sessionManager.findOneById(sessionId);
+        session!.realmId = randomUUID();
+
+        await expect(build().runWith(payload)).rejects.toThrow();
+        expect(refreshTokenIssuer.issueCalls).toHaveLength(0);
     });
 
     it('should rotate on the first refresh and link the new token pair', async () => {

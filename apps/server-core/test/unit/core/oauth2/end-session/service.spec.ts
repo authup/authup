@@ -454,7 +454,7 @@ describe('OAuth2EndSessionService', () => {
         });
 
         const service = buildService(async () => validPayload);
-        const revoked = await service.revoke(sessionId, sub, OAuth2SubKind.USER);
+        const revoked = await service.revoke(sessionId, sub, OAuth2SubKind.USER, realmId);
 
         expect(revoked).toBe(true);
         expect(sessionManager.revokeCalls).toContain(sessionId);
@@ -475,7 +475,22 @@ describe('OAuth2EndSessionService', () => {
         });
 
         const service = buildService(async () => validPayload);
-        const revoked = await service.revoke(sessionId, sub, OAuth2SubKind.USER);
+        const revoked = await service.revoke(sessionId, sub, OAuth2SubKind.USER, realmId);
+
+        expect(revoked).toBe(false);
+        expect(sessionManager.revokeCalls).toHaveLength(0);
+    });
+
+    it('should NOT revoke a session of the subject in another realm', async () => {
+        await sessionManager.create({
+            id: sessionId,
+            sub,
+            subKind: OAuth2SubKind.USER,
+            realmId: randomUUID(),
+        });
+
+        const service = buildService(async () => validPayload);
+        const revoked = await service.revoke(sessionId, sub, OAuth2SubKind.USER, realmId);
 
         expect(revoked).toBe(false);
         expect(sessionManager.revokeCalls).toHaveLength(0);
