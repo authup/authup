@@ -196,4 +196,13 @@ export interface ISessionManager {
      * @param id
      */
     revoke(id: string): Promise<void>;
+
+    /**
+     * Revoke every session of one subject, optionally keeping one (the
+     * caller's own). Each goes through `revoke`.
+     *
+     * @param owner
+     * @param exceptId
+     */
+    revokeByOwner(owner: SessionOwner, exceptId?: string): Promise<void>;
 }

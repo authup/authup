@@ -1278,6 +1278,24 @@ controller factories. Un-threaded `UserValidator` sites (IdP account
 provisioning, file provisioning, the kit's client-side form) keep the
 default 10. No composition rules — length only (NIST 800-63B).
 
+**A new password or a deactivation ends the subject's sessions.**
+`PasswordRecoveryService.resetPassword` revokes every session of the user after
+the save, and `UserService.save` does the same on an update carrying
+`password`, keeping only the session the user changed its own password with
+(read from the injected `requestContext`); an administrator's change keeps
+none. An update flipping `active` to false (`UserService` and `ClientService`)
+revokes every session of that subject, and the authorization middleware treats
+a resolved identity that is not `active` as no credential at all: the bearer
+branch and the MFA ticket answer 401, the console cookie leaves the request
+anonymous. So a deactivation ends a live bearer on its next request and a
+refresh token with its session, where before it only stopped new logins. All
+of it goes through `ISessionManager.revokeByOwner`, so the refresh tokens
+(cascade) and the back-channel logout follow, and it runs after the write,
+never inside the #3526 transaction. The session manager is an optional ctx
+member, so the fake-backed specs construct the services without one. A
+resource server verifying tokens locally against the JWKS still accepts an
+issued access token until its `exp`.
+
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
 
 **Mail templates:** workflow services do **not** build mail HTML inline —
@@ -2777,9 +2795,14 @@ rather than trusted until `exp`.
   cookie branch calls `refresh()` on a throttle rather than `ping()` (which
   moves only `seenAt`). Otherwise an active user would be signed out
   mid-task once the session reached its lifetime. It costs no extra write
-  (`ping` already saved the row) and it re-reads the row first: `save`
-  upserts by primary key, so writing the row read at the top of the request
-  would RESURRECT a session a concurrent sign-out deleted.
+  (`ping` already saved the row). **A session write never re-creates a
+  row**: `SessionRepository.save` inserts only for a new session (no id);
+  for an existing one it runs a conditional `UPDATE` of the four sliding
+  columns (`expiresAt`, `refreshedAt`, `seenAt`, `mfaAt`), and zero affected
+  rows drops the cache entry and throws `JWTError.expired()`. So `ping`,
+  `refresh` and `markMfaVerified` on a copy read before a concurrent revoke
+  fail (401 on a resource route, `invalid_grant` at `/token`, an aborted MFA
+  verify) instead of bringing the revoked session back.
 - **`Allow-Credentials` narrowed to publicUrl's origin** in the same change
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets
@@ -4384,7 +4407,11 @@ than guarded:
   one acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
   Such a change reaches a user's grants after the 60 s owned-roles / owned-permissions
-  query cache.
+  query cache. Removing a user's role or permission junction takes effect at
+  once (its subscriber drops those keys), and so does deleting a role, whose
+  subscriber drops the role's owned-permissions key because the junction rows
+  go by cascade without a subscriber of their own; deleting a whole permission
+  may still lag up to the 60 s query cache.
 
 ### Policy engine evaluators are per engine
 
@@ -9017,7 +9044,7 @@ Canonical form is enforced at four boundaries (defense-in-depth):
 1. **Validator transform** — every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex** — the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
 3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
-4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
+4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, the name, a realm-name filter and a uuid key, which is lowercased so its 60 s query-cache key is the one the entity subscriber drops), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
 
 ### Adding a new identifier column
 

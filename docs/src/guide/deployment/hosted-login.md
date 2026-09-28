@@ -137,6 +137,8 @@ The flow:
    `<publicUrl>/password-reset?token=<code>&realmId=<realm>`.
 3. On `/password-reset` the user enters their user name or email address again
    and chooses a new password (at least `core.passwordMinLength` characters).
+   Every existing session of the user ends, so each device and application
+   has to sign in again.
 
 A code that has run out is refused with `reset_token_expired`; the user starts
 again from step 1. With recovery disabled, both pages show a "not enabled"

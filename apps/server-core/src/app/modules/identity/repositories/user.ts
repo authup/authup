@@ -50,11 +50,14 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         return this.repository.findOneBy(where);
     }
 
-    private async find(key: string, realmKey?: string) : Promise<User | null> {
+    private async find(input: string, realmKey?: string) : Promise<User | null> {
         const query = this.repository.createQueryBuilder('user')
             .leftJoinAndSelect('user.realm', 'realm');
 
-        const isId = isUUID(key);
+        // A uuid compares case-insensitively on the server dialects, so it is
+        // canonicalized here: the cache key must be the one the subscriber drops.
+        const isId = isUUID(input);
+        const key = isId ? input.toLowerCase() : input;
         if (isId) {
             query.where('user.id = :id', { id: key });
         } else {

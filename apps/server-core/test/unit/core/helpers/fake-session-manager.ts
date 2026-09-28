@@ -24,6 +24,12 @@ export class FakeSessionManager implements ISessionManager {
 
     public revokeCalls: string[] = [];
 
+    public revokeByOwnerCalls: {
+        sub: string, 
+        subKind: string, 
+        exceptId?: string 
+    }[] = [];
+
     /**
      * Set to make `verify` reject, i.e. model an expired or already-swept
      * session. The real manager throws (and drops the row) there.
@@ -73,5 +79,14 @@ export class FakeSessionManager implements ISessionManager {
     async revoke(id: string): Promise<void> {
         this.revokeCalls.push(id);
         this.sessions.delete(id);
+    }
+
+    async revokeByOwner(owner: { sub: string, subKind: string }, exceptId?: string): Promise<void> {
+        this.revokeByOwnerCalls.push({ ...owner, exceptId });
+        for (const session of [...this.sessions.values()]) {
+            if (session.sub === owner.sub && session.subKind === owner.subKind && session.id !== exceptId) {
+                await this.revoke(session.id);
+            }
+        }
     }
 }
