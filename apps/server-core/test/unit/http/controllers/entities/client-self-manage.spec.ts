@@ -124,6 +124,21 @@ describe('http/controllers/client (self-manage)', () => {
         expect(current.pathId).toBeNull();
     });
 
+    it('should reject self-update of grant_types (rejected by ATTRIBUTE_NAMES policy)', async () => {
+        const { data: before } = await suite.client.client.getOne(entity.id);
+
+        await expectClientError(
+            () => selfClient.client.update(entity.id, { grantTypes: 'client_credentials urn:ietf:params:oauth:grant-type:device_code' }),
+            {
+                status: 403,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            },
+        );
+
+        const { data: current } = await suite.client.client.getOne(entity.id);
+        expect(current.grantTypes).toEqual(before.grantTypes);
+    });
+
     it('should silently strip self-update of built_in flag (not in validator schema)', async () => {
         const { data: response } = await selfClient.client.update(entity.id, { builtIn: true } as Partial<ClientEntity>);
 

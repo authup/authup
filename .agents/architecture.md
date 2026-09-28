@@ -4554,13 +4554,14 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
+| `system.client-names-self-manage` | `active, realmId, pathId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted, grantTypes, accessPolicyId` |
 | `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId, emailVerified` |
 
 The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
 `secretEncrypted` storage flags (downgrading either would persist the secret
-in plaintext). FK fields like `realmId` are usually validator-stripped on
+in plaintext), and the two admission controls `grantTypes` (the per-client
+grant allowlist) and `accessPolicyId`, which are the operator's to set. FK fields like `realmId` are usually validator-stripped on
 UPDATE already, but stay in the denylist as defense in depth. A
 self-managing client rotates its own secret through
 `POST /clients/@me/secret`: the service hands the policy the two

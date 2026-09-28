@@ -99,6 +99,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         'tokenBindingMethod',
                         'secretHashed',
                         'secretEncrypted',
+                        // Admission controls: which grants a client may use
+                        // and who may obtain a token for it are the
+                        // operator's decision.
+                        'grantTypes',
                         'accessPolicyId',
                     ],
                 },
