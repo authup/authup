@@ -12,7 +12,12 @@ import type {
     PermissionCompileResult,
     PermissionEvaluationContext,
 } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, PolicyDataKey } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDataKey,
+    defineIdentityGrants,
+} from '@authup/access';
 import type { IAppEvent } from 'routup';
 import type { RequestIdentity } from '../helpers/index.ts';
 import { useRequestGrants, useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
@@ -67,7 +72,7 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 
             ctx.data = ctx.data || new PolicyData();
             ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
-            ctx.data.set(PolicyDataKey.GRANTS, grants);
+            ctx.data.set(PolicyDataKey.GRANTS, defineIdentityGrants(identity, grants));
 
             return ctx;
         }

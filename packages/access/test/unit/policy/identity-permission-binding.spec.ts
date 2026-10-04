@@ -16,6 +16,7 @@ import {
     PolicyDefaultEvaluators,
     PolicyEngine,
     PolicyIssueCode,
+    defineIdentityGrants,
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
@@ -50,7 +51,7 @@ describe('identity permission binding compilation', () => {
         const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert });
         const data = () => definePolicyData({
             [BuiltInPolicyType.IDENTITY]: identity,
-            [PolicyDataKey.GRANTS]: bindings,
+            [PolicyDataKey.GRANTS]: defineIdentityGrants(identity, bindings),
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
         });
         const compiled = await engine.evaluate(policy, definePolicyEvaluationContext({
@@ -126,7 +127,7 @@ describe('identity permission binding compilation', () => {
         const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
         const data = definePolicyData({
             [BuiltInPolicyType.IDENTITY]: identity,
-            [PolicyDataKey.GRANTS]: bindings,
+            [PolicyDataKey.GRANTS]: defineIdentityGrants(identity, bindings),
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
         });
 
@@ -181,7 +182,7 @@ describe('identity permission binding compilation', () => {
         const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
         const data = () => definePolicyData({
             [BuiltInPolicyType.IDENTITY]: identity,
-            [PolicyDataKey.GRANTS]: bindings,
+            [PolicyDataKey.GRANTS]: defineIdentityGrants(identity, bindings),
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
         });
 
@@ -221,7 +222,7 @@ describe('identity permission binding recursion (#3633)', () => {
             definePolicyEvaluationContext({
                 data: definePolicyData({
                     [BuiltInPolicyType.IDENTITY]: identity,
-                    [PolicyDataKey.GRANTS]: bindings,
+                    [PolicyDataKey.GRANTS]: defineIdentityGrants(identity, bindings),
                     [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
                 }),
             }),
@@ -295,41 +296,49 @@ describe('identity permission binding recursion (#3633)', () => {
 });
 
 // The grants are policy data (they used to be loaded by the evaluator), so
-// evaluation is a function of the bag alone. An identity whose grants nobody
-// supplied holds none the evaluator could prove: a settled deny, never pending,
-// since a pre-gate permits pending.
+// evaluation is a function of the bag alone. Grants nobody supplied, grants of
+// another shape and grants of another subject than the bag's identity are a
+// settled deny, never pending, since a pre-gate permits pending.
 describe('identity permission binding grants data', () => {
     const engine = new PolicyEngine({
         ...PolicyDefaultEvaluators,
         [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
     });
     const policy = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
+    const bindings : PermissionPolicyBinding[] = [{ permission, realmScope: 'any' }];
 
-    it.each([
-        ['absent', {}],
-        ['not a list', { [PolicyDataKey.GRANTS]: { permission } }],
-    ])('denies when the grants are %s', async (_label, grants) => {
-        const outcome = await engine.evaluate(policy, definePolicyEvaluationContext({
-            data: definePolicyData({
-                [BuiltInPolicyType.IDENTITY]: identity,
-                [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
-                ...grants,
-            }),
-        }));
+    const evaluate = (grants: Record<string, unknown>) => engine.evaluate(policy, definePolicyEvaluationContext({
+        data: definePolicyData({
+            [BuiltInPolicyType.IDENTITY]: identity,
+            [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+            ...grants,
+        }),
+    }));
+
+    it('denies when the grants are absent', async () => {
+        const outcome = await evaluate({});
 
         expect(outcome.success).toBe(false);
         expect(outcome.pending).toBeFalsy();
-        expect((outcome.issues ?? []).map((issue) => issue.code)).toContain(PolicyIssueCode.DATA_MISSING);
+        expect((outcome.issues ?? []).map((issue) => issue.code)).toEqual([PolicyIssueCode.DATA_MISSING]);
     });
 
-    it('evaluates the grants the bag carries', async () => {
-        const outcome = await engine.evaluate(policy, definePolicyEvaluationContext({
-            data: definePolicyData({
-                [BuiltInPolicyType.IDENTITY]: identity,
-                [PolicyDataKey.GRANTS]: [{ permission, realmScope: 'any' }],
-                [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
-            }),
-        }));
+    it.each([
+        ['a bare list', bindings],
+        ['null', null],
+        ['without an identity', { bindings }],
+        ['of another subject', defineIdentityGrants({ type: 'user', id: '9c3a4a9e-0e4f-4c25-9a50-5f7f0a8c1d11' }, bindings)],
+        ['of another identity type', defineIdentityGrants({ type: 'client', id: identity.id }, bindings)],
+    ])('denies grants given as %s', async (_label, grants) => {
+        const outcome = await evaluate({ [PolicyDataKey.GRANTS]: grants });
+
+        expect(outcome.success).toBe(false);
+        expect(outcome.pending).toBeFalsy();
+        expect((outcome.issues ?? []).map((issue) => issue.code)).toEqual([PolicyIssueCode.DATA_INVALID]);
+    });
+
+    it('evaluates the grants of the bag\'s identity', async () => {
+        const outcome = await evaluate({ [PolicyDataKey.GRANTS]: defineIdentityGrants(identity, bindings) });
 
         expect(outcome.success).toBe(true);
     });

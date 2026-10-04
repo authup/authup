@@ -13,6 +13,7 @@ import {
     PolicyDataKey,
     PolicyDefaultEvaluators,
     RealmScope,
+    defineIdentityGrants,
     definePolicyEvaluationContext,
 } from '@authup/access';
 import type { IFilter, IFilters } from '@rapiq/core';
@@ -63,7 +64,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
     }: RunOptions) => {
         const data: Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: identityA,
-            [PolicyDataKey.GRANTS]: bindings,
+            [PolicyDataKey.GRANTS]: defineIdentityGrants(identityA, bindings),
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission: { name: PERMISSION_NAME } },
         };
         if (withResourceRealm) {

@@ -22,8 +22,10 @@ import {
     PolicyEngine,
     RealmScope,
     createPolicyTransitionCollector,
+    defineIdentityGrants,
     definePolicyData,
     isPermissionError,
+    isPolicyError,
 } from '@authup/access';
 import { normalizeError } from '@authup/errors';
 import { DecisionStrategy } from '@authup/kit';
@@ -248,7 +250,7 @@ export async function buildAuthorizationCheck(
                         ...(grants && request.identity ?
                             {
                                 [BuiltInPolicyType.IDENTITY]: request.identity,
-                                [PolicyDataKey.GRANTS]: grants,
+                                [PolicyDataKey.GRANTS]: defineIdentityGrants(request.identity, grants),
                             } :
                             {}),
                         [BuiltInPolicyType.REALM_MATCH]: realm,
@@ -259,15 +261,20 @@ export async function buildAuthorizationCheck(
                 held.push(realm);
                 passed = true;
             } catch (e) {
-                // A denial is the answer. The one failure that must NOT be
-                // read as one is the grant load, and it ran before the matrix.
-                // What is left for this guard is a throw the engine never saw
-                // -- a decorator or a policy-data access -- which denies, but
-                // says so rather than passing for a verdict.
-                if (!isPermissionError(e)) {
+                // A denial is the answer, and so is a policy the engine refused
+                // to evaluate, which denies but says so. Anything else never
+                // reached a verdict: the decorator loads the request's grants,
+                // and a failed read there is infrastructure, not an answer, so
+                // it fails the request rather than becoming an authoritative
+                // empty set the kit memoizes.
+                if (!isPermissionError(e) && !isPolicyError(e)) {
+                    throw normalizeError(e);
+                }
+
+                if (isPolicyError(e)) {
                     ctx.logger?.warn(
                         `Treated ${name} as denied in realm ${realm ?? 'global'} while building the authorization ` +
-                        `check: ${e instanceof Error ? e.message : String(e)}.`,
+                        `check: ${e.message}.`,
                     );
                 }
             }

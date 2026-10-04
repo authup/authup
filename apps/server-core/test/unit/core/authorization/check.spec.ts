@@ -18,7 +18,12 @@ import type {
     PermissionEvaluationContext,
     PermissionPolicyBinding,
 } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, RealmScope } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDataKey,
+    RealmScope,
+} from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import { buildAuthorizationCheck } from '../../../../src/core/authorization/check.ts';
 import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
@@ -74,16 +79,20 @@ const identity : IdentityPolicyData = {
 
 /**
  * What `RequestPermissionEvaluator` does for a request, both halves: it asserts
- * the identity the REQUEST was resolved as, and REMOVES the key when the
- * caller's scopes withhold it. The removal is what a spec passing `undefined`
- * models, and modelling only the attach would let this spec pass while the
- * production wrapper answered a scope-restricted bearer as a fully-scoped one.
+ * the identity the REQUEST was resolved as, and REMOVES the key, together with
+ * the grants placed next to it, when the caller's scopes withhold it. The
+ * removal is what a spec passing `undefined` models, and modelling only the
+ * attach would let this spec pass while the production wrapper answered a
+ * scope-restricted bearer as a fully-scoped one. The grants the build placed
+ * are kept on the attach: the production wrapper places the same ones, and an
+ * identity they do not belong to is refused by the binding evaluator.
  */
 function decorateWith(value?: IdentityPolicyData) {
     return (evaluator: IPermissionEvaluator) : IPermissionEvaluator => {
         const extend = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
             if (!value) {
                 ctx.data?.delete(BuiltInPolicyType.IDENTITY);
+                ctx.data?.delete(PolicyDataKey.GRANTS);
 
                 return ctx;
             }
@@ -166,6 +175,42 @@ describe('core/authorization/check', () => {
             grants: () => Promise.reject(error),
             decorate: decorateWith(identity),
         })).rejects.toThrow(error);
+    });
+
+    // The decorator loads the request's grants itself, inside the matrix. A
+    // failure there never reached a verdict either, so it must fail the build
+    // rather than be read as a denial of every pair.
+    it('raises a decorator failure rather than answering an empty verdict set', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN_OR_NULL)]);
+
+        const error = new Error('ECONNREFUSED: the database is down');
+        const failing : IPermissionEvaluator = {
+            evaluate: () => Promise.reject(error),
+            evaluateOneOf: () => Promise.reject(error),
+            preEvaluate: () => Promise.reject(error),
+            preEvaluateOneOf: () => Promise.reject(error),
+            compile: () => Promise.reject(error),
+        };
+
+        await expect(buildAuthorizationCheck(ctx, {
+            identity,
+            grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            decorate: () => failing,
+        })).rejects.toThrow(error);
+    });
+
+    // A decorator asserting another identity than the one the grants were
+    // loaded for must not evaluate that identity with them.
+    it('denies when the decorator asserts an identity the grants do not belong to', async () => {
+        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.ANY)]);
+
+        const { permissions: result } = await buildAuthorizationCheck(ctx, {
+            identity,
+            grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            decorate: decorateWith({ ...identity, id: 'c641912c-21e5-4cb4-84b6-169e2b2bb099' }),
+        });
+
+        expect(result).toEqual([]);
     });
 
     it('answers the own realm alone for an own grant', async () => {

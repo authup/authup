@@ -4239,8 +4239,13 @@ failure a verdict cannot be derived from. Inside the engine it would be invisibl
 hiccup would read as `200 []`, an answer the kit memoizes by the introspection's
 subject, scope and grants, none of which such a failure moves. Loading before the
 matrix keeps the read outside the engine (see *Grants are policy data*), so it throws
-as itself and the kit asks again on its next resolve. An anonymous caller has no
-grants to load, so it is unaffected.
+as itself and the kit asks again on its next resolve. The decorator loads the
+request's grants again inside the matrix (the same per-request promise, so it
+cannot newly fail), and the per-pair catch re-raises anything that is neither a
+`PermissionError` nor a `PolicyError` rather than counting it as a denial; a
+`PolicyError` (a policy the engine refused) still denies its pair with a warning,
+so one malformed operator policy cannot fail the whole answer. An anonymous caller
+has no grants to load, so it is unaffected.
 
 **The bag carries everything the route actually knows**, so a policy anywhere in the tree
 decides on the same data a request would give it, not only the `permissionBinding` child:
@@ -4455,13 +4460,19 @@ registry passes the same object to `registerEvaluators` on each engine.
 ### Grants are policy data
 
 `IdentityPermissionBindingPolicyEvaluator` loads nothing: it reads the identity's
-grants (raw `PermissionPolicyBinding`s) from the bag under `PolicyDataKey.GRANTS`,
-next to `IDENTITY`, so an evaluation is a function of its data alone. Grants
-absent (or not a list) next to a present identity are a settled `DATA_MISSING`
-deny, never pending, since the pre-gate permits pending. Whoever places an
-identity places its grants and removes both together: `RequestPermissionEvaluator`
-for every request, `buildPermissionCheckerData` for the two single-subject check
-routes, `buildAuthorizationCheck` for the batch check, and the consumer-side
+grants from the bag under `PolicyDataKey.GRANTS`, next to `IDENTITY`, so an
+evaluation is a function of its data alone. The value is `IdentityGrants`
+(`defineIdentityGrants(identity, bindings)`): the raw `PermissionPolicyBinding`s
+plus the `type` and `id` of the subject they were loaded for. Grants absent next to
+a present identity are a settled `DATA_MISSING` deny; grants of another shape, or
+naming another subject than the bag's identity, a settled `DATA_INVALID` deny.
+Neither is pending, since the pre-gate permits pending. The subject tag is what
+makes the pairing structural rather than a convention: a placer that overwrites
+the identity and forgets the grants denies instead of evaluating one subject with
+another's grants. Whoever places an identity places its grants and removes both
+together: `RequestPermissionEvaluator` for every request,
+`buildPermissionCheckerData` for the two single-subject check routes,
+`buildAuthorizationCheck` for the batch check, and the consumer-side
 `createAuthorizationEvaluator`, which binds the introspected grants. Two reasons.
 A grant read inside the engine is flattened into a denial by
 `PolicyEngine.evaluate`, so a database failure answered 403 (or `200 []` on the
@@ -4469,7 +4480,9 @@ batch check) instead of failing; loaded in front of the engine it fails as
 itself. And a provider callback in the middle of evaluation is what blocks
 evaluating the built-in policies anywhere else than in-process (another language,
 another runtime): data in, verdict out has no such boundary. Pinned by the
-*grants data* cases in `packages/access/test/unit/policy/identity-permission-binding.spec.ts`.
+*grants data* cases in `packages/access/test/unit/policy/identity-permission-binding.spec.ts`
+and, for the batch check, *denies when the decorator asserts an identity the grants
+do not belong to* (`test/unit/core/authorization/check.spec.ts`).
 
 ### PermissionBinding & aggregated grants
 

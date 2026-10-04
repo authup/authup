@@ -6,7 +6,12 @@
  */
 
 import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, PolicyDataKey } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDataKey,
+    defineIdentityGrants,
+} from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
@@ -49,7 +54,7 @@ export async function buildPermissionCheckerData(
     if (typeof identity === 'undefined') {
         if (own) {
             output[BuiltInPolicyType.IDENTITY] = own;
-            output[PolicyDataKey.GRANTS] = await loadCheckerGrants(own, own, actor, ctx);
+            output[PolicyDataKey.GRANTS] = defineIdentityGrants(own, await loadCheckerGrants(own, own, actor, ctx));
         }
 
         return output;
@@ -63,7 +68,7 @@ export async function buildPermissionCheckerData(
         await authorizeCheckFor(identity, own, actor, ctx.identityResolver);
     }
 
-    output[PolicyDataKey.GRANTS] = await loadCheckerGrants(identity, own, actor, ctx);
+    output[PolicyDataKey.GRANTS] = defineIdentityGrants(identity, await loadCheckerGrants(identity, own, actor, ctx));
 
     return output;
 }
