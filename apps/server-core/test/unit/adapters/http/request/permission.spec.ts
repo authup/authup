@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import type { PermissionPolicyBinding } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, PolicyDataKey } from '@authup/access';
 import type { Client, Identity } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
@@ -14,13 +15,19 @@ import { describe, expect, it } from 'vitest';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
+    setRequestGrantsResolver,
     setRequestIdentity,
     setRequestScopes,
 } from '../../../../../src/adapters/http/request';
 
+const grants : PermissionPolicyBinding[] = [{ permission: { name: 'test' }, realmScope: 'any' }];
+
 // The request helpers under test only read/write `event.store`.
 function createEvent(): IAppEvent {
-    return { store: {} } as unknown as IAppEvent;
+    const event = { store: {} } as unknown as IAppEvent;
+    setRequestGrantsResolver(event, async () => grants);
+
+    return event;
 }
 
 function clientIdentity(data: Partial<Client>): Identity {
@@ -57,6 +64,22 @@ describe('RequestPermissionEvaluator', () => {
         const ctx = base.evaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(true);
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
+        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(grants);
+    });
+
+    it('should fail the evaluation when the grants cannot be loaded', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+        setRequestGrantsResolver(event, async () => {
+            throw new Error('grant load failed');
+        });
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await expect(evaluator.preEvaluate({ name: 'test' })).rejects.toThrow('grant load failed');
+        expect(base.preEvaluateCalls).toHaveLength(0);
     });
 
     it('should not attach identity policy data without global scope', async () => {
@@ -89,12 +112,14 @@ describe('RequestPermissionEvaluator', () => {
             name: 'test',
             data: new PolicyData({
                 [BuiltInPolicyType.IDENTITY]: { type: 'client', id: 'c1' },
+                [PolicyDataKey.GRANTS]: grants,
                 [BuiltInPolicyType.REALM_MATCH]: null,
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
+        expect(ctx.data?.has(PolicyDataKey.GRANTS)).toBe(false);
         // only the identity is withheld; the rest of the caller's bag rides on
         expect(ctx.data?.has(BuiltInPolicyType.REALM_MATCH)).toBe(true);
     });
@@ -109,10 +134,14 @@ describe('RequestPermissionEvaluator', () => {
 
         await evaluator.preEvaluate({
             name: 'test',
-            data: new PolicyData({ [BuiltInPolicyType.IDENTITY]: { type: 'user', id: 'someone-else' } }),
+            data: new PolicyData({
+                [BuiltInPolicyType.IDENTITY]: { type: 'user', id: 'someone-else' },
+                [PolicyDataKey.GRANTS]: [],
+            }),
         });
 
         const ctx = base.preEvaluateCalls[0];
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
+        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(grants);
     });
 });

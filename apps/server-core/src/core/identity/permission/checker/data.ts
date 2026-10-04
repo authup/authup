@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData } from '@authup/access';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, PolicyDataKey } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
@@ -14,6 +14,11 @@ import type { ActorContext } from '@authup/server-kit';
 import type { IIdentityResolver } from '../../resolver/types.ts';
 import { toIdentityPolicyData } from '../identity-policy-data.ts';
 import type { IIdentityPermissionProvider } from '../types.ts';
+
+export type PermissionCheckerDataContext = {
+    identityResolver: IIdentityResolver,
+    identityPermissionProvider: Pick<IIdentityPermissionProvider, 'getFor'>,
+};
 
 /**
  * The data a permission or policy check evaluates, decided by its own
@@ -25,27 +30,40 @@ import type { IIdentityPermissionProvider } from '../types.ts';
  * - the actor's own identity: that identity, as given;
  * - any other identity: that identity, as given, once the actor may check
  *   for it (see `authorizeCheckFor`).
+ *
+ * The grants of whichever identity that is go next to it under
+ * `PolicyDataKey.GRANTS`, always loaded here: a caller-supplied value is
+ * dropped first, since the grants are what the binding evaluator decides on.
  */
 export async function buildPermissionCheckerData(
     data: Record<string, any>,
     actor: ActorContext,
-    identityResolver: IIdentityResolver,
+    ctx: PermissionCheckerDataContext,
 ) : Promise<Record<string, any>> {
     const output = { ...data };
+    delete output[PolicyDataKey.GRANTS];
+
     const own = toIdentityPolicyData(actor.identity);
     const identity = output[BuiltInPolicyType.IDENTITY];
 
     if (typeof identity === 'undefined') {
         if (own) {
             output[BuiltInPolicyType.IDENTITY] = own;
+            output[PolicyDataKey.GRANTS] = await loadCheckerGrants(own, own, actor, ctx);
         }
 
         return output;
     }
 
-    if (identity !== null && !isOwnIdentity(identity, own)) {
-        await authorizeCheckFor(identity, own, actor, identityResolver);
+    if (identity === null) {
+        return output;
     }
+
+    if (!isOwnIdentity(identity, own)) {
+        await authorizeCheckFor(identity, own, actor, ctx.identityResolver);
+    }
+
+    output[PolicyDataKey.GRANTS] = await loadCheckerGrants(identity, own, actor, ctx);
 
     return output;
 }
@@ -99,24 +117,21 @@ async function authorizeCheckFor(
 }
 
 /**
- * Where a check's engine reads grants from: the actor's own, as its request
- * resolved them (#3597: a token's grants are narrowed to its client), when the
- * check evaluates the actor, so the route answers what the actor's gates
- * decide; any other subject's as stored.
+ * The grants a check evaluates: the actor's own, as its request resolved them
+ * (#3597: a token's grants are narrowed to its client), when the check
+ * evaluates the actor, so the route answers what the actor's gates decide;
+ * any other subject's as stored. Only called once the identity is known to be
+ * the actor's or authorized by `authorizeCheckFor`, which validated its shape.
  */
-export function createCheckerGrantSource(
+function loadCheckerGrants(
+    identity: IdentityPolicyData,
+    own: IdentityPolicyData | undefined,
     actor: ActorContext,
-    provider: Pick<IIdentityPermissionProvider, 'getFor'>,
-) : Pick<IIdentityPermissionProvider, 'getFor'> {
-    const own = toIdentityPolicyData(actor.identity);
+    ctx: PermissionCheckerDataContext,
+) : Promise<PermissionPolicyBinding[]> {
+    if (actor.grants && isOwnIdentity(identity, own)) {
+        return actor.grants();
+    }
 
-    return {
-        getFor: (identity) => {
-            if (actor.grants && isOwnIdentity(identity, own)) {
-                return actor.grants();
-            }
-
-            return provider.getFor(identity);
-        },
-    };
+    return ctx.identityPermissionProvider.getFor(identity);
 }

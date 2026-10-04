@@ -138,7 +138,7 @@ export class AuthorizationMiddleware {
 
     protected async runInner(event: IAppEvent): Promise<void> {
         // Per request, because what a subject holds depends on the token it
-        // presents (#3597): the evaluator reads the request's grants.
+        // presents (#3597): the evaluator is handed the request's grants.
         const grants = this.createGrantsResolver(event);
         setRequestGrantsResolver(event, grants);
 
@@ -146,7 +146,7 @@ export class AuthorizationMiddleware {
             event,
             new PermissionEvaluator({
                 provider: this.permissionProvider,
-                policyEngine: new PolicyEngine({ getFor: grants }),
+                policyEngine: new PolicyEngine(),
                 realmId: null,
                 clientId: null,
             }),
@@ -178,12 +178,14 @@ export class AuthorizationMiddleware {
     }
 
     /**
-     * The request's own subject holds what its token carries, resolved once;
-     * any other subject (a check made on another's behalf) and any request
-     * without a token resolve as themselves.
+     * The request's own subject holds what its token carries; any other
+     * subject (a check made on another's behalf) and any request without a
+     * token resolve as themselves. Each answer is resolved once per request,
+     * since every permission evaluation of the request reads it.
      */
     protected createGrantsResolver(event: IAppEvent): RequestGrantsResolver {
         let tokenGrants : Promise<PermissionPolicyBinding[]> | undefined;
+        const identityGrants = new Map<string, Promise<PermissionPolicyBinding[]>>();
 
         return (identity) => {
             const token = useRequestTokenPayload(event);
@@ -192,7 +194,14 @@ export class AuthorizationMiddleware {
                 return tokenGrants;
             }
 
-            return this.identityPermissionProvider.getFor(identity);
+            const key = `${identity.type}:${identity.id}`;
+            let grants = identityGrants.get(key);
+            if (!grants) {
+                grants = this.identityPermissionProvider.getFor(identity);
+                identityGrants.set(key, grants);
+            }
+
+            return grants;
         };
     }
 

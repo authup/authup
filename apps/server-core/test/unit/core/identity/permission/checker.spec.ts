@@ -38,6 +38,7 @@ import { PermissionRepositoryAdapter } from '../../../../../src/app/modules/data
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
 import {
     RequestPermissionEvaluator,
+    setRequestGrantsResolver,
     setRequestIdentity,
     setRequestScopes,
 } from '../../../../../src/adapters/http/request';
@@ -59,12 +60,13 @@ describe('core/identity/permission/checker', () => {
         const event = { store: {} } as unknown as IAppEvent;
         setRequestIdentity(event, identity);
         setRequestScopes(event, scopes);
+        setRequestGrantsResolver(event, (subject) => identityPermissionProvider.getFor(subject));
 
         return {
             identity: scopes.includes(ScopeName.GLOBAL) ? identity : undefined,
             permissionEvaluator: new RequestPermissionEvaluator(event, new PermissionEvaluator({
                 provider: new PermissionDatabaseProvider(suite.dataSource),
-                policyEngine: new PolicyEngine(identityPermissionProvider),
+                policyEngine: new PolicyEngine(),
             })),
         };
     }
