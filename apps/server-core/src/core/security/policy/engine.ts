@@ -11,12 +11,17 @@ import {
     IdentityPermissionBindingPolicyEvaluator,
     PolicyDefaultEvaluators,
 } from '@authup/access';
-import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PolicyEngine extends BasePolicyEngine {
-    constructor(identityPermissionProvider: Pick<IIdentityPermissionProvider, 'getFor'>) {
+    /**
+     * The binding evaluator reads the identity's grants from the policy data
+     * (`PolicyDataKey.GRANTS`), so whoever places an identity in the bag loads
+     * its grants first: a failed load then surfaces as itself instead of being
+     * flattened into a denial inside the engine.
+     */
+    constructor() {
         super(PolicyDefaultEvaluators);
 
-        this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new IdentityPermissionBindingPolicyEvaluator(identityPermissionProvider));
+        this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new IdentityPermissionBindingPolicyEvaluator());
     }
 }

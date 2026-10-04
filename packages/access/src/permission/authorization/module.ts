@@ -15,6 +15,7 @@ import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
+    PolicyDataKey,
     PolicyDefaultEvaluators,
     PolicyEngine,
 } from '../../policy';
@@ -230,7 +231,7 @@ export async function createAuthorizationEvaluator(
     const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
-        new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
+        new IdentityPermissionBindingPolicyEvaluator(),
     );
     const evaluator = new PermissionEvaluator({
         provider: new PermissionMemoryProvider(definitions),
@@ -242,11 +243,14 @@ export async function createAuthorizationEvaluator(
         if (!identity) {
             // symmetrical with the branch below, which overwrites the key:
             // the document proved no identity, so the caller may not supply
-            // one either
+            // one either, nor grants to go with it
             data.delete(BuiltInPolicyType.IDENTITY);
+            data.delete(PolicyDataKey.GRANTS);
 
             return data;
         }
+
+        data.set(PolicyDataKey.GRANTS, bindings);
 
         data.set(BuiltInPolicyType.IDENTITY, {
             id: identity.id,
