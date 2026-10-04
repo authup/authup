@@ -20,6 +20,7 @@ import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants';
 import { IdentityPolicyEvaluator } from '../identity';
 import { RealmMatchPolicyEvaluator } from '../realm-match';
+import type { IdentityGrants } from './types';
 import { PermissionBindingPolicyValidator } from './validator';
 
 function containsPermissionBinding(policy: PolicyWithType) : boolean {
@@ -78,14 +79,32 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         return data;
     }
 
-    accessGrants(ctx: PolicyEvaluationContext) : PermissionPolicyBinding[] | null {
+    /**
+     * The bindings of the grants in the bag, or the issue code refusing them:
+     * absent grants are missing data, grants of another shape or of another
+     * subject than `identity` are invalid. Both settle the evaluation false.
+     */
+    accessGrants(
+        ctx: PolicyEvaluationContext,
+        identity: { type: string, id: string },
+    ) : PermissionPolicyBinding[] | PolicyIssueCode {
         if (!ctx.data.has(PolicyDataKey.GRANTS)) {
-            return null;
+            return PolicyIssueCode.DATA_MISSING;
         }
 
-        const grants = ctx.data.get(PolicyDataKey.GRANTS);
+        const grants = ctx.data.get<Partial<IdentityGrants> | null>(PolicyDataKey.GRANTS);
+        if (
+            !grants ||
+            typeof grants !== 'object' ||
+            !Array.isArray(grants.bindings) ||
+            !grants.identity ||
+            grants.identity.type !== identity.type ||
+            grants.identity.id !== identity.id
+        ) {
+            return PolicyIssueCode.DATA_INVALID;
+        }
 
-        return Array.isArray(grants) ? grants as PermissionPolicyBinding[] : null;
+        return grants.bindings;
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
@@ -118,14 +137,16 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             };
         }
 
-        const grants = this.accessGrants(ctx);
-        if (!grants) {
+        const grants = this.accessGrants(ctx, identity);
+        if (!Array.isArray(grants)) {
             return {
                 success: false,
                 issues: [
                     definePolicyIssueItem({
-                        code: PolicyIssueCode.DATA_MISSING,
-                        message: 'The data property grants is missing',
+                        code: grants,
+                        message: grants === PolicyIssueCode.DATA_MISSING ?
+                            'The data property grants is missing' :
+                            'The data property grants does not hold the grants of the identity',
                         path: ctx.path,
                     }),
                 ],

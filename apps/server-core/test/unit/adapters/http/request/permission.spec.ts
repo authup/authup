@@ -6,7 +6,12 @@
  */
 
 import type { PermissionPolicyBinding } from '@authup/access';
-import { BuiltInPolicyType, PolicyData, PolicyDataKey } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDataKey,
+    defineIdentityGrants,
+} from '@authup/access';
 import type { Client, Identity } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
@@ -64,7 +69,7 @@ describe('RequestPermissionEvaluator', () => {
         const ctx = base.evaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(true);
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
-        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(grants);
+        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(defineIdentityGrants({ type: 'client', id: 'c1' }, grants));
     });
 
     it('should fail the evaluation when the grants cannot be loaded', async () => {
@@ -136,12 +141,12 @@ describe('RequestPermissionEvaluator', () => {
             name: 'test',
             data: new PolicyData({
                 [BuiltInPolicyType.IDENTITY]: { type: 'user', id: 'someone-else' },
-                [PolicyDataKey.GRANTS]: [],
+                [PolicyDataKey.GRANTS]: defineIdentityGrants({ type: 'user', id: 'someone-else' }, []),
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
-        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(grants);
+        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(defineIdentityGrants({ type: 'client', id: 'c1' }, grants));
     });
 });

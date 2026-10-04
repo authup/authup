@@ -10,11 +10,12 @@
  */
 export enum PolicyDataKey {
     /**
-     * The grants the `identity` in the same bag holds, as raw
-     * `PermissionPolicyBinding`s. The permission binding evaluator reads
-     * them from here rather than loading them, so evaluation is a function of
-     * the bag alone. Whoever places an identity in the bag places its grants
-     * next to it, and removes both together.
+     * The grants the `identity` in the same bag holds, as `IdentityGrants`
+     * (`defineIdentityGrants`). The permission binding evaluator reads them
+     * from here rather than loading them, so evaluation is a function of the
+     * bag alone. Whoever places an identity in the bag places its grants next
+     * to it and removes both together; grants naming another subject than the
+     * bag's identity are refused.
      */
     GRANTS = 'grants',
 }

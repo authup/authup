@@ -18,6 +18,7 @@ import {
     PolicyDataKey,
     PolicyDefaultEvaluators,
     PolicyEngine,
+    defineIdentityGrants,
 } from '../../policy';
 import type {
     IPermissionEvaluator,
@@ -250,8 +251,6 @@ export async function createAuthorizationEvaluator(
             return data;
         }
 
-        data.set(PolicyDataKey.GRANTS, bindings);
-
         data.set(BuiltInPolicyType.IDENTITY, {
             id: identity.id,
             type: identity.type,
@@ -259,6 +258,7 @@ export async function createAuthorizationEvaluator(
             realmName: identity.realmName ?? undefined,
             clientId: identity.clientId ?? null,
         });
+        data.set(PolicyDataKey.GRANTS, defineIdentityGrants(identity, bindings));
 
         return data;
     };
