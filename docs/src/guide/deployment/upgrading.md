@@ -53,11 +53,18 @@ the ones that can break an existing setup come first.
   `smtp` object (next to `connectionString` too), or
   `?tls.rejectUnauthorized=false` on a connection URL given through the
   environment.
-- **Request bodies are capped at 1mb** after decompression, and
+- **Request bodies are capped at 10mb** after decompression, and
   `middlewareBody`, `middlewareCookie` and `middlewareQuery` are now honoured.
   A `middlewareBody` object applies per parser on top of the default: a parser
   stays on and capped unless the object turns it off (`false`) or names its own
   `limit`.
+- **Rate limiting runs in two stages.** Before authentication each source
+  address is capped at 6000 requests a minute, a flood ceiling an office
+  behind one NAT shares. After authentication a request counts against its
+  identity (users 6000, clients 300000 a minute) and an anonymous one against
+  its address (1200 a minute), so users sharing an address no longer share a
+  budget. A `middlewareRateLimit` object configures the second stage; a
+  numeric `max` above the ceiling raises the first stage with it.
 - **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
   fails the start), and `false` now deactivates an existing default admin on
   the next start. Setting it back to `true` does not reactivate the admin:

@@ -379,18 +379,26 @@ export default {
          * default: true (each)
          */
         middlewareBody: true,       // request body parsing; caps json and
-                                    // url-encoded bodies at 1mb, measured
+                                    // url-encoded bodies at 10mb, measured
                                     // after decompression. An options object
                                     // is applied per parser on top of that:
-                                    // both stay on at 1mb unless it sets one
+                                    // both stay on at 10mb unless it sets one
                                     // to false or names its own `limit`
-                                    // ({ json: { limit: '5mb' } }).
+                                    // ({ json: { limit: '20mb' } }).
         middlewareCookie: true,     // cookie parsing
         middlewareCors: true,       // CORS (reflects any origin by default;
                                     // pass options for an explicit allowlist)
         middlewarePrometheus: true, // /metrics endpoint
         middlewareQuery: true,      // query-string parsing
-        middlewareRateLimit: true,  // rate limiting
+        middlewareRateLimit: true,  // rate limiting in two stages: each
+                                    // source address is capped at 6000
+                                    // requests a minute before
+                                    // authentication; afterwards a request
+                                    // counts against its identity (users
+                                    // 6000, clients 300000) or, anonymous,
+                                    // its address (1200). Options configure
+                                    // the second stage; a numeric `max`
+                                    // above 6000 raises the first with it.
         middlewareSwagger: true,    // /docs endpoint
 
         // ----------------------------------------------------

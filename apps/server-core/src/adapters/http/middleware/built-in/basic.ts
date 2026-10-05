@@ -10,8 +10,8 @@ import { basic } from '@routup/basic';
 import type { IApp } from 'routup';
 
 export const BODY_OPTIONS_DEFAULT = {
-    json: { limit: '1mb' },
-    urlEncoded: { limit: '1mb' },
+    json: { limit: '10mb' },
+    urlEncoded: { limit: '10mb' },
 } satisfies Options['body'];
 
 type BodyOptions = Exclude<Options['body'], boolean | undefined>;

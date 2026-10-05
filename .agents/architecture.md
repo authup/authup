@@ -1520,22 +1520,26 @@ API. The six page GETs became a stateless hop:
     orphans the one the markup carries. A federated return hands nothing
     over, since its ladder runs for the account the redemption establishes.
   The response already carries `Vary: Cookie` and `no-store`.
-  **Rate-limit cost on a split deployment.** server-core's limiter runs
-  before authentication and keys on the source address alone (its
-  per-identity `max` never sees an identity; the address is the one
-  `trustProxy` resolves, with a trailing port dropped so one host is one
-  bucket however many connections it opens; under the
-  trust-all default a direct client picks its own key, and a forwarded
-  loopback behind a same-host proxy is skipped as the deployment's own
-  traffic), and the service forwards no
-  visitor address. So on a split topology every server-side call of every
-  render counts against the console's ONE address at the anonymous 1200/min,
-  and a signed-in `/authorize` render makes about five (the authorize info,
-  introspection, the authorization check, the challenge status, the consent
-  probe) where an anonymous one makes one: about 240 signed-in renders a
-  minute, over all visitors, exhaust it, and `/authorize/info` failing fails
-  the page. The composed `authup start` is loopback and skipped. A split
-  deployment under that load raises `core.middlewareRateLimit.max`; the real
+  **Rate-limit cost on a split deployment.** server-core limits in two
+  stages (`adapters/http/middleware/built-in/rate-limit.ts`). Before
+  authentication each source address may send
+  `RATE_LIMIT_ADDRESS_CEILING` (6000) a minute, a flood ceiling only: it is
+  the one stage a failed bearer or a failed Basic credential is counted in,
+  and an office behind one NAT shares it, which is why it is far above any
+  single caller's budget. After authentication a request counts against its
+  identity (`user:<id>` 6000, `client:<id>` 300000) and an anonymous one
+  against its address (1200), so users sharing an address do not share a
+  budget. The address is the one `trustProxy` resolves, with a trailing port
+  dropped: a proxy appends the NAT's per-connection source port, which
+  identifies no user, and keeping it gave every connection a fresh bucket,
+  i.e. no limit. Under the trust-all default a direct client picks its own
+  key, and a forwarded loopback behind a same-host proxy is skipped as the
+  deployment's own traffic. The console service forwards no visitor
+  address, so on a split topology every ANONYMOUS server-side call of every
+  render counts against the console's ONE address at 1200/min, while the
+  calls it makes with the visitor's own bearer count against that visitor.
+  The composed `authup start` is loopback and skipped. A split deployment
+  under that load raises `core.middlewareRateLimit.max`; the real
   fix is forwarding the visitor's address from the console services, which
   needs a trust contract they do not have yet.
 - **It is the ONE console that fetches server-side, so its API address is

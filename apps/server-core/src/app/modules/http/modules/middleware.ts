@@ -20,6 +20,7 @@ import {
     registerBasicMiddleware,
     registerCorsMiddleware,
     registerErrorMiddleware,
+    registerIdentityRateLimitMiddleware,
     registerInternalHttpClientMiddleware,
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
@@ -53,6 +54,7 @@ export class HTTPMiddlewareModule {
 
         await this.mountSwagger(router, container);
         await this.mountAuthorization(router, container);
+        await this.mountIdentityRateLimit(router, container);
         await this.mountRequestEventContext(router);
         await this.mountRealmResolver(router, container);
     }
@@ -121,6 +123,16 @@ export class HTTPMiddlewareModule {
         }
 
         registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
+    }
+
+    async mountIdentityRateLimit(router: IApp, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        if (!this.isEnabled(config.middlewareRateLimit)) {
+            return;
+        }
+
+        registerIdentityRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
     }
 
     async mountSwagger(router: IApp, container: IContainer): Promise<void> {
