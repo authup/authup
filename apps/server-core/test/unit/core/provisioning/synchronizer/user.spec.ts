@@ -116,9 +116,9 @@ describe('core/provisioning/synchronizer/user', () => {
 
     it('should bind no role to an existing user under createOnly', async () => {
         roleRepository.seed({
-            name: 'realm_admin', 
-            realmId: null, 
-            clientId: null, 
+            name: 'realm_admin',
+            realmId: null,
+            clientId: null,
         });
         userRepository.seed({ name: 'realm-admin', realmId });
 
@@ -132,9 +132,9 @@ describe('core/provisioning/synchronizer/user', () => {
 
     it('should bind the declared role to a user it creates', async () => {
         const role = roleRepository.seed({
-            name: 'realm_admin', 
-            realmId: null, 
-            clientId: null, 
+            name: 'realm_admin',
+            realmId: null,
+            clientId: null,
         });
 
         await synchronizer.synchronize({
@@ -150,9 +150,9 @@ describe('core/provisioning/synchronizer/user', () => {
 
     it('should bind the declared role to an existing user under merge', async () => {
         const role = roleRepository.seed({
-            name: 'realm_admin', 
-            realmId: null, 
-            clientId: null, 
+            name: 'realm_admin',
+            realmId: null,
+            clientId: null,
         });
         const existing = userRepository.seed({ name: 'realm-admin', realmId });
 

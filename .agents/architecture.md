@@ -1247,7 +1247,7 @@ Non-entity workflows live under `core/identity/`:
 | Service | Location | Responsibility |
 |---|---|---|
 | `RegistrationService` | `core/identity/registration/` | User registration (`register`) and account activation (`activate`) |
-| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`, which answers an unknown account with the same `{ resetExpires }` and sends nothing, so it is no account oracle) and reset password (`resetPassword`) |
+| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`, which answers an unknown account with the same status and `{ resetExpires }` body a known one gets and sends nothing; response timing and a failed mail send, which answers 400 for a known account only, still tell the two apart) and reset password (`resetPassword`) |
 
 These services own their own validation (inline validators, not from `@authup/core-kit`), and accept `Record<string, any>` raw data.
 
@@ -1520,17 +1520,43 @@ API. The six page GETs became a stateless hop:
     orphans the one the markup carries. A federated return hands nothing
     over, since its ladder runs for the account the redemption establishes.
   The response already carries `Vary: Cookie` and `no-store`.
-  **Rate-limit cost on a split deployment.** server-core's limiter runs
-  before authentication and keys on the source address alone (its
-  per-identity `max` never sees an identity), and the service forwards no
-  visitor address. So on a split topology every server-side call of every
-  render counts against the console's ONE address at the anonymous 1200/min,
-  and a signed-in `/authorize` render makes about five (the authorize info,
-  introspection, the authorization check, the challenge status, the consent
-  probe) where an anonymous one makes one: about 240 signed-in renders a
-  minute, over all visitors, exhaust it, and `/authorize/info` failing fails
-  the page. The composed `authup start` is loopback and skipped. A split
-  deployment under that load raises `core.middlewareRateLimit.max`; the real
+  **Rate-limit cost on a split deployment.** server-core limits in two
+  stages (`adapters/http/middleware/built-in/rate-limit.ts`). Before
+  authentication a source address may cause
+  `RATE_LIMIT_FAILED_AUTHENTICATION_MAX` (300) failed authentications a
+  minute, and only those a guess produces (`isFailedAuthentication`): a 401
+  answering `invalid_client`, or a 401 to a request carrying an
+  `Authorization` header unless it is `expired_token` / `inactive_token`. An
+  expired or revoked token carries a valid signature and a request without
+  credentials guessed nothing; both are what thousands of users behind one
+  NAT address (a hospital network) cause in ordinary use, every access token
+  being renewed after a 401, so counting them locked such a network out. The
+  code reaches the limiter through the request store, where the error
+  middleware records it (`setRequestErrorCode`). A wrong Basic credential on
+  an ANONYMOUS route is no 401 at all (the request continues anonymous), so
+  the second stage's anonymous budget bounds that guess, not this one. It rides
+  `@routup/rate-limit`'s `skipSuccessfulRequest`, which reserves a slot before
+  forwarding and returns it on success, so a parallel burst of failures is
+  bounded too; a `count: 'failed'` mode that counted only after the response
+  was rejected for exactly that (routup/plugins#846). A thrown 401 is judged
+  by the error middleware's response, which is why that middleware must stay
+  on the same router. The Swagger mount sits after the second stage, since
+  the first no longer limits an anonymous request. Password guessing at `/token` answers 400, not 401, and
+  is bounded by the anonymous per-address budget below and the login
+  throttle. After authentication a request counts against its
+  identity (`user:<id>` 6000, `client:<id>` 300000) and an anonymous one
+  against its address (1200), so users sharing an address do not share a
+  budget. The address is the one `trustProxy` resolves, with a trailing port
+  dropped: a proxy appends the NAT's per-connection source port, which
+  identifies no user, and keeping it gave every connection a fresh bucket,
+  i.e. no limit. Under the trust-all default a direct client picks its own
+  key, and a forwarded loopback behind a same-host proxy is skipped as the
+  deployment's own traffic. The console service forwards no visitor
+  address, so on a split topology every ANONYMOUS server-side call of every
+  render counts against the console's ONE address at 1200/min, while the
+  calls it makes with the visitor's own bearer count against that visitor.
+  The composed `authup start` is loopback and skipped. A split deployment
+  under that load raises `core.middlewareRateLimit.max`; the real
   fix is forwarding the visitor's address from the console services, which
   needs a trust contract they do not have yet.
 - **It is the ONE console that fetches server-side, so its API address is
@@ -1814,9 +1840,11 @@ threads instances through constructor/context args:
   simply stays silent (`this.logger?.warn(...)` guard style).
 - **Domain events**: `DomainEventPublisher` (from `@authup/server-kit`,
   optional `logger` ctx) aggregates `IDomainEventHandler`s
-  (`DomainEventRedisHandler`, `DomainEventSocketHandler`); `safePublish`
-  catches + logs so an event-bus failure never fails the originating DB
-  transaction. `DatabaseModule.registerEventPublisher` creates it, registers
+  (`DomainEventRedisHandler`, `DomainEventSocketHandler`, the entity audit
+  mirror). `publish` runs every handler even when an earlier one throws and
+  then rejects with the first error, so a redis outage cannot drop the audit
+  row of a committed write; `safePublish` catches + logs that rejection so an
+  event-bus failure never fails the originating DB transaction. `DatabaseModule.registerEventPublisher` creates it, registers
   it under `DatabaseInjectionKey.DomainEventPublisher`, and injects it into
   every TypeORM subscriber instance via `setPublisher()` after
   `dataSource.initialize()` (TypeORM instantiates the subscriber classes from
@@ -1833,7 +1861,14 @@ threads instances through constructor/context args:
   whose cache is keyed by the owner id). Every `after*` hook hands its
   `event.manager` to the publish as the opaque `transaction`, because the
   hooks run inside the persist transaction and a handler that persists must
-  ride it (#3539). A subscriber without an injected publisher publishes
+  ride it (#3539). The base strips every `select: false` column of its
+  `target` (read once from typeorm's metadata-args storage) from both the
+  payload and the previous payload, on a copy, never on the saved entity:
+  the hook receives the object `save()` was handed, with the client secret,
+  the password and reset/activate hashes, `email` and the token columns
+  still set, and `select` only governs projection. So nothing a read withholds
+  reaches redis, socket.io or the entity audit diff (which therefore records
+  no `email` change). A subscriber without an injected publisher publishes
   nothing (tests / migration CLI runs).
 - **typeorm-extension's global registry is unused**: `setDataSource` /
   `useDataSource` / `unsetDataSource` have no call sites; repositories that
@@ -2351,19 +2386,21 @@ combination answers 400.
   context, `sessionId` included. Never the secret in any form.
 - **The #3351 fix is the read side, and the reveal rule is the plaintext
   rule.** `secretReadGate` lost its `eq('secretEncrypted', true)` leg, so a
-  row carrying the flag is gated like plaintext, and `ClientService.getOne`
-  evaluates reach for every non-hashed value
-  (`entity.secret && !entity.secretHashed`), a flagged row included. A hashed
-  value discloses nothing; every other
+  row carrying the flag is gated like plaintext. Realm reach now narrows the
+  client reads themselves: the list compiles the reader's reach into its
+  WHERE, so another realm's row is absent, and `ClientService.getOne`
+  evaluates reach for every record but the caller's own, so a foreign record
+  answers 403 whatever its secret. Redacting a foreign row's secret is
+  therefore left to the junction positions (`fields[client]` under
+  `/client-permissions` and its siblings), where the row rides along with a
+  junction the reader may see. A hashed value discloses nothing; every other
   stored form is the secret itself. `revealSecret(entity)` then runs on
   every read surface (the single read after its evaluate, the list after
   the schema gate's redaction, a client's own record read): a value that is
   a blob (`isRealmCipherBlob`) is decrypted in place for the reader who
   passed, and a blob that cannot be decrypted (an unknown, disabled or
   foreign key) or a service with no cipher wired answers the row WITHOUT
-  the field, never a 500 and never the ciphertext. A foreign `realm_admin`
-  therefore sees an encrypted row redacted exactly as it sees a plaintext
-  one. #3328 (reach-gating the hashed leg) stays a separate issue.
+  the field, never a 500 and never the ciphertext.
 - **The realm cipher is one DI token, `OAuth2InjectionToken.RealmCipher`**
   (registered in `app/modules/oauth2/module.ts` over `KeyStore`), resolved
   by every consumer of the encrypted-at-rest mode: the MFA seed cipher, the
@@ -2441,8 +2478,10 @@ and encrypted at once refused; a public client refused; self-rotation via
 `@me` with the mode change denied and a foreign client out of reach; and,
 last, the realm enc key answering 409 while the encrypted client references
 it, force-deleted, after which that client answers `invalid_client`),
-`client-secret-projection.spec.ts` (an own encrypted secret decrypted and a
-foreign one redacted for a restricted reader, without dropping the row),
+`client-secret-projection.spec.ts` (an own encrypted secret decrypted for a
+restricted reader, no foreign row listed at the root, a foreign record read
+refused, and a foreign secret redacted under the junction `fields[client]`
+positions),
 `user-concurrency.spec.ts` (a rotation interleaved with a switch to `none`
 is refused and the credential stays cleared) and
 `test/unit/core/provisioning/synchronizer/client.spec.ts` (a raw secret
@@ -2756,16 +2795,20 @@ rather than trusted until `exp`.
   it from being a silent escalation. Do not narrow it.
 - **The residual, stated accurately.** An ambient origin cookie means an XSS
   on the IdP origin can act as the user against the API for as long as the
-  page lives. For a user who cannot mint credentials through the API, no
-  PORTABLE credential can be exfiltrated. For a privileged one it still can:
-  a user holding `CLIENT_CREATE` can be driven, through ordinary same-origin
-  CRUD the console legitimately needs, to `POST /clients` with a
-  caller-chosen `secret`, have roles bound to it, and obtain a
-  `client_credentials` grant, which authenticates the client from the
-  request BODY, so no cookie and no denied route is involved at any point.
-  No deny-list can close that, because the console needs entity CRUD to
-  function. Do not restate the wider claim in docs or release notes. The
-  revocation and header-weight benefits are unaffected and unqualified.
+  page lives, and can also leave with a PORTABLE credential, for every
+  user rather than only a privileged one. Self-service is enough:
+  `USER_SELF_MANAGE` lets `POST /users/@me` set a new password without the
+  current one, and a password is a credential the password grant accepts
+  from anywhere. The change ends the user's other sessions and keeps the
+  one it was made with, so the page's own session survives it. A user
+  holding `CLIENT_CREATE` has a second route: `POST /clients` with a
+  caller-chosen `secret`, roles bound to it, then a `client_credentials`
+  grant, which authenticates the client from the request BODY, so no cookie
+  and no denied route is involved at any point. No deny-list can close
+  either, because the consoles need self-service and entity CRUD to
+  function. So `HttpOnly` keeps the TOKENS out of script, not the account:
+  do not claim more in docs or release notes. The revocation and
+  header-weight benefits are unaffected and unqualified.
 - **Four routes, and only two of them are still on server-core.**
   `GET /console/account/login/start` mints PKCE + `state`, parks them behind
   a 5-minute `SameSite=Lax` login cookie (Lax, not Strict: the return leg may
@@ -2989,7 +3032,9 @@ bootstrap. What differs from the account console, and why:
   `layout`, typed by a `RouteMeta` augmentation). `src/guard.ts`
   (`createRoutingGuard({ store, config })`, mounted via `router.beforeEach`)
   is the port of `client-web-nuxt`'s `RoutingInterceptor`: resolve, the
-  bearer-mode code exchange, then the three gates over `route.matched`, so
+  bearer-mode code exchange (both redeem a code only against the saved
+  authorization request and its `state`, and drop one that arrives without
+  it), then the three gates over `route.matched`, so
   nested children inherit their parent's protection. Two cookie-mode rules
   come from the account console: a failed or settled-`RESTORING` resolve
   logs out with `revoke: false` (a transient failure is not an intent to
@@ -6444,7 +6489,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   admins can set/clear it. `ClientService.save` refuses (400) a policy owned by
   another realm than the client's (`assertAccessPolicyRealm`, over the row
   `validateJoinColumns` loads onto the input); a global policy (`realmId`
-  null) stays allowed. `buildSystemClientAttributes` deliberately omits the
+  null) stays allowed. An update checks only a CHANGED reference, since the
+  console echoes the whole form. Every leg evaluates with the client's realm
+  (`evaluate(..., { realmId })`), so a binding to another realm's policy an
+  older release accepted denies rather than gating with that tree. `buildSystemClientAttributes` deliberately omits the
   key: the provisioner MERGE would otherwise wipe an admin-set policy on
   each per-realm system client (`admin-console`, `account-console`)
   every boot. The admin form binds it via
@@ -8941,9 +8989,11 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   types): their payload column is literally called `value`, so a key-name
   denylist cannot see that it holds an identity provider's `clientSecret` or
   LDAP bind password. The same reasoning applies one layer out, on the
-  realtime bus: `IdentityProviderAttributeSubscriber` overrides `publish` to
-  null the `value` on both the current and previous payload, since the
-  domain-event content is shipped verbatim to redis and socket consumers. Created/deleted rows carry
+  realtime bus: `value` is not a `select: false` column, so the base
+  subscriber's hidden-column strip does not cover it, and
+  `IdentityProviderAttributeSubscriber` overrides `publish` to null it on
+  both the current and previous payload, since the domain-event content is
+  shipped to redis and socket consumers. Created/deleted rows carry
   `data: null` (no column dumps). Rows self-prune on a short per-row TTL via
   `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
   `true` / `eventLogEntityRetentionDays` default `7` days, env
@@ -9199,7 +9249,16 @@ cannot replace any of this, because the server never sees it.
 
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
-introspects on every store instantiation regardless.
+introspects on every store instantiation regardless. Every write carries
+`SameSite=Lax`, and `Secure` whenever the request is https, since the values
+are bearer credentials. `installStore` asks `window.location` unless the host
+passes `cookieSecure`, which a server-side writer must: a render has no
+document, and the Nuxt interceptor's refresh during SSR rotates the refresh
+token, so a write without the flag would replace the `Secure` cookie for as
+long as the token lives. The Nuxt plugin passes `useRequestURL()`'s scheme,
+which h3 reads from `X-Forwarded-Proto` behind a proxy. Its `cookieSet`
+spreads the host's own cookie options last, so they win over the kit's. HSTS
+is the proxy's job and documented as such.
 
 **A session is only committed for a token the endpoint reports as
 `active`.** The introspection answers 200 with the full payload for a token it

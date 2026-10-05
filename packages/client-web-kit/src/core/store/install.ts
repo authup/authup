@@ -76,6 +76,17 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     // implicit paths gave them two shadowing sets that expire independently.
     const cookiePath = options.cookiePath || COOKIE_PATH;
 
+    // The stored values are bearer credentials, so an https document never
+    // lets them ride a plaintext request to the same host. A server render has
+    // no window to ask, so its host says so through `cookieSecure`.
+    const cookieSecure = options.cookieSecure ??
+        (typeof window !== 'undefined' && window.location?.protocol === 'https:');
+    const cookieOptions : CookieOptions = {
+        path: cookiePath,
+        sameSite: 'lax',
+        ...(cookieSecure ? { secure: true } : {}),
+    };
+
     /**
      * Drop the copies written before the path was pinned.
      *
@@ -232,7 +243,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                 if (input) {
                     cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
                         maxAge: maxAgeFn(),
-                        path: cookiePath,
+                        ...cookieOptions,
                     });
                 } else {
                     cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, { path: cookiePath });
@@ -247,7 +258,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                     const maxAge = maxAgeFn();
                     cookieSet(CookieName.ACCESS_TOKEN, input, {
                         maxAge,
-                        path: cookiePath,
+                        ...cookieOptions,
                     });
                 } else {
                     cookieUnset(CookieName.ACCESS_TOKEN, { path: cookiePath });
@@ -259,7 +270,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
             (input) => {
                 if (input) {
-                    cookieSet(CookieName.REFRESH_TOKEN, input, { path: cookiePath });
+                    cookieSet(CookieName.REFRESH_TOKEN, input, cookieOptions);
                 } else {
                     cookieUnset(CookieName.REFRESH_TOKEN, { path: cookiePath });
                 }
@@ -270,7 +281,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             StoreDispatcherEventName.ID_TOKEN_UPDATED,
             (input) => {
                 if (input) {
-                    cookieSet(CookieName.ID_TOKEN, input, { path: cookiePath });
+                    cookieSet(CookieName.ID_TOKEN, input, cookieOptions);
                 } else {
                     cookieUnset(CookieName.ID_TOKEN, { path: cookiePath });
                 }
@@ -282,7 +293,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REALM_MANAGEMENT, input, { path: cookiePath });
+                cookieSet(CookieName.REALM_MANAGEMENT, input, cookieOptions);
             } else {
                 cookieUnset(CookieName.REALM_MANAGEMENT, { path: cookiePath });
             }

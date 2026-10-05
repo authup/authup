@@ -512,9 +512,9 @@ describe('core/identity/password-recovery/service', () => {
 
             expect(sessionManager.revokeByOwnerCalls).toEqual([
                 {
-                    sub: entity.id, 
-                    subKind: 'user', 
-                    exceptId: undefined, 
+                    sub: entity.id,
+                    subKind: 'user',
+                    exceptId: undefined,
                 },
             ]);
         });

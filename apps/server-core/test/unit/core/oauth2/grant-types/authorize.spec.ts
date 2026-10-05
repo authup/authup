@@ -91,9 +91,9 @@ describe('OAuth2AuthorizeGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId, 
-                active: true, 
+                id: userId,
+                realmId,
+                active: true,
             } as User,
         });
         grant = new OAuth2AuthorizeGrant({
@@ -287,9 +287,9 @@ describe('OAuth2AuthorizeGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId, 
-                active: false, 
+                id: userId,
+                realmId,
+                active: false,
             } as User,
         });
 
@@ -308,9 +308,9 @@ describe('OAuth2AuthorizeGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId: randomUUID(), 
-                active: true, 
+                id: userId,
+                realmId: randomUUID(),
+                active: true,
             } as User,
         });
 

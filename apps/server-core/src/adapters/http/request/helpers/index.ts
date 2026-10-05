@@ -7,6 +7,7 @@
 
 export * from './actor.ts';
 export * from './body-realm-id.ts';
+export * from './error-code.ts';
 export * from './grants.ts';
 export * from './identity.ts';
 export * from './locale.ts';

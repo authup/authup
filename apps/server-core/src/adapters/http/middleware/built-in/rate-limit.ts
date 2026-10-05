@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { IApp, IAppEvent } from 'routup';
 import { getRequestIP } from 'routup';
 import { merge } from 'smob';
-import { useRequestIdentity } from '../../request/index.ts';
+import { useRequestErrorCode, useRequestIdentity } from '../../request/index.ts';
 
 // IPv4 127.0.0.0/8, `::1`, and the IPv4-mapped form a dual-stack socket
 // reports. Anchored and octet-checked rather than a `127.` prefix test: a
@@ -33,18 +34,103 @@ function isLoopbackRequest(event: IAppEvent) : boolean {
         LOOPBACK_IP.test(getRequestIP(event) || '');
 }
 
-export function registerRateLimitMiddleware(router: IApp, input?: OptionsInput) {
-    let options : OptionsInput = {
-        // @routup/rate-limit's default keyGenerator hardcodes
-        // `{ trustProxy: true }`; deriving the key here instead lets it
-        // follow the app-level trust contract (config `trustProxy`).
-        keyGenerator: (event) => getRequestIP(event) || '127.0.0.1',
+// A proxy may append the client's source port, which changes with every
+// connection, so the port is dropped: one host is one bucket.
+function stripPort(ip: string) : string {
+    return ip.match(/^\[([^\]]+)\]:\d+$/)?.[1] ??
+        ip.match(/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/)?.[1] ??
+        ip;
+}
+
+/**
+ * How many failed authentications one source address may cause per window
+ * before authentication is known.
+ */
+export const RATE_LIMIT_FAILED_AUTHENTICATION_MAX = 300;
+
+/**
+ * Whether a response is a credential that could have been guessed and was
+ * wrong. Not every 401 is: a token that expired or was revoked carries a
+ * valid signature, so it cannot have been guessed, and a request carrying
+ * no credential at all guessed nothing. Both are what the users behind one
+ * NAT address cause in ordinary use (every access token expires after 15
+ * minutes and is renewed on the 401), so counting them would lock a large
+ * network out of its own deployment.
+ */
+function isFailedAuthentication(event: IAppEvent, response: Response) : boolean {
+    if (response.status !== 401) {
+        return false;
+    }
+
+    const code = useRequestErrorCode(event);
+    if (code === ErrorCode.OAUTH_CLIENT_INVALID) {
+        // a client secret, which the token endpoint also reads from the body
+        return true;
+    }
+
+    if (code === ErrorCode.JWT_EXPIRED || code === ErrorCode.JWT_INACTIVE) {
+        return false;
+    }
+
+    return !!event.request.headers.get('authorization');
+}
+
+function buildAddressKey(event: IAppEvent) : string {
+    // @routup/rate-limit's default keyGenerator hardcodes
+    // `{ trustProxy: true }`; deriving the key here instead lets it follow the
+    // app-level trust contract (config `trustProxy`). A trailing port is
+    // dropped, and the key is prefixed because it indexes a plain object,
+    // where a name such as `constructor` would never count up to the limit.
+    return `ip:${stripPort(getRequestIP(event) || '127.0.0.1')}`;
+}
+
+/**
+ * The first stage, mounted BEFORE authorization: it counts failed
+ * authentications per source address (`isFailedAuthentication`). A forged
+ * bearer, a wrong client secret and a wrong Basic credential on a protected
+ * route are never attributed to an identity, so this is the stage that
+ * bounds guessing them, while the valid requests of every user behind one
+ * NAT address pass it uncounted. A wrong Basic credential on an anonymous
+ * route answers as an anonymous request rather than 401, so the second
+ * stage's anonymous budget bounds that one.
+ *
+ * `skipSuccessfulRequest` reserves a slot before forwarding and returns it
+ * once the response is known, so a parallel burst of failures is bounded by
+ * the limit too; concurrent valid requests hold a slot only while in flight.
+ * A thrown 401 is judged by the response of the error middleware, which is
+ * registered on the same router.
+ */
+export function registerRateLimitMiddleware(router: IApp) {
+    router.use(rateLimit({
+        max: RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
+        keyGenerator: (event) => `pre:${buildAddressKey(event)}`,
+        skipSuccessfulRequest: true,
+        requestWasSuccessful: (event, response) => !isFailedAuthentication(event, response),
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so
-        // counting them collapses the whole deployment onto one anonymous
-        // bucket of 1200/min -- 20 page renders per second, however many
-        // distinct visitors there are.
+        // counting them collapses the whole deployment onto one bucket.
+        skip: isLoopbackRequest,
+        windowMs: 60 * 1000,
+    }));
+}
+
+/**
+ * The second stage, mounted AFTER authorization: an authenticated request is
+ * counted against its identity, so users sharing an address (an office
+ * behind one NAT) no longer share a budget, and an anonymous one against its
+ * address.
+ */
+export function registerIdentityRateLimitMiddleware(router: IApp, input?: OptionsInput) {
+    let options : OptionsInput = {
+        keyGenerator: (event) => {
+            const identity = useRequestIdentity(event);
+            if (identity) {
+                return `${identity.type}:${identity.id}`;
+            }
+
+            return buildAddressKey(event);
+        },
         skip: isLoopbackRequest,
         max(event) {
             const identity = useRequestIdentity(event);

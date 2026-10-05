@@ -11,6 +11,7 @@ import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
 import type { Realm, UserAuthenticator } from '@authup/core-kit';
 import {
+    buildBodyOptions,
     createAuthorizationMiddleware,
     createLoggerMiddleware,
     createRealmResolverMiddleware,
@@ -19,6 +20,7 @@ import {
     registerBasicMiddleware,
     registerCorsMiddleware,
     registerErrorMiddleware,
+    registerIdentityRateLimitMiddleware,
     registerInternalHttpClientMiddleware,
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
@@ -47,11 +49,14 @@ export class HTTPMiddlewareModule {
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
         await this.mountInternalHttpClient(router, container);
-        await this.mountBasic(router);
+        await this.mountBasic(router, container);
         await this.mountRateLimit(router, container);
 
-        await this.mountSwagger(router, container);
         await this.mountAuthorization(router, container);
+        await this.mountIdentityRateLimit(router, container);
+        // after the second stage, which is the one that limits an anonymous
+        // request: the first stage counts failed authentications alone
+        await this.mountSwagger(router, container);
         await this.mountRequestEventContext(router);
         await this.mountRealmResolver(router, container);
     }
@@ -92,8 +97,14 @@ export class HTTPMiddlewareModule {
         registerInternalHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.InternalHttpClient));
     }
 
-    async mountBasic(router: IApp): Promise<void> {
-        registerBasicMiddleware(router);
+    async mountBasic(router: IApp, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        registerBasicMiddleware(router, {
+            body: buildBodyOptions(config.middlewareBody),
+            cookie: config.middlewareCookie,
+            query: config.middlewareQuery,
+        });
     }
 
     async mountPrometheus(router: IApp, container: IContainer): Promise<void> {
@@ -113,7 +124,17 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
+        registerRateLimitMiddleware(router);
+    }
+
+    async mountIdentityRateLimit(router: IApp, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        if (!this.isEnabled(config.middlewareRateLimit)) {
+            return;
+        }
+
+        registerIdentityRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
     }
 
     async mountSwagger(router: IApp, container: IContainer): Promise<void> {

@@ -25,9 +25,9 @@ export class FakeSessionManager implements ISessionManager {
     public revokeCalls: string[] = [];
 
     public revokeByOwnerCalls: {
-        sub: string, 
-        subKind: string, 
-        exceptId?: string 
+        sub: string,
+        subKind: string,
+        exceptId?: string
     }[] = [];
 
     /**
