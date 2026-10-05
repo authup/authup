@@ -1524,15 +1524,24 @@ API. The six page GETs became a stateless hop:
   stages (`adapters/http/middleware/built-in/rate-limit.ts`). Before
   authentication a source address may cause
   `RATE_LIMIT_FAILED_AUTHENTICATION_MAX` (300) failed authentications a
-  minute: it is the one stage a failed bearer or a failed Basic credential is
-  counted in, and it counts only responses with status 401, so the valid
-  requests of an office behind one NAT never consume it. It rides
+  minute, and only those a guess produces (`isFailedAuthentication`): a 401
+  answering `invalid_client`, or a 401 to a request carrying an
+  `Authorization` header unless it is `expired_token` / `inactive_token`. An
+  expired or revoked token carries a valid signature and a request without
+  credentials guessed nothing; both are what thousands of users behind one
+  NAT address (a hospital network) cause in ordinary use, every access token
+  being renewed after a 401, so counting them locked such a network out. The
+  code reaches the limiter through the request store, where the error
+  middleware records it (`setRequestErrorCode`). A wrong Basic credential on
+  an ANONYMOUS route is no 401 at all (the request continues anonymous), so
+  the second stage's anonymous budget bounds that guess, not this one. It rides
   `@routup/rate-limit`'s `skipSuccessfulRequest`, which reserves a slot before
   forwarding and returns it on success, so a parallel burst of failures is
   bounded too; a `count: 'failed'` mode that counted only after the response
   was rejected for exactly that (routup/plugins#846). A thrown 401 is judged
   by the error middleware's response, which is why that middleware must stay
-  on the same router. Password guessing at `/token` answers 400, not 401, and
+  on the same router. The Swagger mount sits after the second stage, since
+  the first no longer limits an anonymous request. Password guessing at `/token` answers 400, not 401, and
   is bounded by the anonymous per-address budget below and the login
   throttle. After authentication a request counts against its
   identity (`user:<id>` 6000, `client:<id>` 300000) and an anonymous one

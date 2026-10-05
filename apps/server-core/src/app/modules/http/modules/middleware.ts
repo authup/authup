@@ -52,9 +52,11 @@ export class HTTPMiddlewareModule {
         await this.mountBasic(router, container);
         await this.mountRateLimit(router, container);
 
-        await this.mountSwagger(router, container);
         await this.mountAuthorization(router, container);
         await this.mountIdentityRateLimit(router, container);
+        // after the second stage, which is the one that limits an anonymous
+        // request: the first stage counts failed authentications alone
+        await this.mountSwagger(router, container);
         await this.mountRequestEventContext(router);
         await this.mountRealmResolver(router, container);
     }

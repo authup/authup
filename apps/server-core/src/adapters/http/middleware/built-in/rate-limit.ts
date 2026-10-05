@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { IApp, IAppEvent } from 'routup';
 import { getRequestIP } from 'routup';
 import { merge } from 'smob';
-import { useRequestIdentity } from '../../request/index.ts';
+import { useRequestErrorCode, useRequestIdentity } from '../../request/index.ts';
 
 // IPv4 127.0.0.0/8, `::1`, and the IPv4-mapped form a dual-stack socket
 // reports. Anchored and octet-checked rather than a `127.` prefix test: a
@@ -47,6 +48,33 @@ function stripPort(ip: string) : string {
  */
 export const RATE_LIMIT_FAILED_AUTHENTICATION_MAX = 300;
 
+/**
+ * Whether a response is a credential that could have been guessed and was
+ * wrong. Not every 401 is: a token that expired or was revoked carries a
+ * valid signature, so it cannot have been guessed, and a request carrying
+ * no credential at all guessed nothing. Both are what the users behind one
+ * NAT address cause in ordinary use (every access token expires after 15
+ * minutes and is renewed on the 401), so counting them would lock a large
+ * network out of its own deployment.
+ */
+function isFailedAuthentication(event: IAppEvent, response: Response) : boolean {
+    if (response.status !== 401) {
+        return false;
+    }
+
+    const code = useRequestErrorCode(event);
+    if (code === ErrorCode.OAUTH_CLIENT_INVALID) {
+        // a client secret, which the token endpoint also reads from the body
+        return true;
+    }
+
+    if (code === ErrorCode.JWT_EXPIRED || code === ErrorCode.JWT_INACTIVE) {
+        return false;
+    }
+
+    return !!event.request.headers.get('authorization');
+}
+
 function buildAddressKey(event: IAppEvent) : string {
     // @routup/rate-limit's default keyGenerator hardcodes
     // `{ trustProxy: true }`; deriving the key here instead lets it follow the
@@ -57,11 +85,14 @@ function buildAddressKey(event: IAppEvent) : string {
 }
 
 /**
- * The first stage, mounted BEFORE authorization: it counts only the requests
- * answered with 401, per source address. A bearer that fails verification
- * and a Basic credential that fails bcrypt are never attributed to an
- * identity, so this is the only stage that bounds guessing them, while the
- * valid requests of every user behind one NAT address pass it uncounted.
+ * The first stage, mounted BEFORE authorization: it counts failed
+ * authentications per source address (`isFailedAuthentication`). A forged
+ * bearer, a wrong client secret and a wrong Basic credential on a protected
+ * route are never attributed to an identity, so this is the stage that
+ * bounds guessing them, while the valid requests of every user behind one
+ * NAT address pass it uncounted. A wrong Basic credential on an anonymous
+ * route answers as an anonymous request rather than 401, so the second
+ * stage's anonymous budget bounds that one.
  *
  * `skipSuccessfulRequest` reserves a slot before forwarding and returns it
  * once the response is known, so a parallel burst of failures is bounded by
@@ -74,7 +105,7 @@ export function registerRateLimitMiddleware(router: IApp) {
         max: RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
         keyGenerator: (event) => `pre:${buildAddressKey(event)}`,
         skipSuccessfulRequest: true,
-        requestWasSuccessful: (_event, response) => response.status !== 401,
+        requestWasSuccessful: (event, response) => !isFailedAuthentication(event, response),
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so
