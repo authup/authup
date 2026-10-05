@@ -177,7 +177,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareBody: {
             type: middlewareType,
             default: true,
-            description: 'Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 1mb; an options object keeps that limit for each parser it does not disable or give a limit of its own.',
+            description: 'Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 10mb; an options object keeps that limit for each parser it does not disable or give a limit of its own.',
         },
         middlewareCors: {
             type: middlewareType,
@@ -202,7 +202,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareRateLimit: {
             type: middlewareType,
             default: true,
-            description: 'Enable the rate-limit middleware, or pass its options.',
+            description: 'Enable the rate-limit middleware, or pass its options. Each source address is capped at 6000 requests a minute before authentication; afterwards an authenticated request counts against its identity and an anonymous one against its address. The options apply to the second stage, and a numeric `max` above the cap raises it.',
         },
         middlewareSwagger: {
         // a plain boolean, unlike its siblings: the Swagger mount takes no

@@ -40,14 +40,14 @@ function postJSON(app: App, size: number) {
 
 describe('buildBodyOptions', () => {
     it('should keep parsing forms when only the json parser is configured', async () => {
-        const response = await postForm(createApp({ json: { limit: '5mb' } }));
+        const response = await postForm(createApp({ json: { limit: '20mb' } }));
 
         expect(response.status).toEqual(200);
         expect(await response.json()).toEqual({ grant_type: 'password' });
     });
 
     it('should honour a raised limit on the parser it names', async () => {
-        const response = await postJSON(createApp({ json: { limit: '5mb' } }), 2 * 1024 * 1024);
+        const response = await postJSON(createApp({ json: { limit: '20mb' } }), 11 * 1024 * 1024);
 
         expect(response.status).toEqual(200);
     });
@@ -57,8 +57,8 @@ describe('buildBodyOptions', () => {
         {},
         { json: true },
         { json: { strict: false } },
-    ])('should keep the 1mb cap for %j', async (input) => {
-        const response = await postJSON(createApp(input), 2 * 1024 * 1024);
+    ])('should keep the 10mb cap for %j', async (input) => {
+        const response = await postJSON(createApp(input), 11 * 1024 * 1024);
 
         expect(response.status).toEqual(413);
     });

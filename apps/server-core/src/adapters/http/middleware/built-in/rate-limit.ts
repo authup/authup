@@ -41,21 +41,63 @@ function stripPort(ip: string) : string {
         ip;
 }
 
-export function registerRateLimitMiddleware(router: IApp, input?: OptionsInput) {
-    let options : OptionsInput = {
-        // @routup/rate-limit's default keyGenerator hardcodes
-        // `{ trustProxy: true }`; deriving the key here instead lets it
-        // follow the app-level trust contract (config `trustProxy`). A
-        // trailing port is dropped, and the key is prefixed because it
-        // indexes a plain object, where a name such as `constructor` would
-        // never count up to the limit.
-        keyGenerator: (event) => `ip:${stripPort(getRequestIP(event) || '127.0.0.1')}`,
+/**
+ * The ceiling one source address may send before authentication is known.
+ * It only blunts a flood: an office behind one NAT shares the address, so it
+ * must carry every request of every user there, and the per-caller budget is
+ * the second stage's.
+ */
+export const RATE_LIMIT_ADDRESS_CEILING = 60 * 100; // 100 req. p. sec
+
+function buildAddressKey(event: IAppEvent) : string {
+    // @routup/rate-limit's default keyGenerator hardcodes
+    // `{ trustProxy: true }`; deriving the key here instead lets it follow the
+    // app-level trust contract (config `trustProxy`). A trailing port is
+    // dropped, and the key is prefixed because it indexes a plain object,
+    // where a name such as `constructor` would never count up to the limit.
+    return `ip:${stripPort(getRequestIP(event) || '127.0.0.1')}`;
+}
+
+/**
+ * The first stage, mounted BEFORE authorization: a per-address flood
+ * ceiling. It runs before any credential is checked, so a bearer that fails
+ * verification, or a Basic credential that fails bcrypt, is counted here and
+ * nowhere else.
+ */
+export function registerRateLimitMiddleware(router: IApp, input: OptionsInput = {}) {
+    const { max, ...rest } = input;
+
+    router.use(rateLimit({
+        ...rest,
+        // A configured numeric budget above the ceiling raises the ceiling
+        // with it, or the first stage would refuse what the second allows.
+        max: Math.max(RATE_LIMIT_ADDRESS_CEILING, typeof max === 'number' ? max : 0),
+        keyGenerator: (event) => `pre:${buildAddressKey(event)}`,
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so
-        // counting them collapses the whole deployment onto one anonymous
-        // bucket of 1200/min -- 20 page renders per second, however many
-        // distinct visitors there are.
+        // counting them collapses the whole deployment onto one bucket.
+        skip: rest.skip ?? isLoopbackRequest,
+        windowMs: rest.windowMs ?? 60 * 1000,
+    }));
+}
+
+/**
+ * The second stage, mounted AFTER authorization: an authenticated request is
+ * counted against its identity, so users sharing an address (an office
+ * behind one NAT) no longer share a budget, and an anonymous one against its
+ * address.
+ */
+export function registerIdentityRateLimitMiddleware(router: IApp, input?: OptionsInput) {
+    let options : OptionsInput = {
+        keyGenerator: (event) => {
+            const identity = useRequestIdentity(event);
+            if (identity) {
+                return `${identity.type}:${identity.id}`;
+            }
+
+            return buildAddressKey(event);
+        },
         skip: isLoopbackRequest,
         max(event) {
             const identity = useRequestIdentity(event);

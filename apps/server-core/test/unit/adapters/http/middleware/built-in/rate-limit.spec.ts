@@ -7,7 +7,12 @@
 
 import { App, defineCoreHandler } from 'routup';
 import { describe, expect, it } from 'vitest';
-import { registerRateLimitMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/rate-limit.ts';
+import {
+    RATE_LIMIT_ADDRESS_CEILING,
+    registerIdentityRateLimitMiddleware,
+    registerRateLimitMiddleware,
+} from '../../../../../../src/adapters/http/middleware/built-in/rate-limit.ts';
+import { setRequestIdentity } from '../../../../../../src/adapters/http/request/index.ts';
 
 // `getRequestIP` reads the socket address off the request, which `App.fetch`
 // leaves unset — so the caller under test is spelled by attaching it.
@@ -15,13 +20,24 @@ function createRequest(ip: string, headers?: Record<string, string>) {
     return Object.assign(new Request('http://server.test/authorize/info', { headers }), { ip });
 }
 
-// `max: 2` only shortens the burst. The bucket a real deployment shares is
-// 1200 per minute; the mechanism is the same at either threshold, and the
-// caller-supplied value also proves the default `skip` survives the merge.
+// Both stages, with a stand-in for the authorization middleware between
+// them: an `x-user` header names the authenticated user. `max: 2` only
+// shortens the second stage's burst (the first keeps its ceiling); the
+// mechanism is the same at the real thresholds, and the caller-supplied
+// value also proves the default `skip` survives the merge.
 function createApp(options: ConstructorParameters<typeof App>[0] = {}) {
     const app = new App(options);
 
     registerRateLimitMiddleware(app, { max: 2 });
+    app.use(defineCoreHandler((event) => {
+        const id = event.request.headers.get('x-user');
+        if (id) {
+            setRequestIdentity(event, { type: 'user', data: { id, name: id } } as any);
+        }
+
+        return event.next();
+    }));
+    registerIdentityRateLimitMiddleware(app, { max: 2 });
     app.get('/authorize/info', defineCoreHandler(() => 'ok'));
 
     return app;
@@ -110,5 +126,42 @@ describe('registerRateLimitMiddleware', () => {
         }
 
         expect(statuses).toEqual([200, 200, 429]);
+    });
+
+    it('should give each user behind one address a budget of its own', async () => {
+        const app = createApp();
+        const statuses : number[] = [];
+
+        for (const user of ['alice', 'alice', 'bob', 'bob', 'carol']) {
+            const response = await app.fetch(createRequest('198.51.100.9', { 'x-user': user }));
+            statuses.push(response.status);
+        }
+
+        expect(statuses).toEqual([200, 200, 200, 200, 200]);
+        expect((await app.fetch(createRequest('198.51.100.9', { 'x-user': 'alice' }))).status).toEqual(429);
+    });
+
+    it('should keep counting an address before authentication', async () => {
+        const app = new App();
+
+        registerRateLimitMiddleware(app, { max: 2 });
+        app.get('/authorize/info', defineCoreHandler(() => 'ok'));
+
+        const statuses = await burst(app, '203.0.113.9', RATE_LIMIT_ADDRESS_CEILING + 1);
+
+        expect(statuses.slice(0, RATE_LIMIT_ADDRESS_CEILING).every((status) => status === 200)).toBeTruthy();
+        expect(statuses[RATE_LIMIT_ADDRESS_CEILING]).toEqual(429);
+    });
+
+    it('should raise the address ceiling with a numeric max above it', async () => {
+        const app = new App();
+
+        registerRateLimitMiddleware(app, { max: RATE_LIMIT_ADDRESS_CEILING + 1 });
+        app.get('/authorize/info', defineCoreHandler(() => 'ok'));
+
+        const statuses = await burst(app, '203.0.113.10', RATE_LIMIT_ADDRESS_CEILING + 2);
+
+        expect(statuses[RATE_LIMIT_ADDRESS_CEILING]).toEqual(200);
+        expect(statuses[RATE_LIMIT_ADDRESS_CEILING + 1]).toEqual(429);
     });
 });
