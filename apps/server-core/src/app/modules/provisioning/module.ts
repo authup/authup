@@ -18,7 +18,6 @@ import type {
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
-import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { withDatabaseLock } from 'typeorm-extension';
 import {
@@ -39,7 +38,6 @@ import { SystemPolicyName } from '@authup/access';
 import {
     PermissionPolicyEntity,
     PolicyRepository,
-    UserEntity,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
 import type { IContainer } from 'eldin';
@@ -85,8 +83,7 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
-import type { Logger } from '@authup/server-kit';
-import { SymmetricCipher, compare } from '@authup/server-kit';
+import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { SystemClientProvisioner } from '../../../core/entities/client/index.ts';
 import { KeyProvisioner } from '../../../core/key/index.ts';
@@ -305,10 +302,6 @@ export class ProvisionerModule implements IModule {
 
         await rootSynchronizer.synchronize(data);
 
-        if (config.env === 'production') {
-            await this.warnOnDefaultAdminPassword(dataSource, realmRepository, logger);
-        }
-
         // ---------------------------------------------------------------
         // Per-realm system clients (web, admin-console, account-console).
         // Single provisioning mechanism: list every realm (incl.
@@ -396,39 +389,5 @@ export class ProvisionerModule implements IModule {
             policyId: defaultPolicy.id,
             policyRealmId: defaultPolicy.realmId,
         })), { chunk: 1000 });
-    }
-
-    /**
-     * Reads the STORED credential rather than the configured one: without
-     * USER_ADMIN_PASSWORD_RESET a changed USER_ADMIN_PASSWORD never reaches an
-     * existing admin, which then still signs in with the default password.
-     */
-    protected async warnOnDefaultAdminPassword(
-        dataSource: DataSource,
-        realmRepository: Repository<Realm>,
-        logger: Logger,
-    ): Promise<void> {
-        const realm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
-        if (!realm) {
-            return;
-        }
-
-        const user = await dataSource.getRepository(UserEntity)
-            .createQueryBuilder('user')
-            .addSelect('user.password')
-            .where('user.name = :name', { name: 'admin' })
-            .andWhere('user.realmId = :realmId', { realmId: realm.id })
-            .getOne();
-        if (!user || !user.active || !user.password) {
-            return;
-        }
-
-        if (await compare('start123', user.password)) {
-            logger.warn(
-                'The default admin user is active with the default password; ' +
-                'set USER_ADMIN_PASSWORD with USER_ADMIN_PASSWORD_RESET=true, ' +
-                'change the password through the API, or set USER_ADMIN_ENABLED=false.',
-            );
-        }
     }
 }
