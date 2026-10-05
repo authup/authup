@@ -1,5 +1,39 @@
 # Change Log
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.68) (2026-10-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691))
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690))
+
+### Features
+
+* **server-core:** realm-scoped token endpoint ([#3686](https://github.com/authup/authup/issues/3686)) ([9c43a11](https://github.com/authup/authup/commit/9c43a11e51e3aa4466dc6dc56041c1b5fcec8ab6))
+
+
+### Bug Fixes
+
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690)) ([3d031be](https://github.com/authup/authup/commit/3d031be98f5a0848c663c30521e83d0bf18dedac))
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691)) ([ea60877](https://github.com/authup/authup/commit/ea60877881679eea9c0ac562281c6897a55b8707))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/core-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/errors bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/i18n bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/server-config-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/server-console-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/server-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 

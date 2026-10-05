@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.68) (2026-10-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690))
+
+### Bug Fixes
+
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690)) ([3d031be](https://github.com/authup/authup/commit/3d031be98f5a0848c663c30521e83d0bf18dedac))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/errors bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/server-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/specs bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 

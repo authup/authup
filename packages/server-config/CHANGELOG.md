@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.68) (2026-10-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691))
+
+### Bug Fixes
+
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691)) ([ea60877](https://github.com/authup/authup/commit/ea60877881679eea9c0ac562281c6897a55b8707))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+    * @authup/server-config-kit bumped from ^1.0.0-beta.68 to ^1.0.1-beta.68
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
