@@ -24,6 +24,7 @@ import type { Permission } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IPermissionPolicyRepository } from '../permission-policy/types.ts';
 import type { IPolicyRepository } from '../policy/types.ts';
+import { isRealmReachable } from '../realm/helpers.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IRoleRepository } from '../role/types.ts';
 import type { IRolePermissionRepository } from '../role-permission/types.ts';
@@ -406,7 +407,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         const realmAdminRoles = await this.roleRepository.findManyBy({ name: ROLE_REALM_ADMIN_NAME });
 
         for (const role of realmAdminRoles) {
-            if (permission.realmId && permission.realmId !== role.realmId) {
+            if (!isRealmReachable(permission.realmId, role.realmId)) {
                 continue;
             }
 
