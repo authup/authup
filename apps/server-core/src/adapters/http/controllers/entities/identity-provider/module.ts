@@ -94,6 +94,7 @@ import {
     describeQuerySchema,
     formatDeviceUserCode,
     identityProviderSchema, 
+    isRealmReachable,
     normalizeDeviceUserCode, 
 } from '../../../../../core/index.ts';
 import {
@@ -393,7 +394,7 @@ export class IdentityProviderController {
             throw new BadRequestError('Only a user can link an identity provider account.');
         }
 
-        if (entity.realmId && entity.realmId !== identity.realmId) {
+        if (!isRealmReachable(entity.realmId, identity.realmId)) {
             throw new BadRequestError('The identity provider does not belong to the user realm.');
         }
 

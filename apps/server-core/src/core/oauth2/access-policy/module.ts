@@ -13,7 +13,7 @@ import {
 import type { IdentityPolicyData } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
 import { PolicyEngine } from '../../security/policy/engine.ts';
-import { isPolicyOfRealm } from '../../entities/policy/realm.ts';
+import { isRealmReachable } from '../../entities/realm/helpers.ts';
 import type {
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AccessPolicyProvider,
@@ -61,7 +61,7 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
             return false;
         }
 
-        if (typeof options.realmId !== 'undefined' && !isPolicyOfRealm(tree, options.realmId)) {
+        if (typeof options.realmId !== 'undefined' && !isRealmReachable(tree.realmId, options.realmId)) {
             this.logger?.warn(`The access policy ${policyId} belongs to another realm than the one it is evaluated for.`);
             return false;
         }
