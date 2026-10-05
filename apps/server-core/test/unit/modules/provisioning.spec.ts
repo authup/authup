@@ -48,7 +48,10 @@ import {
     ProvisionerModule,
     RealmEntity, 
     RoleEntity,
+    UserEntity,
 } from '../../../src/index.ts';
+import type { Logger } from '@authup/server-kit';
+import { hash } from '@authup/server-kit';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
 import { PolicyProvisioningSynchronizer, SYSTEM_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
@@ -238,6 +241,43 @@ describe('app/modules/provisioning', () => {
         const [admin] = realm.relations!.users!;
 
         expect(admin.strategy).toBeUndefined();
+    });
+
+    it('should warn on the stored default admin password, not the configured one', async () => {
+        const warnings: string[] = [];
+        const capture = {
+            warn: (message: string) => {
+                warnings.push(message);
+            },
+        } as unknown as Logger;
+        const warn = () => (new ProvisionerModule() as unknown as {
+            warnOnDefaultAdminPassword(
+                dataSource: DataSource,
+                realmRepository: Repository<Realm>,
+                logger: Logger,
+            ): Promise<void>
+        }).warnOnDefaultAdminPassword(dataSource, di.resolve<Repository<Realm>>(RealmEntity), capture);
+
+        const realm = await di.resolve<Repository<Realm>>(RealmEntity).findOneBy({ name: REALM_MASTER_NAME });
+        const userRepository = dataSource.getRepository(UserEntity);
+        const admin = await userRepository.createQueryBuilder('user')
+            .addSelect('user.password')
+            .where('user.name = :name', { name: 'admin' })
+            .andWhere('user.realmId = :realmId', { realmId: realm!.id })
+            .getOneOrFail();
+
+        try {
+            await userRepository.update(admin.id, { password: await hash('start123') });
+            await warn();
+            expect(warnings).toHaveLength(1);
+
+            warnings.length = 0;
+            await userRepository.update(admin.id, { password: await hash('not-the-default') });
+            await warn();
+            expect(warnings).toHaveLength(0);
+        } finally {
+            await userRepository.update(admin.id, { password: admin.password });
+        }
     });
 
     it('should provision the system clients of every realm and leave legacy web rows untouched', async () => {

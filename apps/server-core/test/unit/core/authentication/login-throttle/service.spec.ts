@@ -86,7 +86,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('does not throttle the same identifier from a different IP (lockout-DoS mitigation)', async () => {
@@ -96,7 +96,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: OTHER_IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('does not throttle a different identifier from the same IP', async () => {
@@ -106,7 +106,7 @@ describe('LoginThrottleService', () => {
             identifier: OTHER_IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('ignores failures outside the sliding window', async () => {
@@ -116,7 +116,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('scopes the pair to the realm of the attempt', async () => {
@@ -127,7 +127,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
 
         await expect(buildService().assertNotThrottled({
             identifier: IDENTIFIER,
@@ -158,7 +158,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('is disabled by default (no enabled option)', async () => {
@@ -171,7 +171,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('fails open when no IP address is derivable', async () => {
@@ -180,7 +180,7 @@ describe('LoginThrottleService', () => {
         await expect(buildService().assertNotThrottled({
             identifier: IDENTIFIER,
             realmId,
-        })).resolves.toBeUndefined();
+        })).resolves.toBe(false);
     });
 
     it('throws a LoginThrottledError carrying retryAfter = windowSeconds', async () => {
@@ -227,7 +227,7 @@ describe('LoginThrottleService', () => {
 
         await service.release(ctx);
         await service.release(ctx);
-        await expect(service.assertNotThrottled(ctx)).resolves.toBeUndefined();
+        await expect(service.assertNotThrottled(ctx)).resolves.toBe(true);
     });
 
     it('asks for a short retry when only attempts in flight fill the threshold', async () => {
@@ -262,6 +262,51 @@ describe('LoginThrottleService', () => {
             expect(error.data?.retryAfter).toEqual(1);
             expect(error.message).not.toMatch(/failed/i);
         }
+    });
+
+    it('falls back to the audit-row count when the cache cannot reserve', async () => {
+        const cache = new MemoryCache();
+        const service = new LoginThrottleService({
+            repository,
+            cache,
+            options: {
+                enabled: true,
+                threshold: THRESHOLD,
+                windowSeconds: WINDOW_SECONDS,
+            },
+        });
+        const ctx = {
+            identifier: IDENTIFIER,
+            ipAddress: IP,
+            realmId,
+        };
+
+        const increment = cache.increment.bind(cache);
+        cache.increment = async () => {
+            throw new Error('cache unavailable');
+        };
+
+        await expect(service.assertNotThrottled(ctx)).resolves.toBe(false);
+
+        seedFailures(THRESHOLD);
+        await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
+
+        // a refused reservation released nothing: the counter never went negative.
+        cache.increment = increment;
+        repository = new FakeEventRepository();
+        const fresh = new LoginThrottleService({
+            repository,
+            cache,
+            options: {
+                enabled: true,
+                threshold: THRESHOLD,
+                windowSeconds: WINDOW_SECONDS,
+            },
+        });
+        for (let i = 0; i < THRESHOLD; i++) {
+            await expect(fresh.assertNotThrottled(ctx)).resolves.toBe(true);
+        }
+        await expect(fresh.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
     });
 
     it('never lets a failing release throw over the attempt it ends', async () => {
