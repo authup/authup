@@ -38,9 +38,9 @@ export class LoginThrottleService implements ILoginThrottleService {
         this.options = ctx.options ?? {};
     }
 
-    async assertNotThrottled(ctx: LoginThrottleContext): Promise<void> {
+    async assertNotThrottled(ctx: LoginThrottleContext): Promise<boolean> {
         if (!this.options.enabled) {
-            return;
+            return false;
         }
 
         // The (identifier, ip) pair is the account-lockout-DoS mitigation: an
@@ -48,7 +48,7 @@ export class LoginThrottleService implements ILoginThrottleService {
         // derivable IP the pair does not exist, so the throttle fails open
         // instead of degrading to a lockable per-identifier key.
         if (!ctx.ipAddress) {
-            return;
+            return false;
         }
 
         const threshold = this.options.threshold ?? DEFAULT_THRESHOLD;
@@ -57,9 +57,18 @@ export class LoginThrottleService implements ILoginThrottleService {
         // reserve the attempt BEFORE counting: an attempt that already ended
         // has recorded its row before releasing, so each attempt is seen
         // either as a row or as in flight, never as neither.
-        const inflight = this.cache ?
-            (await this.cache.increment(this.buildKey(ctx), 1, { ttl: windowSeconds * 1_000 })) - 1 :
-            0;
+        // an unreachable cache must not fail every login: the attempt is then
+        // not reserved, and the audit-row count alone still throttles.
+        let inflight = 0;
+        let reserved = false;
+        if (this.cache) {
+            try {
+                inflight = (await this.cache.increment(this.buildKey(ctx), 1, { ttl: windowSeconds * 1_000 })) - 1;
+                reserved = true;
+            } catch (e) {
+                this.logger?.warn(`Could not reserve a login attempt: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        }
 
         let count : number;
         try {
@@ -74,24 +83,26 @@ export class LoginThrottleService implements ILoginThrottleService {
                 since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),
             });
         } catch (e) {
-            await this.release(ctx);
+            if (reserved) await this.release(ctx);
             throw e;
         }
 
         if (count >= threshold) {
-            await this.release(ctx);
+            if (reserved) await this.release(ctx);
             throw new LoginThrottledError({ retryAfter: windowSeconds });
         }
 
         // the threshold is only full of attempts still running: those end
         // within moments, so the caller may retry almost at once.
         if (count + inflight >= threshold) {
-            await this.release(ctx);
+            if (reserved) await this.release(ctx);
             throw new LoginThrottledError({
                 message: 'Too many concurrent login attempts. Please try again.',
                 retryAfter: 1,
             });
         }
+
+        return reserved;
     }
 
     async release(ctx: LoginThrottleContext): Promise<void> {
