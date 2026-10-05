@@ -7,6 +7,8 @@
 
 import type { BuiltInPolicyType } from './built-in/constants';
 import type { IdentityPolicyData } from './built-in/identity/types';
+import type { IdentityGrants } from './built-in/permission-binding/types';
+import type { PolicyDataKey } from './data';
 import { PolicyData } from './data';
 
 /**
@@ -21,12 +23,13 @@ export interface PolicyInput {
     [BuiltInPolicyType.IDENTITY]?: IdentityPolicyData;
     [BuiltInPolicyType.ATTRIBUTES]?: Record<string, any>;
     [BuiltInPolicyType.REALM_MATCH]?: string | string[] | null;
+    [PolicyDataKey.GRANTS]?: IdentityGrants;
     [key: string]: any;
 }
 
 /**
  * Build a {@link PolicyData} bag from a typed {@link PolicyInput} seed. Well-known keys
- * (identity / attributes / realmMatch) are type-checked; unknown keys are accepted as-is.
+ * (identity / attributes / realmMatch / grants) are type-checked; unknown keys are accepted as-is.
  *
  * Prefer this over `new PolicyData({ ... })` at construction sites so the key vocabulary and
  * per-key value types live in one place.

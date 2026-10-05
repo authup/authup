@@ -4229,8 +4229,12 @@ over the 73 provisioned permissions is hundreds of statements on a route a UI ca
 every login. The definitions are therefore read ONCE through the same `findDefinitions`
 the catalog uses and served from a `PermissionMemoryProvider`, and the caller's grants
 are loaded once, before the matrix, and handed to every pair as policy data: two bulk
-reads plus one grant load, and the rest is in memory. Only GLOBAL definitions are
-evaluated, because that is what every gate in this process evaluates.
+reads plus one grant load, and the rest is in memory. The load is for the identity
+policy evaluation may SEE (`policyIdentity`, `useRequestPolicyIdentity`), not the raw
+one that resolves the realm selectors: a token without `global` has its identity
+withheld from every evaluation, so it loads nothing and cannot fail on a load nothing
+would read. Only GLOBAL definitions are evaluated, because that is what every gate in
+this process evaluates.
 
 **A failed GRANT LOAD fails the request, never answers as a denial.** It is the one
 failure a verdict cannot be derived from. Inside the engine it would be invisible:
