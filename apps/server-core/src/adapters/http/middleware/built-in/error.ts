@@ -11,6 +11,7 @@ import type { Logger } from '@authup/server-kit';
 import { ErrorCode, httpStatusFromCode, serializeError } from '@authup/errors';
 import { isJWTErrorCode } from '@authup/specs';
 import { describeError, sanitizeError } from '../../../../utils/index.ts';
+import { setRequestErrorCode } from '../../request/index.ts';
 
 type ErrorMiddlewareOptions = {
     logger?: Logger
@@ -28,6 +29,7 @@ export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOp
         const status = httpStatusFromCode(next.code);
 
         const payload = serializeError(next);
+        setRequestErrorCode(event, next.code);
 
         if (status >= 500) {
             if (options.logger) {

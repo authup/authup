@@ -59,10 +59,15 @@ the ones that can break an existing setup come first.
   stays on and capped unless the object turns it off (`false`) or names its own
   `limit`.
 - **Rate limiting runs in two stages.** Before authentication a source
-  address may cause 300 failed authentications (responses with status 401) a
-  minute; valid requests are not counted there, so an office behind one NAT
-  is not limited by its own traffic, but it is refused as a whole for the
-  rest of the minute once the failures reach the limit. After authentication
+  address may cause 300 failed authentications a minute: a wrong Basic
+  password on a protected route, a wrong client secret, or a bearer that is
+  not a token this deployment signed. Valid requests are not counted there,
+  and neither are an expired or revoked token nor a request without
+  credentials, which is what the users of a large network behind one NAT
+  address cause in ordinary use (every access token is renewed after a
+  `401`). Once the failures reach the limit the address is refused as a
+  whole for the rest of the minute. The Swagger UI at `/docs` is now
+  limited by the anonymous budget below. After authentication
   a request counts against its identity (users 6000, clients 300000 a minute)
   and an anonymous one against its address (1200 a minute), so users sharing
   an address no longer share a budget. A `middlewareRateLimit` object

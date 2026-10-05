@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    App,
-    createError,
-    defineCoreHandler,
-    defineErrorHandler,
-} from 'routup';
+import { UnauthorizedError } from '@authup/errors';
+import { JWTError, OAuth2ClientError } from '@authup/specs';
+import { App, defineCoreHandler } from 'routup';
 import { describe, expect, it } from 'vitest';
+import { registerErrorMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/error.ts';
 import {
     RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
     registerIdentityRateLimitMiddleware,
@@ -150,25 +148,34 @@ describe('registerRateLimitMiddleware', () => {
     // The first stage alone, in front of a stand-in authorization step that
     // throws 401 for an `x-fail` request, answered by an error handler the
     // way the real error middleware answers it.
+    // The handler stands in for the authorization middleware and the
+    // routes: `x-fail` names the error it raises, answered by the real error
+    // middleware, which is what records the code the limiter reads.
     function createFirstStageApp() {
         const app = new App();
 
         registerRateLimitMiddleware(app);
         app.get('/authorize/info', defineCoreHandler(async (event) => {
-            if (event.request.headers.get('x-fail')) {
+            const fail = event.request.headers.get('x-fail');
+            if (fail) {
                 await new Promise((resolve) => { setTimeout(resolve, 1); });
-                throw createError({ status: 401 });
             }
 
-            return 'ok';
+            switch (fail) {
+                case 'invalid': throw JWTError.invalid();
+                case 'expired': throw JWTError.expired();
+                case 'inactive': throw JWTError.notActive();
+                case 'client': throw OAuth2ClientError.invalid();
+                case 'unauthorized': throw new UnauthorizedError();
+                default: return 'ok';
+            }
         }));
-        app.use(defineErrorHandler((error, event) => {
-            event.response.status = error.status;
-            return error.message;
-        }));
+        registerErrorMiddleware(app);
 
         return app;
     }
+
+    const FORGED = { authorization: 'Bearer forged', 'x-fail': 'invalid' };
 
     it('should never count a valid request before authentication', async () => {
         const app = createFirstStageApp();
@@ -181,11 +188,11 @@ describe('registerRateLimitMiddleware', () => {
         const app = createFirstStageApp();
 
         for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX; i++) {
-            const response = await app.fetch(createRequest('203.0.113.10', { 'x-fail': '1' }));
+            const response = await app.fetch(createRequest('203.0.113.10', FORGED));
             expect(response.status).toEqual(401);
         }
 
-        expect((await app.fetch(createRequest('203.0.113.10', { 'x-fail': '1' }))).status).toEqual(429);
+        expect((await app.fetch(createRequest('203.0.113.10', FORGED))).status).toEqual(429);
         // the address is refused as a whole, valid requests included
         expect((await app.fetch(createRequest('203.0.113.10'))).status).toEqual(429);
         expect((await app.fetch(createRequest('203.0.113.11'))).status).toEqual(200);
@@ -196,10 +203,38 @@ describe('registerRateLimitMiddleware', () => {
         const total = RATE_LIMIT_FAILED_AUTHENTICATION_MAX + 20;
 
         const responses = await Promise.all(
-            Array.from({ length: total }, () => app.fetch(createRequest('203.0.113.12', { 'x-fail': '1' }))),
+            Array.from({ length: total }, () => app.fetch(createRequest('203.0.113.12', FORGED))),
         );
 
         expect(responses.filter((r) => r.status === 401)).toHaveLength(RATE_LIMIT_FAILED_AUTHENTICATION_MAX);
         expect(responses.filter((r) => r.status === 429)).toHaveLength(20);
+    });
+
+    it.each([
+        ['a wrong Basic credential', { authorization: 'Basic d3Jvbmc6d3Jvbmc=', 'x-fail': 'unauthorized' }],
+        ['a wrong client secret in the body', { 'x-fail': 'client' }],
+    ])('should count %s', async (_label, headers) => {
+        const app = createFirstStageApp();
+
+        for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX; i++) {
+            await app.fetch(createRequest('203.0.113.13', headers));
+        }
+
+        expect((await app.fetch(createRequest('203.0.113.13', headers))).status).toEqual(429);
+    });
+
+    it.each([
+        ['an expired token', { authorization: 'Bearer expired', 'x-fail': 'expired' }],
+        ['a revoked token', { authorization: 'Bearer revoked', 'x-fail': 'inactive' }],
+        ['a request carrying no credential', { 'x-fail': 'unauthorized' }],
+    ])('should never count %s', async (_label, headers) => {
+        const app = createFirstStageApp();
+        const statuses : number[] = [];
+
+        for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX + 50; i++) {
+            statuses.push((await app.fetch(createRequest('203.0.113.14', headers))).status);
+        }
+
+        expect(statuses.every((status) => status === 401)).toBeTruthy();
     });
 });

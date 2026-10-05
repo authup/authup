@@ -392,8 +392,10 @@ export default {
         middlewareQuery: true,      // query-string parsing
         middlewareRateLimit: true,  // rate limiting in two stages: each
                                     // source address may cause 300 failed
-                                    // authentications (401) a minute before
-                                    // authentication; afterwards a request
+                                    // authentications a minute before
+                                    // authentication (a wrong password,
+                                    // client secret or forged token; an
+                                    // expired token is not one); afterwards a request
                                     // counts against its identity (users
                                     // 6000, clients 300000) or, anonymous,
                                     // its address (1200). Options configure
