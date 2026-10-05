@@ -177,7 +177,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareBody: {
             type: middlewareType,
             default: true,
-            description: 'Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 1mb; an options object replaces that default.',
+            description: 'Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 1mb; an options object keeps that limit for each parser it does not disable or give a limit of its own.',
         },
         middlewareCors: {
             type: middlewareType,
