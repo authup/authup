@@ -1522,11 +1522,19 @@ API. The six page GETs became a stateless hop:
   The response already carries `Vary: Cookie` and `no-store`.
   **Rate-limit cost on a split deployment.** server-core limits in two
   stages (`adapters/http/middleware/built-in/rate-limit.ts`). Before
-  authentication each source address may send
-  `RATE_LIMIT_ADDRESS_CEILING` (6000) a minute, a flood ceiling only: it is
-  the one stage a failed bearer or a failed Basic credential is counted in,
-  and an office behind one NAT shares it, which is why it is far above any
-  single caller's budget. After authentication a request counts against its
+  authentication a source address may cause
+  `RATE_LIMIT_FAILED_AUTHENTICATION_MAX` (300) failed authentications a
+  minute: it is the one stage a failed bearer or a failed Basic credential is
+  counted in, and it counts only responses with status 401, so the valid
+  requests of an office behind one NAT never consume it. It rides
+  `@routup/rate-limit`'s `skipSuccessfulRequest`, which reserves a slot before
+  forwarding and returns it on success, so a parallel burst of failures is
+  bounded too; a `count: 'failed'` mode that counted only after the response
+  was rejected for exactly that (routup/plugins#846). A thrown 401 is judged
+  by the error middleware's response, which is why that middleware must stay
+  on the same router. Password guessing at `/token` answers 400, not 401, and
+  is bounded by the anonymous per-address budget below and the login
+  throttle. After authentication a request counts against its
   identity (`user:<id>` 6000, `client:<id>` 300000) and an anonymous one
   against its address (1200), so users sharing an address do not share a
   budget. The address is the one `trustProxy` resolves, with a trailing port

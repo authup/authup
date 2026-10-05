@@ -391,14 +391,13 @@ export default {
         middlewarePrometheus: true, // /metrics endpoint
         middlewareQuery: true,      // query-string parsing
         middlewareRateLimit: true,  // rate limiting in two stages: each
-                                    // source address is capped at 6000
-                                    // requests a minute before
+                                    // source address may cause 300 failed
+                                    // authentications (401) a minute before
                                     // authentication; afterwards a request
                                     // counts against its identity (users
                                     // 6000, clients 300000) or, anonymous,
                                     // its address (1200). Options configure
-                                    // the second stage; a numeric `max`
-                                    // above 6000 raises the first with it.
+                                    // the second stage.
         middlewareSwagger: true,    // /docs endpoint
 
         // ----------------------------------------------------

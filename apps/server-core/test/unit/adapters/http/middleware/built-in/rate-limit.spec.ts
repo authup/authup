@@ -5,10 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { App, defineCoreHandler } from 'routup';
+import {
+    App,
+    createError,
+    defineCoreHandler,
+    defineErrorHandler,
+} from 'routup';
 import { describe, expect, it } from 'vitest';
 import {
-    RATE_LIMIT_ADDRESS_CEILING,
+    RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
     registerIdentityRateLimitMiddleware,
     registerRateLimitMiddleware,
 } from '../../../../../../src/adapters/http/middleware/built-in/rate-limit.ts';
@@ -22,13 +27,14 @@ function createRequest(ip: string, headers?: Record<string, string>) {
 
 // Both stages, with a stand-in for the authorization middleware between
 // them: an `x-user` header names the authenticated user. `max: 2` only
-// shortens the second stage's burst (the first keeps its ceiling); the
-// mechanism is the same at the real thresholds, and the caller-supplied
-// value also proves the default `skip` survives the merge.
+// shortens the second stage's burst (the first counts failed
+// authentications alone, and these requests succeed); the mechanism is the
+// same at the real thresholds, and the caller-supplied value also proves the
+// default `skip` survives the merge.
 function createApp(options: ConstructorParameters<typeof App>[0] = {}) {
     const app = new App(options);
 
-    registerRateLimitMiddleware(app, { max: 2 });
+    registerRateLimitMiddleware(app);
     app.use(defineCoreHandler((event) => {
         const id = event.request.headers.get('x-user');
         if (id) {
@@ -141,27 +147,59 @@ describe('registerRateLimitMiddleware', () => {
         expect((await app.fetch(createRequest('198.51.100.9', { 'x-user': 'alice' }))).status).toEqual(429);
     });
 
-    it('should keep counting an address before authentication', async () => {
+    // The first stage alone, in front of a stand-in authorization step that
+    // throws 401 for an `x-fail` request, answered by an error handler the
+    // way the real error middleware answers it.
+    function createFirstStageApp() {
         const app = new App();
 
-        registerRateLimitMiddleware(app, { max: 2 });
-        app.get('/authorize/info', defineCoreHandler(() => 'ok'));
+        registerRateLimitMiddleware(app);
+        app.get('/authorize/info', defineCoreHandler(async (event) => {
+            if (event.request.headers.get('x-fail')) {
+                await new Promise((resolve) => { setTimeout(resolve, 1); });
+                throw createError({ status: 401 });
+            }
 
-        const statuses = await burst(app, '203.0.113.9', RATE_LIMIT_ADDRESS_CEILING + 1);
+            return 'ok';
+        }));
+        app.use(defineErrorHandler((error, event) => {
+            event.response.status = error.status;
+            return error.message;
+        }));
 
-        expect(statuses.slice(0, RATE_LIMIT_ADDRESS_CEILING).every((status) => status === 200)).toBeTruthy();
-        expect(statuses[RATE_LIMIT_ADDRESS_CEILING]).toEqual(429);
+        return app;
+    }
+
+    it('should never count a valid request before authentication', async () => {
+        const app = createFirstStageApp();
+        const statuses = await burst(app, '203.0.113.9', RATE_LIMIT_FAILED_AUTHENTICATION_MAX + 50);
+
+        expect(statuses.every((status) => status === 200)).toBeTruthy();
     });
 
-    it('should raise the address ceiling with a numeric max above it', async () => {
-        const app = new App();
+    it('should refuse an address once its failed authentications reach the limit', async () => {
+        const app = createFirstStageApp();
 
-        registerRateLimitMiddleware(app, { max: RATE_LIMIT_ADDRESS_CEILING + 1 });
-        app.get('/authorize/info', defineCoreHandler(() => 'ok'));
+        for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX; i++) {
+            const response = await app.fetch(createRequest('203.0.113.10', { 'x-fail': '1' }));
+            expect(response.status).toEqual(401);
+        }
 
-        const statuses = await burst(app, '203.0.113.10', RATE_LIMIT_ADDRESS_CEILING + 2);
+        expect((await app.fetch(createRequest('203.0.113.10', { 'x-fail': '1' }))).status).toEqual(429);
+        // the address is refused as a whole, valid requests included
+        expect((await app.fetch(createRequest('203.0.113.10'))).status).toEqual(429);
+        expect((await app.fetch(createRequest('203.0.113.11'))).status).toEqual(200);
+    });
 
-        expect(statuses[RATE_LIMIT_ADDRESS_CEILING]).toEqual(200);
-        expect(statuses[RATE_LIMIT_ADDRESS_CEILING + 1]).toEqual(429);
+    it('should bound a parallel burst of failed authentications by the limit', async () => {
+        const app = createFirstStageApp();
+        const total = RATE_LIMIT_FAILED_AUTHENTICATION_MAX + 20;
+
+        const responses = await Promise.all(
+            Array.from({ length: total }, () => app.fetch(createRequest('203.0.113.12', { 'x-fail': '1' }))),
+        );
+
+        expect(responses.filter((r) => r.status === 401)).toHaveLength(RATE_LIMIT_FAILED_AUTHENTICATION_MAX);
+        expect(responses.filter((r) => r.status === 429)).toHaveLength(20);
     });
 });

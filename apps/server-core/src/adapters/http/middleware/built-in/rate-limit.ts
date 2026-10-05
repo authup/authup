@@ -42,12 +42,10 @@ function stripPort(ip: string) : string {
 }
 
 /**
- * The ceiling one source address may send before authentication is known.
- * It only blunts a flood: an office behind one NAT shares the address, so it
- * must carry every request of every user there, and the per-caller budget is
- * the second stage's.
+ * How many failed authentications one source address may cause per window
+ * before authentication is known.
  */
-export const RATE_LIMIT_ADDRESS_CEILING = 60 * 100; // 100 req. p. sec
+export const RATE_LIMIT_FAILED_AUTHENTICATION_MAX = 300;
 
 function buildAddressKey(event: IAppEvent) : string {
     // @routup/rate-limit's default keyGenerator hardcodes
@@ -59,26 +57,30 @@ function buildAddressKey(event: IAppEvent) : string {
 }
 
 /**
- * The first stage, mounted BEFORE authorization: a per-address flood
- * ceiling. It runs before any credential is checked, so a bearer that fails
- * verification, or a Basic credential that fails bcrypt, is counted here and
- * nowhere else.
+ * The first stage, mounted BEFORE authorization: it counts only the requests
+ * answered with 401, per source address. A bearer that fails verification
+ * and a Basic credential that fails bcrypt are never attributed to an
+ * identity, so this is the only stage that bounds guessing them, while the
+ * valid requests of every user behind one NAT address pass it uncounted.
+ *
+ * `skipSuccessfulRequest` reserves a slot before forwarding and returns it
+ * once the response is known, so a parallel burst of failures is bounded by
+ * the limit too; concurrent valid requests hold a slot only while in flight.
+ * A thrown 401 is judged by the response of the error middleware, which is
+ * registered on the same router.
  */
-export function registerRateLimitMiddleware(router: IApp, input: OptionsInput = {}) {
-    const { max, ...rest } = input;
-
+export function registerRateLimitMiddleware(router: IApp) {
     router.use(rateLimit({
-        ...rest,
-        // A configured numeric budget above the ceiling raises the ceiling
-        // with it, or the first stage would refuse what the second allows.
-        max: Math.max(RATE_LIMIT_ADDRESS_CEILING, typeof max === 'number' ? max : 0),
+        max: RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
         keyGenerator: (event) => `pre:${buildAddressKey(event)}`,
+        skipSuccessfulRequest: true,
+        requestWasSuccessful: (_event, response) => response.status !== 401,
         // A loopback source is by construction the deployment itself: the
         // hosted auth pages render through the auth console's internal
         // client and server-core's own self-calls ride the same address, so
         // counting them collapses the whole deployment onto one bucket.
-        skip: rest.skip ?? isLoopbackRequest,
-        windowMs: rest.windowMs ?? 60 * 1000,
+        skip: isLoopbackRequest,
+        windowMs: 60 * 1000,
     }));
 }
 

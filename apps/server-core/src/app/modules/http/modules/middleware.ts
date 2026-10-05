@@ -122,7 +122,7 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
+        registerRateLimitMiddleware(router);
     }
 
     async mountIdentityRateLimit(router: IApp, container: IContainer): Promise<void> {
