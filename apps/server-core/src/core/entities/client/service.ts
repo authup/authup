@@ -34,7 +34,7 @@ import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
-import { isPolicyOfRealm } from '../policy/realm.ts';
+import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
 
@@ -493,7 +493,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
     // be global or of the client's own realm, never of another realm.
     protected assertAccessPolicyRealm(data: Partial<Client>, realmId: string | null): void {
         const policy = data.accessPolicyId ? data.accessPolicy : undefined;
-        if (policy && !isPolicyOfRealm(policy, realmId)) {
+        if (policy && !isRealmReachable(policy.realmId, realmId)) {
             throw new ValidationError('The access policy belongs to another realm.');
         }
     }

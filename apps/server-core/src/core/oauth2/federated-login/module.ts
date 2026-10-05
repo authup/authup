@@ -43,6 +43,7 @@ import type {
 import { deriveAmrAcr } from '../authorization/helpers.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { isRealmReachable } from '../../entities/realm/helpers.ts';
 import { OAUTH2_FEDERATED_LOGIN_TTL } from './constants.ts';
 import type {
     IOAuth2FederatedLoginService,
@@ -151,7 +152,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             // reading it would disappear silently for any state that reached
             // here without the stamp. A realm-less (global) provider matches
             // every client by design.
-            if (provider.realmId && verified.client.realmId !== provider.realmId) {
+            if (!isRealmReachable(provider.realmId, verified.client.realmId)) {
                 throw OAuth2RequestError.malformed('The provider and client realm do not match.');
             }
 

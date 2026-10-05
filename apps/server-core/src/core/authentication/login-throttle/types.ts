@@ -47,13 +47,15 @@ export interface ILoginThrottleService {
     /**
      * Throw LoginThrottledError when recent LOGIN_FAILED audit events plus
      * the attempts still in flight for the (identifier, ip) pair hit the
-     * threshold. An admitted attempt must be ended with release().
+     * threshold. Resolves true when the admitted attempt reserved a slot,
+     * which must then be ended with release(); false when nothing was
+     * reserved (throttle disabled, no ip, no or unreachable cache).
      */
-    assertNotThrottled(ctx: LoginThrottleContext): Promise<void>;
+    assertNotThrottled(ctx: LoginThrottleContext): Promise<boolean>;
 
     /**
-     * End an attempt admitted by assertNotThrottled, after its outcome has
-     * been recorded. Never throws.
+     * End an attempt for which assertNotThrottled reserved a slot, after its
+     * outcome has been recorded. Never throws.
      */
     release(ctx: LoginThrottleContext): Promise<void>;
 }
