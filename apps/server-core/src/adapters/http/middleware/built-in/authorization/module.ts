@@ -47,6 +47,7 @@ import type {
     IOAuth2TokenVerifier,
     ISessionManager,
     ISessionRepository,
+    IUserAuthenticatorRepository,
 } from '../../../../../core/index.ts';
 import type { RequestGrantsResolver } from '../../../request/index.ts';
 import {
@@ -96,6 +97,8 @@ export class AuthorizationMiddleware {
 
     protected userAuthenticator : ICredentialsAuthenticator<User>;
 
+    protected userAuthenticatorRepository? : Pick<IUserAuthenticatorRepository, 'hasConfirmedByUser'>;
+
     // --------------------------------------
 
     constructor(ctx: HTTPAuthorizationMiddlewareContext) {
@@ -108,6 +111,7 @@ export class AuthorizationMiddleware {
 
         this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver, { cipher: ctx.cipher });
         this.userAuthenticator = new UserAuthenticator(ctx.identityResolver);
+        this.userAuthenticatorRepository = ctx.userAuthenticatorRepository;
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
@@ -514,7 +518,10 @@ export class AuthorizationMiddleware {
                 header.password,
             );
 
-            if (authenticated.success) {
+            if (
+                authenticated.success &&
+                !(await this.userAuthenticatorRepository?.hasConfirmedByUser(authenticated.data.id))
+            ) {
                 setRequestScopes(event, [ScopeName.GLOBAL]);
                 setRequestIdentity(event, {
                     type: IdentityType.USER,

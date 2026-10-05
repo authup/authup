@@ -33,6 +33,19 @@ const POLICY_KEYS = new Set<string>([
     'updatedAt',
 ] satisfies (keyof Policy)[]);
 
+function hasRegexOperator(value: unknown) : boolean {
+    if (Array.isArray(value)) {
+        return value.some((item) => hasRegexOperator(item));
+    }
+
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    return Object.entries(value)
+        .some(([key, item]) => key === '$regex' || hasRegexOperator(item));
+}
+
 /**
  * Keep the options a policy's type declares and nothing else (issue #3669):
  * every other key of the body would be stored as an extra attribute row.
@@ -71,6 +84,15 @@ export class PolicyAttributesValidator extends Container<Record<string, any>> {
             data,
             data.type === BuiltInPolicyType.COMPOSITE ? { pathsToExclude: ['children'] } : {},
         );
+
+        // a pattern runs synchronously against caller-supplied values on the
+        // shared event loop, so the server does not store one
+        if (
+            data.type === BuiltInPolicyType.ATTRIBUTES &&
+            hasRegexOperator(output.query)
+        ) {
+            throw new ValidationError('The query of an attributes policy must not use the $regex operator.');
+        }
 
         // an omitted option comes back as undefined and would be stored as 'undefined'
         return Object.fromEntries(

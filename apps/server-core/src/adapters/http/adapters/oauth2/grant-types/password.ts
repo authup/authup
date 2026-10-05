@@ -6,6 +6,7 @@
  */
 
 import type { User } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import { EventName, EventScope, UserAuthenticatorKind } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
@@ -104,11 +105,14 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         // loginFailed actorName must match what canonically stored rows carry.
         const identifier = username.trim().toLowerCase();
 
-        await this.loginThrottleService?.assertNotThrottled({
+        // a user id resolves regardless of the realm hint, so the hint must
+        // not split its attempts across one bucket per realm.
+        const throttle = {
             identifier,
             ipAddress,
-            realmId: realm.id,
-        });
+            realmId: isUUID(identifier) ? undefined : realm.id,
+        };
+        const reserved = await this.loginThrottleService?.assertNotThrottled(throttle);
 
         let user : User;
         try {
@@ -133,6 +137,10 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             }
 
             throw e;
+        } finally {
+            if (reserved) {
+                await this.loginThrottleService?.release(throttle);
+            }
         }
 
         const mfaVerifiedAt = await this.verifySecondFactor(user, body, {

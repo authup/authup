@@ -203,7 +203,9 @@ Semantics:
 
 - **Strategies work per child, across all realms.** The default
   `createOnly` seeds each realm once; after that the realm's own
-  administrators own the row (a later boot does not revert their edits).
+  administrators own the row (a later boot does not revert their edits, and a
+  user or client that already existed under that name receives none of the
+  entry's role, permission or scope bindings).
   `merge` / `replace` reassert the declared attributes in every realm on
   every boot. `absent` removes the named entity from every realm.
 - **An explicit realm block wins.** For a realm that is also declared
@@ -641,6 +643,15 @@ If omitted, `createOnly` is used by default.
 ### `createOnly` (default)
 
 Creates the entity if it does not exist. Does nothing if it already exists.
+
+For a user, a client or a role that includes its bindings: the roles,
+permissions and scopes it declares are bound only when the entry creates the
+row, and a row that already exists (created through the API, registration or an
+earlier boot) receives none of them. Declare `merge` to bind them onto an
+existing row, which also re-asserts them on every boot. A built-in client
+(`admin-console`, `account-console`) or role (`admin`, `realm_admin`) is the
+exception: only provisioning writes one, so its declared bindings are applied
+under `createOnly` too.
 
 ```yaml
 strategy:

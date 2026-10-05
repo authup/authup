@@ -38,6 +38,7 @@ import {
     CacheModule, 
     ClientEntity,
     ClientScopeEntity,
+    ConfigInjectionKey,
     ConfigModule,
     DefaultProvisioningSource,
     FileProvisioningSource,
@@ -52,6 +53,7 @@ import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
 import { PolicyProvisioningSynchronizer, SYSTEM_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
+import { ProvisioningEntityStrategyType } from '../../../src/core/provisioning/strategy/index.ts';
 import { PolicyRepository } from '../../../src/adapters/database/domains/index.ts';
 import {
     PermissionPolicyRepositoryAdapter,
@@ -214,6 +216,30 @@ describe('app/modules/provisioning', () => {
     // realm's system client. A legacy `web` row (plan 082 removed the `web`
     // system client) is an ordinary client now and must survive a boot
     // untouched.
+    it('should deactivate an existing admin user when the admin user is disabled', async () => {
+        const source = new DefaultProvisioningSource();
+        const [realm] = await source.buildRealms({ ...di.resolve(ConfigInjectionKey), userAdminEnabled: false });
+        const [admin] = realm.relations!.users!;
+
+        expect(admin.attributes.active).toEqual(false);
+        expect(admin.strategy).toEqual({
+            type: ProvisioningEntityStrategyType.MERGE,
+            attributes: ['active'],
+        });
+    });
+
+    it('should leave an existing admin user alone while it stays enabled', async () => {
+        const source = new DefaultProvisioningSource();
+        const [realm] = await source.buildRealms({
+            ...di.resolve(ConfigInjectionKey),
+            userAdminEnabled: true,
+            userAdminPasswordReset: false,
+        });
+        const [admin] = realm.relations!.users!;
+
+        expect(admin.strategy).toBeUndefined();
+    });
+
     it('should provision the system clients of every realm and leave legacy web rows untouched', async () => {
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
         const clientRepository = di.resolve<Repository<Client>>(ClientEntity);

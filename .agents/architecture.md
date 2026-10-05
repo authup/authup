@@ -233,14 +233,18 @@ usable at the service level and nothing in core depends on TypeORM:
   serves ciphertext (see *Client secret storage and rotation*). SYSTEM
   decodes (no actor)
   pass ungated; a gate failure
-  strips the field. `ClientService.getMany` composes no secret WHERE and no
-  per-row loop: rows are not dropped when `secret` is selected, and a `post`
-  verdict strips plaintext values rather than evaluating per row
-  (fail-closed). `getOne` keeps its isMe bypass and post-fetch per-row check
-  as the authoritative single-read path, and depends on the operand
-  projection: without it a bare `fields=id,secret` replace-projection strips
-  `realmId`/flags, the check's `resourceRealmMatch` neutral-passes and a
-  foreign plaintext secret ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
+  strips the field. `ClientService.getMany` composes no secret WHERE: the
+  ROWS are narrowed by the realm reach like every other realm-bound list
+  (compiled WHERE, per-row drop loop on `post`), and within them the secret
+  gate redacts values rather than dropping rows, a `post` verdict stripping
+  plaintext values rather than evaluating per row (fail-closed). The gate
+  still matters on the `/clients` root for a reach the row WHERE covers but
+  the secret condition does not, and it is the only gate under the junction
+  `fields[client]` positions. `getOne` keeps its isMe bypass and evaluates
+  the realm reach on every foreign row whatever the projection, and depends
+  on the adapter's `realmScope` force-select: without it a bare
+  `fields=id,secret` replace-projection strips `realmId`, the check's
+  `resourceRealmMatch` neutral-passes and a foreign row ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
   included relation is NARROWED to its per-relation fieldset (bare
   `include=` → the target schema's `fields.default`/allowed
   projection), so the explicit-include and auto-join forms behave
@@ -849,14 +853,13 @@ Composite statistics that span entities (distinct active users) get a root
   nothing (`narrowReadScope`): a grouped count has no row to evaluate, and
   failing closed cannot over-disclose. The price is that a reader whose
   grant carries a non-lowering policy sees a full list next to a statistic of 0 on the
-  seven entities without an ownership term (role, scope, permission, policy,
-  key, trust anchor, path). Moving the gate into `scopeRead` also moved the
+  eight entities without an ownership term (client, role, scope, permission,
+  policy, key, trust anchor, path). Moving the gate into `scopeRead` also moved the
   decode ahead of the pre-gate in the services that pre-gated first, so an
   unpermitted caller sending a malformed filter now gets 400 rather than 403;
   the vocabulary is public (`/docs/openapi.json`), so nothing is disclosed.
-  Three lists carry no compile: clients
-  pre-gate only (`compile: false`; the secret is field-gated), realms and
-  identity providers are anonymous (no `scope`).
+  Two lists carry no compile: realms and identity providers are anonymous
+  (no `scope`).
 - **Decode and the four window rules.** The query decodes through the entity
   schema with `parameters: ['filters', 'groups', 'aggregates']`
   (`STATS_QUERY_PARAMETERS`, `core/query/describe.ts`; the route carries
@@ -1079,9 +1082,9 @@ export class UserRoleRepositoryAdapter extends EntityRepositoryAdapter<UserRole>
 }
 ```
 
-The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. client and identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
+The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
 
-- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is not gated on realm reach unless a secret is present, by design, so its adapter sets no `realmScope`.
+- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is gated on realm reach for every foreign row, so its adapter sets `realmScope` too.
 - **Extension runs on reads that answer a caller, never on the read a write loads through.** `findMany`, `findOneById`, `findOneByName` and the protected `findOneWithQuery` call the overridable `extendMany` / `extendOne` (no-ops by default); `findOneBy` and `findManyBy` never do. That is the extra-attribute read/write rule as structure rather than convention: policy and user load their attributes there, identity-provider loads and decrypts its secrets on single reads only, since its list is the anonymous login surface.
 - **A name lookup scoped to an unknown realm matches nothing** (`IRealmRepository.resolveId`, fail closed), and a non-uuid id is "no row" before the query (`hasUnmatchableId`, #3650: every by-id lookup returns `null` for it, so every dialect answers 404 where postgres would otherwise refuse the bind with `22P02`; filter operands get the same treatment from the rapiq adapter, #3647).
 - **Every write answers a unique-index refusal with `EntityConflictError` (409)**, the losing side of a race `checkUniqueness` cannot close. `save` runs through the protected `persist(write)`, and so does every write an adapter adds besides it (policy and identity-provider `saveWithEA`, which the services and the policy provisioner write through); a new write that skips `persist` answers the race with a 500 again. Recognizable by `isEntityConflictError`, which `ensurePath` and the federated account manager rely on to re-read the winner. `checkUniqueness` throws the same error, so a caller sees one conflict type whichever of the two caught the duplicate.
@@ -1244,7 +1247,7 @@ Non-entity workflows live under `core/identity/`:
 | Service | Location | Responsibility |
 |---|---|---|
 | `RegistrationService` | `core/identity/registration/` | User registration (`register`) and account activation (`activate`) |
-| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`) and reset password (`resetPassword`) |
+| `PasswordRecoveryService` | `core/identity/password-recovery/` | Forgot password (`forgotPassword`, which answers an unknown account with the same `{ resetExpires }` and sends nothing, so it is no account oracle) and reset password (`resetPassword`) |
 
 These services own their own validation (inline validators, not from `@authup/core-kit`), and accept `Record<string, any>` raw data.
 
@@ -1355,13 +1358,18 @@ content is assertable via `FakeMailClient` (see
 every template × locale).
 
 **Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
-param: `<publicUrl>/activate?token=<hash>` for activation and
-`<publicUrl>/password-reset?token=<hash>&realmId=<id>` for reset (the
+param: `<publicUrl>/activate?token=<code>` for activation and
+`<publicUrl>/password-reset?token=<code>&realmId=<id>` for reset (the
 `realmId` is required so a non-master user's reset link resolves the right
 realm): rendered as the call-to-action link. Both land on backend-served SSR
 pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
-into the URL (the reset form asks for email/name).
+into the URL (the reset form asks for email/name). Only the mail carries the
+code: `auth_users.activate_hash` / `reset_hash` store its SHA-256 digest and
+the lookup digests the presented code, the console-session-secret rule, so a
+read of the table yields nothing that activates an account or resets a
+password. The activation code carries no expiry of its own (a column the
+schema does not have yet).
 
 #### Auth Workflow UI (the auth console service) + Status Endpoint
 
@@ -2042,7 +2050,11 @@ alias token, so it must be quoted (`name: "*"`).
   `RealmProvisioningValidator.run` on the literal name; a partial pattern
   like `tenant-*` fails the regular name check). Child strategies keep the
   full vocabulary: `createOnly` (default: seed once, realm admins own the
-  row), `merge`/`replace` (reassert per boot on every realm), `absent`
+  row; a user or client binds its declared roles, permissions and scopes
+  only on the pass that creates it, never onto a row that already existed,
+  except a client that is `builtIn`, which only provisioning writes, so the
+  system clients stay extendable),
+  `merge`/`replace` (reassert per boot on every realm), `absent`
   (sweep the named entity out of every realm).
 - **Mechanism (expansion + fan-out):** `ProvisionerModule.setup` extracts
   the wildcard entries after the composite load (folding multiples via the
@@ -3656,7 +3668,10 @@ key: junction ATTRIBUTES carry only genuine columns. So a junction write to anot
 entity is realm-gated like a direct entity write: a `realm_admin` in realm A cannot bind a
 permission/role/scope onto a realm-B role/user/client even though the permission itself is
 global. (The *member* side, the permission/role being attached, is gated separately by the
-superset `preEvaluate`.) Setting a `null` owner (a global entity) under `own` correctly
+superset `preEvaluate`; two junctions also refuse a member of a FOREIGN realm outright,
+whoever asks: `identity-provider-role-mapping` a role of another realm than the provider's,
+and `permission-policy` a realm-bound policy of another realm than the permission's, so a
+policy another realm administers can never restrict this realm's or a global permission.) Setting a `null` owner (a global entity) under `own` correctly
 denies, consistent with a `realm_admin` not being able to write a global base entity.
 
 > **One evaluator, no ATTRIBUTES pollution:** the resource realm rides the dedicated
@@ -3691,7 +3706,7 @@ ignored: no widen via attach/detach). `isSuperset` additionally requires the par
 | Role | Scope | Realm reach (junction `realmScope`) |
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | `any`: acts on all realms + `null` global, **from an identity in ANY realm** |
-| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads) / `own` (direct entity CUD) |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads, assignments) / `own` (direct entity CUD and role-permission writes, so a global role's bindings are out of reach) |
 
 ### Nested Route Mounting
 
@@ -3757,8 +3772,12 @@ folder's own `path` on a `PATH_*` grant, which reaches the rows of a subtree.
 An update under such a grant is checked against the stored AND the updated row
 (`evaluateUpdate`, #3654), so a delegate can neither refile a row into its
 folder nor move one out of it.
-`$regex` must never appear in such a policy: the sqlite preset declares no
-`regexp`, so it throws and 500s every list read under the test dialect. Only a
+`$regex` cannot appear in such a policy: `PolicyAttributesValidator` refuses
+it at any depth of an `attributes` query on every `/policies` write (a pattern
+runs synchronously against caller-supplied values on the one event loop every
+realm shares, and the sqlite preset declares no `regexp` either). Provisioning
+files are operator-owned and not checked, and a row stored before the rule
+keeps evaluating. The `@authup/access` library still evaluates `$regex`. Only a
 global admin can author one, since `applyJunctionCreateGrant` nulls a requested
 `policyId` unless the actor holds an uncapped, policy-free grant, which is the
 #3158 / #3159 / #3160 fail-closed rule and means a `sales` administrator cannot
@@ -4546,13 +4565,14 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
+| `system.client-names-self-manage` | `active, realmId, pathId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted, grantTypes, accessPolicyId` |
 | `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId, emailVerified` |
 
 The client denylist additionally blocks `authMethod` (switching away from
 `secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
 `secretEncrypted` storage flags (downgrading either would persist the secret
-in plaintext). FK fields like `realmId` are usually validator-stripped on
+in plaintext), and the two admission controls `grantTypes` (the per-client
+grant allowlist) and `accessPolicyId`, which are the operator's to set. FK fields like `realmId` are usually validator-stripped on
 UPDATE already, but stay in the denylist as defense in depth. A
 self-managing client rotates its own secret through
 `POST /clients/@me/secret`: the service hands the policy the two
@@ -5356,10 +5376,10 @@ console holds the browser session every `prompt=none` decision reads.
 Different domains are the named stage-G follow-up and need WebAuthn origins,
 the federated-login cookie and credentialed CORS to move together.
 
-**Env semantics are per entry, not per type**: the eight security toggles
+**Env semantics are per entry, not per type**: the nine security toggles
 (`worker.enabled`, `migrationEnabled`, `eventLogEnabled`,
 `eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
-`mfaRequired`, `querySchemaDiscoveryEnabled`) use the strict boolean reader that throws on a set-but-
+`mfaRequired`, `querySchemaDiscoveryEnabled`, `userAdminEnabled`) use the strict boolean reader that throws on a set-but-
 unrecognized value; every other boolean keeps envix's lenient `toBool`,
 which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
 `trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.
@@ -5856,6 +5876,10 @@ in `UserAttributeService.create` and in `update` over the PAIR the row will
 hold (`data.name ?? entity.name`, `data.value ?? entity.value`), so a
 reserved row cannot be fed junk by a body that omits the name and an
 unchecked row cannot be renamed into a reserved one to slip its value past.
+The federated write path runs the same check: `IdentityProviderAccountManager.saveUser`
+DROPS a mapped `locale` / `colorMode` the rule refuses before `saveOneWithEA`
+(a cosmetic claim never fails a login), so an attribute mapping onto either
+name cannot store what the API would refuse.
 `locale` is checked for BCP47 SHAPE and never narrowed to a catalog authup
 has, since the attribute is the user's preference for every RP that reads the
 claim, but it is BOUNDED (subtags of at most 8 characters, 35 characters in
@@ -6417,7 +6441,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
-  admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
+  admins can set/clear it. `ClientService.save` refuses (400) a policy owned by
+  another realm than the client's (`assertAccessPolicyRealm`, over the row
+  `validateJoinColumns` loads onto the input); a global policy (`realmId`
+  null) stays allowed. `buildSystemClientAttributes` deliberately omits the
   key: the provisioner MERGE would otherwise wipe an admin-set policy on
   each per-realm system client (`admin-console`, `account-console`)
   every boot. The admin form binds it via
@@ -7159,7 +7186,8 @@ plus a `<uuid>@example.com` placeholder (#3434).
 - **Forward-only for the name, verification-aware for the email.** The
   account manager's UPDATE branch never rewrites `user.name` (it is
   `nameLocked` at creation), so users already provisioned under a UUID keep
-  it. It MAY rewrite `email` through an operator attribute mapping
+  it; the name-collision retry of `saveUser` is CREATE-only, so a failed
+  update save fails the login instead of renaming the user. It MAY rewrite `email` through an operator attribute mapping
   (`targetName: email`), and a mapped address that differs from the stored
   one clears `emailVerified`, the #3519 rule `UserService.save` applies,
   unless the mapping asserts `emailVerified` itself. The stored address is
@@ -8131,7 +8159,7 @@ never expose a user's factor secret to an admin). The kit `AUserAuthenticatorEnr
 mirrors this: when `userId !== '@me'` it offers only the email button
 (`canOfferKind`).
 
-**Enforcement: two chokepoints, both server-side:**
+**Enforcement: three chokepoints, all server-side:**
 
 1. **Interactive `/authorize`**: the proof is session-bound. `auth_sessions.mfa_at`
    is stamped by `POST /authenticators/challenge` (bearer-scoped; via the
@@ -8142,8 +8170,7 @@ mirrors this: when `userId !== '@me'` it offers only the email button
    (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required`, a dedicated
    code, deliberately NOT `login_required`, so RPs can tell "log in again" from
    "complete the challenge") when the user holds a confirmed device and the
-   backing session carries no `mfaAt`. A session-less flow (HTTP Basic) fails
-   closed the same way. `GET /authenticators/challenge` reports
+   backing session carries no `mfaAt`. `GET /authenticators/challenge` reports
    `{ required, enrollmentRequired, kinds, challenge? }`: the kind-generic wire
    shape (the optional `challenge` payload carries WebAuthn request options)
    that drives the kit ladder.
@@ -8159,6 +8186,12 @@ mirrors this: when `userId !== '@me'` it offers only the email button
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
    the token endpoint. WebAuthn cannot ride a single POST: interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
+3. **User Basic auth** (`userAuthBasic`): a Basic credential carries no
+   factor, so the authorization middleware leaves the request anonymous for a
+   user holding a confirmed device (`userAuthenticatorRepository
+   .hasConfirmedByUser`, wired only while `mfaEnabled`), the same answer a
+   wrong password gets. Automation acting for such a user authenticates as a
+   confidential client.
 
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
 the upstream provider as the authentication authority, and that trust is
@@ -8482,9 +8515,9 @@ which blocked Redis with a keyspace scan, emptied every realm's cache on any
 realm's key change, and lost to that very race. The mark reaches every
 replica only through a shared Redis cache; with the in-process memory cache
 it applies on the replica that served the key change, and the others honour
-the key within a token's lifetime. The claims prefix is versioned
-(`oauth2_token_claims_v2`), so an entry an older release cached is never
-read. A local-mode resource server keeps its own verified-token cache and
+the key within a token's lifetime. An entry cached before the key realm
+check existed is served without it until it expires, so the upgrade notes
+ask a Redis deployment to drop the `oauth2_token_claims*` keys once. A local-mode resource server keeps its own verified-token cache and
 accepts such a token until that entry or the token expires.
 
 **Management API:** `KeyService`
@@ -9057,7 +9090,20 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `EVENT_ACTOR_NAME_MAX_LENGTH`: the same bound `EventService.record` applies
   to the persisted `actorName`. A reader that matches stored rows by actor name
   must normalize exactly like the writer, or an over-long identifier never
-  matches its own rows and the throttle silently fails open for it. Config
+  matches its own rows and the throttle silently fails open for it. The count
+  alone is check-then-act (the row lands only after bcrypt), so the service
+  also reserves each attempt in the cache (`ICache.increment` on
+  `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
+  refuses when rows plus the other attempts in flight reach the threshold; the
+  grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
+  written, so every attempt is seen as a row or as in flight. A refusal the
+  rows alone justify carries `retryAfter` = the window; one filled only by
+  attempts in flight (a burst of correct logins included) carries
+  `retryAfter: 1` and a message that claims no failures. `release()` is best
+  effort and never throws over the attempt's own outcome; a slot it could not
+  return lapses with the window. A user-id
+  identifier drops the realm from the key and from the count, since
+  `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;
   enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).

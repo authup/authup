@@ -20,6 +20,7 @@ import { ResetTokenExpiredError } from './token-expired.ts';
 import { createValidator } from '@validup/zod';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
+import { digestSHA256 } from '../../../utils/digest.ts';
 import { z } from 'zod';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
@@ -80,17 +81,24 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             realmId: realm.id,
         };
 
+        const resetExpires = new Date(
+            Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
+        ).toISOString();
+
         const entity = await this.repository.findOneByWithEmail(where);
 
+        // an unknown account is answered like a known one, so the endpoint
+        // does not tell which names and addresses exist.
         if (!entity) {
-            throw new EntityNotFoundError();
+            return { resetExpires };
         }
 
+        // the code is mailed, only its digest is stored, so reading the table
+        // yields nothing that resets a password.
+        const resetCode = randomBytes(32).toString('hex');
         const merged = this.repository.merge(entity, {
-            resetExpires: new Date(
-                Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
-            ).toISOString(),
-            resetHash: randomBytes(32).toString('hex'),
+            resetExpires,
+            resetHash: digestSHA256(resetCode),
         });
 
         await this.repository.save(merged);
@@ -102,14 +110,14 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             // non-master user.
             const resetUrl = this.options.publicUrl ?
                 `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset` +
-                `?token=${encodeURIComponent(merged.resetHash!)}` +
+                `?token=${encodeURIComponent(resetCode)}` +
                 `&realmId=${encodeURIComponent(entity.realmId)}` :
                 undefined;
 
             const mail = await this.mailTemplateRenderer.render({
                 template: MailTemplateName.PASSWORD_RESET,
                 params: {
-                    code: merged.resetHash!,
+                    code: resetCode,
                     url: resetUrl,
                     expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES,
                 },
@@ -158,11 +166,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const where: Record<string, any> = {
             ...(validated.name ? { name: validated.name } : {}),
             ...(validated.email ? { email: validated.email } : {}),
-            resetHash: validated.token,
+            resetHash: digestSHA256(validated.token),
             realmId: realm.id,
         };
 
-        const entity = await this.repository.findOneBy(where);
+        const entity = await this.repository.findOneByWithEmail(where);
         if (!entity) {
             throw new EntityNotFoundError();
         }

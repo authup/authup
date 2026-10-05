@@ -84,6 +84,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             };
         }
 
+        let created = false;
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE: {
@@ -126,12 +127,22 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     break;
             }
         } else {
+            created = true;
             await this.resolvePath(input);
             if (!input.attributes.email && input.attributes.name) {
                 input.attributes.email = buildUserFakeEmail(input.attributes.name);
             }
 
             attributes = await this.userRepository.save(this.userRepository.create(input.attributes));
+        }
+
+        // createOnly leaves a row it did not create alone, and that includes
+        // its roles and permissions.
+        if (!created && strategy.type === ProvisioningEntityStrategyType.CREATE_ONLY) {
+            return {
+                ...input,
+                attributes,
+            };
         }
 
         // Permissions (Global, Realm & Client)

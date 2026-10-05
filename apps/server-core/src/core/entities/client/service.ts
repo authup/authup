@@ -34,6 +34,7 @@ import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
+import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
 
@@ -92,27 +93,47 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS, compile: false });
+        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS });
     }
 
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Client>> {
-        // The per-row `secret` visibility gate lives on the client SCHEMA
-        // (`fields.validateMany`, issue #3322), so it also covers the
-        // `include=client` paths served by other services; the repository
-        // layer redacts unauthorized values without dropping rows. An
-        // encrypted value that survived it is one the reader may see.
+        // Rows are narrowed to the actor's realm reach; the per-row `secret`
+        // visibility gate lives on the client SCHEMA (`fields.validateMany`,
+        // issue #3322), so it also covers the `include=client` paths served
+        // by other services. An encrypted value that survived it is one the
+        // reader may see.
         const scope = await this.scopeRead(
             await decodeQuery(query, { schema: clientSchema, actor }),
             actor,
         );
-        const result = await this.repository.findMany(scope.query);
+        const { data: entities, meta } = await this.repository.findMany(scope.query);
 
-        await Promise.all(result.data.map((entity) => this.revealSecret(entity)));
+        let data = entities;
+        let { total } = meta;
+        if (scope.post) {
+            data = [];
+            for (const entity of entities) {
+                try {
+                    await actor.permissionEvaluator.evaluateOneOf({
+                        name: CLIENT_READ_PERMISSIONS,
+                        data: definePolicyData({
+                            [BuiltInPolicyType.ATTRIBUTES]: entity,
+                            ...this.resourceRealmMatch(entity),
+                        }),
+                    });
+                    data.push(entity);
+                } catch {
+                    total -= 1;
+                }
+            }
+        }
 
-        return result;
+        await Promise.all(data.map((entity) => this.revealSecret(entity)));
+
+        return { data, meta: { ...meta, total } };
     }
 
     async getOne(
@@ -150,11 +171,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
-        // Every stored form takes the reach evaluate: a plaintext is the
-        // secret itself, an encrypted value is decrypted for a permitted
-        // reader (plan 105), and a hash is offline-crackable and has no
-        // reader-facing reason to cross realms (#3328).
-        if (!isMe && entity.secret) {
+        // Every foreign read takes the reach evaluate, whatever the secret
+        // projection: the row's configuration is realm-bound like its secret.
+        if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: CLIENT_READ_PERMISSIONS,
                 data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
@@ -310,6 +329,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await this.assertPathRealm(validated.pathId, entity.realmId);
         }
 
+        // Only a changed reference is checked: an edit echoing a binding an
+        // older release accepted must still save.
+        if (entity && validated.accessPolicyId !== entity.accessPolicyId) {
+            this.assertAccessPolicyRealm(validated, entity.realmId);
+        }
+
         const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
 
         if (entity) {
@@ -411,6 +436,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await this.assertPathRealm(validated.pathId, validated.realmId ?? null);
         }
 
+        this.assertAccessPolicyRealm(validated, validated.realmId ?? null);
+
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
             data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
@@ -459,6 +486,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (path.realmId !== realmId) {
             throw new ValidationError('The path belongs to another realm.');
+        }
+    }
+
+    // validateJoinColumns loads the referenced policy onto the input. It may
+    // be global or of the client's own realm, never of another realm.
+    protected assertAccessPolicyRealm(data: Partial<Client>, realmId: string | null): void {
+        const policy = data.accessPolicyId ? data.accessPolicy : undefined;
+        if (policy && !isRealmReachable(policy.realmId, realmId)) {
+            throw new ValidationError('The access policy belongs to another realm.');
         }
     }
 
