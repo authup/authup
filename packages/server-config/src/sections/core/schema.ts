@@ -202,7 +202,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareRateLimit: {
             type: middlewareType,
             default: true,
-            description: 'Enable the rate-limit middleware, or pass its options. Each source address is capped at 6000 requests a minute before authentication; afterwards an authenticated request counts against its identity and an anonymous one against its address. The options apply to the second stage, and a numeric `max` above the cap raises it.',
+            description: 'Enable the rate-limit middleware, or pass its options. Before authentication each source address may cause 300 failed authentications (status 401) a minute; afterwards an authenticated request counts against its identity and an anonymous one against its address. The options apply to the second stage.',
         },
         middlewareSwagger: {
         // a plain boolean, unlike its siblings: the Swagger mount takes no
