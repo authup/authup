@@ -144,6 +144,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -173,6 +174,7 @@ describe('core/authorization/check', () => {
         await expect(buildAuthorizationCheck(ctx, {
             identity,
             grants: () => Promise.reject(error),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         })).rejects.toThrow(error);
     });
@@ -207,6 +209,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith({ ...identity, id: 'c641912c-21e5-4cb4-84b6-169e2b2bb099' }),
         });
 
@@ -219,6 +222,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -238,6 +242,7 @@ describe('core/authorization/check', () => {
             identity,
             realms: [FOREIGN_REALM_ID],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -250,6 +255,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -263,6 +269,7 @@ describe('core/authorization/check', () => {
             identity,
             names: ['user_update', 'not_a_permission'],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -297,6 +304,7 @@ describe('core/authorization/check', () => {
         const { permissions: held } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
         expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
@@ -314,6 +322,7 @@ describe('core/authorization/check', () => {
         const { permissions: denied } = await buildAuthorizationCheck(ctx, {
             identity: clientIdentity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: clientIdentity,
             decorate: decorateWith(clientIdentity),
         });
         expect(denied).toEqual([]);
@@ -365,7 +374,7 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            grants: () => Promise.reject(new Error('a withheld identity loads no grants')),
             decorate: decorateWith(undefined),
         });
 
@@ -379,6 +388,7 @@ describe('core/authorization/check', () => {
             identity,
             realms: RealmScope.OWN,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -392,6 +402,7 @@ describe('core/authorization/check', () => {
             identity,
             realms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -417,6 +428,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -445,6 +457,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: identity,
             decorate: decorateWith(identity),
         });
 
@@ -463,6 +476,11 @@ describe('core/authorization/check', () => {
             },
             realms: RealmScope.OWN,
             grants: (value) => ctx.identityPermissionProvider.getFor(value),
+            policyIdentity: {
+                ...identity, 
+                realmId: null, 
+                realmName: null, 
+            },
             decorate: decorateWith({
                 ...identity, 
                 realmId: null, 
@@ -496,6 +514,7 @@ describe('core/authorization/check', () => {
             const result = await buildAuthorizationCheck(ctx, {
                 identity,
                 grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             });
 
@@ -515,6 +534,7 @@ describe('core/authorization/check', () => {
             const result = await buildAuthorizationCheck(ctx, {
                 identity,
                 grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             });
 
@@ -534,6 +554,7 @@ describe('core/authorization/check', () => {
             const result = await buildAuthorizationCheck(ctx, {
                 identity,
                 grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             });
 
@@ -577,6 +598,7 @@ describe('core/authorization/check', () => {
             const result = await buildAuthorizationCheck(ctx, {
                 identity,
                 grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             });
 
@@ -598,6 +620,7 @@ describe('core/authorization/check', () => {
             const result = await buildAuthorizationCheck(ctx, {
                 identity,
                 grants: (value) => ctx.identityPermissionProvider.getFor(value),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             });
 
@@ -632,6 +655,7 @@ describe('core/authorization/check', () => {
             await expect(buildAuthorizationCheck(ctx, {
                 identity,
                 grants: () => Promise.reject(error),
+                policyIdentity: identity,
                 decorate: decorateWith(identity),
             })).rejects.toThrow(error);
         });

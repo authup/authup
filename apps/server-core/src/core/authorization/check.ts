@@ -182,11 +182,13 @@ export async function buildAuthorizationCheck(
     // engine it would be flattened into a denial, and the route would answer
     // an authoritative empty set that the kit memoizes for the rest of the
     // document's life. Thrown from here, it fails the request, and the kit
-    // asks again on its next resolve.
+    // asks again on its next resolve. Loaded for the POLICY identity only: a
+    // caller whose scopes withhold its identity from evaluation holds no
+    // grant a verdict could read.
     let grants : PermissionPolicyBinding[] | undefined;
-    if (request.identity) {
+    if (request.policyIdentity) {
         try {
-            grants = await request.grants(request.identity);
+            grants = await request.grants(request.policyIdentity);
         } catch (e) {
             throw normalizeError(e);
         }
@@ -247,10 +249,10 @@ export async function buildAuthorizationCheck(
                         // REQUEST, and removes it when the caller's scopes
                         // withhold it, so this can widen nothing: it is the
                         // identity the caller was resolved as or none at all.
-                        ...(grants && request.identity ?
+                        ...(grants && request.policyIdentity ?
                             {
-                                [BuiltInPolicyType.IDENTITY]: request.identity,
-                                [PolicyDataKey.GRANTS]: defineIdentityGrants(request.identity, grants),
+                                [BuiltInPolicyType.IDENTITY]: request.policyIdentity,
+                                [PolicyDataKey.GRANTS]: defineIdentityGrants(request.policyIdentity, grants),
                             } :
                             {}),
                         [BuiltInPolicyType.REALM_MATCH]: realm,

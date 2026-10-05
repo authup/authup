@@ -34,7 +34,12 @@ import {
     toIdentityPolicyData,
 } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { RequestPermissionEvaluator, buildActorContext, useRequestGrants } from '../../../request/index.ts';
+import {
+    RequestPermissionEvaluator,
+    buildActorContext,
+    useRequestGrants,
+    useRequestPolicyIdentity,
+} from '../../../request/index.ts';
 
 export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext &
 AuthorizationCheckBuilderContext;
@@ -219,6 +224,7 @@ export class AuthorizationController {
             names: payload.names,
             realms: payload.realms,
             identity: toIdentityPolicyData(actor.identity),
+            policyIdentity: toIdentityPolicyData(useRequestPolicyIdentity(event)?.raw),
             decorate: (
                 evaluator,
             ) => new RequestPermissionEvaluator(event, evaluator),
