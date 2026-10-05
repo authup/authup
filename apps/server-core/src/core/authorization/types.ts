@@ -82,6 +82,14 @@ export type AuthorizationCheckRequest = {
      */
     identity?: IdentityPolicyData,
     /**
+     * The identity policy evaluation may see for this request: `identity`
+     * when the caller's scopes include `global`, none otherwise. It is what
+     * the grants are loaded for, so a scope-restricted caller, whose
+     * evaluation `decorate` keeps identity-free, never pays for (or fails on)
+     * a grant load nothing would read.
+     */
+    policyIdentity?: IdentityPolicyData,
+    /**
      * Wrap the evaluator the build composes, so the caller's own request rules
      * apply to it. REQUIRED rather than defaulted: the one rule that matters
      * here withholds the identity from a credential whose scopes lack

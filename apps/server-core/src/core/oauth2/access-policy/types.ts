@@ -7,7 +7,6 @@
 
 import type { BasePolicy, IdentityPolicyData, PolicyData } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
-import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 /**
  * The tree the provider loads. At runtime it is the policy entity, whose root
@@ -51,6 +50,5 @@ export interface IOAuth2AccessPolicyProvider {
 
 export type OAuth2AccessPolicyEvaluatorContext = {
     policyProvider: IOAuth2AccessPolicyProvider,
-    identityPermissionProvider: IIdentityPermissionProvider,
     logger?: Logger,
 };

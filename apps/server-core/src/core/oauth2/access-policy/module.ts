@@ -30,7 +30,7 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
 
     constructor(ctx: OAuth2AccessPolicyEvaluatorContext) {
         this.policyProvider = ctx.policyProvider;
-        this.engine = new PolicyEngine(ctx.identityPermissionProvider);
+        this.engine = new PolicyEngine();
         this.logger = ctx.logger;
     }
 

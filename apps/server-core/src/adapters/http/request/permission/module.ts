@@ -12,10 +12,15 @@ import type {
     PermissionCompileResult,
     PermissionEvaluationContext,
 } from '@authup/access';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDataKey,
+    defineIdentityGrants,
+} from '@authup/access';
 import type { IAppEvent } from 'routup';
 import type { RequestIdentity } from '../helpers/index.ts';
-import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
+import { useRequestGrants, useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionEvaluator implements IPermissionEvaluator {
     protected event: IAppEvent;
@@ -30,36 +35,44 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
     // --------------------------------------------------------------
 
     async evaluate(ctx: PermissionEvaluationContext) : Promise<void> {
-        return this.evaluator.evaluate(this.extendContext(ctx));
+        return this.evaluator.evaluate(await this.extendContext(ctx));
     }
 
     async preEvaluate(ctx: PermissionEvaluationContext) : Promise<void> {
-        return this.evaluator.preEvaluate(this.extendContext(ctx));
+        return this.evaluator.preEvaluate(await this.extendContext(ctx));
     }
 
     // --------------------------------------------------------------
 
     async preEvaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
-        return this.evaluator.preEvaluateOneOf(this.extendContext(ctx));
+        return this.evaluator.preEvaluateOneOf(await this.extendContext(ctx));
     }
 
     async evaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
-        return this.evaluator.evaluateOneOf(this.extendContext(ctx));
+        return this.evaluator.evaluateOneOf(await this.extendContext(ctx));
     }
 
     // --------------------------------------------------------------
 
     async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
-        return this.evaluator.compile(this.extendContext(ctx));
+        return this.evaluator.compile(await this.extendContext(ctx));
     }
 
     // --------------------------------------------------------------
 
-    protected extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : T {
+    protected async extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : Promise<T> {
         const identity = useRequestPolicyIdentity(this.event);
         if (identity) {
+            // The grants travel with the identity they belong to, loaded here
+            // rather than inside the engine: a failed load then fails the
+            // request as itself, where the engine would flatten it into a
+            // permission denial. The load is the request's own (#3597), so a
+            // token's grants stay narrowed to its client.
+            const grants = await useRequestGrants(this.event, identity);
+
             ctx.data = ctx.data || new PolicyData();
             ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
+            ctx.data.set(PolicyDataKey.GRANTS, defineIdentityGrants(identity, grants));
 
             return ctx;
         }
@@ -71,8 +84,11 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
         // that. Without the removal the gate only held for a caller that
         // happened to leave the key empty, so placing it anywhere else silently
         // answered a scope-restricted bearer as a fully-scoped one.
+        // The grants go with it: grants placed next to an identity this
+        // request was not resolved as must not reach the binding evaluator.
         if (ctx.data) {
             ctx.data.delete(BuiltInPolicyType.IDENTITY);
+            ctx.data.delete(PolicyDataKey.GRANTS);
         }
 
         return ctx;

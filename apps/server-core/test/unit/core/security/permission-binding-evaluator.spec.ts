@@ -10,14 +10,15 @@ import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
+    PolicyDataKey,
     PolicyDefaultEvaluators,
     RealmScope,
+    defineIdentityGrants,
     definePolicyEvaluationContext,
 } from '@authup/access';
 import type { IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
 import { describe, expect, it } from 'vitest';
-import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
 
 /**
  * Disjunction semantics of the permission-binding evaluator (issue #3155).
@@ -61,18 +62,16 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
         withResourceRealm = true,
         withConditions = false,
     }: RunOptions) => {
-        const provider = new FakeIdentityPermissionProvider();
-        provider.setBindings(bindings);
-
         const data: Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: identityA,
+            [PolicyDataKey.GRANTS]: defineIdentityGrants(identityA, bindings),
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission: { name: PERMISSION_NAME } },
         };
         if (withResourceRealm) {
             data[BuiltInPolicyType.REALM_MATCH] = resourceRealm ?? null;
         }
 
-        const evaluator = new IdentityPermissionBindingPolicyEvaluator(provider);
+        const evaluator = new IdentityPermissionBindingPolicyEvaluator();
         return evaluator.evaluate(
             { type: BuiltInPolicyType.PERMISSION_BINDING },
             definePolicyEvaluationContext({
