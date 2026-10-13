@@ -4184,8 +4184,7 @@ attempt, so "may I" has an answer before anyone signs in and a login gate would 
 withhold it. Everything identity-bound denies by itself:
 `IdentityPermissionBindingPolicyEvaluator` deliberately omits IDENTITY from its
 `requires`, so a missing one is a settled `DATA_MISSING` deny rather than a pending
-permit, and with no identity there is no grant load either, so `grants` is never called
-for an anonymous caller. `resolveRealms` needs no special case either: a realm-less caller
+permit, and with no identity there is no grant load either. `resolveRealms` needs no special case either: a realm-less caller
 resolves `own` to nothing and `ownOrNull` to the global rows alone, which is the reach
 `realmScopeMatches` already grants such an identity. A default deployment therefore
 answers an anonymous caller an EMPTY set, because `PermissionService.create` binds the
@@ -4228,12 +4227,12 @@ provider's `findOne` carries an uncached junction read plus a tree walk each, so
 over the 73 provisioned permissions is hundreds of statements on a route a UI calls at
 every login. The definitions are therefore read ONCE through the same `findDefinitions`
 the catalog uses and served from a `PermissionMemoryProvider`, and the caller's grants
-are loaded once, before the matrix, and handed to every pair as policy data: two bulk
-reads plus one grant load, and the rest is in memory. The load is for the identity
-policy evaluation may SEE (`policyIdentity`, `useRequestPolicyIdentity`), not the raw
-one that resolves the realm selectors: a token without `global` has its identity
-withheld from every evaluation, so it loads nothing and cannot fail on a load nothing
-would read. Only GLOBAL definitions are evaluated, because that is what every gate in
+are loaded once by the controller and ride on its identity into every pair: two bulk
+reads plus one grant load, and the rest is in memory. One `identity` does both jobs: it
+always resolves the realm selectors, and it carries `grants` only when policy
+evaluation may SEE it (`useRequestPolicyIdentity`). A token without `global` has its
+identity withheld from every evaluation, so it loads nothing and cannot fail on a load
+nothing would read. Only GLOBAL definitions are evaluated, because that is what every gate in
 this process evaluates.
 
 **A failed GRANT LOAD fails the request, never answers as a denial.** It is the one
@@ -4241,8 +4240,8 @@ failure a verdict cannot be derived from. Inside the engine it would be invisibl
 `PolicyEngine.evaluate` turns every evaluator throw into issues and
 `PermissionEvaluator` re-raises those as a `PermissionError`, so a cache or database
 hiccup would read as `200 []`, an answer the kit memoizes by the introspection's
-subject, scope and grants, none of which such a failure moves. Loading before the
-matrix keeps the read outside the engine (see *Grants are policy data*), so it throws
+subject, scope and grants, none of which such a failure moves. Loading in the
+controller, before the matrix, keeps the read outside the engine (see *Grants are policy data*), so it throws
 as itself and the kit asks again on its next resolve. The decorator loads the
 request's grants again inside the matrix (the same per-request promise, so it
 cannot newly fail), and the per-pair catch re-raises anything that is neither a

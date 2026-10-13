@@ -190,8 +190,7 @@ export class AuthorizationController {
      * DATA_MISSING deny rather than a pending permit, and every built-in
      * definition is bound to the global `system.default`, whose identity child
      * carries that rule. So a default deployment answers an anonymous caller
-     * an empty set, and the grant load behind `grants` is never reached for
-     * one, since the binding evaluator returns before it. `resolveRealms`
+     * an empty set, and no grant is loaded for one. `resolveRealms`
      * needs no special case either: a realm-less caller resolves `own` to
      * nothing and `ownOrNull` to the global rows alone, which is what
      * `realmScopeMatches` already grants such an identity.
@@ -220,17 +219,26 @@ export class AuthorizationController {
 
         const actor = buildActorContext(event);
 
+        // The grants ride on the identity only when policies may see it. They
+        // are loaded here, before any evaluation, because a failed load is the
+        // one failure a verdict cannot be derived from: inside the engine it
+        // would be flattened into a denial, an authoritative empty set the kit
+        // memoizes. Thrown from here, it fails the request.
+        let identity = toIdentityPolicyData(actor.identity);
+        if (identity && useRequestPolicyIdentity(event)) {
+            identity = {
+                ...identity,
+                grants: await useRequestGrants(event, identity),
+            };
+        }
+
         const { permissions, expiresAt } = await buildAuthorizationCheck(this.ctx, {
             names: payload.names,
             realms: payload.realms,
-            identity: toIdentityPolicyData(actor.identity),
-            policyIdentity: toIdentityPolicyData(useRequestPolicyIdentity(event)?.raw),
+            identity,
             decorate: (
                 evaluator,
             ) => new RequestPermissionEvaluator(event, evaluator),
-            grants: (
-                identity,
-            ) => useRequestGrants(event, identity),
         });
 
         // `no-cache` stays, so no cache reuses the body without revalidating:

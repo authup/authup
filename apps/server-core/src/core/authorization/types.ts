@@ -12,7 +12,6 @@ import type {
     BasePolicy,
     IPermissionEvaluator,
     IdentityPolicyData,
-    PermissionPolicyBinding,
 } from '@authup/access';
 import type { Logger } from '@authup/server-kit';
 
@@ -76,19 +75,13 @@ export type AuthorizationCheckRequest = {
      */
     realms?: AuthorizationCheckRealms,
     /**
-     * The caller's identity, used to resolve a symbolic realm selector. It is
-     * NOT what the evaluation reads: the identity reaches the policy data
-     * through `decorate`, under the scope condition that belongs there.
+     * The caller's identity. It resolves a symbolic realm selector, and when
+     * policies may see it (the caller's scopes include `global`) it carries
+     * its grants, which decide whether a denied pair's expiry concerns the
+     * caller. The evaluation itself reads the identity through `decorate`,
+     * under the scope condition that belongs there.
      */
     identity?: IdentityPolicyData,
-    /**
-     * The identity policy evaluation may see for this request: `identity`
-     * when the caller's scopes include `global`, none otherwise. It is what
-     * the grants are loaded for, so a scope-restricted caller, whose
-     * evaluation `decorate` keeps identity-free, never pays for (or fails on)
-     * a grant load nothing would read.
-     */
-    policyIdentity?: IdentityPolicyData,
     /**
      * Wrap the evaluator the build composes, so the caller's own request rules
      * apply to it. REQUIRED rather than defaulted: the one rule that matters
@@ -96,14 +89,6 @@ export type AuthorizationCheckRequest = {
      * `global`, and a default would make forgetting it fail open.
      */
     decorate: (evaluator: IPermissionEvaluator) => IPermissionEvaluator,
-    /**
-     * The grants an identity holds for this request, the source every gate of
-     * the request reads (#3597), so a verdict cannot disagree with the gate
-     * that would decide the same call. REQUIRED for the same reason as
-     * `decorate`: a default would resolve grants the request's token does not
-     * carry.
-     */
-    grants: (identity: IdentityPolicyData) => Promise<PermissionPolicyBinding[]>,
 };
 
 export type AuthorizationCheckResult = {

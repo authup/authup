@@ -25,7 +25,7 @@ import {
 } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import { buildAuthorizationCheck } from '../../../../src/core/authorization/check.ts';
-import type { PermissionPolicies } from '../../../../src/core/authorization/types.ts';
+import type { AuthorizationCheckRequest, PermissionPolicies } from '../../../../src/core/authorization/types.ts';
 import { FakeAuthorizationCatalogRepository } from '../helpers/fake-authorization-catalog-repository.ts';
 import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permission-provider.ts';
 
@@ -77,13 +77,12 @@ const identity : IdentityPolicyData = {
 };
 
 /**
- * What `RequestPermissionEvaluator` does for a request, both halves: it asserts
- * the identity the REQUEST was resolved as, and REMOVES the key, and the
- * grants it carries with it, when the caller's scopes withhold it. The
- * removal is what a spec passing `undefined` models, and modelling only the
- * attach would let this spec pass while the production wrapper answered a
- * scope-restricted bearer as a fully-scoped one. The grants the build placed
- * are kept on the attach: the production wrapper places the same ones.
+ * What `RequestPermissionEvaluator` does for a request, both halves: it places
+ * the identity the REQUEST was resolved as, with its grants, and REMOVES the
+ * key when the caller's scopes withhold it. The removal is what a spec passing
+ * `undefined` models, and modelling only the attach would let this spec pass
+ * while the production wrapper answered a scope-restricted bearer as a
+ * fully-scoped one.
  */
 function decorateWith(value?: IdentityPolicyData) {
     return (evaluator: IPermissionEvaluator) : IPermissionEvaluator => {
@@ -95,10 +94,7 @@ function decorateWith(value?: IdentityPolicyData) {
             }
 
             const data = ctx.data || new PolicyData();
-            const placed = data.has(BuiltInPolicyType.IDENTITY) ?
-                data.get<IdentityPolicyData>(BuiltInPolicyType.IDENTITY) :
-                undefined;
-            data.set(BuiltInPolicyType.IDENTITY, { ...value, grants: placed?.grants });
+            data.set(BuiltInPolicyType.IDENTITY, value);
 
             return { ...ctx, data };
         };
@@ -111,6 +107,22 @@ function decorateWith(value?: IdentityPolicyData) {
             compile: (ctx) => evaluator.compile(ctx as any),
         };
     };
+}
+
+/**
+ * A caller whose scopes let policies see its identity: the controller loads
+ * its grants onto it, and the request wrapper places that same identity.
+ */
+async function visible(
+    ctx: ReturnType<typeof setup>,
+    value: IdentityPolicyData = identity,
+) : Promise<Pick<AuthorizationCheckRequest, 'identity' | 'decorate'>> {
+    const withGrants = {
+        ...value,
+        grants: await ctx.identityPermissionProvider.getFor(value),
+    };
+
+    return { identity: withGrants, decorate: decorateWith(withGrants) };
 }
 
 function grant(name: string, realmScope: `${RealmScope}`) : PermissionPolicyBinding {
@@ -141,42 +153,11 @@ describe('core/authorization/check', () => {
             [grant('user_update', RealmScope.OWN_OR_NULL)],
         );
 
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
+        const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
         expect(result).toEqual([
             { name: 'user_update', realms: [REALM_ID, null] },
         ]);
-    });
-
-    /**
-     * The grant load is the one failure a verdict cannot be derived from, and
-     * it is indistinguishable from a denial by the time it reaches the loop:
-     * `PolicyEngine.evaluate` flattens every evaluator throw into issues and
-     * `PermissionEvaluator` re-raises those as a `PermissionError`. Answered as
-     * one it becomes an authoritative empty set under a 200, which the kit
-     * memoizes by the introspection's subject, scope and grants -- none of
-     * which a database hiccup moves -- so one bad read gates a console closed
-     * for the rest of the document's life.
-     */
-    it('raises a failed grant load rather than answering an empty verdict set', async () => {
-        const ctx = setup(
-            [definition('user_update'), definition('user_read')],
-            [grant('user_update', RealmScope.OWN_OR_NULL)],
-        );
-
-        const error = new Error('ECONNREFUSED: the database is down');
-
-        await expect(buildAuthorizationCheck(ctx, {
-            identity,
-            grants: () => Promise.reject(error),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        })).rejects.toThrow(error);
     });
 
     // The decorator loads the request's grants itself, inside the matrix. A
@@ -196,22 +177,14 @@ describe('core/authorization/check', () => {
 
         await expect(buildAuthorizationCheck(ctx, {
             identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: () => failing,
         })).rejects.toThrow(error);
     });
 
-    // A decorator asserting another identity than the one the grants were
-    // loaded for must not evaluate that identity with them.
     it('answers the own realm alone for an own grant', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
+        const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
         expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
     });
@@ -226,11 +199,8 @@ describe('core/authorization/check', () => {
         );
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
+            ...await visible(ctx),
             realms: [FOREIGN_REALM_ID],
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
         });
 
         expect(result).toEqual([{ name: 'realm_read', realms: [FOREIGN_REALM_ID] }]);
@@ -239,12 +209,7 @@ describe('core/authorization/check', () => {
     it('omits a permission reaching none of the requested realms', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.NONE)]);
 
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
+        const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
         expect(result).toEqual([]);
     });
@@ -253,11 +218,8 @@ describe('core/authorization/check', () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
+            ...await visible(ctx),
             names: ['user_update', 'not_a_permission'],
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
         });
 
         expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
@@ -288,12 +250,7 @@ describe('core/authorization/check', () => {
 
         const ctx = setup([identityOnly], []);
 
-        const { permissions: held } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
+        const { permissions: held } = await buildAuthorizationCheck(ctx, await visible(ctx));
         expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
 
         // the same tree denies an identity the policy does not admit, which is
@@ -306,12 +263,7 @@ describe('core/authorization/check', () => {
             clientId: 'c641912c-21e5-4cb4-84b6-169e2b2bb002',
         };
 
-        const { permissions: denied } = await buildAuthorizationCheck(ctx, {
-            identity: clientIdentity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: clientIdentity,
-            decorate: decorateWith(clientIdentity),
-        });
+        const { permissions: denied } = await buildAuthorizationCheck(ctx, { ...await visible(ctx, clientIdentity) });
         expect(denied).toEqual([]);
     });
 
@@ -349,7 +301,6 @@ describe('core/authorization/check', () => {
         const { permissions: held } = await buildAuthorizationCheck(ctx, {
             identity,
             realms: RealmScope.OWN,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
             decorate: decorateWith(undefined),
         });
 
@@ -361,7 +312,6 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             identity,
-            grants: () => Promise.reject(new Error('a withheld identity loads no grants')),
             decorate: decorateWith(undefined),
         });
 
@@ -372,11 +322,8 @@ describe('core/authorization/check', () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.OWN_OR_NULL)]);
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
+            ...await visible(ctx),
             realms: RealmScope.OWN,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
         });
 
         expect(result).toEqual([{ name: 'user_read', realms: [REALM_ID] }]);
@@ -386,11 +333,8 @@ describe('core/authorization/check', () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
+            ...await visible(ctx),
             realms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
         });
 
         expect(result).toEqual([
@@ -412,67 +356,22 @@ describe('core/authorization/check', () => {
             ],
         );
 
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
+        const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
         expect(result.map((entry) => entry.name)).toEqual(['user_read']);
     });
 
-    it('loads the identity grants exactly once for the whole batch', async () => {
-        const ctx = setup(
-            [definition('a_read'), definition('b_read'), definition('c_read')],
-            [
-                grant('a_read', RealmScope.ANY),
-                grant('b_read', RealmScope.ANY),
-                grant('c_read', RealmScope.ANY),
-            ],
-        );
-
-        let loads = 0;
-        const provider = ctx.identityPermissionProvider;
-        const inner = provider.getFor.bind(provider);
-        provider.getFor = async (value: IdentityPolicyData) => {
-            loads += 1;
-
-            return inner(value);
-        };
-
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith(identity),
-        });
-
-        expect(result).toHaveLength(3);
-        expect(loads).toEqual(1);
-    });
 
     it('answers nothing when the identity has no realm to resolve own against', async () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity: {
-                ...identity, 
-                realmId: null, 
-                realmName: null, 
-            },
-            realms: RealmScope.OWN,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: {
-                ...identity, 
-                realmId: null, 
-                realmName: null, 
-            },
-            decorate: decorateWith({
-                ...identity, 
-                realmId: null, 
-                realmName: null, 
+            ...await visible(ctx, {
+                ...identity,
+                realmId: null,
+                realmName: null,
             }),
+            realms: RealmScope.OWN,
         });
 
         expect(result).toEqual([]);
@@ -498,12 +397,7 @@ describe('core/authorization/check', () => {
         it('reports no expiry when no evaluated verdict depends on the clock', async () => {
             const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.OWN_OR_NULL)]);
 
-            const result = await buildAuthorizationCheck(ctx, {
-                identity,
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            });
+            const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
             expect(result.permissions).toHaveLength(1);
             expect(result.expiresAt).toBeUndefined();
@@ -518,12 +412,7 @@ describe('core/authorization/check', () => {
                 [grant('user_read', RealmScope.OWN_OR_NULL)],
             );
 
-            const result = await buildAuthorizationCheck(ctx, {
-                identity,
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            });
+            const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
             expect(result.permissions).toEqual([]);
             expect(result.expiresAt).toEqual(at(8));
@@ -538,12 +427,7 @@ describe('core/authorization/check', () => {
                 [grant('user_read', RealmScope.OWN_OR_NULL)],
             );
 
-            const result = await buildAuthorizationCheck(ctx, {
-                identity,
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            });
+            const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
             expect(result.permissions).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
             // the minute after the end: the evaluator compares at minute precision
@@ -565,7 +449,6 @@ describe('core/authorization/check', () => {
 
             const result = await buildAuthorizationCheck(ctx, {
                 realms: [null],
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
                 decorate: decorateWith(undefined),
             });
 
@@ -582,12 +465,7 @@ describe('core/authorization/check', () => {
                 [grant('user_update', RealmScope.OWN_OR_NULL)],
             );
 
-            const result = await buildAuthorizationCheck(ctx, {
-                identity,
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            });
+            const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
             expect(result.permissions).toEqual([]);
             expect(result.expiresAt).toBeUndefined();
@@ -604,12 +482,7 @@ describe('core/authorization/check', () => {
                 [],
             );
 
-            const result = await buildAuthorizationCheck(ctx, {
-                identity,
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            });
+            const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
             expect(result.permissions).toEqual([]);
             expect(result.expiresAt).toEqual(at(8));
@@ -623,28 +496,11 @@ describe('core/authorization/check', () => {
 
             const result = await buildAuthorizationCheck(ctx, {
                 realms: [null],
-                grants: (value) => ctx.identityPermissionProvider.getFor(value),
                 decorate: decorateWith(undefined),
             });
 
             expect(result.permissions).toEqual([]);
             expect(result.expiresAt).toEqual(at(8));
-        });
-
-        it('raises a failed grant load met while deciding whether a denied pair expires', async () => {
-            vi.useFakeTimers({ toFake: ['Date'] });
-            vi.setSystemTime(at(6));
-
-            // the time policy denies before the binding child loads the grants
-            const ctx = setup([[definition('user_read')[0], [officeHours, systemDefault]]], []);
-            const error = new Error('ECONNREFUSED: the database is down');
-
-            await expect(buildAuthorizationCheck(ctx, {
-                identity,
-                grants: () => Promise.reject(error),
-                policyIdentity: identity,
-                decorate: decorateWith(identity),
-            })).rejects.toThrow(error);
         });
     });
 });

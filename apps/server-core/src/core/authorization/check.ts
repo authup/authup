@@ -110,9 +110,9 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
  * login.
  *
  * So the definitions are read ONCE in bulk through the same `findDefinitions`
- * the catalog uses and served from memory, and the caller's grants are loaded
- * once, up front, and handed to every evaluation as policy data. Two bulk
- * reads plus one grant load, and the rest is in memory.
+ * the catalog uses and served from memory, and the caller's grants, loaded
+ * once by the controller, ride on its identity into every evaluation. Two
+ * bulk reads plus one grant load, and the rest is in memory.
  *
  * Only GLOBAL definitions are evaluated, because that is what every gate in
  * this process evaluates: a request resolves a permission with a null realm
@@ -175,22 +175,9 @@ export async function buildAuthorizationCheck(
         return { permissions: [] };
     }
 
-    // Loaded before the matrix rather than by the engine, because a failed
-    // load is the one failure a verdict cannot be derived from: inside the
-    // engine it would be flattened into a denial, and the route would answer
-    // an authoritative empty set that the kit memoizes for the rest of the
-    // document's life. Thrown from here, it fails the request, and the kit
-    // asks again on its next resolve. Loaded for the POLICY identity only: a
-    // caller whose scopes withhold its identity from evaluation holds no
-    // grant a verdict could read.
-    let grants : PermissionPolicyBinding[] | undefined;
-    if (request.policyIdentity) {
-        try {
-            grants = await request.grants(request.policyIdentity);
-        } catch (e) {
-            throw normalizeError(e);
-        }
-    }
+    // Present only when policies may see the identity: a caller whose scopes
+    // withhold it holds no grant a verdict could read.
+    const grants = request.identity?.grants;
 
     const policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
     policyEngine.registerEvaluator(
@@ -238,25 +225,10 @@ export async function buildAuthorizationCheck(
             try {
                 await evaluator.preEvaluate({
                     name,
-                    data: definePolicyData({
-                        // Every policy in the tree that reads the identity gets
-                        // it, not only the permission-binding child: an
-                        // `identity` or attribute-mode `realmMatch` policy bound
-                        // to a definition is evaluated here exactly as a request
-                        // evaluates it. `decorate` re-asserts the key from the
-                        // REQUEST, and removes it when the caller's scopes
-                        // withhold it, so this can widen nothing: it is the
-                        // identity the caller was resolved as or none at all.
-                        ...(grants && request.policyIdentity ?
-                            {
-                                [BuiltInPolicyType.IDENTITY]: {
-                                    ...request.policyIdentity,
-                                    grants,
-                                },
-                            } :
-                            {}),
-                        [BuiltInPolicyType.REALM_MATCH]: realm,
-                    }),
+                    // The identity, with its grants, is placed by `decorate`,
+                    // which asserts the one the request was resolved as, or
+                    // none when the caller's scopes withhold it.
+                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realm }),
                     options: { transitions: pairTransitions },
                 });
 
