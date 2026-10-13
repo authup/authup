@@ -116,9 +116,9 @@ describe('OAuth2RefreshTokenGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId, 
-                active: true, 
+                id: userId,
+                realmId,
+                active: true,
             } as User,
         });
     });
@@ -128,9 +128,9 @@ describe('OAuth2RefreshTokenGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId: randomUUID(), 
-                active: true, 
+                id: userId,
+                realmId: randomUUID(),
+                active: true,
             } as User,
         });
 
@@ -145,9 +145,9 @@ describe('OAuth2RefreshTokenGrant', () => {
         identityResolver.setIdentity({
             type: 'user',
             data: {
-                id: userId, 
-                realmId, 
-                active: false, 
+                id: userId,
+                realmId,
+                active: false,
             } as User,
         });
 

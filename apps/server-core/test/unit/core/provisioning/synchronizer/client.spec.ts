@@ -213,9 +213,9 @@ describe('core/provisioning/synchronizer/client', () => {
 
     it('should bind no role to an existing client under createOnly', async () => {
         roleRepository.seed({
-            name: 'admin', 
-            realmId: null, 
-            clientId: null, 
+            name: 'admin',
+            realmId: null,
+            clientId: null,
         });
         clientRepository.seed({
             name: 'gitops',
@@ -234,9 +234,9 @@ describe('core/provisioning/synchronizer/client', () => {
 
     it('should bind the declared role to a client it creates', async () => {
         const role = roleRepository.seed({
-            name: 'admin', 
-            realmId: null, 
-            clientId: null, 
+            name: 'admin',
+            realmId: null,
+            clientId: null,
         });
 
         await synchronizer.synchronize({

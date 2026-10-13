@@ -177,7 +177,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareBody: {
             type: middlewareType,
             default: true,
-            description: 'Enable the body-parsing middleware, or pass its options.',
+            description: 'Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 10mb; an options object keeps that limit for each parser it does not disable or give a limit of its own.',
         },
         middlewareCors: {
             type: middlewareType,
@@ -202,7 +202,28 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         middlewareRateLimit: {
             type: middlewareType,
             default: true,
-            description: 'Enable the rate-limit middleware, or pass its options.',
+            description: 'Enable the rate-limit middleware, or pass its options. Before authentication each source address may cause 300 failed authentications a minute (a wrong password, client secret or forged token answered with 401; an expired or revoked token and a request without credentials are not counted); afterwards an authenticated request counts against its identity and an anonymous one against its address, within the budgets rateLimitAnonymousMax, rateLimitUserMax and rateLimitClientMax. The options apply to the second stage; a numeric max among them replaces all three budgets.',
+        },
+        rateLimitAnonymousMax: {
+            type: z.number().int().positive(),
+            default: 1200,
+            description: 'Requests per minute an anonymous request may make, counted per source address. A sign-in is anonymous until it succeeds, so raise this when many users share one address (a hospital or an office behind one NAT).',
+            env: EnvironmentVariable.RATE_LIMIT_ANONYMOUS_MAX,
+            readEnv: readEnvInt,
+        },
+        rateLimitUserMax: {
+            type: z.number().int().positive(),
+            default: 6000,
+            description: 'Requests per minute an authenticated user may make, counted per user.',
+            env: EnvironmentVariable.RATE_LIMIT_USER_MAX,
+            readEnv: readEnvInt,
+        },
+        rateLimitClientMax: {
+            type: z.number().int().positive(),
+            default: 300_000,
+            description: 'Requests per minute an authenticated client may make, counted per client.',
+            env: EnvironmentVariable.RATE_LIMIT_CLIENT_MAX,
+            readEnv: readEnvInt,
         },
         middlewareSwagger: {
         // a plain boolean, unlike its siblings: the Swagger mount takes no

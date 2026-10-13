@@ -19,6 +19,7 @@ import {
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
+import { isUUID } from '@authup/kit';
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { useAlertDialog, useToast } from '@vuecs/overlays';
@@ -127,7 +128,9 @@ export default defineComponent({
         const consumeReturnParams = async () => {
             const handle = typeof route.query.linkHandle === 'string' ? route.query.linkHandle : undefined;
             const linkError = typeof route.query.linkError === 'string' ? route.query.linkError : undefined;
-            const providerId = typeof route.query.provider === 'string' ? route.query.provider : undefined;
+            const providerId = typeof route.query.provider === 'string' && isUUID(route.query.provider) ?
+                route.query.provider :
+                undefined;
             if (!handle && !linkError) {
                 return;
             }

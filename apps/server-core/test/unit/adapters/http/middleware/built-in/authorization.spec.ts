@@ -103,9 +103,9 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
         };
 
         const session = await suite.sessionManager.create({
-            sub: user.id, 
-            subKind: IdentityType.USER, 
-            realmId, 
+            sub: user.id,
+            subKind: IdentityType.USER,
+            realmId,
         });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
@@ -146,14 +146,14 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
 
         const realmId = randomUUID();
         const other = {
-            id: randomUUID(), 
-            name: 'other', 
-            realmId, 
+            id: randomUUID(),
+            name: 'other',
+            realmId,
         } as User;
         const session = await suite.sessionManager.create({
-            sub: randomUUID(), 
-            subKind: IdentityType.USER, 
-            realmId, 
+            sub: randomUUID(),
+            subKind: IdentityType.USER,
+            realmId,
         });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
@@ -181,9 +181,9 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             active: true,
         } as User;
         const session = await suite.sessionManager.create({
-            sub: foreign.id, 
-            subKind: IdentityType.USER, 
-            realmId, 
+            sub: foreign.id,
+            subKind: IdentityType.USER,
+            realmId,
         });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
@@ -211,9 +211,9 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             active: true,
         } as User;
         const session = await suite.sessionManager.create({
-            sub: user.id, 
-            subKind: IdentityType.USER, 
-            realmId: randomUUID(), 
+            sub: user.id,
+            subKind: IdentityType.USER,
+            realmId: randomUUID(),
         });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
@@ -263,9 +263,9 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
         } as User;
 
         const session = await suite.sessionManager.create({
-            sub: user.id, 
-            subKind: IdentityType.USER, 
-            realmId, 
+            sub: user.id,
+            subKind: IdentityType.USER,
+            realmId,
         });
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,

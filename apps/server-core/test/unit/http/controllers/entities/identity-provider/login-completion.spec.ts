@@ -403,15 +403,12 @@ describe('identity-provider login completion', () => {
 
         // the session was created for the pending login's short window and
         // has to outlive it once the login completed
-        const { data: sessions } = await suite.client.session.getMany({
-            filters: { subKind: 'user' },
-            pagination: { limit: 50 },
-        });
-        const session = sessions
-            .filter((row) => row.authMethod === 'ext')
-            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
+        const grant = await response.json();
+        const { data: session } = await suite.client.session.getOne(
+            decodeJWTPayload(grant.access_token).session_id,
+        );
 
-        expect(session).toBeDefined();
+        expect(session.authMethod).toEqual('ext');
         expect(new Date(session.expiresAt).getTime())
             .toBeGreaterThan(Date.now() + (10 * 60 * 1000));
     });

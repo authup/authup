@@ -118,6 +118,11 @@ export type Options = {
      */
     cookiePath?: string,
     /**
+     * Mark the store cookies `Secure`. See the store install option of the
+     * same name.
+     */
+    cookieSecure?: boolean,
+    /**
      * Authenticate on the opaque, `HttpOnly` session cookie the server issues
      * instead of on a token pair held in JavaScript (plan 088). Opt-in, and
      * only usable by a surface served from the API's own origin — see the

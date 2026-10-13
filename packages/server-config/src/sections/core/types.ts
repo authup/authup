@@ -182,6 +182,29 @@ export type CoreConfig = {
     middlewareRateLimit: MiddlewareOptions,
 
     /**
+     * Requests per minute an anonymous request may make, counted per source
+     * address. Raise it when many users share one address (a hospital or an
+     * office behind one NAT), since a sign-in is anonymous until it succeeds.
+     *
+     * default: 1200
+     */
+    rateLimitAnonymousMax: number,
+
+    /**
+     * Requests per minute an authenticated user may make, counted per user.
+     *
+     * default: 6000
+     */
+    rateLimitUserMax: number,
+
+    /**
+     * Requests per minute an authenticated client may make, counted per client.
+     *
+     * default: 300000
+     */
+    rateLimitClientMax: number,
+
+    /**
      * Swagger middleware. The zod type behind this key is a plain boolean, so
      * options are typed but not accepted; the wider type is what every other
      * middleware key carries.

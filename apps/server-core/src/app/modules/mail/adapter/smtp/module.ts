@@ -16,7 +16,10 @@ export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
     if (typeof options === 'string') {
         transport = createTransport(options);
     } else if (options.connectionString) {
-        transport = createTransport(options.connectionString);
+        transport = createTransport({
+            url: options.connectionString,
+            tls: { rejectUnauthorized: options.rejectUnauthorized ?? true },
+        });
     } else {
         let auth: Record<string, any> | undefined;
         if (options.user && options.password) {
@@ -33,7 +36,7 @@ export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
             auth,
             secure: options.ssl,
             opportunisticTLS: options.starttls,
-            tls: { rejectUnauthorized: false },
+            tls: { rejectUnauthorized: options.rejectUnauthorized ?? true },
         });
     }
 

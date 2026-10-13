@@ -5,10 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { StoreAuthStatus, provideStoreFactory } from '@authup/client-web-kit';
+import {
+    StoreAuthStatus,
+    clearAuthorizationRequest,
+    provideStoreFactory,
+    saveAuthorizationRequest,
+} from '@authup/client-web-kit';
 import type { RouteLocationNormalized } from 'vue-router';
 import { createApp, ref } from 'vue';
 import {
+    afterEach,
+    beforeEach,
     describe,
     expect,
     it,
@@ -58,11 +65,52 @@ function createInterceptor(overrides: Partial<StoreStub> = {}) {
     return { interceptor: new RoutingInterceptor(nuxtApp), store };
 }
 
-// No sessionStorage in this environment, so `loadAuthorizationRequest` returns
-// undefined throughout. That is deliberate: the destination is supposed to come
-// off the callback URL now, so these cases must pass with no stored request.
+// The saved request carries no destination: the destination comes off the
+// callback URL, so these cases must land where the URL says.
 describe('RoutingInterceptor', () => {
     describe('post-exchange destination', () => {
+        beforeEach(() => {
+            const storage = new Map<string, string>();
+            vi.stubGlobal('sessionStorage', {
+                getItem: (key: string) => storage.get(key) ?? null,
+                setItem: (key: string, value: string) => storage.set(key, value),
+                removeItem: (key: string) => storage.delete(key),
+            });
+
+            saveAuthorizationRequest({
+                state: 'the-state',
+                code_verifier: 'the-verifier',
+                redirect_uri: 'http://app.test/login/callback',
+                client_id: 'the-client',
+                realm_id: 'the-realm',
+            });
+        });
+
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        it('should drop a code when no request was saved', async () => {
+            const { interceptor, store } = createInterceptor();
+            clearAuthorizationRequest();
+
+            const result = await interceptor.execute(
+                createRoute({
+                    path: '/login/callback',
+                    query: {
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users',
+                    },
+                }),
+                createRoute({ path: '/' }),
+            );
+
+            expect(store.exchangeAuthorizationCode).not.toHaveBeenCalled();
+            expect(result?.path).toEqual('/login/callback');
+            expect(result?.query).toEqual({});
+        });
+
         it('should land on the destination carried by the callback query', async () => {
             const { interceptor, store } = createInterceptor();
 
@@ -88,7 +136,11 @@ describe('RoutingInterceptor', () => {
             const result = await interceptor.execute(
                 createRoute({
                     path: '/login/callback',
-                    query: { code: 'the-code', redirect: '/users?page=2#row-7' },
+                    query: {
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users?page=2#row-7',
+                    },
                 }),
                 createRoute({ path: '/' }),
             );
@@ -104,7 +156,11 @@ describe('RoutingInterceptor', () => {
             const result = await interceptor.execute(
                 createRoute({
                     path: '/login/callback',
-                    query: { code: 'the-code', redirect: '/users?tag=a&tag=b' },
+                    query: {
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users?tag=a&tag=b',
+                    },
                 }),
                 createRoute({ path: '/' }),
             );

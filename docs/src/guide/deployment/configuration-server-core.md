@@ -35,7 +35,7 @@ deploying to production: the examples below carry placeholders, never copy a
 credential out of documentation. The admin password is applied only when the
 admin user is created: to change it on an existing deployment, also set
 `userAdminPasswordReset` (`USER_ADMIN_PASSWORD_RESET=true`). A production
-process still running the default admin password logs a warning on startup.
+process configured with the default admin password logs a warning on startup.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
@@ -353,9 +353,13 @@ export default {
          * Security: with `true` (the default), a DIRECT client can spoof
          * its IP via X-Forwarded-For: login-throttle keys, audit events,
          * the access log, and the session inventory then record the forged
-         * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
-         * proxy) when the listener is reachable without a proxy or exact
-         * attribution matters. String forms are canonicalized: "1" means
+         * value. The rate limiter keys on the same address, so such a
+         * client can also spread its requests over many keys, and behind a
+         * same-host proxy a forwarded 127.0.0.1 is treated as the
+         * deployment's own traffic and not counted at all. Pin the actual
+         * proxy (e.g. 1, or loopback for a same-host proxy) when the
+         * listener is reachable without a proxy or exact attribution
+         * matters. String forms are canonicalized: "1" means
          * one trusted hop (never trust-all), "true"/"false" parse as
          * booleans, anything else is a comma-separated allowlist. Allowlist
          * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
@@ -374,14 +378,54 @@ export default {
          * File-only (no environment variables).
          * default: true (each)
          */
-        middlewareBody: true,       // request body parsing
+        middlewareBody: true,       // request body parsing; caps json and
+                                    // url-encoded bodies at 10mb, measured
+                                    // after decompression. An options object
+                                    // is applied per parser on top of that:
+                                    // both stay on at 10mb unless it sets one
+                                    // to false or names its own `limit`
+                                    // ({ json: { limit: '20mb' } }).
         middlewareCookie: true,     // cookie parsing
         middlewareCors: true,       // CORS (reflects any origin by default;
                                     // pass options for an explicit allowlist)
         middlewarePrometheus: true, // /metrics endpoint
         middlewareQuery: true,      // query-string parsing
-        middlewareRateLimit: true,  // rate limiting
+        middlewareRateLimit: true,  // rate limiting in two stages: each
+                                    // source address may cause 300 failed
+                                    // authentications a minute before
+                                    // authentication (a wrong password,
+                                    // client secret or forged token; an
+                                    // expired token is not one); afterwards a request
+                                    // counts against its identity or,
+                                    // anonymous, its address, within the
+                                    // three budgets below. Options configure
+                                    // the second stage; a numeric `max`
+                                    // there replaces all three budgets.
         middlewareSwagger: true,    // /docs endpoint
+
+        /**
+         * Requests per minute an anonymous request may make, counted per
+         * source address. A sign-in is anonymous until it succeeds, so raise
+         * this when many users share one address (a hospital or an office
+         * behind one NAT); the user and client budgets stay as they are.
+         * env: RATE_LIMIT_ANONYMOUS_MAX
+         * default: 1200
+         */
+        rateLimitAnonymousMax: 1200,
+
+        /**
+         * Requests per minute an authenticated user may make, per user.
+         * env: RATE_LIMIT_USER_MAX
+         * default: 6000
+         */
+        rateLimitUserMax: 6000,
+
+        /**
+         * Requests per minute an authenticated client may make, per client.
+         * env: RATE_LIMIT_CLIENT_MAX
+         * default: 300000
+         */
+        rateLimitClientMax: 300000,
 
         // ----------------------------------------------------
 

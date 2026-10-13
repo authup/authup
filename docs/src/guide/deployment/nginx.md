@@ -53,6 +53,16 @@ server {
 }
 ```
 
+## HTTPS
+
+Serve the public address over https only, and let the proxy send
+`Strict-Transport-Security` on every response, for example with
+`add_header Strict-Transport-Security "max-age=31536000" always;` in the
+https `server` block. Authup does not set the header itself. The hosted login
+pages keep the session tokens in cookies, which are marked `Secure` whenever
+they are written on an https page; the header is what stops a browser from
+contacting the host over plain http in the first place.
+
 ## Sub-path deployment
 
 Authup can live under a path prefix of a larger site. Strip the prefix in the

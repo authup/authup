@@ -66,14 +66,23 @@ export class DomainEventPublisher implements IDomainEventPublisher {
             this.logger.debug(`Publishing event ${buildEventFullName(ctx.content.type, ctx.content.event)}...`);
         }
 
-        const handlers = this.handlers.values();
-        while (true) {
-            const it = handlers.next();
-            if (it.done) {
-                return;
+        // A failing handler (the redis bus being down) must not keep the
+        // later ones (the entity audit mirror) from running.
+        let error : unknown;
+        let failed = false;
+        for (const handler of this.handlers) {
+            try {
+                await handler.handle(ctx);
+            } catch (e) {
+                if (!failed) {
+                    failed = true;
+                    error = e;
+                }
             }
+        }
 
-            await it.value.handle(ctx);
+        if (failed) {
+            throw error;
         }
     }
 }

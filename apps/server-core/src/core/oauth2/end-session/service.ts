@@ -167,9 +167,9 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         // Never revoke a session that does not belong to the hint's subject
         // and realm.
         if (!isTokenSession(session, {
-            sub, 
-            sub_kind: subKind as OAuth2TokenPayload['sub_kind'], 
-            realm_id: realmId, 
+            sub,
+            sub_kind: subKind as OAuth2TokenPayload['sub_kind'],
+            realm_id: realmId,
         })) {
             return false;
         }

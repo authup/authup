@@ -16,10 +16,10 @@ import {
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
 import {
-    createFakeClient, 
-    createFakeRealm, 
-    expectClientError, 
-    expectPropertiesEqualToSrc, 
+    createFakeClient,
+    createFakeRealm,
+    expectClientError,
+    expectPropertiesEqualToSrc,
     httpRequest,
 } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
