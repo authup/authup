@@ -39,14 +39,14 @@ describe('body middleware', () => {
     it('should refuse a json body above the default limit', async () => {
         const response = await httpRequest(suite, 'POST', '/authorization/check', {
             headers: { 'content-type': 'application/json' },
-            body: `[${' '.repeat(2 * 1024 * 1024)}]`,
+            body: `[${' '.repeat(11 * 1024 * 1024)}]`,
         });
 
         await expectBodyRefused(response);
     });
 
     it('should measure the limit on the decompressed body', async () => {
-        const decoded = Buffer.from(`[${' '.repeat(8 * 1024 * 1024)}]`);
+        const decoded = Buffer.from(`[${' '.repeat(12 * 1024 * 1024)}]`);
 
         const response = await httpRequest(suite, 'POST', '/authorization/check', {
             headers: {
@@ -60,7 +60,7 @@ describe('body middleware', () => {
     });
 
     it('should refuse a url-encoded body above the default limit', async () => {
-        const response = await httpRequest(suite, 'POST', '/authorization/check', { form: { padding: 'a'.repeat(2 * 1024 * 1024) } });
+        const response = await httpRequest(suite, 'POST', '/authorization/check', { form: { padding: 'a'.repeat(11 * 1024 * 1024) } });
 
         await expectBodyRefused(response);
     });

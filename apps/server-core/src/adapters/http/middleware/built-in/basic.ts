@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/kit';
 import type { Options } from '@routup/basic';
 import { basic } from '@routup/basic';
 import type { IApp } from 'routup';
@@ -16,15 +17,15 @@ export const BODY_OPTIONS_DEFAULT = {
 
 type BodyOptions = Exclude<Options['body'], boolean | undefined>;
 
-function withLimit<T extends BodyOptions['json'] | BodyOptions['urlEncoded']>(
-    input: T,
+function withLimit(
+    input: BodyOptions['json'] | BodyOptions['urlEncoded'],
     fallback: { limit: string },
 ) {
     if (input === false) {
         return false;
     }
 
-    if (typeof input === 'object' && input !== null) {
+    if (isObject(input)) {
         return { ...fallback, ...input };
     }
 
@@ -43,7 +44,7 @@ export function buildBodyOptions(input: boolean | Record<string, any> | undefine
         return false;
     }
 
-    if (typeof input !== 'object' || input === null) {
+    if (!isObject(input)) {
         return BODY_OPTIONS_DEFAULT;
     }
 
