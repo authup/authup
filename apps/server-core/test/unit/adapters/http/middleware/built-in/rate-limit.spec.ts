@@ -23,25 +23,42 @@ function createRequest(ip: string, headers?: Record<string, string>) {
     return Object.assign(new Request('http://server.test/authorize/info', { headers }), { ip });
 }
 
-// Both stages, with a stand-in for the authorization middleware between
-// them: an `x-user` header names the authenticated user. `max: 2` only
-// shortens the second stage's burst (the first counts failed
-// authentications alone, and these requests succeed); the mechanism is the
-// same at the real thresholds, and the caller-supplied value also proves the
-// default `skip` survives the merge.
-function createApp(options: ConstructorParameters<typeof App>[0] = {}) {
-    const app = new App(options);
+const BUDGETS = {
+    anonymous: 1200,
+    user: 6000,
+    client: 300_000,
+};
 
-    registerRateLimitMiddleware(app);
+// A stand-in for the authorization middleware: an `x-user` or `x-client`
+// header names the authenticated identity.
+function registerIdentityStandIn(app: App) {
     app.use(defineCoreHandler((event) => {
-        const id = event.request.headers.get('x-user');
-        if (id) {
-            setRequestIdentity(event, { type: 'user', data: { id, name: id } } as any);
+        const user = event.request.headers.get('x-user');
+        if (user) {
+            setRequestIdentity(event, { type: 'user', data: { id: user, name: user } } as any);
+        }
+
+        const client = event.request.headers.get('x-client');
+        if (client) {
+            setRequestIdentity(event, { type: 'client', data: { id: client, name: client } } as any);
         }
 
         return event.next();
     }));
-    registerIdentityRateLimitMiddleware(app, { max: 2 });
+}
+
+// Both stages, with the identity stand-in between them. `max: 2` only
+// shortens the second stage's burst (the first counts failed
+// authentications alone, and these requests succeed); the mechanism is the
+// same at the real thresholds, and the caller-supplied value also proves the
+// default `skip` survives the merge and that a numeric `max` replaces every
+// budget.
+function createApp(options: ConstructorParameters<typeof App>[0] = {}) {
+    const app = new App(options);
+
+    registerRateLimitMiddleware(app);
+    registerIdentityStandIn(app);
+    registerIdentityRateLimitMiddleware(app, BUDGETS, { max: 2 });
     app.get('/authorize/info', defineCoreHandler(() => 'ok'));
 
     return app;
@@ -236,5 +253,52 @@ describe('registerRateLimitMiddleware', () => {
         }
 
         expect(statuses.every((status) => status === 401)).toBeTruthy();
+    });
+});
+
+describe('registerIdentityRateLimitMiddleware', () => {
+    function createBudgetApp(budgets: typeof BUDGETS) {
+        const app = new App();
+
+        registerIdentityStandIn(app);
+        registerIdentityRateLimitMiddleware(app, budgets);
+        app.get('/authorize/info', defineCoreHandler(() => 'ok'));
+
+        return app;
+    }
+
+    async function count(app: App, headers: Record<string, string>, total: number) {
+        let passed = 0;
+        for (let i = 0; i < total; i++) {
+            if ((await app.fetch(createRequest('198.51.100.9', headers))).status === 200) {
+                passed++;
+            }
+        }
+
+        return passed;
+    }
+
+    it('should give anonymous requests, users and clients their own budget', async () => {
+        const app = createBudgetApp({
+            anonymous: 2, 
+            user: 3, 
+            client: 4, 
+        });
+
+        expect(await count(app, {}, 6)).toEqual(2);
+        expect(await count(app, { 'x-user': 'alice' }, 6)).toEqual(3);
+        expect(await count(app, { 'x-client': 'robot' }, 6)).toEqual(4);
+    });
+
+    it('should raise the anonymous budget alone', async () => {
+        const app = createBudgetApp({
+            anonymous: 5, 
+            user: 1, 
+            client: 1, 
+        });
+
+        // the users behind one address keep a budget of their own
+        expect(await count(app, {}, 6)).toEqual(5);
+        expect(await count(app, { 'x-user': 'alice' }, 3)).toEqual(1);
     });
 });

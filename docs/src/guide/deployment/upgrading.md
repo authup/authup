@@ -70,8 +70,12 @@ the ones that can break an existing setup come first.
   limited by the anonymous budget below. After authentication
   a request counts against its identity (users 6000, clients 300000 a minute)
   and an anonymous one against its address (1200 a minute), so users sharing
-  an address no longer share a budget. A `middlewareRateLimit` object
-  configures the second stage only.
+  an address no longer share a budget. The three budgets are configurable on
+  their own (`rateLimitAnonymousMax`, `rateLimitUserMax`,
+  `rateLimitClientMax`, env `RATE_LIMIT_*_MAX`); raise the anonymous one when
+  many users sign in from one address. A `middlewareRateLimit` object still
+  configures the second stage only, and a numeric `max` in it replaces all
+  three budgets, so prefer the dedicated keys.
 - **`USER_ADMIN_ENABLED`** must be a recognized boolean (an unrecognized value
   fails the start), and `false` now deactivates an existing default admin on
   the next start. Setting it back to `true` does not reactivate the admin:

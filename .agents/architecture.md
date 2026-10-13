@@ -1544,8 +1544,11 @@ API. The six page GETs became a stateless hop:
   the first no longer limits an anonymous request. Password guessing at `/token` answers 400, not 401, and
   is bounded by the anonymous per-address budget below and the login
   throttle. After authentication a request counts against its
-  identity (`user:<id>` 6000, `client:<id>` 300000) and an anonymous one
-  against its address (1200), so users sharing an address do not share a
+  identity (`user:<id>`, `client:<id>`) and an anonymous one against its
+  address, within `core.rateLimitUserMax` (6000), `rateLimitClientMax`
+  (300000) and `rateLimitAnonymousMax` (1200); a numeric `max` in
+  `core.middlewareRateLimit` replaces all three, which is why the budgets are
+  keys of their own, so users sharing an address do not share a
   budget. The address is the one `trustProxy` resolves, with a trailing port
   dropped: a proxy appends the NAT's per-connection source port, which
   identifies no user, and keeping it gave every connection a fresh bucket,
@@ -1556,7 +1559,7 @@ API. The six page GETs became a stateless hop:
   render counts against the console's ONE address at 1200/min, while the
   calls it makes with the visitor's own bearer count against that visitor.
   The composed `authup start` is loopback and skipped. A split deployment
-  under that load raises `core.middlewareRateLimit.max`; the real
+  under that load raises `core.rateLimitAnonymousMax`; the real
   fix is forwarding the visitor's address from the console services, which
   needs a trust contract they do not have yet.
 - **It is the ONE console that fetches server-side, so its API address is

@@ -396,11 +396,36 @@ export default {
                                     // authentication (a wrong password,
                                     // client secret or forged token; an
                                     // expired token is not one); afterwards a request
-                                    // counts against its identity (users
-                                    // 6000, clients 300000) or, anonymous,
-                                    // its address (1200). Options configure
-                                    // the second stage.
+                                    // counts against its identity or,
+                                    // anonymous, its address, within the
+                                    // three budgets below. Options configure
+                                    // the second stage; a numeric `max`
+                                    // there replaces all three budgets.
         middlewareSwagger: true,    // /docs endpoint
+
+        /**
+         * Requests per minute an anonymous request may make, counted per
+         * source address. A sign-in is anonymous until it succeeds, so raise
+         * this when many users share one address (a hospital or an office
+         * behind one NAT); the user and client budgets stay as they are.
+         * env: RATE_LIMIT_ANONYMOUS_MAX
+         * default: 1200
+         */
+        rateLimitAnonymousMax: 1200,
+
+        /**
+         * Requests per minute an authenticated user may make, per user.
+         * env: RATE_LIMIT_USER_MAX
+         * default: 6000
+         */
+        rateLimitUserMax: 6000,
+
+        /**
+         * Requests per minute an authenticated client may make, per client.
+         * env: RATE_LIMIT_CLIENT_MAX
+         * default: 300000
+         */
+        rateLimitClientMax: 300000,
 
         // ----------------------------------------------------
 

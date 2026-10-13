@@ -115,13 +115,32 @@ export function registerRateLimitMiddleware(router: IApp) {
     }));
 }
 
+export type IdentityRateLimitBudgets = {
+    /**
+     * Requests per window for an anonymous request, per source address.
+     */
+    anonymous: number,
+    /**
+     * Requests per window for an authenticated user.
+     */
+    user: number,
+    /**
+     * Requests per window for an authenticated client.
+     */
+    client: number,
+};
+
 /**
  * The second stage, mounted AFTER authorization: an authenticated request is
  * counted against its identity, so users sharing an address (an office
  * behind one NAT) no longer share a budget, and an anonymous one against its
- * address.
+ * address. A numeric `max` in the options replaces all three budgets.
  */
-export function registerIdentityRateLimitMiddleware(router: IApp, input?: OptionsInput) {
+export function registerIdentityRateLimitMiddleware(
+    router: IApp,
+    budgets: IdentityRateLimitBudgets,
+    input?: OptionsInput,
+) {
     let options : OptionsInput = {
         keyGenerator: (event) => {
             const identity = useRequestIdentity(event);
@@ -135,16 +154,16 @@ export function registerIdentityRateLimitMiddleware(router: IApp, input?: Option
         max(event) {
             const identity = useRequestIdentity(event);
             if (!identity) {
-                return 60 * 20; // 20 req. p. sec
+                return budgets.anonymous;
             }
 
             switch (identity.type) {
                 case 'client': {
-                    return 60 * 5_000; // 1000 req p. sec
+                    return budgets.client;
                 }
                 case 'user':
                 default: {
-                    return 60 * 100; // 100 req p. sec
+                    return budgets.user;
                 }
             }
         },

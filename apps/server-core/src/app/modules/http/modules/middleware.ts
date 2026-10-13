@@ -134,7 +134,15 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        registerIdentityRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
+        registerIdentityRateLimitMiddleware(
+            router,
+            {
+                anonymous: config.rateLimitAnonymousMax,
+                user: config.rateLimitUserMax,
+                client: config.rateLimitClientMax,
+            },
+            this.transformBoolToEmptyObject(config.middlewareRateLimit),
+        );
     }
 
     async mountSwagger(router: IApp, container: IContainer): Promise<void> {
