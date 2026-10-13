@@ -16,6 +16,7 @@ import { PolicyEngine } from '../../engine';
 import { PolicyDataKey } from '../../data';
 import type { PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
+import { PolicyError, isPolicyError } from '../../error';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants';
 import { IdentityPolicyEvaluator } from '../identity';
@@ -80,16 +81,22 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
     }
 
     /**
-     * The bindings of the grants in the bag, or the issue code refusing them:
-     * absent grants are missing data, grants of another shape or of another
-     * subject than `identity` are invalid. Both settle the evaluation false.
+     * The bindings of the grants in the bag. Absent grants are missing data,
+     * grants of another shape or of another subject than `identity` are
+     * invalid; both throw a PolicyError carrying the refusing issue.
      */
     accessGrants(
         ctx: PolicyEvaluationContext,
         identity: { type: string, id: string },
-    ) : PermissionPolicyBinding[] | PolicyIssueCode {
+    ) : PermissionPolicyBinding[] {
         if (!ctx.data.has(PolicyDataKey.GRANTS)) {
-            return PolicyIssueCode.DATA_MISSING;
+            throw new PolicyError('The data property grants is missing', undefined, [
+                definePolicyIssueItem({
+                    code: PolicyIssueCode.DATA_MISSING,
+                    message: 'The data property grants is missing',
+                    path: ctx.path,
+                }),
+            ]);
         }
 
         const grants = ctx.data.get<Partial<IdentityGrants> | null>(PolicyDataKey.GRANTS);
@@ -101,7 +108,13 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             grants.identity.type !== identity.type ||
             grants.identity.id !== identity.id
         ) {
-            return PolicyIssueCode.DATA_INVALID;
+            throw new PolicyError('The data property grants does not hold the grants of the identity', undefined, [
+                definePolicyIssueItem({
+                    code: PolicyIssueCode.DATA_INVALID,
+                    message: 'The data property grants does not hold the grants of the identity',
+                    path: ctx.path,
+                }),
+            ]);
         }
 
         return grants.bindings;
@@ -137,20 +150,15 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             };
         }
 
-        const grants = this.accessGrants(ctx, identity);
-        if (!Array.isArray(grants)) {
-            return {
-                success: false,
-                issues: [
-                    definePolicyIssueItem({
-                        code: grants,
-                        message: grants === PolicyIssueCode.DATA_MISSING ?
-                            'The data property grants is missing' :
-                            'The data property grants does not hold the grants of the identity',
-                        path: ctx.path,
-                    }),
-                ],
-            };
+        let grants : PermissionPolicyBinding[];
+        try {
+            grants = this.accessGrants(ctx, identity);
+        } catch (e) {
+            if (isPolicyError(e)) {
+                return { success: false, issues: [...e.issues] };
+            }
+
+            throw e;
         }
 
         const identityBindings = grants.filter((item) => {
