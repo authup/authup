@@ -206,7 +206,7 @@
                             "additionalProperties": {}
                         }
                     ],
-                    "description": "Enable the body-parsing middleware, or pass its options.",
+                    "description": "Enable the body-parsing middleware, or pass its options. `true` caps json and url-encoded bodies at 10mb; an options object keeps that limit for each parser it does not disable or give a limit of its own.",
                     "default": true
                 },
                 "middlewareCors": {
@@ -286,8 +286,32 @@
                             "additionalProperties": {}
                         }
                     ],
-                    "description": "Enable the rate-limit middleware, or pass its options.",
+                    "description": "Enable the rate-limit middleware, or pass its options. Before authentication each source address may cause 300 failed authentications a minute (a wrong password, client secret or forged token answered with 401; an expired or revoked token and a request without credentials are not counted); afterwards an authenticated request counts against its identity and an anonymous one against its address, within the budgets rateLimitAnonymousMax, rateLimitUserMax and rateLimitClientMax. The options apply to the second stage; a numeric max among them replaces all three budgets.",
                     "default": true
+                },
+                "rateLimitAnonymousMax": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Requests per minute an anonymous request may make, counted per source address. A sign-in is anonymous until it succeeds, so raise this when many users share one address (a hospital or an office behind one NAT).",
+                    "default": 1200,
+                    "x-authup-env": "RATE_LIMIT_ANONYMOUS_MAX"
+                },
+                "rateLimitUserMax": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Requests per minute an authenticated user may make, counted per user.",
+                    "default": 6000,
+                    "x-authup-env": "RATE_LIMIT_USER_MAX"
+                },
+                "rateLimitClientMax": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Requests per minute an authenticated client may make, counted per client.",
+                    "default": 300000,
+                    "x-authup-env": "RATE_LIMIT_CLIENT_MAX"
                 },
                 "middlewareSwagger": {
                     "type": "boolean",
