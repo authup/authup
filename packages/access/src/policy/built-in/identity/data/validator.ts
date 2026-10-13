@@ -9,6 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 
+import type { PermissionPolicyBinding } from '../../../../permission/types';
 import type { IdentityPolicyData } from '../types.ts';
 
 export class PolicyIdentityDataValidator extends Container<IdentityPolicyData> {
@@ -45,6 +46,14 @@ export class PolicyIdentityDataValidator extends Container<IdentityPolicyData> {
                 z.uuid()
                     .or(z.null())
                     .or(z.undefined())
+                    .optional(),
+            ),
+        );
+
+        this.mount(
+            'grants',
+            createValidator(
+                z.array(z.custom<PermissionPolicyBinding>((input) => !!input && typeof input === 'object'))
                     .optional(),
             ),
         );

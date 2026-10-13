@@ -15,10 +15,8 @@ import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
-    PolicyDataKey,
     PolicyDefaultEvaluators,
     PolicyEngine,
-    defineIdentityGrants,
 } from '../../policy';
 import type {
     IPermissionEvaluator,
@@ -246,7 +244,6 @@ export async function createAuthorizationEvaluator(
             // the document proved no identity, so the caller may not supply
             // one either, nor grants to go with it
             data.delete(BuiltInPolicyType.IDENTITY);
-            data.delete(PolicyDataKey.GRANTS);
 
             return data;
         }
@@ -257,8 +254,8 @@ export async function createAuthorizationEvaluator(
             realmId: identity.realmId ?? undefined,
             realmName: identity.realmName ?? undefined,
             clientId: identity.clientId ?? null,
+            grants: bindings,
         });
-        data.set(PolicyDataKey.GRANTS, defineIdentityGrants(identity, bindings));
 
         return data;
     };

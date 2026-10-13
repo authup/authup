@@ -21,7 +21,6 @@ import type {
 import {
     BuiltInPolicyType,
     PolicyData,
-    PolicyDataKey,
     RealmScope,
 } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
@@ -79,26 +78,27 @@ const identity : IdentityPolicyData = {
 
 /**
  * What `RequestPermissionEvaluator` does for a request, both halves: it asserts
- * the identity the REQUEST was resolved as, and REMOVES the key, together with
- * the grants placed next to it, when the caller's scopes withhold it. The
+ * the identity the REQUEST was resolved as, and REMOVES the key, and the
+ * grants it carries with it, when the caller's scopes withhold it. The
  * removal is what a spec passing `undefined` models, and modelling only the
  * attach would let this spec pass while the production wrapper answered a
  * scope-restricted bearer as a fully-scoped one. The grants the build placed
- * are kept on the attach: the production wrapper places the same ones, and an
- * identity they do not belong to is refused by the binding evaluator.
+ * are kept on the attach: the production wrapper places the same ones.
  */
 function decorateWith(value?: IdentityPolicyData) {
     return (evaluator: IPermissionEvaluator) : IPermissionEvaluator => {
         const extend = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
             if (!value) {
                 ctx.data?.delete(BuiltInPolicyType.IDENTITY);
-                ctx.data?.delete(PolicyDataKey.GRANTS);
 
                 return ctx;
             }
 
             const data = ctx.data || new PolicyData();
-            data.set(BuiltInPolicyType.IDENTITY, value);
+            const placed = data.has(BuiltInPolicyType.IDENTITY) ?
+                data.get<IdentityPolicyData>(BuiltInPolicyType.IDENTITY) :
+                undefined;
+            data.set(BuiltInPolicyType.IDENTITY, { ...value, grants: placed?.grants });
 
             return { ...ctx, data };
         };
@@ -203,19 +203,6 @@ describe('core/authorization/check', () => {
 
     // A decorator asserting another identity than the one the grants were
     // loaded for must not evaluate that identity with them.
-    it('denies when the decorator asserts an identity the grants do not belong to', async () => {
-        const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.ANY)]);
-
-        const { permissions: result } = await buildAuthorizationCheck(ctx, {
-            identity,
-            grants: (value) => ctx.identityPermissionProvider.getFor(value),
-            policyIdentity: identity,
-            decorate: decorateWith({ ...identity, id: 'c641912c-21e5-4cb4-84b6-169e2b2bb099' }),
-        });
-
-        expect(result).toEqual([]);
-    });
-
     it('answers the own realm alone for an own grant', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 

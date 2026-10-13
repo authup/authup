@@ -13,15 +13,14 @@ import { aggregatePermissionPolicyBindings } from '../../../permission/helpers';
 import { RealmScope, normalizeRealmScope } from '../../../permission/realm-scope';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { PolicyEngine } from '../../engine';
-import { PolicyDataKey } from '../../data';
 import type { PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyError, isPolicyError } from '../../error';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants';
 import { IdentityPolicyEvaluator } from '../identity';
+import type { IdentityPolicyData } from '../identity';
 import { RealmMatchPolicyEvaluator } from '../realm-match';
-import type { IdentityGrants } from './types';
 import { PermissionBindingPolicyValidator } from './validator';
 
 function containsPermissionBinding(policy: PolicyWithType) : boolean {
@@ -55,11 +54,11 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
     }
 
     requires() : string[] {
-        // IDENTITY and GRANTS are deliberately NOT declared: a missing identity
-        // must stay a settled DATA_MISSING deny (fail-closed) so a scope-restricted
-        // or anonymous bearer still fails the pre-gate through system.default —
-        // pending would be permitted there. Missing grants are the same deny: an
-        // identity whose grants nobody supplied holds none we could prove.
+        // IDENTITY is deliberately NOT declared: a missing identity must stay a
+        // settled DATA_MISSING deny (fail-closed) so a scope-restricted or
+        // anonymous bearer still fails the pre-gate through system.default —
+        // pending would be permitted there. An identity without grants is the
+        // same deny: it holds none we could prove.
         return [BuiltInPolicyType.PERMISSION_BINDING];
     }
 
@@ -81,43 +80,24 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
     }
 
     /**
-     * The bindings of the grants in the bag. Absent grants are missing data,
-     * grants of another shape or of another subject than `identity` are
-     * invalid; both throw a PolicyError carrying the refusing issue.
+     * The grants the identity holds. An identity carrying none is missing
+     * data, which throws a PolicyError carrying the refusing issue.
      */
     accessGrants(
         ctx: PolicyEvaluationContext,
-        identity: { type: string, id: string },
+        identity: IdentityPolicyData,
     ) : PermissionPolicyBinding[] {
-        if (!ctx.data.has(PolicyDataKey.GRANTS)) {
-            throw new PolicyError('The data property grants is missing', undefined, [
+        if (!identity.grants) {
+            throw new PolicyError('The identity grants are missing', undefined, [
                 definePolicyIssueItem({
                     code: PolicyIssueCode.DATA_MISSING,
-                    message: 'The data property grants is missing',
+                    message: 'The identity grants are missing',
                     path: ctx.path,
                 }),
             ]);
         }
 
-        const grants = ctx.data.get<Partial<IdentityGrants> | null>(PolicyDataKey.GRANTS);
-        if (
-            !grants ||
-            typeof grants !== 'object' ||
-            !Array.isArray(grants.bindings) ||
-            !grants.identity ||
-            grants.identity.type !== identity.type ||
-            grants.identity.id !== identity.id
-        ) {
-            throw new PolicyError('The data property grants does not hold the grants of the identity', undefined, [
-                definePolicyIssueItem({
-                    code: PolicyIssueCode.DATA_INVALID,
-                    message: 'The data property grants does not hold the grants of the identity',
-                    path: ctx.path,
-                }),
-            ]);
-        }
-
-        return grants.bindings;
+        return identity.grants;
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {

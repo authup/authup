@@ -9,8 +9,6 @@ import type { PermissionPolicyBinding } from '@authup/access';
 import {
     BuiltInPolicyType,
     PolicyData,
-    PolicyDataKey,
-    defineIdentityGrants,
 } from '@authup/access';
 import type { Client, Identity } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
@@ -18,7 +16,6 @@ import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import type { IAppEvent } from 'routup';
 import { describe, expect, it } from 'vitest';
 import {
-    RequestIdentity,
     RequestPermissionEvaluator,
     setRequestGrantsResolver,
     setRequestIdentity,
@@ -68,8 +65,11 @@ describe('RequestPermissionEvaluator', () => {
 
         const ctx = base.evaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(true);
-        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
-        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(defineIdentityGrants({ type: 'client', id: 'c1' }, grants));
+        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
+            type: 'client', 
+            id: 'c1', 
+            grants, 
+        });
     });
 
     it('should fail the evaluation when the grants cannot be loaded', async () => {
@@ -116,15 +116,17 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.preEvaluate({
             name: 'test',
             data: new PolicyData({
-                [BuiltInPolicyType.IDENTITY]: { type: 'client', id: 'c1' },
-                [PolicyDataKey.GRANTS]: grants,
+                [BuiltInPolicyType.IDENTITY]: {
+                    type: 'client', 
+                    id: 'c1', 
+                    grants, 
+                },
                 [BuiltInPolicyType.REALM_MATCH]: null,
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
-        expect(ctx.data?.has(PolicyDataKey.GRANTS)).toBe(false);
         // only the identity is withheld; the rest of the caller's bag rides on
         expect(ctx.data?.has(BuiltInPolicyType.REALM_MATCH)).toBe(true);
     });
@@ -140,13 +142,19 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.preEvaluate({
             name: 'test',
             data: new PolicyData({
-                [BuiltInPolicyType.IDENTITY]: { type: 'user', id: 'someone-else' },
-                [PolicyDataKey.GRANTS]: defineIdentityGrants({ type: 'user', id: 'someone-else' }, []),
+                [BuiltInPolicyType.IDENTITY]: {
+                    type: 'user', 
+                    id: 'someone-else', 
+                    grants: [], 
+                }, 
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
-        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toBeInstanceOf(RequestIdentity);
-        expect(ctx.data?.get(PolicyDataKey.GRANTS)).toEqual(defineIdentityGrants({ type: 'client', id: 'c1' }, grants));
+        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
+            type: 'client', 
+            id: 'c1', 
+            grants, 
+        });
     });
 });

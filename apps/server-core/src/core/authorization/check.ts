@@ -17,12 +17,10 @@ import {
     IdentityPermissionBindingPolicyEvaluator,
     PermissionEvaluator,
     PermissionMemoryProvider,
-    PolicyDataKey,
     PolicyDefaultEvaluators,
     PolicyEngine,
     RealmScope,
     createPolicyTransitionCollector,
-    defineIdentityGrants,
     definePolicyData,
     isPermissionError,
     isPolicyError,
@@ -251,8 +249,10 @@ export async function buildAuthorizationCheck(
                         // identity the caller was resolved as or none at all.
                         ...(grants && request.policyIdentity ?
                             {
-                                [BuiltInPolicyType.IDENTITY]: request.policyIdentity,
-                                [PolicyDataKey.GRANTS]: defineIdentityGrants(request.policyIdentity, grants),
+                                [BuiltInPolicyType.IDENTITY]: {
+                                    ...request.policyIdentity,
+                                    grants,
+                                },
                             } :
                             {}),
                         [BuiltInPolicyType.REALM_MATCH]: realm,

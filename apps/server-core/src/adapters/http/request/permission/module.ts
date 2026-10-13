@@ -15,8 +15,6 @@ import type {
 import {
     BuiltInPolicyType,
     PolicyData,
-    PolicyDataKey,
-    defineIdentityGrants,
 } from '@authup/access';
 import type { IAppEvent } from 'routup';
 import type { RequestIdentity } from '../helpers/index.ts';
@@ -71,8 +69,16 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
             const grants = await useRequestGrants(this.event, identity);
 
             ctx.data = ctx.data || new PolicyData();
-            ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
-            ctx.data.set(PolicyDataKey.GRANTS, defineIdentityGrants(identity, grants));
+            // a plain object: RequestIdentity exposes its fields as getters,
+            // which a spread would drop
+            ctx.data.set(BuiltInPolicyType.IDENTITY, {
+                type: identity.type,
+                id: identity.id,
+                clientId: identity.clientId,
+                realmId: identity.realmId ?? null,
+                realmName: identity.realmName ?? null,
+                grants,
+            });
 
             return ctx;
         }
@@ -84,11 +90,9 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
         // that. Without the removal the gate only held for a caller that
         // happened to leave the key empty, so placing it anywhere else silently
         // answered a scope-restricted bearer as a fully-scoped one.
-        // The grants go with it: grants placed next to an identity this
-        // request was not resolved as must not reach the binding evaluator.
+        // The grants go with it, since they are part of the identity.
         if (ctx.data) {
             ctx.data.delete(BuiltInPolicyType.IDENTITY);
-            ctx.data.delete(PolicyDataKey.GRANTS);
         }
 
         return ctx;

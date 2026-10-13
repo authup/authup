@@ -9,8 +9,6 @@ import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access
 import {
     BuiltInPolicyType,
     PolicyData,
-    PolicyDataKey,
-    defineIdentityGrants,
 } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
@@ -36,9 +34,9 @@ export type PermissionCheckerDataContext = {
  * - any other identity: that identity, as given, once the actor may check
  *   for it (see `authorizeCheckFor`).
  *
- * The grants of whichever identity that is go next to it under
- * `PolicyDataKey.GRANTS`, always loaded here: a caller-supplied value is
- * dropped first, since the grants are what the binding evaluator decides on.
+ * The grants of whichever identity that is ride on it (`identity.grants`),
+ * always loaded here: a caller-supplied value is overwritten, since the
+ * grants are what the binding evaluator decides on.
  */
 export async function buildPermissionCheckerData(
     data: Record<string, any>,
@@ -46,15 +44,16 @@ export async function buildPermissionCheckerData(
     ctx: PermissionCheckerDataContext,
 ) : Promise<Record<string, any>> {
     const output = { ...data };
-    delete output[PolicyDataKey.GRANTS];
 
     const own = toIdentityPolicyData(actor.identity);
     const identity = output[BuiltInPolicyType.IDENTITY];
 
     if (typeof identity === 'undefined') {
         if (own) {
-            output[BuiltInPolicyType.IDENTITY] = own;
-            output[PolicyDataKey.GRANTS] = defineIdentityGrants(own, await loadCheckerGrants(own, own, actor, ctx));
+            output[BuiltInPolicyType.IDENTITY] = {
+                ...own,
+                grants: await loadCheckerGrants(own, own, actor, ctx),
+            };
         }
 
         return output;
@@ -68,7 +67,10 @@ export async function buildPermissionCheckerData(
         await authorizeCheckFor(identity, own, actor, ctx.identityResolver);
     }
 
-    output[PolicyDataKey.GRANTS] = defineIdentityGrants(identity, await loadCheckerGrants(identity, own, actor, ctx));
+    output[BuiltInPolicyType.IDENTITY] = {
+        ...identity,
+        grants: await loadCheckerGrants(identity, own, actor, ctx),
+    };
 
     return output;
 }

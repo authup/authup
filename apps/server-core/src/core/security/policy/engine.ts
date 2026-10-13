@@ -15,7 +15,7 @@ import {
 export class PolicyEngine extends BasePolicyEngine {
     /**
      * The binding evaluator reads the identity's grants from the policy data
-     * (`PolicyDataKey.GRANTS`), so whoever places an identity in the bag loads
+     * (`identity.grants`), so whoever places an identity in the bag loads
      * its grants first: a failed load then surfaces as itself instead of being
      * flattened into a denial inside the engine.
      */
