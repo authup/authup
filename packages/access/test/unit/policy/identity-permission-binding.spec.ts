@@ -322,11 +322,16 @@ describe('identity permission binding grants data', () => {
         ['a string', 'any'],
         ['an object', { bindings }],
         ['a list of scalars', [1]],
+        ['a binding without a permission', [{}]],
+        ['a binding without a permission name', [{ permission: {} }]],
     ])('denies grants given as %s', async (_label, grants) => {
         const outcome = await evaluate(grants);
 
         expect(outcome.success).toBe(false);
         expect(outcome.pending).toBeFalsy();
+        // refused by the identity data validator, naming the field, rather
+        // than crashing the binding evaluator on the malformed entry
+        expect((outcome.issues ?? []).map((issue) => issue.message).join()).toMatch(/grants/);
     });
 
     it('evaluates the grants the identity carries', async () => {
