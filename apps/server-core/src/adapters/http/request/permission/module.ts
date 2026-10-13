@@ -75,8 +75,8 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
                 type: identity.type,
                 id: identity.id,
                 clientId: identity.clientId,
-                realmId: identity.realmId ?? null,
-                realmName: identity.realmName ?? null,
+                realmId: identity.realmId,
+                realmName: identity.realmName,
                 grants,
             });
 
