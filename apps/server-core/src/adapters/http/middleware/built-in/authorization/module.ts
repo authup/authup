@@ -10,9 +10,12 @@ import { PermissionEvaluator } from '@authup/access';
 import type { Client, Session, User } from '@authup/core-kit';
 import {
     IdentityType,
+    REALM_MASTER_NAME,
     ScopeName,
 } from '@authup/core-kit';
 import { AuthHeaderError } from '@authup/errors';
+import type { Result } from '@authup/kit';
+import { isUUID } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
 import { useRequestCookie } from '@routup/basic/cookie';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -54,6 +57,7 @@ import {
     RequestIdentity,
     RequestPermissionEvaluator,
     extractClientCertificateEvidence,
+    getRequestRealmID,
     isSameOriginRequest,
     setRequestGrantsResolver,
     setRequestIdentity,
@@ -508,10 +512,7 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ) {
         if (this.options.clientAuthBasic) {
-            const authenticator = await this.clientAuthenticator.safeAuthenticate(
-                header.username,
-                header.password,
-            );
+            const authenticator = await this.authenticateBasic(event, this.clientAuthenticator, header);
             if (authenticator.success) {
                 setRequestScopes(event, [ScopeName.GLOBAL]);
                 setRequestIdentity(event, {
@@ -522,10 +523,7 @@ export class AuthorizationMiddleware {
         }
 
         if (this.options.userAuthBasic) {
-            const authenticated = await this.userAuthenticator.safeAuthenticate(
-                header.username,
-                header.password,
-            );
+            const authenticated = await this.authenticateBasic(event, this.userAuthenticator, header);
 
             if (
                 authenticated.success &&
@@ -538,5 +536,27 @@ export class AuthorizationMiddleware {
                 });
             }
         }
+    }
+
+    /**
+     * Under `/realms/:realmId/*` a Basic NAME is looked up in the route realm
+     * first and in the master realm second (issue #3687), never in an
+     * arbitrary realm: the route realm names the resource, not the caller, so
+     * an operator of the master realm keeps managing other realms by name. A
+     * UUID resolves globally, and a flat route keeps its unscoped lookup. The
+     * realm resolver is mounted ahead of this middleware for that reason.
+     */
+    protected async authenticateBasic<T extends Client | User>(
+        event: IAppEvent,
+        authenticator: ICredentialsAuthenticator<T>,
+        header: BasicAuthorizationHeader,
+    ): Promise<Result<T>> {
+        const realmId = getRequestRealmID(event);
+        const result = await authenticator.safeAuthenticate(header.username, header.password, realmId);
+        if (!realmId || result.success || isUUID(header.username)) {
+            return result;
+        }
+
+        return authenticator.safeAuthenticate(header.username, header.password, REALM_MASTER_NAME);
     }
 }

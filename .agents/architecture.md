@@ -3769,7 +3769,7 @@ This applies to the controllers that read realm context: `client`, `user`, `perm
 
 **Request flow**:
 
-1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolveId()` (UUID pass-through: no existence check; names resolve canonically), and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm name → `EntityNotFoundError` → 404; an unknown realm UUID passes through and fails closed at the repository predicate below.
+1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId/:nested', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`, AHEAD of the authorization middleware, which needs the route realm to resolve a Basic name) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolveId()` (UUID pass-through: no existence check; names resolve canonically), and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm name → `EntityNotFoundError` → 404; an unknown realm UUID passes through and fails closed at the repository predicate below.
 2. The decorator-mounted route subsequently re-extracts `:realmId` from the URL into `event.params.realmId`, clobbering the raw URL value with itself: this is why the resolved UUID is stored on `event.store`, not `event.params`.
 3. Controllers read the realm via `getRequestRealmID(event)` (helper in `adapters/http/request/helpers/realm-id.ts`), which prefers the stashed UUID and falls back to `event.params.realmId` for cases where the middleware didn't run.
 
@@ -7657,10 +7657,18 @@ The three realm-resolving grants (`password`, `authorization_code`,
   predicate for UUIDs would break realm-less id-identified logins, because
   the master fallback makes "defaulted" indistinguishable from "explicit" by
   the time the realm reaches the authenticator.
-- **Localized to `/token`.** HTTP Basic auth shares the same
-  `UserAuthenticator` class but is intentionally untouched: realm-less
-  Basic-auth-by-name resolution is unchanged (and never carries a realm
-  hint). The same raw, fallback-less `realm_id` handling remains on
+- **HTTP Basic on the management API follows its own rule** (issue #3687,
+  `AuthorizationMiddleware.authenticateBasic`). On `/realms/:realmId/*` a
+  Basic NAME, user or client, is tried in the route realm first and in the
+  master realm second, never in an arbitrary realm; a UUID resolves globally
+  and a flat route keeps its unscoped lookup. The master step exists because
+  there the route realm names the RESOURCE, not the caller, so a master
+  operator keeps managing other realms by name. Strict route-realm scoping
+  (the `/realms/:realmId/token` rule) was rejected for that reason: it broke
+  every master-admin Basic call on another realm's nested mount; so was
+  refusing an identity of a foreign realm, which also refuses an `any`
+  administrator. Both lookups failing costs two credential checks.
+  The same raw, fallback-less `realm_id` handling remains on
   `client_credentials` (client names are unique per `(name, realm_id)`) and on
   the `/authorize` code-request verifier's `data.realm_id`.
 
