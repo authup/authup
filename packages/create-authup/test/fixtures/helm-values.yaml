@@ -1667,9 +1667,43 @@ worker:
   # -- Deploy a dedicated background worker (requires server.enabled). It never
   # migrates: on a fresh install it restarts until the server has initialized
   # the schema; enable server.migration.enabled so upgrades run the Job first
-  enabled: false
+  enabled: true
   # -- Number of worker replicas (one is normally sufficient)
   replicaCount: 1
+  containerPorts:
+    # @schema
+    # type: integer
+    # required: true
+    # minimum: 1
+    # maximum: 65535
+    # @schema
+    # -- Worker health listener port (WORKER_PORT)
+    http: 3000
+  readinessProbe:
+    # -- Check sweep health without restarting the worker on database outages
+    enabled: true
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  # @schema
+  # additionalProperties: true
+  # type: object
+  # properties:
+  #   httpGet: {type: object}
+  #   tcpSocket: {type: object}
+  #   exec: {type: object}
+  #   grpc: {type: object}
+  # oneOf:
+  #   - additionalProperties: false
+  #   - required: [httpGet]
+  #   - required: [tcpSocket]
+  #   - required: [exec]
+  #   - required: [grpc]
+  # @schema
+  # -- Custom readiness probe with exactly one handler (overrides readinessProbe)
+  customReadinessProbe: {}
   # -- Override the container command
   command: []
   # -- Override the container args
