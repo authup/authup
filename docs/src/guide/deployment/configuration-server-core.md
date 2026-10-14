@@ -651,6 +651,8 @@ export default {
 
         /**
          * Activate the built-in `system` client of the master realm.
+         * Applied on every start, so it also (de)activates an
+         * existing client.
          * env: CLIENT_SYSTEM_ENABLED
          * default: false
          */
