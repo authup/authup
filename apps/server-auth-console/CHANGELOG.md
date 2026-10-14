@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* harden the HTTP layer, domain events and client cookies (security hardening 3/3) ([#3692](https://github.com/authup/authup/issues/3692))
+
+### Bug Fixes
+
+* beta.69 release blockers (rate limit, login throttle, helm worker, release-as) ([#3718](https://github.com/authup/authup/issues/3718)) ([240ddac](https://github.com/authup/authup/commit/240ddac038a39f731d31778a355bc62e4b17923d))
+* **deps:** bump the minorandpatch group with 30 updates ([#3716](https://github.com/authup/authup/issues/3716)) ([a615381](https://github.com/authup/authup/commit/a6153819c733522f4e556df96028d54c8578322a))
+* harden the HTTP layer, domain events and client cookies (security hardening 3/3) ([#3692](https://github.com/authup/authup/issues/3692)) ([6f33cd6](https://github.com/authup/authup/commit/6f33cd63e89fbf18ea899cb3fe4bab16c11a45d8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/core-http-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/errors bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-config bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-config-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-console-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/specs bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 

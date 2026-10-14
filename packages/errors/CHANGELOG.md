@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
+
+
+### Bug Fixes
+
+* beta.69 release blockers (rate limit, login throttle, helm worker, release-as) ([#3718](https://github.com/authup/authup/issues/3718)) ([240ddac](https://github.com/authup/authup/commit/240ddac038a39f731d31778a355bc62e4b17923d))
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
