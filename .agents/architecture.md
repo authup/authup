@@ -9199,7 +9199,9 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   matches its own rows and the throttle silently fails open for it. The count
   alone is check-then-act (the row lands only after bcrypt), so the service
   also reserves each attempt in the cache (`ICache.increment` on
-  `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
+  `loginAttempt:<realm>:<identifier>:<ip>:<bucket>`, fixed one-minute
+  buckets, in flight being the current bucket plus the previous one) BEFORE
+  counting, and
   refuses when rows plus the other attempts in flight reach the threshold; the
   grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
   written, so every attempt is seen as a row or as in flight. A refusal the
@@ -9207,7 +9209,10 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   attempts in flight (a burst of correct logins included) carries
   `retryAfter: 1` and a message that claims no failures. `release()` is best
   effort and never throws over the attempt's own outcome; a slot it could not
-  return lapses with the window. A user-id
+  return lapses within two buckets, because a bucket is written only while it
+  is current. One counter re-armed on every attempt (the sliding TTL
+  `increment` gives) kept a leaked slot alive for as long as the pair kept
+  retrying. A user-id
   identifier drops the realm from the key and from the count, since
   `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;

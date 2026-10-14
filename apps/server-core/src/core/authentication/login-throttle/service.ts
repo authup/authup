@@ -22,6 +22,17 @@ import type {
 const DEFAULT_THRESHOLD = 5;
 const DEFAULT_WINDOW_SECONDS = 900;
 
+/**
+ * Attempts in flight are counted in fixed buckets of this length, the current
+ * one plus the one before it. An attempt runs for moments, so two buckets
+ * cover it; a bucket is only written while it is current, so a slot that was
+ * never released (a crash between reserve and release, a cache failure on the
+ * release) lapses within two buckets however often the pair retries. One
+ * counter re-armed on every attempt would instead keep it alive for as long as
+ * the attempts continue.
+ */
+const INFLIGHT_BUCKET_MS = 60 * 1_000;
+
 export class LoginThrottleService implements ILoginThrottleService {
     protected repository: IEventRepository;
 
@@ -63,7 +74,7 @@ export class LoginThrottleService implements ILoginThrottleService {
         let reserved = false;
         if (this.cache) {
             try {
-                inflight = (await this.cache.increment(this.buildKey(ctx), 1, { ttl: windowSeconds * 1_000 })) - 1;
+                inflight = await this.reserve(ctx);
                 reserved = true;
             } catch (e) {
                 this.logger?.warn(`Could not reserve a login attempt: ${e instanceof Error ? e.message : String(e)}`);
@@ -111,16 +122,37 @@ export class LoginThrottleService implements ILoginThrottleService {
         }
 
         // best effort: the outcome of the attempt must reach the caller, and
-        // a slot not returned only lapses with the window.
-        const windowSeconds = this.options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
+        // a slot not returned lapses with its bucket. The current bucket is
+        // decremented even when the slot was reserved in the previous one:
+        // in flight is the sum of both, so either keeps it exact.
         try {
-            await this.cache.increment(this.buildKey(ctx), -1, { ttl: windowSeconds * 1_000 });
+            await this.cache.increment(this.buildKey(ctx, this.currentBucket()), -1, { ttl: INFLIGHT_BUCKET_MS * 2 });
         } catch (e) {
             this.logger?.warn(`Could not release a login attempt: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 
-    protected buildKey(ctx: LoginThrottleContext): string {
-        return `loginAttempt:${ctx.realmId ?? ''}:${ctx.identifier}:${ctx.ipAddress}`;
+    /**
+     * Reserve a slot and answer how many other attempts of the pair are in
+     * flight.
+     */
+    protected async reserve(ctx: LoginThrottleContext): Promise<number> {
+        const cache = this.cache as ICache;
+        const bucket = this.currentBucket();
+
+        const current = await cache.increment(this.buildKey(ctx, bucket), 1, { ttl: INFLIGHT_BUCKET_MS * 2 });
+        const previous = await cache.get(this.buildKey(ctx, bucket - 1));
+
+        // a release landing in a later bucket than its reservation leaves the
+        // later one below zero until it lapses, so never report less than none
+        return Math.max(0, current - 1 + (typeof previous === 'number' ? previous : 0));
+    }
+
+    protected currentBucket(): number {
+        return Math.floor(Date.now() / INFLIGHT_BUCKET_MS);
+    }
+
+    protected buildKey(ctx: LoginThrottleContext, bucket: number): string {
+        return `loginAttempt:${ctx.realmId ?? ''}:${ctx.identifier}:${ctx.ipAddress}:${bucket}`;
     }
 }

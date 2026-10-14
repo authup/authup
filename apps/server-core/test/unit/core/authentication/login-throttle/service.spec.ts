@@ -14,6 +14,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { LoginThrottleService } from '../../../../../src/core/authentication/login-throttle/service.ts';
 import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../../../../src/core/entities/event/constants.ts';
@@ -261,6 +262,43 @@ describe('LoginThrottleService', () => {
         if (isLoginThrottledError(error)) {
             expect(error.data?.retryAfter).toEqual(1);
             expect(error.message).not.toMatch(/failed/i);
+        }
+    });
+
+    it('lets slots that were never released lapse while the pair keeps retrying', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(new Date('2026-10-14T10:00:00.000Z'));
+            const service = new LoginThrottleService({
+                repository,
+                cache: new MemoryCache(),
+                options: {
+                    enabled: true,
+                    threshold: THRESHOLD,
+                    windowSeconds: WINDOW_SECONDS,
+                },
+            });
+            const ctx = {
+                identifier: IDENTIFIER,
+                ipAddress: IP,
+                realmId,
+            };
+
+            // reserved and never released, e.g. by a process that crashed
+            for (let i = 0; i < THRESHOLD; i++) {
+                await service.assertNotThrottled(ctx);
+            }
+
+            // retried every second for a minute: still within the two buckets
+            for (let i = 0; i < 60; i++) {
+                vi.setSystemTime(Date.now() + 1_000);
+                await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
+            }
+
+            vi.setSystemTime(Date.now() + 61_000);
+            await expect(service.assertNotThrottled(ctx)).resolves.toBe(true);
+        } finally {
+            vi.useRealTimers();
         }
     });
 
