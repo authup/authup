@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* `IdentityPermissionBindingPolicyEvaluator` takes no constructor argument and reads the identity's grants from `identity.grants`; an evaluation without them denies with `DATA_MISSING`. server-core's `PolicyEngine` and `OAuth2AccessPolicyEvaluator` no longer take an identity permission provider.
+
+### Bug Fixes
+
+* beta.69 release blockers (rate limit, login throttle, helm worker, release-as) ([#3718](https://github.com/authup/authup/issues/3718)) ([240ddac](https://github.com/authup/authup/commit/240ddac038a39f731d31778a355bc62e4b17923d))
+
+
+### Code Refactoring
+
+* read the identity's grants from policy data ([#3702](https://github.com/authup/authup/issues/3702)) ([231bd6b](https://github.com/authup/authup/commit/231bd6b5982cd2ce3d677fc278bcadcf2e5e244c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 

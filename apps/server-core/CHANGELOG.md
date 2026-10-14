@@ -1,5 +1,54 @@
 # Change Log
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** a script authenticating over HTTP Basic by name as a user or client outside the master realm must use its own realm's nested routes or the identity's id.
+* `IdentityPermissionBindingPolicyEvaluator` takes no constructor argument and reads the identity's grants from `identity.grants`; an evaluation without them denies with `DATA_MISSING`. server-core's `PolicyEngine` and `OAuth2AccessPolicyEvaluator` no longer take an identity permission provider.
+* harden the HTTP layer, domain events and client cookies (security hardening 3/3) ([#3692](https://github.com/authup/authup/issues/3692))
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691))
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690))
+
+### Features
+
+* **server-core:** realm-scoped token endpoint ([#3686](https://github.com/authup/authup/issues/3686)) ([9c43a11](https://github.com/authup/authup/commit/9c43a11e51e3aa4466dc6dc56041c1b5fcec8ab6))
+
+
+### Bug Fixes
+
+* beta.69 release blockers (rate limit, login throttle, helm worker, release-as) ([#3718](https://github.com/authup/authup/issues/3718)) ([240ddac](https://github.com/authup/authup/commit/240ddac038a39f731d31778a355bc62e4b17923d))
+* bind tokens, keys and sessions to their realm (security hardening 1/3) ([#3690](https://github.com/authup/authup/issues/3690)) ([3d031be](https://github.com/authup/authup/commit/3d031be98f5a0848c663c30521e83d0bf18dedac))
+* **deps:** bump the minorandpatch group with 30 updates ([#3716](https://github.com/authup/authup/issues/3716)) ([a615381](https://github.com/authup/authup/commit/a6153819c733522f4e556df96028d54c8578322a))
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691)) ([ea60877](https://github.com/authup/authup/commit/ea60877881679eea9c0ac562281c6897a55b8707))
+* harden the HTTP layer, domain events and client cookies (security hardening 3/3) ([#3692](https://github.com/authup/authup/issues/3692)) ([6f33cd6](https://github.com/authup/authup/commit/6f33cd63e89fbf18ea899cb3fe4bab16c11a45d8))
+* **server-core:** resolve Basic names in the route realm or master ([#3715](https://github.com/authup/authup/issues/3715)) ([da615bd](https://github.com/authup/authup/commit/da615bdd48b634631c13c20ecbd6db0137cb60a7))
+
+
+### Code Refactoring
+
+* read the identity's grants from policy data ([#3702](https://github.com/authup/authup/issues/3702)) ([231bd6b](https://github.com/authup/authup/commit/231bd6b5982cd2ce3d677fc278bcadcf2e5e244c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/core-http-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/core-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/errors bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/i18n bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-config bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-config-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-console-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/server-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+    * @authup/specs bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.68 to ^1.0.0-beta.69
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
