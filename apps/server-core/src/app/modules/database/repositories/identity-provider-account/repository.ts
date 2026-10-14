@@ -18,7 +18,7 @@ import type {
 import { applyQuery, fetchMany } from '../query.ts';
 import { applyJunctionRealmScopeSelect } from '../helpers.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { isDatabaseUniqueViolationError } from 'typeorm-extension';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import type {
     IIdentityProviderAccountRepository,
@@ -137,7 +137,7 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
             // at this provider. The driver does not say which, so the manager
             // classifies after a re-read; here only the driver error is kept
             // from escaping as a 500.
-            if (isUniqueConstraintDatabaseError(e)) {
+            if (isDatabaseUniqueViolationError(e)) {
                 throw new EntityConflictError({ entity: 'identity provider account' });
             }
 

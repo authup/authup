@@ -15,8 +15,7 @@ import type {
     Repository,
     SelectQueryBuilder,
 } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
-import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { isDatabaseUniqueViolationError, validateEntityJoinColumns } from 'typeorm-extension';
 import {
     applyJunctionRealmScopeSelect,
     hasUnmatchableId,
@@ -241,7 +240,7 @@ export abstract class EntityRepositoryAdapter<
         try {
             return await write();
         } catch (e) {
-            if (isUniqueConstraintDatabaseError(e)) {
+            if (isDatabaseUniqueViolationError(e)) {
                 throw new EntityConflictError({ entity: this.options.entity });
             }
 

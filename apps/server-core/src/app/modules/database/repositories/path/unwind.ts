@@ -7,7 +7,7 @@
 
 import { Brackets, In } from 'typeorm';
 import type { EntityManager } from 'typeorm';
-import { isTransientLockDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { isDatabaseLockConflictError } from 'typeorm-extension';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import {
     ClientEntity,
@@ -146,7 +146,7 @@ export async function runPathTransaction<R>(
         try {
             return await manager.connection.transaction(fn);
         } catch (e) {
-            if (!isTransientLockDatabaseError(e)) {
+            if (!isDatabaseLockConflictError(e)) {
                 throw e;
             }
 

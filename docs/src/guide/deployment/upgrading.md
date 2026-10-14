@@ -164,6 +164,13 @@ the ones that can break an existing setup come first.
 - The access log no longer records the `codeRequest` and `redirect` query
   parameters.
 
+### MySQL replication is supported again
+
+The timezone pin no longer refuses a MySQL `replication` setup: every master
+and slave session runs in UTC like a single connection does. A deployment
+that moved off replication because the boot refused it can configure it
+again under `db.replication`.
+
 ## v1.0.0-beta.68 (was: next release after v1.0.0-beta.67)
 
 ### The worker opens a health port
