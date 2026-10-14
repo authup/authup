@@ -701,6 +701,36 @@ describe('token-introspect authorization', () => {
         expect(body.permissions).toBeUndefined();
     });
 
+    // The token parameter, once supplied, is the only token the request is
+    // about. A value too short (or too long) for a token used to fail the body
+    // validator and fall back to the CALLER's bearer, so a resource server
+    // forwarding a garbage client token had its own credential reported as
+    // active - authenticating the garbage as the resource server.
+    it.each([
+        ['too short', 'not-a-token'],
+        ['too long', 'x'.repeat(2049)],
+    ])('should report a %s body token as inactive, never the caller\'s bearer', async (_label, token) => {
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            form: { token },
+        });
+
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body).toEqual({ active: false });
+    });
+
+    // negative control: the same bearer, asked about itself in the body, is live
+    it('should still report the caller\'s bearer as active when it is the body token', async () => {
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            form: { token: accessToken },
+        });
+
+        expect(response.status).toEqual(200);
+        expect((await response.json()).active).toBe(true);
+    });
+
     it('should accept a live bearer introspecting itself', async () => {
         // the kit's shape: the token is both the credential and the subject
         const client = new HTTPClient({ baseURL: suite.baseURL });
