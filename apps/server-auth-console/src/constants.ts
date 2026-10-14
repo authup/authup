@@ -49,3 +49,13 @@ export const PAGES = [
 export const ASSETS_PATH = '/assets';
 
 export const HEALTH_PATH = '/healthy';
+
+/**
+ * How many forwarded bearers the API may refuse within one window before a
+ * render stops forwarding the visitor's access token. Well below server-core's
+ * failed-authentication limit (300 a minute per address), so the console's
+ * address never reaches it, even across two unaligned windows.
+ */
+export const SESSION_FORWARDING_REJECTED_MAX = 100;
+
+export const SESSION_FORWARDING_WINDOW = 60 * 1000;

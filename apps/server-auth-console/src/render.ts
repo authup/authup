@@ -27,6 +27,7 @@ import {
     readUILocalesHint,
 } from './payload';
 import { resolveDistPath } from './resolve';
+import { createSessionForwardingGuard } from './session';
 import type { RenderPage } from './types';
 
 /**
@@ -61,6 +62,9 @@ export function createRenderPage(distPath?: string) : RenderPage {
     let cachedHtml: string | undefined;
     let cachedManifest: Record<string, any> | undefined;
     let cachedRender: RenderFunction | undefined;
+    // Per handler as well: the refused-bearer count belongs to the address
+    // this handler's renders reach the API from.
+    const sessionForwarding = createSessionForwardingGuard();
 
     return async (event, config, ctx) => {
         const resolved = (cachedDistPath ??= resolveDistPath(distPath));
@@ -131,8 +135,8 @@ export function createRenderPage(distPath?: string) : RenderPage {
             // store has resolved their session, so it must never outlive the
             // request. Built against the internal address like every other
             // server-side call (#3550).
-            httpClient: createAPIClient(config),
-            cookies: ctx.session ? readRenderCookies(event) : {},
+            httpClient: sessionForwarding.observe(createAPIClient(config)),
+            cookies: ctx.session && sessionForwarding.allows() ? readRenderCookies(event) : {},
         });
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);

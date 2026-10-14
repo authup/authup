@@ -7,6 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Key } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType, JWTError } from '@authup/specs';
 import {
@@ -102,7 +103,8 @@ describe('OAuth2TokenVerifier', () => {
             tokenRepo.seedSignature('cached-token', createPayload());
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(), tokenRepo);
 
-            await expect(verifier.verify('cached-token', { skipActiveCheck: true })).rejects.toThrow(JWTError);
+            await expect(verifier.verify('cached-token', { skipActiveCheck: true }))
+                .rejects.toMatchObject({ code: ErrorCode.JWT_INACTIVE });
             expect(tokenRepo.findOneBySignatureCalls).toHaveLength(0);
         });
 
@@ -194,7 +196,8 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), new FakeOAuth2TokenRepository());
 
-            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
+            // inactive rather than invalid: the token was issued, not guessed
+            await expect(verifier.verify('raw-token')).rejects.toMatchObject({ code: ErrorCode.JWT_INACTIVE });
         });
 
         it('should verify a token whose kid references a PASSIVE key', async () => {

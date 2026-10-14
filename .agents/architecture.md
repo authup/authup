@@ -1527,8 +1527,10 @@ API. The six page GETs became a stateless hop:
   minute, and only those a guess produces (`isFailedAuthentication`): a 401
   answering `invalid_client`, or a 401 to a request carrying an
   `Authorization` header unless it is `expired_token` / `inactive_token`. An
-  expired or revoked token carries a valid signature and a request without
-  credentials guessed nothing; both are what thousands of users behind one
+  expired or revoked token, and one whose signing key was disabled or deleted
+  (the verifier answers `inactive_token` for it, `JWTError.keyNotActive`, so
+  the key kill switch does not lock a NAT address out), carries a valid
+  signature, and a request without credentials guessed nothing; both are what thousands of users behind one
   NAT address (a hospital network) cause in ordinary use, every access token
   being renewed after a 401, so counting them locked such a network out. The
   code reaches the limiter through the request store, where the error
@@ -1558,6 +1560,15 @@ API. The six page GETs became a stateless hop:
   address, so on a split topology every ANONYMOUS server-side call of every
   render counts against the console's ONE address at 1200/min, while the
   calls it makes with the visitor's own bearer count against that visitor.
+  A forwarded bearer the API REFUSES is the exception: it carries no identity,
+  so the first stage charges it to the console's address, and junk
+  access-token cookies would otherwise push that address over 300 and lock
+  every hosted page out of the API. The render therefore stops forwarding the
+  cookie for the rest of a minute once 100 forwarded bearers were refused
+  (`createSessionForwardingGuard`, `apps/server-auth-console/src/session.ts`,
+  one per handler, counting what the first stage counts); past it the page
+  renders logged out, which is what an unusable token renders anyway, and the
+  browser restores the session on hydration.
   The composed `authup start` is loopback and skipped. A split deployment
   under that load raises `core.rateLimitAnonymousMax`; the real
   fix is forwarding the visitor's address from the console services, which

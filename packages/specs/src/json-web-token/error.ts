@@ -48,6 +48,19 @@ export class JWTError extends AuthupError {
         });
     }
 
+    /**
+     * The token names a signing key that no longer verifies (disabled or
+     * deleted). The token was issued, not guessed, so it is reported as
+     * inactive rather than invalid: a failed-authentication rate limit must
+     * not count it.
+     */
+    static keyNotActive() {
+        return new JWTError({
+            code: ErrorCode.JWT_INACTIVE,
+            message: 'The signing key of the token is not active.',
+        });
+    }
+
     static notActiveBefore(date?: string | Date) {
         if (typeof date === 'undefined') {
             return new JWTError({

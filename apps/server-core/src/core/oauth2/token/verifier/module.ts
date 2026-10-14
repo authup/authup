@@ -51,7 +51,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         // (disabled or deleted) has to be refused here, including an entry a
         // verify that resolved the key just before wrote just after.
         if (await this.tokenRepository.isKeyInactive(header.kid)) {
-            throw JWTError.headerPropertyInvalid('kid');
+            throw JWTError.keyNotActive();
         }
 
         let payload = await this.tokenRepository.findOneBySignature(token);
@@ -90,7 +90,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         // disabled = neither signs nor verifies (passive still verifies).
         if (key.status === KeyStatus.DISABLED) {
-            throw JWTError.headerPropertyInvalid('kid');
+            throw JWTError.keyNotActive();
         }
 
         switch (key.type) {
