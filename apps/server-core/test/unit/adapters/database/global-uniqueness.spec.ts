@@ -33,7 +33,7 @@ import {
     RoleEntity,
     ScopeEntity,
 } from '../../../../src/adapters/database/domains/index.ts';
-import { isUniqueConstraintDatabaseError } from '../../../../src/adapters/database/errors/driver.ts';
+import { isDatabaseUniqueViolationError } from 'typeorm-extension';
 import { DatabaseInjectionKey } from '../../../../src/app/modules/database/index.ts';
 import { createTestDatabaseModuleForSecondaryInstance } from '../../../app/index.ts';
 
@@ -186,7 +186,7 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
             await insert(target, 'global-probe', null);
 
             await expect(insert(target, 'global-probe', null), target.table)
-                .rejects.toSatisfy(isUniqueConstraintDatabaseError);
+                .rejects.toSatisfy(isDatabaseUniqueViolationError);
         }
     });
 
@@ -201,7 +201,7 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
             await insert(target, 'scoped-probe', null);
 
             await expect(insert(target, 'scoped-probe', first.id), target.table)
-                .rejects.toSatisfy(isUniqueConstraintDatabaseError);
+                .rejects.toSatisfy(isDatabaseUniqueViolationError);
         }
     });
 
@@ -228,6 +228,6 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
         await withRunner((runner) => migration.up(runner));
 
         await expect(insert(permission, 'global-probe', null))
-            .rejects.toSatisfy(isUniqueConstraintDatabaseError);
+            .rejects.toSatisfy(isDatabaseUniqueViolationError);
     });
 });

@@ -18,7 +18,7 @@ import {
     RealmEntity,
     UserEntity,
 } from '../../../../src/adapters/database/domains/index.ts';
-import { isUniqueConstraintDatabaseError } from '../../../../src/adapters/database/errors/driver.ts';
+import { isDatabaseUniqueViolationError } from 'typeorm-extension';
 import { createFakeUser } from '../../../utils/index.ts';
 
 describe('adapters/database/domains/path', () => {
@@ -90,7 +90,7 @@ describe('adapters/database/domains/path', () => {
         }
 
         expect(error).toBeDefined();
-        expect(isUniqueConstraintDatabaseError(error)).toBeTruthy();
+        expect(isDatabaseUniqueViolationError(error)).toBeTruthy();
     });
 
     it('should allow one path in two realms', async () => {

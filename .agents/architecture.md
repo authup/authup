@@ -484,8 +484,8 @@ usable at the service level and nothing in core depends on TypeORM:
     `max_age` for the length of the offset. An explicit setting that
     contradicts the pin (a non-UTC mysql `timezone`, a postgres
     `TimeZone`, a custom `typeCast`) fails the boot with an `OptionsError`
-    rather than being half applied, and so does a mysql replication config
-    until upstream can pin a pool cluster (tada5hi/typeorm-extension#1452).
+    rather than being half applied. A mysql replication config is pinned
+    on every master and slave session (typeorm-extension 4.3.0).
     Rows a local-time database stamped
     before this pin keep their local wall clock (see upgrading.md). Pinned
     by `test/unit/adapters/database/timestamp-session-timezone.spec.ts`
@@ -3876,7 +3876,7 @@ read different rows, so the transaction's own re-read cannot see the other and
 the unique key catches nothing, since `marketing` and `sales/munich` collide on
 no constraint. Those two take the rows in OPPOSITE orders, so the server breaks
 the cycle by aborting one side, and the adapter retries a transaction it aborted
-for a transient lock conflict (`isTransientLockDatabaseError`): the aborted
+for a transient lock conflict (typeorm-extension's `isDatabaseLockConflictError`): the aborted
 transaction wrote nothing and the callback derives every write from its own
 locked reads, so re-running it is the whole recovery. Unretried, a parent rename
 raced against its child's answered an unmapped 500 nine times in twenty-four.
@@ -6664,8 +6664,8 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   rather than overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`,
   shared by the entity column + the service normalizer so they cannot drift).
   A race-losing duplicate insert under the unique index is swallowed via
-  `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
-  reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
+  typeorm-extension's `isDatabaseUniqueViolationError`, which classifies the
+  driver code of every supported dialect.
 
 ## Device Authorization Grant (RFC 8628)
 
@@ -7494,8 +7494,8 @@ user); the uniqueness flip above ships one, on both dialects.
   `(providerUserId, providerId)` (one external identity, one local user)
   and `(providerId, userId)` (one link per provider per user).
   `IdentityProviderAccountRepositoryAdapter.save` translates the driver's
-  unique violation (`isUniqueConstraintDatabaseError`, the consent-insert
-  sibling) into `EntityConflictError` from `@authup/errors`, declared on
+  unique violation (typeorm-extension's `isDatabaseUniqueViolationError`, the
+  consent-insert sibling) into `EntityConflictError` from `@authup/errors`, declared on
   the port's `save`; it stays generic because the driver does not say
   WHICH index fired, so neither the link flow nor the federated login ever
   surfaces a raw `QueryFailedError`. `IdentityProviderAccountManager`
@@ -7859,9 +7859,8 @@ be an OAuth2 answer: the presented token is already consumed and
 cache-blocklisted, so the client has nothing to retry with, and a 500 reads as
 retryable to most OAuth2 clients while hiding a benign-and-expected race among
 real faults (issue #3435). So `SessionTokenRepositoryAdapter.create` translates a
-foreign-key rejection (`isForeignKeyConstraintDatabaseError` in
-`adapters/database/errors/driver.ts`, the sibling of the consent-insert
-uniqueness check) into `SessionTokenRelationMissingError`
+foreign-key rejection (typeorm-extension's `isDatabaseForeignKeyViolationError`, the sibling of
+the consent-insert uniqueness check) into `SessionTokenRelationMissingError`
 (`core/oauth2/session-token/error.ts`, declared on the `create` port), and the
 refresh grant wraps both issuer calls and re-raises it as `invalid_grant`. Only
 that one condition is translated; every other failure is rethrown untouched, so

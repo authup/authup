@@ -14,7 +14,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
 import { CachePrefix, ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { isDatabaseUniqueViolationError } from 'typeorm-extension';
 import type {
     ConsentFindManyOptions,
     ConsentOwner,
@@ -151,7 +151,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
             try {
                 await this.repository.save(entity);
             } catch (e) {
-                if (!isUniqueConstraintDatabaseError(e)) {
+                if (!isDatabaseUniqueViolationError(e)) {
                     throw e;
                 }
             }

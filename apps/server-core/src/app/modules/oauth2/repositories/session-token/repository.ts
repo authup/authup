@@ -14,7 +14,7 @@ import { In, LessThan } from 'typeorm';
 import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
 import { deleteInBatches, resolveSweepBatchSize } from '../../../database/repositories/helpers.ts';
 import { SessionTokenEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isForeignKeyConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { isDatabaseForeignKeyViolationError } from 'typeorm-extension';
 import { SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE, SessionTokenRelationMissingError } from '../../../../../core/index.ts';
 import type {
     ISessionTokenRepository,
@@ -56,7 +56,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
             // same, which is why the error names neither. Report that condition
             // instead of letting a driver error escape as an unhandled internal
             // error (issue #3435).
-            if (isForeignKeyConstraintDatabaseError(e)) {
+            if (isDatabaseForeignKeyViolationError(e)) {
                 throw new SessionTokenRelationMissingError();
             }
 
