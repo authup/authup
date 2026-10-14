@@ -11,7 +11,7 @@ import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
-import { buildPermissionCheckerData, createCheckerGrantSource } from '../../permission/checker/data.ts';
+import { buildPermissionCheckerData } from '../../permission/checker/data.ts';
 import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
@@ -30,9 +30,9 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         actor: ActorContext,
         realm?: string,
     ): Promise<void> {
-        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
+        const input = await buildPermissionCheckerData(data, actor, this.ctx);
 
-        await this.evaluate(idOrName, input, actor, realm);
+        await this.evaluate(idOrName, input, realm);
     }
 
     async safeCheck(
@@ -42,10 +42,10 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         realm?: string,
     ): Promise<Result<null>> {
         // outside the try: being refused the subject answers the request, not the check
-        const input = await buildPermissionCheckerData(data, actor, this.ctx.identityResolver);
+        const input = await buildPermissionCheckerData(data, actor, this.ctx);
 
         try {
-            await this.evaluate(idOrName, input, actor, realm);
+            await this.evaluate(idOrName, input, realm);
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -55,7 +55,6 @@ export class PolicyCheckerService implements IPolicyCheckerService {
     protected async evaluate(
         idOrName: string,
         input: Record<string, any>,
-        actor: ActorContext,
         realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
@@ -78,7 +77,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
             throw new EntityNotFoundError();
         }
 
-        const engine = new PolicyEngine(createCheckerGrantSource(actor, this.ctx.identityPermissionProvider));
+        const engine = new PolicyEngine();
         await engine.evaluateOrFail(
             entity,
             definePolicyEvaluationContext({ data: new PolicyData(input) }),

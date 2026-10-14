@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionPolicyBinding } from '../../../permission/types';
 import type { BasePolicy } from '../../types';
 
 export interface IdentityPolicy extends BasePolicy {
@@ -34,5 +35,13 @@ export type IdentityPolicyData = {
     /**
      * Realm name associated with identity.
      */
-    realmName?: string | null
+    realmName?: string | null,
+    /**
+     * The grants the identity holds. The permission binding evaluator reads
+     * them from here rather than loading them, so evaluation is a function of
+     * the data alone. Whoever places an identity in the policy data places
+     * its grants with it, and an identity without them holds none we could
+     * prove.
+     */
+    grants?: PermissionPolicyBinding[]
 };

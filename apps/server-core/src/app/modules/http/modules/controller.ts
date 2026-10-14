@@ -1045,7 +1045,6 @@ export class HTTPControllerModule {
 
         this.accessPolicyEvaluator = new OAuth2AccessPolicyEvaluator({
             policyProvider: new PolicyRepository(dataSource),
-            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
             logger: container.resolve(LoggerInjectionKey),
         });
 

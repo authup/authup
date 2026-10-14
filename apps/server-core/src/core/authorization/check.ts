@@ -10,7 +10,6 @@ import type {
     AuthorizationCheckPermissions,
     BasePolicy,
     IPermissionEvaluator,
-    IdentityPolicyData,
     PermissionPolicyBinding,
 } from '@authup/access';
 import {
@@ -24,6 +23,7 @@ import {
     createPolicyTransitionCollector,
     definePolicyData,
     isPermissionError,
+    isPolicyError,
 } from '@authup/access';
 import { normalizeError } from '@authup/errors';
 import { DecisionStrategy } from '@authup/kit';
@@ -105,15 +105,14 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
  *
  * Cost is what makes this shape possible. `PermissionEvaluator` resolves a
  * definition per name, and the database provider's `findOne` carries an
- * uncached junction read plus a tree walk each, while the binding evaluator
- * re-reads the identity's grants on every evaluation. Run that way per name it
- * is hundreds of statements for one request, on a route a UI calls at every
+ * uncached junction read plus a tree walk each. Run that way per name it is
+ * hundreds of statements for one request, on a route a UI calls at every
  * login.
  *
  * So the definitions are read ONCE in bulk through the same `findDefinitions`
- * the catalog uses and served from memory, and the grant load is hoisted into
- * one memoized closure behind the structural `getFor` the binding evaluator
- * takes. Two bulk reads plus one grant load, and the rest is in memory.
+ * the catalog uses and served from memory, and the caller's grants, loaded
+ * once by the controller, ride on its identity into every evaluation. Two
+ * bulk reads plus one grant load, and the rest is in memory.
  *
  * Only GLOBAL definitions are evaluated, because that is what every gate in
  * this process evaluates: a request resolves a permission with a null realm
@@ -176,42 +175,14 @@ export async function buildAuthorizationCheck(
         return { permissions: [] };
     }
 
-    let grants : Promise<PermissionPolicyBinding[]> | undefined;
-
-    // The grant load is the one failure a verdict cannot be derived from, and
-    // it is INVISIBLE to the catch below: `PolicyEngine.evaluate` turns every
-    // evaluator throw into issues and `PermissionEvaluator` re-raises those as
-    // a `PermissionError`, so by the time a rejected read arrives there it is
-    // indistinguishable from a denial. Left that way the route answers an
-    // authoritative empty set with a 200 and no log line, and a consumer
-    // memoizes it: the kit keys its memo on the introspection's subject, scope
-    // and grants, none of which a cache or database hiccup moves, so one
-    // failed read gates a console closed for the rest of the document's life.
-    //
-    // So the rejection is kept here and re-raised, which is what lets the
-    // caller retry: the kit clears its memo on a rejection and asks again on
-    // the next resolve.
-    let grantsError : unknown;
-    let grantsFailed = false;
-
-    const loadGrants = (identity: IdentityPolicyData) => {
-        if (!grants) {
-            grants = request.grants(identity)
-                .catch((e) => {
-                    grantsFailed = true;
-                    grantsError = e;
-
-                    throw e;
-                });
-        }
-
-        return grants;
-    };
+    // Present only when policies may see the identity: a caller whose scopes
+    // withhold it holds no grant a verdict could read.
+    const grants = request.identity?.grants;
 
     const policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
     policyEngine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
-        new IdentityPermissionBindingPolicyEvaluator({ getFor: loadGrants }),
+        new IdentityPermissionBindingPolicyEvaluator(),
     );
 
     // Whether the clock of a DENIED pair can move this caller's answer. Held
@@ -227,18 +198,11 @@ export async function buildAuthorizationCheck(
             return true;
         }
 
-        if (!request.identity) {
+        if (!grants) {
             return false;
         }
 
-        let held : PermissionPolicyBinding[];
-        try {
-            held = await loadGrants(request.identity);
-        } catch (e) {
-            throw normalizeError(e);
-        }
-
-        return held.some((grant) => grant.permission.name === name &&
+        return grants.some((grant) => grant.permission.name === name &&
             !grant.permission.realmId &&
             !grant.permission.clientId);
     };
@@ -261,46 +225,32 @@ export async function buildAuthorizationCheck(
             try {
                 await evaluator.preEvaluate({
                     name,
-                    data: definePolicyData({
-                        // Every policy in the tree that reads the identity gets
-                        // it, not only the permission-binding child: an
-                        // `identity` or attribute-mode `realmMatch` policy bound
-                        // to a definition is evaluated here exactly as a request
-                        // evaluates it. `decorate` re-asserts the key from the
-                        // REQUEST, and removes it when the caller's scopes
-                        // withhold it, so this can widen nothing: it is the
-                        // identity the caller was resolved as or none at all.
-                        ...(request.identity ?
-                            { [BuiltInPolicyType.IDENTITY]: request.identity } :
-                            {}),
-                        [BuiltInPolicyType.REALM_MATCH]: realm,
-                    }),
+                    // The identity, with its grants, is placed by `decorate`,
+                    // which asserts the one the request was resolved as, or
+                    // none when the caller's scopes withhold it.
+                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realm }),
                     options: { transitions: pairTransitions },
                 });
 
                 held.push(realm);
                 passed = true;
             } catch (e) {
-                // A denial is the answer. The one failure that must NOT be
-                // read as one is the grant load, and it is caught above
-                // rather than here, since the engine has already flattened it
-                // into a `PermissionError` by the time it arrives. What is
-                // left for this guard is a throw the engine never saw -- a
-                // decorator or a policy-data access -- which denies, but says
-                // so rather than passing for a verdict.
-                if (!isPermissionError(e)) {
+                // A denial is the answer, and so is a policy the engine refused
+                // to evaluate, which denies but says so. Anything else never
+                // reached a verdict: the decorator loads the request's grants,
+                // and a failed read there is infrastructure, not an answer, so
+                // it fails the request rather than becoming an authoritative
+                // empty set the kit memoizes.
+                if (!isPermissionError(e) && !isPolicyError(e)) {
+                    throw normalizeError(e);
+                }
+
+                if (isPolicyError(e)) {
                     ctx.logger?.warn(
                         `Treated ${name} as denied in realm ${realm ?? 'global'} while building the authorization ` +
-                        `check: ${e instanceof Error ? e.message : String(e)}.`,
+                        `check: ${e.message}.`,
                     );
                 }
-            }
-
-            // Raised on the first pair that hits it rather than after the
-            // whole matrix: the promise is memoized, so every remaining pair
-            // would fail the same way for the same reason.
-            if (grantsFailed) {
-                throw normalizeError(grantsError);
             }
 
             if (

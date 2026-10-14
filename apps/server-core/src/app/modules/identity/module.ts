@@ -153,11 +153,9 @@ export class IdentityModule implements IModule {
                 permissionMapper,
                 // Built inside the factory, the way the controller factory
                 // builds the one behind the client access policy: the
-                // evaluator has no token of its own, and resolving the
-                // permission provider here keeps module order irrelevant.
+                // evaluator has no token of its own.
                 enrollmentPolicyEvaluator: new OAuth2AccessPolicyEvaluator({
                     policyProvider: new PolicyRepository(dataSource),
-                    identityPermissionProvider: c.resolve(IdentityInjectionKey.PermissionProvider),
                     logger: c.resolve(LoggerInjectionKey),
                 }),
                 logger: c.resolve(LoggerInjectionKey),

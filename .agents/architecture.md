@@ -1120,7 +1120,7 @@ export type ActorContext = {
 
 The HTTP adapter provides `RequestPermissionEvaluator`: the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. The authorization middleware composes one per request, over an engine that reads the request's grants (see *A user's client-owned grants apply through that client's tokens*).
 
-**`extendContext` is SYMMETRICAL, and `useRequestPolicyIdentity(event)` is the one place the `global`-scope condition is spelled.** The helper answers the request's own identity when the scopes include `global` and nothing otherwise. `extendContext` sets `IDENTITY` to it when there is one (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when there is none. A caller may therefore fill the bag itself (the batch authorization check does, so every identity-reading policy in a tree gets the data) without restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. Only the identity key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope* and *should overwrite a pre-placed identity with the request's own* (`test/unit/adapters/http/request/permission.spec.ts`).
+**`extendContext` is SYMMETRICAL, and `useRequestPolicyIdentity(event)` is the one place the `global`-scope condition is spelled.** The helper answers the request's own identity when the scopes include `global` and nothing otherwise. `extendContext` sets `IDENTITY` to it when there is one (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when there is none. A caller may therefore fill the bag itself (the batch authorization check does, so every identity-reading policy in a tree gets the data) without restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. The identity carries its grants (`identity.grants`, see *Grants are policy data*), loaded from `useRequestGrants`, so overwriting or deleting the key governs both. The identity is built as a plain object, since `RequestIdentity` exposes its fields as getters a spread would drop. The load runs BEFORE the inner evaluator, so a failed read fails the request as itself instead of being flattened into a permission denial inside the engine. Only that key is governed; the rest of the caller's bag rides through untouched. Pinned by *should remove a pre-placed identity without global scope*, *should overwrite a pre-placed identity with the request's own* and *should fail the evaluation when the grants cannot be loaded* (`test/unit/adapters/http/request/permission.spec.ts`).
 
 **The two single-subject check routes read WHO to check from the data's own `identity` key, and never remove it (#3604).** Both controllers pass the body through unchanged, with an actor whose identity is `useRequestPolicyIdentity(event)`, and both checkers keep `master`'s signature `check(idOrName, data, actor, realm)`. `buildPermissionCheckerData` (`core/identity/permission/checker/data.ts`) turns the key into the data both routes evaluate, on a plain evaluator (the permission route) or engine (the policy route), since the data already says who is evaluated:
 
@@ -4251,8 +4251,7 @@ attempt, so "may I" has an answer before anyone signs in and a login gate would 
 withhold it. Everything identity-bound denies by itself:
 `IdentityPermissionBindingPolicyEvaluator` deliberately omits IDENTITY from its
 `requires`, so a missing one is a settled `DATA_MISSING` deny rather than a pending
-permit, and it returns before reaching the grant load, so `grants` is never called for
-an anonymous caller. `resolveRealms` needs no special case either: a realm-less caller
+permit, and with no identity there is no grant load either. `resolveRealms` needs no special case either: a realm-less caller
 resolves `own` to nothing and `ownOrNull` to the global rows alone, which is the reach
 `realmScopeMatches` already grants such an identity. A default deployment therefore
 answers an anonymous caller an EMPTY set, because `PermissionService.create` binds the
@@ -4291,27 +4290,32 @@ is still decided per row.
 
 `buildAuthorizationCheck` (`core/authorization/check.ts`) is what makes the shape
 affordable. `PermissionEvaluator` resolves a definition per name, and the database
-provider's `findOne` carries an uncached junction read plus a tree walk each, while the
-binding evaluator re-reads the grants on every evaluation, so a loop over the 73
-provisioned permissions is hundreds of statements on a route a UI calls at every login.
-The definitions are therefore read ONCE through the same `findDefinitions` the catalog
-uses and served from a `PermissionMemoryProvider`, and the grant load is hoisted into one
-memoized closure behind the structural `getFor` the binding evaluator takes: two bulk
-reads plus one grant load, and the rest is in memory. Only GLOBAL definitions are
-evaluated, because that is what every gate in this process evaluates.
+provider's `findOne` carries an uncached junction read plus a tree walk each, so a loop
+over the 73 provisioned permissions is hundreds of statements on a route a UI calls at
+every login. The definitions are therefore read ONCE through the same `findDefinitions`
+the catalog uses and served from a `PermissionMemoryProvider`, and the caller's grants
+are loaded once by the controller and ride on its identity into every pair: two bulk
+reads plus one grant load, and the rest is in memory. One `identity` does both jobs: it
+always resolves the realm selectors, and it carries `grants` only when policy
+evaluation may SEE it (`useRequestPolicyIdentity`). A token without `global` has its
+identity withheld from every evaluation, so it loads nothing and cannot fail on a load
+nothing would read. Only GLOBAL definitions are evaluated, because that is what every gate in
+this process evaluates.
 
-**A failed GRANT LOAD is re-raised, never answered as a denial.** It is the one
-failure a verdict cannot be derived from, and it is invisible to a classifier:
+**A failed GRANT LOAD fails the request, never answers as a denial.** It is the one
+failure a verdict cannot be derived from. Inside the engine it would be invisible:
 `PolicyEngine.evaluate` turns every evaluator throw into issues and
-`PermissionEvaluator` re-raises those as a `PermissionError`, so an
-`isPermissionError` guard around the evaluation cannot tell a rejected read from a
-denial and a cache or database hiccup answered `200 []`. That reads as
-authoritative, and the kit memoizes the answer by the introspection's subject,
-scope and grants, none of which such a failure moves, so one bad read gated a
-console closed for the rest of the document's life. The rejection is therefore kept
-on the memoized promise and re-raised at the first pair that hits it, which is what
-lets a caller retry: the kit clears its memo on a rejection and asks again on the
-next resolve. An anonymous caller never reaches the load at all, so it is unaffected.
+`PermissionEvaluator` re-raises those as a `PermissionError`, so a cache or database
+hiccup would read as `200 []`, an answer the kit memoizes by the introspection's
+subject, scope and grants, none of which such a failure moves. Loading in the
+controller, before the matrix, keeps the read outside the engine (see *Grants are policy data*), so it throws
+as itself and the kit asks again on its next resolve. The decorator loads the
+request's grants again inside the matrix (the same per-request promise, so it
+cannot newly fail), and the per-pair catch re-raises anything that is neither a
+`PermissionError` nor a `PolicyError` rather than counting it as a denial; a
+`PolicyError` (a policy the engine refused) still denies its pair with a warning,
+so one malformed operator policy cannot fail the whole answer. An anonymous caller
+has no grants to load, so it is unaffected.
 
 **The bag carries everything the route actually knows**, so a policy anywhere in the tree
 decides on the same data a request would give it, not only the `permissionBinding` child:
@@ -4465,15 +4469,16 @@ which already regressed introspection once. `getFor(identity)` accepts only the 
 provider, so identity metadata cannot narrow the result. Client applicability is applied
 separately by `getForToken`. Everything else reads that one grant set:
 
-- **evaluation**: the authorization middleware composes the request's evaluator per
-  request, over an engine whose grant source is `createGrantsResolver`: the request's own
-  subject resolves through `getForToken` with the verified bearer's payload
-  (`useRequestTokenPayload`), memoized for the request; any other subject (a check made
-  on another's behalf) and any request without a token resolve through `getFor`. The
-  batch check reads the same source (`AuthorizationCheckRequest.grants`), and the two
-  `POST /permissions/:id/check` and `POST /policies/:id/check` routes read the actor's
-  grants when they evaluate the actor (`createCheckerGrantSource`), a foreign subject's as
-  stored;
+- **evaluation**: the authorization middleware installs the request's grant source,
+  `createGrantsResolver`: the request's own subject resolves through `getForToken` with
+  the verified bearer's payload (`useRequestTokenPayload`); any other subject (a check
+  made on another's behalf) and any request without a token resolve through `getFor`;
+  each answer is memoized for the request. `RequestPermissionEvaluator` places that
+  source's answer in the bag next to the identity on every evaluation. The batch check
+  reads the same source (`AuthorizationCheckRequest.grants`), and the two
+  `POST /permissions/:id/check` and `POST /policies/:id/check` routes load the actor's
+  grants when they evaluate the actor, a foreign subject's as stored
+  (`buildPermissionCheckerData`, which drops any grants the caller's body carried);
 - **delegation**: `buildActorContext` exposes that source as `ActorContext.grants`, and
   `isSuperset(parent, child)` / `resolveJunctionGrant(bindings, options)` take grant
   lists, never an identity, and a service passes the actor's through `getActorGrants`
@@ -4489,8 +4494,8 @@ A grant minting from an existing token must copy its `client_id` (refresh and MF
 completion do; the device grant binds the device's own client). Open, and stated rather
 than guarded:
 
-- the application access-policy engine (`OAuth2AccessPolicyEvaluator`) still holds the
-  bare provider; it evaluates with IDENTITY data only, so it never reads grants;
+- the application access-policy engine (`OAuth2AccessPolicyEvaluator`) evaluates with
+  IDENTITY data only and places no grants, so a binding node there denies;
 - the served consoles authenticate with the session cookie, which sets an identity but no
   token payload, so `createGrantsResolver` falls through to `getFor` and nothing is narrowed
   inside them: a console user's grants owned by ANY client apply. That is the fail-open above
@@ -4512,15 +4517,41 @@ than guarded:
 (`{ ...evaluators }`), and nothing may change that. Every engine is built from
 the one shared `PolicyDefaultEvaluators` constant, and `registerEvaluator`
 writes into the map the engine holds. Holding the caller's object instead made
-each registration reach every engine in the process: server-core's subclass
-registers a `PermissionBindingPolicyEvaluator` bound to ITS
-`identityPermissionProvider`, so the newest application's provider silently
-became every application's, and an older one evaluated its grants against the
-newer one's database. That is invisible in a single-application deployment and
-surfaces only where two applications share a process, which today means the
-federation e2e spec (`.agents/testing.md` → *A second application in one
-spec*). A caller that genuinely wants a shared registry passes the same object
-to `registerEvaluators` on each engine.
+each registration reach every engine in the process: when the binding evaluator
+still held a grant provider, the newest application's provider silently became
+every application's, and an older one evaluated its grants against the newer
+one's database. An evaluator holding per-application state is exactly what a
+custom type registers, so the copy stays. That is invisible in a
+single-application deployment and surfaces only where two applications share a
+process, which today means the federation e2e spec (`.agents/testing.md` → *A
+second application in one spec*). A caller that genuinely wants a shared
+registry passes the same object to `registerEvaluators` on each engine.
+
+### Grants are policy data
+
+`IdentityPermissionBindingPolicyEvaluator` loads nothing: it reads the grants the
+identity carries (`IdentityPolicyData.grants`, the raw `PermissionPolicyBinding`s)
+from the `IDENTITY` key, so an evaluation is a function of its data alone. An
+identity without grants is a settled `DATA_MISSING` deny (`accessGrants` throws a
+`PolicyError` carrying the issue, `evaluate` returns it); grants of another shape
+fail the identity data validator, which mounts `grants` (it strips unmounted keys,
+so without the mount the grants would vanish on the first read). Neither is
+pending, since the pre-gate permits pending. Carrying the grants ON the identity
+rather than under a key of their own is what makes the pairing structural: no
+placer can leave one subject next to another's grants, and every other key in the
+bag is a policy type's own slot. A separate `grants` key with a subject tag was
+rejected for exactly that reason. Whoever places an identity loads its grants:
+`RequestPermissionEvaluator` for every request, `buildPermissionCheckerData` for
+the two single-subject check routes (overwriting grants a caller's body carried),
+`buildAuthorizationCheck` for the batch check, and the consumer-side
+`createAuthorizationEvaluator`, which binds the introspected grants. Two reasons.
+A grant read inside the engine is flattened into a denial by
+`PolicyEngine.evaluate`, so a database failure answered 403 (or `200 []` on the
+batch check) instead of failing; loaded in front of the engine it fails as
+itself. And a provider callback in the middle of evaluation is what blocks
+evaluating the built-in policies anywhere else than in-process (another language,
+another runtime): data in, verdict out has no such boundary. Pinned by the
+*grants data* cases in `packages/access/test/unit/policy/identity-permission-binding.spec.ts`.
 
 ### PermissionBinding & aggregated grants
 

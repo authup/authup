@@ -15,16 +15,13 @@ import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult 
 import { PolicyEngine } from '../../engine';
 import type { PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
+import { PolicyError, isPolicyError } from '../../error';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants';
-import type { IdentityPolicyData } from '../identity';
 import { IdentityPolicyEvaluator } from '../identity';
+import type { IdentityPolicyData } from '../identity';
 import { RealmMatchPolicyEvaluator } from '../realm-match';
 import { PermissionBindingPolicyValidator } from './validator';
-
-type IdentityPermissionProvider = {
-    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>,
-};
 
 function containsPermissionBinding(policy: PolicyWithType) : boolean {
     if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {
@@ -50,20 +47,18 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
 
     protected realmMatchEvaluator : RealmMatchPolicyEvaluator;
 
-    protected identityPermissionProvider: IdentityPermissionProvider;
-
-    constructor(identityPermissionProvider: IdentityPermissionProvider) {
+    constructor() {
         this.validator = new PermissionBindingPolicyValidator();
         this.identityEvaluator = new IdentityPolicyEvaluator();
         this.realmMatchEvaluator = new RealmMatchPolicyEvaluator();
-        this.identityPermissionProvider = identityPermissionProvider;
     }
 
     requires() : string[] {
         // IDENTITY is deliberately NOT declared: a missing identity must stay a
-        // settled DATA_MISSING deny (fail-closed) so a scope-restricted or anonymous
-        // bearer still fails the pre-gate through system.default — pending would be
-        // permitted there.
+        // settled DATA_MISSING deny (fail-closed) so a scope-restricted or
+        // anonymous bearer still fails the pre-gate through system.default —
+        // pending would be permitted there. An identity without grants is the
+        // same deny: it holds none we could prove.
         return [BuiltInPolicyType.PERMISSION_BINDING];
     }
 
@@ -82,6 +77,27 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         ctx.data.setValidated(BuiltInPolicyType.PERMISSION_BINDING);
 
         return data;
+    }
+
+    /**
+     * The grants the identity holds. An identity carrying none is missing
+     * data, which throws a PolicyError carrying the refusing issue.
+     */
+    accessGrants(
+        ctx: PolicyEvaluationContext,
+        identity: IdentityPolicyData,
+    ) : PermissionPolicyBinding[] {
+        if (!identity.grants) {
+            throw new PolicyError('The identity grants are missing', undefined, [
+                definePolicyIssueItem({
+                    code: PolicyIssueCode.DATA_MISSING,
+                    message: 'The identity grants are missing',
+                    path: ctx.path,
+                }),
+            ]);
+        }
+
+        return identity.grants;
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
@@ -114,15 +130,25 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             };
         }
 
-        const identityBindings = await this.identityPermissionProvider.getFor(identity)
-            .then((bindings) => bindings.filter((item) => {
-                if (item.permission.name !== binding.permission.name) {
-                    return false;
-                }
+        let grants : PermissionPolicyBinding[];
+        try {
+            grants = this.accessGrants(ctx, identity);
+        } catch (e) {
+            if (isPolicyError(e)) {
+                return { success: false, issues: [...e.issues] };
+            }
 
-                return (binding.permission.realmId ?? null) === (item.permission.realmId ?? null) &&
-                    (binding.permission.clientId ?? null) === (item.permission.clientId ?? null);
-            }));
+            throw e;
+        }
+
+        const identityBindings = grants.filter((item) => {
+            if (item.permission.name !== binding.permission.name) {
+                return false;
+            }
+
+            return (binding.permission.realmId ?? null) === (item.permission.realmId ?? null) &&
+                (binding.permission.clientId ?? null) === (item.permission.clientId ?? null);
+        });
 
         if (identityBindings.length === 0) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };

@@ -11,7 +11,6 @@ import type { BasePolicy, IdentityPolicyData } from '@authup/access';
 import { describe, expect, it } from 'vitest';
 import { OAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth2/access-policy/module.ts';
 import type { IOAuth2AccessPolicyProvider, OAuth2AccessPolicyTree } from '../../../../../src/core/oauth2/access-policy/types.ts';
-import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 class FakePolicyProvider implements IOAuth2AccessPolicyProvider {
     public calls: string[] = [];
@@ -44,10 +43,7 @@ const subject: IdentityPolicyData = {
     realmName: 'master',
 };
 
-const buildEvaluator = (provider: IOAuth2AccessPolicyProvider) => new OAuth2AccessPolicyEvaluator({
-    policyProvider: provider,
-    identityPermissionProvider: new FakeIdentityPermissionProvider(),
-});
+const buildEvaluator = (provider: IOAuth2AccessPolicyProvider) => new OAuth2AccessPolicyEvaluator({ policyProvider: provider });
 
 describe('core/oauth2/access-policy — OAuth2AccessPolicyEvaluator', () => {
     it('should permit access when the policy passes for the subject', async () => {

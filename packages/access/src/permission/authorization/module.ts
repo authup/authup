@@ -230,7 +230,7 @@ export async function createAuthorizationEvaluator(
     const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
-        new IdentityPermissionBindingPolicyEvaluator({ getFor: async () => bindings }),
+        new IdentityPermissionBindingPolicyEvaluator(),
     );
     const evaluator = new PermissionEvaluator({
         provider: new PermissionMemoryProvider(definitions),
@@ -242,7 +242,7 @@ export async function createAuthorizationEvaluator(
         if (!identity) {
             // symmetrical with the branch below, which overwrites the key:
             // the document proved no identity, so the caller may not supply
-            // one either
+            // one either, nor grants to go with it
             data.delete(BuiltInPolicyType.IDENTITY);
 
             return data;
@@ -254,6 +254,7 @@ export async function createAuthorizationEvaluator(
             realmId: identity.realmId ?? undefined,
             realmName: identity.realmName ?? undefined,
             clientId: identity.clientId ?? null,
+            grants: bindings,
         });
 
         return data;
