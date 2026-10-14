@@ -344,8 +344,13 @@ SHOW timezone;
 SELECT @@global.time_zone, @@system_time_zone;
 ```
 
-If it is not UTC and the historical values matter, convert them once after
-the upgrade, per table and column, with the zone the database used:
+If it is not UTC and the historical values matter, convert them **while no
+Authup instance is writing**: stop every instance of the old version, run the
+conversion, then start the new one. The statements cannot tell a legacy
+local-time row from a correct UTC one, so running them after the new version
+has written rows (or during a rolling upgrade, where old and new instances
+write side by side) shifts the correct rows too. Convert each table and column
+once, with the zone the database used:
 
 ```sql
 -- PostgreSQL
@@ -353,6 +358,13 @@ UPDATE auth_events SET created_at = (created_at AT TIME ZONE 'Europe/Berlin') AT
 -- MySQL (needs the server's time zone tables loaded)
 UPDATE auth_events SET created_at = CONVERT_TZ(created_at, 'Europe/Berlin', '+00:00');
 ```
+
+If the new version is already running, restrict the conversion to rows
+stamped before the first upgraded instance started, giving that moment in UTC,
+e.g. `WHERE created_at < '2026-09-23 12:00:00'`. Every row the new version wrote
+is at or after it, so none is shifted. On a database east of UTC, legacy rows
+from the last offset before the upgrade (two hours for Europe/Berlin in summer)
+fall at or after the cutoff too; check those by hand.
 
 Sessions deserve a look even when nothing else does. A session's `createdAt`
 is its authentication time, so on a database east of UTC a session created
