@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '@authup/core-http-kit';
 import type {
     AuthConsoleConfig,
     CoreConfig,
@@ -104,3 +105,31 @@ export type RenderPage = (
         session?: boolean,
     },
 ) => Promise<string>;
+
+export type SessionForwardingGuardOptions = {
+    /**
+     * Refused bearers per window before forwarding stops.
+     */
+    max?: number,
+    /**
+     * The window length in milliseconds.
+     */
+    window?: number,
+    /**
+     * The clock, a seam for tests.
+     */
+    now?: () => number,
+};
+
+export type SessionForwardingGuard = {
+    /**
+     * Reserve the right to forward the visitor's access token for one render.
+     * Resolves the function that ends the reservation once the render is done,
+     * or undefined when the limit is reached and the render must not forward.
+     */
+    reserve() : (() => void) | undefined,
+    /**
+     * Count the bearers the API refuses on this client.
+     */
+    observe(client: Client) : Client,
+};

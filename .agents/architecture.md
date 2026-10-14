@@ -1527,8 +1527,10 @@ API. The six page GETs became a stateless hop:
   minute, and only those a guess produces (`isFailedAuthentication`): a 401
   answering `invalid_client`, or a 401 to a request carrying an
   `Authorization` header unless it is `expired_token` / `inactive_token`. An
-  expired or revoked token carries a valid signature and a request without
-  credentials guessed nothing; both are what thousands of users behind one
+  expired or revoked token, and one whose signing key was disabled or deleted
+  (the verifier answers `inactive_token` for it, `JWTError.keyNotActive`, so
+  the key kill switch does not lock a NAT address out), carries a valid
+  signature, and a request without credentials guessed nothing; both are what thousands of users behind one
   NAT address (a hospital network) cause in ordinary use, every access token
   being renewed after a 401, so counting them locked such a network out. The
   code reaches the limiter through the request store, where the error
@@ -1558,6 +1560,17 @@ API. The six page GETs became a stateless hop:
   address, so on a split topology every ANONYMOUS server-side call of every
   render counts against the console's ONE address at 1200/min, while the
   calls it makes with the visitor's own bearer count against that visitor.
+  A forwarded bearer the API REFUSES is the exception: it carries no identity,
+  so the first stage charges it to the console's address, and junk
+  access-token cookies would otherwise push that address over 300 and lock
+  every hosted page out of the API. The render therefore stops forwarding the
+  cookie for the rest of a minute once refused bearers plus renders still
+  waiting for the API reach 100 (`createSessionForwardingGuard`,
+  `apps/server-auth-console/src/session.ts`, one per handler, counting what
+  the first stage counts; a render reserves its slot before it forwards, or a
+  parallel burst would forward before the first refusal came back); past it the page
+  renders logged out, which is what an unusable token renders anyway, and the
+  browser restores the session on hydration.
   The composed `authup start` is loopback and skipped. A split deployment
   under that load raises `core.rateLimitAnonymousMax`; the real
   fix is forwarding the visitor's address from the console services, which
@@ -9188,7 +9201,9 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   matches its own rows and the throttle silently fails open for it. The count
   alone is check-then-act (the row lands only after bcrypt), so the service
   also reserves each attempt in the cache (`ICache.increment` on
-  `loginAttempt:<realm>:<identifier>:<ip>`, window TTL) BEFORE counting, and
+  `loginAttempt:<realm>:<identifier>:<ip>:<bucket>`, fixed one-minute
+  buckets, in flight being the current bucket plus the previous one) BEFORE
+  counting, and
   refuses when rows plus the other attempts in flight reach the threshold; the
   grant calls `release()` in a `finally`, after the `LOGIN_FAILED` row is
   written, so every attempt is seen as a row or as in flight. A refusal the
@@ -9196,7 +9211,13 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   attempts in flight (a burst of correct logins included) carries
   `retryAfter: 1` and a message that claims no failures. `release()` is best
   effort and never throws over the attempt's own outcome; a slot it could not
-  return lapses with the window. A user-id
+  return lapses within two buckets, because a bucket is written only while it
+  is current. `assertNotThrottled` answers the reservation and `release()`
+  returns the slot to the bucket it names: a release booked onto a later
+  bucket would read below zero once that bucket became the previous one and
+  admit an attempt past the threshold. One counter re-armed on every attempt (the sliding TTL
+  `increment` gives) kept a leaked slot alive for as long as the pair kept
+  retrying. A user-id
   identifier drops the realm from the key and from the count, since
   `IdentityResolver` ignores the realm hint for one. Config
   `loginAttemptThrottleEnabled/Threshold/Window`;

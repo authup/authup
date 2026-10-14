@@ -27,6 +27,7 @@ import {
     readUILocalesHint,
 } from './payload';
 import { resolveDistPath } from './resolve';
+import { createSessionForwardingGuard } from './session';
 import type { RenderPage } from './types';
 
 /**
@@ -61,6 +62,9 @@ export function createRenderPage(distPath?: string) : RenderPage {
     let cachedHtml: string | undefined;
     let cachedManifest: Record<string, any> | undefined;
     let cachedRender: RenderFunction | undefined;
+    // Per handler as well: the refused-bearer count belongs to the address
+    // this handler's renders reach the API from.
+    const sessionForwarding = createSessionForwardingGuard();
 
     return async (event, config, ctx) => {
         const resolved = (cachedDistPath ??= resolveDistPath(distPath));
@@ -123,17 +127,29 @@ export function createRenderPage(distPath?: string) : RenderPage {
             data: ctx.data,
         };
 
-        const [appHtml, preloadLinks] = await render({
-            url: ctx.url,
-            manifest,
-            payload,
-            // One client per render: it carries the visitor's bearer once the
-            // store has resolved their session, so it must never outlive the
-            // request. Built against the internal address like every other
-            // server-side call (#3550).
-            httpClient: createAPIClient(config),
-            cookies: ctx.session ? readRenderCookies(event) : {},
-        });
+        // A render that forwards the visitor's token holds a slot of the guard
+        // until it is done, refused or not. A visitor without one holds none,
+        // or ordinary anonymous traffic would use up the slots.
+        const cookies = ctx.session ? readRenderCookies(event) : {};
+        const release = Object.keys(cookies).length > 0 ? sessionForwarding.reserve() : undefined;
+
+        let appHtml : string;
+        let preloadLinks : string;
+        try {
+            [appHtml, preloadLinks] = await render({
+                url: ctx.url,
+                manifest,
+                payload,
+                // One client per render: it carries the visitor's bearer once the
+                // store has resolved their session, so it must never outlive the
+                // request. Built against the internal address like every other
+                // server-side call (#3550).
+                httpClient: sessionForwarding.observe(createAPIClient(config)),
+                cookies: release ? cookies : {},
+            });
+        } finally {
+            release?.();
+        }
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);
         body = replaceTemplateMarker(body, '<!--app-html-->', appHtml);

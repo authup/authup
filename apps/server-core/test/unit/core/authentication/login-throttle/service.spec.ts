@@ -14,6 +14,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { LoginThrottleService } from '../../../../../src/core/authentication/login-throttle/service.ts';
 import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../../../../src/core/entities/event/constants.ts';
@@ -86,7 +87,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('does not throttle the same identifier from a different IP (lockout-DoS mitigation)', async () => {
@@ -96,7 +97,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: OTHER_IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('does not throttle a different identifier from the same IP', async () => {
@@ -106,7 +107,7 @@ describe('LoginThrottleService', () => {
             identifier: OTHER_IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('ignores failures outside the sliding window', async () => {
@@ -116,7 +117,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('scopes the pair to the realm of the attempt', async () => {
@@ -127,7 +128,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
 
         await expect(buildService().assertNotThrottled({
             identifier: IDENTIFIER,
@@ -158,7 +159,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('is disabled by default (no enabled option)', async () => {
@@ -171,7 +172,7 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('fails open when no IP address is derivable', async () => {
@@ -180,7 +181,7 @@ describe('LoginThrottleService', () => {
         await expect(buildService().assertNotThrottled({
             identifier: IDENTIFIER,
             realmId,
-        })).resolves.toBe(false);
+        })).resolves.toBeUndefined();
     });
 
     it('throws a LoginThrottledError carrying retryAfter = windowSeconds', async () => {
@@ -221,13 +222,13 @@ describe('LoginThrottleService', () => {
             realmId,
         };
 
-        await service.assertNotThrottled(ctx);
-        await service.assertNotThrottled(ctx);
+        const first = await service.assertNotThrottled(ctx);
+        const second = await service.assertNotThrottled(ctx);
         await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
 
-        await service.release(ctx);
-        await service.release(ctx);
-        await expect(service.assertNotThrottled(ctx)).resolves.toBe(true);
+        await service.release(ctx, first!);
+        await service.release(ctx, second!);
+        await expect(service.assertNotThrottled(ctx)).resolves.toBeDefined();
     });
 
     it('asks for a short retry when only attempts in flight fill the threshold', async () => {
@@ -264,6 +265,79 @@ describe('LoginThrottleService', () => {
         }
     });
 
+    it('lets slots that were never released lapse while the pair keeps retrying', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(new Date('2026-10-14T10:00:00.000Z'));
+            const service = new LoginThrottleService({
+                repository,
+                cache: new MemoryCache(),
+                options: {
+                    enabled: true,
+                    threshold: THRESHOLD,
+                    windowSeconds: WINDOW_SECONDS,
+                },
+            });
+            const ctx = {
+                identifier: IDENTIFIER,
+                ipAddress: IP,
+                realmId,
+            };
+
+            // reserved and never released, e.g. by a process that crashed
+            for (let i = 0; i < THRESHOLD; i++) {
+                await service.assertNotThrottled(ctx);
+            }
+
+            // retried every second for a minute: still within the two buckets
+            for (let i = 0; i < 60; i++) {
+                vi.setSystemTime(Date.now() + 1_000);
+                await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
+            }
+
+            vi.setSystemTime(Date.now() + 61_000);
+            await expect(service.assertNotThrottled(ctx)).resolves.toBeDefined();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('returns a slot to the bucket it was reserved in when the release crosses a minute', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(new Date('2026-10-14T10:00:59.000Z'));
+            const service = new LoginThrottleService({
+                repository,
+                cache: new MemoryCache(),
+                options: {
+                    enabled: true,
+                    threshold: THRESHOLD,
+                    windowSeconds: WINDOW_SECONDS,
+                },
+            });
+            const ctx = {
+                identifier: IDENTIFIER,
+                ipAddress: IP,
+                realmId,
+            };
+
+            // reserved just before the minute changes, released just after
+            const reservation = await service.assertNotThrottled(ctx);
+            vi.setSystemTime(new Date('2026-10-14T10:01:01.000Z'));
+            await service.release(ctx, reservation!);
+
+            // two buckets on, a fresh burst must still stop at the threshold:
+            // a release booked onto the later bucket would have offset one
+            vi.setSystemTime(new Date('2026-10-14T10:02:30.000Z'));
+            for (let i = 0; i < THRESHOLD; i++) {
+                await expect(service.assertNotThrottled(ctx)).resolves.toBeDefined();
+            }
+            await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('falls back to the audit-row count when the cache cannot reserve', async () => {
         const cache = new MemoryCache();
         const service = new LoginThrottleService({
@@ -286,7 +360,7 @@ describe('LoginThrottleService', () => {
             throw new Error('cache unavailable');
         };
 
-        await expect(service.assertNotThrottled(ctx)).resolves.toBe(false);
+        await expect(service.assertNotThrottled(ctx)).resolves.toBeUndefined();
 
         seedFailures(THRESHOLD);
         await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
@@ -304,7 +378,7 @@ describe('LoginThrottleService', () => {
             },
         });
         for (let i = 0; i < THRESHOLD; i++) {
-            await expect(fresh.assertNotThrottled(ctx)).resolves.toBe(true);
+            await expect(fresh.assertNotThrottled(ctx)).resolves.toBeDefined();
         }
         await expect(fresh.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
     });
@@ -328,6 +402,6 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId,
-        })).resolves.toBeUndefined();
+        }, { bucket: 0 })).resolves.toBeUndefined();
     });
 });

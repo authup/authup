@@ -228,6 +228,29 @@ describe('app/modules/provisioning', () => {
         });
     });
 
+    it('should reassert the system client active flag in both directions', async () => {
+        const source = new DefaultProvisioningSource();
+        const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+
+        const provision = async (clientSystemEnabled: boolean) => {
+            const realms = await source.buildRealms({
+                ...di.resolve(ConfigInjectionKey),
+                clientSystemEnabled,
+            });
+            const provisioning = new ProvisionerModule([{ load: async () => ({ realms }) }]);
+            await provisioning.setup(di);
+
+            const realm = await realmRepository.findOneByOrFail({ name: REALM_MASTER_NAME });
+            const client = await clientRepository.findOneByOrFail({ name: 'system', realmId: realm.id });
+            return client.active;
+        };
+
+        expect(await provision(false)).toEqual(false);
+        expect(await provision(true)).toEqual(true);
+        expect(await provision(false)).toEqual(false);
+    });
+
     it('should leave an existing admin user alone while it stays enabled', async () => {
         const source = new DefaultProvisioningSource();
         const [realm] = await source.buildRealms({

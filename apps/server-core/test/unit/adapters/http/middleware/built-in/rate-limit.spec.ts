@@ -182,6 +182,7 @@ describe('registerRateLimitMiddleware', () => {
                 case 'invalid': throw JWTError.invalid();
                 case 'expired': throw JWTError.expired();
                 case 'inactive': throw JWTError.notActive();
+                case 'key-inactive': throw JWTError.keyNotActive();
                 case 'client': throw OAuth2ClientError.invalid();
                 case 'unauthorized': throw new UnauthorizedError();
                 default: return 'ok';
@@ -243,6 +244,7 @@ describe('registerRateLimitMiddleware', () => {
     it.each([
         ['an expired token', { authorization: 'Bearer expired', 'x-fail': 'expired' }],
         ['a revoked token', { authorization: 'Bearer revoked', 'x-fail': 'inactive' }],
+        ['a token of a disabled or deleted signing key', { authorization: 'Bearer issued', 'x-fail': 'key-inactive' }],
         ['a request carrying no credential', { 'x-fail': 'unauthorized' }],
     ])('should never count %s', async (_label, headers) => {
         const app = createFirstStageApp();

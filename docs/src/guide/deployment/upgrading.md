@@ -62,11 +62,15 @@ the ones that can break an existing setup come first.
   address may cause 300 failed authentications a minute: a wrong Basic
   password on a protected route, a wrong client secret, or a bearer that is
   not a token this deployment signed. Valid requests are not counted there,
-  and neither are an expired or revoked token nor a request without
+  and neither are an expired or revoked token, a token whose signing key was
+  disabled or deleted (answered `inactive_token`), nor a request without
   credentials, which is what the users of a large network behind one NAT
   address cause in ordinary use (every access token is renewed after a
   `401`). Once the failures reach the limit the address is refused as a
-  whole for the rest of the minute. The Swagger UI at `/docs` is now
+  whole for the rest of the minute. A split deployment's auth console
+  forwards the visitor's access token when it renders a page, so after 100
+  refused tokens in a minute it renders logged out until the minute ends,
+  which keeps its own address below that limit. The Swagger UI at `/docs` is now
   limited by the anonymous budget below. After authentication
   a request counts against its identity (users 6000, clients 300000 a minute)
   and an anonymous one against its address (1200 a minute), so users sharing
