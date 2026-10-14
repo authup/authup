@@ -72,13 +72,12 @@ describe('renderHelm', () => {
         ]);
         expect(output.startsWith(`# Written by npm create authup. Install with: ${HELM_COMMANDS.join(' && ')}\n`)).toBe(true);
         expect(output).toContain('existingSecret');
-        expect(output).not.toContain(CHART_REQUIREMENT);
         expect(output).not.toContain('\u2014');
     });
 
-    it('should name the chart requirement only when a split is on', () => {
+    it('should name the chart requirement on every document', () => {
+        expect(render()).toContain(`${CHART_REQUIREMENT}\nserver:\n`);
         expect(render({ workerSplit: true, redis: { url: 'redis://redis:6379' } })).toContain(`${CHART_REQUIREMENT}\nserver:\n`);
-        expect(render({ consoleSplit: true, redis: { url: 'redis://redis:6379' } })).toContain(CHART_REQUIREMENT);
     });
 
     it('should derive hostname and tls from an https url carrying a port', () => {
@@ -152,8 +151,9 @@ describe('renderHelm', () => {
         expect(output).toContain('  migration:\n    enabled: true\n');
         expect(output).toContain('\nworker:\n  enabled: true\n');
 
+        // spelled out without a split too: the chart defaults to a dedicated worker since 0.5.0
         const plain = render();
-        expect(plain).not.toContain('worker');
+        expect(plain).toContain('\nworker:\n  enabled: false\n');
         expect(plain).not.toContain('migration');
     });
 

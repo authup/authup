@@ -9,8 +9,9 @@ import type { Answers, Rendered } from '../types.ts';
 import { quoteYaml } from '../utils.ts';
 
 // The chart version, not the authup version: it is what `helm install` selects, and 0.4.0 is the first that carries
-// worker.* and server.splitConsoles (0.3.0 rejects both through its values schema).
-export const CHART_REQUIREMENT = '# The worker and the console split need the authup helm chart 0.4.0 or later.';
+// worker.* and server.splitConsoles (0.3.0 rejects both through its values schema). Every document names worker.enabled,
+// so every document needs it.
+export const CHART_REQUIREMENT = '# This file needs the authup helm chart 0.4.0 or later.';
 
 export const HELM_COMMANDS: string[] = [
     'helm repo add authup https://helm.authup.org',
@@ -28,9 +29,9 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
     const lines: string[] = [
         `# Written by npm create authup. Install with: ${HELM_COMMANDS.join(' && ')}`,
         '# Secrets in this file (auth.adminPassword, the database password, smtp.connectionString) can move to the chart\'s existingSecret keys; see the chart README.',
-        // worker.* and server.splitConsoles arrived with the chart that tracks v1.0.0-beta.64 (authup/helm PR #29); the
-        // released 0.3.0 rejects both through its values schema, while a no-split document renders on either.
-        ...(answers.workerSplit || answers.consoleSplit ? [CHART_REQUIREMENT] : []),
+        // worker.* arrived with the chart that tracks v1.0.0-beta.64 (authup/helm PR #29); the released 0.3.0 rejects it
+        // through its values schema.
+        CHART_REQUIREMENT,
         'server:',
         `  publicUrl: ${quoteYaml(answers.publicUrl)}`,
         ...(tls && !answers.tlsCertManager ?
@@ -74,9 +75,9 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
         '  #     passwordMinLength: 12',
     );
 
-    if (answers.workerSplit) {
-        lines.push('', 'worker:', '  enabled: true');
-    }
+    // Always spelled out: the chart's default flipped to a dedicated worker in
+    // 0.5.0, so leaving the key out would split a deployment that asked not to.
+    lines.push('', 'worker:', `  enabled: ${answers.workerSplit}`);
 
     lines.push(
         '',

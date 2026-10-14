@@ -117,6 +117,17 @@ describe('helm values against the chart schema', () => {
         });
     }
 
+    it.each([false, true])('should deploy a dedicated worker only for a split (split: %s)', (workerSplit) => {
+        // the chart defaults to a dedicated worker since 0.5.0, so the merged
+        // document must say what the answer asked for, not what the chart does
+        const data = merge(
+            defaults,
+            parse(renderHelm(buildAnswers({ workerSplit }), '1.0.0-beta.64')['values.yaml']),
+        ) as { worker: { enabled: boolean } };
+
+        expect(data.worker.enabled).toEqual(workerSplit);
+    });
+
     it('should reject a mistyped key, so the guard is live', () => {
         expect(validate(defaults)).toBe(true);
         expect(validate(merge(defaults, { server: { splitConsoles: 'yes' } }))).toBe(false);
