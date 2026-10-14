@@ -539,12 +539,12 @@ export class AuthorizationMiddleware {
     }
 
     /**
-     * Under `/realms/:realmId/*` a Basic NAME is looked up in the route realm
-     * first and in the master realm second (issue #3687), never in an
-     * arbitrary realm: the route realm names the resource, not the caller, so
-     * an operator of the master realm keeps managing other realms by name. A
-     * UUID resolves globally, and a flat route keeps its unscoped lookup. The
-     * realm resolver is mounted ahead of this middleware for that reason.
+     * A Basic NAME is looked up in the route realm first and in the master
+     * realm second, or in the master realm alone on a route without one
+     * (issue #3687), never in an arbitrary realm. The route realm names the
+     * resource, not the caller, so an operator of the master realm keeps
+     * managing other realms by name. A UUID resolves globally. The realm
+     * resolver is mounted ahead of this middleware for that reason.
      */
     protected async authenticateBasic<T extends Client | User>(
         event: IAppEvent,
@@ -552,8 +552,12 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ): Promise<Result<T>> {
         const realmId = getRequestRealmID(event);
+        if (!realmId) {
+            return authenticator.safeAuthenticate(header.username, header.password, REALM_MASTER_NAME);
+        }
+
         const result = await authenticator.safeAuthenticate(header.username, header.password, realmId);
-        if (!realmId || result.success || isUUID(header.username)) {
+        if (result.success || isUUID(header.username)) {
             return result;
         }
 

@@ -7658,12 +7658,15 @@ The three realm-resolving grants (`password`, `authorization_code`,
   the master fallback makes "defaulted" indistinguishable from "explicit" by
   the time the realm reaches the authenticator.
 - **HTTP Basic on the management API follows its own rule** (issue #3687,
-  `AuthorizationMiddleware.authenticateBasic`). On `/realms/:realmId/*` a
-  Basic NAME, user or client, is tried in the route realm first and in the
-  master realm second, never in an arbitrary realm; a UUID resolves globally
-  and a flat route keeps its unscoped lookup. The master step exists because
-  there the route realm names the RESOURCE, not the caller, so a master
-  operator keeps managing other realms by name. Strict route-realm scoping
+  `AuthorizationMiddleware.authenticateBasic`). A Basic NAME, user or
+  client, is tried in the route realm first and in the master realm second on
+  `/realms/:realmId/*`, and in the master realm alone on a flat route; never in
+  an arbitrary realm. A UUID resolves globally, so an identity of another realm
+  uses its id or its own realm's nested mount. The master step exists because
+  the route realm names the RESOURCE, not the caller, so a master operator
+  keeps managing other realms by name. Refusing a name several realms hold
+  was rejected for flat routes: a realm admin creating its own `admin` would
+  lock the master admin out. Strict route-realm scoping
   (the `/realms/:realmId/token` rule) was rejected for that reason: it broke
   every master-admin Basic call on another realm's nested mount; so was
   refusing an identity of a foreign realm, which also refuses an `any`

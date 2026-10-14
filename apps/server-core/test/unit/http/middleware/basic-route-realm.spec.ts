@@ -26,9 +26,9 @@ function basic(username: string, password: string) {
 }
 
 /**
- * Issue #3687: a Basic NAME resolves within the route realm on
- * /realms/:realmId/*, a UUID resolves globally, and a flat route is
- * unchanged.
+ * Issue #3687: a Basic NAME resolves in the route realm, then in the
+ * master realm, or in the master realm alone on a flat route. A UUID
+ * resolves globally.
  */
 describe('http/middleware/authorization (Basic under a route realm)', () => {
     const suite = createTestApplication({
@@ -128,9 +128,11 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
             expect((await response.json()).data.id).toEqual(clientB.id);
         });
 
-        it('should keep resolving a client name on a flat route', async () => {
-            const response = await httpRequest(suite, 'GET', '/clients/@me', { headers: { Authorization: basic(clientOnlyB.name, secretB) } });
+        it('should resolve a client name in the master realm on a flat route', async () => {
+            let response = await httpRequest(suite, 'GET', '/users', { headers: { Authorization: basic(clientOnlyB.name, secretB) } });
+            expect(response.status).toEqual(401);
 
+            response = await httpRequest(suite, 'GET', '/clients/@me', { headers: { Authorization: basic(clientOnlyB.id, secretB) } });
             expect(response.status).toEqual(200);
             expect((await response.json()).data.id).toEqual(clientOnlyB.id);
         });
@@ -151,6 +153,15 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
             const response = await httpRequest(suite, 'GET', `/realms/${realmA.name}/users/@me`, { headers: { Authorization: basic(sharedUserName, secretB) } });
 
             expect(response.status).toEqual(401);
+        });
+
+        it('should resolve a user name in the master realm on a flat route', async () => {
+            let response = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: basic(sharedUserName, secretB) } });
+            expect(response.status).toEqual(401);
+
+            response = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: basic(userB.id, secretB) } });
+            expect(response.status).toEqual(200);
+            expect((await response.json()).data.id).toEqual(userB.id);
         });
 
         it('should resolve a user uuid globally', async () => {
