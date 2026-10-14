@@ -86,6 +86,13 @@ the ones that can break an existing setup come first.
 - **HTTP Basic and MFA.** With `userAuthBasic` and `mfaEnabled` both on, Basic
   user credentials are refused for a user holding a confirmed authenticator.
   Scripts acting as such a user must authenticate as a confidential client.
+- **HTTP Basic names resolve in a known realm.** A Basic user or client NAME
+  is looked up in the route realm and then the master realm under
+  `/realms/<realm>/...`, and in the master realm alone on every other route; it
+  is no longer matched in an arbitrary realm. A script authenticating by name
+  as a user or client outside the master realm must call its own realm's
+  routes (`/realms/<realm>/users` instead of `/users`) or send the identity's
+  id instead of its name.
 - **Token parameters travel in the body.** `/token/introspect` and
   `/token/revoke` refuse a `token` query parameter (400).
 - **Attributes policies** can no longer be written with a `$regex` operator in
