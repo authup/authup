@@ -60,7 +60,10 @@ describe('http/controllers/entities/policy/checker', () => {
         expect(response.status).toMatch(/^(success|error)$/);
     });
 
-    it('answers a bearer without the global scope an error, and refuses it naming a subject (#3604)', async () => {
+    // A token's scopes restrict what the identity may DO, never who it is: a
+    // policy that reads only the identity sees it without `global`, and the
+    // caller may name itself, but naming anyone else still needs permission_check.
+    it('answers a bearer without the global scope as its identity, and refuses it naming another subject (#3604)', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
@@ -78,10 +81,14 @@ describe('http/controllers/entities/policy/checker', () => {
         const { client, payload } = await createScopeRestrictedClient(suite);
 
         const bare = await client.policy.check(policy.id);
-        expect(bare.status).toEqual('error');
+        expect(bare.status).toEqual('success');
 
+        const self = await client.policy.check(policy.id, { identity: { type: payload.sub_kind, id: payload.sub } });
+        expect(self.status).toEqual('success');
+
+        const { data: other } = await suite.client.user.create(createFakeUser());
         await expectClientError(
-            () => client.policy.check(policy.id, { identity: { type: payload.sub_kind, id: payload.sub } }),
+            () => client.policy.check(policy.id, { identity: { type: 'user', id: other.id } }),
             { status: 403 },
         );
     });

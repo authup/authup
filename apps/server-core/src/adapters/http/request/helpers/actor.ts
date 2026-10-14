@@ -8,7 +8,7 @@
 import type { IAppEvent } from 'routup';
 import type { ActorContext } from '@authup/server-kit';
 import { useRequestPermissionEvaluator } from '../permission/helper.ts';
-import { useRequestGrants } from './grants.ts';
+import { useRequestPolicyGrants } from '../permission/module.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(event: IAppEvent): ActorContext {
@@ -18,7 +18,8 @@ export function buildActorContext(event: IAppEvent): ActorContext {
         permissionEvaluator: useRequestPermissionEvaluator(event),
         identity: identity ? identity.raw : undefined,
         grants: identity ?
-            () => useRequestGrants(event, { type: identity.type, id: identity.id }) :
+            // scope-gated: a token without `global` delegates nothing
+            () => useRequestPolicyGrants(event, { type: identity.type, id: identity.id }) :
             undefined,
     };
 }

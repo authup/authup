@@ -37,8 +37,7 @@ import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     RequestPermissionEvaluator,
     buildActorContext,
-    useRequestGrants,
-    useRequestPolicyIdentity,
+    useRequestPolicyGrants,
 } from '../../../request/index.ts';
 
 export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext &
@@ -219,16 +218,17 @@ export class AuthorizationController {
 
         const actor = buildActorContext(event);
 
-        // The grants ride on the identity only when policies may see it. They
-        // are loaded here, before any evaluation, because a failed load is the
-        // one failure a verdict cannot be derived from: inside the engine it
-        // would be flattened into a denial, an authoritative empty set the kit
-        // memoizes. Thrown from here, it fails the request.
+        // The grants ride on the identity, scope-gated (a token without
+        // `global` holds none). They are loaded here, before any evaluation,
+        // because a failed load is the one failure a verdict cannot be
+        // derived from: inside the engine it would be flattened into a
+        // denial, an authoritative empty set the kit memoizes. Thrown from
+        // here, it fails the request.
         let identity = toIdentityPolicyData(actor.identity);
-        if (identity && useRequestPolicyIdentity(event)) {
+        if (identity) {
             identity = {
                 ...identity,
-                grants: await useRequestGrants(event, identity),
+                grants: await useRequestPolicyGrants(event, identity),
             };
         }
 

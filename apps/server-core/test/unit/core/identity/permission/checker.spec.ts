@@ -41,6 +41,7 @@ import {
     setRequestGrantsResolver,
     setRequestIdentity,
     setRequestScopes,
+    useRequestPolicyGrants,
 } from '../../../../../src/adapters/http/request';
 import { createTestApplication } from '../../../../app';
 
@@ -52,9 +53,9 @@ describe('core/identity/permission/checker', () => {
     let identityPermissionProvider: IIdentityPermissionProvider;
 
     /**
-     * The actor the controller hands the checker: the authorization
-     * middleware's evaluator behind the request wrapper, and the identity
-     * policies may see for the request, which a token without `global` has not.
+     * The actor the controller hands the checker (`buildActorContext`): the
+     * authorization middleware's evaluator behind the request wrapper, the
+     * request's identity, and its scope-gated grants — none without `global`.
      */
     function requestActor(identity: Identity, scopes: string[] = [ScopeName.GLOBAL]) : ActorContext {
         const event = { store: {} } as unknown as IAppEvent;
@@ -63,7 +64,8 @@ describe('core/identity/permission/checker', () => {
         setRequestGrantsResolver(event, (subject) => identityPermissionProvider.getFor(subject));
 
         return {
-            identity: scopes.includes(ScopeName.GLOBAL) ? identity : undefined,
+            identity,
+            grants: () => useRequestPolicyGrants(event, { type: identity.type, id: identity.data.id }),
             permissionEvaluator: new RequestPermissionEvaluator(event, new PermissionEvaluator({
                 provider: new PermissionDatabaseProvider(suite.dataSource),
                 policyEngine: new PolicyEngine(),

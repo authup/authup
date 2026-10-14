@@ -27,8 +27,9 @@ export type PermissionCheckerDataContext = {
  * The data a permission or policy check evaluates, decided by its own
  * `identity` key (#3604):
  *
- * - absent: the actor's identity, which the HTTP routes hand over only when
- *   the request's scopes include `global`;
+ * - absent: the actor's identity, whenever one resolved; its grants are
+ *   the actor's own (`actor.grants`), which the HTTP routes scope-gate, so a
+ *   token without `global` is checked as its identity holding none;
  * - `null`: no identity at all;
  * - the actor's own identity: that identity, as given;
  * - any other identity: that identity, as given, once the actor may check
