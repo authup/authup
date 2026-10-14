@@ -127,17 +127,27 @@ export function createRenderPage(distPath?: string) : RenderPage {
             data: ctx.data,
         };
 
-        const [appHtml, preloadLinks] = await render({
-            url: ctx.url,
-            manifest,
-            payload,
-            // One client per render: it carries the visitor's bearer once the
-            // store has resolved their session, so it must never outlive the
-            // request. Built against the internal address like every other
-            // server-side call (#3550).
-            httpClient: sessionForwarding.observe(createAPIClient(config)),
-            cookies: ctx.session && sessionForwarding.allows() ? readRenderCookies(event) : {},
-        });
+        // A render that forwards the visitor's token holds a slot of the guard
+        // until it is done, refused or not.
+        const release = ctx.session ? sessionForwarding.reserve() : undefined;
+
+        let appHtml : string;
+        let preloadLinks : string;
+        try {
+            [appHtml, preloadLinks] = await render({
+                url: ctx.url,
+                manifest,
+                payload,
+                // One client per render: it carries the visitor's bearer once the
+                // store has resolved their session, so it must never outlive the
+                // request. Built against the internal address like every other
+                // server-side call (#3550).
+                httpClient: sessionForwarding.observe(createAPIClient(config)),
+                cookies: release ? readRenderCookies(event) : {},
+            });
+        } finally {
+            release?.();
+        }
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);
         body = replaceTemplateMarker(body, '<!--app-html-->', appHtml);

@@ -112,7 +112,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             ipAddress,
             realmId: isUUID(identifier) ? undefined : realm.id,
         };
-        const reserved = await this.loginThrottleService?.assertNotThrottled(throttle);
+        const reservation = await this.loginThrottleService?.assertNotThrottled(throttle);
 
         let user : User;
         try {
@@ -138,8 +138,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
             throw e;
         } finally {
-            if (reserved) {
-                await this.loginThrottleService?.release(throttle);
+            if (reservation) {
+                await this.loginThrottleService?.release(throttle, reservation);
             }
         }
 

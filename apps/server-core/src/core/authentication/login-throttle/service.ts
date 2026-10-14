@@ -15,6 +15,7 @@ import type { IEventRepository } from '../../entities/index.ts';
 import type {
     ILoginThrottleService,
     LoginThrottleContext,
+    LoginThrottleReservation,
     LoginThrottleServiceContext,
     LoginThrottleServiceOptions,
 } from './types.ts';
@@ -49,9 +50,9 @@ export class LoginThrottleService implements ILoginThrottleService {
         this.options = ctx.options ?? {};
     }
 
-    async assertNotThrottled(ctx: LoginThrottleContext): Promise<boolean> {
+    async assertNotThrottled(ctx: LoginThrottleContext): Promise<LoginThrottleReservation | undefined> {
         if (!this.options.enabled) {
-            return false;
+            return undefined;
         }
 
         // The (identifier, ip) pair is the account-lockout-DoS mitigation: an
@@ -59,7 +60,7 @@ export class LoginThrottleService implements ILoginThrottleService {
         // derivable IP the pair does not exist, so the throttle fails open
         // instead of degrading to a lockable per-identifier key.
         if (!ctx.ipAddress) {
-            return false;
+            return undefined;
         }
 
         const threshold = this.options.threshold ?? DEFAULT_THRESHOLD;
@@ -71,11 +72,12 @@ export class LoginThrottleService implements ILoginThrottleService {
         // an unreachable cache must not fail every login: the attempt is then
         // not reserved, and the audit-row count alone still throttles.
         let inflight = 0;
-        let reserved = false;
+        let reservation : LoginThrottleReservation | undefined;
         if (this.cache) {
             try {
-                inflight = await this.reserve(ctx);
-                reserved = true;
+                const bucket = this.currentBucket();
+                inflight = await this.reserve(ctx, bucket);
+                reservation = { bucket };
             } catch (e) {
                 this.logger?.warn(`Could not reserve a login attempt: ${e instanceof Error ? e.message : String(e)}`);
             }
@@ -94,39 +96,39 @@ export class LoginThrottleService implements ILoginThrottleService {
                 since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),
             });
         } catch (e) {
-            if (reserved) await this.release(ctx);
+            if (reservation) await this.release(ctx, reservation);
             throw e;
         }
 
         if (count >= threshold) {
-            if (reserved) await this.release(ctx);
+            if (reservation) await this.release(ctx, reservation);
             throw new LoginThrottledError({ retryAfter: windowSeconds });
         }
 
         // the threshold is only full of attempts still running: those end
         // within moments, so the caller may retry almost at once.
         if (count + inflight >= threshold) {
-            if (reserved) await this.release(ctx);
+            if (reservation) await this.release(ctx, reservation);
             throw new LoginThrottledError({
                 message: 'Too many concurrent login attempts. Please try again.',
                 retryAfter: 1,
             });
         }
 
-        return reserved;
+        return reservation;
     }
 
-    async release(ctx: LoginThrottleContext): Promise<void> {
+    async release(ctx: LoginThrottleContext, reservation: LoginThrottleReservation): Promise<void> {
         if (!this.options.enabled || !ctx.ipAddress || !this.cache) {
             return;
         }
 
         // best effort: the outcome of the attempt must reach the caller, and
-        // a slot not returned lapses with its bucket. The current bucket is
-        // decremented even when the slot was reserved in the previous one:
-        // in flight is the sum of both, so either keeps it exact.
+        // a slot not returned lapses with its bucket. The slot goes back to
+        // the bucket it was taken from: a later one would read below zero
+        // once it became the previous bucket and offset real attempts.
         try {
-            await this.cache.increment(this.buildKey(ctx, this.currentBucket()), -1, { ttl: INFLIGHT_BUCKET_MS * 2 });
+            await this.cache.increment(this.buildKey(ctx, reservation.bucket), -1, { ttl: INFLIGHT_BUCKET_MS * 2 });
         } catch (e) {
             this.logger?.warn(`Could not release a login attempt: ${e instanceof Error ? e.message : String(e)}`);
         }
@@ -136,15 +138,14 @@ export class LoginThrottleService implements ILoginThrottleService {
      * Reserve a slot and answer how many other attempts of the pair are in
      * flight.
      */
-    protected async reserve(ctx: LoginThrottleContext): Promise<number> {
+    protected async reserve(ctx: LoginThrottleContext, bucket: number): Promise<number> {
         const cache = this.cache as ICache;
-        const bucket = this.currentBucket();
 
         const current = await cache.increment(this.buildKey(ctx, bucket), 1, { ttl: INFLIGHT_BUCKET_MS * 2 });
         const previous = await cache.get(this.buildKey(ctx, bucket - 1));
 
-        // a release landing in a later bucket than its reservation leaves the
-        // later one below zero until it lapses, so never report less than none
+        // a slot released after its bucket lapsed leaves that bucket below
+        // zero, so never report less than none
         return Math.max(0, current - 1 + (typeof previous === 'number' ? previous : 0));
     }
 

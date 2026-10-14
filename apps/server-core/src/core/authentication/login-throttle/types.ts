@@ -43,19 +43,27 @@ export type LoginThrottleContext = {
     realmId?: string | null,
 };
 
+/**
+ * A slot assertNotThrottled reserved for an admitted attempt, handed back to
+ * release() so the slot is returned to the bucket it was taken from.
+ */
+export type LoginThrottleReservation = {
+    bucket: number,
+};
+
 export interface ILoginThrottleService {
     /**
      * Throw LoginThrottledError when recent LOGIN_FAILED audit events plus
      * the attempts still in flight for the (identifier, ip) pair hit the
-     * threshold. Resolves true when the admitted attempt reserved a slot,
-     * which must then be ended with release(); false when nothing was
-     * reserved (throttle disabled, no ip, no or unreachable cache).
+     * threshold. Resolves the reservation when the admitted attempt reserved
+     * a slot, which must then be ended with release(); undefined when nothing
+     * was reserved (throttle disabled, no ip, no or unreachable cache).
      */
-    assertNotThrottled(ctx: LoginThrottleContext): Promise<boolean>;
+    assertNotThrottled(ctx: LoginThrottleContext): Promise<LoginThrottleReservation | undefined>;
 
     /**
      * End an attempt for which assertNotThrottled reserved a slot, after its
      * outcome has been recorded. Never throws.
      */
-    release(ctx: LoginThrottleContext): Promise<void>;
+    release(ctx: LoginThrottleContext, reservation: LoginThrottleReservation): Promise<void>;
 }

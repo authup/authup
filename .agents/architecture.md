@@ -1564,9 +1564,11 @@ API. The six page GETs became a stateless hop:
   so the first stage charges it to the console's address, and junk
   access-token cookies would otherwise push that address over 300 and lock
   every hosted page out of the API. The render therefore stops forwarding the
-  cookie for the rest of a minute once 100 forwarded bearers were refused
-  (`createSessionForwardingGuard`, `apps/server-auth-console/src/session.ts`,
-  one per handler, counting what the first stage counts); past it the page
+  cookie for the rest of a minute once refused bearers plus renders still
+  waiting for the API reach 100 (`createSessionForwardingGuard`,
+  `apps/server-auth-console/src/session.ts`, one per handler, counting what
+  the first stage counts; a render reserves its slot before it forwards, or a
+  parallel burst would forward before the first refusal came back); past it the page
   renders logged out, which is what an unusable token renders anyway, and the
   browser restores the session on hydration.
   The composed `authup start` is loopback and skipped. A split deployment
@@ -9210,7 +9212,10 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `retryAfter: 1` and a message that claims no failures. `release()` is best
   effort and never throws over the attempt's own outcome; a slot it could not
   return lapses within two buckets, because a bucket is written only while it
-  is current. One counter re-armed on every attempt (the sliding TTL
+  is current. `assertNotThrottled` answers the reservation and `release()`
+  returns the slot to the bucket it names: a release booked onto a later
+  bucket would read below zero once that bucket became the previous one and
+  admit an attempt past the threshold. One counter re-armed on every attempt (the sliding TTL
   `increment` gives) kept a leaked slot alive for as long as the pair kept
   retrying. A user-id
   identifier drops the realm from the key and from the count, since

@@ -123,9 +123,11 @@ export type SessionForwardingGuardOptions = {
 
 export type SessionForwardingGuard = {
     /**
-     * Whether a render may forward the visitor's access token now.
+     * Reserve the right to forward the visitor's access token for one render.
+     * Resolves the function that ends the reservation once the render is done,
+     * or undefined when the limit is reached and the render must not forward.
      */
-    allows() : boolean,
+    reserve() : (() => void) | undefined,
     /**
      * Count the bearers the API refuses on this client.
      */

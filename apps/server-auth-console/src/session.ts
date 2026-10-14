@@ -8,6 +8,7 @@
 import { getClientErrorCode } from '@authup/core-http-kit';
 import type { Client } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { SESSION_FORWARDING_REJECTED_MAX, SESSION_FORWARDING_WINDOW } from './constants';
 import type { SessionForwardingGuard, SessionForwardingGuardOptions } from './types';
 
@@ -18,15 +19,7 @@ import type { SessionForwardingGuard, SessionForwardingGuardOptions } from './ty
  * the API does not count it and neither does this guard.
  */
 function isRejectedBearer(err: unknown) : boolean {
-    if (
-        typeof err !== 'object' ||
-        err === null ||
-        !('response' in err) ||
-        typeof err.response !== 'object' ||
-        err.response === null ||
-        !('status' in err.response) ||
-        err.response.status !== 401
-    ) {
+    if (!isObject(err) || !isObject(err.response) || err.response.status !== 401) {
         return false;
     }
 
@@ -44,9 +37,12 @@ function isRejectedBearer(err: unknown) : boolean {
  * cookies would push the console's address over the API's failed
  * authentication limit and lock every hosted page out of the API.
  *
- * Past the limit the guard stops forwarding the cookie for the rest of the
- * window, so a page renders logged out, which is what a token that does not
- * verify renders anyway; the browser restores the session on hydration.
+ * A render reserves capacity before it forwards and returns it once it is
+ * done, so renders still waiting for the API count against the limit as well:
+ * otherwise a burst of parallel renders would all forward before the first
+ * refusal came back. Past the limit a page renders without the cookie, which
+ * is what a token that does not verify renders anyway; the browser restores
+ * the session on hydration.
  */
 export function createSessionForwardingGuard(
     options: SessionForwardingGuardOptions = {},
@@ -57,6 +53,7 @@ export function createSessionForwardingGuard(
 
     let windowStart = 0;
     let rejected = 0;
+    let inflight = 0;
 
     const roll = () => {
         const time = now();
@@ -67,9 +64,23 @@ export function createSessionForwardingGuard(
     };
 
     return {
-        allows() {
+        reserve() {
             roll();
-            return rejected < max;
+            if (rejected + inflight >= max) {
+                return undefined;
+            }
+
+            inflight += 1;
+
+            let released = false;
+            return () => {
+                if (released) {
+                    return;
+                }
+
+                released = true;
+                inflight -= 1;
+            };
         },
         observe(client: Client) {
             client.on('responseError', (err) => {

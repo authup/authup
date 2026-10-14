@@ -39,12 +39,31 @@ describe('createSessionForwardingGuard', () => {
         guard.observe(client);
 
         for (let i = 0; i < 2; i++) {
+            guard.reserve()!();
             fail(401, ErrorCode.JWT_INVALID);
         }
-        expect(guard.allows()).toBeTruthy();
 
+        const third = guard.reserve();
+        expect(third).toBeDefined();
+        third!();
         fail(401, ErrorCode.JWT_INVALID);
-        expect(guard.allows()).toBeFalsy();
+
+        expect(guard.reserve()).toBeUndefined();
+    });
+
+    it('should count renders still waiting for the API against the limit', () => {
+        const guard = createSessionForwardingGuard({ max: 3, now: () => 1000 });
+
+        // a burst of parallel renders, none answered yet
+        const reservations = [guard.reserve(), guard.reserve(), guard.reserve()];
+        expect(reservations.every((release) => typeof release === 'function')).toBeTruthy();
+        expect(guard.reserve()).toBeUndefined();
+
+        // a render that ends unrefused hands its slot back, once
+        reservations[0]!();
+        reservations[0]!();
+        expect(guard.reserve()).toBeDefined();
+        expect(guard.reserve()).toBeUndefined();
     });
 
     it('should forward again in the next window', () => {
@@ -57,11 +76,12 @@ describe('createSessionForwardingGuard', () => {
         const { client, fail } = createStubClient();
         guard.observe(client);
 
+        guard.reserve()!();
         fail(401, ErrorCode.JWT_INVALID);
-        expect(guard.allows()).toBeFalsy();
+        expect(guard.reserve()).toBeUndefined();
 
         time += 60_000;
-        expect(guard.allows()).toBeTruthy();
+        expect(guard.reserve()).toBeDefined();
     });
 
     it.each([
@@ -73,8 +93,9 @@ describe('createSessionForwardingGuard', () => {
         const { client, fail } = createStubClient();
         guard.observe(client);
 
+        guard.reserve()!();
         fail(status, code);
-        expect(guard.allows()).toBeTruthy();
+        expect(guard.reserve()).toBeDefined();
     });
 
     it('should hand the error on to the next hook', () => {

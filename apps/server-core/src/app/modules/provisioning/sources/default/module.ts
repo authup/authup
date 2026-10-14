@@ -263,18 +263,19 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
         ];
 
-        let clientStrategy : ProvisioningEntityStrategy<Client> | undefined;
-        if (config.clientSystemSecretReset) {
-            clientStrategy = {
-                type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['builtIn', 'authMethod', 'tokenBindingMethod', 'secret', 'secretHashed', 'secretEncrypted'],
-            };
-        } else {
-            clientStrategy = {
-                type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['builtIn', 'authMethod', 'tokenBindingMethod'],
-            };
-        }
+        // `active` follows `clientSystemEnabled` on every boot, in both
+        // directions: the flag is the operator's switch for the client, so
+        // flipping it must reach a row an earlier boot created.
+        const clientStrategy : ProvisioningEntityStrategy<Client> = {
+            type: ProvisioningEntityStrategyType.MERGE,
+            attributes: [
+                'builtIn',
+                'authMethod',
+                'tokenBindingMethod',
+                'active',
+                ...(config.clientSystemSecretReset ? ['secret' as const, 'secretHashed' as const, 'secretEncrypted' as const] : []),
+            ],
+        };
 
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.clients = [
