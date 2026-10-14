@@ -12,6 +12,7 @@ import {
     isValidupError,
 } from 'validup';
 import { defineIssueItem } from '@ebec/core';
+import { hasOwnProperty } from '@authup/kit';
 import { JWTError } from '@authup/specs';
 import { useRequestQuery } from '@routup/basic/query';
 import { readFromLocations, useRequestToken } from '../../../../request/index.ts';
@@ -41,7 +42,7 @@ export async function extractTokenFromRequest(event: IAppEvent) : Promise<string
     // unreadable value is therefore reported as an unreadable token (a
     // `JWTError`, which both endpoints answer per RFC 7662 / 7009 §2.2), and
     // only an empty one is a malformed request.
-    if (Object.prototype.hasOwnProperty.call(body, 'token')) {
+    if (hasOwnProperty(body, 'token')) {
         if (typeof body.token !== 'string' || body.token.length === 0) {
             throw new ValidupError([
                 defineIssueItem({
