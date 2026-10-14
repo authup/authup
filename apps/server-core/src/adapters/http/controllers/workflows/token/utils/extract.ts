@@ -33,15 +33,10 @@ export async function extractTokenFromRequest(event: IAppEvent) : Promise<string
 
     const body = await readFromLocations(event, ['body']);
 
-    // A token supplied in the body is THE token, whatever it looks like.
-    // Falling back to the caller's own bearer when it fails validation would
-    // answer about a different token than the one asked for: a resource
-    // server forwarding a malformed client token to `/token/introspect` would
-    // get its OWN credential reported as active, and `/token/revoke` would
-    // revoke the caller's token instead of the one named. A present but
-    // unreadable value is therefore reported as an unreadable token (a
-    // `JWTError`, which both endpoints answer per RFC 7662 / 7009 §2.2), and
-    // only an empty one is a malformed request.
+    // A supplied token is the only token the request is about. Never fall
+    // back to the caller's bearer: introspection would report the caller's
+    // own credential, revocation would revoke it. An unreadable value is a
+    // JWTError (RFC 7662 / 7009 §2.2), only an empty one a malformed request.
     if (hasOwnProperty(body, 'token')) {
         if (typeof body.token !== 'string' || body.token.length === 0) {
             throw new ValidupError([
