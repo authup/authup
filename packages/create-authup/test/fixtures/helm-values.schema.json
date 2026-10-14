@@ -5974,6 +5974,25 @@
           "title": "command",
           "type": "array"
         },
+        "containerPorts": {
+          "additionalProperties": false,
+          "properties": {
+            "http": {
+              "default": 3000,
+              "description": "Worker health listener port (WORKER_PORT)",
+              "maximum": 65535,
+              "minimum": 1,
+              "required": [],
+              "title": "http",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "http"
+          ],
+          "title": "containerPorts",
+          "type": "object"
+        },
         "containerSecurityContext": {
           "additionalProperties": true,
           "description": "Container security context",
@@ -6060,6 +6079,57 @@
           ],
           "title": "containerSecurityContext"
         },
+        "customReadinessProbe": {
+          "additionalProperties": true,
+          "description": "Custom readiness probe with exactly one handler (overrides readinessProbe)",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "required": []
+            },
+            {
+              "required": [
+                "httpGet"
+              ]
+            },
+            {
+              "required": [
+                "tcpSocket"
+              ]
+            },
+            {
+              "required": [
+                "exec"
+              ]
+            },
+            {
+              "required": [
+                "grpc"
+              ]
+            }
+          ],
+          "properties": {
+            "exec": {
+              "required": [],
+              "type": "object"
+            },
+            "grpc": {
+              "required": [],
+              "type": "object"
+            },
+            "httpGet": {
+              "required": [],
+              "type": "object"
+            },
+            "tcpSocket": {
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "title": "customReadinessProbe",
+          "type": "object"
+        },
         "disableRestartOnChanges": {
           "default": false,
           "description": "Disable checksum annotations that roll pods on configuration changes",
@@ -6068,7 +6138,7 @@
           "type": "boolean"
         },
         "enabled": {
-          "default": false,
+          "default": true,
           "description": "Deploy a dedicated background worker (requires server.enabled). It never\nmigrates: on a fresh install it restarts until the server has initialized\nthe schema; enable server.migration.enabled so upgrades run the Job first",
           "required": [],
           "title": "enabled",
@@ -6262,6 +6332,58 @@
           "title": "priorityClassName",
           "type": "string"
         },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Check sweep health without restarting the worker on database outages",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "failureThreshold": {
+              "default": 3,
+              "required": [],
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 0,
+              "required": [],
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 30,
+              "required": [],
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "required": [],
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 5,
+              "required": [],
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "timeoutSeconds",
+            "failureThreshold",
+            "successThreshold"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
         "replicaCount": {
           "default": 1,
           "description": "Number of worker replicas (one is normally sufficient)",
@@ -6382,6 +6504,8 @@
       "required": [
         "enabled",
         "replicaCount",
+        "containerPorts",
+        "readinessProbe",
         "command",
         "args",
         "extraEnvVars",
