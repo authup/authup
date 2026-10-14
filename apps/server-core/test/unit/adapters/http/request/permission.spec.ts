@@ -17,9 +17,12 @@ import type { IAppEvent } from 'routup';
 import { describe, expect, it } from 'vitest';
 import {
     RequestPermissionEvaluator,
+    buildActorContext,
     setRequestGrantsResolver,
     setRequestIdentity,
+    setRequestPermissionEvaluator,
     setRequestScopes,
+    useRequestPolicyGrants,
 } from '../../../../../src/adapters/http/request';
 
 const grants : PermissionPolicyBinding[] = [{ permission: { name: 'test' }, realmScope: 'any' }];
@@ -87,7 +90,9 @@ describe('RequestPermissionEvaluator', () => {
         expect(base.preEvaluateCalls).toHaveLength(0);
     });
 
-    it('should not attach identity policy data without global scope', async () => {
+    // A token's scopes restrict what the identity may DO, never who it is:
+    // without `global` the identity still resolves, holding no grant.
+    it('should attach the identity without grants when the scopes withhold global', async () => {
         const event = createEvent();
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         // No scopes → not global.
@@ -98,15 +103,32 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.evaluate({ name: 'test' });
 
         const ctx = base.evaluateCalls[0];
-        expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBeFalsy();
+        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
+            type: 'client',
+            id: 'c1',
+            grants: [],
+        });
+    });
+
+    it('should not load the grants when the scopes withhold global', async () => {
+        const event = createEvent();
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+        setRequestGrantsResolver(event, async () => {
+            throw new Error('grants must not be loaded');
+        });
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await expect(evaluator.preEvaluate({ name: 'test' })).resolves.toBeUndefined();
     });
 
     // The wrapper is the ONE place the scope condition is spelled, so a caller
     // that fills the bag itself (the batch authorization check passes every
-    // identity-reading policy in a tree its identity) can never outrank it: an
-    // attach alone would leave a scope-restricted bearer answered as a
-    // fully-scoped one wherever the key was pre-placed.
-    it('should remove a pre-placed identity without global scope', async () => {
+    // identity-reading policy in a tree its identity) can never outrank it: a
+    // pre-placed identity, grants and all, is replaced by the request's own,
+    // carrying only what its scopes allow.
+    it('should strip the grants of a pre-placed identity without global scope', async () => {
         const event = createEvent();
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
 
@@ -126,9 +148,35 @@ describe('RequestPermissionEvaluator', () => {
         });
 
         const ctx = base.preEvaluateCalls[0];
-        expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
-        // only the identity is withheld; the rest of the caller's bag rides on
+        expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
+            type: 'client',
+            id: 'c1',
+            grants: [],
+        });
+        // the rest of the caller's bag rides on
         expect(ctx.data?.has(BuiltInPolicyType.REALM_MATCH)).toBe(true);
+    });
+
+    it('should remove a pre-placed identity when no identity resolved', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        await evaluator.preEvaluate({
+            name: 'test',
+            data: new PolicyData({
+                [BuiltInPolicyType.IDENTITY]: {
+                    type: 'client', 
+                    id: 'c1', 
+                    grants, 
+                },
+            }),
+        });
+
+        const ctx = base.preEvaluateCalls[0];
+        expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
     });
 
     it('should overwrite a pre-placed identity with the request\'s own', async () => {
@@ -156,5 +204,34 @@ describe('RequestPermissionEvaluator', () => {
             id: 'c1', 
             grants, 
         });
+    });
+});
+
+describe('useRequestPolicyGrants', () => {
+    it('should resolve the grants for a global-scoped request', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+
+        await expect(useRequestPolicyGrants(event, { type: 'client', id: 'c1' })).resolves.toEqual(grants);
+    });
+
+    it('should resolve no grants when the scopes withhold global', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.OPEN_ID]);
+
+        await expect(useRequestPolicyGrants(event, { type: 'client', id: 'c1' })).resolves.toEqual([]);
+    });
+});
+
+describe('buildActorContext', () => {
+    it('should keep the identity but delegate no grants when the scopes withhold global', async () => {
+        const event = createEvent();
+        setRequestScopes(event, [ScopeName.OPEN_ID]);
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+        setRequestPermissionEvaluator(event, new RequestPermissionEvaluator(event, new FakePermissionEvaluator()));
+
+        const actor = buildActorContext(event);
+        expect(actor.identity).toMatchObject({ type: 'client' });
+        await expect(actor.grants?.()).resolves.toEqual([]);
     });
 });

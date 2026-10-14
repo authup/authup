@@ -8,9 +8,11 @@
 import { ScopeName } from '@authup/core-kit';
 import type {
     IPermissionEvaluator,
+    IdentityPolicyData,
     PermissionCompileContext,
     PermissionCompileResult,
     PermissionEvaluationContext,
+    PermissionPolicyBinding,
 } from '@authup/access';
 import {
     BuiltInPolicyType,
@@ -65,12 +67,16 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
             // rather than inside the engine: a failed load then fails the
             // request as itself, where the engine would flatten it into a
             // permission denial. The load is the request's own (#3597), so a
-            // token's grants stay narrowed to its client.
-            const grants = await useRequestGrants(this.event, identity);
+            // token's grants stay narrowed to its client, and scope-gated, so
+            // a token without `global` evaluates as its identity holding none.
+            const grants = await useRequestPolicyGrants(this.event, identity);
 
             ctx.data = ctx.data || new PolicyData();
             // a plain object: RequestIdentity exposes its fields as getters,
-            // which a spread would drop
+            // which a spread would drop. Always overwritten, never merged: a
+            // caller may place an identity in the bag itself (the batch
+            // authorization check does), and only the request's own identity,
+            // carrying only the grants its scopes allow, may survive that.
             ctx.data.set(BuiltInPolicyType.IDENTITY, {
                 type: identity.type,
                 id: identity.id,
@@ -83,14 +89,8 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
             return ctx;
         }
 
-        // Symmetrical, so this is the ONE place the scope condition is spelled:
-        // a caller may place an identity in the bag itself (the batch
-        // authorization check does, so every identity-reading policy in a tree
-        // gets it), and what the request was NOT resolved as must never survive
-        // that. Without the removal the gate only held for a caller that
-        // happened to leave the key empty, so placing it anywhere else silently
-        // answered a scope-restricted bearer as a fully-scoped one.
-        // The grants go with it, since they are part of the identity.
+        // No identity was resolved (an anonymous request), so none may be
+        // evaluated: a caller-placed one is removed, grants and all.
         if (ctx.data) {
             ctx.data.delete(BuiltInPolicyType.IDENTITY);
         }
@@ -100,23 +100,36 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 }
 
 /**
- * The identity a policy may see for this request: its own when the scopes
- * include `global`, none otherwise. The ONE place that condition is spelled:
- * `RequestPermissionEvaluator` asserts it on every evaluation, and
- * `POST /policies/:id/check`, which runs the policy engine without a
- * permission evaluator, hands it to the checker as the caller (#3604).
+ * The identity a policy may see for this request: its own, whenever one was
+ * resolved. A token's scopes never hide WHO is asking; they restrict WHAT the
+ * identity may do, which `useRequestPolicyGrants` decides.
  */
 export function useRequestPolicyIdentity(event: IAppEvent) : RequestIdentity | undefined {
-    const identity = useRequestIdentity(event);
-
     // Only an identity that was actually resolved. Setting `undefined` would
     // still make `PolicyData.has('identity')` true (key presence), so the
     // built-in identity evaluator would run its validator against `undefined`
     // and throw an uncaught error instead of a clean permission denial (the
     // deleted-subject edge case in issue #3184).
-    if (identity && useRequestScopes(event).includes(ScopeName.GLOBAL)) {
-        return identity;
+    return useRequestIdentity(event) || undefined;
+}
+
+/**
+ * The grants the request's own identity may exercise: what its token carries
+ * when the scopes include `global`, none otherwise. The ONE place that
+ * condition is spelled: `RequestPermissionEvaluator` applies it on every
+ * evaluation, `buildActorContext` hands it to the services that delegate the
+ * actor's grants, and the batch authorization check and
+ * `POST /{permissions,policies}/:id/check` (#3604) evaluate the actor through
+ * it. Without `global` the identity still resolves, so identity-reading
+ * policies see who is asking, but every grant-bound permission denies.
+ */
+export async function useRequestPolicyGrants(
+    event: IAppEvent,
+    identity: Pick<IdentityPolicyData, 'type' | 'id'>,
+) : Promise<PermissionPolicyBinding[]> {
+    if (!useRequestScopes(event).includes(ScopeName.GLOBAL)) {
+        return [];
     }
 
-    return undefined;
+    return useRequestGrants(event, identity);
 }

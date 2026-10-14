@@ -47,7 +47,6 @@ import {
     applyRouteRealmIDToBody,
     buildActorContext,
     getRequestRealmID,
-    useRequestPolicyIdentity,
 } from '../../../request/index.ts';
 import { serveEntityStats } from '../stats.ts';
 
@@ -128,13 +127,13 @@ export class PermissionController {
         @DBody() data: any,
         @DContext() event: IAppEvent,
     ): Promise<PermissionAPICheckResponse> {
-        // the checker evaluates the data on its own evaluator, so the actor's identity
-        // is the one policies may see for this request
+        // the checker evaluates the data on its own evaluator: the actor's identity
+        // is the one policies see, and its grants are scope-gated (#3604)
         const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
             id,
             data,
-            { ...actor, identity: useRequestPolicyIdentity(event)?.raw },
+            actor,
             getRequestRealmID(event),
         );
 

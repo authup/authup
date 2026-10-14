@@ -65,7 +65,11 @@ describe('http/controllers/entities/permission/checker', () => {
         expect(response.status).toMatch(/^(success|error)$/);
     });
 
-    it('answers a bearer without the global scope an error, and refuses it naming a subject (#3604)', async () => {
+    // A token's scopes restrict what the identity may DO, never who it is:
+    // without `global` the caller is checked as its identity holding no grant,
+    // so a grant-bound permission denies — whether it names itself or not —
+    // and naming anyone else still needs permission_check.
+    it('answers a bearer without the global scope as its identity holding no grant, and refuses it naming another subject (#3604)', async () => {
         const control = await suite.client.permission.check(PermissionName.USER_UPDATE);
         expect(control.status).toEqual('success');
 
@@ -74,8 +78,12 @@ describe('http/controllers/entities/permission/checker', () => {
         const bare = await client.permission.check(PermissionName.USER_UPDATE);
         expect(bare.status).toEqual('error');
 
+        const self = await client.permission.check(PermissionName.USER_UPDATE, { identity: { type: payload.sub_kind, id: payload.sub } });
+        expect(self.status).toEqual('error');
+
+        const { data: other } = await suite.client.user.create(createFakeUser());
         await expectClientError(
-            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: payload.sub_kind, id: payload.sub } }),
+            () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: other.id } }),
             { status: 403 },
         );
     });

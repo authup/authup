@@ -13,8 +13,8 @@ import type { TestHTTPApplication } from '../app';
 
 /**
  * A client bearing the admin's own access token re-signed with `scope`, which
- * by default withholds `global`, so every identity-reading policy is answered
- * as it is for a scope-restricted bearer. `payload` names the subject.
+ * by default withholds `global`, so it is answered as a scope-restricted bearer:
+ * its identity, holding no grant. `payload` names the subject.
  */
 export async function createScopeRestrictedClient(suite: TestHTTPApplication, scope = 'openid') {
     const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
