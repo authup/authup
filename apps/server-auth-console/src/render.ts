@@ -128,8 +128,10 @@ export function createRenderPage(distPath?: string) : RenderPage {
         };
 
         // A render that forwards the visitor's token holds a slot of the guard
-        // until it is done, refused or not.
-        const release = ctx.session ? sessionForwarding.reserve() : undefined;
+        // until it is done, refused or not. A visitor without one holds none,
+        // or ordinary anonymous traffic would use up the slots.
+        const cookies = ctx.session ? readRenderCookies(event) : {};
+        const release = Object.keys(cookies).length > 0 ? sessionForwarding.reserve() : undefined;
 
         let appHtml : string;
         let preloadLinks : string;
@@ -143,7 +145,7 @@ export function createRenderPage(distPath?: string) : RenderPage {
                 // request. Built against the internal address like every other
                 // server-side call (#3550).
                 httpClient: sessionForwarding.observe(createAPIClient(config)),
-                cookies: release ? readRenderCookies(event) : {},
+                cookies: release ? cookies : {},
             });
         } finally {
             release?.();
