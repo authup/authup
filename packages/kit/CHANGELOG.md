@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691))
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 30 updates ([#3716](https://github.com/authup/authup/issues/3716)) ([a615381](https://github.com/authup/authup/commit/a6153819c733522f4e556df96028d54c8578322a))
+* harden login workflows, authorization reads and provisioning (security hardening 2/3) ([#3691](https://github.com/authup/authup/issues/3691)) ([ea60877](https://github.com/authup/authup/commit/ea60877881679eea9c0ac562281c6897a55b8707))
+
 ## [1.0.0-beta.68](https://github.com/authup/authup/compare/v1.0.0-beta.67...v1.0.0-beta.68) (2026-09-25)
 
 
