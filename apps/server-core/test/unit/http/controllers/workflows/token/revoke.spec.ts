@@ -114,12 +114,7 @@ describe('token-revoke', () => {
         expect(introspectResponse.active).toBeFalsy();
     });
 
-    // Same clause, the other half: "invalid tokens do not cause an error
-    // response since the client cannot handle such an error in a reasonable
-    // way". Expiry was already bypassed; these two answered 401 and 404.
-    // A malformed token parameter names an unreadable token, never the
-    // caller's own: the fallback to the Authorization header used to revoke
-    // the CALLER's token whenever the body value failed validation.
+    // A malformed token parameter used to fall back to the caller's bearer.
     it('should not revoke the caller\'s bearer for a malformed body token', async () => {
         const grant = await suite.client
             .token
@@ -140,6 +135,9 @@ describe('token-revoke', () => {
         expect(introspection.active).toBe(true);
     });
 
+    // Same clause, the other half: "invalid tokens do not cause an error
+    // response since the client cannot handle such an error in a reasonable
+    // way". Expiry was already bypassed; these two answered 401 and 404.
     it('should answer its ordinary success for a malformed token', async () => {
         await expect(
             suite.client.token.revoke({ token: 'not-a-json-web-token' }),
