@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScheduledTask } from 'node-cron';
-import cron from 'node-cron';
 import type { Logger } from '@authup/server-kit';
+import type { IComponent } from 'ergos';
+import { defineScheduledComponent } from 'ergos';
 import type { DataSource } from 'typeorm';
 import { EventAggregateRepositoryAdapter } from '../../app/modules/database/repositories/index.ts';
 import type { IEventAggregateRepository } from '../../core/index.ts';
 import { EVENT_AGGREGATE_BACKFILL_DAYS } from '../../core/index.ts';
-import type { Component } from '../types.ts';
 
 function shiftDay(day: string, days: number) : string {
     const date = new Date(`${day}T00:00:00.000Z`);
@@ -81,51 +80,16 @@ export function createEventAggregatorComponent(
     dataSource: DataSource,
     options: { retentionDays: number },
     logger?: Logger,
-) : Component {
-    let task : ScheduledTask | undefined;
-    let stopped = false;
-    let lastSuccessAt : number | undefined;
-    let runningSince : number | undefined;
+) : IComponent {
+    // the backfill cursor lives as long as the component
+    const tick = createEventAggregatorTick(new EventAggregateRepositoryAdapter(dataSource), options);
 
-    return {
-        async start() {
-            const tick = createEventAggregatorTick(new EventAggregateRepositoryAdapter(dataSource), options);
-
-            // a failed pass must never take the process down (start() is
-            // fire-and-forget); the next tick retries
-            const execute = async () => {
-                runningSince = Date.now();
-                try {
-                    await tick();
-                    lastSuccessAt = Date.now();
-                } catch (e) {
-                    logger?.warn('Aggregating audit events failed.');
-                    logger?.warn(e);
-                } finally {
-                    runningSince = undefined;
-                }
-            };
-
-            await execute();
-
-            if (stopped) {
-                return;
-            }
-
-            // a tick outlasting the minute must not queue another scan of
-            // the same days behind it: the next fire is skipped instead
-            task = cron.schedule('* * * * *', async () => {
-                await execute();
-            }, { noOverlap: true });
-        },
-        async stop() {
-            stopped = true;
-
-            if (task) {
-                await task.stop();
-                task = undefined;
-            }
-        },
-        status: () => ({ lastSuccessAt, runningSince }),
-    };
+    // a pass never overlaps the previous one: a tick outlasting the minute
+    // skips the next fire instead of queueing another scan of the same days
+    return defineScheduledComponent({
+        name: 'event-aggregator',
+        schedule: '* * * * *',
+        logger,
+        run: tick,
+    });
 }
