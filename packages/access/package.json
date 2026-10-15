@@ -63,7 +63,7 @@
         "@validup/zod": "^2.0.1",
         "smob": "^1.6.1",
         "validup": "^2.0.1",
-        "zod": "^4.6.5"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "unplugin-swc": "^2.0.0",
