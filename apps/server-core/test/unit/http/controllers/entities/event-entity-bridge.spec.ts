@@ -10,6 +10,7 @@ import {
     EventName,
     EventScope,
     PermissionName,
+    REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import { Client as HTTPClient, buildQueryString } from '@authup/core-http-kit';
 import { RealmScope } from '@authup/access';
@@ -47,7 +48,15 @@ describe('event (entity-CRUD bridge)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const { data } = await suite.client.user.getMany({ filters: { name: 'admin' } });
+        // Another spec on the shared database may create an `admin` in a
+        // foreign realm, so the lookup is scoped to the master realm.
+        const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
+        const { data } = await suite.client.user.getMany({
+            filters: {
+                name: 'admin',
+                realmId: master.id,
+            },
+        });
         expect(data).toHaveLength(1);
         adminUserId = data[0].id;
     });

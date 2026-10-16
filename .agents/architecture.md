@@ -1227,12 +1227,11 @@ this row at all, the updated row that it stays in reach afterwards, so a move
 out of reach is refused too. Snapshot the stored row BEFORE
 `repository.merge`, which mutates the entity in place. `DELETE` evaluates the
 stored row only and needs nothing more. The last argument is
-`{ realm: (row) => ..., data?: (row) => ... }`: `realm` is REQUIRED and
-resolves each row's record realm (entities `row.realmId`, falling back to the
-stored realm where the validator strips it from the updated row, else `null`;
-junctions `junctionResourceRealm(row)`, role attributes the parent
-role's realm, a realm itself its own `id`), `data` adds further policy data and
-may not carry `realmMatch`. The method delegates to `evaluateRecordUpdate` from
+`{ realm: (row) => ... }`, REQUIRED, resolving each row's record realm
+(entities `row.realmId ?? null`, which holds for the updated row too since
+`realmId` is immutable and the updated row spreads the stored one; junctions
+`junctionResourceRealm(row)`, role attributes the parent role's realm, a realm
+itself its own `id`). The method delegates to `evaluateRecordUpdate` from
 `@authup/access` (see *Realm reach* below), so an update can never run with the
 realm omitted. Consequence for realms: a `REALM_UPDATE` or `REALM_DELETE` grant
 at `own` reach writes the actor's own realm only (the delete passes the realm's

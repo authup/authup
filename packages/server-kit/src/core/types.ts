@@ -55,6 +55,4 @@ export interface IEntityRepository<
 export type EntityUpdateEvaluationResolvers = {
     /** The record's realm (`null` = global row) for this row. */
     realm: (row: Record<string, any>) => RecordRealm,
-    /** Further policy data for this row; must not carry `realmMatch`. */
-    data?: (row: Record<string, any>) => Record<string, any>,
 };

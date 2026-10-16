@@ -35,10 +35,7 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
             'client_update',
             { pathId: null, realmId: 'stored' },
             { pathId: 'folder', realmId: 'next' },
-            {
-                realm: (row) => row.realmId,
-                data: (row) => ({ custom: row.pathId }),
-            },
+            { realm: (row) => row.realmId },
         );
 
         expect(calls.map((c) => c.name)).toEqual(['client_update', 'client_update']);
@@ -47,14 +44,6 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
             { pathId: 'folder', realmId: 'next' },
         ]);
         expect(calls.map((c) => c.data?.get(BuiltInPolicyType.REALM_MATCH))).toEqual(['stored', 'next']);
-        expect(calls.map((c) => c.data?.get('custom'))).toEqual([null, 'folder']);
-    });
-
-    it('should refuse a data resolver carrying realmMatch', async () => {
-        await expect(new Service().run(createActor([]), 'client_update', {}, {}, {
-            realm: () => null,
-            data: () => ({ [BuiltInPolicyType.REALM_MATCH]: 'foreign' }),
-        })).rejects.toThrow('client_update');
     });
 
     it('should stop at a refused stored row', async () => {

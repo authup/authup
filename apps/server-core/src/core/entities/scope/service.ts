@@ -184,13 +184,12 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            const storedRealmId = entity.realmId;
             await this.evaluateUpdate(
                 actor,
                 PermissionName.SCOPE_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                { realm: (row) => row.realmId ?? storedRealmId ?? null },
+                { realm: (row) => row.realmId ?? null },
             );
 
             await this.repository.checkUniqueness(validated, entity);

@@ -38,7 +38,7 @@ export abstract class AbstractEntityService {
     }
 
     /**
-     * @deprecated Removed in a follow-up: pass the record realm explicitly
+     * @deprecated To be removed with #3731: pass the record realm explicitly
      * (`evaluateRecord` / `evaluateUpdate`'s `realm` resolver) instead.
      *
      * Resource-realm entry for a permission `evaluate()` input, spread into the PolicyData
@@ -64,8 +64,7 @@ export abstract class AbstractEntityService {
      * Each row is evaluated as the ATTRIBUTES of its own check. `realm` is
      * required and resolves the RECORD's realm per row (the stored row's realm
      * for the stored check), which each grant's `realm_scope` is matched
-     * against. `data` contributes further policy data and must not carry
-     * `realmMatch`.
+     * against.
      */
     protected async evaluateUpdate(
         actor: ActorContext,
@@ -77,7 +76,6 @@ export abstract class AbstractEntityService {
         const target = (row: Record<string, any>) => ({
             realm: resolvers.realm(row),
             attributes: row,
-            ...(resolvers.data ? { data: resolvers.data(row) } : {}),
         });
 
         await evaluateRecordUpdate(actor.permissionEvaluator, {
