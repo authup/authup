@@ -8,4 +8,3 @@
 export * from './event-aggregator/index.ts';
 export * from './event-cleaner/index.ts';
 export * from './oauth2-cleaner/index.ts';
-export * from './types.ts';

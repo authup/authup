@@ -5,78 +5,46 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScheduledTask } from 'node-cron';
-import cron from 'node-cron';
 import type { ICache, Logger } from '@authup/server-kit';
+import type { IComponent } from 'synergos';
+import { defineScheduledComponent } from 'synergos';
 import type { Session } from '@authup/core-kit';
 import type { DataSource } from 'typeorm';
 import { SessionEntity } from '../../adapters/database/domains/index.ts';
 import { SessionRepository } from '../../app/modules/authentication/repositories/session.ts';
 import { SessionTokenRepositoryAdapter } from '../../app/modules/oauth2/repositories/session-token/repository.ts';
-import type { Component } from '../types.ts';
 
 export function createOAuth2CleanerComponent(
     dataSource: DataSource,
     cache: ICache,
     logger?: Logger,
-) : Component {
-    let task : ScheduledTask | undefined;
-    let stopped = false;
-    let lastSuccessAt : number | undefined;
-    let runningSince : number | undefined;
+) : IComponent {
+    // Both sweeps run through the repository layer, which owns the
+    // batching: an unbounded predicate DELETE on either table would be
+    // one long transaction, issued by every replica once a minute.
+    const sessionRepository = new SessionRepository({
+        repository: dataSource.getRepository<Session>(SessionEntity),
+        cache,
+    });
+    const sessionTokenRepository = new SessionTokenRepositoryAdapter(dataSource);
 
-    return {
-        async start() {
-            // Both sweeps run through the repository layer, which owns the
-            // batching: an unbounded predicate DELETE on either table would be
-            // one long transaction, issued by every replica once a minute.
-            const sessionRepository = new SessionRepository({
-                repository: dataSource.getRepository<Session>(SessionEntity),
-                cache,
-            });
-            const sessionTokenRepository = new SessionTokenRepositoryAdapter(dataSource);
-
-            // A failed sweep must never take the process down (start() is
-            // fire-and-forget → an uncaught rejection is fatal on modern
-            // node); the next tick simply retries.
-            const execute = async () => {
-                runningSince = Date.now();
-                try {
-                    const isoDate = new Date().toISOString();
-
-                    // Sweep expired session-token rows first: the auth_session_tokens
-                    // volume dominates (one row per access token, ~15min TTL) and a
-                    // deleted session cascade-drops its remaining rows anyway.
-                    await sessionTokenRepository.deleteExpired(isoDate);
-
-                    await sessionRepository.deleteExpired(isoDate);
-                    lastSuccessAt = Date.now();
-                } catch (e) {
-                    logger?.warn('Sweeping expired sessions failed.');
-                    logger?.warn(e);
-                } finally {
-                    runningSince = undefined;
-                }
-            };
-
-            await execute();
-
-            if (stopped) {
-                return;
-            }
-
-            task = cron.schedule('* * * * *', async () => {
-                await execute();
-            }, { noOverlap: true });
+    return defineScheduledComponent({
+        schedule: '* * * * *',
+        hooks: {
+            onError: (e) => {
+                logger?.warn('Component oauth2-cleaner pass failed.');
+                logger?.warn(e);
+            },
         },
-        async stop() {
-            stopped = true;
+        run: async () => {
+            const isoDate = new Date().toISOString();
 
-            if (task) {
-                await task.stop();
-                task = undefined;
-            }
+            // Sweep expired session-token rows first: the auth_session_tokens
+            // volume dominates (one row per access token, ~15min TTL) and a
+            // deleted session cascade-drops its remaining rows anyway.
+            await sessionTokenRepository.deleteExpired(isoDate);
+
+            await sessionRepository.deleteExpired(isoDate);
         },
-        status: () => ({ lastSuccessAt, runningSince }),
-    };
+    });
 }

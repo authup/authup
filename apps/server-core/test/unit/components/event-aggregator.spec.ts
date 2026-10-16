@@ -9,7 +9,6 @@ import { randomUUID } from 'node:crypto';
 import { EntityType, EventName, EventScope } from '@authup/core-kit';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
-import cron from 'node-cron';
 import type { DataSource } from 'typeorm';
 import {
     afterAll,
@@ -178,16 +177,17 @@ describe('components/event-aggregator', () => {
         });
     });
 
-    it('should never start a tick while the previous one still runs', async () => {
-        const schedule = vi.spyOn(cron, 'schedule');
+    it('should aggregate in the first pass of start() and report it through status()', async () => {
+        await seed(`${TODAY}T01:00:00.000Z`);
+
         const component = createEventAggregatorComponent(dataSource, { retentionDays: 0 });
         try {
             await component.start();
 
-            expect(schedule).toHaveBeenCalledWith('* * * * *', expect.any(Function), expect.objectContaining({ noOverlap: true }));
+            expect(await read(TODAY)).toHaveLength(1);
+            expect(component.status()).toEqual({ lastSuccessAt: Date.now(), runningSince: undefined });
         } finally {
             await component.stop();
-            schedule.mockRestore();
         }
     });
 

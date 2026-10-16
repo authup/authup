@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Component } from '../../../components/index.ts';
+import type { IComponent } from 'synergos';
 import {
     createEventAggregatorComponent,
     createEventCleanerComponent,
@@ -28,7 +28,7 @@ export class ComponentsModule implements IModule {
 
     protected options: ComponentsModuleOptions;
 
-    protected registry: { name: string, component: Component }[];
+    protected registry: { name: string, component: IComponent }[];
 
     protected startedAt: number | undefined;
 
@@ -66,7 +66,7 @@ export class ComponentsModule implements IModule {
 
         // Name and component travel together so the boot log can never drift
         // from what was actually registered.
-        const registry: { name: string, component: Component }[] = [
+        const registry: { name: string, component: IComponent }[] = [
             {
                 name: 'oauth2-cleaner',
                 component: createOAuth2CleanerComponent(dataSource, cache, logger),
