@@ -175,8 +175,8 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
             // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
-            // resource realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realmId) and
-            // neutral-passes when absent (preEvaluate / gate checks / realm-less resources) —
+            // resource realm from ctx.data[REALM_MATCH] alone (never from ATTRIBUTES.realmId)
+            // and neutral-passes when the key is absent (preEvaluate / gate checks / realm-less resources) —
             // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine) so
             // the reach factor can never be skipped by a caller's include/exclude filters or
             // deferred by the engine's data-availability gate.

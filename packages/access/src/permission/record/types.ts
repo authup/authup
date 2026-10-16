@@ -5,15 +5,50 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-/** The record a single-record check is evaluated against. */
-export type RecordReach = {
+import type { PolicyData, PolicyInput } from '../../policy';
+import type { PermissionEvaluationOptions } from '../evaluator';
+
+/**
+ * The realm of the record a check is evaluated against: a realm id, `null`
+ * for a global row, or a list of either when every listed realm must be
+ * reached.
+ */
+export type RecordRealm = string | null | (string | null)[];
+
+/** One record a single-record check is evaluated against. */
+export type RecordTarget = {
     /**
-     * The record's realm, or the target realm on create. `null` is a global
-     * row: only `ownOrNull`/`any` grants reach it. Required (`undefined`
-     * reads as `null`), so a caller cannot drop the realm by omission and
-     * neutral-pass every grant's `realm_scope`.
+     * The RECORD's realm (`null` = global row), or the target realm on
+     * create. This is what each grant's `realm_scope` is matched against.
+     * It is distinct from `PermissionEvaluationContext.realmId`, which is the
+     * realm the PERMISSION is bound to. Required: `undefined` throws, so a
+     * caller cannot drop the realm by omission and neutral-pass every grant's
+     * `realm_scope`.
      */
-    realmId: string | null | undefined;
-    /** The row, for attribute policies on the grant. */
+    realm: RecordRealm;
+    /**
+     * The row, for attribute policies on the grant. Never synthesized: without
+     * it an attribute policy stays pending.
+     */
     attributes?: Record<string, any>;
+    /**
+     * Further policy data (an identity, a custom key). Never mutated; must not
+     * carry `realmMatch`, and must not carry `attributes` when `attributes` is
+     * given.
+     */
+    data?: PolicyData | PolicyInput;
+};
+
+export type RecordEvaluationContext = RecordTarget & {
+    name: string | string[];
+    options?: PermissionEvaluationOptions;
+};
+
+export type RecordUpdateEvaluationContext = {
+    name: string | string[];
+    options?: PermissionEvaluationOptions;
+    /** The stored row: the actor must reach it to change it at all. */
+    current: RecordTarget;
+    /** The updated row: it must stay in reach afterwards. */
+    next: RecordTarget;
 };
