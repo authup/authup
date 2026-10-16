@@ -6,8 +6,8 @@
  */
 
 import type { Logger } from '@authup/server-kit';
-import type { IComponent } from 'ergos';
-import { defineScheduledComponent } from 'ergos';
+import type { IComponent } from 'synergos';
+import { defineScheduledComponent } from 'synergos';
 import type { DataSource } from 'typeorm';
 import { EventAggregateRepositoryAdapter } from '../../app/modules/database/repositories/index.ts';
 import type { IEventAggregateRepository } from '../../core/index.ts';
@@ -87,9 +87,13 @@ export function createEventAggregatorComponent(
     // a pass never overlaps the previous one: a tick outlasting the minute
     // skips the next fire instead of queueing another scan of the same days
     return defineScheduledComponent({
-        name: 'event-aggregator',
         schedule: '* * * * *',
-        logger,
+        hooks: {
+            onError: (e) => {
+                logger?.warn('Component event-aggregator pass failed.');
+                logger?.warn(e);
+            },
+        },
         run: tick,
     });
 }

@@ -7,8 +7,8 @@
 
 import type { Event } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
-import type { IComponent } from 'ergos';
-import { defineScheduledComponent } from 'ergos';
+import type { IComponent } from 'synergos';
+import { defineScheduledComponent } from 'synergos';
 import type { DataSource } from 'typeorm';
 import { EventEntity } from '../../adapters/database/domains/index.ts';
 import { EventRepositoryAdapter } from '../../app/modules/database/repositories/index.ts';
@@ -22,9 +22,13 @@ export function createEventCleanerComponent(
     );
 
     return defineScheduledComponent({
-        name: 'event-cleaner',
         schedule: '* * * * *',
-        logger,
+        hooks: {
+            onError: (e) => {
+                logger?.warn('Component event-cleaner pass failed.');
+                logger?.warn(e);
+            },
+        },
         // Rows carry a per-row expires_at stamped at write time from
         // eventLogRetentionDays; null = keep forever.
         run: async () => {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IComponent } from 'ergos';
+import type { IComponent } from 'synergos';
 import {
     createEventAggregatorComponent,
     createEventCleanerComponent,

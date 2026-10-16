@@ -6,8 +6,8 @@
  */
 
 import type { ICache, Logger } from '@authup/server-kit';
-import type { IComponent } from 'ergos';
-import { defineScheduledComponent } from 'ergos';
+import type { IComponent } from 'synergos';
+import { defineScheduledComponent } from 'synergos';
 import type { Session } from '@authup/core-kit';
 import type { DataSource } from 'typeorm';
 import { SessionEntity } from '../../adapters/database/domains/index.ts';
@@ -29,9 +29,13 @@ export function createOAuth2CleanerComponent(
     const sessionTokenRepository = new SessionTokenRepositoryAdapter(dataSource);
 
     return defineScheduledComponent({
-        name: 'oauth2-cleaner',
         schedule: '* * * * *',
-        logger,
+        hooks: {
+            onError: (e) => {
+                logger?.warn('Component oauth2-cleaner pass failed.');
+                logger?.warn(e);
+            },
+        },
         run: async () => {
             const isoDate = new Date().toISOString();
 
