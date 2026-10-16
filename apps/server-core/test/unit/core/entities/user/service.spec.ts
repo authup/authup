@@ -117,6 +117,19 @@ describe('core/entities/user/service', () => {
             expect(result.meta.total).toBe(0);
         });
 
+        it('should propagate a non-permission failure of the per-record check', async () => {
+            repository.seed([createFakeUser({ name: 'other' })]);
+
+            const actor = createSelfActor(randomUUID());
+            actor.permissionEvaluator.setBehavior(({ method }) => {
+                if (method === 'evaluateOneOf') {
+                    throw new Error('provider unavailable');
+                }
+            });
+
+            await expect(service.getMany({}, actor)).rejects.toThrow('provider unavailable');
+        });
+
         it('composes the self short-circuit with a compiled conditional as WHERE and skips per-row evaluation', async () => {
             const realmId = randomUUID();
             // the self row lives OUTSIDE the compiled realm condition — only the

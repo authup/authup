@@ -24,7 +24,7 @@ import {
     PermissionName, 
     ScopeName, 
 } from '@authup/core-kit';
-import { evaluateRecord } from '@authup/access';
+import { reachesRecord } from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { readRequestBody } from '@routup/basic/body';
@@ -426,19 +426,22 @@ export class TokenController {
             return true;
         }
 
+        // The verifier already refuses a token without a realm claim, so the
+        // `null` fallback only keeps the record realm defined. Only a
+        // permission error is a deny; a failure loading the grants fails the
+        // request instead of reading as "not allowed".
         const actor = buildActorContext(event);
-        try {
-            await evaluateRecord(actor.permissionEvaluator, {
-                name: PermissionName.TOKEN_INTROSPECT,
-                realm: payload.realm_id || null,
-            });
-            return true;
-        } catch {
+        const allowed = await reachesRecord(actor.permissionEvaluator, {
+            name: PermissionName.TOKEN_INTROSPECT,
+            realm: payload.realm_id || null,
+        });
+        if (!allowed) {
             this.logger?.info(
                 `introspection denied: ${identity.type} ${identity.id} may not introspect the presented token`,
             );
-            return false;
         }
+
+        return allowed;
     }
 
     // ----------------------------------------------------------

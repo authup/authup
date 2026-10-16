@@ -179,6 +179,44 @@ describe('http/controllers/user (self-manage)', () => {
         ).rejects.toThrow();
     });
 
+    // a self-edit is matched against the user's own realm, and `none`
+    // reaches no realm: the grant permits no self-edit at all
+    it('should reject a self-edit through a none-reach grant', async () => {
+        const password = 'self-manage-none-password-123';
+        const { data: user } = await suite.client.user.create({
+            ...createFakeUser(),
+            password,
+            active: true,
+        });
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.NONE,
+        });
+
+        const tokenResponse = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_name: REALM_MASTER_NAME,
+        });
+
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({
+            type: 'Bearer',
+            token: tokenResponse.access_token,
+        });
+
+        await expectClientError(
+            () => client.user.update(user.id, { displayName: 'none-renamed' }),
+            { status: 403 },
+        );
+
+        const { data: current } = await suite.client.user.getOne(user.id);
+        expect(current.displayName).not.toBe('none-renamed');
+    });
+
     it('should reject creating a UserAttribute with a denylisted key (active is a User column)', async () => {
         // `active` is in the policy denylist AND is a User column, so the
         // reserved-name filter rejects first; either way the write fails.

@@ -49,6 +49,15 @@ export default eslintConfig(
             }, {
                 selector: 'MemberExpression[computed=true][property.object.name="BuiltInPolicyType"][property.property.name="REALM_MATCH"]',
                 message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
+            }, {
+                selector: 'CallExpression[callee.property.name="set"] > MemberExpression.arguments:first-child[object.name="BuiltInPolicyType"][property.name="REALM_MATCH"]',
+                message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
+            }, {
+                selector: 'Property[key.name="realmMatch"], Property[key.value="realmMatch"]',
+                message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
+            }, {
+                selector: 'CallExpression[callee.property.name="set"] > Literal.arguments:first-child[value="realmMatch"]',
+                message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
             }],
         },
     },

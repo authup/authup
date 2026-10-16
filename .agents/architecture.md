@@ -1192,9 +1192,12 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             validated.realmId = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionEvaluator.evaluate({
+        // evaluateRecord from @authup/access: the record realm is named, never
+        // derived from a realmMatch policy data key
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            realm: validated.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         await this.repository.checkUniqueness(validated);
@@ -2341,10 +2344,11 @@ combination answers 400.
   whose `authMethod` is not `secret` answers 400: nothing to rotate.
 - **The gate is `CLIENT_UPDATE` with realm reach, or the client itself
   under `CLIENT_SELF_MANAGE`.** `preEvaluate(CLIENT_UPDATE)`, then
-  `evaluate(CLIENT_UPDATE, ATTRIBUTES: row + realmMatch)`, so a
-  `realm_admin` rotates in its own realm only. When the pre-gate fails and
-  the actor IS the row (`isMe`), the service falls back to
-  `preEvaluate(CLIENT_SELF_MANAGE)` and evaluates it over
+  `evaluateRecord(CLIENT_UPDATE)` over the row with its realm as the record
+  realm, so a `realm_admin` rotates in its own realm only. When the pre-gate
+  fails and the actor IS the row (`isMe`), the service falls back to
+  `preEvaluate(CLIENT_SELF_MANAGE)` and evaluates it against the stored
+  row's realm over
   `{ secret, ...(mode changed ? { secretHashed, secretEncrypted } : {}) }`:
   the flags reach the policy only when they change, so the existing
   `system.client-names-self-manage` denylist refuses a self-managing
@@ -3734,8 +3738,10 @@ caller data already carrying `realmMatch`. The row rides the caller's `data` und
 `attributes` like any other policy data key; that data is cloned rather than written to, and
 no `attributes` bag is synthesized, so an attribute policy without a row stays pending.
 **Every single-record check in server-core goes through these helpers**, and an eslint
-`no-restricted-syntax` rule refuses a computed `[BuiltInPolicyType.REALM_MATCH]` key in
-`apps/server-core/src` outside the two files that cannot take a record realm:
+`no-restricted-syntax` rule refuses the key in `apps/server-core/src` (a computed
+`[BuiltInPolicyType.REALM_MATCH]` key or member, a literal `realmMatch` property key, and
+either spelling as the first argument of a `.set()` call; a spread or a raw string stored
+elsewhere still gets past it, which the helpers' runtime refusal backs up) outside the two files that cannot take a record realm:
 `core/authorization/check.ts` (it pre-evaluates per realm the request names) and
 `core/identity/permission/checker/service.ts` (it evaluates caller-supplied check data,
 which may carry its own `realmMatch` and decides between evaluate and pre-evaluate by
@@ -3746,7 +3752,8 @@ null` (a missing realm on a global-capable entity IS a global row), and every
 `<ENTITY>_UPDATE` evaluation of a stored row goes through `evaluateUpdate`'s required
 `realm` resolver. The `*_SELF_MANAGE` self-edit evaluations (user, client, the client's
 own secret rotation, user attribute) pass the STORED row's realm, which an `own` grant
-reaches, so reach is checked there too and the self-manage denylist policy rides on top. A
+reaches, so reach is checked there too and the self-manage denylist policy rides on top (a
+self-manage grant at `realmScope: none` therefore permits no self-edit). A
 session token is checked against its session's realm, and a token whose session did not
 load is denied. A `post` verdict's per-row drop loop uses `reachesRecord*`, so only a
 permission error drops a row and anything else fails the request. Junction
@@ -4738,9 +4745,10 @@ if (entity) {
 // ... validation runs ...
 
 if (isSelfEdit) {
-    await actor.permissionEvaluator.evaluate({
+    await evaluateRecord(actor.permissionEvaluator, {
         name: PermissionName.CLIENT_SELF_MANAGE,
-        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+        realm: entity.realmId,
+        data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
     });
 }
 ```
@@ -4748,6 +4756,12 @@ if (isSelfEdit) {
 Two-layer rejection:
 1. **Validator** silently strips fields it doesn't mount (e.g. `builtIn`, `realmId` on UPDATE): these never reach the policy.
 2. **ATTRIBUTE_NAMES policy** rejects validated fields not in the allowlist (e.g. `active` on a client): produces a `value_invalid` issue and the request fails.
+
+The self-manage grant's reach is matched against the STORED row's realm (the
+validated payload carries no `realmId` on update), and the same holds for the
+client secret rotation and the user-attribute self path (whose create matches
+the actor's own realm). So a self-manage grant stored at `realmScope: none`
+permits no self-edit: `none` reaches nothing.
 
 **The update WRITE runs inside a row-locking transaction (#3526), and only
 the write.** `UserService.save` and `ClientService.save` do their pre-work

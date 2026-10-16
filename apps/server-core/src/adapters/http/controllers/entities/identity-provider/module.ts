@@ -230,7 +230,7 @@ export class IdentityProviderController {
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
                 PermissionName.IDENTITY_PROVIDER_DELETE,
             ],
-            realm: entity.realmId ?? null,
+            realm: entity.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
@@ -273,7 +273,7 @@ export class IdentityProviderController {
 
         await evaluateRecord(permissionEvaluator, {
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
-            realm: entity.realmId ?? null,
+            realm: entity.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
@@ -616,11 +616,11 @@ export class IdentityProviderController {
             await evaluateRecordUpdate(permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_UPDATE,
                 current: {
-                    realm: entity.realmId ?? null,
+                    realm: entity.realmId,
                     data: { [BuiltInPolicyType.ATTRIBUTES]: { ...entity } },
                 },
                 next: {
-                    realm: next.realmId ?? entity.realmId ?? null,
+                    realm: next.realmId,
                     data: { [BuiltInPolicyType.ATTRIBUTES]: next },
                 },
             });

@@ -9,7 +9,7 @@ import {
     BuiltInPolicyType,
     PermissionError,
     evaluateRecord,
-    reachesRecord,
+    isPermissionError,
 } from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
@@ -95,21 +95,22 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         });
     }
 
+    /** {@link evaluateToken} as a predicate: only a permission error reads as `false`. */
     protected async reachesToken(
         actor: ActorContext,
         name: `${PermissionName}`,
         entity: SessionToken,
     ): Promise<boolean> {
-        const session = entity.session as Session | undefined;
-        if (!session) {
-            return false;
-        }
+        try {
+            await this.evaluateToken(actor, name, entity);
+            return true;
+        } catch (e) {
+            if (isPermissionError(e)) {
+                return false;
+            }
 
-        return reachesRecord(actor.permissionEvaluator, {
-            name,
-            realm: session.realmId,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
-        });
+            throw e;
+        }
     }
 
     async getMany(
