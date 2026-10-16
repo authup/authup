@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IScheduledComponent } from 'hubwire';
+import type { IComponent } from 'hubwire';
 import {
     createEventAggregatorComponent,
     createEventCleanerComponent,
@@ -28,7 +28,7 @@ export class ComponentsModule implements IModule {
 
     protected options: ComponentsModuleOptions;
 
-    protected registry: { name: string, component: IScheduledComponent }[];
+    protected registry: { name: string, component: IComponent }[];
 
     protected startedAt: number | undefined;
 
@@ -66,7 +66,7 @@ export class ComponentsModule implements IModule {
 
         // Name and component travel together so the boot log can never drift
         // from what was actually registered.
-        const registry: { name: string, component: IScheduledComponent }[] = [
+        const registry: { name: string, component: IComponent }[] = [
             {
                 name: 'oauth2-cleaner',
                 component: createOAuth2CleanerComponent(dataSource, cache, logger),
@@ -128,10 +128,10 @@ export class ComponentsModule implements IModule {
 
         // Every schedule stops before any pass is awaited, so no component
         // starts a new sweep while another one drains. stop() does not wait
-        // for a pass in flight; settled() does, so no sweep still queries
+        // for a pass in flight; settled?.() does, so no sweep still queries
         // the data source once the database tears down.
         const stopped = await Promise.allSettled(components.map((component) => component.stop()));
-        const settled = await Promise.allSettled(components.map((component) => component.settled()));
+        const settled = await Promise.allSettled(components.map((component) => component.settled?.()));
 
         [...stopped, ...settled].forEach((result) => {
             if (result.status === 'fulfilled' || !logger.success) {
