@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    evaluateRecord,
+    isPermissionError,
+} from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
@@ -69,17 +74,43 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
     }
 
     /**
-     * The realm the row belongs to, taken from its session. Absent when the
-     * session did not load, which leaves the realm factor neutral, so the
-     * per-row permission check below is what denies.
+     * Throws a permission error unless `name` passes for the row. The row
+     * carries no realm of its own, so its session's realm is the record realm;
+     * a row whose session did not load is denied outright.
      */
-    protected tokenRealmMatch(entity: SessionToken) {
+    protected async evaluateToken(
+        actor: ActorContext,
+        name: `${PermissionName}`,
+        entity: SessionToken,
+    ): Promise<void> {
         const session = entity.session as Session | undefined;
         if (!session) {
-            return {};
+            throw new PermissionError();
         }
 
-        return this.resourceRealmMatch({ realmId: session.realmId });
+        await evaluateRecord(actor.permissionEvaluator, {
+            name,
+            realm: session.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+        });
+    }
+
+    /** {@link evaluateToken} as a predicate: only a permission error reads as `false`. */
+    protected async reachesToken(
+        actor: ActorContext,
+        name: `${PermissionName}`,
+        entity: SessionToken,
+    ): Promise<boolean> {
+        try {
+            await this.evaluateToken(actor, name, entity);
+            return true;
+        } catch (e) {
+            if (isPermissionError(e)) {
+                return false;
+            }
+
+            throw e;
+        }
     }
 
     async getMany(
@@ -123,18 +154,12 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.SESSION_READ,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.tokenRealmMatch(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            if (!await this.reachesToken(actor, PermissionName.SESSION_READ, entity)) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -204,18 +229,11 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
 
         let count = 0;
         for (const entity of entities) {
-            if (!this.isOwnedBy(entity, actor)) {
-                try {
-                    await actor.permissionEvaluator.evaluate({
-                        name: PermissionName.SESSION_DELETE,
-                        data: definePolicyData({
-                            [BuiltInPolicyType.ATTRIBUTES]: entity,
-                            ...this.tokenRealmMatch(entity),
-                        }),
-                    });
-                } catch {
-                    continue;
-                }
+            if (
+                !this.isOwnedBy(entity, actor) &&
+                !await this.reachesToken(actor, PermissionName.SESSION_DELETE, entity)
+            ) {
+                continue;
             }
 
             await this.revoke(entity);
@@ -240,13 +258,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: permission });
-            await actor.permissionEvaluator.evaluate({
-                name: permission,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.tokenRealmMatch(entity),
-                }),
-            });
+            await this.evaluateToken(actor, permission, entity);
         }
 
         return entity;

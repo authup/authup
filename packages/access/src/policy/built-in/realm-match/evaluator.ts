@@ -84,9 +84,9 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 // constant-true: nin([]) matches everything (rapiq ConstantPlan)
                 condition = nin(field, []);
             } else {
-                // The lowered column (default `realmId`) holds realm IDs — the resource
-                // realm is stamped from `entity.realmId`
-                // (AbstractEntityService.resourceRealmMatch), so the WHERE match compares
+                // The lowered column (default `realmId`) holds realm IDs. A record
+                // check's `realm` argument is the row's realm column read raw
+                // (evaluateRecord / reachesRecord), so the WHERE match compares
                 // that ID column against the actor's realm ID. The realm NAME is
                 // deliberately NOT pushed here: it never appears in a realmId column and
                 // would bind a non-uuid literal that postgres/mysql reject against a uuid

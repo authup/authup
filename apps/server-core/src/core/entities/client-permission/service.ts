@@ -8,7 +8,9 @@
 import {
     BuiltInPolicyType,
     RealmScope,
-    definePolicyData,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
 } from '@authup/access';
 import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
@@ -83,18 +85,17 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: READ_PERMISSION_NAMES,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
-                        [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: READ_PERMISSION_NAMES,
+                realm: this.junctionResourceRealm(entity),
+                data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return { data, meta: { ...meta, total } };
@@ -111,12 +112,10 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
-            }),
+            realm: this.junctionResourceRealm(entity),
+            data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
         return entity;
@@ -168,12 +167,10 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             applyJunctionCreateGrant(validated, grant);
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_PERMISSION_CREATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
-            }),
+            realm: this.junctionResourceRealm(validated),
+            data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
         let entity = this.repository.create(validated);
@@ -262,12 +259,10 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_PERMISSION_DELETE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
-                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
-            }),
+            realm: this.junctionResourceRealm(entity),
+            data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
         const { id: entityId } = entity;

@@ -53,7 +53,11 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
             const repository = new FakeEntityRepository<any>();
             const permissionRepository = new FakeEntityRepository<Permission>();
             const permission = permissionRepository.seed({ name: 'custom_perm', realmId: null });
-            const entity = repository.seed({ permissionId: permission.id, policyId: null });
+            const entity = repository.seed({
+                permissionId: permission.id, 
+                policyId: null, 
+                [`${owner}RealmId`]: null, 
+            });
             const service = new Service({
                 repository, 
                 permissionRepository, 
@@ -104,6 +108,7 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
             const role = roleRepository.seed({ clientId: null } as Partial<Role>);
             const entity = repository.seed({
                 providerId: randomUUID(),
+                providerRealmId: null,
                 roleId: role.id,
                 name: 'old',
             });

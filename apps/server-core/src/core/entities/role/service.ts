@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
@@ -72,18 +77,17 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: PERMISSION_NAMES,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: PERMISSION_NAMES,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -106,12 +110,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         return entity;
@@ -193,7 +195,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                     ...entity,
                     ...validated,
                 },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
 
             entity = this.repository.merge(entity, validated);
@@ -210,9 +212,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             validated.realmId = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_CREATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            realm: validated.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         await this.repository.checkUniqueness(validated);
@@ -241,9 +244,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             throw new ValidationError('The default admin role can not be deleted.');
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

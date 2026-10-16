@@ -313,7 +313,8 @@ describe('authorization catalog consumer', () => {
     it('neutral-passes reach for a realm-less resource and prevents caller identity or policy-filter overrides', async () => {
         const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
         // no REALM_MATCH key: the resource has no realm dimension, so reach
-        // neutral-passes exactly as server-core's resourceRealmMatch does
+        // neutral-passes; a record check never gets here, since its required
+        // `realm` argument always sets the key
         await expect(evaluator.evaluate({ name: 'event_read' })).resolves.toBeUndefined();
         // a present key is still validated
         await expect(evaluator.evaluate({

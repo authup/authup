@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { 
-    BuiltInPolicyType, 
-    RealmScope, 
-    SystemPolicyName, 
-    definePolicyData, 
+import {
+    BuiltInPolicyType,
+    RealmScope,
+    SystemPolicyName,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
 } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
@@ -100,18 +102,17 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: PERMISSION_NAMES,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: PERMISSION_NAMES,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -135,12 +136,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         return entity;
@@ -227,7 +226,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 PermissionName.PERMISSION_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
 
             await this.repository.checkUniqueness(validated, entity);
@@ -246,9 +245,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             validated.realmId = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_CREATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            realm: validated.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         await this.repository.checkUniqueness(validated);
@@ -300,9 +300,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             throw new ValidationError('A built-in permission can not be deleted.');
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

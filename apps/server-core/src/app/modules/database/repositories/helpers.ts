@@ -20,9 +20,9 @@ import { Brackets, In, IsNull } from 'typeorm';
 /**
  * Force-load the columns a realm-gated `getMany` per-row check depends on.
  * rapiq honors a client `fields` projection over the adapter `default`, so a
- * projection omitting `realmId` would otherwise leave the per-row
- * `resourceRealmMatch` with no realm to match — neutralizing the realmScope
- * reach factor and leaking cross-realm rows to an own/ownOrNull-scoped reader.
+ * projection omitting `realmId` would otherwise hand the per-row record check
+ * no realm at all: the check then throws instead of evaluating, and a fallback
+ * to `null` would read the row as global to an ownOrNull-scoped reader.
  * Call it AFTER `applyQuery`. Columns already in the projection must be
  * skipped: `addSelect` emits a second identically-aliased column, and under a
  * join + take (the DISTINCT id-subquery) postgres then rejects the wrapper's

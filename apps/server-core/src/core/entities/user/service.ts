@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { eq } from '@rapiq/core';
@@ -113,20 +118,21 @@ export class UserService extends AbstractEntityService implements IUserService {
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: [
-                        PermissionName.USER_READ,
-                        PermissionName.USER_UPDATE,
-                        PermissionName.USER_DELETE,
-                    ],
-                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
-                });
-
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: [
+                    PermissionName.USER_READ,
+                    PermissionName.USER_UPDATE,
+                    PermissionName.USER_DELETE,
+                ],
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -180,9 +186,10 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         if (!isMe) {
-            await actor.permissionEvaluator.evaluateOneOf({
+            await evaluateRecordOneOf(actor.permissionEvaluator, {
                 name: permissionNames,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -315,9 +322,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             if (isSelfEdit) {
-                await actor.permissionEvaluator.evaluate({
+                await evaluateRecord(actor.permissionEvaluator, {
                     name: PermissionName.USER_SELF_MANAGE,
-                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+                    realm: entity.realmId,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
                 });
             }
 
@@ -341,7 +349,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
                     ...entity,
                     ...validated,
-                }, { realm: (row) => row.realmId ?? null });
+                }, { realm: (row) => row.realmId });
             }
 
             if (emailChanged) {
@@ -430,9 +438,10 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         entity = this.repository.create(validated);
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_CREATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         if (validated.password) {
@@ -490,9 +499,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

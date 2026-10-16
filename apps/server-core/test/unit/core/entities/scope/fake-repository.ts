@@ -10,6 +10,11 @@ import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IScopeRepository } from '../../../../../src/core/entities/scope/types.ts';
 
 export class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {
+    constructor() {
+        // a loaded row carries every column: an unset realm is null, not absent
+        super({ defaults: { realmId: null } });
+    }
+
     async checkUniqueness(): Promise<void> {
         // no-op
     }

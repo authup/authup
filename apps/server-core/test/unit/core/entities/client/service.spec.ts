@@ -127,7 +127,7 @@ describe('core/entities/client/service', () => {
 
                 const attributes = call.ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
                 if (!attributes || attributes.realmId !== realmA) {
-                    throw new Error('denied');
+                    throw new PermissionError({ message: 'denied' });
                 }
             });
 
@@ -590,7 +590,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should open one repository transaction for the write and none on create (#3526)', async () => {
-            const entity = await service.create(createFakeClient(), createAllowAllActor());
+            const entity = await service.create(createFakeClient({ realmId: randomUUID() }), createAllowAllActor());
             expect(repository.transactionCalls).toBe(0);
 
             await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
@@ -887,6 +887,25 @@ describe('core/entities/client/service', () => {
             expect(attrs).toHaveProperty('description', 'updated-desc');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('builtIn');
+        });
+
+        it('should evaluate CLIENT_SELF_MANAGE against the stored row realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeClient({ name: 'self-realm-client', realmId }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            await service.update(entity.id, { description: 'updated-desc' }, actor);
+
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.CLIENT_SELF_MANAGE,
+            );
+            expect(selfManageCall!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
         });
 
         it('should throw when actor lacks CLIENT_UPDATE and is not the client itself', async () => {

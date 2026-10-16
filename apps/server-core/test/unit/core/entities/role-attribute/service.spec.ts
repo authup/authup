@@ -28,7 +28,7 @@ describe('core/entities/role-attribute/service', () => {
     let service: RoleAttributeService;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<RoleAttribute>();
+        repository = new FakeEntityRepository<RoleAttribute>({ defaults: { realmId: null } });
         service = new RoleAttributeService({ repository });
     });
 

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { Path } from '@authup/core-kit';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IPathRepository } from '../../../../../src/core/entities/path/types.ts';
@@ -31,7 +32,8 @@ export class FakePathRepository extends FakeEntityRepository<Path> implements IP
     transactionRepository: FakePathRepository | undefined;
 
     constructor(options: FakePathRepositoryOptions = {}) {
-        super();
+        // a loaded row carries every column: a realm-bound row always has a realm
+        super({ defaults: { realmId: randomUUID() } });
         this.lockRows = options.lockRows ?? false;
     }
 

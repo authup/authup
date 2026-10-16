@@ -58,7 +58,7 @@ describe('core/entities/user-attribute/service', () => {
     let userRealms: Map<string, string>;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<UserAttribute>();
+        repository = new FakeEntityRepository<UserAttribute>({ defaults: { realmId: randomUUID() } });
         userRealms = new Map();
         repository.onValidateJoinColumns((data: Record<string, any>) => {
             if (data.userId) {
@@ -472,7 +472,11 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should accept a good value on a reserved row', async () => {
-            const entity = repository.create(createFakeUserAttribute({ name: 'locale', value: 'de' }));
+            const entity = repository.create(createFakeUserAttribute({
+                name: 'locale', 
+                value: 'de', 
+                realmId: randomUUID(), 
+            }));
             await repository.save(entity);
 
             const result = await service.update(entity.id, { value: 'fr' }, createAllowAllActor());
@@ -484,7 +488,11 @@ describe('core/entities/user-attribute/service', () => {
         // unchecked row cannot be renamed into a reserved one to slip its
         // value past the check.
         it('should refuse renaming an unchecked row into a reserved name when its value fails', async () => {
-            const entity = repository.create(createFakeUserAttribute({ name: 'theme', value: 'purple' }));
+            const entity = repository.create(createFakeUserAttribute({
+                name: 'theme', 
+                value: 'purple', 
+                realmId: randomUUID(), 
+            }));
             await repository.save(entity);
 
             await expect(service.update(entity.id, { name: 'colorMode' }, createAllowAllActor()))
@@ -492,7 +500,11 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should check a rename against the value it carries along', async () => {
-            const entity = repository.create(createFakeUserAttribute({ name: 'theme', value: 'purple' }));
+            const entity = repository.create(createFakeUserAttribute({
+                name: 'theme', 
+                value: 'purple', 
+                realmId: randomUUID(), 
+            }));
             await repository.save(entity);
 
             await expect(service.update(entity.id, { name: 'colorMode', value: 'dark' }, createAllowAllActor()))

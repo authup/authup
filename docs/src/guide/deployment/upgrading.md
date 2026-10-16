@@ -152,6 +152,12 @@ the ones that can break an existing setup come first.
   default `own` reach now manages only the actor's own realm, and one at
   `realmScope: none` manages none. Re-grant it at `any` where an actor manages
   other realms. The built-in `admin` role already holds both at `any`.
+- **Self-manage grants are checked for realm reach.** A user or client editing
+  itself, rotating its own client secret or writing its own user attributes is
+  now matched against its own realm. A `user_self_manage` or
+  `client_self_manage` grant at `own`, `ownOrNull` or `any` keeps working; one
+  stored at `realmScope: none` (which reaches nothing) no longer permits
+  self-edits. Re-grant it at `own` where self-service is intended.
 
 **No action**
 

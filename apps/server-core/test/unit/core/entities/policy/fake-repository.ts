@@ -10,6 +10,11 @@ import type { IPolicyRepository } from '../../../../../src/core/entities/policy/
 import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakePolicyRepository extends FakeEntityRepository<Policy> implements IPolicyRepository {
+    constructor() {
+        // a loaded row carries every column: an unset realm is null, not absent
+        super({ defaults: { realmId: null } });
+    }
+
     async checkUniqueness(): Promise<void> {
         // no-op
     }

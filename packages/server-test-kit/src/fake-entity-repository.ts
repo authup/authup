@@ -14,8 +14,23 @@ import type {
     IEntityRepository,
 } from '@authup/server-kit';
 
+export type FakeEntityRepositoryOptions<T extends ObjectLiteral> = {
+    /**
+     * Column values a seeded row carries unless the seed names them. A row
+     * loaded from the database carries every column, so a nullable column
+     * (`realmId`) is `null` rather than absent.
+     */
+    defaults?: Partial<T>,
+};
+
 export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRepository<T> {
     protected store: T[] = [];
+
+    protected defaults: Partial<T>;
+
+    constructor(options: FakeEntityRepositoryOptions<T> = {}) {
+        this.defaults = options.defaults || {};
+    }
 
     protected joinColumnHandler: ((data: Partial<T>) => void | Promise<void>) | undefined;
 
@@ -116,12 +131,12 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
 
     seed(input: Partial<T> | Partial<T>[]): T | T[] {
         if (Array.isArray(input)) {
-            const created = input.map((entity) => this.create(entity));
+            const created = input.map((entity) => this.create({ ...this.defaults, ...entity }));
             this.store.push(...created);
             return created;
         }
 
-        const created = this.create(input);
+        const created = this.create({ ...this.defaults, ...input });
         this.store.push(created);
         return created;
     }

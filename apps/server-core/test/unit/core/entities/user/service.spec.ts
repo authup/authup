@@ -117,6 +117,19 @@ describe('core/entities/user/service', () => {
             expect(result.meta.total).toBe(0);
         });
 
+        it('should propagate a non-permission failure of the per-record check', async () => {
+            repository.seed([createFakeUser({ name: 'other' })]);
+
+            const actor = createSelfActor(randomUUID());
+            actor.permissionEvaluator.setBehavior(({ method }) => {
+                if (method === 'evaluateOneOf') {
+                    throw new Error('provider unavailable');
+                }
+            });
+
+            await expect(service.getMany({}, actor)).rejects.toThrow('provider unavailable');
+        });
+
         it('composes the self short-circuit with a compiled conditional as WHERE and skips per-row evaluation', async () => {
             const realmId = randomUUID();
             // the self row lives OUTSIDE the compiled realm condition — only the
@@ -335,7 +348,7 @@ describe('core/entities/user/service', () => {
         });
 
         it('should open one repository transaction for the write and none on create (#3526)', async () => {
-            const entity = await service.create(createFakeUser(), createAllowAllActor());
+            const entity = await service.create(createFakeUser({ realmId: randomUUID() }), createAllowAllActor());
             expect(repository.transactionCalls).toBe(0);
 
             await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
@@ -684,6 +697,21 @@ describe('core/entities/user/service', () => {
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('active');
             expect(attrs).not.toHaveProperty('realmId');
+        });
+
+        it('should evaluate USER_SELF_MANAGE against the stored row realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeUser({ name: 'self-realm-user', realmId }));
+
+            const actor = createSelfActor(entity.id);
+            denyOnlyUserUpdate(actor);
+
+            await service.update(entity.id, { displayName: 'Updated' }, actor);
+
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCall!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
         });
 
         it('should throw when non-self user lacks USER_UPDATE', async () => {

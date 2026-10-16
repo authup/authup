@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import type { User as UserEntity } from '@authup/core-kit';
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
@@ -37,9 +38,12 @@ describe('http/controllers/user (self-manage)', () => {
         entity = created;
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+        // an own-reach grant: a self-edit is evaluated against the STORED
+        // row's realm, which an own grant reaches
         await suite.client.userPermission.create({
             userId: entity.id,
             permissionId: permission.id,
+            realmScope: RealmScope.OWN,
         });
 
         const tokenResponse = await suite.client.token.createWithPassword({
@@ -154,6 +158,18 @@ describe('http/controllers/user (self-manage)', () => {
         expect(response.value).toBe('de-DE');
     });
 
+    it('should allow user to update their own UserAttribute through an own-reach grant', async () => {
+        const { data: created } = await selfClient.userAttribute.create({
+            name: 'timezone',
+            value: 'Europe/Berlin',
+        });
+
+        const { data: updated } = await selfClient.userAttribute.update(created.id, { value: 'Europe/Paris' });
+
+        expect(updated.value).toBe('Europe/Paris');
+        expect(updated.realmId).toBe(entity.realmId);
+    });
+
     it('should reject creating a UserAttribute with a key that shadows a User column (reserved-name filter)', async () => {
         await expect(
             selfClient.userAttribute.create({
@@ -161,6 +177,44 @@ describe('http/controllers/user (self-manage)', () => {
                 value: 'foo@bar.test',
             }),
         ).rejects.toThrow();
+    });
+
+    // a self-edit is matched against the user's own realm, and `none`
+    // reaches no realm: the grant permits no self-edit at all
+    it('should reject a self-edit through a none-reach grant', async () => {
+        const password = 'self-manage-none-password-123';
+        const { data: user } = await suite.client.user.create({
+            ...createFakeUser(),
+            password,
+            active: true,
+        });
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.NONE,
+        });
+
+        const tokenResponse = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_name: REALM_MASTER_NAME,
+        });
+
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        client.setAuthorizationHeader({
+            type: 'Bearer',
+            token: tokenResponse.access_token,
+        });
+
+        await expectClientError(
+            () => client.user.update(user.id, { displayName: 'none-renamed' }),
+            { status: 403 },
+        );
+
+        const { data: current } = await suite.client.user.getOne(user.id);
+        expect(current.displayName).not.toBe('none-renamed');
     });
 
     it('should reject creating a UserAttribute with a denylisted key (active is a User column)', async () => {

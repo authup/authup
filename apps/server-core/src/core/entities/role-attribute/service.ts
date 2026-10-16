@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { inArray } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
@@ -70,19 +75,21 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: [
-                        PermissionName.ROLE_READ,
-                        PermissionName.ROLE_UPDATE,
-                        PermissionName.ROLE_DELETE,
-                    ],
-                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
-                });
-                data.push(entity);
-            } catch {
-                total--;
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: [
+                    PermissionName.ROLE_READ,
+                    PermissionName.ROLE_UPDATE,
+                    PermissionName.ROLE_DELETE,
+                ],
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
+                total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -111,13 +118,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
                 PermissionName.ROLE_DELETE,
             ],
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         return entity;
@@ -139,12 +147,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const entity = this.repository.create(data);
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value },
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } },
         });
 
         await this.repository.save(entity);
@@ -207,9 +213,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

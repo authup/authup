@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import type { Event, User } from '@authup/core-kit';
 import { EventName, EventScope, IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
@@ -303,7 +303,7 @@ describe('EventService', () => {
 
                 const resourceRealm = ctx.data?.get<string | null>(BuiltInPolicyType.REALM_MATCH);
                 if (resourceRealm !== realmId && resourceRealm !== null) {
-                    throw new Error('Realm denied');
+                    throw new PermissionError({ message: 'Realm denied' });
                 }
             });
 
@@ -351,7 +351,7 @@ describe('EventService', () => {
 
                 const attributes = ctx.data?.get<Event>(BuiltInPolicyType.ATTRIBUTES);
                 if (attributes?.id === denied.id) {
-                    throw new Error('Event denied');
+                    throw new PermissionError({ message: 'Event denied' });
                 }
             });
             const { data, meta } = await service.getMany({}, actor);

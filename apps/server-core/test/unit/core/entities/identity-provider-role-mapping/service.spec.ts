@@ -32,8 +32,15 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
     let identityPermissionProvider: FakeIdentityPermissionProvider;
     let service: IdentityProviderRoleMappingService;
 
+    const providerRealmIdDefault = randomUUID();
+
     beforeEach(() => {
-        repository = new FakeEntityRepository<IdentityProviderRoleMapping>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<IdentityProviderRoleMapping>({ defaults: { providerRealmId: providerRealmIdDefault } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.provider = { realmId: providerRealmIdDefault };
+        });
         roleRepository = new FakeEntityRepository<Role>();
         identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new IdentityProviderRoleMappingService({

@@ -23,7 +23,12 @@ describe('core/entities/client-scope/service', () => {
     let service: ClientScopeService;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<ClientScope>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<ClientScope>({ defaults: { clientRealmId: null } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.client = { realmId: null };
+        });
         service = new ClientScopeService({ repository });
     });
 

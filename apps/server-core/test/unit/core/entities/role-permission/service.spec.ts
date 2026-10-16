@@ -34,7 +34,12 @@ describe('core/entities/role-permission/service', () => {
     let service: RolePermissionService;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<RolePermission>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<RolePermission>({ defaults: { roleRealmId: null } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.role = { realmId: null };
+        });
         permissionRepository = new FakeEntityRepository<Permission>();
         service = new RolePermissionService({
             repository, 
@@ -110,6 +115,7 @@ describe('core/entities/role-permission/service', () => {
 
         it('should preCheck permission name when permission is provided', async () => {
             repository.onValidateJoinColumns((data: any) => {
+                data.role = { realmId: null };
                 data.permission = { name: 'custom-perm', realmId: null };
             });
 
@@ -156,6 +162,7 @@ describe('core/entities/role-permission/service', () => {
             });
 
             repository.onValidateJoinColumns((data: any) => {
+                data.role = { realmId: null };
                 data.permission = { name: 'custom-perm', realmId: null };
             });
 
@@ -181,6 +188,7 @@ describe('core/entities/role-permission/service', () => {
             });
 
             repository.onValidateJoinColumns((data: any) => {
+                data.role = { realmId: null };
                 data.permission = { name: 'custom-perm', realmId: null };
             });
 

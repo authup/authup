@@ -6,7 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import {
@@ -116,19 +121,18 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: PERMISSION_NAMES,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                entity.decryptionKey = null;
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: PERMISSION_NAMES,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            entity.decryptionKey = null;
+            data.push(entity);
         }
 
         return {
@@ -152,12 +156,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         // Belt-and-braces null of private material (see getMany).
@@ -193,12 +195,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             throw new ValidationError('A realm must be specified.');
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.KEY_CREATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: validated,
-                ...this.resourceRealmMatch(validated),
-            }),
+            realm: validated.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         // Caller-supplied signature material vouches for whatever the caller
@@ -208,9 +208,9 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         // realm, probed with a realm the actor cannot own; generating one
         // stays at the grant's own reach.
         if (use === JWKUse.SIGNATURE && validated.decryptionKey) {
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.KEY_CREATE,
-                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: this.buildForeignRealmId(actor) }),
+                realm: this.buildForeignRealmId(actor),
             });
         }
 
@@ -297,7 +297,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             PermissionName.KEY_UPDATE,
             entity,
             { ...entity, ...validated },
-            { realm: (row) => row.realmId ?? null },
+            { realm: (row) => row.realmId },
         );
 
         if (validated.name && validated.name !== entity.name) {
@@ -340,12 +340,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.KEY_DELETE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         if (entity.use === JWKUse.ENCRYPTION && !options.force) {
