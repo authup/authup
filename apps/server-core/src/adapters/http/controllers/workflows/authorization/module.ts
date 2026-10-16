@@ -6,12 +6,7 @@
  */
 
 import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
-import {
-    BuiltInPolicyType,
-    PermissionError,
-    definePolicyData,
-    isPermissionError,
-} from '@authup/access';
+import { PermissionError, evaluateRecordOneOf, isPermissionError } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import {
     DBody,
@@ -113,9 +108,9 @@ export class AuthorizationController {
 
         const catalog = await buildAuthorizationCatalog(this.ctx, async (realmId) => {
             try {
-                await actor.permissionEvaluator.evaluateOneOf({
+                await evaluateRecordOneOf(actor.permissionEvaluator, {
                     name: names,
-                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }),
+                    realm: realmId,
                 });
 
                 return true;

@@ -98,13 +98,26 @@ describe('core/entities/key/service', () => {
 
                 calls += 1;
                 if (calls === 2) {
-                    throw new Error('denied');
+                    throw new PermissionError({ message: 'denied' });
                 }
             });
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
             expect(result.meta.total).toEqual(1);
+        });
+
+        it('propagates a non-permission failure of the per-row realm gate', async () => {
+            repository.seed([buildKey()]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior(({ method }) => {
+                if (method === 'evaluateOneOf') {
+                    throw new Error('provider unavailable');
+                }
+            });
+
+            await expect(service.getMany({}, actor)).rejects.toThrow('provider unavailable');
         });
 
         it('pushes a compiled conditional into the row query and skips per-row evaluation', async () => {

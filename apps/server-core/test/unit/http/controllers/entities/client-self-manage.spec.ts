@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import type { Client as ClientEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
@@ -41,9 +42,12 @@ describe('http/controllers/client (self-manage)', () => {
         entity = created;
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
+        // an own-reach grant: a self-edit is evaluated against the STORED
+        // row's realm, which an own grant reaches
         await suite.client.clientPermission.create({
             clientId: entity.id,
             permissionId: permission.id,
+            realmScope: RealmScope.OWN,
         });
 
         const tokenResponse = await suite.client.token.createWithClientCredentials({

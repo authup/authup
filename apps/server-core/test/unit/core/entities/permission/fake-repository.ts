@@ -10,6 +10,11 @@ import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
 
 export class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
+    constructor() {
+        // a loaded row carries every column: an unset realm is null, not absent
+        super({ defaults: { realmId: null } });
+    }
+
     async checkUniqueness(): Promise<void> {
         // no-op
     }

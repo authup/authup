@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
@@ -89,18 +89,17 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.SESSION_READ,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecord(actor.permissionEvaluator, {
+                name: PermissionName.SESSION_READ,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -120,12 +119,10 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_READ });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.SESSION_READ,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -140,12 +137,10 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.SESSION_DELETE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -301,15 +296,12 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             // sessions in its realm — cross-realm rows are skipped, not failed,
             // so filter breadth cannot escalate beyond the actor's reach.
             if (!this.isOwnedBy(session, actor)) {
-                try {
-                    await actor.permissionEvaluator.evaluate({
-                        name: PermissionName.SESSION_DELETE,
-                        data: definePolicyData({
-                            [BuiltInPolicyType.ATTRIBUTES]: session,
-                            ...this.resourceRealmMatch(session),
-                        }),
-                    });
-                } catch {
+                const reached = await reachesRecord(actor.permissionEvaluator, {
+                    name: PermissionName.SESSION_DELETE,
+                    realm: session.realmId,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: session },
+                });
+                if (!reached) {
                     continue;
                 }
             }

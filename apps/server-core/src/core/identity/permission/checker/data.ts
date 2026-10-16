@@ -6,10 +6,7 @@
  */
 
 import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
-import {
-    BuiltInPolicyType,
-    PolicyData,
-} from '@authup/access';
+import { BuiltInPolicyType, evaluateRecord } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
@@ -115,12 +112,10 @@ async function authorizeCheckFor(
         throw new EntityNotFoundError();
     }
 
-    await actor.permissionEvaluator.evaluate({
+    await evaluateRecord(actor.permissionEvaluator, {
         name: PermissionName.PERMISSION_CHECK,
-        data: new PolicyData({
-            ...(own ? { [BuiltInPolicyType.IDENTITY]: own } : {}),
-            [BuiltInPolicyType.REALM_MATCH]: subject.data.realmId ?? null,
-        }),
+        realm: subject.data.realmId ?? null,
+        data: own ? { [BuiltInPolicyType.IDENTITY]: own } : {},
     });
 }
 

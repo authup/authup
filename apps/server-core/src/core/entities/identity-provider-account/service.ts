@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import {
@@ -126,18 +126,17 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        [BuiltInPolicyType.REALM_MATCH]: entity.userRealmId ?? null,
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecord(actor.permissionEvaluator, {
+                name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
+                realm: entity.userRealmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return { data, meta: { ...meta, total } };
@@ -157,12 +156,10 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    [BuiltInPolicyType.REALM_MATCH]: entity.userRealmId ?? null,
-                }),
+                realm: entity.userRealmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -181,12 +178,10 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    [BuiltInPolicyType.REALM_MATCH]: entity.userRealmId ?? null,
-                }),
+                realm: entity.userRealmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 

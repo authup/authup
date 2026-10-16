@@ -686,6 +686,21 @@ describe('core/entities/user/service', () => {
             expect(attrs).not.toHaveProperty('realmId');
         });
 
+        it('should evaluate USER_SELF_MANAGE against the stored row realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeUser({ name: 'self-realm-user', realmId }));
+
+            const actor = createSelfActor(entity.id);
+            denyOnlyUserUpdate(actor);
+
+            await service.update(entity.id, { displayName: 'Updated' }, actor);
+
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCall!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
+        });
+
         it('should throw when non-self user lacks USER_UPDATE', async () => {
             const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 

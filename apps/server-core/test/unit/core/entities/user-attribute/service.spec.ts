@@ -58,7 +58,7 @@ describe('core/entities/user-attribute/service', () => {
     let userRealms: Map<string, string>;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<UserAttribute>();
+        repository = new FakeEntityRepository<UserAttribute>({ defaults: { realmId: randomUUID() } });
         userRealms = new Map();
         repository.onValidateJoinColumns((data: Record<string, any>) => {
             if (data.userId) {

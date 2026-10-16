@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    evaluateRecord,
+    reachesRecord,
+} from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { eq, inArray, or } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
@@ -191,14 +196,16 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         const entity = this.repository.create(data);
 
         if (isSelfFallback) {
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_SELF_MANAGE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+                realm: entity.realmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } },
             });
         } else {
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_UPDATE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                realm: entity.realmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -259,9 +266,10 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         entity = this.repository.merge(entity, data);
 
         if (isSelfFallback) {
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_SELF_MANAGE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+                realm: before.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } },
             });
         } else {
             await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, entity, { realm: (row) => row.realmId ?? null });
@@ -312,15 +320,10 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             return true;
         }
 
-        try {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_UPDATE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
-            });
-
-            return true;
-        } catch {
-            return false;
-        }
+        return reachesRecord(actor.permissionEvaluator, {
+            name: PermissionName.USER_UPDATE,
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+        });
     }
 }

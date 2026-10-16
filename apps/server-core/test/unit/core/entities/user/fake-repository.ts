@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { Role, User } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
@@ -12,6 +13,11 @@ import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
 
 export class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
+    constructor() {
+        // a loaded row carries every column: a realm-bound row always has a realm
+        super({ defaults: { realmId: randomUUID() } });
+    }
+
     async checkUniqueness(): Promise<void> {
         // no-op
     }

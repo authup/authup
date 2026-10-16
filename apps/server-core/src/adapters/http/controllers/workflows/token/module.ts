@@ -24,7 +24,7 @@ import {
     PermissionName, 
     ScopeName, 
 } from '@authup/core-kit';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { evaluateRecord } from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { readRequestBody } from '@routup/basic/body';
@@ -428,9 +428,9 @@ export class TokenController {
 
         const actor = buildActorContext(event);
         try {
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.TOKEN_INTROSPECT,
-                data: new PolicyData({ ...(payload.realm_id ? { [BuiltInPolicyType.REALM_MATCH]: payload.realm_id } : {}) }),
+                realm: payload.realm_id || null,
             });
             return true;
         } catch {

@@ -11,6 +11,11 @@ import type { IRoleRepository } from '../../../../../src/core/entities/role/type
 import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakeRoleRepository extends FakeEntityRepository<Role> implements IRoleRepository {
+    constructor() {
+        // a loaded row carries every column: an unset realm is null, not absent
+        super({ defaults: { realmId: null } });
+    }
+
     async checkUniqueness(_data?: Partial<Role>, _existing?: Role): Promise<void> {
         // no-op
     }

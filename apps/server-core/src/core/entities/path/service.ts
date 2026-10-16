@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet } from '@authup/kit';
@@ -84,18 +89,17 @@ export class PathService extends AbstractEntityService implements IPathService {
         let { total } = meta;
 
         for (const entity of entities) {
-            try {
-                await actor.permissionEvaluator.evaluateOneOf({
-                    name: PERMISSION_NAMES,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                data.push(entity);
-            } catch {
+            const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                name: PERMISSION_NAMES,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(entity);
         }
 
         return {
@@ -121,12 +125,10 @@ export class PathService extends AbstractEntityService implements IPathService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
+        await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-                ...this.resourceRealmMatch(entity),
-            }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         return entity;
@@ -159,9 +161,10 @@ export class PathService extends AbstractEntityService implements IPathService {
         validated.path = buildPathForParent(parent, validated.name);
         assertPathBounds(validated.path);
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PATH_CREATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            realm: validated.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         await this.repository.checkUniqueness(validated);
@@ -310,9 +313,10 @@ export class PathService extends AbstractEntityService implements IPathService {
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PATH_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

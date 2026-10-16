@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
 import { ValidatorGroup } from '@authup/kit';
 import { eq, inArray, or } from '@rapiq/core';
 import {
@@ -235,18 +235,17 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.USER_AUTHENTICATOR_READ,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
-                data.push(this.sanitize(entity));
-            } catch {
+            const reached = await reachesRecord(actor.permissionEvaluator, {
+                name: PermissionName.USER_AUTHENTICATOR_READ,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (!reached) {
                 total -= 1;
+                continue;
             }
+
+            data.push(this.sanitize(entity));
         }
 
         return {
@@ -267,12 +266,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_READ });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_AUTHENTICATOR_READ,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -451,12 +448,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_CREATE });
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_AUTHENTICATOR_CREATE,
-            data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: target.realmId },
-                ...this.resourceRealmMatch(target),
-            }),
+            realm: target.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: target.realmId } },
         });
 
         return target;
@@ -553,12 +548,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_UPDATE });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_AUTHENTICATOR_UPDATE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -652,12 +645,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_DELETE });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_AUTHENTICATOR_DELETE,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 

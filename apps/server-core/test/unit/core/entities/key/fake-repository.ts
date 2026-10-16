@@ -5,12 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { Key } from '@authup/core-kit';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 import { EntityConflictError } from '@authup/errors';
 import type { IKeyRepository } from '../../../../../src/core/entities/key/types.ts';
 
 export class FakeKeyRepository extends FakeEntityRepository<Key> implements IKeyRepository {
+    constructor() {
+        // a loaded row carries every column: a realm-bound row always has a realm
+        super({ defaults: { realmId: randomUUID() } });
+    }
+
     public blobReferences = 0;
 
     public countBlobReferencesCalls: string[] = [];

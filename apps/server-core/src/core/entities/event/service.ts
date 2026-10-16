@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
 import { and, eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
@@ -60,22 +60,17 @@ export class EventService extends AbstractEntityService implements IEventService
     }
 
     protected async canReadRealm(actor: ActorContext, realmId: string | null): Promise<boolean> {
-        try {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.EVENT_READ,
-                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }),
-                options: {
-                    policiesIncluded: [
-                        BuiltInPolicyType.COMPOSITE,
-                        BuiltInPolicyType.PERMISSION_BINDING,
-                        BuiltInPolicyType.REALM_MATCH,
-                    ],
-                },
-            });
-            return true;
-        } catch {
-            return false;
-        }
+        return reachesRecord(actor.permissionEvaluator, {
+            name: PermissionName.EVENT_READ,
+            realm: realmId,
+            options: {
+                policiesIncluded: [
+                    BuiltInPolicyType.COMPOSITE,
+                    BuiltInPolicyType.PERMISSION_BINDING,
+                    BuiltInPolicyType.REALM_MATCH,
+                ],
+            },
+        });
     }
 
     protected async resolveReadVisibility(actor: ActorContext): Promise<EventReadVisibility | undefined> {
@@ -206,17 +201,13 @@ export class EventService extends AbstractEntityService implements IEventService
                 continue;
             }
 
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.EVENT_READ,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        ...this.resourceRealmMatch(entity),
-                    }),
-                });
+            const reached = await reachesRecord(actor.permissionEvaluator, {
+                name: PermissionName.EVENT_READ,
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            });
+            if (reached) {
                 data.push(entity);
-            } catch {
-                continue;
             }
         }
 
@@ -237,12 +228,10 @@ export class EventService extends AbstractEntityService implements IEventService
 
         if (!this.isOwnedBy(entity, actor)) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.EVENT_READ,
-                data: definePolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    ...this.resourceRealmMatch(entity),
-                }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 

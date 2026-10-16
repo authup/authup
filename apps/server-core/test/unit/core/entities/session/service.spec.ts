@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { eq, isParseError } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import type { Session, User } from '@authup/core-kit';
@@ -428,7 +428,7 @@ describe('SessionService', () => {
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
                 if (resourceRealm !== realmId) {
-                    throw new Error('out of realm reach');
+                    throw new PermissionError({ message: 'out of realm reach' });
                 }
             });
             const actor: ActorContext = {

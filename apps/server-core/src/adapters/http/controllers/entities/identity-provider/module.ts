@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    evaluateRecordUpdate,
+} from '@authup/access';
 import {
     ValidatorGroup,
     base64URLDecode,
@@ -219,13 +224,14 @@ export class IdentityProviderController {
             throw new EntityNotFoundError();
         }
 
-        await useRequestPermissionEvaluator(event).evaluateOneOf({
+        await evaluateRecordOneOf(useRequestPermissionEvaluator(event), {
             name: [
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
                 PermissionName.IDENTITY_PROVIDER_DELETE,
             ],
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
+            realm: entity.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         return { data: entity, meta: { schema: describeQuerySchema(identityProviderSchema, RECORD_QUERY_PARAMETERS) } };
@@ -265,9 +271,10 @@ export class IdentityProviderController {
             throw new EntityNotFoundError();
         }
 
-        await permissionEvaluator.evaluate({
+        await evaluateRecord(permissionEvaluator, {
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
+            realm: entity.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;
@@ -605,24 +612,28 @@ export class IdentityProviderController {
 
         if (entity) {
             // The stored row and the merged row must both pass (#3654).
-            for (const attributes of [{ ...entity }, { ...entity, ...data }]) {
-                await permissionEvaluator.evaluate({
-                    name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: attributes,
-                        [BuiltInPolicyType.REALM_MATCH]: attributes.realmId ?? entity.realmId ?? null,
-                    }),
-                });
-            }
+            const next = { ...entity, ...data };
+            await evaluateRecordUpdate(permissionEvaluator, {
+                name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+                current: {
+                    realm: entity.realmId ?? null,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: { ...entity } },
+                },
+                next: {
+                    realm: next.realmId ?? entity.realmId ?? null,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: next },
+                },
+            });
         } else {
             if (!data.realmId) {
                 const identity = useRequestIdentityOrFail(event);
                 data.realmId = identity.realmId;
             }
 
-            await permissionEvaluator.evaluate({
+            await evaluateRecord(permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data, [BuiltInPolicyType.REALM_MATCH]: data.realmId ?? null }),
+                realm: data.realmId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: data },
             });
         }
 

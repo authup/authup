@@ -86,7 +86,7 @@ describe('core/entities/trust-anchor/service', () => {
 
                 calls += 1;
                 if (calls === 2) {
-                    throw new Error('denied');
+                    throw new PermissionError({ message: 'denied' });
                 }
             });
 

@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    evaluateRecordOneOf,
+    reachesRecordOneOf,
+} from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -116,18 +121,17 @@ export class ClientService extends AbstractEntityService implements IClientServi
         if (scope.post) {
             data = [];
             for (const entity of entities) {
-                try {
-                    await actor.permissionEvaluator.evaluateOneOf({
-                        name: CLIENT_READ_PERMISSIONS,
-                        data: definePolicyData({
-                            [BuiltInPolicyType.ATTRIBUTES]: entity,
-                            ...this.resourceRealmMatch(entity),
-                        }),
-                    });
-                    data.push(entity);
-                } catch {
+                const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
+                    name: CLIENT_READ_PERMISSIONS,
+                    realm: entity.realmId,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                });
+                if (!reached) {
                     total -= 1;
+                    continue;
                 }
+
+                data.push(entity);
             }
         }
 
@@ -174,9 +178,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
         // Every foreign read takes the reach evaluate, whatever the secret
         // projection: the row's configuration is realm-bound like its secret.
         if (!isMe) {
-            await actor.permissionEvaluator.evaluateOneOf({
+            await evaluateRecordOneOf(actor.permissionEvaluator, {
                 name: CLIENT_READ_PERMISSIONS,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                realm: entity.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
 
@@ -350,9 +355,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
 
             if (isSelfEdit) {
-                await actor.permissionEvaluator.evaluate({
+                await evaluateRecord(actor.permissionEvaluator, {
                     name: PermissionName.CLIENT_SELF_MANAGE,
-                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+                    realm: entity.realmId,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
                 });
             }
 
@@ -438,9 +444,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         this.assertAccessPolicyRealm(validated, validated.realmId ?? null);
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_CREATE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            realm: validated.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
         entity = this.repository.create(validated);
@@ -561,15 +568,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
             // The mode flags reach the policy only when they change, so the
             // self-manage denylist refuses a self-managing client's downgrade
             // and permits a plain rotation, with no rule of its own here.
-            await actor.permissionEvaluator.evaluate({
+            await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.CLIENT_SELF_MANAGE,
-                data: definePolicyData({
+                realm: entity.realmId,
+                data: {
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         secret,
                         ...(mode !== currentMode ? flags : {}),
                     },
-                    ...this.resourceRealmMatch(entity),
-                }),
+                },
             });
         } else {
             await this.evaluateUpdate(
@@ -660,9 +667,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             throw new EntityNotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            realm: entity.realmId,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;
