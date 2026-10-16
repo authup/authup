@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IComponent } from 'synergos';
+import type { IComponent } from 'hubwire';
 import {
     createEventAggregatorComponent,
     createEventCleanerComponent,
@@ -126,16 +126,21 @@ export class ComponentsModule implements IModule {
         this.registry = [];
         this.startedAt = undefined;
 
-        for (const component of components) {
-            try {
-                await component.stop();
-            } catch (e) {
-                if (logger.success) {
-                    logger.data.warn('Stopping a background component failed.');
-                    logger.data.warn(e);
-                }
+        // Every schedule stops before any pass is awaited, so no component
+        // starts a new sweep while another one drains. stop() does not wait
+        // for a pass in flight; settled?.() does, so no sweep still queries
+        // the data source once the database tears down.
+        const stopped = await Promise.allSettled(components.map((component) => component.stop()));
+        const settled = await Promise.allSettled(components.map((component) => component.settled?.()));
+
+        [...stopped, ...settled].forEach((result) => {
+            if (result.status === 'fulfilled' || !logger.success) {
+                return;
             }
-        }
+
+            logger.data.warn('Stopping a background component failed.');
+            logger.data.warn(result.reason);
+        });
     }
 
     /**

@@ -6,8 +6,8 @@
  */
 
 import type { Logger } from '@authup/server-kit';
-import type { IComponent } from 'synergos';
-import { defineScheduledComponent } from 'synergos';
+import type { IScheduledComponent } from 'hubwire';
+import { defineScheduledComponent } from 'hubwire';
 import type { DataSource } from 'typeorm';
 import { EventAggregateRepositoryAdapter } from '../../app/modules/database/repositories/index.ts';
 import type { IEventAggregateRepository } from '../../core/index.ts';
@@ -80,7 +80,7 @@ export function createEventAggregatorComponent(
     dataSource: DataSource,
     options: { retentionDays: number },
     logger?: Logger,
-) : IComponent {
+) : IScheduledComponent {
     // the backfill cursor lives as long as the component
     const tick = createEventAggregatorTick(new EventAggregateRepositoryAdapter(dataSource), options);
 

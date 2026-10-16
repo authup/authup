@@ -6,8 +6,8 @@
  */
 
 import type { ICache, Logger } from '@authup/server-kit';
-import type { IComponent } from 'synergos';
-import { defineScheduledComponent } from 'synergos';
+import type { IScheduledComponent } from 'hubwire';
+import { defineScheduledComponent } from 'hubwire';
 import type { Session } from '@authup/core-kit';
 import type { DataSource } from 'typeorm';
 import { SessionEntity } from '../../adapters/database/domains/index.ts';
@@ -18,7 +18,7 @@ export function createOAuth2CleanerComponent(
     dataSource: DataSource,
     cache: ICache,
     logger?: Logger,
-) : IComponent {
+) : IScheduledComponent {
     // Both sweeps run through the repository layer, which owns the
     // batching: an unbounded predicate DELETE on either table would be
     // one long transaction, issued by every replica once a minute.
