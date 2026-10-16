@@ -191,7 +191,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 PermissionName.SCOPE_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
 
             await this.repository.checkUniqueness(validated, entity);

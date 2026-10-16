@@ -590,7 +590,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should open one repository transaction for the write and none on create (#3526)', async () => {
-            const entity = await service.create(createFakeClient(), createAllowAllActor());
+            const entity = await service.create(createFakeClient({ realmId: randomUUID() }), createAllowAllActor());
             expect(repository.transactionCalls).toBe(0);
 
             await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());

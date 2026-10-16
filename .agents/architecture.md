@@ -1231,8 +1231,9 @@ out of reach is refused too. Snapshot the stored row BEFORE
 `repository.merge`, which mutates the entity in place. `DELETE` evaluates the
 stored row only and needs nothing more. The last argument is
 `{ realm: (row) => ... }`, REQUIRED, resolving each row's record realm
-(entities `row.realmId ?? null`, which holds for the updated row too since
-`realmId` is immutable and the updated row spreads the stored one; junctions
+(entities `row.realmId`, read raw like every stored row, which holds for the
+updated row too since `realmId` is immutable and the updated row spreads the
+stored one; junctions
 `junctionResourceRealm(row)`, role attributes the parent role's realm, a realm
 itself its own `id`). The method delegates to `evaluateRecordUpdate` from
 `@authup/access` (see *Realm reach* below), so an update can never run with the

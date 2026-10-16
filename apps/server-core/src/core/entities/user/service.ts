@@ -349,7 +349,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
                     ...entity,
                     ...validated,
-                }, { realm: (row) => row.realmId ?? null });
+                }, { realm: (row) => row.realmId });
             }
 
             if (emailChanged) {

@@ -219,7 +219,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 PermissionName.PERMISSION_UPDATE,
                 { ...entity },
                 { ...entity, ...validated },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
 
             await this.repository.checkUniqueness(validated, entity);

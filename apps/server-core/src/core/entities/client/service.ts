@@ -366,7 +366,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             entity = this.repository.merge(entity, validated);
 
             if (!isSelfEdit) {
-                await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, entity, { realm: (row) => row.realmId ?? null });
+                await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, entity, { realm: (row) => row.realmId });
             }
 
             if (entity.authMethod === ClientAuthMethod.SECRET) {
@@ -584,7 +584,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 PermissionName.CLIENT_UPDATE,
                 entity,
                 { ...entity, ...flags },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
         }
 

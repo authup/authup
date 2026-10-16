@@ -195,7 +195,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                     ...entity,
                     ...validated,
                 },
-                { realm: (row) => row.realmId ?? null },
+                { realm: (row) => row.realmId },
             );
 
             entity = this.repository.merge(entity, validated);

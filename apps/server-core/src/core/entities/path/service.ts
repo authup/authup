@@ -230,7 +230,7 @@ export class PathService extends AbstractEntityService implements IPathService {
                 ...validated,
                 path: resolved.path,
             },
-            { realm: (row) => row.realmId ?? null },
+            { realm: (row) => row.realmId },
         );
 
         if (resolved.path !== entity.path) {

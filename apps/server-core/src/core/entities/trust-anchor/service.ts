@@ -203,7 +203,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             PermissionName.KEY_UPDATE,
             entity,
             { ...entity, ...validated },
-            { realm: (row) => row.realmId ?? null },
+            { realm: (row) => row.realmId },
         );
 
         if (validated.name && validated.name !== entity.name) {

@@ -248,6 +248,7 @@ describe('core/entities/policy/service', () => {
             const entity = await service.create({
                 name: 'realm-match-options',
                 type: BuiltInPolicyType.REALM_MATCH,
+                realmId: null,
             }, createAllowAllActor());
 
             await service.update(entity.id, {
