@@ -10,5 +10,6 @@ export * from './helpers';
 export * from './provider';
 export * from './evaluator';
 export * from './realm-scope';
+export * from './record';
 export * from './types';
 export * from './authorization';
