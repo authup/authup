@@ -7,8 +7,8 @@
 
 import type { Event } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
-import type { IComponent } from 'synergos';
-import { defineScheduledComponent } from 'synergos';
+import type { IScheduledComponent } from 'hubwire';
+import { defineScheduledComponent } from 'hubwire';
 import type { DataSource } from 'typeorm';
 import { EventEntity } from '../../adapters/database/domains/index.ts';
 import { EventRepositoryAdapter } from '../../app/modules/database/repositories/index.ts';
@@ -16,7 +16,7 @@ import { EventRepositoryAdapter } from '../../app/modules/database/repositories/
 export function createEventCleanerComponent(
     dataSource: DataSource,
     logger?: Logger,
-) : IComponent {
+) : IScheduledComponent {
     const repository = new EventRepositoryAdapter(
         dataSource.getRepository<Event>(EventEntity),
     );

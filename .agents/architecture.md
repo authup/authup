@@ -5302,9 +5302,11 @@ no successful pass for `COMPONENT_OVERDUE_AFTER` (five minutes, five missed
 one-minute ticks), counted from setup until the first success, unless a pass
 is in flight and younger than `COMPONENT_HUNG_AFTER` (30 minutes): a batched
 drain may outlast five minutes while working, a hung query may not. Every
-component is synergos's `defineScheduledComponent` (`IComponent`: `start`,
-`stop`, `status`), whose cron runs `noOverlap`, so `runningSince` names one
-pass; a failing pass is logged and retried on the next tick. Before
+component is hubwire's `defineScheduledComponent` (`IScheduledComponent`:
+`start`, `stop`, `status`, `settled`), whose cron runs `noOverlap`, so
+`runningSince` names one pass; a failing pass is logged and retried on the
+next tick. `stop()` does not wait for a pass in flight, so teardown awaits
+`settled()` after it, before the database module tears down. Before
 setup and after teardown `healthy` is false. It binds `core.worker.port` (`WORKER_PORT`) on
 `core.host`; the port defaults to 0, meaning unset, and resolves to
 `core.port` (`PORT`), the same inheritance `core.host` takes from the root

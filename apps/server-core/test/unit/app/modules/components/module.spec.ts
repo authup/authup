@@ -269,8 +269,9 @@ describe('app/modules/components', () => {
         await module.setup(container);
         await flushMicrotasks();
 
-        // the next pass never returns, as a large drain or a hung query would
-        findMock.mockReturnValue(new Promise(() => {}));
+        // the next pass does not return, as a large drain or a hung query would
+        const pass = Promise.withResolvers<unknown[]>();
+        findMock.mockReturnValue(pass.promise);
         await vi.advanceTimersByTimeAsync(60_000);
 
         await vi.advanceTimersByTimeAsync(10 * 60_000);
@@ -289,7 +290,75 @@ describe('app/modules/components', () => {
         expect(module.getHealth().healthy).toBeFalsy();
         expect(module.getHealth().components[0].overdue).toBeTruthy();
 
+        pass.resolve([]);
         await module.teardown(container);
+    });
+
+    it('should wait on teardown for a pass in flight', async () => {
+        const config = await normalizeConfig({ eventLogEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        const pass = Promise.withResolvers<unknown[]>();
+        findMock.mockReturnValue(pass.promise);
+        await vi.advanceTimersByTimeAsync(60_000);
+
+        // the database is never torn down beneath a running sweep
+        let tornDown = false;
+        const teardown = module.teardown(container).then(() => { tornDown = true; });
+        await flushMicrotasks();
+        expect(tornDown).toBeFalsy();
+
+        pass.resolve([]);
+        await teardown;
+        expect(tornDown).toBeTruthy();
+    });
+
+    it('should stop every component before waiting for a pass in flight', async () => {
+        const config = await normalizeConfig({});
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, findMock } = createContext(config);
+
+        const module = new ComponentsModule();
+        await module.setup(container);
+        await flushMicrotasks();
+
+        // oauth2-cleaner, first in line, holds its next pass open, as a
+        // large drain would; the event cleaner (the sweep that selects on
+        // `expiring`) keeps completing, so it would sweep again if it were
+        // still scheduled while teardown waits for oauth2-cleaner.
+        const pass = Promise.withResolvers<unknown[]>();
+        let held = false;
+        findMock.mockImplementation(async (options: { where?: { expiring?: boolean } }) => {
+            if (!held && !options.where?.expiring) {
+                held = true;
+                return pass.promise;
+            }
+
+            return [];
+        });
+        await vi.advanceTimersByTimeAsync(60_000);
+
+        const teardown = module.teardown(container);
+        await flushMicrotasks();
+        const calls = findMock.mock.calls.length;
+
+        // while the held pass drains, no component sweeps again
+        await vi.advanceTimersByTimeAsync(3 * 60_000);
+        expect(findMock).toHaveBeenCalledTimes(calls);
+
+        pass.resolve([]);
+        await teardown;
     });
 
     it('should be unhealthy when one of several components is overdue', async () => {
