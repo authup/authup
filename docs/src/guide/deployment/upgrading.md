@@ -147,6 +147,11 @@ the ones that can break an existing setup come first.
   writes too when the request is https (behind a TLS-terminating proxy, send
   `X-Forwarded-Proto: https`). Send `Strict-Transport-Security` from your
   reverse proxy.
+- **Realm update and delete are checked for realm reach.** A realm's own realm
+  is the realm itself, so a `realm_update` or `realm_delete` grant at the
+  default `own` reach now manages only the actor's own realm, and one at
+  `realmScope: none` manages none. Re-grant it at `any` where an actor manages
+  other realms. The built-in `admin` role already holds both at `any`.
 
 **No action**
 
