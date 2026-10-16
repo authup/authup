@@ -43,11 +43,12 @@ import { createFakeTimePolicy } from '../../../../utils/domains/policy';
  * `conditional`, so the reach is a SQL WHERE and the SELECT list cannot affect
  * it — every test using `reader` exercises that path, and a `fields=` projection
  * there proves nothing about the force-select. The force-select only matters on
- * the `post` branch, where the reach is a per-row `resourceRealmMatch` that is
- * PRESENCE-based: a stripped `realmId` leaves the realm-match key absent and the
- * factor neutral-passes, i.e. fails OPEN. `postReader` is the reader that
- * reaches that branch, and *holds the gate on the post branch* is the only test
- * here that fails if the four `applyRealmScopeSelect` calls are removed.
+ * the `post` branch, where the reach is a per-row record check whose `realm`
+ * argument is the row's `realmId` read raw: a stripped `realmId` reaches it as
+ * `undefined` and the check throws, so the list fails instead of answering.
+ * `postReader` is the reader that reaches that branch, and *holds the gate on
+ * the post branch* is the only test here that fails if the four
+ * `applyRealmScopeSelect` calls are removed.
  */
 describe('global-capable entities (realm isolation)', () => {
     const suite = createTestApplication();
@@ -153,8 +154,8 @@ describe('global-capable entities (realm isolation)', () => {
         // a second reader whose grants carry a junction policy that CANNOT be
         // lowered to a condition, so `compile()` answers `post` and the gate runs
         // as the per-row loop instead of a WHERE. That is the only branch in which
-        // `applyRealmScopeSelect` is load-bearing — and it fails OPEN without it,
-        // because `resourceRealmMatch` is presence-based. ATTRIBUTE_NAMES is the
+        // `applyRealmScopeSelect` is load-bearing: without it the record check
+        // gets an `undefined` realm and throws. ATTRIBUTE_NAMES is the
         // built-in type that pends (it wants row attributes) and defines no
         // `toCondition`; inverted over a name no entity carries, it always passes,
         // so the realm reach is the only thing deciding a row.
@@ -400,8 +401,8 @@ describe('global-capable entities (realm isolation)', () => {
         expect(own.data.some((entity) => entity.id === ownRoleId)).toBe(true);
 
         // the force-select is what keeps `realmId` on the row the per-row gate
-        // reads; without it `resourceRealmMatch` yields no key, the reach factor
-        // neutral-passes and every foreign row below comes back
+        // reads; without it the record check gets an `undefined` realm and
+        // throws, so none of the reads below would answer
         const cases: [string, () => Promise<any>][] = [
             ['role', () => postReader.role.getMany({ filters: { id: foreignRoleId }, fields: ['id', 'name'] })],
             ['scope', () => postReader.scope.getMany({ filters: { id: foreignScopeId }, fields: ['id', 'name'] })],

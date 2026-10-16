@@ -32,7 +32,12 @@ describe('core/entities/user-permission/service', () => {
     let service: UserPermissionService;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<UserPermission>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<UserPermission>({ defaults: { userRealmId: null } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.user = { realmId: null };
+        });
         permissionRepository = new FakeEntityRepository<Permission>();
         identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new UserPermissionService({
@@ -95,6 +100,7 @@ describe('core/entities/user-permission/service', () => {
 
         it('should preCheck permission name when permission is provided', async () => {
             repository.onValidateJoinColumns((data: any) => {
+                data.user = { realmId: null };
                 data.permission = { name: 'custom-perm', realmId: null };
             });
 

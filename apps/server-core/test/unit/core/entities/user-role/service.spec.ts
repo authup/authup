@@ -31,7 +31,12 @@ describe('core/entities/user-role/service', () => {
     let identityPermissionProvider: FakeIdentityPermissionProvider;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<UserRole>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<UserRole>({ defaults: { userRealmId: null } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.user = { realmId: null };
+        });
         identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new UserRoleService({ repository, identityPermissionProvider });
     });

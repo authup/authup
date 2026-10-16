@@ -160,7 +160,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.KEY_CREATE,
-            realm: validated.realmId ?? null,
+            realm: validated.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 

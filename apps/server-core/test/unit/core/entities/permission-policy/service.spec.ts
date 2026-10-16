@@ -23,7 +23,12 @@ describe('core/entities/permission-policy/service', () => {
     let service: PermissionPolicyService;
 
     beforeEach(() => {
-        repository = new FakeEntityRepository<PermissionPolicy>();
+        // a stored junction row always carries its owner realm column, and a
+        // create stamps it from the join-loaded owner
+        repository = new FakeEntityRepository<PermissionPolicy>({ defaults: { permissionRealmId: null } });
+        repository.onValidateJoinColumns((data: any) => {
+            data.permission = { realmId: null };
+        });
         service = new PermissionPolicyService({ repository });
     });
 

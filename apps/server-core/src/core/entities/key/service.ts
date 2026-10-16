@@ -197,7 +197,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.KEY_CREATE,
-            realm: validated.realmId ?? null,
+            realm: validated.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 

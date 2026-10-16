@@ -3605,8 +3605,8 @@ fallback passes `junctionResourceRealm(entity)` as the record realm: a junction
 row has no `realmId`, so the row's own realm column would match nothing. And the adapters force-select that key through
 `applyJunctionRealmScopeSelect` (the sibling of `applyRealmScopeSelect`, which
 prepends a `realmId` no junction table has): a client `fields=` projection
-replaces the schema default, and a stripped owner realm coalesces to `null`,
-which an `ownOrNull` reader reaches. That helper serves any row with no
+replaces the schema default, and a stripped owner realm would reach the record
+check as `undefined`, which throws and fails the request. That helper serves any row with no
 `realmId`, junction or not: `identity-provider-account` calls it with
 `'userRealmId'` plus an `extraColumns` `['userId']` for its ownership
 short-circuit (#3601), which is why the parameter exists.
@@ -3761,7 +3761,8 @@ services (`role/user/client-permission`, `user/client-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
 (only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**
 (`roleRealmId` for role-permission, `userRealmId` for user-role, `clientRealmId`
-for client-scope, ... via `JunctionEntityService.junctionResourceRealm`)
+for client-scope, ... via `JunctionEntityService.junctionResourceRealm`, which reads the
+column raw, so a junction row missing it throws like an entity row missing `realmId`)
 as the record realm: junction ATTRIBUTES carry only genuine columns. So a junction write to another realm's
 entity is realm-gated like a direct entity write: a `realm_admin` in realm A cannot bind a
 permission/role/scope onto a realm-B role/user/client even though the permission itself is
@@ -7451,7 +7452,7 @@ user); the uniqueness flip above ships one, on both dialects.
   ownership term alone on `deny`, and nothing on `allow`. So pagination and
   totals are exact. The self term is composed only for a user identity, which
   is the per-row `isOwnedBy` short-circuit expressed as SQL. `post` keeps the
-  per-row `evaluate` with `REALM_MATCH: entity.userRealmId ?? null`, and that
+  per-row `reachesRecord` with the row's raw `userRealmId` as its realm, and that
   is the only branch where the adapter's force-select matters; it goes through
   `applyJunctionRealmScopeSelect(qb, alias, 'userRealmId', ['userId'])`, the
   shared helper for a row with no `realmId`. `getOne` is unchanged: it reads

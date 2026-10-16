@@ -198,13 +198,13 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         if (isSelfFallback) {
             await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_SELF_MANAGE,
-                realm: entity.realmId ?? null,
+                realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } },
             });
         } else {
             await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_UPDATE,
-                realm: entity.realmId ?? null,
+                realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }

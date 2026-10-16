@@ -163,7 +163,7 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PATH_CREATE,
-            realm: validated.realmId ?? null,
+            realm: validated.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 

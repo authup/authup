@@ -128,7 +128,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
-                realm: entity.userRealmId ?? null,
+                realm: entity.userRealmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
             if (!reached) {
@@ -158,7 +158,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ });
             await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
-                realm: entity.userRealmId ?? null,
+                realm: entity.userRealmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }
@@ -180,7 +180,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE });
             await evaluateRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE,
-                realm: entity.userRealmId ?? null,
+                realm: entity.userRealmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
         }

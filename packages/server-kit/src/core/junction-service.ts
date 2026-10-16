@@ -36,10 +36,12 @@ export abstract class JunctionEntityService extends AbstractEntityService {
 
     /**
      * The OWNER realm, handed to a record check as its `realm`. A `null` owner (global) is
-     * matched (and `own` correctly denies it). Reading `ownerRealmKey` keeps the
-     * compile-time guard: a junction cannot silently skip its realm.
+     * matched (and `own` correctly denies it). The column is read raw: a row missing it
+     * (a projection that stripped it) yields `undefined`, which the record check throws on
+     * rather than reading as a global row. Reading `ownerRealmKey` keeps the compile-time
+     * guard: a junction cannot silently skip its realm.
      */
     protected junctionResourceRealm(entity: Record<string, any>): string | null {
-        return entity[this.ownerRealmKey] ?? null;
+        return entity[this.ownerRealmKey];
     }
 }

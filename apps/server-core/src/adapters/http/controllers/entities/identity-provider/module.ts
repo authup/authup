@@ -632,7 +632,7 @@ export class IdentityProviderController {
 
             await evaluateRecord(permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
-                realm: data.realmId ?? null,
+                realm: data.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: data },
             });
         }
