@@ -188,7 +188,6 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             PermissionName.ROLE_UPDATE,
             current,
             { [entity.name]: entity.value },
-            // the attribute row carries its parent role's realm, stamped at create
             { realm: () => realmId },
         );
 

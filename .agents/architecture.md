@@ -1228,13 +1228,15 @@ out of reach is refused too. Snapshot the stored row BEFORE
 `repository.merge`, which mutates the entity in place. `DELETE` evaluates the
 stored row only and needs nothing more. The last argument is
 `{ realm: (row) => ..., data?: (row) => ... }`: `realm` is REQUIRED and
-resolves each row's record realm (entities `row.realmId ?? <stored realm> ??
-null`, junctions `junctionResourceRealm(row)`, role attributes the parent
+resolves each row's record realm (entities `row.realmId`, falling back to the
+stored realm where the validator strips it from the updated row, else `null`;
+junctions `junctionResourceRealm(row)`, role attributes the parent
 role's realm, a realm itself its own `id`), `data` adds further policy data and
 may not carry `realmMatch`. The method delegates to `evaluateRecordUpdate` from
 `@authup/access` (see *Realm reach* below), so an update can never run with the
-realm omitted. Consequence for realms: a `REALM_UPDATE` grant at `own` reach
-updates the actor's own realm only (pinned by `realm-update-reach.spec.ts`).
+realm omitted. Consequence for realms: a `REALM_UPDATE` or `REALM_DELETE` grant
+at `own` reach writes the actor's own realm only (the delete passes the realm's
+`id` as its record realm too; pinned by `realm-update-reach.spec.ts`).
 
 #### Entity-Specific Service Patterns
 
@@ -3736,8 +3738,11 @@ cloned rather than written to, and no `attributes` bag is synthesized, so an att
 policy without a row stays pending. Entity reads and creates still derive the key from the
 ATTRIBUTES `realmId` via the deprecated `AbstractEntityService.resourceRealmMatch` (set only
 when the source carries `realmId`, so a source without it neutral-passes; `realmId` also
-stays in ATTRIBUTES for the self-manage denylists), while every update goes through
-`evaluateUpdate`'s required `realm` resolver. Junction
+stays in ATTRIBUTES for the self-manage denylists), while every `<ENTITY>_UPDATE`
+evaluation of a stored row goes through `evaluateUpdate`'s required `realm` resolver.
+The `*_SELF_MANAGE` self-edit evaluations (user, client, user attribute) carry no
+`realmMatch`, since the validator strips `realmId` on UPDATE, and so neutral-pass
+reach; the self-manage denylist policy is their guard. Junction
 services (`role/user/client-permission`, `user/client-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
 (only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**

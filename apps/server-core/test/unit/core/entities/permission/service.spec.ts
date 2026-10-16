@@ -34,6 +34,7 @@ import {
 } from '@authup/server-test-kit';
 import { FakePolicyRepository } from '../policy/fake-repository.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeRoleRepository } from '../role/fake-repository.ts';
 import { FakePermissionRepository } from './fake-repository.ts';
 import { createFakePermission } from '../../../../utils/domains/index.ts';
@@ -288,6 +289,20 @@ describe('core/entities/permission/service', () => {
             });
             return actor;
         };
+
+        it('should evaluate the stored and the updated row in the permission\'s realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakePermission({
+                name: 'reach-name',
+                builtIn: false,
+                realmId,
+            }));
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { name: 'reach-renamed' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PERMISSION_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
 
         it('should refuse moving an unreachable permission into reach', async () => {
             const entity = repository.seed(createFakePermission({ name: 'other-name', builtIn: false }));

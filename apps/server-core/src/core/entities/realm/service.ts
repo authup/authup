@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData, evaluateRecord } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -132,7 +132,6 @@ export class RealmService extends AbstractEntityService implements IRealmService
                 PermissionName.REALM_UPDATE,
                 { ...entity },
                 { ...entity, ...validated },
-                // a realm's own realm is itself
                 { realm: () => realmId },
             );
 
@@ -200,9 +199,10 @@ export class RealmService extends AbstractEntityService implements IRealmService
             throw new ValidationError('A built-in realm can not be deleted.');
         }
 
-        await actor.permissionEvaluator.evaluate({
+        await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.REALM_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            realm: entity.id,
+            attributes: entity,
         });
 
         const { id: entityId } = entity;

@@ -35,7 +35,7 @@ import {
 } from '@authup/server-test-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { KeyService } from '../../../../../src/core/entities/key/service.ts';
-import { FakeEventService } from '../../helpers/index.ts';
+import { FakeEventService, readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeKeyRepository } from './fake-repository.ts';
 
 const CERTIFICATE = readFileSync(
@@ -422,6 +422,15 @@ describe('core/entities/key/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         const reachable = (attributes: Record<string, any>) => typeof attributes.name === 'string' &&
             attributes.name.startsWith('team-');
+
+        it('evaluates the stored and the updated row in the key\'s realm', async () => {
+            const [seeded] = repository.seed([buildKey({ name: 'team-a' })]);
+            const actor = createAllowAllActor();
+
+            await service.update(seeded.id, { name: 'team-b' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.KEY_UPDATE))
+                .toEqual([seeded.realmId, seeded.realmId]);
+        });
 
         it('refuses renaming an unreachable key into reach', async () => {
             const [seeded] = repository.seed([buildKey({ name: 'other' })]);

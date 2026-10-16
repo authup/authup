@@ -19,6 +19,22 @@ function describeName(name: string | string[]): string {
 }
 
 /**
+ * An IPolicyData that is not this package's PolicyData (another
+ * implementation, or a second copy of the package). Spreading one as a record
+ * would keep only its internal fields and drop every key it carries.
+ */
+function isPolicyDataLike(input: unknown): boolean {
+    if (typeof input !== 'object' || input === null) {
+        return false;
+    }
+
+    const value = input as Record<string, unknown>;
+    return typeof value.has === 'function' &&
+        typeof value.get === 'function' &&
+        typeof value.clone === 'function';
+}
+
+/**
  * A fresh policy data bag for one record: the caller's data is cloned, never
  * written to, so one bag can be reused across records.
  */
@@ -30,6 +46,10 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
     let data : PolicyData;
     if (target.data instanceof PolicyData) {
         data = target.data.clone();
+    } else if (isPolicyDataLike(target.data)) {
+        throw new Error(
+            `The policy data for permission ${describeName(name)} must be a PolicyData instance of this package or a plain record.`,
+        );
     } else {
         data = new PolicyData({ ...(target.data || {}) });
     }
@@ -126,14 +146,18 @@ export async function evaluateRecordUpdate(
     ctx: RecordUpdateEvaluationContext,
 ): Promise<void> {
     await evaluateRecord(evaluator, {
-        name: ctx.name, 
-        options: ctx.options, 
-        ...ctx.current, 
+        realm: ctx.current.realm,
+        attributes: ctx.current.attributes,
+        data: ctx.current.data,
+        name: ctx.name,
+        options: ctx.options,
     });
     await evaluateRecord(evaluator, {
-        name: ctx.name, 
-        options: ctx.options, 
-        ...ctx.next, 
+        realm: ctx.next.realm,
+        attributes: ctx.next.attributes,
+        data: ctx.next.data,
+        name: ctx.name,
+        options: ctx.options,
     });
 }
 

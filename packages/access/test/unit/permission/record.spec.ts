@@ -213,6 +213,56 @@ describe('src/permission/record', () => {
         })).rejects.toSatisfy(isPermissionError);
     });
 
+    it('refuses an update whose attributes move a record into or out of reach', async () => {
+        const evaluator = await build([{
+            name: 'event_read',
+            realm_scope: 'any',
+            policies: ['visible'],
+        }]);
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'event_read',
+            current: { realm: realmB, attributes: { visible: true } },
+            next: { realm: realmB, attributes: { visible: true } },
+        })).resolves.toBeUndefined();
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'event_read',
+            current: { realm: realmB, attributes: { visible: false } },
+            next: { realm: realmB, attributes: { visible: true } },
+        })).rejects.toSatisfy(isPermissionError);
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'event_read',
+            current: { realm: realmB, attributes: { visible: true } },
+            next: { realm: realmB, attributes: { visible: false } },
+        })).rejects.toSatisfy(isPermissionError);
+    });
+
+    it('never lets an update target override the permission name', async () => {
+        const evaluator = await build([
+            { name: 'event_read', realm_scope: 'own' },
+            { name: 'event_delete', realm_scope: 'any' },
+        ]);
+        const row = { realm: realmB, name: 'event_delete' };
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'event_read',
+            current: row,
+            next: row,
+        })).rejects.toSatisfy(isPermissionError);
+    });
+
+    it('throws for policy data that is not a PolicyData instance of this package', async () => {
+        const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
+        const foreign = {
+            has: () => false,
+            get: () => undefined,
+            clone: () => foreign,
+        };
+        await expect(evaluateRecord(evaluator, {
+            name: 'event_read',
+            realm: realmA,
+            data: foreign,
+        })).rejects.toThrow('event_read');
+    });
+
     it('reports unbounded reach only for an unrestricted any grant', async () => {
         expect(await hasUnboundedReach(await build([{ name: 'event_read', realm_scope: 'any' }]), 'event_read')).toBe(true);
         expect(await hasUnboundedReach(await build([{ name: 'event_read', realm_scope: 'ownOrNull' }]), 'event_read')).toBe(false);

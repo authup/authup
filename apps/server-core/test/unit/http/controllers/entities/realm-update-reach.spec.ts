@@ -19,12 +19,11 @@ import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
 
 /**
- * A realm update is evaluated with the realm as its own record realm, so a
- * REALM_UPDATE grant at `own` reach updates the actor's own realm and no
- * other. Before, the update carried no record realm at all and the reach
- * factor neutral-passed, so an `own` grant updated every realm.
+ * A realm update or delete is evaluated with the realm as its own record
+ * realm, so a REALM_UPDATE or REALM_DELETE grant at `own` reach writes the
+ * actor's own realm and no other.
  */
-describe('realm update reach', () => {
+describe('realm update and delete reach', () => {
     const suite = createTestApplication();
 
     let actor: HTTPClient;
@@ -47,12 +46,14 @@ describe('realm update reach', () => {
             secretEncrypted: false,
         });
 
-        const { data: permission } = await suite.client.permission.getOne(PermissionName.REALM_UPDATE);
-        await suite.client.clientPermission.create({
-            clientId: client.id,
-            permissionId: permission.id,
-            realmScope: RealmScope.OWN,
-        });
+        for (const name of [PermissionName.REALM_UPDATE, PermissionName.REALM_DELETE]) {
+            const { data: permission } = await suite.client.permission.getOne(name);
+            await suite.client.clientPermission.create({
+                clientId: client.id,
+                permissionId: permission.id,
+                realmScope: RealmScope.OWN,
+            });
+        }
 
         const token = await suite.client.token.createWithClientCredentials({
             client_id: client.id,
@@ -79,5 +80,20 @@ describe('realm update reach', () => {
 
         const { data } = await suite.client.realm.getOne(foreignRealmId);
         expect(data.description).not.toEqual('updated from a foreign realm');
+    });
+
+    it('refuses to delete a foreign realm', async () => {
+        await expectClientError(
+            () => actor.realm.delete(foreignRealmId),
+            { status: 403 },
+        );
+
+        const { data } = await suite.client.realm.getOne(foreignRealmId);
+        expect(data.id).toEqual(foreignRealmId);
+    });
+
+    it('deletes the actor\'s own realm', async () => {
+        const { data } = await actor.realm.delete(ownRealmId);
+        expect(data.id).toEqual(ownRealmId);
     });
 });

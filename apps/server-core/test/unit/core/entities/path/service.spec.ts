@@ -24,6 +24,7 @@ import {
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { PathService } from '../../../../../src/core/entities/path/service.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { createFakePath } from '../../../../utils/domains/index.ts';
 import { FakePathRepository } from './fake-repository.ts';
 
@@ -442,6 +443,15 @@ describe('core/entities/path/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         const reachable = (attributes: Record<string, any>) => typeof attributes.path === 'string' &&
             (attributes.path === 'analyses' || attributes.path.startsWith('analyses/'));
+
+        it('should evaluate the stored and the updated row in the folder\'s realm', async () => {
+            const a = seedPath({ name: 'a', path: 'a' });
+            const actor = createAllowAllActor();
+
+            await service.update(a.id, { name: 'b' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PATH_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
 
         it('should refuse moving an unreachable folder into reach', async () => {
             const analyses = seedPath({ name: 'analyses', path: 'analyses' });

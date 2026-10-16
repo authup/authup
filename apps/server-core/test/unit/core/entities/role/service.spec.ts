@@ -20,6 +20,7 @@ import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeRoleRepository } from './fake-repository.ts';
 import {
     createAllowAllActor,
@@ -205,6 +206,16 @@ describe('core/entities/role/service', () => {
 
             return actor;
         };
+
+        it('should evaluate the stored and the updated row in the role\'s realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeRole({ name: 'team-role', realmId }));
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { name: 'team-renamed' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.ROLE_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
 
         it('should refuse moving an unreachable role into reach', async () => {
             const entity = repository.seed(createFakeRole({ name: 'other-role' }));

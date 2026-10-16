@@ -31,6 +31,7 @@ import {
 } from '@authup/server-test-kit';
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakePathRepository } from '../path/fake-repository.ts';
 import { FakeUserRepository } from './fake-repository.ts';
 import { createFakePath, createFakeUser } from '../../../../utils/domains/index.ts';
@@ -609,6 +610,14 @@ describe('core/entities/user/service', () => {
                         throw PermissionError.denied('path');
                     }
                 });
+            });
+
+            it('should evaluate the stored and the updated row in the user\'s realm', async () => {
+                const entity = repository.seed(createFakeUser({ realmId, pathId: reachable }));
+
+                await service.update(entity.id, { displayName: 'New Display' }, actor);
+                expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.USER_UPDATE))
+                    .toEqual([realmId, realmId]);
             });
 
             it('should refuse moving an unreachable row into reach', async () => {
