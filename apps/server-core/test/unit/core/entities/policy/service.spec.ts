@@ -22,6 +22,7 @@ import {
 import { z } from 'zod';
 import { PolicyService } from '../../../../../src/core/entities/policy/service.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakePolicyRepository } from './fake-repository.ts';
 
 describe('core/entities/policy/service', () => {
@@ -60,6 +61,23 @@ describe('core/entities/policy/service', () => {
 
             return { permissionEvaluator };
         }
+
+        it('should evaluate the stored and the updated row in the policy\'s realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed({
+                id: randomUUID(),
+                name: 'reach-a',
+                type: BuiltInPolicyType.COMPOSITE,
+                builtIn: false,
+                invert: false,
+                realmId,
+            } as Policy);
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { name: 'reach-b' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PERMISSION_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
 
         it('should refuse moving an unreachable row into reach', async () => {
             const entity = seed('outside');

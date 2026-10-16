@@ -27,6 +27,7 @@ import {
 import { createFakeRealm } from '../../../../utils/domains/index.ts';
 import type { Realm } from '@authup/core-kit';
 import type { IRealmProvisioner } from '../../../../../src/core/provisioning/types.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/record-realm.ts';
 
 class RecordingRealmProvisioner implements IRealmProvisioner {
     public calls: string[] = [];
@@ -208,6 +209,16 @@ describe('core/entities/realm/service', () => {
 
             expect(result.description).toBe('updated description');
         });
+
+        it('should evaluate REALM_UPDATE with the realm as the record realm of both rows', async () => {
+            const entity = repository.seed(createFakeRealm({ builtIn: false }));
+
+            const actor = createAllowAllActor();
+            await service.update(entity.id, { description: 'updated description' }, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.REALM_UPDATE))
+                .toEqual([entity.id, entity.id]);
+        });
     });
 
     describe('update with a restricted grant (#3654)', () => {
@@ -322,6 +333,16 @@ describe('core/entities/realm/service', () => {
             await service.delete(entity.id, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.REALM_DELETE });
+        });
+
+        it('should evaluate REALM_DELETE with the realm as its record realm', async () => {
+            const entity = repository.seed(createFakeRealm({ builtIn: false }));
+
+            const actor = createAllowAllActor();
+            await service.delete(entity.id, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.REALM_DELETE))
+                .toEqual([entity.id]);
         });
 
         it('should throw when actor lacks permission', async () => {

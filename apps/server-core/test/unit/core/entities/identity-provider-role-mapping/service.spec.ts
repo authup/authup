@@ -24,6 +24,7 @@ import {
     createMasterRealmActor, 
 } from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/record-realm.ts';
 
 describe('core/entities/identity-provider-role-mapping/service', () => {
     let repository: FakeEntityRepository<IdentityProviderRoleMapping>;
@@ -204,6 +205,22 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             });
             return actor;
         };
+
+        it('should evaluate the stored and the updated row in the owner realm', async () => {
+            const ownerRealmId = randomUUID();
+            const entity = repository.seed({
+                providerRealmId: ownerRealmId,
+                roleRealmId: randomUUID(),
+                providerId: randomUUID(),
+                roleId: randomUUID(),
+                name: 'reachable',
+            });
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { value: 'changed' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE))
+                .toEqual([ownerRealmId, ownerRealmId]);
+        });
 
         it('should refuse moving an unreachable row into reach', async () => {
             const entity = repository.seed({

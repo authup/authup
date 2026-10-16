@@ -222,13 +222,12 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 throw new ValidationError('The name of a built-in permission can not be changed.');
             }
 
-            const storedRealmId = entity.realmId;
             await this.evaluateUpdate(
                 actor,
                 PermissionName.PERMISSION_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }),
+                { realm: (row) => row.realmId ?? null },
             );
 
             await this.repository.checkUniqueness(validated, entity);

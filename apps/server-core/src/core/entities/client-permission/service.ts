@@ -245,7 +245,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             PermissionName.CLIENT_PERMISSION_UPDATE,
             current,
             this.junctionAttributes(merged),
-            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+            { realm: (row) => this.junctionResourceRealm(row) },
         );
 
         return this.repository.save(merged);

@@ -23,6 +23,7 @@ import {
     createNonMasterRealmActor, 
 } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
 import { FakeScopeRepository } from './fake-repository.ts';
 
@@ -146,6 +147,16 @@ describe('core/entities/scope/service', () => {
             });
             return actor;
         };
+
+        it('should evaluate the stored and the updated row in the scope\'s realm', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeScope({ name: 'reach-name', realmId }));
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { name: 'reach-renamed' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.SCOPE_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
 
         it('should refuse moving an unreachable scope into reach', async () => {
             const entity = repository.seed(createFakeScope({ name: 'other-name' }));

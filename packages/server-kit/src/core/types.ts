@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RecordRealm } from '@authup/access';
 import type { ObjectLiteral } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 
@@ -49,3 +50,9 @@ export interface IEntityRepository<
 
     validateJoinColumns(data: Partial<T>): Promise<void>;
 }
+
+/** How `AbstractEntityService.evaluateUpdate` reads each evaluated row. */
+export type EntityUpdateEvaluationResolvers = {
+    /** The record's realm (`null` = global row) for this row. */
+    realm: (row: Record<string, any>) => RecordRealm,
+};

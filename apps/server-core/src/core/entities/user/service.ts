@@ -338,11 +338,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             if (!isSelfEdit) {
-                const storedRealmId = before.realmId;
                 await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
                     ...entity,
                     ...validated,
-                }, (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }));
+                }, { realm: (row) => row.realmId ?? null });
             }
 
             if (emailChanged) {

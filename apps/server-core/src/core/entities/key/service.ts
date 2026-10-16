@@ -297,7 +297,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             PermissionName.KEY_UPDATE,
             entity,
             { ...entity, ...validated },
-            (row) => this.resourceRealmMatch(row),
+            { realm: (row) => row.realmId ?? null },
         );
 
         if (validated.name && validated.name !== entity.name) {

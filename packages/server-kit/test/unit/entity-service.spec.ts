@@ -35,7 +35,7 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
             'client_update',
             { pathId: null, realmId: 'stored' },
             { pathId: 'folder', realmId: 'next' },
-            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId }),
+            { realm: (row) => row.realmId },
         );
 
         expect(calls.map((c) => c.name)).toEqual(['client_update', 'client_update']);
@@ -57,7 +57,7 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
             },
         } as unknown as ActorContext;
 
-        await expect(new Service().run(actor, 'client_update', {}, {})).rejects.toThrow('denied');
+        await expect(new Service().run(actor, 'client_update', {}, {}, { realm: () => null })).rejects.toThrow('denied');
         expect(calls).toHaveLength(1);
     });
 });

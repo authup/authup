@@ -181,13 +181,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const current = { [entity.name]: entity.value };
         entity = this.repository.merge(entity, data);
+        const realmId = entity.realmId ?? null;
 
         await this.evaluateUpdate(
             actor,
             PermissionName.ROLE_UPDATE,
             current,
             { [entity.name]: entity.value },
-            this.resourceRealmMatch(entity),
+            { realm: () => realmId },
         );
 
         await this.repository.save(entity);

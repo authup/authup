@@ -29,7 +29,7 @@ import {
     it,
 } from 'vitest';
 import { TrustAnchorService } from '../../../../../src/core/entities/trust-anchor/service.ts';
-import { FakeEventService } from '../../helpers/index.ts';
+import { FakeEventService, readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeTrustAnchorRepository } from './fake-repository.ts';
 
 const CA_CERTIFICATE = readFileSync(
@@ -205,6 +205,15 @@ describe('core/entities/trust-anchor/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         const reachable = (attributes: Record<string, any>) => typeof attributes.name === 'string' &&
             attributes.name.startsWith('team-');
+
+        it('evaluates the stored and the updated row in the anchor\'s realm', async () => {
+            const [seeded] = repository.seed([buildTrustAnchor({ name: 'team-a' })]);
+            const actor = createAllowAllActor();
+
+            await service.update(seeded.id, { name: 'team-b' }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.KEY_UPDATE))
+                .toEqual([seeded.realmId, seeded.realmId]);
+        });
 
         it('refuses renaming an unreachable anchor into reach', async () => {
             const [seeded] = repository.seed([buildTrustAnchor({ name: 'other' })]);

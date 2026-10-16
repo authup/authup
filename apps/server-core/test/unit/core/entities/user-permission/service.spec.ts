@@ -23,7 +23,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
 } from '@authup/server-test-kit';
-import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
+import { FakeIdentityPermissionProvider, readEvaluatedRecordRealms } from '../../helpers/index.ts';
 
 describe('core/entities/user-permission/service', () => {
     let repository: FakeEntityRepository<UserPermission>;
@@ -165,6 +165,20 @@ describe('core/entities/user-permission/service', () => {
             });
             return actor;
         };
+
+        it('should evaluate the stored and the updated row in the owner realm', async () => {
+            const ownerRealmId = randomUUID();
+            const entity = repository.seed({
+                userRealmId: ownerRealmId,
+                permissionRealmId: randomUUID(),
+                policyId: null,
+            });
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { policyId: null }, actor);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.USER_PERMISSION_UPDATE))
+                .toEqual([ownerRealmId, ownerRealmId]);
+        });
 
         it('should refuse moving an unreachable row into reach', async () => {
             const entity = repository.seed({ policyId: '22222222-2222-4222-8222-222222222222' });

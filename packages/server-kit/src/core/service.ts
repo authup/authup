@@ -6,9 +6,10 @@
  */
 
 import type { PermissionPolicyBinding } from '@authup/access';
-import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { BuiltInPolicyType, evaluateRecordUpdate } from '@authup/access';
 import { hasOwnProperty, isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
+import type { EntityUpdateEvaluationResolvers } from './types';
 
 export abstract class AbstractEntityService {
     /**
@@ -37,6 +38,9 @@ export abstract class AbstractEntityService {
     }
 
     /**
+     * @deprecated To be removed with #3731: pass the record realm explicitly
+     * (`evaluateRecord` / `evaluateUpdate`'s `realm` resolver) instead.
+     *
      * Resource-realm entry for a permission `evaluate()` input, spread into the PolicyData
      * literal: `new PolicyData({ [ATTRIBUTES]: x, ...this.resourceRealmMatch(x) })`. It mirrors
      * ATTRIBUTES `realmId` PRESENCE — the `realmMatch` key is set only when the source carries
@@ -57,22 +61,27 @@ export abstract class AbstractEntityService {
      * updated row alone lets an update move a row INTO reach, e.g. refile a
      * client into the folder an ATTRIBUTES policy grants (#3654).
      *
-     * `data` may be a function of the evaluated row, so each check reads the
-     * realm of its own row: the stored row's realm for the stored check.
+     * Each row is evaluated as the ATTRIBUTES of its own check. `realm` is
+     * required and resolves the RECORD's realm per row (the stored row's realm
+     * for the stored check), which each grant's `realm_scope` is matched
+     * against.
      */
     protected async evaluateUpdate(
         actor: ActorContext,
         name: string,
         current: Record<string, any>,
         next: Record<string, any>,
-        data: Record<string, any> | ((attributes: Record<string, any>) => Record<string, any>) = {},
+        resolvers: EntityUpdateEvaluationResolvers,
     ): Promise<void> {
-        for (const attributes of [current, next]) {
-            const extra = typeof data === 'function' ? data(attributes) : data;
-            await actor.permissionEvaluator.evaluate({
-                name,
-                data: definePolicyData({ ...extra, [BuiltInPolicyType.ATTRIBUTES]: attributes }),
-            });
-        }
+        const target = (row: Record<string, any>) => ({
+            realm: resolvers.realm(row),
+            data: { [BuiltInPolicyType.ATTRIBUTES]: row },
+        });
+
+        await evaluateRecordUpdate(actor.permissionEvaluator, {
+            name,
+            current: target(current),
+            next: target(next),
+        });
     }
 }

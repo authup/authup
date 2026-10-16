@@ -225,7 +225,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
             current,
             this.junctionAttributes(merged),
-            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+            { realm: (row) => this.junctionResourceRealm(row) },
         );
 
         return this.repository.save(merged);

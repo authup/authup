@@ -212,13 +212,12 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 throw new ValidationError('A built-in policy can not be updated.');
             }
 
-            const storedRealmId = entity.realmId;
             await this.evaluateUpdate(
                 actor,
                 PermissionName.PERMISSION_UPDATE,
                 { ...entity },
                 { ...entity, ...validated },
-                (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }),
+                { realm: (row) => row.realmId ?? null },
             );
 
             await this.repository.checkUniqueness(validated, entity);
