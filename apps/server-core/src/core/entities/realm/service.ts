@@ -126,11 +126,14 @@ export class RealmService extends AbstractEntityService implements IRealmService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
+            const realmId = entity.id;
             await this.evaluateUpdate(
                 actor,
                 PermissionName.REALM_UPDATE,
                 { ...entity },
                 { ...entity, ...validated },
+                // a realm's own realm is itself
+                { realm: () => realmId },
             );
 
             if (entity.name === REALM_MASTER_NAME && isPropertySet(validated, 'name') && entity.name !== validated.name) {

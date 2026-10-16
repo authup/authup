@@ -1226,7 +1226,15 @@ under `{ pathId: { $in: [<analyses>] } }` could refile any client into
 this row at all, the updated row that it stays in reach afterwards, so a move
 out of reach is refused too. Snapshot the stored row BEFORE
 `repository.merge`, which mutates the entity in place. `DELETE` evaluates the
-stored row only and needs nothing more.
+stored row only and needs nothing more. The last argument is
+`{ realm: (row) => ..., data?: (row) => ... }`: `realm` is REQUIRED and
+resolves each row's record realm (entities `row.realmId ?? <stored realm> ??
+null`, junctions `junctionResourceRealm(row)`, role attributes the parent
+role's realm, a realm itself its own `id`), `data` adds further policy data and
+may not carry `realmMatch`. The method delegates to `evaluateRecordUpdate` from
+`@authup/access` (see *Realm reach* below), so an update can never run with the
+realm omitted. Consequence for realms: a `REALM_UPDATE` grant at `own` reach
+updates the actor's own realm only (pinned by `realm-update-reach.spec.ts`).
 
 #### Entity-Specific Service Patterns
 
@@ -3716,10 +3724,20 @@ policy fails (the symmetric over-grant). There is no collapsed `realmScope`: eac
 keeps its own, and folding them would be lossy in both directions.
 
 **Resources present their realm under the `realmMatch` PolicyData key: entities AND
-junctions.** Entity services derive it from the ATTRIBUTES `realmId` via
-`AbstractEntityService.resourceRealmMatch` (set only when the source carries `realmId`, so a
-self-edit UPDATE (where the validator strips `realmId`) leaves the key absent and
-neutral-passes; `realmId` also stays in ATTRIBUTES for the self-manage denylists). Junction
+junctions.** The single-record helpers in `@authup/access` (`permission/record/`) build that
+bag: `evaluateRecord` / `evaluateRecordOneOf` (evaluate / evaluateOneOf semantics for a name
+array), the `reachesRecord*` predicates (only a permission error reads as `false`),
+`evaluateRecordUpdate` and `hasUnboundedReach` (a `compile()` verdict of `allow`, i.e. an
+`any` grant with no narrowing policy; it relies on `system.default` being bound). Their
+`realm` is the RECORD's realm (`null` = global row, a list = every realm), distinct from the
+evaluation context's `realmId` (the permission's binding realm); `undefined` throws, as does
+caller data already carrying `realmMatch` or `attributes` given twice, the caller's data is
+cloned rather than written to, and no `attributes` bag is synthesized, so an attribute
+policy without a row stays pending. Entity reads and creates still derive the key from the
+ATTRIBUTES `realmId` via the deprecated `AbstractEntityService.resourceRealmMatch` (set only
+when the source carries `realmId`, so a source without it neutral-passes; `realmId` also
+stays in ATTRIBUTES for the self-manage denylists), while every update goes through
+`evaluateUpdate`'s required `realm` resolver. Junction
 services (`role/user/client-permission`, `user/client-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
 (only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**

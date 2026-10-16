@@ -255,7 +255,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             PermissionName.ROLE_PERMISSION_UPDATE,
             current,
             this.junctionAttributes(merged),
-            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+            { realm: (row) => this.junctionResourceRealm(row) },
         );
 
         return this.repository.save(merged);

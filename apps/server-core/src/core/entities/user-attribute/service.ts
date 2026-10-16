@@ -264,7 +264,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
                 data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
             });
         } else {
-            await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, entity, (row) => this.resourceRealmMatch(row));
+            await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, entity, { realm: (row) => row.realmId ?? null });
         }
 
         await this.repository.save(entity);

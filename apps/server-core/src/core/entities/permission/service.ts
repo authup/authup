@@ -228,7 +228,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 PermissionName.PERMISSION_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }),
+                { realm: (row) => row.realmId ?? storedRealmId ?? null },
             );
 
             await this.repository.checkUniqueness(validated, entity);

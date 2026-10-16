@@ -246,7 +246,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             PermissionName.USER_PERMISSION_UPDATE,
             current,
             this.junctionAttributes(merged),
-            (row) => ({ [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(row) }),
+            { realm: (row) => this.junctionResourceRealm(row) },
         );
 
         return this.repository.save(merged);

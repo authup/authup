@@ -190,7 +190,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 PermissionName.SCOPE_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                (row) => ({ [BuiltInPolicyType.REALM_MATCH]: row.realmId ?? storedRealmId ?? null }),
+                { realm: (row) => row.realmId ?? storedRealmId ?? null },
             );
 
             await this.repository.checkUniqueness(validated, entity);
