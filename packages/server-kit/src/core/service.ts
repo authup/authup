@@ -75,7 +75,7 @@ export abstract class AbstractEntityService {
     ): Promise<void> {
         const target = (row: Record<string, any>) => ({
             realm: resolvers.realm(row),
-            attributes: row,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: row },
         });
 
         await evaluateRecordUpdate(actor.permissionEvaluator, {

@@ -3732,9 +3732,9 @@ array), the `reachesRecord*` predicates (only a permission error reads as `false
 `any` grant with no narrowing policy; it relies on `system.default` being bound). Their
 `realm` is the RECORD's realm (`null` = global row, a list = every realm), distinct from the
 evaluation context's `realmId` (the permission's binding realm); `undefined` throws, as does
-caller data already carrying `realmMatch` or `attributes` given twice, the caller's data is
-cloned rather than written to, and no `attributes` bag is synthesized, so an attribute
-policy without a row stays pending. Entity reads and creates still derive the key from the
+caller data already carrying `realmMatch`. The row rides the caller's `data` under
+`attributes` like any other policy data key; that data is cloned rather than written to, and
+no `attributes` bag is synthesized, so an attribute policy without a row stays pending. Entity reads and creates still derive the key from the
 ATTRIBUTES `realmId` via the deprecated `AbstractEntityService.resourceRealmMatch` (set only
 when the source carries `realmId`, so a source without it neutral-passes; `realmId` also
 stays in ATTRIBUTES for the self-manage denylists), while every `<ENTITY>_UPDATE`

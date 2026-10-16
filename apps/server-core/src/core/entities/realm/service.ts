@@ -202,7 +202,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.REALM_DELETE,
             realm: entity.id,
-            attributes: entity,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
         const { id: entityId } = entity;

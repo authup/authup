@@ -106,16 +106,6 @@ describe('src/permission/record', () => {
         })).rejects.toThrow('event_read');
     });
 
-    it('throws when attributes are given both directly and in the data', async () => {
-        const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
-        await expect(evaluateRecord(evaluator, {
-            name: 'event_read',
-            realm: realmA,
-            attributes: { visible: true },
-            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } },
-        })).rejects.toThrow('event_read');
-    });
-
     it('never mutates the caller data', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'own' }]);
         const data = new PolicyData({ custom: true });
@@ -150,12 +140,12 @@ describe('src/permission/record', () => {
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
             realm: realmB,
-            attributes: { visible: true },
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } },
         })).toBe(true);
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
             realm: realmB,
-            attributes: { visible: false },
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } },
         })).toBe(false);
     });
 
@@ -172,7 +162,7 @@ describe('src/permission/record', () => {
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
             realm: realmB,
-            attributes: { visible: false },
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } },
         })).toBe(true);
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
@@ -221,18 +211,18 @@ describe('src/permission/record', () => {
         }]);
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
-            current: { realm: realmB, attributes: { visible: true } },
-            next: { realm: realmB, attributes: { visible: true } },
+            current: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
+            next: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
         })).resolves.toBeUndefined();
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
-            current: { realm: realmB, attributes: { visible: false } },
-            next: { realm: realmB, attributes: { visible: true } },
+            current: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } } },
+            next: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
         })).rejects.toSatisfy(isPermissionError);
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
-            current: { realm: realmB, attributes: { visible: true } },
-            next: { realm: realmB, attributes: { visible: false } },
+            current: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
+            next: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } } },
         })).rejects.toSatisfy(isPermissionError);
     });
 

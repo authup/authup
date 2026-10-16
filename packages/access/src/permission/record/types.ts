@@ -27,14 +27,11 @@ export type RecordTarget = {
      */
     realm: RecordRealm;
     /**
-     * The row, for attribute policies on the grant. Never synthesized: without
-     * it an attribute policy stays pending.
-     */
-    attributes?: Record<string, any>;
-    /**
-     * Further policy data (an identity, a custom key). Never mutated; must not
-     * carry `realmMatch`, and must not carry `attributes` when `attributes` is
-     * given.
+     * The policy data the record is evaluated with: the row under
+     * `attributes` (for attribute policies on the grant; never synthesized,
+     * so without it an attribute policy stays pending), an identity, a custom
+     * key. Never mutated; must not carry `realmMatch`, which is set from
+     * `realm`.
      */
     data?: PolicyData | PolicyInput;
 };

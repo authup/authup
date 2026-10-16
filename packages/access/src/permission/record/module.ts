@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/kit';
 import { BuiltInPolicyType, PolicyData } from '../../policy';
 import { isPermissionError } from '../error';
 import type { IPermissionEvaluator, PermissionEvaluationContext } from '../evaluator';
@@ -24,14 +25,10 @@ function describeName(name: string | string[]): string {
  * would keep only its internal fields and drop every key it carries.
  */
 function isPolicyDataLike(input: unknown): boolean {
-    if (typeof input !== 'object' || input === null) {
-        return false;
-    }
-
-    const value = input as Record<string, unknown>;
-    return typeof value.has === 'function' &&
-        typeof value.get === 'function' &&
-        typeof value.clone === 'function';
+    return isObject(input) &&
+        typeof input.has === 'function' &&
+        typeof input.get === 'function' &&
+        typeof input.clone === 'function';
 }
 
 /**
@@ -56,16 +53,6 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
 
     if (data.has(BuiltInPolicyType.REALM_MATCH)) {
         throw new Error(`The policy data for permission ${describeName(name)} must not carry ${BuiltInPolicyType.REALM_MATCH}.`);
-    }
-
-    if (typeof target.attributes !== 'undefined') {
-        if (data.has(BuiltInPolicyType.ATTRIBUTES)) {
-            throw new Error(
-                `The record attributes for permission ${describeName(name)} are given twice (attributes and data).`,
-            );
-        }
-
-        data.set(BuiltInPolicyType.ATTRIBUTES, target.attributes);
     }
 
     data.set(BuiltInPolicyType.REALM_MATCH, target.realm);
@@ -147,14 +134,12 @@ export async function evaluateRecordUpdate(
 ): Promise<void> {
     await evaluateRecord(evaluator, {
         realm: ctx.current.realm,
-        attributes: ctx.current.attributes,
         data: ctx.current.data,
         name: ctx.name,
         options: ctx.options,
     });
     await evaluateRecord(evaluator, {
         realm: ctx.next.realm,
-        attributes: ctx.next.attributes,
         data: ctx.next.data,
         name: ctx.name,
         options: ctx.options,
