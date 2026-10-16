@@ -35,6 +35,24 @@ export default eslintConfig(
         },
     },
     {
+        files: ['apps/server-core/src/**/*.ts'],
+        ignores: [
+            // per-realm pre-evaluation over the realms a check request names
+            'apps/server-core/src/core/authorization/check.ts',
+            // caller-supplied check data, evaluated or pre-evaluated as given
+            'apps/server-core/src/core/identity/permission/checker/service.ts',
+        ],
+        rules: {
+            'no-restricted-syntax': ['error', {
+                selector: 'Property[computed=true][key.object.name="BuiltInPolicyType"][key.property.name="REALM_MATCH"]',
+                message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
+            }, {
+                selector: 'MemberExpression[computed=true][property.object.name="BuiltInPolicyType"][property.property.name="REALM_MATCH"]',
+                message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
+            }],
+        },
+    },
+    {
         files: ['**/*.vue'],
         languageOptions: { globals: { NodeJS: 'readonly' } },
     },

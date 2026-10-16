@@ -243,8 +243,8 @@ usable at the service level and nothing in core depends on TypeORM:
   `fields[client]` positions. `getOne` keeps its isMe bypass and evaluates
   the realm reach on every foreign row whatever the projection, and depends
   on the adapter's `realmScope` force-select: without it a bare
-  `fields=id,secret` replace-projection strips `realmId`, the check's
-  `resourceRealmMatch` neutral-passes and a foreign row ships. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
+  `fields=id,secret` replace-projection strips `realmId` and the record
+  check has no realm to match the row against. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
   included relation is NARROWED to its per-relation fieldset (bare
   `include=` → the target schema's `fields.default`/allowed
   projection), so the explicit-include and auto-join forms behave
@@ -1084,7 +1084,7 @@ export class UserRoleRepositoryAdapter extends EntityRepositoryAdapter<UserRole>
 
 The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `realmScope` (`column`, default `realmId`, plus `extraColumns`: what the per-row realm gate reads, force-selected after `applyQuery`; unset for a list with no per-row gate, i.e. identity provider); `realmRepository` (the entity has names; without it `findOneByName` answers `null` and `findOneByIdOrName` is a lookup by id, which is every junction and attribute table); `nameColumn` (default `name`; the path adapter looks up by `path`); `lockRows` (the instance a `transaction()` hands its callback reads `FOR UPDATE`). What the base guarantees, once for all of them:
 
-- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` made the per-row realm check neutral-pass (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is gated on realm reach for every foreign row, so its adapter sets `realmScope` too.
+- **`findMany`** groups by id, executes the decoded IR through `applyQuery`, force-selects the `realmScope` columns and reads through `fetchMany`, the only fetch the field redaction runs on (#3329). **`findOneWithQuery`**, the record read that applies a `fields=` projection (`UserService.getOne` via the user adapter's `findOne`), force-selects them too, plus `id`: `GET /users/:id?fields=name` otherwise returned a foreign-realm user to a `realm_admin`, since the stripped `realmId` left the per-row realm check nothing to match (pinned in `realm-isolation-field-projection.spec.ts`). The client record read is gated on realm reach for every foreign row, so its adapter sets `realmScope` too.
 - **Extension runs on reads that answer a caller, never on the read a write loads through.** `findMany`, `findOneById`, `findOneByName` and the protected `findOneWithQuery` call the overridable `extendMany` / `extendOne` (no-ops by default); `findOneBy` and `findManyBy` never do. That is the extra-attribute read/write rule as structure rather than convention: policy and user load their attributes there, identity-provider loads and decrypts its secrets on single reads only, since its list is the anonymous login surface.
 - **A name lookup scoped to an unknown realm matches nothing** (`IRealmRepository.resolveId`, fail closed), and a non-uuid id is "no row" before the query (`hasUnmatchableId`, #3650: every by-id lookup returns `null` for it, so every dialect answers 404 where postgres would otherwise refuse the bind with `22P02`; filter operands get the same treatment from the rapiq adapter, #3647).
 - **Every write answers a unique-index refusal with `EntityConflictError` (409)**, the losing side of a race `checkUniqueness` cannot close. `save` runs through the protected `persist(write)`, and so does every write an adapter adds besides it (policy and identity-provider `saveWithEA`, which the services and the policy provisioner write through); a new write that skips `persist` answers the race with a 500 again. Recognizable by `isEntityConflictError`, which `ensurePath` and the federated account manager rely on to re-read the winner. `checkUniqueness` throws the same error, so a caller sees one conflict type whichever of the two caught the duplicate.
@@ -3501,7 +3501,7 @@ behalf.
 #3574): `getMany` composes the compiled-WHERE shape (`compile({ name: [<E>_READ,
 <E>_UPDATE, <E>_DELETE] })`, `appendQueryConditions` on `conditional`, a
 constant-false `inArray('id', [])` on `deny`, the per-row drop loop on `post`)
-and `getOne` runs `evaluateOneOf` with `resourceRealmMatch(entity)` after the
+and `getOne` runs `evaluateRecordOneOf` with the row's `realmId` after the
 fetch. So on these four endpoints an `ownOrNull` reader sees its own realm's rows
 plus the global ones and nothing else, with exact totals and pagination on the
 `conditional` verdict (the `post` fallback's totals are an upper bound: see
@@ -3597,10 +3597,8 @@ totals; only a policy-bound junction reader pays the `post` approximation.
 Three details are load-bearing. The OWNER key, never the member key: `user-role`
 gates on `userRealmId`, not the `roleRealmId` of a role that is usually global,
 and gating on the member side would deny every own-reach reader. The post
-fallback passes `junctionResourceRealm(entity)` under `REALM_MATCH` explicitly:
-`resourceRealmMatch` is presence-based on `realmId`, which a junction row never
-has, so it would return `{}` and neutral-pass every foreign row while looking
-correct. And the adapters force-select that key through
+fallback passes `junctionResourceRealm(entity)` as the record realm: a junction
+row has no `realmId`, so the row's own realm column would match nothing. And the adapters force-select that key through
 `applyJunctionRealmScopeSelect` (the sibling of `applyRealmScopeSelect`, which
 prepends a `realmId` no junction table has): a client `fields=` projection
 replaces the schema default, and a stripped owner realm coalesces to `null`,
@@ -3734,20 +3732,30 @@ array), the `reachesRecord*` predicates (only a permission error reads as `false
 evaluation context's `realmId` (the permission's binding realm); `undefined` throws, as does
 caller data already carrying `realmMatch`. The row rides the caller's `data` under
 `attributes` like any other policy data key; that data is cloned rather than written to, and
-no `attributes` bag is synthesized, so an attribute policy without a row stays pending. Entity reads and creates still derive the key from the
-ATTRIBUTES `realmId` via the deprecated `AbstractEntityService.resourceRealmMatch` (set only
-when the source carries `realmId`, so a source without it neutral-passes; `realmId` also
-stays in ATTRIBUTES for the self-manage denylists), while every `<ENTITY>_UPDATE`
-evaluation of a stored row goes through `evaluateUpdate`'s required `realm` resolver.
-The `*_SELF_MANAGE` self-edit evaluations (user, client, user attribute) carry no
-`realmMatch`, since the validator strips `realmId` on UPDATE, and so neutral-pass
-reach; the self-manage denylist policy is their guard. Junction
+no `attributes` bag is synthesized, so an attribute policy without a row stays pending.
+**Every single-record check in server-core goes through these helpers**, and an eslint
+`no-restricted-syntax` rule refuses a computed `[BuiltInPolicyType.REALM_MATCH]` key in
+`apps/server-core/src` outside the two files that cannot take a record realm:
+`core/authorization/check.ts` (it pre-evaluates per realm the request names) and
+`core/identity/permission/checker/service.ts` (it evaluates caller-supplied check data,
+which may carry its own `realmMatch` and decides between evaluate and pre-evaluate by
+presence). The realm is always explicit, never derived from a key's presence: a stored row
+passes its `realmId` (a row missing the column throws rather than reading as global, which
+is why the realm-gated adapters force-select it), a create passes `validated.realmId ??
+null` (a missing realm on a global-capable entity IS a global row), and every
+`<ENTITY>_UPDATE` evaluation of a stored row goes through `evaluateUpdate`'s required
+`realm` resolver. The `*_SELF_MANAGE` self-edit evaluations (user, client, the client's
+own secret rotation, user attribute) pass the STORED row's realm, which an `own` grant
+reaches, so reach is checked there too and the self-manage denylist policy rides on top. A
+session token is checked against its session's realm, and a token whose session did not
+load is denied. A `post` verdict's per-row drop loop uses `reachesRecord*`, so only a
+permission error drops a row and anything else fails the request. Junction
 services (`role/user/client-permission`, `user/client-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
 (only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**
 (`roleRealmId` for role-permission, `userRealmId` for user-role, `clientRealmId`
-for client-scope, … via `JunctionEntityService.junctionResourceRealm`) under the `realmMatch`
-key: junction ATTRIBUTES carry only genuine columns. So a junction write to another realm's
+for client-scope, ... via `JunctionEntityService.junctionResourceRealm`)
+as the record realm: junction ATTRIBUTES carry only genuine columns. So a junction write to another realm's
 entity is realm-gated like a direct entity write: a `realm_admin` in realm A cannot bind a
 permission/role/scope onto a realm-B role/user/client even though the permission itself is
 global. (The *member* side, the permission/role being attached, is gated separately by the
@@ -6631,8 +6639,8 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   delete at `own`, read at default `ownOrNull`); a reader without
   `CONSENT_READ` is force-scoped to its own rows, own-row get/delete needs no
   permission, and foreign rows are gated by the compiled WHERE (ownership OR
-  the compiled reach), falling back to a per-row `evaluate` +
-  `resourceRealmMatch` on `post`. The adapter force-selects
+  the compiled reach), falling back to a per-row `reachesRecord` over the
+  row's realm on `post`. The adapter force-selects
   `realmId`/`sub`/`subKind` for that fallback (plan-039 discipline).
   Typed client: `client.consent.getMany/getOne/delete`.
 - **Kit skip (client-side, since GET /authorize is anonymous):**
@@ -8001,8 +8009,8 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   `preEvaluate` denial and passes `findMany(query, { owner })`, a mandatory
   `andWhere` a rapiq filter cannot override). An actor **with** `SESSION_READ`
   sees every session its realm reach permits, through the compiled WHERE
-  (ownership OR the compiled reach), with a per-row `evaluate` +
-  `resourceRealmMatch` drop loop as the `post` fallback.
+  (ownership OR the compiled reach), with a per-row `reachesRecord` drop loop
+  over the row's realm as the `post` fallback.
 - `GET /sessions/:id`: read one. Own session → no permission; else
   `SESSION_READ` + realm-match. `@me`/`@self` resolve to the caller's current
   session (`useRequestSessionId`).
@@ -8042,7 +8050,7 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
     (`ISessionRepository.findAllByQuery`: deliberately **unbounded**, no
     pagination cap: reusing the paginated `findMany` would silently truncate at
     `maxLimit`) and revokes each. Gated by `SESSION_DELETE` **plus a per-session
-    `resourceRealmMatch`** (same drop-unauthorized shape as `getMany`). Filter
+    record check over the session's realm** (same drop-unauthorized shape as `getMany`). Filter
     breadth **cannot escalate**: the actor only deletes what it is already
     authorized to delete, so a `realm_admin` in realm A silently drops a target's
     realm-B sessions, and `filter[realmId]` is bounded to its reach.
@@ -8068,11 +8076,10 @@ which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
 grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
 list read path bypasses the session cache (id-keyed only, no list index) and goes
 straight to TypeORM. **Every realm-gated `findMany` adapter force-selects the
-columns its per-row gate reads, regardless of the client `fields` projection**: the gate reads `entity.realmId` via `resourceRealmMatch`, and rapiq
+columns its per-row gate reads, regardless of the client `fields` projection**: the gate hands `entity.realmId` to the record check as its realm, and rapiq
 honors a `fields` projection over `default`, so without the force-select a scoped
-reader could strip `realmId` and neutralize the realmScope reach factor
-(cross-realm leak; for an `ownOrNull` reader the stripped realm reads as a
-null/global resource). The shared helper `applyRealmScopeSelect(qb, alias,
+reader could strip `realmId` (the check then throws on the missing realm; a
+fallback to `null` would read the row as global to an `ownOrNull` reader). The shared helper `applyRealmScopeSelect(qb, alias,
 extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
 `applyQuery` in: `session` (`+ sub, subKind`: ownership check), `user`
 (`+ id`: self short-circuit), `role-attribute`,
@@ -8272,7 +8279,7 @@ valid code flips `confirmed`. Only confirmed devices satisfy challenges. Own
 devices are ungated self-access (like sessions); managing *others'* devices
 requires the `USER_AUTHENTICATOR_READ/CREATE/UPDATE/DELETE` permissions
 (auto-provisioned; realm_admin holds CUD at `own` reach, read at `ownOrNull`),
-with per-row `resourceRealmMatch` gates. A foreign device id under the wrong
+with per-row record checks over the device's realm. A foreign device id under the wrong
 user's nested route is a 404 (no existence oracle).
 
 **Enrollment FOR another user is email-only, even for a privileged actor
@@ -8653,7 +8660,7 @@ accepts such a token until that entry or the token expires.
 (`core/entities/key/`) + `KeyController` dual-mounted
 `/keys` + `/realms/:realmId/keys`, gated by the auto-provisioned `KEY_*`
 permission family (`admin` = `any`; `realm_admin` = `ownOrNull` read, `own`
-CUD via the OWN-override list) with per-row `resourceRealmMatch` drops in
+CUD via the OWN-override list) with per-row `reachesRecordOneOf` drops in
 `getMany` (plan-039 `applyRealmScopeSelect`). POST create discriminates
 **generate vs import** by material presence: generate supports
 RS256/384/512 + ES256/384/512 (HS* rejected: JWKS cannot publish shared
