@@ -7,7 +7,7 @@
 
 import type { PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType, evaluateRecordUpdate } from '@authup/access';
-import { hasOwnProperty, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
 import type { EntityUpdateEvaluationResolvers } from './types';
 
@@ -35,23 +35,6 @@ export abstract class AbstractEntityService {
         }
 
         return undefined;
-    }
-
-    /**
-     * @deprecated To be removed with #3731: pass the record realm explicitly
-     * (`evaluateRecord` / `evaluateUpdate`'s `realm` resolver) instead.
-     *
-     * Resource-realm entry for a permission `evaluate()` input, spread into the PolicyData
-     * literal: `new PolicyData({ [ATTRIBUTES]: x, ...this.resourceRealmMatch(x) })`. It mirrors
-     * ATTRIBUTES `realmId` PRESENCE — the `realmMatch` key is set only when the source carries
-     * `realmId`, so a self-edit UPDATE (where the validator strips `realmId`) leaves the key
-     * ABSENT and the realm_scope reach factor neutral-passes, exactly as the pre-key behavior.
-     * A present `realmId: null` (global resource) is carried as `null` (and `own` denies it).
-     */
-    protected resourceRealmMatch(source: Record<string, any>): Record<string, any> {
-        return hasOwnProperty(source, 'realmId') ?
-            { [BuiltInPolicyType.REALM_MATCH]: source.realmId ?? null } :
-            {};
     }
 
     /**
