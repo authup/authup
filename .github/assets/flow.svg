@@ -1,0 +1,142 @@
+<svg width="960" height="420" viewBox="0 0 960 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fl-title fl-desc">
+    <title id="fl-title">From sign-in to an authorized request</title>
+    <desc id="fl-desc">Your application sends the browser to the hosted /authorize page with PKCE. The person signs in with a password, LDAP or an external provider, completes a second factor if one is enrolled, and consents once per application. Your application redeems the code at /token for an access and a refresh token; refresh tokens rotate and a replayed one revokes its session. Your API verifies the access token and decides with grants: each grant is a permission, a realm reach of own, own or global, or any, and an optional policy.</desc>
+
+    <style>
+        :root {
+            --fg: #1F2330;
+            --muted: #5A6075;
+            --panel: #F5F6FB;
+            --panel-edge: #D5D9EA;
+            --card: #FFFFFF;
+            --rail: #8C93AD;
+            --peri: #5566B4;
+            --rose: #B5686C;
+            --green: #3F8A5B;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --fg: #EEF0F8;
+                --muted: #A0A6BC;
+                --panel: #171A24;
+                --panel-edge: #343A4F;
+                --card: #0F121A;
+                --rail: #6B7290;
+                --peri: #9AA8E6;
+                --rose: #E0A2A2;
+                --green: #7CC497;
+            }
+        }
+        text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; fill: var(--fg); }
+        .muted { fill: var(--muted); }
+        .code { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; }
+        .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; }
+        .title { font-size: 15px; font-weight: 600; }
+        .panel { fill: var(--panel); stroke: var(--panel-edge); }
+        .card { fill: var(--card); }
+        .rail { stroke: var(--rail); }
+        .chip { fill: var(--card); stroke: var(--panel-edge); }
+        .peri { stroke: var(--peri); }
+        .rose { stroke: var(--rose); }
+        .green { stroke: var(--green); }
+        .t-peri { fill: var(--peri); }
+        .t-rose { fill: var(--rose); }
+        .t-green { fill: var(--green); }
+    </style>
+
+    <defs>
+        <marker id="fl-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#8C93AD"/>
+        </marker>
+    </defs>
+
+    <!-- at authup -->
+    <rect class="panel" x="16" y="16" width="928" height="172" rx="18"/>
+    <text class="label t-peri" x="36" y="44">AT AUTHUP: HOSTED PAGES AND THE TOKEN ENDPOINT, ONE ORIGIN</text>
+    <rect class="card peri" x="36" y="64" width="160" height="104" rx="12" stroke-width="1.5">
+        <animate attributeName="stroke-width" values="1.5;3.5;1.5" dur="0.6s" begin="0.0s" repeatCount="1" fill="freeze"/>
+    </rect>
+    <circle cx="60" cy="90" r="11" fill="#6D7FCC" fill-opacity="0.18"/>
+    <text class="code t-peri" x="60" y="94" font-size="11" text-anchor="middle">1</text>
+    <text class="title" x="78" y="95">Authorize</text>
+    <text class="code muted" x="52" y="130" font-size="11.5">GET /authorize</text>
+    <text class="code muted" x="52" y="148" font-size="11.5">with PKCE and state</text>
+    <path class="rail" d="M196 116 H214" stroke-width="2" marker-end="url(#fl-head)"/>
+    <rect class="card peri" x="216" y="64" width="160" height="104" rx="12" stroke-width="1.5">
+        <animate attributeName="stroke-width" values="1.5;3.5;1.5" dur="0.6s" begin="0.5s" repeatCount="1" fill="freeze"/>
+    </rect>
+    <circle cx="240" cy="90" r="11" fill="#6D7FCC" fill-opacity="0.18"/>
+    <text class="code t-peri" x="240" y="94" font-size="11" text-anchor="middle">2</text>
+    <text class="title" x="258" y="95">Sign in</text>
+    <text class="code muted" x="232" y="130" font-size="11.5">password, LDAP,</text>
+    <text class="code muted" x="232" y="148" font-size="11.5">GitHub, Google, OIDC</text>
+    <path class="rail" d="M376 116 H394" stroke-width="2" marker-end="url(#fl-head)"/>
+    <rect class="card peri" x="396" y="64" width="160" height="104" rx="12" stroke-width="1.5">
+        <animate attributeName="stroke-width" values="1.5;3.5;1.5" dur="0.6s" begin="1.0s" repeatCount="1" fill="freeze"/>
+    </rect>
+    <circle cx="420" cy="90" r="11" fill="#6D7FCC" fill-opacity="0.18"/>
+    <text class="code t-peri" x="420" y="94" font-size="11" text-anchor="middle">3</text>
+    <text class="title" x="438" y="95">Second factor</text>
+    <text class="code muted" x="412" y="130" font-size="11.5">TOTP, passkey,</text>
+    <text class="code muted" x="412" y="148" font-size="11.5">email code</text>
+    <path class="rail" d="M556 116 H574" stroke-width="2" marker-end="url(#fl-head)"/>
+    <rect class="card peri" x="576" y="64" width="160" height="104" rx="12" stroke-width="1.5">
+        <animate attributeName="stroke-width" values="1.5;3.5;1.5" dur="0.6s" begin="1.5s" repeatCount="1" fill="freeze"/>
+    </rect>
+    <circle cx="600" cy="90" r="11" fill="#6D7FCC" fill-opacity="0.18"/>
+    <text class="code t-peri" x="600" y="94" font-size="11" text-anchor="middle">4</text>
+    <text class="title" x="618" y="95">Consent</text>
+    <text class="code muted" x="592" y="130" font-size="11.5">remembered per</text>
+    <text class="code muted" x="592" y="148" font-size="11.5">application</text>
+    <path class="rail" d="M736 116 H754" stroke-width="2" marker-end="url(#fl-head)"/>
+    <rect class="card peri" x="756" y="64" width="160" height="104" rx="12" stroke-width="1.5">
+        <animate attributeName="stroke-width" values="1.5;3.5;1.5" dur="0.6s" begin="2.0s" repeatCount="1" fill="freeze"/>
+    </rect>
+    <circle cx="780" cy="90" r="11" fill="#6D7FCC" fill-opacity="0.18"/>
+    <text class="code t-peri" x="780" y="94" font-size="11" text-anchor="middle">5</text>
+    <text class="title" x="798" y="95">Tokens</text>
+    <text class="code muted" x="772" y="130" font-size="11.5">POST /token</text>
+    <text class="code muted" x="772" y="148" font-size="11.5">access + refresh</text>
+
+    <!-- the access token travels to your API -->
+    <path class="rail" d="M836 168 V236" stroke-width="2" marker-end="url(#fl-head)"/>
+    <rect class="chip" x="738" y="196" width="196" height="22" rx="11"/>
+    <text class="code" x="836" y="211" font-size="11" text-anchor="middle">Authorization: Bearer …</text>
+
+    <!-- in your api -->
+    <rect class="panel" x="16" y="240" width="928" height="164" rx="18"/>
+    <text class="label t-green" x="36" y="268">IN YOUR API</text>
+    <rect class="card green" x="720" y="286" width="204" height="98" rx="12" stroke-width="1.5"/>
+    <text class="title" x="738" y="314">Verify</text>
+    <text class="code muted" x="738" y="338" font-size="11.5">TokenVerifier</text>
+    <text class="code muted" x="738" y="356" font-size="11.5">.verify(token)</text>
+    <path class="rail" d="M720 335 H664" stroke-width="2" marker-end="url(#fl-head)"/>
+
+    <rect class="card" x="36" y="286" width="624" height="98" rx="12" stroke="var(--panel-edge)"/>
+    <text class="title" x="54" y="314">Decide: the actor holds a grant</text>
+    <rect class="chip" x="54" y="326" width="150" height="44" rx="10"/>
+    <text class="label muted" x="66" y="342" font-size="9">PERMISSION</text>
+    <text class="code" x="66" y="361" font-size="11.5">user_update</text>
+    <text class="muted" x="214" y="352" font-size="16">+</text>
+    <rect class="chip" x="232" y="326" width="196" height="44" rx="10"/>
+    <text class="label muted" x="244" y="342" font-size="9">REALM REACH</text>
+    <text class="code" x="244" y="361" font-size="11.5">own · ownOrNull · any</text>
+    <text class="muted" x="438" y="352" font-size="16">+</text>
+    <rect class="chip" x="456" y="326" width="186" height="44" rx="10" stroke-dasharray="4 3"/>
+    <text class="label muted" x="468" y="342" font-size="9">POLICY, OPTIONAL</text>
+    <text class="code" x="468" y="361" font-size="11.5">attributes · time · …</text>
+
+    <!-- one pass: the steps light up in order, then the token goes to the API and is decided on -->
+    <g opacity="0">
+        <circle r="9" fill="#6D7FCC" fill-opacity="0.25"/>
+        <circle r="4.5" fill="#6D7FCC"/>
+        <animateMotion dur="0.7s" begin="2.5s" repeatCount="1" fill="freeze" path="M836 170 V236"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.8;1" dur="0.7s" begin="2.5s" repeatCount="1" fill="freeze"/>
+    </g>
+    <g opacity="0">
+        <circle r="9" fill="#4F9D6B" fill-opacity="0.25"/>
+        <circle r="4.5" fill="#4F9D6B"/>
+        <animateMotion dur="0.6s" begin="3.3s" repeatCount="1" fill="freeze" path="M720 335 H664"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.8;1" dur="0.6s" begin="3.3s" repeatCount="1" fill="freeze"/>
+    </g>
+</svg>
