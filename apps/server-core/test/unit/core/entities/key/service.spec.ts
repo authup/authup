@@ -332,6 +332,26 @@ describe('core/entities/key/service', () => {
             expect(entity.decryptionKey).toBeNull();
         });
 
+        it('rejects an RSA key pair shorter than 2048 bits', async () => {
+            const options = AsymmetricKey.buildImportOptionsForJWTAlgorithm(JWTAlgorithm.RS256);
+            const keyPair = await crypto.subtle.generateKey(
+                {
+                    ...options,
+                    modulusLength: 1024,
+                    publicExponent: new Uint8Array([1, 0, 1]),
+                } as RsaHashedKeyGenParams,
+                true,
+                ['sign', 'verify'],
+            );
+
+            await expect(service.create({
+                use: JWKUse.SIGNATURE,
+                decryptionKey: await new AsymmetricKey(keyPair.privateKey).toBase64(),
+                encryptionKey: await new AsymmetricKey(keyPair.publicKey).toBase64(),
+                realmId: randomUUID(),
+            }, createAllowAllActor())).rejects.toThrow(/2048 bits/);
+        });
+
         it('rejects a signature import without its public part', async () => {
             const options = AsymmetricKey.buildImportOptionsForJWTAlgorithm(JWTAlgorithm.RS256);
             const keyPair = await createAsymmetricKeyPair(options);

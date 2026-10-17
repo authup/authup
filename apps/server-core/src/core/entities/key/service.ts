@@ -562,6 +562,15 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             throw new ValidationError('The private and public key material do not form a pair.');
         }
 
+        // the adapters verify with jose, which refuses RSA keys under 2048
+        // bits, so a shorter key would sign tokens no resource server accepts.
+        if (publicJwk.kty === 'RSA' && typeof publicJwk.n === 'string') {
+            const bits = Buffer.from(publicJwk.n, 'base64url').byteLength * 8;
+            if (bits < 2048) {
+                throw new ValidationError(`The RSA key is ${bits} bits; signature keys must be 2048 bits or larger.`);
+            }
+        }
+
         return {
             type: algorithm.startsWith('ES') ? JWKType.EC : JWKType.RSA,
             signatureAlgorithm: algorithm,
