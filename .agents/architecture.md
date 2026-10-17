@@ -8643,7 +8643,11 @@ subject's own realm, so no issued token is refused. A verifier outside the
 server sees no sessions: `@authup/server-adapter-kit`'s local mode reads the
 key from the token's own realm (`GET /realms/<realm_id>/jwks/<kid>`, a
 non-uuid `kid` refused before any request) and trusts the `sub` that key
-signed. That is why IMPORTING signature material requires a `KEY_CREATE`
+signed. The adapter keeps each imported key per `(realm_id, kid)` for
+`jwkCache.ttl` (default 300 s, at most 100 keys, nothing cached on a failed
+fetch, concurrent misses share one fetch, `jwkCache: false` opts out), so
+disabling or deleting a signature key reaches an adapter after at most that
+TTL. That is why IMPORTING signature material requires a `KEY_CREATE`
 grant that reaches beyond the actor's own realm (evaluated against a random
 foreign realm, the `EventService` reach probe): a `realm_admin` may generate
 signature keys, never supply one, and a holder of the wider grant is trusted

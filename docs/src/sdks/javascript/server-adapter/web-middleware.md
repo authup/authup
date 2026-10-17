@@ -49,6 +49,28 @@ Contract:
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
 extracts the token from wherever they like (cookie, custom header, query string): the adapter does not parse cookies.
 
+## Key caching
+
+Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, at most
+100 keys. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
+no restart, and a disabled or deleted key keeps verifying for at most the TTL. Tune or disable the cache
+on the `TokenVerifier`:
+
+```typescript
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    jwkCache: { ttl: 600, max: 50 },
+});
+
+// fetch the signing key for every verification
+const uncachedVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    jwkCache: false,
+});
+```
+
+The `cache` option, which caches verification results per token, is separate.
+
 ## Certificate-bound tokens
 
 If verification returns a token with `cnf.x5t#S256`, `verifyRequest` fails

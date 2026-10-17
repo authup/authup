@@ -11,6 +11,7 @@ import type {
 } from '@authup/specs';
 import type { TokenCreator } from '@authup/core-http-kit';
 import type { ITokenVerifierCache } from './cache';
+import type { JWKCacheOptions } from './jwk';
 
 export interface ITokenVerifier {
     verify(token: string, options?: TokenVerifyOptions) : Promise<TokenVerificationData>
@@ -36,6 +37,11 @@ export type TokenVerifierContext = {
      * If not set, the remaining token lifetime is used.
      */
     maxRemoteCacheTTL?: number,
+    /**
+     * Caches the signing keys used for local verification per realm and key id.
+     * `false` fetches the key for every verification.
+     */
+    jwkCache?: JWKCacheOptions | false,
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {

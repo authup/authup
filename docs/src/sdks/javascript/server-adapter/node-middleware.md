@@ -88,6 +88,8 @@ or every foreign token is reported as inactive. Tokens issued to the
 creator's own client need no grant.
 :::
 
+Local verification (no `creator`) caches the signing keys it fetches; see [Key caching](web-middleware.md#key-caching).
+
 ## verifyRequest primitive
 
 If you need direct control over the response (for example to short-circuit unauthenticated requests with a custom

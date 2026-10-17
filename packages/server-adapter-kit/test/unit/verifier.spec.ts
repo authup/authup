@@ -9,6 +9,7 @@ import { ErrorCode } from '@authup/errors';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import {
     beforeAll, 
+    beforeEach,
     describe, 
     expect, 
     it, 
@@ -247,6 +248,80 @@ describe('verifier', () => {
 
             const output = await tokenVerifier.verify(BoundTokenID, { certificateThumbprint: TokenCertificateThumbprint });
             expect(output.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
+        });
+    });
+
+    describe('jwk cache', () => {
+        const OTHER_KID = '7a2e5c3b-4d1f-4b6a-8c9e-0f1a2b3c4d5e';
+        const OTHER_REALM = '8b3f6d4c-5e2a-4c7b-9d0f-1a2b3c4d5e6f';
+        const notFound = Object.assign(new Error('not found'), { response: { status: 404 } });
+
+        let verifier : TokenVerifier;
+
+        beforeEach(() => {
+            getJwk.mockClear();
+            verifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+        });
+
+        it('fetches a key once per realm and kid', async () => {
+            await verifier.verifyLocal(token);
+            await verifier.verifyLocal(await faker.sign(TokenPayload));
+
+            expect(getJwk).toHaveBeenCalledTimes(1);
+        });
+
+        it('fetches per realm', async () => {
+            await verifier.verifyLocal(token);
+            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: OTHER_REALM }));
+
+            expect(getJwk).toHaveBeenCalledTimes(2);
+            expect(getJwk).toHaveBeenLastCalledWith(FAKER_KEY_ID, OTHER_REALM);
+        });
+
+        it('fetches a rotated kid', async () => {
+            await verifier.verifyLocal(token);
+            await verifier.verifyLocal(await faker.sign(TokenPayload, OTHER_KID));
+
+            expect(getJwk).toHaveBeenCalledTimes(2);
+            expect(getJwk).toHaveBeenLastCalledWith(OTHER_KID, TokenPayload.realm_id);
+        });
+
+        it('does not cache a 404', async () => {
+            getJwk.mockRejectedValueOnce(notFound);
+
+            await expect(verifier.verifyLocal(token)).rejects.toMatchObject({
+                code: ErrorCode.JWT_INVALID,
+                message: 'The token payload property kid is invalid.',
+            });
+            await expect(verifier.verifyLocal(token)).resolves.toBeDefined();
+            expect(getJwk).toHaveBeenCalledTimes(2);
+        });
+
+        it('retries after a failed fetch', async () => {
+            getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
+
+            await expect(verifier.verifyLocal(token)).rejects.toBeInstanceOf(JWTError);
+            await expect(verifier.verifyLocal(token)).resolves.toBeDefined();
+            expect(getJwk).toHaveBeenCalledTimes(2);
+        });
+
+        it('does not refetch on a signature failure', async () => {
+            await verifier.verifyLocal(token);
+
+            const forged = await new Faker().sign(TokenPayload);
+            await expect(verifier.verifyLocal(forged)).rejects.toBeInstanceOf(JWTError);
+            await expect(verifier.verifyLocal(forged)).rejects.toBeInstanceOf(JWTError);
+
+            expect(getJwk).toHaveBeenCalledTimes(1);
+        });
+
+        it('fetches per verify when disabled', async () => {
+            const uncached = new TokenVerifier({ baseURL: 'http://localhost:3001', jwkCache: false });
+
+            await uncached.verifyLocal(token);
+            await uncached.verifyLocal(token);
+
+            expect(getJwk).toHaveBeenCalledTimes(2);
         });
     });
 });
