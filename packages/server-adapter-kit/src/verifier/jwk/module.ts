@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { JWTError } from '@authup/specs';
 import type { JWKCacheEntry, JWKCacheKey, JWKCacheOptions } from './types';
 
 type JWKCacheRecord = {
@@ -17,6 +18,8 @@ export class JWKCache {
 
     protected readonly max: number;
 
+    protected readonly timeout: number;
+
     protected entries: Map<string, JWKCacheRecord>;
 
     protected flights: Map<string, Promise<JWKCacheEntry>>;
@@ -24,6 +27,7 @@ export class JWKCache {
     constructor(options?: JWKCacheOptions) {
         this.ttl = options?.ttl ?? 300;
         this.max = options?.max ?? 100;
+        this.timeout = options?.timeout ?? 10;
         this.entries = new Map();
         this.flights = new Map();
     }
@@ -45,8 +49,20 @@ export class JWKCache {
             return pending;
         }
 
-        const flight = Promise.resolve()
-            .then(load)
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const deadline = new Promise<never>((_resolve, reject) => {
+            timer = setTimeout(() => {
+                reject(new JWTError({ message: 'Fetching the JWK from the auth server timed out.' }));
+            }, this.timeout * 1000);
+        });
+
+        // A stalled fetch must not pin every later lookup of the key: the
+        // flight settles at the deadline, and a load finishing after it is
+        // dropped instead of stored.
+        const flight : Promise<JWKCacheEntry> = Promise.race([
+            Promise.resolve().then(load),
+            deadline,
+        ])
             .then((entry) => {
                 this.entries.delete(key);
                 this.entries.set(key, { value: entry, expiresAt: Date.now() + this.ttl * 1000 });
@@ -56,7 +72,12 @@ export class JWKCache {
 
                 return entry;
             })
-            .finally(() => this.flights.delete(key));
+            .finally(() => {
+                clearTimeout(timer);
+                if (this.flights.get(key) === flight) {
+                    this.flights.delete(key);
+                }
+            });
 
         this.flights.set(key, flight);
 

@@ -13,6 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
+import { JWTError } from '@authup/specs';
 import type { JWKCacheEntry } from '../../src';
 import { JWKCache } from '../../src';
 
@@ -143,5 +144,44 @@ describe('jwk cache', () => {
 
         await expect(cache.resolve(key, load)).resolves.toBe(entry);
         expect(load).toHaveBeenCalledTimes(2);
+    });
+    it('bounds a stalled flight by the timeout', async () => {
+        vi.useFakeTimers();
+        const cache = new JWKCache({ timeout: 5 });
+        const stalled = vi.fn(() => new Promise<JWKCacheEntry>(() => {}));
+        const healthy = vi.fn(async () => entry);
+        const key = { realmId: 'r1', kid: KID_A };
+
+        const first = cache.resolve(key, stalled);
+        const joined = cache.resolve(key, healthy);
+        const firstSettled = expect(first).rejects.toBeInstanceOf(JWTError);
+        const joinedSettled = expect(joined).rejects.toBeInstanceOf(JWTError);
+
+        await vi.advanceTimersByTimeAsync(5_000);
+        await firstSettled;
+        await joinedSettled;
+
+        await expect(cache.resolve(key, healthy)).resolves.toBe(entry);
+        expect(stalled).toHaveBeenCalledTimes(1);
+        expect(healthy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not store the late result of a timed-out flight', async () => {
+        vi.useFakeTimers();
+        const cache = new JWKCache({ timeout: 5 });
+        const { promise: late, resolve: release } = Promise.withResolvers<JWKCacheEntry>();
+        const key = { realmId: 'r1', kid: KID_A };
+
+        const first = cache.resolve(key, () => late);
+        const settled = expect(first).rejects.toBeInstanceOf(JWTError);
+        await vi.advanceTimersByTimeAsync(5_000);
+        await settled;
+
+        release(entry);
+        await vi.advanceTimersByTimeAsync(0);
+
+        const load = vi.fn(async () => entry);
+        await cache.resolve(key, load);
+        expect(load).toHaveBeenCalledTimes(1);
     });
 });

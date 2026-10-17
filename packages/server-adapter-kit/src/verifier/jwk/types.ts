@@ -14,6 +14,11 @@ export type JWKCacheOptions = {
      * Maximum cached keys; the oldest inserted is evicted first. Default 100.
      */
     max?: number,
+    /**
+     * Seconds a key fetch may take before it fails and the next
+     * lookup starts a fresh one. Default 10.
+     */
+    timeout?: number,
 };
 
 export type JWKCacheKey = {
