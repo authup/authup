@@ -48,16 +48,13 @@ Every application with users ends up building the same layer: login and password
     <img src="./.github/assets/architecture.svg" alt="Your applications (a web app with the authorization code flow and PKCE, a service with client credentials, a CLI with the device grant) sign in at Authup and receive tokens. One Authup process serves the OAuth2 and OpenID Connect endpoints, the realm signing keys, the management API and the auth, admin and account consoles on one origin, backed by PostgreSQL or MySQL and optionally Redis. Applications send the access token as a Bearer header to your APIs, which verify it with the realm's published keys or by introspection. For more traffic the same image runs as separate core, console and worker replicas." width="100%" />
 </p>
 
-### Authup or another identity provider?
+### What sets Authup apart
 
-| Pick | When |
-|---|---|
-| **Authup** | You want permissions and policies as part of the identity provider, scoped per realm or shared globally, and evaluable in your own services with the same model. Your team works in JavaScript or TypeScript and wants to run, extend and embed it in that stack, from a single process |
-| **Keycloak** | You need SAML, Kerberos, or a long-established project with a large ecosystem |
-| **Authentik** | You need SAML, an LDAP or RADIUS endpoint for legacy applications, a proxy for applications without any SSO support, or login flows assembled from configurable stages |
-| **Authelia** | You want a lightweight login portal with a second factor in front of a reverse proxy, configured in one file |
+- **Authorization is built in.** Permissions are granted to roles, users and clients with a realm reach and optional policies, not just roles in a token.
+- **The same model runs in your services.** [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) evaluates the permissions Authup reports for a token with the server's own rules.
+- **One process.** API, login pages and consoles start with `npx authup start` and split into replicas when you need them.
 
-Authup is still in its 1.0 beta. It speaks OAuth 2.0 and OpenID Connect but no SAML, and it does not act as a forward-auth proxy.
+Need SAML, Kerberos or a forward-auth proxy? Keycloak, Authentik or Authelia cover those today.
 
 ## Quick start
 
