@@ -2,7 +2,7 @@
     "name": "@authup/server-adapter-socket-io",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "A socket.io server adapter for authup",
+    "description": "Authenticate Socket.IO connections with Authup access tokens.",
     "exports": {
         "./package.json": "./package.json",
         ".": {

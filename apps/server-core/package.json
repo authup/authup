@@ -2,7 +2,7 @@
     "name": "@authup/server-core",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "This is a standalone application.",
+    "description": "The Authup identity provider: OAuth2 and OpenID Connect endpoints plus the management API, as a library.",
     "license": "AGPL-3.0-only",
     "main": "dist/index.mjs",
     "module": "dist/index.mjs",

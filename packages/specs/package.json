@@ -2,7 +2,7 @@
     "name": "@authup/specs",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "A package containing constants, interfaces, utils, ... for different specifications.",
+    "description": "Constants, types and error classes for OAuth 2.0, OpenID Connect, JWT and JWK, as Authup uses them.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
@@ -47,7 +47,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/protocols"
+        "directory": "packages/specs"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"

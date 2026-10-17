@@ -2,7 +2,7 @@
     "name": "@authup/kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "A Package containing general (context independent) utilities.",
+    "description": "Context-free helpers shared across Authup: URL pattern matching, ids, names and serialization.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

@@ -2,7 +2,7 @@
     "name": "@authup/client-web-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "This package contains vue components.",
+    "description": "Vue 3 components, a Pinia session store and permission checks for apps that sign in with Authup.",
     "license": "Apache-2.0",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",

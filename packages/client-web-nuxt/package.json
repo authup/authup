@@ -2,7 +2,7 @@
     "name": "@authup/client-web-nuxt",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Nuxt module for the authup ecosystem",
+    "description": "Nuxt module that signs your app in with Authup and guards its routes by login state and permission.",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",

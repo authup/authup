@@ -3,7 +3,7 @@
     "version": "1.0.0-beta.69",
     "type": "module",
     "license": "AGPL-3.0-only",
-    "description": "Authup's auth console: the SSR auth workflow UI (authorize, register, activate, password recovery, logout) rendered by server-core on the IdP origin.",
+    "description": "Authup's hosted login, consent, registration, password recovery and device pages, as a server-rendered Vue bundle.",
     "types": "./src/contract.ts",
     "files": [
         "dist",

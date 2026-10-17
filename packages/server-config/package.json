@@ -2,7 +2,7 @@
     "name": "@authup/server-config",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "The whole authup.yml document: every configuration key an authup deployment understands, declared once so a service selects keys instead of declaring them.",
+    "description": "Every key of authup.yml, declared once: path, environment variable, default, reader and zod type.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

@@ -2,7 +2,7 @@
     "name": "@authup/server-admin-console",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "The service behind authup's admin console: it serves the admin console bundle with its runtime configuration injected.",
+    "description": "The service that serves the Authup admin console with its runtime configuration and theme.",
     "license": "AGPL-3.0-only",
     "bin": {
         "authup-admin-console": "dist/bin.mjs"

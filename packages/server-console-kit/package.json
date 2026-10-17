@@ -2,7 +2,7 @@
     "name": "@authup/server-console-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "The page-serving mechanism every authup console service shares: html shell stamping, security headers, asset rebasing and the template splice.",
+    "description": "Serve a built console bundle: shell splicing, security headers, asset rebasing and operator theming.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
