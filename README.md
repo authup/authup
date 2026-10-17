@@ -20,7 +20,7 @@
 <p align="center">
     <a href="#why-authup"><b>Why Authup</b></a>
     ·
-    <a href="#quick-start">Quick start</a>
+    <a href="#usage">Usage</a>
     ·
     <a href="#use-it-from-any-language">Integrate</a>
     ·
@@ -54,7 +54,11 @@ Every application with users ends up building the same layer: login and password
 - **The same model runs in your services.** [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) evaluates the permissions Authup reports for a token with the server's own rules.
 - **One process.** API, login pages and consoles start with `npx authup start` and split into replicas when you need them.
 
-## Quick start
+## Usage
+
+How to configure and set up Authup in detail is covered in the [deployment guide](https://authup.org/guide/deployment/).
+
+### Quick start
 
 ```shell
 npx authup@latest start
@@ -69,9 +73,11 @@ It serves:
 - Admin console: `http://localhost:3000/console/admin`
 - Account console: `http://localhost:3000/console/account`
 
-Sign in to the admin console as `admin` with the password `start123` in the `master` realm, and change it.
+Sign in to the admin console as `admin` with the password `start123` in the `master` realm, and change it. The bare-metal setup is described in the [bare-metal guide](https://authup.org/guide/deployment/bare-metal).
 
-For production, run the image against a PostgreSQL or MySQL database you already have. It runs in production mode, which refuses SQLite, and serves the same paths:
+### Production
+
+The recommended way to run Authup is the Docker image. One container runs the whole deployment against a PostgreSQL or MySQL database you already have:
 
 ```shell
 docker run \
@@ -86,13 +92,29 @@ docker run \
   authup/authup:latest start
 ```
 
-Rather than writing the deployment files by hand, let the wizard write them:
+The image runs in production mode, which does not support SQLite, so it does not start until a server database is configured, through `DB_*` or a `db:` block in `authup.yml`. It serves the same paths as the quick start.
+
+Rather than writing the deployment files by hand, run `npm create authup@latest`: a few prompts write a compose project, Helm values, a `docker run` env file or a bare-metal project. The container targets pin the image tag and the bare-metal project pins the `authup` dependency to the release the wizard belongs to; the Helm values name no tag, since the chart's `appVersion` owns it.
+
+### Development
+
+Install the workspace dependencies, build once, and start the development loop:
 
 ```shell
-npm create authup@latest
+npm install
+npm run build
+npm run dev
 ```
 
-It asks a few questions and writes a `docker run` env file, a compose project, Helm values or a bare-metal project. The [deployment guide](https://authup.org/guide/deployment/) covers configuration, reverse proxies and scaling out.
+This runs the experimental `authup dev` command: server-core and every console share `http://localhost:3000/`, the consoles use hot module replacement, and server-core runs directly from TypeScript source. `npm run test` and `npm run lint` run the test suite and the linter (after a build).
+
+To work on the admin console against a standalone dev server instead, start it in a second terminal:
+
+```shell
+VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
+```
+
+It listens on `http://localhost:5173/console/admin/`.
 
 ## Use it from any language
 
@@ -145,16 +167,6 @@ Optional packages for JavaScript and TypeScript, for when you want typed calls i
 | [`@authup/client-web-kit`](https://github.com/authup/authup/tree/master/packages/client-web-kit), [`@authup/client-web-nuxt`](https://github.com/authup/authup/tree/master/packages/client-web-nuxt) | Vue components and a Nuxt module for sign-in and administration |
 
 The other workspaces under [`apps/`](apps) and [`packages/`](packages) make up Authup itself; each has its own README.
-
-## Development
-
-```shell
-npm install
-npm run build
-npm run dev
-```
-
-`npm run dev` serves server-core and every console on `http://localhost:3000` with hot module replacement. `npm run test` and `npm run lint` run the test suite and the linter (after a build).
 
 ## Contributing
 
