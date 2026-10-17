@@ -51,8 +51,8 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/access": "^1.0.0-beta.69",
-        "@authup/core-kit": "^1.0.0-beta.69",
-        "@authup/kit": "^1.0.0-beta.69",
+        "@authup/core-kit": "^1.0.1-beta.69",
+        "@authup/kit": "^1.0.1-beta.69",
         "@authup/server-kit": "^1.0.0-beta.69",
         "@rapiq/core": "^2.4.0"
     },

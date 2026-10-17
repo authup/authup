@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.69) (2026-10-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter-kit:** ITokenVerifierCache is renamed to IVerifierCache and its get/set methods to getToken/setToken; implementations must also provide getJwk/setJwk. MemoryTokenVerifierCache and RedisTokenVerifierCache are renamed to MemoryVerifierCache and RedisVerifierCache.
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735))
+* **access:** a REALM_UPDATE grant at own (or ownOrNull) reach updates the actor's own realm only; before, the reach factor neutral-passed and such a grant updated every realm. resourceRealmMatch is deprecated.
+* **server-core:** a permission or policy whose tree only reads the identity (no permission-binding policy) now evaluates for a token without `global` instead of denying. Grant-bound permissions still deny, and naming another subject on the check routes still requires permission_check.
+
+### Features
+
+* **access:** record-reach helpers and a required realm on entity updates ([#3732](https://github.com/authup/authup/issues/3732)) ([9a46f98](https://github.com/authup/authup/commit/9a46f987d4d134f46862ecba7b633aa853b77928))
+* **server-adapter-kit:** cache signing keys in TokenVerifier ([#3739](https://github.com/authup/authup/issues/3739)) ([cf30274](https://github.com/authup/authup/commit/cf3027447aa2e1b8f46cd66aa7100a3c4a564c74))
+
+
+### Bug Fixes
+
+* **deps:** patch vulnerable transitive dependencies ([#3721](https://github.com/authup/authup/issues/3721)) ([4e2003a](https://github.com/authup/authup/commit/4e2003acb86a5061f702a0f0913ee99257166ba5))
+* **server-core:** let a token's scope restrict its grants, never its identity ([#3723](https://github.com/authup/authup/issues/3723)) ([37c8609](https://github.com/authup/authup/commit/37c8609954a0d348d5eadc5bf8b3752fcdbd2200))
+* **server-core:** never substitute the caller's bearer for a supplied token ([#3724](https://github.com/authup/authup/issues/3724)) ([ff650b6](https://github.com/authup/authup/commit/ff650b60082282e271617b8fd6fc59ca13bc2a01))
+
+
+### Code Refactoring
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735)) ([ad33d06](https://github.com/authup/authup/commit/ad33d068f58184aaeb85e9a45f9a8a885f1eb414))
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 
