@@ -1,6 +1,6 @@
 <svg width="960" height="440" viewBox="0 0 960 440" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ar-title ar-desc">
     <title id="ar-title">How an Authup deployment fits between your applications and your APIs</title>
-    <desc id="ar-desc">Your applications sign in at Authup with the authorization code flow, client credentials or the device grant and receive tokens. One Authup process serves the OAuth2 and OpenID Connect endpoints, the management API and the auth, admin and account consoles on one origin, backed by PostgreSQL or MySQL and optionally Redis. Your applications send the access token to your APIs, which verify it with an Authup server adapter against the realm's published keys or through token introspection. The same image scales out by starting the core, console and worker roles separately.</desc>
+    <desc id="ar-desc">Your applications sign in at Authup with the authorization code flow, client credentials or the device grant and receive tokens. One Authup process serves the OAuth2 and OpenID Connect endpoints, the management API and the auth, admin and account consoles on one origin, backed by PostgreSQL or MySQL and optionally Redis. Your applications send the access token to your APIs, which verify it against the realm's published keys or through token introspection. The same image scales out by starting the core, console and worker roles separately.</desc>
 
     <style>
         :root {
@@ -89,17 +89,12 @@
     <!-- your apis -->
     <rect class="panel" x="700" y="16" width="244" height="320" rx="18"/>
     <text class="label t-green" x="720" y="44">YOUR APIS</text>
-    <rect class="card green" x="720" y="62" width="204" height="112" rx="12" stroke-width="1.5"/>
-    <text class="title" x="738" y="90">Server adapter</text>
-    <text class="code muted" x="738" y="114" font-size="12">server-adapter-node</text>
-    <text class="code muted" x="738" y="132" font-size="12">server-adapter-web</text>
-    <text class="code muted" x="738" y="150" font-size="12">server-adapter-socket-io</text>
-    <rect class="card" x="720" y="190" width="204" height="126" rx="12" stroke="var(--panel-edge)"/>
-    <text class="title" x="738" y="216">Two ways to verify</text>
-    <text class="muted" x="738" y="240" font-size="12">Local: check the signature</text>
-    <text class="muted" x="738" y="256" font-size="12">with the realm's keys, cached.</text>
-    <text class="muted" x="738" y="282" font-size="12">Remote: introspect, which</text>
-    <text class="muted" x="738" y="298" font-size="12">also returns permissions.</text>
+    <rect class="card green" x="720" y="62" width="204" height="138" rx="12" stroke-width="1.5"/>
+    <text class="title" x="738" y="90">Verify the token</text>
+    <text class="muted" x="738" y="116" font-size="12">Locally: check the signature</text>
+    <text class="muted" x="738" y="132" font-size="12">with the realm's keys.</text>
+    <text class="muted" x="738" y="160" font-size="12">Or remotely: introspect it,</text>
+    <text class="muted" x="738" y="176" font-size="12">which also returns permissions.</text>
 
     <!-- tokens: authup to the applications -->
     <path class="rail" d="M308 118 H264" stroke-width="2" marker-end="url(#ar-head)"/>
