@@ -144,11 +144,12 @@ export class TokenVerifier implements ITokenVerifier {
         let payload : OAuth2TokenPayload;
 
         try {
-            const result = await jwtVerify(
-                token,
-                entry.key,
-                entry.algorithm ? { algorithms: [entry.algorithm] } : {},
-            );
+            // 60 seconds is the leeway @node-rs/jsonwebtoken applied, so an
+            // issuer whose clock runs slightly ahead still passes nbf.
+            const result = await jwtVerify(token, entry.key, {
+                clockTolerance: 60,
+                ...(entry.algorithm ? { algorithms: [entry.algorithm] } : {}),
+            });
             payload = result.payload as OAuth2TokenPayload;
         } catch (e) {
             if (e instanceof errors.JWTExpired) {

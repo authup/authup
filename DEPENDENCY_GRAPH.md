@@ -97,7 +97,6 @@ graph TD
 
     %% Layer 4
     server-adapter-kit --> core-http-kit
-    server-adapter-kit --> core-kit
     server-adapter-kit --> errors
     server-adapter-kit --> kit
     server-adapter-kit --> server-kit

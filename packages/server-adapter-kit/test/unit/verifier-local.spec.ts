@@ -117,6 +117,15 @@ describe('verifier local', () => {
         );
     });
 
+    it('should accept a token whose nbf lies within the 60 second clock leeway', async () => {
+        getJwk.mockResolvedValueOnce(await faker.useJwk());
+
+        const token = await faker.sign(buildPayload({ nbf: Math.floor(Date.now() / 1000) + 30 }));
+
+        const output = await verifier.verifyLocal(token);
+        expect(output.sub).toEqual(TokenPayload.sub);
+    });
+
     it('should decode a payload with non-ASCII claims', async () => {
         getJwk.mockResolvedValueOnce(await faker.useJwk());
 
