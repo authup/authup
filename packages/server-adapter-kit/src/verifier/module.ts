@@ -111,15 +111,20 @@ export class TokenVerifier implements ITokenVerifier {
             throw JWTError.headerPropertyInvalid('kid');
         }
 
-        const { kid } = header;
+        // uuids compare case-insensitively (isUUID and the server's lookup),
+        // so each case variant would otherwise be its own cache entry: one
+        // upstream fetch per variant and an easy way to evict real keys.
+        const kid = header.kid.toLowerCase();
 
         // The key is read from the realm the token names, so a key of
         // another realm can never verify it; the signature check below then
         // proves the claim it was looked up by.
-        const { realm_id: realmId } = extractTokenPayload(token);
-        if (typeof realmId !== 'string' || !realmId) {
+        const { realm_id: realmClaim } = extractTokenPayload(token);
+        if (typeof realmClaim !== 'string' || !realmClaim) {
             throw JWTError.payloadPropertyInvalid('realm_id');
         }
+
+        const realmId = isUUID(realmClaim) ? realmClaim.toLowerCase() : realmClaim;
 
         const entry = this.jwkCache ?
             await this.jwkCache.resolve({ realmId, kid }, () => this.loadJwk(kid, realmId)) :

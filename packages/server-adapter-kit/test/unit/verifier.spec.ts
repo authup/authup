@@ -298,6 +298,27 @@ describe('verifier', () => {
             expect(getJwk).toHaveBeenLastCalledWith(OTHER_KID, TokenPayload.realm_id);
         });
 
+        it('keys and fetches a kid case-insensitively', async () => {
+            await verifier.verifyLocal(token);
+            await verifier.verifyLocal(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
+
+            expect(getJwk).toHaveBeenCalledTimes(1);
+            expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
+        });
+
+        it('fetches a lower-cased kid', async () => {
+            await verifier.verifyLocal(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
+
+            expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
+        });
+
+        it('keys a realm id case-insensitively', async () => {
+            await verifier.verifyLocal(token);
+            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: TokenPayload.realm_id.toUpperCase() }));
+
+            expect(getJwk).toHaveBeenCalledTimes(1);
+        });
+
         it('does not cache a 404', async () => {
             getJwk.mockRejectedValueOnce(notFound);
 
