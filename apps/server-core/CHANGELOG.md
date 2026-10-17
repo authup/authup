@@ -1,5 +1,44 @@
 # Change Log
 
+## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.69) (2026-10-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735))
+* **access:** a REALM_UPDATE grant at own (or ownOrNull) reach updates the actor's own realm only; before, the reach factor neutral-passed and such a grant updated every realm. resourceRealmMatch is deprecated.
+* **server-core:** a permission or policy whose tree only reads the identity (no permission-binding policy) now evaluates for a token without `global` instead of denying. Grant-bound permissions still deny, and naming another subject on the check routes still requires permission_check.
+
+### Features
+
+* **access:** record-reach helpers and a required realm on entity updates ([#3732](https://github.com/authup/authup/issues/3732)) ([9a46f98](https://github.com/authup/authup/commit/9a46f987d4d134f46862ecba7b633aa853b77928))
+
+
+### Bug Fixes
+
+* **server-core:** let a token's scope restrict its grants, never its identity ([#3723](https://github.com/authup/authup/issues/3723)) ([37c8609](https://github.com/authup/authup/commit/37c8609954a0d348d5eadc5bf8b3752fcdbd2200))
+* **server-core:** never substitute the caller's bearer for a supplied token ([#3724](https://github.com/authup/authup/issues/3724)) ([ff650b6](https://github.com/authup/authup/commit/ff650b60082282e271617b8fd6fc59ca13bc2a01))
+
+
+### Code Refactoring
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735)) ([ad33d06](https://github.com/authup/authup/commit/ad33d068f58184aaeb85e9a45f9a8a885f1eb414))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/core-kit bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/errors bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/i18n bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/kit bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/server-config bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/server-config-kit bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/server-console-kit bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+    * @authup/specs bumped from ^1.0.0-beta.69 to ^1.0.1-beta.69
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 
