@@ -5452,9 +5452,7 @@ service packages must read config without depending on server-core, and
 putting the mechanism in `@authup/server-kit` instead would have made a
 static-file-serving console inherit native `@node-rs/bcrypt` and
 `@node-rs/jsonwebtoken` binaries, winston, redis, the socket.io emitter and
-`@rapiq/core`. `packages/server-config-kit/test/unit/dependencies.spec.ts`
-pins the dependency set, the successor of the portability guard the folder
-carried before the extraction.
+`@rapiq/core`.
 
 **One document, one declaration per key** (`@authup/server-config`). Every
 key of `authup.yml` is declared exactly once, in the section it belongs to,
