@@ -91,7 +91,10 @@ Layer 3:
                       `declare module` augmentation is re-exposed in the emitted .d.ts. access and core-kit
                       are the identifier enums the permission / policy / scope display-name catalogs are
                       keyed by, so they surface in the emitted .d.ts and are dependencies, not devDeps)
-  server-adapter-kit → kit, errors, specs, core-kit, core-http-kit, server-kit
+  server-adapter-kit → kit, errors, specs, core-http-kit (+ jose, which verifies tokens; server-kit is
+                      devDep-only: the test faker signs with it. Pinned by test/unit/dependencies.spec.ts,
+                      because the adapters must not inherit server-kit's native @node-rs/jsonwebtoken,
+                      winston and redis)
   server-test-kit   → access, core-kit, kit, server-kit, @rapiq/core (consumed devDep-only; server-kit and @rapiq/core are runtime dependencies: their types are re-exposed by the fakes' public .d.ts)
 
 Layer 4:
