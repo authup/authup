@@ -193,6 +193,7 @@ describe('jwk cache', () => {
         { ttl: Infinity },
         { timeout: 0 },
         { timeout: NaN },
+        { timeout: 2_147_484 },
     ])('rejects invalid options %o', (options) => {
         expect(() => new JWKCache(options)).toThrow(TypeError);
     });

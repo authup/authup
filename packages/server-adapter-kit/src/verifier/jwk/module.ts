@@ -37,8 +37,9 @@ export class JWKCache {
             throw new TypeError('The JWK cache max must be a non-negative integer.');
         }
 
-        if (!Number.isFinite(this.timeout) || this.timeout <= 0) {
-            throw new TypeError('The JWK cache timeout must be a finite, positive number of seconds.');
+        // setTimeout clamps a delay above 2^31 - 1 ms to 1 ms
+        if (!Number.isFinite(this.timeout) || this.timeout <= 0 || this.timeout * 1000 > 2_147_483_647) {
+            throw new TypeError('The JWK cache timeout must be a positive number of seconds, at most 2147483.');
         }
         this.entries = new Map();
         this.flights = new Map();
