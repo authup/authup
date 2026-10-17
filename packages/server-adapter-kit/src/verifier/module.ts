@@ -12,23 +12,22 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
 import {
-    JWKType,
     JWTError,
     OAuth2TokenKind,
-    isJWTError,
 } from '@authup/specs';
 import type {
-    JWTAlgorithm,
     OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
 } from '@authup/specs';
+import type { JWTPayload, ProtectedHeaderParameters } from 'jose';
 import {
-    extractTokenHeader,
-    extractTokenPayload,
-    verifyToken,
-} from '@authup/server-kit';
-import { importJWK } from 'jose';
+    decodeJwt,
+    decodeProtectedHeader,
+    errors,
+    importJWK,
+    jwtVerify,
+} from 'jose';
 import { assertTokenCertificateBinding } from '../certificate-binding';
 import type { IVerifierCache } from './cache';
 import { MemoryVerifierCache } from './cache';
@@ -105,8 +104,10 @@ export class TokenVerifier implements ITokenVerifier {
             }
         }
 
-        const header = extractTokenHeader(token);
-        if (!header) {
+        let header : ProtectedHeaderParameters;
+        try {
+            header = decodeProtectedHeader(token);
+        } catch {
             throw JWTError.headerInvalid('The token header could not be extracted.');
         }
 
@@ -122,7 +123,14 @@ export class TokenVerifier implements ITokenVerifier {
         // The key is read from the realm the token names, so a key of
         // another realm can never verify it; the signature check below then
         // proves the claim it was looked up by.
-        const { realm_id: realmClaim } = extractTokenPayload(token);
+        let claims : JWTPayload;
+        try {
+            claims = decodeJwt(token);
+        } catch {
+            throw JWTError.payloadInvalid('The token payload could not be extracted.');
+        }
+
+        const { realm_id: realmClaim } = claims;
         if (typeof realmClaim !== 'string' || !realmClaim) {
             throw JWTError.payloadPropertyInvalid('realm_id');
         }
@@ -135,17 +143,17 @@ export class TokenVerifier implements ITokenVerifier {
 
         let payload : OAuth2TokenPayload;
 
-        // todo: get jwk type for algorithm
-
         try {
-            payload = await verifyToken(token, {
-                type: JWKType.RSA,
-                key: entry.key,
-                ...(entry.algorithm ? { algorithms: [entry.algorithm as JWTAlgorithm.RS256] } : {}),
-            }) as OAuth2TokenPayload;
+            // 60 seconds is the leeway @node-rs/jsonwebtoken applied, so an
+            // issuer whose clock runs slightly ahead still passes nbf.
+            const result = await jwtVerify(token, entry.key, {
+                clockTolerance: 60,
+                ...(entry.algorithm ? { algorithms: [entry.algorithm] } : {}),
+            });
+            payload = result.payload as OAuth2TokenPayload;
         } catch (e) {
-            if (isJWTError(e) && e.code === ErrorCode.JWT_EXPIRED) {
-                throw e;
+            if (e instanceof errors.JWTExpired) {
+                throw JWTError.expired();
             }
 
             throw JWTError.payloadInvalid('The token could not be verified.');
