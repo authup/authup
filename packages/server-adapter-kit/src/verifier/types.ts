@@ -10,7 +10,7 @@ import type {
     OAuth2TokenPermission,
 } from '@authup/specs';
 import type { TokenCreator } from '@authup/core-http-kit';
-import type { ITokenVerifierCache } from './cache';
+import type { IVerifierCache } from './cache';
 import type { JWKCacheOptions } from './jwk';
 
 export interface ITokenVerifier {
@@ -30,7 +30,7 @@ export type TokenVerifyOptions = {
 export type TokenVerifierContext = {
     baseURL: string,
     creator?: TokenCreator,
-    cache?: ITokenVerifierCache,
+    cache?: IVerifierCache,
     /**
      * Maximum TTL (in seconds) for caching remote introspection results.
      * Limits how long a revoked token can remain cached as valid.
@@ -38,7 +38,8 @@ export type TokenVerifierContext = {
      */
     maxRemoteCacheTTL?: number,
     /**
-     * Caches the signing keys used for local verification per realm and key id.
+     * Caches the signing keys used for local verification per realm and key id,
+     * in `cache` (getJwk/setJwk) or in process memory when none is given.
      * `false` fetches the key for every verification.
      */
     jwkCache?: JWKCacheOptions | false,

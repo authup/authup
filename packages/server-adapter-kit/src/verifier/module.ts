@@ -30,9 +30,10 @@ import {
 } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { assertTokenCertificateBinding } from '../certificate-binding';
-import type { ITokenVerifierCache } from './cache';
-import { JWKCache } from './jwk';
-import type { JWKCacheEntry } from './jwk';
+import type { IVerifierCache } from './cache';
+import { MemoryVerifierCache } from './cache';
+import { JWKResolver } from './jwk';
+import type { JWKCacheData } from './jwk';
 import type {
     ITokenVerifier,
     TokenVerificationData,
@@ -46,15 +47,17 @@ export class TokenVerifier implements ITokenVerifier {
 
     protected client: Client;
 
-    protected cache : ITokenVerifierCache | undefined;
+    protected cache : IVerifierCache | undefined;
 
     protected maxRemoteCacheTTL: number | undefined;
 
-    protected jwkCache: JWKCache | undefined;
+    protected jwkResolver: JWKResolver | undefined;
 
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
-        this.jwkCache = ctx.jwkCache === false ? undefined : new JWKCache(ctx.jwkCache);
+        this.jwkResolver = ctx.jwkCache === false ?
+            undefined :
+            new JWKResolver(ctx.cache ?? new MemoryVerifierCache(), ctx.jwkCache);
         this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
         this.client = new Client({ baseURL: ctx.baseURL });
 
@@ -96,7 +99,7 @@ export class TokenVerifier implements ITokenVerifier {
     protected async resolveLocal(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
-            output = await this.cache.get(token);
+            output = await this.cache.getToken(token);
             if (output) {
                 return output;
             }
@@ -126,8 +129,8 @@ export class TokenVerifier implements ITokenVerifier {
 
         const realmId = isUUID(realmClaim) ? realmClaim.toLowerCase() : realmClaim;
 
-        const entry = this.jwkCache ?
-            await this.jwkCache.resolve({ realmId, kid }, () => this.loadJwk(kid, realmId)) :
+        const entry = this.jwkResolver ?
+            await this.jwkResolver.resolve({ realmId, kid }, () => this.loadJwk(kid, realmId)) :
             await this.loadJwk(kid, realmId);
 
         let payload : OAuth2TokenPayload;
@@ -153,13 +156,13 @@ export class TokenVerifier implements ITokenVerifier {
         output = this.transform(payload);
 
         if (this.cache) {
-            await this.cache.set(token, output, secondsDiff);
+            await this.cache.setToken(token, output, secondsDiff);
         }
 
         return output;
     }
 
-    protected async loadJwk(kid: string, realmId: string) : Promise<JWKCacheEntry> {
+    protected async loadJwk(kid: string, realmId: string) : Promise<JWKCacheData> {
         let jwk : OAuth2JsonWebKey;
 
         try {
@@ -188,7 +191,7 @@ export class TokenVerifier implements ITokenVerifier {
     protected async resolveRemote(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
-            output = await this.cache.get(token);
+            output = await this.cache.getToken(token);
             if (output) {
                 return output;
             }
@@ -241,7 +244,7 @@ export class TokenVerifier implements ITokenVerifier {
         output = this.transform(payload);
 
         if (this.cache) {
-            await this.cache.set(token, output, cacheTTL);
+            await this.cache.setToken(token, output, cacheTTL);
         }
 
         return output;

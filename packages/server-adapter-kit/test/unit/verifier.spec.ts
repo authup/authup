@@ -17,7 +17,7 @@ import {
 } from 'vitest';
 import { Client } from '@authup/core-http-kit';
 import { TokenAPI } from '@hapic/oauth2';
-import { MemoryTokenVerifierCache, TokenVerifier } from '../../src';
+import { MemoryVerifierCache, TokenVerifier } from '../../src';
 import {
     BoundTokenID,
     BoundTokenPayload,
@@ -48,7 +48,7 @@ describe('verifier', () => {
     });
 
     it('should verify token local', async () => {
-        const cache = new MemoryTokenVerifierCache();
+        const cache = new MemoryVerifierCache();
         const tokenVerifier = new TokenVerifier({
             baseURL: 'http://localhost:3001',
             cache,
@@ -57,7 +57,7 @@ describe('verifier', () => {
         const output = await tokenVerifier.verify(token);
         expect(output).toBeDefined();
 
-        const outputCached = await cache.get(token);
+        const outputCached = await cache.getToken(token);
         expect(output).toEqual(outputCached);
     });
 
@@ -128,7 +128,7 @@ describe('verifier', () => {
     });
 
     it('should verify token remote', async () => {
-        const cache = new MemoryTokenVerifierCache();
+        const cache = new MemoryVerifierCache();
         const tokenVerifier = new TokenVerifier({
             baseURL: 'http://localhost:3001',
             cache,
@@ -142,7 +142,7 @@ describe('verifier', () => {
         const output = await tokenVerifier.verify(token);
         expect(output).toBeDefined();
 
-        const outputCached = await cache.get(token);
+        const outputCached = await cache.getToken(token);
         expect(output).toEqual(outputCached);
     });
 
@@ -209,11 +209,11 @@ describe('verifier', () => {
             expect(certificateThumbprint).not.toHaveBeenCalled();
         });
 
-        // MemoryTokenVerifierCache retains object references — a caller
+        // MemoryVerifierCache retains object references — a caller
         // mutating its result (e.g. stripping cnf) must not poison the
         // cached entry and bypass the binding on later verifications.
         it('should not let a caller mutation of the result poison the cached entry', async () => {
-            const cache = new MemoryTokenVerifierCache();
+            const cache = new MemoryVerifierCache();
             const tokenVerifier = new TokenVerifier({
                 baseURL: 'http://localhost:3001',
                 cache,
@@ -222,7 +222,7 @@ describe('verifier', () => {
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
             delete output.cnf;
 
-            const cached = await cache.get(boundToken);
+            const cached = await cache.getToken(boundToken);
             expect(cached?.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
 
             await expect(tokenVerifier.verify(boundToken))
@@ -232,14 +232,14 @@ describe('verifier', () => {
         // The binding is per-request evidence, not a property of the token
         // alone — a cached verification result must not bypass it.
         it('should enforce the binding on cache hits', async () => {
-            const cache = new MemoryTokenVerifierCache();
+            const cache = new MemoryVerifierCache();
             const tokenVerifier = new TokenVerifier({
                 baseURL: 'http://localhost:3001',
                 cache,
             });
 
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
-            expect(output).toEqual(await cache.get(boundToken));
+            expect(output).toEqual(await cache.getToken(boundToken));
 
             await expect(tokenVerifier.verify(boundToken))
                 .rejects.toBeInstanceOf(JWTError);

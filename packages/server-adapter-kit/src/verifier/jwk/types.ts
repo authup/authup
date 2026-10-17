@@ -11,10 +11,6 @@ export type JWKCacheOptions = {
      */
     ttl?: number,
     /**
-     * Maximum cached keys; the oldest inserted is evicted first. Default 100.
-     */
-    max?: number,
-    /**
      * Seconds a key fetch may take before it fails and the next
      * lookup starts a fresh one. Default 10.
      */
@@ -26,7 +22,7 @@ export type JWKCacheKey = {
     kid: string,
 };
 
-export type JWKCacheEntry = {
+export type JWKCacheData = {
     key: CryptoKey,
     algorithm?: string,
 };

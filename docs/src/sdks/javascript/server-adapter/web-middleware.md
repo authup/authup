@@ -51,8 +51,9 @@ extracts the token from wherever they like (cookie, custom header, query string)
 
 ## Key caching
 
-Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, at most
-100 keys. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
+Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, in the
+`cache` (`getJwk` / `setJwk`) or in process memory when none is set. `RedisVerifierCache` keeps keys
+in memory too, since a `CryptoKey` cannot be serialized. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
 no restart, and a disabled or deleted key keeps verifying for at most the TTL. Concurrent lookups of one
 key share a single fetch, which fails after 10 seconds (`timeout`) so a stalled request to the auth server
 cannot hold up later verifications. Tune or disable the cache on the `TokenVerifier`:
@@ -60,7 +61,7 @@ cannot hold up later verifications. Tune or disable the cache on the `TokenVerif
 ```typescript
 const tokenVerifier = new TokenVerifier({
     baseURL: 'http://localhost:3000/',
-    jwkCache: { ttl: 600, max: 50, timeout: 5 },
+    jwkCache: { ttl: 600, timeout: 5 },
 });
 
 // fetch the signing key for every verification
@@ -70,7 +71,7 @@ const uncachedVerifier = new TokenVerifier({
 });
 ```
 
-The `cache` option, which caches verification results per token, is separate.
+A custom `cache` implements `getJwk` and `setJwk` next to `getToken` and `setToken`.
 
 ## Certificate-bound tokens
 

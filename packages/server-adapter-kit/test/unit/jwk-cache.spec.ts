@@ -14,16 +14,18 @@ import {
     vi,
 } from 'vitest';
 import { JWTError } from '@authup/specs';
-import type { JWKCacheEntry } from '../../src';
-import { JWKCache } from '../../src';
+import type { JWKCacheData, JWKCacheOptions } from '../../src';
+import { JWKResolver, MemoryVerifierCache, RedisVerifierCache } from '../../src';
+
+function create(options?: JWKCacheOptions) {
+    return new JWKResolver(new MemoryVerifierCache(), options);
+}
 
 const KID_A = '0b6c3f0e-2a51-4d8e-9f3b-7a1c5e2d4f60';
 const KID_B = '1c7d4a1f-3b62-4e9f-a04c-8b2d6f3e5a71';
-const KID_C = '2d8e5b2a-4c73-4fa0-b15d-9c3e7a4f6b82';
-const T0 = 1_700_000_000_000;
 
-describe('jwk cache', () => {
-    let entry : JWKCacheEntry;
+describe('jwk resolver', () => {
+    let entry : JWKCacheData;
 
     beforeAll(async () => {
         const pair = await crypto.subtle.generateKey(
@@ -42,10 +44,11 @@ describe('jwk cache', () => {
 
     afterEach(() => {
         vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     it('loads once and serves hits', async () => {
-        const cache = new JWKCache();
+        const cache = create();
         const load = vi.fn(async () => entry);
 
         const a = await cache.resolve({ realmId: 'r1', kid: KID_A }, load);
@@ -57,7 +60,7 @@ describe('jwk cache', () => {
     });
 
     it('keeps realms apart', async () => {
-        const cache = new JWKCache();
+        const cache = create();
         const load = vi.fn(async () => entry);
 
         await cache.resolve({ realmId: 'r1', kid: KID_A }, load);
@@ -67,7 +70,7 @@ describe('jwk cache', () => {
     });
 
     it('loads a new kid', async () => {
-        const cache = new JWKCache();
+        const cache = create();
         const load = vi.fn(async () => entry);
 
         await cache.resolve({ realmId: 'r1', kid: KID_A }, load);
@@ -77,42 +80,49 @@ describe('jwk cache', () => {
     });
 
     it('expires an entry at exactly ttl', async () => {
-        vi.setSystemTime(T0);
-        const cache = new JWKCache({ ttl: 10 });
+        // the memory cache measures age with performance.now()
+        let now = performance.now();
+        vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+        const cache = create({ ttl: 10 });
         const load = vi.fn(async () => entry);
         const key = { realmId: 'r1', kid: KID_A };
 
         await cache.resolve(key, load);
         expect(load).toHaveBeenCalledTimes(1);
 
-        vi.setSystemTime(T0 + 9_999);
+        now += 9_999;
         await cache.resolve(key, load);
         expect(load).toHaveBeenCalledTimes(1);
 
-        vi.setSystemTime(T0 + 10_000);
+        now += 1;
         await cache.resolve(key, load);
         expect(load).toHaveBeenCalledTimes(2);
     });
 
-    it('evicts the oldest entry beyond max', async () => {
-        const cache = new JWKCache({ max: 2 });
+    it('caches nothing with ttl 0', async () => {
+        const cache = create({ ttl: 0 });
         const load = vi.fn(async () => entry);
+        const key = { realmId: 'r1', kid: KID_A };
 
-        await cache.resolve({ realmId: 'r1', kid: KID_A }, load);
-        await cache.resolve({ realmId: 'r1', kid: KID_B }, load);
-        await cache.resolve({ realmId: 'r1', kid: KID_C }, load);
-        expect(load).toHaveBeenCalledTimes(3);
+        await cache.resolve(key, load);
+        await cache.resolve(key, load);
 
-        await cache.resolve({ realmId: 'r1', kid: KID_A }, load);
-        expect(load).toHaveBeenCalledTimes(4);
+        expect(load).toHaveBeenCalledTimes(2);
+    });
 
-        await cache.resolve({ realmId: 'r1', kid: KID_C }, load);
-        expect(load).toHaveBeenCalledTimes(4);
+    it('keeps keys in memory for the redis cache', async () => {
+        const redis = new RedisVerifierCache({} as ConstructorParameters<typeof RedisVerifierCache>[0]);
+        const key = { realmId: 'r1', kid: KID_A };
+
+        await redis.setJwk(key, entry, 10);
+
+        await expect(redis.getJwk(key)).resolves.toBe(entry);
     });
 
     it('shares one flight between concurrent misses', async () => {
-        const cache = new JWKCache();
-        const { promise: deferred, resolve: release } = Promise.withResolvers<JWKCacheEntry>();
+        const cache = create();
+        const { promise: deferred, resolve: release } = Promise.withResolvers<JWKCacheData>();
         const load = vi.fn(() => deferred);
         const key = { realmId: 'r1', kid: KID_A };
 
@@ -127,7 +137,7 @@ describe('jwk cache', () => {
     });
 
     it('shares one rejected flight and stores nothing', async () => {
-        const cache = new JWKCache();
+        const cache = create();
         const load = vi.fn()
             .mockRejectedValueOnce(new Error('404'))
             .mockResolvedValue(entry);
@@ -147,8 +157,8 @@ describe('jwk cache', () => {
     });
     it('bounds a stalled flight by the timeout', async () => {
         vi.useFakeTimers();
-        const cache = new JWKCache({ timeout: 5 });
-        const stalled = vi.fn(() => new Promise<JWKCacheEntry>(() => {}));
+        const cache = create({ timeout: 5 });
+        const stalled = vi.fn(() => new Promise<JWKCacheData>(() => {}));
         const healthy = vi.fn(async () => entry);
         const key = { realmId: 'r1', kid: KID_A };
 
@@ -168,8 +178,8 @@ describe('jwk cache', () => {
 
     it('does not store the late result of a timed-out flight', async () => {
         vi.useFakeTimers();
-        const cache = new JWKCache({ timeout: 5 });
-        const { promise: late, resolve: release } = Promise.withResolvers<JWKCacheEntry>();
+        const cache = create({ timeout: 5 });
+        const { promise: late, resolve: release } = Promise.withResolvers<JWKCacheData>();
         const key = { realmId: 'r1', kid: KID_A };
 
         const first = cache.resolve(key, () => late);
@@ -185,9 +195,6 @@ describe('jwk cache', () => {
         expect(load).toHaveBeenCalledTimes(1);
     });
     it.each([
-        { max: -1 },
-        { max: 1.5 },
-        { max: NaN },
         { ttl: -1 },
         { ttl: NaN },
         { ttl: Infinity },
@@ -195,17 +202,6 @@ describe('jwk cache', () => {
         { timeout: NaN },
         { timeout: 2_147_484 },
     ])('rejects invalid options %o', (options) => {
-        expect(() => new JWKCache(options)).toThrow(TypeError);
-    });
-
-    it('caches nothing with max 0', async () => {
-        const cache = new JWKCache({ max: 0 });
-        const load = vi.fn(async () => entry);
-        const key = { realmId: 'r1', kid: KID_A };
-
-        await cache.resolve(key, load);
-        await cache.resolve(key, load);
-
-        expect(load).toHaveBeenCalledTimes(2);
+        expect(() => create(options)).toThrow(TypeError);
     });
 });

@@ -8644,7 +8644,9 @@ server sees no sessions: `@authup/server-adapter-kit`'s local mode reads the
 key from the token's own realm (`GET /realms/<realm_id>/jwks/<kid>`, a
 non-uuid `kid` refused before any request) and trusts the `sub` that key
 signed. The adapter keeps each imported key per `(realm_id, kid)` for
-`jwkCache.ttl` (default 300 s, at most 100 keys, nothing cached on a failed
+`jwkCache.ttl` (default 300 s) in the verifier's `IVerifierCache`
+(`getJwk` / `setJwk`, process memory when none is given; the redis cache keeps
+keys in memory since a `CryptoKey` does not serialize; nothing cached on a failed
 fetch, concurrent misses share one fetch bounded by `jwkCache.timeout`
 (default 10 s) so a stalled fetch cannot pin later lookups, `kid` and a uuid
 `realm_id` lower-cased before keying, `jwkCache: false` opts out), so
