@@ -115,6 +115,18 @@ describe('verifier', () => {
         }
     });
 
+    it('should report an expired token as expired local', async () => {
+        const now = Math.floor(Date.now() / 1000);
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+        const expired = await faker.sign({
+            ...TokenPayload,
+            iat: now - 7200,
+            exp: now - 3600,
+        });
+
+        await expect(tokenVerifier.verifyLocal(expired)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
+    });
+
     it('should verify token remote', async () => {
         const cache = new MemoryTokenVerifierCache();
         const tokenVerifier = new TokenVerifier({

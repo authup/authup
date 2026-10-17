@@ -15,6 +15,7 @@ import {
     JWKType,
     JWTError,
     OAuth2TokenKind,
+    isJWTError,
 } from '@authup/specs';
 import type {
     JWTAlgorithm,
@@ -134,7 +135,11 @@ export class TokenVerifier implements ITokenVerifier {
                 key: entry.key,
                 ...(entry.algorithm ? { algorithms: [entry.algorithm as JWTAlgorithm.RS256] } : {}),
             }) as OAuth2TokenPayload;
-        } catch {
+        } catch (e) {
+            if (isJWTError(e) && e.code === ErrorCode.JWT_EXPIRED) {
+                throw e;
+            }
+
             throw JWTError.payloadInvalid('The token could not be verified.');
         }
 
