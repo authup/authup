@@ -142,25 +142,38 @@ Install an adapter and its verifier:
 npm install @authup/server-adapter-node @authup/server-adapter-kit
 ```
 
-The middleware reads the `Authorization: Bearer` header, verifies the token and hands you its claims. It works with Node's `http` server, Express and anything else with a `(req, res, next)` signature:
+The middleware reads the `Authorization: Bearer` header, verifies the token and hands you its claims, which you attach to the request. It works with Node's `http` server, Express and anything else with a `(req, res, next)` signature:
 
 ```typescript
-import type { IncomingMessage } from 'node:http';
 import type { TokenVerificationData } from '@authup/server-adapter-kit';
 import { TokenVerifier } from '@authup/server-adapter-kit';
 import { createMiddleware } from '@authup/server-adapter-node';
 
-const auth = new WeakMap<IncomingMessage, TokenVerificationData>();
+declare module 'node:http' {
+    interface IncomingMessage {
+        auth?: TokenVerificationData;
+    }
+}
 
 app.use(createMiddleware({
     tokenVerifier: new TokenVerifier({ baseURL: 'https://auth.example.com' }),
     tokenVerifierHandler: (req, data) => {
-        auth.set(req, data); // data.sub, data.sub_kind, data.realm_name, data.scope
+        req.auth = data;
     },
 }));
+
+app.get('/orders', (req, res) => {
+    if (!req.auth) {
+        res.statusCode = 401;
+        res.end();
+        return;
+    }
+
+    res.end(`orders of ${req.auth.sub} in realm ${req.auth.realm_name}`);
+});
 ```
 
-A request without a token passes through without claims; an invalid or expired token is handed to `next(error)`.
+The `declare module` block types `req.auth` everywhere, including Express's `Request`, which extends `IncomingMessage`. A request without a token passes through with `req.auth` unset; an invalid or expired token is handed to `next(error)`.
 
 The verifier runs in one of two modes:
 
