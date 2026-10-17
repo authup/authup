@@ -106,7 +106,7 @@
         "change-case": "^5.4.4",
         "citty": "^0.2.2",
         "confinity": "^2.0.1",
-        "dotenv": "^18.0.7",
+        "dotenv": "^18.0.8",
         "dycraft": "^1.1.0",
         "eldin": "^1.3.0",
         "envix": "^1.5.0",
@@ -130,7 +130,7 @@
         "typeorm-extension": "^4.3.0",
         "uncrypto": "^0.1.3",
         "validup": "^2.0.1",
-        "zod": "^4.6.5"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "@authup/server-test-kit": "^1.0.0-beta.69",
