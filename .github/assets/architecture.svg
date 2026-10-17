@@ -51,16 +51,16 @@
     </defs>
 
     <!-- your applications -->
-    <rect class="panel" x="16" y="16" width="244" height="320" rx="18"/>
+    <rect class="panel" x="16" y="16" width="236" height="320" rx="18"/>
     <text class="label t-rose" x="36" y="44">YOUR APPLICATIONS</text>
-    <rect class="card rose" x="36" y="62" width="204" height="74" rx="12" stroke-width="1.5"/>
+    <rect class="card rose" x="36" y="62" width="196" height="74" rx="12" stroke-width="1.5"/>
     <text class="title" x="54" y="90">Web app</text>
     <text class="code muted" x="54" y="114" font-size="12">authorization code</text>
     <text class="code muted" x="54" y="128" font-size="12">+ PKCE</text>
-    <rect class="card rose" x="36" y="148" width="204" height="74" rx="12" stroke-width="1.5"/>
+    <rect class="card rose" x="36" y="148" width="196" height="74" rx="12" stroke-width="1.5"/>
     <text class="title" x="54" y="176">Service</text>
     <text class="code muted" x="54" y="200" font-size="12">client_credentials</text>
-    <rect class="card rose" x="36" y="234" width="204" height="82" rx="12" stroke-width="1.5"/>
+    <rect class="card rose" x="36" y="234" width="196" height="82" rx="12" stroke-width="1.5"/>
     <text class="title" x="54" y="262">CLI or TV</text>
     <text class="code muted" x="54" y="286" font-size="12">device_code</text>
     <text class="code muted" x="54" y="302" font-size="12">authup login</text>
@@ -97,30 +97,30 @@
     <text class="muted" x="738" y="176" font-size="12">which also returns permissions.</text>
 
     <!-- tokens: authup to the applications -->
-    <path class="rail" d="M308 118 H264" stroke-width="2" marker-end="url(#ar-head)"/>
-    <path class="rail" d="M260 176 H304" stroke-width="2" marker-end="url(#ar-head)"/>
-    <rect class="chip" x="264" y="96" width="42" height="18" rx="9"/>
-    <text class="code" x="285" y="109" font-size="10" text-anchor="middle">token</text>
-    <rect class="chip" x="262" y="180" width="46" height="18" rx="9"/>
-    <text class="code" x="285" y="193" font-size="10" text-anchor="middle">sign in</text>
+    <path class="rail" d="M308 118 H256" stroke-width="2" marker-end="url(#ar-head)"/>
+    <path class="rail" d="M252 176 H304" stroke-width="2" marker-end="url(#ar-head)"/>
+    <rect class="chip" x="259" y="96" width="42" height="18" rx="9"/>
+    <text class="code" x="280" y="109" font-size="10" text-anchor="middle">token</text>
+    <rect class="chip" x="254" y="180" width="52" height="18" rx="9"/>
+    <text class="code" x="280" y="193" font-size="10" text-anchor="middle">sign in</text>
     <!-- keys: authup publishes them, the APIs cache them -->
     <path class="rail" d="M652 118 H696" stroke-width="2" marker-end="url(#ar-head)"/>
     <rect class="chip" x="656" y="96" width="42" height="18" rx="9"/>
     <text class="code" x="677" y="109" font-size="10" text-anchor="middle">JWKS</text>
     <!-- bearer: the applications call the APIs -->
-    <path class="rail" d="M138 336 V364 H822 V340" stroke-width="2" marker-end="url(#ar-head)"/>
+    <path class="rail" d="M134 336 V364 H822 V340" stroke-width="2" marker-end="url(#ar-head)"/>
 
     <!-- one pass: a token is issued, carried to the API, then the API reads the keys -->
     <g opacity="0">
         <circle r="9" fill="#6D7FCC" fill-opacity="0.25"/>
         <circle r="4.5" fill="#6D7FCC"/>
-        <animateMotion dur="0.8s" repeatCount="1" fill="freeze" path="M308 118 H264"/>
+        <animateMotion dur="0.8s" repeatCount="1" fill="freeze" path="M308 118 H256"/>
         <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.8;1" dur="0.8s" repeatCount="1" fill="freeze"/>
     </g>
     <g opacity="0">
         <circle r="9" fill="#6D7FCC" fill-opacity="0.25"/>
         <circle r="4.5" fill="#6D7FCC"/>
-        <animateMotion dur="2s" begin="0.8s" repeatCount="1" fill="freeze" path="M138 336 V364 H822 V340"/>
+        <animateMotion dur="2s" begin="0.8s" repeatCount="1" fill="freeze" path="M134 336 V364 H822 V340"/>
         <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2s" begin="0.8s" repeatCount="1" fill="freeze"/>
     </g>
     <g opacity="0">
