@@ -57,6 +57,8 @@ or every foreign token is reported as inactive. Tokens issued to the
 creator's own client need no grant.
 :::
 
+Local verification (no `creator`) caches the signing keys it fetches; see [Key caching](web-middleware.md#key-caching).
+
 The middleware also tolerates `Bearer <token>` formatted values (the prefix is stripped via
 `extractBearerToken`); bare tokens are passed through unchanged.
 

@@ -15,6 +15,7 @@ import {
     JWKType,
     JWTError,
     OAuth2TokenKind,
+    isJWTError,
 } from '@authup/specs';
 import type {
     JWTAlgorithm,
@@ -29,7 +30,10 @@ import {
 } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { assertTokenCertificateBinding } from '../certificate-binding';
-import type { ITokenVerifierCache } from './cache';
+import type { IVerifierCache } from './cache';
+import { MemoryVerifierCache } from './cache';
+import { JWKResolver } from './jwk';
+import type { JWKCacheData } from './jwk';
 import type {
     ITokenVerifier,
     TokenVerificationData,
@@ -43,12 +47,17 @@ export class TokenVerifier implements ITokenVerifier {
 
     protected client: Client;
 
-    protected cache : ITokenVerifierCache | undefined;
+    protected cache : IVerifierCache | undefined;
 
     protected maxRemoteCacheTTL: number | undefined;
 
+    protected jwkResolver: JWKResolver | undefined;
+
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
+        this.jwkResolver = ctx.jwkCache === false ?
+            undefined :
+            new JWKResolver(ctx.cache ?? new MemoryVerifierCache(), ctx.jwkCache);
         this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
         this.client = new Client({ baseURL: ctx.baseURL });
 
@@ -90,7 +99,7 @@ export class TokenVerifier implements ITokenVerifier {
     protected async resolveLocal(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
-            output = await this.cache.get(token);
+            output = await this.cache.getToken(token);
             if (output) {
                 return output;
             }
@@ -105,19 +114,59 @@ export class TokenVerifier implements ITokenVerifier {
             throw JWTError.headerPropertyInvalid('kid');
         }
 
+        // uuids compare case-insensitively (isUUID and the server's lookup),
+        // so each case variant would otherwise be its own cache entry: one
+        // upstream fetch per variant and an easy way to evict real keys.
+        const kid = header.kid.toLowerCase();
+
         // The key is read from the realm the token names, so a key of
         // another realm can never verify it; the signature check below then
         // proves the claim it was looked up by.
-        const { realm_id: realmId } = extractTokenPayload(token);
-        if (typeof realmId !== 'string' || !realmId) {
+        const { realm_id: realmClaim } = extractTokenPayload(token);
+        if (typeof realmClaim !== 'string' || !realmClaim) {
             throw JWTError.payloadPropertyInvalid('realm_id');
         }
 
+        const realmId = isUUID(realmClaim) ? realmClaim.toLowerCase() : realmClaim;
+
+        const entry = this.jwkResolver ?
+            await this.jwkResolver.resolve({ realmId, kid }, () => this.loadJwk(kid, realmId)) :
+            await this.loadJwk(kid, realmId);
+
+        let payload : OAuth2TokenPayload;
+
+        // todo: get jwk type for algorithm
+
+        try {
+            payload = await verifyToken(token, {
+                type: JWKType.RSA,
+                key: entry.key,
+                ...(entry.algorithm ? { algorithms: [entry.algorithm as JWTAlgorithm.RS256] } : {}),
+            }) as OAuth2TokenPayload;
+        } catch (e) {
+            if (isJWTError(e) && e.code === ErrorCode.JWT_EXPIRED) {
+                throw e;
+            }
+
+            throw JWTError.payloadInvalid('The token could not be verified.');
+        }
+
+        const secondsDiff = this.getTokenExpiresIn(payload);
+
+        output = this.transform(payload);
+
+        if (this.cache) {
+            await this.cache.setToken(token, output, secondsDiff);
+        }
+
+        return output;
+    }
+
+    protected async loadJwk(kid: string, realmId: string) : Promise<JWKCacheData> {
         let jwk : OAuth2JsonWebKey;
 
         try {
-            // todo: this should be cached as well :)
-            jwk = await this.client.getJwk(header.kid, realmId);
+            jwk = await this.client.getJwk(kid, realmId);
         } catch (e) {
             if (isObject(e) && isObject(e.response) && e.response.status === 404) {
                 throw JWTError.payloadPropertyInvalid('kid');
@@ -136,35 +185,13 @@ export class TokenVerifier implements ITokenVerifier {
             throw JWTError.payloadInvalid('The jwt key is not valid.');
         }
 
-        let payload : OAuth2TokenPayload;
-
-        // todo: get jwk type for algorithm
-
-        try {
-            payload = await verifyToken(token, {
-                type: JWKType.RSA,
-                key,
-                ...(jwk.alg ? { algorithms: [jwk.alg as JWTAlgorithm.RS256] } : {}),
-            }) as OAuth2TokenPayload;
-        } catch {
-            throw JWTError.payloadInvalid('The token could not be verified.');
-        }
-
-        const secondsDiff = this.getTokenExpiresIn(payload);
-
-        output = this.transform(payload);
-
-        if (this.cache) {
-            await this.cache.set(token, output, secondsDiff);
-        }
-
-        return output;
+        return { key, algorithm: jwk.alg };
     }
 
     protected async resolveRemote(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
-            output = await this.cache.get(token);
+            output = await this.cache.getToken(token);
             if (output) {
                 return output;
             }
@@ -217,7 +244,7 @@ export class TokenVerifier implements ITokenVerifier {
         output = this.transform(payload);
 
         if (this.cache) {
-            await this.cache.set(token, output, cacheTTL);
+            await this.cache.setToken(token, output, cacheTTL);
         }
 
         return output;

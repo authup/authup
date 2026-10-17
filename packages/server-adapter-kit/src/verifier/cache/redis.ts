@@ -8,11 +8,16 @@
 import { createHash } from 'node:crypto';
 import type { Client } from 'redis-extension';
 import { JsonAdapter, createClient } from 'redis-extension';
+import type { JWKCacheData, JWKCacheKey } from '../jwk';
 import type { TokenVerificationData } from '../types';
-import type { ITokenVerifierCache } from './types';
+import { MemoryVerifierCache } from './memory';
+import type { IVerifierCache } from './types';
 
-export class RedisTokenVerifierCache implements ITokenVerifierCache {
+export class RedisVerifierCache implements IVerifierCache {
     protected instance : JsonAdapter;
+
+    // a CryptoKey cannot be serialized, so keys stay in process memory
+    protected memory : MemoryVerifierCache;
 
     constructor(input?: Client | string) {
         let client: Client;
@@ -26,18 +31,27 @@ export class RedisTokenVerifierCache implements ITokenVerifierCache {
         }
 
         this.instance = new JsonAdapter(client);
+        this.memory = new MemoryVerifierCache();
     }
 
-    get(token: string): Promise<TokenVerificationData | undefined> {
+    getToken(token: string): Promise<TokenVerificationData | undefined> {
         return this.instance.get(this.buildKey(token));
     }
 
-    set(token: string, data: TokenVerificationData, seconds: number): Promise<void> {
+    setToken(token: string, data: TokenVerificationData, seconds: number): Promise<void> {
         return this.instance.set(
             this.buildKey(token),
             data,
             { seconds },
         );
+    }
+
+    getJwk(key: JWKCacheKey): Promise<JWKCacheData | undefined> {
+        return this.memory.getJwk(key);
+    }
+
+    setJwk(key: JWKCacheKey, entry: JWKCacheData, seconds: number): Promise<void> {
+        return this.memory.setJwk(key, entry, seconds);
     }
 
     protected buildKey(token: string) {
