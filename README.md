@@ -54,8 +54,6 @@ Every application with users ends up building the same layer: login and password
 - **The same model runs in your services.** [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) evaluates the permissions Authup reports for a token with the server's own rules.
 - **One process.** API, login pages and consoles start with `npx authup start` and split into replicas when you need them.
 
-Need SAML, Kerberos or a forward-auth proxy? Keycloak, Authentik or Authelia cover those today.
-
 ## Quick start
 
 ```shell
