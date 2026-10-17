@@ -314,7 +314,7 @@ describe('verifier', () => {
 
         it('keys a realm id case-insensitively', async () => {
             await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: TokenPayload.realm_id.toUpperCase() }));
+            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: TokenPayload.realm_id?.toUpperCase() }));
 
             expect(getJwk).toHaveBeenCalledTimes(1);
         });
