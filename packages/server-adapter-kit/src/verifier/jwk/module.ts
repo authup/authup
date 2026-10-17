@@ -28,6 +28,18 @@ export class JWKCache {
         this.ttl = options?.ttl ?? 300;
         this.max = options?.max ?? 100;
         this.timeout = options?.timeout ?? 10;
+
+        if (!Number.isFinite(this.ttl) || this.ttl < 0) {
+            throw new TypeError('The JWK cache ttl must be a finite, non-negative number of seconds.');
+        }
+
+        if (!Number.isSafeInteger(this.max) || this.max < 0) {
+            throw new TypeError('The JWK cache max must be a non-negative integer.');
+        }
+
+        if (!Number.isFinite(this.timeout) || this.timeout <= 0) {
+            throw new TypeError('The JWK cache timeout must be a finite, positive number of seconds.');
+        }
         this.entries = new Map();
         this.flights = new Map();
     }
@@ -66,8 +78,12 @@ export class JWKCache {
             .then((entry) => {
                 this.entries.delete(key);
                 this.entries.set(key, { value: entry, expiresAt: Date.now() + this.ttl * 1000 });
-                while (this.entries.size > this.max) {
-                    this.entries.delete(this.entries.keys().next().value as string);
+                for (const k of this.entries.keys()) {
+                    if (this.entries.size <= this.max) {
+                        break;
+                    }
+
+                    this.entries.delete(k);
                 }
 
                 return entry;

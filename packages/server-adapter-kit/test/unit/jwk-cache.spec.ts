@@ -184,4 +184,27 @@ describe('jwk cache', () => {
         await cache.resolve(key, load);
         expect(load).toHaveBeenCalledTimes(1);
     });
+    it.each([
+        { max: -1 },
+        { max: 1.5 },
+        { max: NaN },
+        { ttl: -1 },
+        { ttl: NaN },
+        { ttl: Infinity },
+        { timeout: 0 },
+        { timeout: NaN },
+    ])('rejects invalid options %o', (options) => {
+        expect(() => new JWKCache(options)).toThrow(TypeError);
+    });
+
+    it('caches nothing with max 0', async () => {
+        const cache = new JWKCache({ max: 0 });
+        const load = vi.fn(async () => entry);
+        const key = { realmId: 'r1', kid: KID_A };
+
+        await cache.resolve(key, load);
+        await cache.resolve(key, load);
+
+        expect(load).toHaveBeenCalledTimes(2);
+    });
 });
