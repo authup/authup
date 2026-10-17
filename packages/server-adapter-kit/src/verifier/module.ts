@@ -41,6 +41,9 @@ import type {
     TokenVerifyOptions,
 } from './types';
 
+// RFC 7515 compact serialization: three unpadded base64url segments.
+const COMPACT_JWS_PATTERN = /^[\w-]+\.[\w-]+\.[\w-]+$/;
+
 export class TokenVerifier implements ITokenVerifier {
     protected interceptorMounted : boolean | undefined;
 
@@ -96,6 +99,14 @@ export class TokenVerifier implements ITokenVerifier {
     }
 
     protected async resolveLocal(token: string) : Promise<TokenVerificationData> {
+        // jose's base64url decoding ignores whitespace and accepts padding,
+        // and the signature segment is not covered by the signature, so
+        // without this one valid token yields endlessly many accepted
+        // strings, each a fresh verification and cache entry.
+        if (!COMPACT_JWS_PATTERN.test(token)) {
+            throw JWTError.invalid();
+        }
+
         let output: TokenVerificationData | undefined;
         if (this.cache) {
             output = await this.cache.getToken(token);
@@ -186,11 +197,24 @@ export class TokenVerifier implements ITokenVerifier {
             });
         }
 
-        const key = await importJWK(jwk);
+        let key : CryptoKey | Uint8Array;
+        try {
+            key = await importJWK(jwk);
+        } catch {
+            throw JWTError.payloadInvalid('The jwt key is not valid.');
+        }
 
         /* istanbul ignore next */
         if (!(key instanceof CryptoKey)) {
             throw JWTError.payloadInvalid('The jwt key is not valid.');
+        }
+
+        // jose refuses to verify with an RSA key under 2048 bits.
+        const { modulusLength } = key.algorithm as Partial<RsaHashedKeyAlgorithm>;
+        if (typeof modulusLength === 'number' && modulusLength < 2048) {
+            throw JWTError.payloadInvalid(
+                `The jwt key is ${modulusLength} bits; RSA keys must be 2048 bits or larger.`,
+            );
         }
 
         return { key, algorithm: jwk.alg };
