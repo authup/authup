@@ -60,9 +60,33 @@ Every application with users ends up building the same layer: login and password
 npx authup@latest start
 ```
 
-This starts everything on `http://localhost:3000`: the API, the admin console at `/console/admin`, the account console at `/console/account` and the hosted login pages. Sign in to the admin console as `admin` / `start123` in the `master` realm, and change the password. Without a configured database Authup uses SQLite in the current directory, which is for trying it out only.
+With no database configured, Authup falls back to SQLite and writes `db.sqlite` into the current directory. That is for trying things out, not for production.
 
-For a real deployment, run the [Docker image](https://authup.org/guide/deployment/docker) `authup/authup` against PostgreSQL or MySQL, or let the wizard write the files for you:
+It serves:
+
+- API: `http://localhost:3000/`
+- Auth console (login, consent, registration, password recovery): `http://localhost:3000/console/auth/`
+- Admin console: `http://localhost:3000/console/admin`
+- Account console: `http://localhost:3000/console/account`
+
+Sign in to the admin console as `admin` with the password `start123` in the `master` realm, and change it.
+
+For production, run the image against a PostgreSQL or MySQL database you already have. It runs in production mode, which refuses SQLite, and serves the same paths:
+
+```shell
+docker run \
+  -p 3000:3000 \
+  -e PUBLIC_URL=http://localhost:3000 \
+  -e DB_TYPE=postgres \
+  -e DB_HOST=postgres.example.com \
+  -e DB_PORT=5432 \
+  -e DB_USERNAME=authup \
+  -e DB_PASSWORD=secret \
+  -e DB_DATABASE=authup \
+  authup/authup:latest start
+```
+
+Rather than writing the deployment files by hand, let the wizard write them:
 
 ```shell
 npm create authup@latest
