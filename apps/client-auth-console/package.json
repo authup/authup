@@ -67,11 +67,11 @@
         "@vuecs/timeago": "^2.2.1",
         "cross-env": "^10.1.0",
         "happy-dom": "^20.14.6",
-        "pinia": "^4.0.3",
+        "pinia": "^4.1.0",
         "tailwindcss": "^4.3.1",
         "vite": "^8.3.4",
         "vitest": "^5.0.3",
-        "vue": "^3.5.43",
+        "vue": "^3.5.44",
         "vue-router": "^5.4.0",
         "vue-tsc": "^3.3.13"
     },
