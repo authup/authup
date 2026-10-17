@@ -97,7 +97,7 @@ Layer 3:
 Layer 4:
   server-adapter-node      → server-adapter-kit
   server-adapter-socket-io → server-adapter-kit (errors is devDep-only: test)
-  server-adapter-web       → server-adapter-kit (errors is devDep-only: test)
+  server-adapter-web       → server-adapter-kit (errors, core-http-kit, server-kit, specs are devDep-only: test)
 
 Application libraries:
   client-web-kit    → access, kit, core-kit, core-http-kit, core-realtime-kit, errors, i18n, specs
