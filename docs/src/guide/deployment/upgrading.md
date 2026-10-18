@@ -30,12 +30,14 @@ verifies tokens through [vouchly](https://github.com/tada5hi/vouchly), which use
   than over the verification result, and is keyed by a hash vouchly computes,
   never by the token itself. Entries a `RedisTokenVerifierCache` wrote are not
   read again and expire on their own.
-- **Results are cached by default.** A `TokenVerifier` without `cache` now keeps
-  results in process memory until the token expires; pass `cache: false` for
-  the previous uncached behaviour. In remote mode (`creator` set) this means a
-  revoked token keeps passing for as long as its answer is cached, so set
-  `maxRemoteCacheTTL` (seconds) or `cache: false` if revocation has to take
-  effect at once.
+- **What a result cache costs.** As before, a `TokenVerifier` caches results
+  only when you pass `cache`. A cached result is served until the token's
+  `exp` without asking authup again: in local mode it outlives a disabled or
+  deleted signing key, in remote mode a revoked token. `maxRemoteCacheTTL`
+  (seconds) bounds the remote case; `0` still means no bound.
+- **`realm_id` must be a uuid.** Local mode refuses a token whose `realm_id` is
+  not a uuid before asking authup for a key. authup always issues the uuid; a
+  name or a path segment would change the key URL.
 - **Shared caches are namespaced.** A cache passed in gets the namespace
   `authup:<local|remote>:<baseURL>`, so a local and a remote verifier of one
   deployment never serve each other's results. Verifiers with different
@@ -46,7 +48,7 @@ verifies tokens through [vouchly](https://github.com/tada5hi/vouchly), which use
   key id for 300 seconds and gives up on a key fetch after 10 seconds
   (`jwkCache: { ttl, timeout }`); `jwkCache: false` fetches the key for every
   verification. A disabled or rotated key therefore reaches an adapter within
-  the key TTL.
+  the key TTL, for every token whose result is not cached (see above).
 
 **No action expected**
 
@@ -56,7 +58,9 @@ verifies tokens through [vouchly](https://github.com/tada5hi/vouchly), which use
 - Errors keep authup's codes: `expired_token` for an expired token,
   `inactive_token` for a token introspection reports inactive, and
   `invalid_token` for everything else, including an introspection request that
-  failed (its message names the status).
+  failed (its message names the status). In remote mode a three-segment token
+  that does not decode is now refused locally as `invalid_token` instead of
+  being introspected (authup answered such a token `inactive_token`).
 
 Tokens authup issues are unaffected by the following, which only a token from
 another issuer could hit. An adapter now rejects a token that:

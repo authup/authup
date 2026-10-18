@@ -34,8 +34,10 @@ export type TokenVerifierContext = {
      */
     creator?: TokenCreator,
     /**
-     * Caches verification results. Default: a MemoryTokenCache of this
-     * verifier's own; false disables caching.
+     * Caches verification results until the token's exp (remote: at most
+     * maxRemoteCacheTTL). Default: no cache. A cached result is served
+     * without asking authup again, so it outlives a disabled signing key
+     * and a revoked token.
      */
     cache?: ITokenCache | false,
     /**
@@ -47,7 +49,7 @@ export type TokenVerifierContext = {
     /**
      * Maximum TTL (in seconds) for caching remote introspection results.
      * Limits how long a revoked token can remain cached as valid.
-     * If not set, the remaining token lifetime is used.
+     * If not set, or 0, the remaining token lifetime is used.
      */
     maxRemoteCacheTTL?: number,
     /**

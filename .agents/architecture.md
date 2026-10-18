@@ -8640,7 +8640,9 @@ inactive) and the end-session revoke (no revoke). Every issuer stamps the
 subject's own realm, so no issued token is refused. A verifier outside the
 server sees no sessions: `@authup/server-adapter-kit`'s local mode reads the
 key from the token's own realm (`GET /realms/<realm_id>/jwks/<kid>`, a
-non-uuid `kid` refused before any request) and trusts the `sub` that key
+non-uuid `kid` or `realm_id` refused before any request: a `realm_id` of `..`
+would turn the url into the flat `/jwks/<kid>`, which serves a key of any
+realm) and trusts the `sub` that key
 signed. Verification runs through vouchly, with one issuer selected by a
 string `realm_id` rather than by `iss` (a deployment reaching authup through an
 internal url sees another `iss`). The adapter keeps each key per
@@ -8648,15 +8650,18 @@ internal url sees another `iss`). The adapter keeps each key per
 (vouchly's `cachedKeys`, whatever token cache is configured, since a
 `CryptoKey` does not serialize; nothing cached on a failed fetch, concurrent
 misses share one fetch bounded by `jwkCache.timeout` (default 10 s) so a
-stalled fetch cannot pin later lookups, `kid` and a uuid `realm_id`
-lower-cased before keying, `jwkCache: false` opts out), so
-disabling or deleting a signature key reaches an adapter after at most that
-TTL. Remote mode (a `creator` set) is the same issuer with
+stalled fetch cannot pin later lookups, `kid` and `realm_id` lower-cased
+before keying, `jwkCache: false` opts out), so disabling or deleting a
+signature key reaches an adapter after at most that TTL, for every token whose
+result is not cached. Remote mode (a `creator` set) is the same issuer with
 `verification: 'remote'`, matching every token, opaque ones included; it
 introspects with the minted client-credentials token and re-mints once on a
-401. Verification results go to vouchly's token cache (in-memory by default,
-`RedisTokenCache` for redis), whose entries a cache passed in keeps under
-`authup:<local|remote>:<baseURL>` so the two modes never serve each other. That is why IMPORTING signature material requires a `KEY_CREATE`
+401 (concurrent 401s share one re-mint). Verification results are cached
+only when a cache is passed in (vouchly's `MemoryTokenCache`, or
+`RedisTokenCache`): a cached result is served until `exp` without asking
+authup, so it outlives a disabled key and a revoked token, which is why there
+is no default cache. A cache passed in keeps its entries under
+`authup:<local|remote>:<baseURL>`, so the two modes never serve each other. That is why IMPORTING signature material requires a `KEY_CREATE`
 grant that reaches beyond the actor's own realm (evaluated against a random
 foreign realm, the `EventService` reach probe): a `realm_admin` may generate
 signature keys, never supply one, and a holder of the wider grant is trusted

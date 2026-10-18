@@ -26,21 +26,57 @@ import type {
  * creator mints, kept until authup answers 401 (vouchly then asks again
  * with retry) or a mint failed.
  */
+const REMINT_REUSE_MS = 5_000;
+
 function createIntrospectionAuthorization(creator: TokenCreator) {
     let pending : Promise<string> | undefined;
 
+    // An expired client token should cost one client_credentials grant, not
+    // one per request answered 401: a retry joins a re-mint still running,
+    // and reuses one that finished in the last REMINT_REUSE_MS, since a 401
+    // that soon belongs to the token it replaced.
+    let reminting : Promise<string> | undefined;
+    let remintedAt = 0;
+
+    const mint = () => {
+        const current = creator().then((response) => `Bearer ${response.access_token}`);
+        pending = current;
+        current.catch(() => {
+            if (pending === current) {
+                pending = undefined;
+            }
+        });
+
+        return current;
+    };
+
     return async (context: IntrospectionAuthorizationContext) : Promise<string> => {
-        if (!pending || context.retry) {
-            const current = creator().then((response) => `Bearer ${response.access_token}`);
-            pending = current;
-            current.catch(() => {
-                if (pending === current) {
-                    pending = undefined;
-                }
-            });
+        if (context.retry) {
+            if (reminting) {
+                return reminting;
+            }
+
+            if (pending && Date.now() - remintedAt < REMINT_REUSE_MS) {
+                return pending;
+            }
+
+            const current = mint();
+            reminting = current;
+            current
+                .then(() => {
+                    remintedAt = Date.now();
+                })
+                .finally(() => {
+                    if (reminting === current) {
+                        reminting = undefined;
+                    }
+                })
+                .catch(() => undefined);
+
+            return current;
         }
 
-        return pending;
+        return pending ?? mint();
     };
 }
 
@@ -76,13 +112,16 @@ export class TokenVerifier implements ITokenVerifier {
                             remote: {
                                 endpoint: buildIntrospectionEndpoint(ctx.baseURL),
                                 authorization: createIntrospectionAuthorization(ctx.creator),
-                                maxCacheTTL: ctx.maxRemoteCacheTTL,
+                                // 0 has always meant no cap
+                                maxCacheTTL: ctx.maxRemoteCacheTTL || undefined,
                             },
                         } :
                         {}),
                 }),
             ],
-            cache: ctx.cache,
+            // no result cache unless one is passed in: a cached result outlives a
+            // disabled signing key and a revoked token until the token's exp.
+            cache: ctx.cache ?? false,
             cacheNamespace,
             ...(remote ? { opaque: 'authup' } : {}),
         });

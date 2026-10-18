@@ -123,6 +123,29 @@ describe('verifier remote', () => {
         expect(authorizationHeaders()).toEqual(['Bearer client-token-1', 'Bearer client-token-1']);
     });
 
+    it('treats maxRemoteCacheTTL 0 as no cap, as before', async () => {
+        const verifier = createRemote({ cache: new SpyTokenCache(), maxRemoteCacheTTL: 0 });
+
+        await verifier.verify(token);
+        await verifier.verify(token);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('re-mints once for concurrent introspections answered 401', async () => {
+        const creator = createCreator();
+        fetchMock.mockImplementation(async (_input: unknown, init?: RequestInit) => {
+            await new Promise((resolve) => { setTimeout(resolve, 10); });
+            const header = (init?.headers as Record<string, string>)?.authorization;
+            return header === 'Bearer client-token-1' ? respond(401) : respond(200, TokenPayload);
+        });
+        const verifier = createRemote({ creator });
+
+        await Promise.all(Array.from({ length: 10 }, () => verifier.verify(token)));
+
+        expect(creator).toHaveBeenCalledTimes(2);
+    });
+
     it('re-mints the token once after a 401', async () => {
         fetchMock.mockResolvedValueOnce(respond(401));
         const creator = createCreator();
