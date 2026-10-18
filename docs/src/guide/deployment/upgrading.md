@@ -7,27 +7,56 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.69)
 
-### Server adapters verify tokens with jose
+### Server adapters verify tokens through vouchly
 
 `@authup/server-adapter-kit` (and with it the node, web and socket.io adapters)
-verifies tokens with [jose](https://github.com/panva/jose) instead of the native
-`@node-rs/jsonwebtoken`, and caches signing keys.
+verifies tokens through [vouchly](https://github.com/tada5hi/vouchly), which uses
+[jose](https://github.com/panva/jose), instead of the native
+`@node-rs/jsonwebtoken`. It caches signing keys and verification results.
 
 **May need action**
 
-- **RSA signature keys must be 2048 bits or larger.** jose refuses to verify with
-  a shorter RSA key, so an adapter rejects every token such a key signs, with a
-  message naming the key size. Importing a shorter RSA key through `POST /keys`
-  is now refused. Keys authup generates are 2048 bits. If you imported a shorter
-  one, generate a new signature key in that realm (it takes the highest
-  priority) and disable the old one; adapters cannot verify its tokens anyway,
-  so users signed in with them sign in again.
+- **RSA signature keys must be 2048 bits or larger.** An adapter refuses to
+  verify with a shorter RSA key, so it rejects every token such a key signs,
+  with a message naming the key size. Importing a shorter RSA key through
+  `POST /keys` is now refused. Keys authup generates are 2048 bits. If you
+  imported a shorter one, generate a new signature key in that realm (it takes
+  the highest priority) and disable the old one; adapters cannot verify its
+  tokens anyway, so users signed in with them sign in again.
 - **Renamed cache exports.** `MemoryTokenVerifierCache`, `RedisTokenVerifierCache`
-  and `ITokenVerifierCache` are now `MemoryVerifierCache`, `RedisVerifierCache`
-  and `IVerifierCache`. The cache interface gained `getJwk` / `setJwk`, so a
-  custom cache implementation must add both.
+  and `ITokenVerifierCache` are now `MemoryTokenCache`, `RedisTokenCache` and
+  `ITokenCache` (vouchly's cache port, re-exported). A custom cache implements
+  `get(key)` / `set(key, entry, ttl)` over vouchly's `TokenCacheEntry` rather
+  than over the verification result, and is keyed by a hash vouchly computes,
+  never by the token itself. Entries a `RedisTokenVerifierCache` wrote are not
+  read again and expire on their own.
+- **Results are cached by default.** A `TokenVerifier` without `cache` now keeps
+  results in process memory until the token expires; pass `cache: false` for
+  the previous uncached behaviour. In remote mode (`creator` set) this means a
+  revoked token keeps passing for as long as its answer is cached, so set
+  `maxRemoteCacheTTL` (seconds) or `cache: false` if revocation has to take
+  effect at once.
+- **Shared caches are namespaced.** A cache passed in gets the namespace
+  `authup:<local|remote>:<baseURL>`, so a local and a remote verifier of one
+  deployment never serve each other's results. Verifiers with different
+  configurations sharing one cache set `cacheNamespace` apart.
+- **`verifyLocal` and `verifyRemote` are removed.** Call `verify`; the mode
+  follows from `creator` as before. A subclass overriding `verify` keeps working.
+- **New `jwkCache` option.** Local mode caches each signing key per realm and
+  key id for 300 seconds and gives up on a key fetch after 10 seconds
+  (`jwkCache: { ttl, timeout }`); `jwkCache: false` fetches the key for every
+  verification. A disabled or rotated key therefore reaches an adapter within
+  the key TTL.
 
 **No action expected**
+
+- Remote mode mints its client-credentials token once and re-mints it when the
+  introspection endpoint answers 401, instead of failing every request until
+  the process restarts.
+- Errors keep authup's codes: `expired_token` for an expired token,
+  `inactive_token` for a token introspection reports inactive, and
+  `invalid_token` for everything else, including an introspection request that
+  failed (its message names the status).
 
 Tokens authup issues are unaffected by the following, which only a token from
 another issuer could hit. An adapter now rejects a token that:
