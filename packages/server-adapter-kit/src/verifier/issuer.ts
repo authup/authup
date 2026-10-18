@@ -49,14 +49,17 @@ function readKeyLookup(context: KeySourceContext) : KeyLookup {
         throw JWTError.headerPropertyInvalid('kid');
     }
 
+    // authup always stamps the realm's uuid. A name or a path segment such as
+    // '..' would change the key URL: '/realms/../jwks/<kid>' is the flat key
+    // endpoint, which serves a key of any realm.
     const { realm_id: realmId } = context.token.claims;
-    if (typeof realmId !== 'string' || !realmId) {
+    if (typeof realmId !== 'string' || !isUUID(realmId)) {
         throw JWTError.payloadPropertyInvalid('realm_id');
     }
 
     return {
         kid: kid.toLowerCase(),
-        realmId: isUUID(realmId) ? realmId.toLowerCase() : realmId,
+        realmId: realmId.toLowerCase(),
     };
 }
 

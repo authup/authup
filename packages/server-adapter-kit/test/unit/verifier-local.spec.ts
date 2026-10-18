@@ -137,6 +137,24 @@ describe('verifier local', () => {
         await expect(verifier.verify(token)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
     });
 
+    it.each(['..', '.', 'master', '../realms/other'])('should refuse realm_id %s before any key request', async (realmId) => {
+        const token = await faker.sign(buildPayload({ realm_id: realmId }));
+
+        await expect(verifier.verify(token)).rejects.toSatisfy(isJWTError);
+        expect(getJwk).not.toHaveBeenCalled();
+    });
+
+    it('should stop accepting a token once its key is gone when no cache is passed', async () => {
+        const instance = new TokenVerifier({ baseURL: 'http://localhost:3001', jwkCache: false });
+        const token = await faker.sign(buildPayload());
+
+        getJwk.mockResolvedValueOnce(await faker.useJwk());
+        await instance.verify(token);
+
+        getJwk.mockRejectedValueOnce({ response: { status: 404 } });
+        await expect(instance.verify(token)).rejects.toSatisfy(isJWTError);
+    });
+
     it('should reject an unsecured token', async () => {
         getJwk.mockResolvedValueOnce(await faker.useJwk());
 
