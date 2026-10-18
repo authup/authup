@@ -6,4 +6,4 @@
  */
 
 export * from './faker';
-export * from './response-error';
+export * from './cache';

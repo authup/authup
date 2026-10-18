@@ -70,6 +70,31 @@ const uncachedVerifier = new TokenVerifier({
 });
 ```
 
+## Token caching
+
+A `TokenVerifier` caches each verification result until the token expires, in process memory by
+default. Remote verification (with `creator`) caches an introspection answer for at most
+`maxRemoteCacheTTL` seconds when set, which bounds how long a revoked token still passes. Pass
+`cache: false` to verify every request anew, or a `RedisTokenCache` to share results between
+processes:
+
+```typescript
+import { RedisTokenCache, TokenVerifier } from '@authup/server-adapter-kit';
+
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    cache: new RedisTokenCache('redis://127.0.0.1:6379'),
+});
+```
+
+Entries of a cache passed in are kept under a namespace, by default `authup:local:<baseURL>` or
+`authup:remote:<baseURL>`, so a local and a remote verifier of one deployment never answer with each
+other's results. Verifiers sharing a `cacheNamespace` must be configured identically.
+
+Remote verification introspects with the token `creator` mints and keeps it until authup answers
+`401`; it then mints a new one and asks once more. An inactive token is rejected with
+`inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
+
 ## Certificate-bound tokens
 
 If verification returns a token with `cnf.x5t#S256`, `verifyRequest` fails

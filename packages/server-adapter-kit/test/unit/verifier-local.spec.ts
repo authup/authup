@@ -81,7 +81,7 @@ describe('verifier local', () => {
         '!!!.e30.sig',
         `${HEADER}.!!!.sig`,
     ])('should reject malformed token %s with a JWTError', async (input) => {
-        await expect(verifier.verifyLocal(input)).rejects.toSatisfy(isJWTError);
+        await expect(verifier.verify(input)).rejects.toSatisfy(isJWTError);
         expect(getJwk).not.toHaveBeenCalled();
     });
 
@@ -95,7 +95,7 @@ describe('verifier local', () => {
     ])('should reject a valid token altered by %s', async (_label, alter) => {
         const token = await faker.sign(buildPayload());
 
-        await expect(verifier.verifyLocal(alter(token))).rejects.toSatisfy(isJWTError);
+        await expect(verifier.verify(alter(token))).rejects.toSatisfy(isJWTError);
         expect(getJwk).not.toHaveBeenCalled();
     });
 
@@ -104,7 +104,7 @@ describe('verifier local', () => {
         delete jwk.alg;
         getJwk.mockResolvedValueOnce(jwk);
 
-        await expect(verifier.verifyLocal(await faker.sign(buildPayload()))).rejects.toSatisfy(isJWTError);
+        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(isJWTError);
     });
 
     it('should reject an RSA realm key shorter than 2048 bits with a JWTError naming the cause', async () => {
@@ -124,7 +124,7 @@ describe('verifier local', () => {
             kid: FAKER_KEY_ID,
         });
 
-        await expect(verifier.verifyLocal(await faker.sign(buildPayload()))).rejects.toSatisfy(
+        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(
             (e: unknown) => isJWTError(e) && /2048/.test(e.message),
         );
     });
@@ -134,7 +134,7 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload({ exp: Math.floor(Date.now() / 1000) - 30 }));
 
-        await expect(verifier.verifyLocal(token)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
+        await expect(verifier.verify(token)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
     });
 
     it('should reject an unsecured token', async () => {
@@ -144,7 +144,7 @@ describe('verifier local', () => {
         const [, payload] = unsecured.split('.');
         const token = `${encodeSegment({ alg: 'none', kid: FAKER_KEY_ID })}.${payload}.`;
 
-        await expect(verifier.verifyLocal(token)).rejects.toSatisfy(
+        await expect(verifier.verify(token)).rejects.toSatisfy(
             (e: unknown) => isJWTError(e) && e.code !== ErrorCode.JWT_EXPIRED,
         );
     });
@@ -156,7 +156,7 @@ describe('verifier local', () => {
             .setProtectedHeader({ alg: 'ES256', kid: FAKER_KEY_ID })
             .sign(ecPrivateKey);
 
-        const output = await verifier.verifyLocal(token);
+        const output = await verifier.verify(token);
         expect(output.sub).toEqual(TokenPayload.sub);
     });
 
@@ -165,7 +165,7 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload({ nbf: Math.floor(Date.now() / 1000) + 3600 }));
 
-        await expect(verifier.verifyLocal(token)).rejects.toSatisfy(
+        await expect(verifier.verify(token)).rejects.toSatisfy(
             (e: unknown) => isJWTError(e) && e.code !== ErrorCode.JWT_EXPIRED,
         );
     });
@@ -175,7 +175,7 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload({ nbf: Math.floor(Date.now() / 1000) + 30 }));
 
-        const output = await verifier.verifyLocal(token);
+        const output = await verifier.verify(token);
         expect(output.sub).toEqual(TokenPayload.sub);
     });
 
@@ -184,7 +184,7 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload({ name: 'Пётр' }));
 
-        const output = await verifier.verifyLocal(token);
+        const output = await verifier.verify(token);
         expect(output.name).toEqual('Пётр');
         expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
     });
@@ -194,7 +194,7 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload());
 
-        await expect(verifier.verifyLocal(token)).rejects.toSatisfy(isJWTError);
+        await expect(verifier.verify(token)).rejects.toSatisfy(isJWTError);
     });
 
     it.each([
@@ -242,6 +242,6 @@ describe('verifier local', () => {
 
         const token = await faker.sign(buildPayload());
 
-        await expect(verifier.verifyLocal(token)).rejects.toSatisfy(isJWTError);
+        await expect(verifier.verify(token)).rejects.toSatisfy(isJWTError);
     });
 });

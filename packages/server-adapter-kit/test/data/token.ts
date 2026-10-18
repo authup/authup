@@ -8,8 +8,6 @@
 import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { JWTError } from '@authup/specs';
-import type { TokenIntrospectParameters } from '@hapic/oauth2';
-import { createResponseError } from '../utils';
 
 export const TokenPayload : OAuth2TokenIntrospectionResponse = {
     active: true,
@@ -40,19 +38,36 @@ export const BoundTokenPayload : OAuth2TokenIntrospectionResponse = {
 
 export const BoundTokenID = 'bound-token';
 
-export async function introspectToken(data: TokenIntrospectParameters = {}) : Promise<OAuth2TokenIntrospectionResponse> {
-    switch (data.token) {
+export const INTROSPECTION_ENDPOINT = 'http://localhost:3001/token/introspect';
+
+function respond(status: number, body: unknown) : Response {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'content-type': 'application/json' },
+    });
+}
+
+/**
+ * Answers authup's introspection endpoint the way the server does: an unknown
+ * token string is reported with the payload above, a malformed one with 400.
+ */
+export async function introspectToken(input: RequestInfo | URL, init?: RequestInit) : Promise<Response> {
+    const url = input instanceof Request ? input.url : String(input);
+    if (url !== INTROSPECTION_ENDPOINT) {
+        return respond(404, { code: ErrorCode.JWT_INVALID });
+    }
+
+    const token = new URLSearchParams(String(init?.body ?? '')).get('token');
+    switch (token) {
         case ErrorCode.JWT_INVALID: {
-            throw createResponseError(JWTError.payloadInvalid());
-        }
-        case ErrorCode.JWT_EXPIRED: {
-            throw createResponseError(JWTError.expired());
+            const error = JWTError.payloadInvalid();
+            return respond(400, { code: error.code, message: error.message });
         }
         case BoundTokenID: {
-            return BoundTokenPayload;
+            return respond(200, BoundTokenPayload);
         }
         default: {
-            return TokenPayload;
+            return respond(200, TokenPayload);
         }
     }
 }

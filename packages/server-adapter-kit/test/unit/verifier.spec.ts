@@ -16,8 +16,7 @@ import {
     vitest,
 } from 'vitest';
 import { Client } from '@authup/core-http-kit';
-import { TokenAPI } from '@hapic/oauth2';
-import { MemoryVerifierCache, TokenVerifier } from '../../src';
+import { MemoryTokenCache, TokenVerifier } from '../../src';
 import {
     BoundTokenID,
     BoundTokenPayload,
@@ -25,7 +24,10 @@ import {
     TokenPayload,
     introspectToken,
 } from '../data/token';
-import { FAKER_KEY_ID, Faker } from '../utils';
+import { FAKER_KEY_ID, Faker, readCachedClaims } from '../utils';
+
+const LOCAL_NAMESPACE = 'authup:local:http://localhost:3001';
+const REMOTE_NAMESPACE = 'authup:remote:http://localhost:3001';
 
 describe('verifier', () => {
     let faker : Faker;
@@ -43,12 +45,12 @@ describe('verifier', () => {
         });
         boundToken = await faker.sign(BoundTokenPayload);
 
-        vitest.spyOn(TokenAPI.prototype, 'introspect').mockImplementation((options) => introspectToken(options));
+        vitest.stubGlobal('fetch', vitest.fn(introspectToken));
         getJwk = vitest.spyOn(Client.prototype, 'getJwk').mockReturnValue(faker.useJwk());
     });
 
     it('should verify token local', async () => {
-        const cache = new MemoryVerifierCache();
+        const cache = new MemoryTokenCache();
         const tokenVerifier = new TokenVerifier({
             baseURL: 'http://localhost:3001',
             cache,
@@ -57,7 +59,7 @@ describe('verifier', () => {
         const output = await tokenVerifier.verify(token);
         expect(output).toBeDefined();
 
-        const outputCached = await cache.getToken(token);
+        const outputCached = await readCachedClaims(cache, token, LOCAL_NAMESPACE);
         expect(output).toEqual(outputCached);
     });
 
@@ -76,7 +78,7 @@ describe('verifier', () => {
         getJwk.mockClear();
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
-        await tokenVerifier.verifyLocal(token);
+        await tokenVerifier.verify(token);
 
         expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
     });
@@ -87,7 +89,7 @@ describe('verifier', () => {
         const payload = { ...TokenPayload };
         delete payload.realm_id;
 
-        await expect(tokenVerifier.verifyLocal(await faker.sign(payload)))
+        await expect(tokenVerifier.verify(await faker.sign(payload)))
             .rejects.toBeInstanceOf(JWTError);
         expect(getJwk).not.toHaveBeenCalled();
     });
@@ -96,7 +98,7 @@ describe('verifier', () => {
         getJwk.mockClear();
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
-        await expect(tokenVerifier.verifyLocal(await faker.sign(TokenPayload, '../users')))
+        await expect(tokenVerifier.verify(await faker.sign(TokenPayload, '../users')))
             .rejects.toBeInstanceOf(JWTError);
         expect(getJwk).not.toHaveBeenCalled();
     });
@@ -108,7 +110,7 @@ describe('verifier', () => {
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         try {
-            await tokenVerifier.verifyLocal(mfaToken);
+            await tokenVerifier.verify(mfaToken);
             expect(false).toBe(true);
         } catch (e) {
             expect(e).toBeInstanceOf(JWTError);
@@ -124,11 +126,11 @@ describe('verifier', () => {
             exp: now - 3600,
         });
 
-        await expect(tokenVerifier.verifyLocal(expired)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
+        await expect(tokenVerifier.verify(expired)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
     });
 
     it('should verify token remote', async () => {
-        const cache = new MemoryVerifierCache();
+        const cache = new MemoryTokenCache();
         const tokenVerifier = new TokenVerifier({
             baseURL: 'http://localhost:3001',
             cache,
@@ -142,7 +144,7 @@ describe('verifier', () => {
         const output = await tokenVerifier.verify(token);
         expect(output).toBeDefined();
 
-        const outputCached = await cache.getToken(token);
+        const outputCached = await readCachedClaims(cache, token, REMOTE_NAMESPACE);
         expect(output).toEqual(outputCached);
     });
 
@@ -209,11 +211,11 @@ describe('verifier', () => {
             expect(certificateThumbprint).not.toHaveBeenCalled();
         });
 
-        // MemoryVerifierCache retains object references — a caller
+        // A cache retaining object references — a caller
         // mutating its result (e.g. stripping cnf) must not poison the
         // cached entry and bypass the binding on later verifications.
         it('should not let a caller mutation of the result poison the cached entry', async () => {
-            const cache = new MemoryVerifierCache();
+            const cache = new MemoryTokenCache();
             const tokenVerifier = new TokenVerifier({
                 baseURL: 'http://localhost:3001',
                 cache,
@@ -222,7 +224,7 @@ describe('verifier', () => {
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
             delete output.cnf;
 
-            const cached = await cache.getToken(boundToken);
+            const cached = await readCachedClaims(cache, boundToken, LOCAL_NAMESPACE);
             expect(cached?.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
 
             await expect(tokenVerifier.verify(boundToken))
@@ -232,14 +234,14 @@ describe('verifier', () => {
         // The binding is per-request evidence, not a property of the token
         // alone — a cached verification result must not bypass it.
         it('should enforce the binding on cache hits', async () => {
-            const cache = new MemoryVerifierCache();
+            const cache = new MemoryTokenCache();
             const tokenVerifier = new TokenVerifier({
                 baseURL: 'http://localhost:3001',
                 cache,
             });
 
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
-            expect(output).toEqual(await cache.getToken(boundToken));
+            expect(output).toEqual(await readCachedClaims(cache, boundToken, LOCAL_NAMESPACE));
 
             await expect(tokenVerifier.verify(boundToken))
                 .rejects.toBeInstanceOf(JWTError);
@@ -276,45 +278,45 @@ describe('verifier', () => {
         });
 
         it('fetches a key once per realm and kid', async () => {
-            await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign(TokenPayload));
+            await verifier.verify(token);
+            await verifier.verify(await faker.sign(TokenPayload));
 
             expect(getJwk).toHaveBeenCalledTimes(1);
         });
 
         it('fetches per realm', async () => {
-            await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: OTHER_REALM }));
+            await verifier.verify(token);
+            await verifier.verify(await faker.sign({ ...TokenPayload, realm_id: OTHER_REALM }));
 
             expect(getJwk).toHaveBeenCalledTimes(2);
             expect(getJwk).toHaveBeenLastCalledWith(FAKER_KEY_ID, OTHER_REALM);
         });
 
         it('fetches a rotated kid', async () => {
-            await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign(TokenPayload, OTHER_KID));
+            await verifier.verify(token);
+            await verifier.verify(await faker.sign(TokenPayload, OTHER_KID));
 
             expect(getJwk).toHaveBeenCalledTimes(2);
             expect(getJwk).toHaveBeenLastCalledWith(OTHER_KID, TokenPayload.realm_id);
         });
 
         it('keys and fetches a kid case-insensitively', async () => {
-            await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
+            await verifier.verify(token);
+            await verifier.verify(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
 
             expect(getJwk).toHaveBeenCalledTimes(1);
             expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
         });
 
         it('fetches a lower-cased kid', async () => {
-            await verifier.verifyLocal(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
+            await verifier.verify(await faker.sign(TokenPayload, FAKER_KEY_ID.toUpperCase()));
 
             expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
         });
 
         it('keys a realm id case-insensitively', async () => {
-            await verifier.verifyLocal(token);
-            await verifier.verifyLocal(await faker.sign({ ...TokenPayload, realm_id: TokenPayload.realm_id?.toUpperCase() }));
+            await verifier.verify(token);
+            await verifier.verify(await faker.sign({ ...TokenPayload, realm_id: TokenPayload.realm_id?.toUpperCase() }));
 
             expect(getJwk).toHaveBeenCalledTimes(1);
         });
@@ -322,37 +324,41 @@ describe('verifier', () => {
         it('does not cache a 404', async () => {
             getJwk.mockRejectedValueOnce(notFound);
 
-            await expect(verifier.verifyLocal(token)).rejects.toMatchObject({
+            await expect(verifier.verify(token)).rejects.toMatchObject({
                 code: ErrorCode.JWT_INVALID,
                 message: 'The token payload property kid is invalid.',
             });
-            await expect(verifier.verifyLocal(token)).resolves.toBeDefined();
+            await expect(verifier.verify(token)).resolves.toBeDefined();
             expect(getJwk).toHaveBeenCalledTimes(2);
         });
 
         it('retries after a failed fetch', async () => {
             getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
 
-            await expect(verifier.verifyLocal(token)).rejects.toBeInstanceOf(JWTError);
-            await expect(verifier.verifyLocal(token)).resolves.toBeDefined();
+            await expect(verifier.verify(token)).rejects.toBeInstanceOf(JWTError);
+            await expect(verifier.verify(token)).resolves.toBeDefined();
             expect(getJwk).toHaveBeenCalledTimes(2);
         });
 
         it('does not refetch on a signature failure', async () => {
-            await verifier.verifyLocal(token);
+            await verifier.verify(token);
 
             const forged = await new Faker().sign(TokenPayload);
-            await expect(verifier.verifyLocal(forged)).rejects.toBeInstanceOf(JWTError);
-            await expect(verifier.verifyLocal(forged)).rejects.toBeInstanceOf(JWTError);
+            await expect(verifier.verify(forged)).rejects.toBeInstanceOf(JWTError);
+            await expect(verifier.verify(forged)).rejects.toBeInstanceOf(JWTError);
 
             expect(getJwk).toHaveBeenCalledTimes(1);
         });
 
         it('fetches per verify when disabled', async () => {
-            const uncached = new TokenVerifier({ baseURL: 'http://localhost:3001', jwkCache: false });
+            const uncached = new TokenVerifier({
+                baseURL: 'http://localhost:3001',
+                jwkCache: false,
+                cache: false,
+            });
 
-            await uncached.verifyLocal(token);
-            await uncached.verifyLocal(token);
+            await uncached.verify(token);
+            await uncached.verify(token);
 
             expect(getJwk).toHaveBeenCalledTimes(2);
         });

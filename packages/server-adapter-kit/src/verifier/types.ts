@@ -10,7 +10,7 @@ import type {
     OAuth2TokenPermission,
 } from '@authup/specs';
 import type { TokenCreator } from '@authup/core-http-kit';
-import type { IVerifierCache } from './cache';
+import type { ITokenCache } from 'vouchly';
 
 export interface ITokenVerifier {
     verify(token: string, options?: TokenVerifyOptions) : Promise<TokenVerificationData>
@@ -28,8 +28,22 @@ export type TokenVerifyOptions = {
 
 export type TokenVerifierContext = {
     baseURL: string,
+    /**
+     * Mints the client-credentials token remote mode introspects with.
+     * Present: every token is verified by introspection (remote mode).
+     */
     creator?: TokenCreator,
-    cache?: IVerifierCache,
+    /**
+     * Caches verification results. Default: a MemoryTokenCache of this
+     * verifier's own; false disables caching.
+     */
+    cache?: ITokenCache | false,
+    /**
+     * Separates the entries of verifiers sharing a cache passed in. Only
+     * verifiers with the same configuration may share one namespace.
+     * Default: `authup:<local|remote>:<baseURL>`.
+     */
+    cacheNamespace?: string,
     /**
      * Maximum TTL (in seconds) for caching remote introspection results.
      * Limits how long a revoked token can remain cached as valid.

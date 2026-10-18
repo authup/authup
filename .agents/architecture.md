@@ -8651,7 +8651,12 @@ misses share one fetch bounded by `jwkCache.timeout` (default 10 s) so a
 stalled fetch cannot pin later lookups, `kid` and a uuid `realm_id`
 lower-cased before keying, `jwkCache: false` opts out), so
 disabling or deleting a signature key reaches an adapter after at most that
-TTL. That is why IMPORTING signature material requires a `KEY_CREATE`
+TTL. Remote mode (a `creator` set) is the same issuer with
+`verification: 'remote'`, matching every token, opaque ones included; it
+introspects with the minted client-credentials token and re-mints once on a
+401. Verification results go to vouchly's token cache (in-memory by default,
+`RedisTokenCache` for redis), whose entries a cache passed in keeps under
+`authup:<local|remote>:<baseURL>` so the two modes never serve each other. That is why IMPORTING signature material requires a `KEY_CREATE`
 grant that reaches beyond the actor's own realm (evaluated against a random
 foreign realm, the `EventService` reach probe): a `realm_admin` may generate
 signature keys, never supply one, and a holder of the wider grant is trusted

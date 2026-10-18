@@ -18,7 +18,7 @@ import {
     vi,
 } from 'vitest';
 import type { TokenVerifierContext } from '../../src';
-import { RedisVerifierCache, TokenVerifier } from '../../src';
+import { RedisTokenCache, TokenVerifier } from '../../src';
 import { TokenPayload } from '../data/token';
 import { Faker } from '../utils';
 
@@ -27,8 +27,13 @@ const KID_B = '1c7d4a1f-3b62-4e9f-a04c-8b2d6f3e5a71';
 const REALM_A = 'e0aefc0c-3396-471e-ab81-f84779978223';
 const REALM_B = '8b3f6d4c-5e2a-4c7b-9d0f-1a2b3c4d5e6f';
 
+// the token cache is off, so every verify reaches the key source.
 function create(jwkCache?: TokenVerifierContext['jwkCache']) {
-    return new TokenVerifier({ baseURL: 'http://localhost:3001', jwkCache });
+    return new TokenVerifier({
+        baseURL: 'http://localhost:3001', 
+        jwkCache, 
+        cache: false, 
+    });
 }
 
 describe('jwk cache', () => {
@@ -117,9 +122,9 @@ describe('jwk cache', () => {
     });
 
     it('keeps keys in memory for the redis cache', async () => {
-        const cache = new RedisVerifierCache({} as ConstructorParameters<typeof RedisVerifierCache>[0]);
-        vi.spyOn(cache, 'getToken').mockResolvedValue(undefined);
-        vi.spyOn(cache, 'setToken').mockResolvedValue(undefined);
+        const cache = new RedisTokenCache({} as ConstructorParameters<typeof RedisTokenCache>[0]);
+        vi.spyOn(cache, 'get').mockResolvedValue(undefined);
+        vi.spyOn(cache, 'set').mockResolvedValue(undefined);
 
         const verifier = new TokenVerifier({ baseURL: 'http://localhost:3001', cache });
         const token = await sign();

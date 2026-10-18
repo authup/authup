@@ -9,13 +9,26 @@ import type { Client } from '@authup/core-http-kit';
 import { isObject, isUUID } from '@authup/kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
-import type { Issuer, KeySource, KeySourceContext } from 'vouchly';
+import type {
+    IntrospectionAuthorizationContext,
+    Issuer,
+    KeySource,
+    KeySourceContext,
+} from 'vouchly';
 import { cachedKeys } from 'vouchly';
 import type { TokenVerifierContext } from './types';
 
 type AuthupIssuerContext = {
     client: Client,
     jwkCache?: TokenVerifierContext['jwkCache'],
+    /**
+     * Introspect every token at authup instead of verifying it locally.
+     */
+    remote?: {
+        endpoint: string,
+        authorization: (context: IntrospectionAuthorizationContext) => Promise<string>,
+        maxCacheTTL?: number,
+    },
 };
 
 type KeyLoader = Parameters<typeof cachedKeys>[0];
@@ -92,7 +105,7 @@ export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {
         });
     }
 
-    return {
+    const issuer : Issuer = {
         id: 'authup',
         // matched on the realm, not on iss: a deployment reaching authup
         // through an internal url sees another iss than the public one.
@@ -107,4 +120,18 @@ export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {
         // payloads pass (foreign or legacy tokens).
         claims: (claims) => typeof claims.kind === 'undefined' || claims.kind === OAuth2TokenKind.ACCESS,
     };
+
+    if (ctx.remote) {
+        // authup decides about every token it is asked about, whatever the
+        // token names, so remote mode matches any compact token.
+        issuer.issuer = () => true;
+        issuer.verification = 'remote';
+        issuer.introspection = {
+            endpoint: ctx.remote.endpoint,
+            authorization: ctx.remote.authorization,
+            maxCacheTTL: ctx.remote.maxCacheTTL,
+        };
+    }
+
+    return issuer;
 }
