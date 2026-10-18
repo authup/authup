@@ -5,6 +5,40 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.69)
+
+### Server adapters verify tokens with jose
+
+`@authup/server-adapter-kit` (and with it the node, web and socket.io adapters)
+verifies tokens with [jose](https://github.com/panva/jose) instead of the native
+`@node-rs/jsonwebtoken`, and caches signing keys.
+
+**May need action**
+
+- **RSA signature keys must be 2048 bits or larger.** jose refuses to verify with
+  a shorter RSA key, so an adapter rejects every token such a key signs, with a
+  message naming the key size. Importing a shorter RSA key through `POST /keys`
+  is now refused. Keys authup generates are 2048 bits. If you imported a shorter
+  one, generate a new signature key in that realm (it takes the highest
+  priority) and disable the old one; adapters cannot verify its tokens anyway,
+  so users signed in with them sign in again.
+- **Renamed cache exports.** `MemoryTokenVerifierCache`, `RedisTokenVerifierCache`
+  and `ITokenVerifierCache` are now `MemoryVerifierCache`, `RedisVerifierCache`
+  and `IVerifierCache`. The cache interface gained `getJwk` / `setJwk`, so a
+  custom cache implementation must add both.
+
+**No action expected**
+
+Tokens authup issues are unaffected by the following, which only a token from
+another issuer could hit. An adapter now rejects a token that:
+
+- is not three unpadded base64url segments (trailing `=`, whitespace),
+- carries an unrecognised `crit` header parameter or `b64: false`,
+- has a non-numeric `exp`, `nbf` or `iat`.
+
+A token that is both not yet valid and already expired is reported as invalid
+rather than expired.
+
 ## v1.0.0-beta.69 (was: next release after v1.0.0-beta.68)
 
 ### Security hardening that changes behaviour

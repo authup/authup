@@ -84,6 +84,58 @@ describe('verifier local', () => {
         expect(getJwk).not.toHaveBeenCalled();
     });
 
+    it.each([
+        ['trailing padding', (token: string) => `${token}==`],
+        ['a space in the signature', (token: string) => `${token.slice(0, -4)} ${token.slice(-4)}`],
+        ['a tab in the payload', (token: string) => {
+            const [header, payload, signature] = token.split('.');
+            return `${header}.${payload.slice(0, 4)}\t${payload.slice(4)}.${signature}`;
+        }],
+    ])('should reject a valid token altered by %s', async (_label, alter) => {
+        const token = await faker.sign(buildPayload());
+
+        await expect(verifier.verifyLocal(alter(token))).rejects.toSatisfy(isJWTError);
+        expect(getJwk).not.toHaveBeenCalled();
+    });
+
+    it('should reject a realm key without an algorithm with a JWTError', async () => {
+        const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+        delete jwk.alg;
+        getJwk.mockResolvedValueOnce(jwk);
+
+        await expect(verifier.verifyLocal(await faker.sign(buildPayload()))).rejects.toSatisfy(isJWTError);
+    });
+
+    it('should reject an RSA realm key shorter than 2048 bits with a JWTError naming the cause', async () => {
+        const pair = await crypto.subtle.generateKey(
+            {
+                name: 'RSASSA-PKCS1-v1_5',
+                modulusLength: 1024,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: 'SHA-256',
+            },
+            true,
+            ['sign', 'verify'],
+        );
+        getJwk.mockResolvedValueOnce({
+            ...(await exportJWK(pair.publicKey)),
+            alg: 'RS256',
+            kid: FAKER_KEY_ID,
+        });
+
+        await expect(verifier.verifyLocal(await faker.sign(buildPayload()))).rejects.toSatisfy(
+            (e: unknown) => isJWTError(e) && /2048/.test(e.message),
+        );
+    });
+
+    it('should report a token expired within the clock leeway as expired', async () => {
+        getJwk.mockResolvedValueOnce(await faker.useJwk());
+
+        const token = await faker.sign(buildPayload({ exp: Math.floor(Date.now() / 1000) - 30 }));
+
+        await expect(verifier.verifyLocal(token)).rejects.toMatchObject({ code: ErrorCode.JWT_EXPIRED });
+    });
+
     it('should reject an unsecured token', async () => {
         getJwk.mockResolvedValueOnce(await faker.useJwk());
 
@@ -136,8 +188,16 @@ describe('verifier local', () => {
         expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
     });
 
-    it('should reject a token signed by another key', async () => {
+    it('should reject a token whose algorithm differs from the realm key', async () => {
         getJwk.mockResolvedValueOnce(ecJwk);
+
+        const token = await faker.sign(buildPayload());
+
+        await expect(verifier.verifyLocal(token)).rejects.toSatisfy(isJWTError);
+    });
+
+    it('should reject a token signed by another key of the same algorithm', async () => {
+        getJwk.mockResolvedValueOnce(await new Faker().useJwk());
 
         const token = await faker.sign(buildPayload());
 
