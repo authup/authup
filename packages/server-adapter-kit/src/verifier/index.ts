@@ -6,6 +6,5 @@
  */
 
 export * from './cache';
-export * from './jwk';
 export * from './module';
 export * from './types';

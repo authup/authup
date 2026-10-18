@@ -24,6 +24,7 @@ import {
     it,
     vitest,
 } from 'vitest';
+import { isVouchlyError } from 'vouchly';
 import { TokenVerifier } from '../../src';
 import { TokenPayload } from '../data/token';
 import { FAKER_KEY_ID, Faker } from '../utils';
@@ -194,6 +195,46 @@ describe('verifier local', () => {
         const token = await faker.sign(buildPayload());
 
         await expect(verifier.verifyLocal(token)).rejects.toSatisfy(isJWTError);
+    });
+
+    it.each([
+        ['a malformed token', async () => 'a.b'],
+        ['a token naming no realm', async () => {
+            const payload : Record<string, any> = buildPayload();
+            delete payload.realm_id;
+            return faker.sign(payload);
+        }],
+        ['a kid that is no uuid', async () => faker.sign(buildPayload(), '../users')],
+        ['an unknown kid', async () => {
+            getJwk.mockRejectedValueOnce(Object.assign(new Error('not found'), { response: { status: 404 } }));
+            return faker.sign(buildPayload());
+        }],
+        ['a failed key fetch', async () => {
+            getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
+            return faker.sign(buildPayload());
+        }],
+        ['a forged signature', async () => {
+            getJwk.mockResolvedValueOnce(await new Faker().useJwk());
+            return faker.sign(buildPayload());
+        }],
+        ['an expired token', async () => {
+            getJwk.mockResolvedValueOnce(await faker.useJwk());
+            return faker.sign(buildPayload({ exp: Math.floor(Date.now() / 1000) - 3600 }));
+        }],
+        ['a refresh token', async () => {
+            getJwk.mockResolvedValueOnce(await faker.useJwk());
+            return faker.sign(buildPayload({ kind: 'refresh_token' }));
+        }],
+        ['a certificate-bound token without a thumbprint', async () => {
+            getJwk.mockResolvedValueOnce(await faker.useJwk());
+            return faker.sign(buildPayload({ cnf: { 'x5t#S256': 'thumbprint' } }));
+        }],
+    ])('should reject %s with a JWTError, never a VouchlyError', async (_label, build) => {
+        const token = await build();
+
+        await expect(verifier.verify(token)).rejects.toSatisfy(
+            (e: unknown) => isJWTError(e) && !isVouchlyError(e),
+        );
     });
 
     it('should reject a token signed by another key of the same algorithm', async () => {

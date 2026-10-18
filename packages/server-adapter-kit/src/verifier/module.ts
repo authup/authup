@@ -10,29 +10,21 @@ import {
     ClientAuthenticationHook,
 } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
-import { isObject, isUUID } from '@authup/kit';
+import { isObject } from '@authup/kit';
 import {
     JWTError,
     OAuth2TokenKind,
 } from '@authup/specs';
 import type {
-    OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
 } from '@authup/specs';
-import type { JWTPayload, ProtectedHeaderParameters } from 'jose';
-import {
-    decodeJwt,
-    decodeProtectedHeader,
-    errors,
-    importJWK,
-    jwtVerify,
-} from 'jose';
+import type { Verifier } from 'vouchly';
+import { createVerifier, isCompactToken } from 'vouchly';
 import { assertTokenCertificateBinding } from '../certificate-binding';
 import type { IVerifierCache } from './cache';
-import { MemoryVerifierCache } from './cache';
-import { JWKResolver } from './jwk';
-import type { JWKCacheData } from './jwk';
+import { toJWTError } from './error';
+import { createAuthupIssuer } from './issuer';
 import type {
     ITokenVerifier,
     TokenVerificationData,
@@ -40,9 +32,6 @@ import type {
     TokenVerifierContext,
     TokenVerifyOptions,
 } from './types';
-
-// RFC 7515 compact serialization: three unpadded base64url segments.
-const COMPACT_JWS_PATTERN = /^[\w-]+\.[\w-]+\.[\w-]+$/;
 
 export class TokenVerifier implements ITokenVerifier {
     protected interceptorMounted : boolean | undefined;
@@ -53,15 +42,21 @@ export class TokenVerifier implements ITokenVerifier {
 
     protected maxRemoteCacheTTL: number | undefined;
 
-    protected jwkResolver: JWKResolver | undefined;
+    protected verifier: Verifier;
 
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
-        this.jwkResolver = ctx.jwkCache === false ?
-            undefined :
-            new JWKResolver(ctx.cache ?? new MemoryVerifierCache(), ctx.jwkCache);
         this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
         this.client = new Client({ baseURL: ctx.baseURL });
+        this.verifier = createVerifier({
+            issuers: [
+                createAuthupIssuer({
+                    client: this.client,
+                    jwkCache: ctx.jwkCache,
+                }),
+            ],
+            cache: false,
+        });
 
         if (ctx.creator) {
             // todo: use server kit singleton :)
@@ -85,10 +80,42 @@ export class TokenVerifier implements ITokenVerifier {
     }
 
     async verifyLocal(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
-        const output = await this.resolveLocal(token);
-        await this.assertCertificateBinding(output, options);
-        // never expose the cache-owned object: a caller mutating its result
-        // (e.g. stripping cnf) must not poison later cache hits.
+        // jose's base64url decoding ignores whitespace and accepts padding,
+        // and the signature segment is not covered by the signature, so
+        // without this one valid token yields endlessly many accepted
+        // strings, each a fresh verification and cache entry.
+        if (!isCompactToken(token)) {
+            throw JWTError.invalid();
+        }
+
+        if (this.cache) {
+            const cached = await this.cache.getToken(token);
+            if (cached) {
+                await this.assertCertificateBinding(cached, options);
+                // never expose the cache-owned object: a caller mutating its
+                // result (e.g. stripping cnf) must not poison later cache hits.
+                return structuredClone(cached);
+            }
+        }
+
+        let payload : OAuth2TokenPayload;
+        try {
+            const result = await this.verifier.verify(token, { certificateThumbprint: options.certificateThumbprint });
+            payload = result.claims as OAuth2TokenPayload;
+        } catch (e) {
+            throw toJWTError(e);
+        }
+
+        // the clock leeway applies to nbf only: a token past its exp is
+        // expired, whatever the leeway.
+        const secondsDiff = this.getTokenExpiresIn(payload);
+
+        const output = this.transform(payload);
+
+        if (this.cache) {
+            await this.cache.setToken(token, output, secondsDiff);
+        }
+
         return structuredClone(output);
     }
 
@@ -96,128 +123,6 @@ export class TokenVerifier implements ITokenVerifier {
         const output = await this.resolveRemote(token);
         await this.assertCertificateBinding(output, options);
         return structuredClone(output);
-    }
-
-    protected async resolveLocal(token: string) : Promise<TokenVerificationData> {
-        // jose's base64url decoding ignores whitespace and accepts padding,
-        // and the signature segment is not covered by the signature, so
-        // without this one valid token yields endlessly many accepted
-        // strings, each a fresh verification and cache entry.
-        if (!COMPACT_JWS_PATTERN.test(token)) {
-            throw JWTError.invalid();
-        }
-
-        let output: TokenVerificationData | undefined;
-        if (this.cache) {
-            output = await this.cache.getToken(token);
-            if (output) {
-                return output;
-            }
-        }
-
-        let header : ProtectedHeaderParameters;
-        try {
-            header = decodeProtectedHeader(token);
-        } catch {
-            throw JWTError.headerInvalid('The token header could not be extracted.');
-        }
-
-        if (!header.kid || !isUUID(header.kid)) {
-            throw JWTError.headerPropertyInvalid('kid');
-        }
-
-        // uuids compare case-insensitively (isUUID and the server's lookup),
-        // so each case variant would otherwise be its own cache entry: one
-        // upstream fetch per variant and an easy way to evict real keys.
-        const kid = header.kid.toLowerCase();
-
-        // The key is read from the realm the token names, so a key of
-        // another realm can never verify it; the signature check below then
-        // proves the claim it was looked up by.
-        let claims : JWTPayload;
-        try {
-            claims = decodeJwt(token);
-        } catch {
-            throw JWTError.payloadInvalid('The token payload could not be extracted.');
-        }
-
-        const { realm_id: realmClaim } = claims;
-        if (typeof realmClaim !== 'string' || !realmClaim) {
-            throw JWTError.payloadPropertyInvalid('realm_id');
-        }
-
-        const realmId = isUUID(realmClaim) ? realmClaim.toLowerCase() : realmClaim;
-
-        const entry = this.jwkResolver ?
-            await this.jwkResolver.resolve({ realmId, kid }, () => this.loadJwk(kid, realmId)) :
-            await this.loadJwk(kid, realmId);
-
-        let payload : OAuth2TokenPayload;
-
-        try {
-            // 60 seconds is the leeway @node-rs/jsonwebtoken applied, so an
-            // issuer whose clock runs slightly ahead still passes nbf.
-            const result = await jwtVerify(token, entry.key, {
-                clockTolerance: 60,
-                ...(entry.algorithm ? { algorithms: [entry.algorithm] } : {}),
-            });
-            payload = result.payload as OAuth2TokenPayload;
-        } catch (e) {
-            if (e instanceof errors.JWTExpired) {
-                throw JWTError.expired();
-            }
-
-            throw JWTError.payloadInvalid('The token could not be verified.');
-        }
-
-        const secondsDiff = this.getTokenExpiresIn(payload);
-
-        output = this.transform(payload);
-
-        if (this.cache) {
-            await this.cache.setToken(token, output, secondsDiff);
-        }
-
-        return output;
-    }
-
-    protected async loadJwk(kid: string, realmId: string) : Promise<JWKCacheData> {
-        let jwk : OAuth2JsonWebKey;
-
-        try {
-            jwk = await this.client.getJwk(kid, realmId);
-        } catch (e) {
-            if (isObject(e) && isObject(e.response) && e.response.status === 404) {
-                throw JWTError.payloadPropertyInvalid('kid');
-            }
-
-            throw new JWTError({
-                message: 'Failed to fetch JWK from auth server.',
-                cause: e as Error,
-            });
-        }
-
-        let key : CryptoKey | Uint8Array;
-        try {
-            key = await importJWK(jwk);
-        } catch {
-            throw JWTError.payloadInvalid('The jwt key is not valid.');
-        }
-
-        /* istanbul ignore next */
-        if (!(key instanceof CryptoKey)) {
-            throw JWTError.payloadInvalid('The jwt key is not valid.');
-        }
-
-        // jose refuses to verify with an RSA key under 2048 bits.
-        const { modulusLength } = key.algorithm as Partial<RsaHashedKeyAlgorithm>;
-        if (typeof modulusLength === 'number' && modulusLength < 2048) {
-            throw JWTError.payloadInvalid(
-                `The jwt key is ${modulusLength} bits; RSA keys must be 2048 bits or larger.`,
-            );
-        }
-
-        return { key, algorithm: jwk.alg };
     }
 
     protected async resolveRemote(token: string) : Promise<TokenVerificationData> {
