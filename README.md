@@ -176,7 +176,17 @@ These guidelines will help to ensure that contributions are made effectively and
 
 ## Citation
 
-If you use Authup in academic work, please cite it: GitHub's **"Cite this repository"** button reads [`CITATION.cff`](./CITATION.cff), and [Zenodo](https://doi.org/10.5281/zenodo.20836542) mints a DOI for each release.
+If you use Authup in academic work, please cite it. Citation metadata is maintained in
+[`CITATION.cff`](./CITATION.cff): GitHub renders a **"Cite this repository"** button from it.
+
+Authup is archived on [Zenodo](https://doi.org/10.5281/zenodo.20836542), which mints a DOI for
+each release. The badge below resolves to the **concept DOI**: it always points to the latest
+version; to cite a specific release, use that version's DOI from the
+[Zenodo record](https://doi.org/10.5281/zenodo.20836542).
+
+[![DOI](https://zenodo.org/badge/380934910.svg)](https://doi.org/10.5281/zenodo.20836542)
+
+Example (BibTeX):
 
 ```bibtex
 @software{placzek_authup,
