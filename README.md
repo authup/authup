@@ -54,6 +54,33 @@ Every application with users ends up building the same layer: login and password
 - **The same model runs in your services.** [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) evaluates the permissions Authup reports for a token with the server's own rules.
 - **One process.** API, login pages and consoles start with `npx authup start` and split into replicas when you need them.
 
+## Features
+
+### Sign-in
+
+- 👤 **Single sign-on**: sign in once, use every application of a realm
+- 🔐 **Second factor**: TOTP, recovery codes, email codes and passkeys
+- 👍 **Social login and identity brokering**: any OAuth2 or OpenID Connect provider, with presets for GitHub, Google, Facebook, Instagram and PayPal
+- 📁 **LDAP**: sign in with directory accounts, linked to local users
+
+### Protocols and authorization
+
+- 📜 **Standard protocols**: OAuth 2.0 and OpenID Connect, with authorization code and PKCE, client credentials, rotating refresh tokens, device authorization and logout
+- 🛡️ **Permissions and policies**: grant permissions to roles, users and clients, guarded by attribute, identity, time and realm policies
+- 🧩 **Isomorphic permissions**: evaluate the same permissions in your UI, API and services
+
+### Running it
+
+- 🏢 **Realms**: separate tenants, each with its own users, clients, roles and signing keys
+- 🖥️ **Consoles**: an admin console for every entity and an account console for end users, themable without a rebuild
+- 🗂️ **Declarative provisioning**: seed realms, clients, roles and users from YAML or JSON files
+- 🕵️ **Logging and monitoring**: a security event log with a dashboard, and Prometheus metrics
+- 🏭 **Scaling**: one image that splits into API, console and worker replicas, with a Helm chart
+
+### Building on it
+
+- 📚 **Client libraries**: a typed HTTP client, server adapters, and Vue and Nuxt components
+
 ## Usage
 
 How to configure and set up Authup in detail is covered in the [deployment guide](https://authup.org/guide/deployment/).
