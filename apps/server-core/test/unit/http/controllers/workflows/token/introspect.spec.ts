@@ -746,7 +746,6 @@ describe('token-introspect authorization', () => {
         // verifying foreign tokens needs
         const client = new HTTPClient({ baseURL: suite.baseURL });
         const hook = new ClientAuthenticationHook({
-            baseURL: suite.baseURL,
             tokenCreator: () => client.token.createWithClientCredentials({
                 client_id: confidentialClientId,
                 client_secret: clientSecret,

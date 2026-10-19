@@ -13,10 +13,21 @@ import type {
     IOAuth2TokenAPI,
     OAuth2TokenDeviceCodeGrantParameters,
     OAuth2TokenGrantParameters,
+    OAuth2TokenPasswordGrantParameters,
     OAuth2TokenRequestOptions,
 } from '../types';
 
 export class OAuth2TokenAPI extends TokenAPI implements IOAuth2TokenAPI {
+    override async createWithPassword(
+        parameters: Omit<OAuth2TokenPasswordGrantParameters, 'grant_type'>,
+        options: OAuth2TokenRequestOptions = {},
+    ) : Promise<OAuth2TokenGrantResponse> {
+        return this.create({
+            grant_type: OAuth2TokenGrant.PASSWORD,
+            ...parameters,
+        }, options);
+    }
+
     async createWithDeviceCode(
         parameters: Omit<OAuth2TokenDeviceCodeGrantParameters, 'grant_type'>,
         options?: OAuth2TokenRequestOptions,

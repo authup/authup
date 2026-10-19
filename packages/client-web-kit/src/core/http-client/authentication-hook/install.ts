@@ -29,7 +29,6 @@ export function installHTTPClientAuthenticationHook(
     let refreshTokenInUse : string | null = null;
 
     const hook = new ClientAuthenticationHook({
-        baseURL: options.baseURL,
         tokenCreator: () => {
             if (!refreshToken.value) {
                 throw new Error('No refresh token available.');
