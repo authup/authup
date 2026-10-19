@@ -1884,7 +1884,10 @@ threads instances through constructor/context args:
   (`adapters/database/subscriber/`), a declarative base class configured with
   `{ type, target, destinations, cache? }`: `destinations` is built with
   `buildEntityDestinations(type, (data) => [realmIds...])` (one global channel
-  destination + one namespaced destination per non-null realm id); `cache.keys`
+  destination + one namespaced destination per non-null realm id, named by
+  `buildEntityNamespaceName` from `@authup/core-kit`, which the kit's entity
+  socket also connects through, falling back to `/` for a master-realm
+  session); `cache.keys`
   returns the query-result-cache keys to drop on update/remove
   (`cache.onInsert: true` adds insert: used by junction/attribute subscribers
   whose cache is keyed by the owner id). Every `after*` hook hands its

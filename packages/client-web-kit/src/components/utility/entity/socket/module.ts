@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityDefaultEventName, REALM_MASTER_NAME, buildEntityChannelName } from '@authup/core-kit';
+import {
+    EntityDefaultEventName,
+    REALM_MASTER_NAME,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
+} from '@authup/core-kit';
 import type {
     EntityType,
     EntityTypeMap,
@@ -60,6 +65,8 @@ function create<
 
         return storeRefs.realmId.value;
     });
+
+    const namespace = computed(() => (realmId.value ? buildEntityNamespaceName(realmId.value) : '/'));
 
     const targetId = computed(
         () => (
@@ -145,7 +152,7 @@ function create<
 
         mounted = true;
 
-        const socket = await socketManager.connect(`/resources#${realmId.value}`);
+        const socket = await socketManager.connect(namespace.value);
 
         let event : EventFullName<TYPE, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
         if (ctx.buildSubscribeEventName) {
@@ -191,7 +198,7 @@ function create<
 
         mounted = false;
 
-        const socket = await socketManager.connect(`/resources#${realmId.value}`);
+        const socket = await socketManager.connect(namespace.value);
 
         let event : EventFullName<TYPE, `${EventNameSuffix.UNSUBSCRIBE}`>;
         if (ctx.buildUnsubscribeEventName) {
@@ -211,7 +218,7 @@ function create<
         if (ctx.onCreated) {
             socket.off(buildEventFullName(
                 ctx.type as `${EntityType}`,
-                EntityDefaultEventName.UPDATED,
+                EntityDefaultEventName.CREATED,
             ), handleCreated);
         }
 
