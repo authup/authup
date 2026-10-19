@@ -5,19 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createHash } from 'node:crypto';
 import type { Client } from 'redis-extension';
 import { JsonAdapter, createClient } from 'redis-extension';
-import type { JWKCacheData, JWKCacheKey } from '../jwk';
-import type { TokenVerificationData } from '../types';
-import { MemoryVerifierCache } from './memory';
-import type { IVerifierCache } from './types';
+import type { ITokenCache, TokenCacheEntry } from 'vouchly';
 
-export class RedisVerifierCache implements IVerifierCache {
+/**
+ * vouchly's token cache on redis. The key vouchly hands over is already a
+ * SHA-256 of the namespace and the token, so it is stored as is.
+ */
+export class RedisTokenCache implements ITokenCache {
     protected instance : JsonAdapter;
-
-    // a CryptoKey cannot be serialized, so keys stay in process memory
-    protected memory : MemoryVerifierCache;
 
     constructor(input?: Client | string) {
         let client: Client;
@@ -31,31 +28,22 @@ export class RedisVerifierCache implements IVerifierCache {
         }
 
         this.instance = new JsonAdapter(client);
-        this.memory = new MemoryVerifierCache();
     }
 
-    getToken(token: string): Promise<TokenVerificationData | undefined> {
-        return this.instance.get(this.buildKey(token));
+    get(key: string): Promise<TokenCacheEntry | undefined> {
+        return this.instance.get(this.buildKey(key));
     }
 
-    setToken(token: string, data: TokenVerificationData, seconds: number): Promise<void> {
-        return this.instance.set(
-            this.buildKey(token),
-            data,
-            { seconds },
-        );
+    async set(key: string, entry: TokenCacheEntry, ttl: number): Promise<void> {
+        if (!(ttl > 0)) {
+            return;
+        }
+
+        // vouchly refuses an expired hit itself, so rounding up is safe.
+        await this.instance.set(this.buildKey(key), entry, { seconds: Math.ceil(ttl) });
     }
 
-    getJwk(key: JWKCacheKey): Promise<JWKCacheData | undefined> {
-        return this.memory.getJwk(key);
-    }
-
-    setJwk(key: JWKCacheKey, entry: JWKCacheData, seconds: number): Promise<void> {
-        return this.memory.setJwk(key, entry, seconds);
-    }
-
-    protected buildKey(token: string) {
-        const hash = createHash('sha256').update(token).digest('hex');
-        return `token:${hash}`;
+    protected buildKey(key: string) {
+        return `vouchly:${key}`;
     }
 }

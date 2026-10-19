@@ -10,8 +10,7 @@ import type {
     OAuth2TokenPermission,
 } from '@authup/specs';
 import type { TokenCreator } from '@authup/core-http-kit';
-import type { IVerifierCache } from './cache';
-import type { JWKCacheOptions } from './jwk';
+import type { ITokenCache } from 'vouchly';
 
 export interface ITokenVerifier {
     verify(token: string, options?: TokenVerifyOptions) : Promise<TokenVerificationData>
@@ -29,20 +28,45 @@ export type TokenVerifyOptions = {
 
 export type TokenVerifierContext = {
     baseURL: string,
+    /**
+     * Mints the client-credentials token remote mode introspects with.
+     * Present: every token is verified by introspection (remote mode).
+     */
     creator?: TokenCreator,
-    cache?: IVerifierCache,
+    /**
+     * Caches verification results until the token's exp (remote: at most
+     * maxRemoteCacheTTL). Default: no cache. A cached result is served
+     * without asking authup again, so it outlives a disabled signing key
+     * and a revoked token.
+     */
+    cache?: ITokenCache | false,
+    /**
+     * Separates the entries of verifiers sharing a cache passed in. Only
+     * verifiers with the same configuration may share one namespace.
+     * Default: `authup:<local|remote>:<baseURL>`.
+     */
+    cacheNamespace?: string,
     /**
      * Maximum TTL (in seconds) for caching remote introspection results.
      * Limits how long a revoked token can remain cached as valid.
-     * If not set, the remaining token lifetime is used.
+     * If not set, or 0, the remaining token lifetime is used.
      */
     maxRemoteCacheTTL?: number,
     /**
-     * Caches the signing keys used for local verification per realm and key id,
-     * in `cache` (getJwk/setJwk) or in process memory when none is given.
-     * `false` fetches the key for every verification.
+     * Caches the signing keys used for local verification per realm and key
+     * id, in process memory. `false` fetches the key for every verification.
      */
-    jwkCache?: JWKCacheOptions | false,
+    jwkCache?: {
+        /**
+         * Seconds a resolved key stays cached. Default 300.
+         */
+        ttl?: number,
+        /**
+         * Seconds a key fetch may take before it fails and the next
+         * lookup starts a fresh one. Default 10.
+         */
+        timeout?: number,
+    } | false,
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {

@@ -51,9 +51,8 @@ extracts the token from wherever they like (cookie, custom header, query string)
 
 ## Key caching
 
-Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, in the
-`cache` (`getJwk` / `setJwk`) or in process memory when none is set. `RedisVerifierCache` keeps keys
-in memory too, since a `CryptoKey` cannot be serialized. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
+Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, in
+process memory whatever token `cache` is set, since a `CryptoKey` cannot be serialized. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
 no restart, and a disabled or deleted key keeps verifying for at most the TTL. Concurrent lookups of one
 key share a single fetch, which fails after 10 seconds (`timeout`) so a stalled request to the auth server
 cannot hold up later verifications. Tune or disable the cache on the `TokenVerifier`:
@@ -71,7 +70,30 @@ const uncachedVerifier = new TokenVerifier({
 });
 ```
 
-A custom `cache` implements `getJwk` and `setJwk` next to `getToken` and `setToken`.
+## Token caching
+
+A `TokenVerifier` verifies every request anew unless you pass a `cache`. With one, each result is
+kept until the token expires and served without asking authup again, so it outlives a disabled
+signing key (local verification) or a revoked token (remote verification, with `creator`).
+`maxRemoteCacheTTL` bounds how long an introspection answer is kept. Pass a `MemoryTokenCache`
+for one process, or a `RedisTokenCache` to share results between processes:
+
+```typescript
+import { RedisTokenCache, TokenVerifier } from '@authup/server-adapter-kit';
+
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    cache: new RedisTokenCache('redis://127.0.0.1:6379'),
+});
+```
+
+Entries of a cache passed in are kept under a namespace, by default `authup:local:<baseURL>` or
+`authup:remote:<baseURL>`, so a local and a remote verifier of one deployment never answer with each
+other's results. Verifiers sharing a `cacheNamespace` must be configured identically.
+
+Remote verification introspects with the token `creator` mints and keeps it until authup answers
+`401`; it then mints a new one and asks once more. An inactive token is rejected with
+`inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
 
 ## Certificate-bound tokens
 
