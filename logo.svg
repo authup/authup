@@ -1,0 +1,17 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="au-key" x1="0" y1="0" x2="1" y2="1">
+            <stop stop-color="#6D7FCC"/>
+            <stop offset="1" stop-color="#CC8181"/>
+        </linearGradient>
+        <filter id="au-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+    </defs>
+    <rect x="8" y="8" width="240" height="240" rx="56" fill="#6D7FCC" fill-opacity="0.12"/>
+    <rect x="8.75" y="8.75" width="238.5" height="238.5" rx="55.25" stroke="#6D7FCC" stroke-opacity="0.35" stroke-width="1.5"/>
+    <g filter="url(#au-blur)" opacity="0.55">
+        <path d="M42.18 51.1 A12 12 0 1 1 57.82 51.1 L55 68 L45 68 Z" fill="#3F4C8C" transform="translate(134 140) scale(2.6) translate(-50 -49)"/>
+    </g>
+    <g transform="translate(0 0)">
+        <path d="M42.18 51.1 A12 12 0 1 1 57.82 51.1 L55 68 L45 68 Z" fill="url(#au-key)" transform="translate(128 128) scale(2.6) translate(-50 -49)"/>
+    </g>
+</svg>
