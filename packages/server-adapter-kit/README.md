@@ -88,21 +88,23 @@ Give your API's client the `token_introspect` permission. Without it the client 
 ### Cache verified tokens
 
 ```typescript
-import { MemoryVerifierCache, RedisVerifierCache, TokenVerifier } from '@authup/server-adapter-kit';
+import { MemoryTokenCache, RedisTokenCache, TokenVerifier } from '@authup/server-adapter-kit';
 
 const verifier = new TokenVerifier({
     baseURL: 'https://auth.example.com',
-    cache: new MemoryVerifierCache(),
+    cache: new MemoryTokenCache(),
 });
 
 const shared = new TokenVerifier({
     baseURL: 'https://auth.example.com',
-    cache: new RedisVerifierCache('redis://127.0.0.1:6379'),
+    cache: new RedisTokenCache('redis://127.0.0.1:6379'),
     maxRemoteCacheTTL: 60,
 });
 ```
 
-Verified results are cached only when you pass a `cache`. A result is kept for the token's remaining lifetime, or at most `maxRemoteCacheTTL` seconds in remote mode. `RedisVerifierCache` takes a connection string, a `redis-extension` client, or nothing (redis-extension's default connection); it stores results under a SHA-256 hash of the token and keeps signing keys in process memory, since a `CryptoKey` cannot be serialized.
+Verified results are cached only when you pass a `cache`. A result is kept for the token's remaining lifetime, or at most `maxRemoteCacheTTL` seconds in remote mode. Entries are keyed by a SHA-256 hash of the namespace and the token, the namespace defaulting to `authup:<local|remote>:<baseURL>`. `MemoryTokenCache` (re-exported from vouchly) keeps up to 10000 entries in process memory. `RedisTokenCache` takes a connection string, a `redis-extension` client, or nothing (redis-extension's default connection). A cache of your own implements vouchly's `ITokenCache` (`get(key)` and `set(key, entry, ttl)`).
+
+Signing keys are never stored in `cache`: they stay in process memory, since a `CryptoKey` cannot be serialized.
 
 ### Bound tokens
 
@@ -132,9 +134,10 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 |---|---|---|---|
 | `baseURL` | `string` | (required) | Base URL of the Authup API |
 | `creator` | `TokenCreator` | `undefined` | Switches to remote mode: mints the token the introspection call authenticates with |
-| `cache` | `IVerifierCache` | `undefined` | Caches verified results; without it every call verifies again |
+| `cache` | `ITokenCache \| false` | `undefined` | Caches verified results; without it every call verifies again |
+| `cacheNamespace` | `string` | `authup:<local\|remote>:<baseURL>` | Separates the entries of verifiers sharing one cache. Only verifiers with the same configuration may share a namespace |
 | `maxRemoteCacheTTL` | `number` | remaining token lifetime | Upper bound in seconds for caching a remote result |
-| `jwkCache` | `{ ttl?, timeout? } \| false` | `{ ttl: 300, timeout: 10 }` | Signing key cache for local mode, held in `cache` or in process memory. `ttl` is seconds a key stays cached (`0` stores nothing), `timeout` the seconds a key fetch may take. `false` fetches the key on every verification |
+| `jwkCache` | `{ ttl?, timeout? } \| false` | `{ ttl: 300, timeout: 10 }` | Signing key cache for local mode, held in process memory. `ttl` is seconds a key stays cached (`0` stores nothing), `timeout` the seconds a key fetch may take. `false` fetches the key on every verification |
 
 `verify(token, options)`:
 
@@ -146,20 +149,19 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 
 | Export | Kind | Purpose |
 |---|---|---|
-| `TokenVerifier` | class | `verify`, `verifyLocal`, `verifyRemote` |
+| `TokenVerifier` | class | `verify(token, options?)` |
 | `ITokenVerifier` | interface | The `verify(token, options?)` contract the adapters accept |
-| `MemoryVerifierCache` | class | In-process `IVerifierCache` with per-entry TTL |
-| `RedisVerifierCache` | class | Redis-backed `IVerifierCache` for tokens, memory for keys |
-| `IVerifierCache` | interface | `getToken` / `setToken` / `getJwk` / `setJwk`, for your own cache |
-| `JWKResolver` | class | The key cache with in-flight deduplication and fetch timeout |
+| `MemoryTokenCache` | class | In-process `ITokenCache` with per-entry TTL (re-exported from vouchly) |
+| `RedisTokenCache` | class | Redis-backed `ITokenCache` |
+| `ITokenCache`, `TokenCacheEntry` | types | vouchly's cache contract, for a cache of your own |
 | `extractBearerToken` | function | Reads the token out of an `Authorization` header value |
 | `assertTokenCertificateBinding` | function | The RFC 8705 thumbprint check on its own |
-| `TokenVerifierContext`, `TokenVerifyOptions`, `TokenVerificationData`, `JWKCacheOptions` | types | Options and result shapes |
+| `TokenVerifierContext`, `TokenVerifyOptions`, `TokenVerificationData` | types | Options and result shapes |
 
 ## Notes
 
 - **Local mode does not see revocations.** A token whose session was revoked keeps verifying until it expires, and a disabled signing key keeps verifying until its cache entry expires (5 minutes by default). Use remote mode, or a short `jwkCache.ttl`, where that matters.
-- **Errors are `JWTError`s.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`. In remote mode the server's error code is passed through.
+- **Errors are `JWTError`s.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`. In remote mode every other failure is `invalid_token`; the server's own error code is not passed through.
 - **Results are copies.** `verify` returns a clone, so mutating it never changes a cached entry.
 - **Kind-less tokens pass.** Only a present `kind` other than `access_token` is rejected.
 
