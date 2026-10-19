@@ -2,7 +2,7 @@
     "name": "@authup/core-http-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Package containing global constants, types & interfaces.",
+    "description": "Typed HTTP client for the Authup API, with a hook that obtains and refreshes tokens.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

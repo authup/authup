@@ -3,7 +3,7 @@
     "version": "1.0.0-beta.69",
     "type": "module",
     "license": "AGPL-3.0-only",
-    "description": "Authup's admin console: the administration SPA, served by server-core at /console/admin and hostable standalone.",
+    "description": "The Authup admin console: a Vue single-page app for managing realms, users, clients, roles and permissions.",
     "files": [
         "dist"
     ],

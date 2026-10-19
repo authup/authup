@@ -2,7 +2,7 @@
     "name": "@authup/server-adapter-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "A package containing a toolkit for server side adapters",
+    "description": "Verify Authup access tokens in your own API, locally against realm keys or by introspection.",
     "exports": {
         "./package.json": "./package.json",
         ".": {

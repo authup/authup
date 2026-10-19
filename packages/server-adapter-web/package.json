@@ -2,7 +2,7 @@
     "name": "@authup/server-adapter-web",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "A Web Request adapter primitive for authup.",
+    "description": "Verify the Authup access token of a Web Request, in any framework built on it.",
     "exports": {
         "./package.json": "./package.json",
         ".": {

@@ -2,7 +2,7 @@
     "name": "@authup/server-auth-console",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "The SSR service behind authup's hosted auth pages: it renders the auth console bundle and hydrates it anonymously over HTTP.",
+    "description": "The service that renders Authup's hosted login, consent, registration and password recovery pages.",
     "license": "AGPL-3.0-only",
     "bin": {
         "authup-auth-console": "dist/bin.mjs"

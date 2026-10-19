@@ -2,7 +2,7 @@
     "name": "@authup/server-config-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Declarative configuration schema: one registry per config type, deriving the environment reader, the validator mounts, the defaults and a JSON Schema document.",
+    "description": "Declare a config type once and derive its environment reader, defaults, validation and JSON Schema.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

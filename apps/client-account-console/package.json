@@ -3,7 +3,7 @@
     "version": "1.0.0-beta.69",
     "type": "module",
     "license": "AGPL-3.0-only",
-    "description": "Authup's account console: the end-user self-service SPA, served by server-core at /console/account and hostable standalone.",
+    "description": "The Authup account console: a Vue single-page app where users manage their own account.",
     "files": [
         "dist"
     ],

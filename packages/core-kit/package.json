@@ -2,7 +2,7 @@
     "name": "@authup/core-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Package containing global constants, types & interfaces.",
+    "description": "Domain types, enums and validators for every Authup entity, shared by server and clients.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

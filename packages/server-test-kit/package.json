@@ -2,7 +2,7 @@
     "name": "@authup/server-test-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Shared test fakes for server-side packages and apps.",
+    "description": "In-memory fakes for testing services built on @authup/server-kit, without a database or HTTP.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

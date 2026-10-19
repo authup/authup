@@ -2,7 +2,7 @@
     "name": "@authup/core-realtime-kit",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "Package containing a toolkit for the core realtime service.",
+    "description": "A socket.io client manager and event-name helpers for Authup's realtime entity events.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

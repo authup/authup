@@ -1,88 +1,113 @@
-<div align="center">
+<p align="center">
+    <img src="./.github/assets/logo.svg" alt="Authup logo: a periwinkle-to-rose keyhole on a translucent tile" width="128" height="128" />
+</p>
 
-[![Authup banner](./.github/assets/banner.png)](https://authup.org)
+<h1 align="center">Authup</h1>
 
-</div>
+<p align="center">
+    <b>Self-hostable identity and access management for your applications and APIs.</b><br>
+    Login pages, OAuth 2.0 and OpenID Connect, second factors, external logins and permissions,<br>
+    in one process that any language can talk to.
+</p>
 
-[![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
-[![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-[![license](https://img.shields.io/github/license/authup/authup?style=flat-square)](https://github.com/authup/authup/blob/master/LICENSING.md)
-[![stars](https://img.shields.io/github/stars/authup/authup?style=flat-square)](https://github.com/authup/authup)
-[![DOI](https://zenodo.org/badge/380934910.svg)](https://doi.org/10.5281/zenodo.20836542)
+<p align="center">
+    <a href="https://github.com/authup/authup/actions/workflows/main.yml"><img src="https://github.com/authup/authup/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
+    <a href="https://www.npmjs.com/package/authup"><img src="https://img.shields.io/npm/v/authup?label=npm" alt="npm version" /></a>
+    <a href="https://snyk.io/test/github/authup/authup"><img src="https://snyk.io/test/github/authup/authup/badge.svg" alt="Known vulnerabilities" /></a>
+    <a href="./LICENSING.md"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%2F%20Apache--2.0-blue" alt="License: AGPL-3.0 for apps, Apache-2.0 for packages" /></a>
+</p>
 
-## What is Authup?
-Authup is an authentication & authorization system.
-It is designed to be easy to use and flexible, with support for multiple authentication strategies.
-With Authup, developers can quickly and easily add authentication & authorization to their applications.
+<p align="center">
+    <a href="#why-authup"><b>Why Authup</b></a>
+    ·
+    <a href="#usage">Usage</a>
+    ·
+    <a href="#use-it-from-any-language">Integrate</a>
+    ·
+    <a href="#sdks">SDKs</a>
+    ·
+    <a href="https://authup.org">Documentation</a>
+</p>
 
-**Table of Contents**
+---
 
-- [Features](#features)
-- [Documentation](#documentation)
-- [Usage](#usage)
-  - [Quick Start](#quick-start)
-  - [Production](#production)
-  - [Development](#development)
-- [Applications](#applications)
-- [Packages](#packages)
-- [Contributing](#contributing)
-- [Citation](#citation)
-- [License](#license)
+## Why Authup?
+
+Every application with users ends up building the same layer: login and password reset pages, sessions and tokens, a second factor, "Sign in with GitHub", an admin screen, and permission checks spread through every API. Authup is that layer, run as a service and spoken to over open standards.
+
+| Concern | With Authup |
+|---|---|
+| **Sign-in** | Hosted login, consent, registration, password recovery and device verification pages, with TOTP, recovery codes, email codes and passkeys as a second factor |
+| **Protocols** | OAuth 2.0 and OpenID Connect: authorization code with PKCE, client credentials, rotating refresh tokens, device authorization, discovery, userinfo, logout |
+| **External logins** | Any OAuth2 or OpenID Connect provider (presets for GitHub, Google and others) and LDAP, linkable to existing accounts |
+| **Authorization** | Permissions granted to roles, users and clients, each scoped to a realm and optionally guarded by policies (attributes, identity, time, ...) |
+| **Tenants** | Realms, each with its own users, clients, roles and signing keys |
+| **Operations** | Admin and account consoles, a security event log, Prometheus metrics, and one image that scales out into separate replicas |
+
+<p align="center">
+    <img src="./.github/assets/architecture.svg" alt="Your applications (a web app with the authorization code flow and PKCE, a service with client credentials, a CLI with the device grant) sign in at Authup and receive tokens. One Authup process serves the OAuth2 and OpenID Connect endpoints, the realm signing keys, the management API and the auth, admin and account consoles on one origin, backed by PostgreSQL or MySQL and optionally Redis. Applications send the access token as a Bearer header to your APIs, which verify it with the realm's published keys or by introspection. For more traffic the same image runs as separate core, console and worker replicas." width="100%" />
+</p>
+
+### What sets Authup apart
+
+- **Authorization is built in.** Permissions are granted to roles, users and clients with a realm reach and optional policies, not just roles in a token.
+- **The same model runs in your services.** [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) evaluates the permissions Authup reports for a token with the server's own rules.
+- **One process.** API, login pages and consoles start with `npx authup start` and split into replicas when you need them.
 
 ## Features
 
-- 🌐 **Integration** - Easy integration into existing systems and only use the components you need
-- 🛡️ **Identity- & Access-Management** - Manage user identities and control access to resources
-- 🏭 **Clustering** - Cluster and scale authup for high availability and performance with Docker/Kubernetes
-- ⚡  **Blazing Fast** - Fast and reliable system due to microservice architecture
-- ️‍️🕵️‍♀️ **Logging & Monitoring** - Logs and monitors activities and transactions to detect potential security issues
-- 👤 **Single-Sign On** - Login once to multiple applications
-- 📜 **Standard Protocols** - [LDAP](https://datatracker.ietf.org/doc/html/rfc4511), [OAuth2.0](https://tools.ietf.org/html/rfc6749) & [OpenID Connect](https://openid.net/connect/)
-- 👍 **Social Login** - Easy enable social login (GitHub, Google, Facebook, ...)
-- 🤝 **Identity Brokering** - OpenID Connect
-- 🔓 **Simple claim based** and fully featured **subject and attribute based** authorization
-- 🧩 **Isomorphic** & **declarative** permission management. Serialize and share permissions between UI, API & microservices
-- 💻 **TypeScript** and **JavaScript** support
-- 📚 **Client** libraries
-- & much **more**
+### Sign-in
 
-## Documentation
+- 👤 **Single sign-on**: sign in once, use every application of a realm
+- 🔐 **Second factor**: TOTP, recovery codes, email codes and passkeys
+- 👍 **Social login and identity brokering**: any OAuth2 or OpenID Connect provider, with presets for GitHub, Google, Facebook, Instagram and PayPal
+- 📁 **LDAP**: sign in with directory accounts, linked to local users
 
-To read the docs, visit [https://authup.org](https://authup.org)
+### Protocols and authorization
+
+- 📜 **Standard protocols**: OAuth 2.0 and OpenID Connect, with authorization code and PKCE, client credentials, rotating refresh tokens, device authorization and logout
+- 🛡️ **Permissions and policies**: grant permissions to roles, users and clients, guarded by attribute, identity, time and realm policies
+- 🧩 **Isomorphic permissions**: evaluate the same permissions in your UI, API and services
+
+### Running it
+
+- 🏢 **Realms**: separate tenants, each with its own users, clients, roles and signing keys
+- 🖥️ **Consoles**: an admin console for every entity and an account console for end users, themable without a rebuild
+- 🗂️ **Declarative provisioning**: seed realms, clients, roles and users from YAML or JSON files
+- 🕵️ **Logging and monitoring**: a security event log with a dashboard, and Prometheus metrics
+- 🏭 **Scaling**: one image that splits into API, console and worker replicas, with a Helm chart
+
+### Building on it
+
+- 📚 **Client libraries**: a typed HTTP client, server adapters, and Vue and Nuxt components
 
 ## Usage
 
-How Authup can be configured and set up in detail, you can find out [here](https://authup.org/guide/deployment/).
+How to configure and set up Authup in detail is covered in the [deployment guide](https://authup.org/guide/deployment/).
 
-### Quick Start
-
-The fastest way to try Authup out is the global CLI. It needs no configuration:
+### Quick start
 
 ```shell
-$ npx authup@latest start
+npx authup@latest start
 ```
 
-With no database configured, Authup falls back to SQLite and writes `db.sqlite`
-into the current working directory. That is meant for trying things out and for
-local development. It is not a production setup.
+With no database configured, Authup falls back to SQLite and writes `db.sqlite` into the current directory. That is for trying things out, not for production.
 
 It serves:
+
 - API: `http://localhost:3000/`
-- Auth console (login, consent, register, password recovery): served under `http://localhost:3000/console/auth/`
+- Auth console (login, consent, registration, password recovery): `http://localhost:3000/console/auth/`
 - Admin console: `http://localhost:3000/console/admin`
 - Account console: `http://localhost:3000/console/account`
 
-To find out how to configure and set up the bare metal variant in detail, click
-[here](https://authup.org/guide/deployment/bare-metal).
+Sign in to the admin console as `admin` with the password `start123` in the `master` realm, and change it. The bare-metal setup is described in the [bare-metal guide](https://authup.org/guide/deployment/bare-metal).
 
 ### Production
 
-The **recommended** and optimal way to set up authup is using docker.
-One container runs the whole deployment against a PostgreSQL or MySQL database you already have.
+The recommended way to run Authup is the Docker image. One container runs the whole deployment against a PostgreSQL or MySQL database you already have:
 
 ```shell
-$ docker run \
+docker run \
   -p 3000:3000 \
   -e PUBLIC_URL=http://localhost:3000 \
   -e DB_TYPE=postgres \
@@ -94,107 +119,87 @@ $ docker run \
   authup/authup:latest start
 ```
 
-The image runs in production mode, which does not support SQLite, so it does not start until a server database is configured, via `DB_*` or a `db:` block in `authup.yml`.
+The image runs in production mode, which does not support SQLite, so it does not start until a server database is configured, through `DB_*` or a `db:` block in `authup.yml`. It serves the same paths as the quick start.
 
-It serves:
-- API: `http://localhost:3000/`
-- Auth console (login, consent, register, password recovery): served under `http://localhost:3000/console/auth/`
-- Admin console: `http://localhost:3000/console/admin`
-- Account console: `http://localhost:3000/console/account`
-
-For the full setup, including a compose file that brings the database with it, see the [deployment guide](https://authup.org/guide/deployment/).
-
-Rather than writing those files by hand, run `npm create authup@latest`: a few
-prompts write a compose project, helm values, a `docker run` env file or a
-bare-metal project. The container targets pin the image tag and the bare-metal
-project pins the `authup` dependency to the release the wizard belongs to; the
-helm values name no tag, since the chart's `appVersion` owns it.
+Rather than writing the deployment files by hand, run `npm create authup@latest`: a few prompts write a compose project, Helm values, a `docker run` env file or a bare-metal project. The container targets pin the image tag and the bare-metal project pins the `authup` dependency to the release the wizard belongs to; the Helm values name no tag, since the chart's `appVersion` owns it.
 
 ### Development
 
-Install the workspace dependencies, build once, and start the unified development
-loop:
+Install the workspace dependencies, build once, and start the development loop:
 
 ```shell
-$ npm i
-$ npm run build
-$ npm run dev
+npm install
+npm run build
+npm run dev
 ```
 
-This runs the experimental `authup dev` command: server-core and every console
-share `http://localhost:3000/`, the consoles use hot module replacement, and
-server-core runs directly from TypeScript source.
+This runs the experimental `authup dev` command: server-core and every console share `http://localhost:3000/`, the consoles use hot module replacement, and server-core runs directly from TypeScript source. `npm run test` and `npm run lint` run the test suite and the linter (after a build).
 
-To work on the admin console against a standalone dev server instead, start it in
-a second terminal:
+To work on the admin console against a standalone dev server instead, start it in a second terminal:
 
 ```shell
-$ VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
+VITE_API_URL=http://localhost:3000 npm run dev --workspace=apps/client-admin-console
 ```
 
 It listens on `http://localhost:5173/console/admin/`.
 
-## Applications
-The repository contains the following application workspaces:
+## Use it from any language
 
-| Name | Type | Description |
-|---|---|---|
-| [authup](apps/authup) | CLI | The operator binary. It composes the core and enabled console services in one process and provides the `start`, `migration`, `healthcheck`, and `config` commands. |
-| [client-account-console](apps/client-account-console) | Bundle | The end-user self-service SPA, served by `server-account-console` or hosted as static files. |
-| [client-admin-console](apps/client-admin-console) | Bundle | The administration SPA, served by `server-admin-console` or hosted as static files. |
-| [client-auth-console](apps/client-auth-console) | Bundle | The server-rendered login, consent, registration, and account-recovery UI rendered by `server-auth-console`. |
-| [server-account-console](apps/server-account-console) | Service | Serves the account console bundle with runtime configuration and theming. |
-| [server-admin-console](apps/server-admin-console) | Service | Serves the admin console bundle with runtime configuration and theming. |
-| [server-auth-console](apps/server-auth-console) | Service | Renders the hosted auth workflow pages on the identity-provider origin. |
-| [server-core](apps/server-core) | Service | Provides the OAuth2/OpenID Connect endpoints and management API; it renders no console and ships no binary. |
+Authup speaks OAuth 2.0 and OpenID Connect, so the library you already use for "Sign in with ..." works with it, whatever your stack. Point it at the discovery document:
 
-## Packages
-The repository contains the following packages:
+```text
+http://localhost:3000/realms/master/.well-known/openid-configuration
+```
 
-| Name | Description |
+<p align="center">
+    <img src="./.github/assets/flow.svg" alt="Your application sends the browser to the hosted /authorize page with PKCE. The person signs in with a password, LDAP or an external provider, completes a second factor if one is enrolled, and consents once per application. Your application redeems the code at /token for an access and a refresh token. Your API verifies the access token and decides with grants: each grant is a permission, a realm reach of own, ownOrNull or any, and an optional policy." width="100%" />
+</p>
+
+### Protect your API
+
+Verify the access token like any JWT, against the keys at the `jwks_uri` of the discovery document, or ask Authup about it with token introspection, which also returns the subject's permissions:
+
+```shell
+curl -d "token=$ACCESS_TOKEN" \
+  -d "client_id=$CLIENT_ID" -d "client_secret=$CLIENT_SECRET" \
+  http://localhost:3000/token/introspect
+```
+
+To introspect tokens issued to other clients, the calling client needs the `token_introspect` permission. Node, Socket.IO and Web `Request` servers can use a [server adapter](https://github.com/authup/authup/tree/master/packages/server-adapter-node) instead, which does both and caches the keys.
+
+### Call the management API
+
+Everything the admin console does goes through a REST API. Get a token with client credentials and call it:
+
+```shell
+curl -d "grant_type=client_credentials" \
+  -d "client_id=$CLIENT_ID" -d "client_secret=$CLIENT_SECRET" \
+  http://localhost:3000/token
+
+curl -g -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "http://localhost:3000/users?page[limit]=20"
+```
+
+The OpenAPI document is served at `/docs/openapi.json`. From a terminal, `npx authup login` and `npx authup api user list` do the same without curl.
+
+## SDKs
+
+Optional packages for JavaScript and TypeScript, for when you want typed calls instead of raw HTTP:
+
+| Package | For |
 |---|---|
-| [access](packages/access) | Permission and policy evaluation. |
-| [client-web-kit](packages/client-web-kit) | Reusable Vue components, composables, and web utilities. |
-| [client-web-kit-theme](packages/client-web-kit-theme) | Base vuecs theme and component styles for `client-web-kit`. |
-| [client-web-nuxt](packages/client-web-nuxt) | Nuxt integration for Authup web clients. |
-| [client-web-theme](packages/client-web-theme) | Authup's application theme for vuecs components. |
-| [core-http-kit](packages/core-http-kit) | HTTP client and resource APIs for Authup. |
-| [core-kit](packages/core-kit) | Shared core constants, types, and utilities. |
-| [core-realtime-kit](packages/core-realtime-kit) | Toolkit for Authup realtime clients. |
-| [errors](packages/errors) | Shared error codes and error classes. |
-| [i18n](packages/i18n) | Framework-agnostic translations and locale registry. |
-| [kit](packages/kit) | General context-independent utilities. |
-| [server-adapter-kit](packages/server-adapter-kit) | Shared token verification, caching, and types for server adapters. |
-| [server-adapter-node](packages/server-adapter-node) | Node.js request middleware for token verification. |
-| [server-adapter-socket-io](packages/server-adapter-socket-io) | Socket.IO middleware for token verification. |
-| [server-adapter-web](packages/server-adapter-web) | Web `Request` adapter primitive for token verification. |
-| [server-config](packages/server-config) | The complete declarative `authup.yml` configuration registry. |
-| [server-config-kit](packages/server-config-kit) | Configuration registries, environment readers, validation, defaults, and JSON Schema generation. |
-| [server-console-kit](packages/server-console-kit) | Shared console-serving, security-header, asset, shell, and theming mechanisms. |
-| [server-kit](packages/server-kit) | Shared server-side contracts and utilities. |
-| [server-test-kit](packages/server-test-kit) | Shared test fakes for server packages and applications. |
-| [specs](packages/specs) | Constants, types, and utilities for supported specifications. |
+| [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) | A typed client for every endpoint, with token refresh |
+| [`@authup/server-adapter-node`](https://github.com/authup/authup/tree/master/packages/server-adapter-node), [`-socket-io`](https://github.com/authup/authup/tree/master/packages/server-adapter-socket-io), [`-web`](https://github.com/authup/authup/tree/master/packages/server-adapter-web) | Token verification middleware for your APIs |
+| [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) | Permission and policy evaluation in your own service |
+| [`@authup/client-web-kit`](https://github.com/authup/authup/tree/master/packages/client-web-kit), [`@authup/client-web-nuxt`](https://github.com/authup/authup/tree/master/packages/client-web-nuxt) | Vue components and a Nuxt module for sign-in and administration |
+
+The other workspaces under [`apps/`](apps) and [`packages/`](packages) make up Authup itself; each has its own README.
 
 ## Contributing
 
 Before starting to work on a pull request, it is important to review the guidelines for
 [contributing](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md).
 These guidelines will help to ensure that contributions are made effectively and are accepted.
-
-## Comparison
-
-|                                                 | Authup | Keycloak | Authentic | Authelia |
-|:------------------------------------------------|:------:|:--------:|:---------:|:--------:|
-| Realm Resources (User, Roles, Permissions, ...) |   ✓    |    ✓     |     ✗     |    ✗     |
-| Global Resources (Roles, Permissions, ...)      |   ✓    |    ✗     |     ✓     |    ✓     |
-| Modular System                                  |   ✓    |    ✗     |     ✓     |    ✗     |
-| Client Library                                  |   ✓    |    ✓     |     ✓     |    ✗     |
-| Vue.JS Library                                  |   ✓    |    ✗     |     ✗     |    ✗     |
-| OAuth2 Protocol                                 |   ✓    |    ✓     |     ✓     |    ✓     |
-| OpenID Connect Protocol                         |   ✓    |    ✓     |     ✓     |    ✓     |
-| LDAP Protocol                                   |   ✓    |    ✗     |     ✓     |    ✓     |
-
-
 
 ## Citation
 

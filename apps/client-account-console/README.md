@@ -1,71 +1,96 @@
-# @authup/client-account-console 👤
+<p align="center">
+    <img src="https://raw.githubusercontent.com/authup/authup/master/.github/assets/logo.svg" alt="Authup logo" width="96" height="96" />
+</p>
 
-[![npm version](https://badge.fury.io/js/@authup%2Fclient-account-console.svg)](https://badge.fury.io/js/@authup%2Fclient-account-console)
-[![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
-[![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
+<h1 align="center">@authup/client-account-console</h1>
 
-This is the account console for Authup: the end-user self-service surface
-(profile, password, authenticators, sessions, application consents).
+<p align="center">
+    <b>The Authup account console: a Vue single-page app where users manage their own account.</b><br>
+    A built bundle with no process of its own, served by @authup/server-account-console or by any static host.
+</p>
 
-It is a client-only single-page application. The authup server
-(`@authup/server-core`) depends on this package and serves the built
-bundle at `<publicUrl>/console/account`; the same bundle can be hosted standalone
-on any static host. See the deployment guide for details, including the
-runtime configuration contract (`window.__AUTHUP__` via the
-`<!--account-config-->` marker in `index.html`).
+<p align="center">
+    <a href="https://www.npmjs.com/package/@authup/client-account-console"><img src="https://img.shields.io/npm/v/@authup/client-account-console" alt="npm version" /></a>
+    <a href="https://github.com/authup/authup/actions/workflows/main.yml"><img src="https://github.com/authup/authup/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License: AGPL-3.0" /></a>
+</p>
+
+<p align="center">
+    <a href="#installation"><b>Installation</b></a> · <a href="#usage">Usage</a> · <a href="#runtime-configuration">Configuration</a> · <a href="https://authup.org">Documentation</a>
+</p>
+
+---
+
+## Where it fits
+
+The package ships `dist/` and nothing else: no server, no binary. [`@authup/server-account-console`](https://github.com/authup/authup/tree/master/apps/server-account-console) depends on it and serves it at `<publicUrl>/console/account`, which is what `authup start` does. Its pages cover the profile, the password, authenticators (TOTP, recovery codes, email codes, passkeys), connected external accounts, sessions and the applications a user has granted access to.
+
+Link your users to `<publicUrl>/console/account?ref=<your app's URL>`: the console renders a back link to the application they came from.
+
+Install the package directly only to host the console on another static host, or to substitute a fork of it through `accountConsole.path`.
+
+## Installation
+
+```shell
+npm install @authup/client-account-console
+```
+
+The bundle is under `node_modules/@authup/client-account-console/dist`.
+
+## Usage
+
+### Served by Authup
+
+Nothing to configure. The service injects the runtime configuration into the shell on every request, validates `ref` against the trusted origins, and the console signs in with an `HttpOnly` session cookie on the API's own origin, so no token is held in JavaScript.
+
+- `ACCOUNT_CONSOLE_ENABLED=false` makes the console render a disabled notice and turns its server-side login off.
+- `ACCOUNT_CONSOLE_PATH` points the service at a substituted package directory instead of this one.
+
+### Hosted on its own
+
+1. Serve `dist/` under `/console/account/`, the base the bundle was built with, and answer every deep link with `index.html`.
+2. Replace the `<!--account-config-->` marker in `index.html` with the configuration:
+
+   ```html
+   <script>window.__AUTHUP__ = { apiUrl: 'https://auth.example.com' };</script>
+   ```
+
+3. Add the host's origin to the server's `TRUSTED_ORIGINS`, so the per-realm `account-console` client accepts the redirect back.
+
+On a foreign origin the session cookie cannot be presented, so the console signs in through the authorization code flow with PKCE in the browser instead.
+
+## Runtime configuration
+
+`window.__AUTHUP__` may carry:
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `apiUrl` | `string` | the page's origin plus any prefix in front of `/console/account` | The API base URL |
+| `basePath` | `string` | `/console/account` | The router base |
+| `ref` | `string` | none | The back-link target. The app never reads `ref` from its own URL, so a static host that wants one validates it and injects it here |
+| `cookieSession` | `boolean` | `false` | Set by the serving service: it implements the cookie-mode login routes. Applies only when `apiUrl` is the page's own origin |
+| `features.accountConsole` | `boolean` | `true` | `false` renders the disabled notice |
 
 ## Development
 
-The dev server needs a running authup server to talk to.
+From the repository root, `npm run dev` serves this console through Vite with hot module replacement at `http://localhost:3000/console/account`, on the API's own origin.
 
-1. Start (or pick) an authup server. Outside production the vite origin
-   (`http://localhost:5173`) is seeded into the trusted origins already, so
-   the per-realm `account-console` OAuth2 client accepts the sign-in
-   round-trip with no configuration:
+On its own, against a running Authup server:
 
-   ```sh
-   authup start
-   ```
-
-   From the repository, after `npm run build`:
-
-   ```sh
-   npm run cli -w apps/server-core -- start
-   ```
-
-   Only one standalone console can hold the port, so if the admin console's
-   dev server already has it, run this one through `authup dev` instead or
-   give it its own `TRUSTED_ORIGINS` entry.
-
-2. Run the dev server with the API URL injected:
-
-   ```sh
-   VITE_API_URL=http://localhost:3000 npm run dev
-   ```
-
-   (`VITE_API_URL` can also live in a local `.env.local`. Without it the
-   app assumes it is served by the authup origin itself and derives the
-   API URL from its own location, which is wrong under the vite dev
-   server.)
-
-3. Open <http://localhost:5173/console/account>: the app is mounted under its
-   canonical `/console/account` base path in dev too.
-
-Sign-in leaves the dev origin for the server's hosted login and returns
-with an authorization code, so the full flow works against the real API.
-
-## Build
-
-```sh
-npm run build
+```shell
+VITE_API_URL=http://localhost:3000 npm run dev    # Vite on http://localhost:5173/console/account/
+npm run build                                       # dist/, what the service serves
 ```
 
-Emits the static bundle to `dist/` (the artifact this package ships).
+Outside production `http://localhost:5173` is a trusted origin by default, so the sign-in redirect works without configuration. The port is strict, so only one console's standalone dev server can run at a time; run the other through `npm run dev` at the root.
+
+## Notes
+
+- **A missing marker fails silently.** Without `<!--account-config-->` replaced, the console still loads and derives the API URL from its own location, which is only right when it is served on the API's origin.
+- **The asset base is fixed at build time.** `index.html` references its assets under `/console/account/`. The service rewrites those references for any other published path; a static host serving the bundle elsewhere has to do the same or rebuild with another Vite base.
 
 ## License
 
 Made with 💚
 
-Published under the [AGPL-3.0 License](./LICENSE).
-A commercial license is available for organizations that cannot meet the AGPL's conditions:
-see [LICENSING.md](../../LICENSING.md) or contact **contact@tada5hi.net**.
+Published under the [AGPL-3.0](./LICENSE). A commercial license is available; see [LICENSING.md](https://github.com/authup/authup/blob/master/LICENSING.md).

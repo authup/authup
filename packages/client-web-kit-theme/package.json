@@ -2,7 +2,7 @@
   "name": "@authup/client-web-kit-theme",
   "type": "module",
   "version": "1.0.0-beta.69",
-  "description": "Kit-level vuecs theme for authup - composes @vuecs/theme-tailwind with the overrides @authup/client-web-kit's components need.",
+  "description": "The styles and vuecs theme the @authup/client-web-kit components render with, built on Tailwind CSS v4.",
   "license": "Apache-2.0",
   "exports": {
     "./package.json": "./package.json",

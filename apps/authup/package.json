@@ -2,7 +2,7 @@
     "name": "authup",
     "type": "module",
     "version": "1.0.0-beta.69",
-    "description": "This is the CLI for the authup ecosystem.",
+    "description": "The Authup CLI: start the identity provider, run migrations, and manage a deployment from your terminal.",
     "license": "AGPL-3.0-only",
     "files": [
         "dist"
@@ -42,7 +42,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/authup"
+        "directory": "apps/authup"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
