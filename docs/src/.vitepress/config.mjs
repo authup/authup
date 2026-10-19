@@ -32,6 +32,14 @@ const guideContributingSidebar = [
 
 export default defineConfig({
     title: 'Authup',
+    head: [
+        ['link', {
+            rel: 'icon', 
+            type: 'image/svg+xml', 
+            href: '/logo.svg', 
+        }],
+        ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
+    ],
     base: '/',
     vite: {
         plugins: [tailwindcss()],
@@ -60,6 +68,7 @@ export default defineConfig({
      */
     ignoreDeadLinks: [/(^|\/)api-query-reference$/],
     themeConfig: {
+        logo: { src: '/logo.svg', alt: 'Authup logo' },
         socialLinks: [
             {
                 icon: 'github',
