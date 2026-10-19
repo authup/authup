@@ -12,9 +12,7 @@ import type { ClientAuthenticationHookEventName } from './constants';
 
 export type ClientAuthenticationHookOptions = {
     /**
-     * The URL of the api service.
-     *
-     * default: client.baseURL
+     * @deprecated Ignored: the hook acts on the clients attached to it. Will be removed.
      */
     baseURL?: string,
     /**

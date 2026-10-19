@@ -109,7 +109,7 @@ client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
 | Method | Grant |
 |---|---|
-| `createWithPassword({ username, password, realm_id?, realm_name? })` | `password` |
+| `createWithPassword({ username, password, otp?, realm_id?, realm_name? })` | `password` |
 | `createWithClientCredentials({ client_id, client_secret })` | `client_credentials` |
 | `createWithRefreshToken({ refresh_token })` | `refresh_token` |
 | `createWithAuthorizationCode({ code, redirect_uri, code_verifier? })` | `authorization_code` |
@@ -117,7 +117,7 @@ client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 | `introspect({ token })` | `POST /token/introspect` |
 | `revoke({ token })` | `POST /token/revoke` |
 
-A user holding a second factor adds `otp` (a TOTP or recovery code) to the password grant. The field is declared on `IOAuth2TokenAPI`, so type the client as `IClient` to pass it.
+A user holding a second factor adds `otp` (a TOTP or recovery code) to the password grant.
 
 ### Keep a token fresh
 
