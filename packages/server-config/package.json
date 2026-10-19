@@ -52,6 +52,7 @@
         "@authup/core-kit": "^1.0.0-beta.69",
         "@authup/kit": "^1.0.0-beta.69",
         "@authup/server-config-kit": "^1.0.0-beta.69",
+        "confinity": "^2.0.1",
         "envix": "^1.5.0",
         "zod": "^4.6.7"
     },
