@@ -27,8 +27,22 @@ describe('core/entities/role-attribute/service', () => {
     let repository: FakeEntityRepository<RoleAttribute>;
     let service: RoleAttributeService;
 
+    let roles: Map<string, { id: string, realmId: string | null }>;
+
+    const createRole = (realmId: string | null) => {
+        const id = randomUUID();
+        roles.set(id, { id, realmId });
+        return id;
+    };
+
     beforeEach(() => {
+        roles = new Map();
         repository = new FakeEntityRepository<RoleAttribute>({ defaults: { realmId: null } });
+        repository.onValidateJoinColumns((data: Record<string, any>) => {
+            if (typeof data.roleId === 'string' && roles.has(data.roleId)) {
+                data.role = roles.get(data.roleId);
+            }
+        });
         service = new RoleAttributeService({ repository });
     });
 
@@ -45,11 +59,11 @@ describe('core/entities/role-attribute/service', () => {
             const [, denied] = repository.seed([
                 createFakeRoleAttribute({
                     name: 'allowed',
-                    roleId: 'role-1', 
+                    roleId: 'role-1',
                 }),
                 createFakeRoleAttribute({
                     name: 'denied',
-                    roleId: 'role-2', 
+                    roleId: 'role-2',
                 }),
             ]);
 
@@ -141,8 +155,7 @@ describe('core/entities/role-attribute/service', () => {
             const data = {
                 name: 'new-attr',
                 value: 'val',
-                roleId: randomUUID(),
-                role: { realmId: roleRealmId },
+                roleId: createRole(roleRealmId),
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -155,8 +168,7 @@ describe('core/entities/role-attribute/service', () => {
             await service.create({
                 name: 'attr',
                 value: 'val',
-                roleId: randomUUID(),
-                role: { realmId: null },
+                roleId: createRole(null),
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
@@ -166,8 +178,7 @@ describe('core/entities/role-attribute/service', () => {
             await expect(
                 service.create({
                     name: 'attr',
-                    roleId: randomUUID(),
-                    role: { realmId: null },
+                    roleId: createRole(null),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -191,18 +202,54 @@ describe('core/entities/role-attribute/service', () => {
             });
 
             await expect(service.create({
-                name: 'attr', 
-                value: 'v', 
-                roleId: randomUUID(), 
-                role: { realmId: 'realm-a' },
+                name: 'attr',
+                value: 'v',
+                roleId: createRole('realm-a'),
             }, actor)).resolves.toBeDefined();
 
             await expect(service.create({
-                name: 'attr', 
-                value: 'v', 
-                roleId: randomUUID(), 
-                role: { realmId: 'realm-b' },
+                name: 'attr',
+                value: 'v',
+                roleId: createRole('realm-b'),
             }, actor)).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('takes the realm from the loaded role, never from a role object in the body', async () => {
+            const roleId = createRole('realm-b');
+
+            const actor = createAllowAllActor();
+            const result = await service.create({
+                name: 'attr',
+                value: 'v',
+                role: { id: roleId, realmId: 'realm-a' },
+            }, actor);
+
+            expect(result.roleId).toBe(roleId);
+            expect(result.realmId).toBe('realm-b');
+            expect(actor.permissionEvaluator.evaluateCalls.at(-1)?.data?.get(BuiltInPolicyType.REALM_MATCH)).toBe('realm-b');
+        });
+
+        it('prefers roleId over the id of a role object', async () => {
+            const roleId = createRole('realm-a');
+            const otherId = createRole('realm-b');
+
+            const result = await service.create({
+                name: 'attr',
+                value: 'v',
+                roleId,
+                role: { id: otherId, realmId: 'realm-b' },
+            }, createAllowAllActor());
+
+            expect(result.roleId).toBe(roleId);
+            expect(result.realmId).toBe('realm-a');
+        });
+
+        it('refuses a body naming no role', async () => {
+            await expect(service.create({
+                name: 'attr',
+                value: 'v',
+                role: { realmId: 'realm-a' },
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
     });
 
@@ -210,7 +257,7 @@ describe('core/entities/role-attribute/service', () => {
         it('should update an existing attribute', async () => {
             const entity = repository.seed(createFakeRoleAttribute({
                 name: 'old',
-                value: 'old-val', 
+                value: 'old-val',
             }));
 
             const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
@@ -287,9 +334,9 @@ describe('core/entities/role-attribute/service', () => {
             const result = await service.update(
                 entity.id,
                 {
-                    value: 'x', 
-                    roleId: 'role-other', 
-                    role: { realmId: 'realm-b' }, 
+                    value: 'x',
+                    roleId: 'role-other',
+                    role: { realmId: 'realm-b' },
                 },
                 actor,
             );
