@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.69)
+## v1.0.0-beta.70 (was: next release after v1.0.0-beta.69)
 
 ### Single-record checks are matched against the record's realm
 
