@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735))
+
+### Bug Fixes
+
+* ensure consistent version for release ([b483f08](https://github.com/authup/authup/commit/b483f08b23183dbfbe72f97c9f664a02a0cf7726))
+
+
+### Code Refactoring
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735)) ([ad33d06](https://github.com/authup/authup/commit/ad33d068f58184aaeb85e9a45f9a8a885f1eb414))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/core-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/server-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

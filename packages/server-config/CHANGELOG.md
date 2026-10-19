@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#3747](https://github.com/authup/authup/issues/3747)) ([072e407](https://github.com/authup/authup/commit/072e40743474056fd6cb5c4bdf2ff912d172b2f0))
+* follow-ups from the README rewrite ([#3744](https://github.com/authup/authup/issues/3744)) ([#3750](https://github.com/authup/authup/issues/3750)) ([e79a2c6](https://github.com/authup/authup/commit/e79a2c6aeaa426c1d291cdaf7fb25770f4d2ebc5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/server-config-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

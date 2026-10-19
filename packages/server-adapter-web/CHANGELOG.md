@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter-kit:** ITokenVerifierCache is renamed to IVerifierCache and its get/set methods to getToken/setToken; implementations must also provide getJwk/setJwk. MemoryTokenVerifierCache and RedisTokenVerifierCache are renamed to MemoryVerifierCache and RedisVerifierCache.
+
+### Features
+
+* **server-adapter-kit:** cache signing keys in TokenVerifier ([#3739](https://github.com/authup/authup/issues/3739)) ([cf30274](https://github.com/authup/authup/commit/cf3027447aa2e1b8f46cd66aa7100a3c4a564c74))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+  * devDependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/errors bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/server-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/specs bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

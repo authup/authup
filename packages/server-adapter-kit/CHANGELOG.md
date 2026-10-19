@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter-kit:** verify tokens through vouchly ([#3745](https://github.com/authup/authup/issues/3745))
+* **server-adapter-kit:** ITokenVerifierCache is renamed to IVerifierCache and its get/set methods to getToken/setToken; implementations must also provide getJwk/setJwk. MemoryTokenVerifierCache and RedisTokenVerifierCache are renamed to MemoryVerifierCache and RedisVerifierCache.
+
+### Features
+
+* **server-adapter-kit:** cache signing keys in TokenVerifier ([#3739](https://github.com/authup/authup/issues/3739)) ([cf30274](https://github.com/authup/authup/commit/cf3027447aa2e1b8f46cd66aa7100a3c4a564c74))
+
+
+### Bug Fixes
+
+* **server-adapter-kit:** reject altered token strings and short RSA keys ([#3743](https://github.com/authup/authup/issues/3743)) ([ec15ef2](https://github.com/authup/authup/commit/ec15ef2a5f22926245870da213d2e0f93f68175e))
+* **server-core:** take a role attribute's realm from the stored role ([#3748](https://github.com/authup/authup/issues/3748)) ([2e2a826](https://github.com/authup/authup/commit/2e2a826328f30a20693e80226eeb73194d2e2e35))
+
+
+### Code Refactoring
+
+* **server-adapter-kit:** verify tokens through vouchly ([#3745](https://github.com/authup/authup/issues/3745)) ([2b23de4](https://github.com/authup/authup/commit/2b23de4bda0329d455bc23b5273b5b5cd3dc5a64))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/errors bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/specs bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+  * devDependencies
+    * @authup/server-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 
