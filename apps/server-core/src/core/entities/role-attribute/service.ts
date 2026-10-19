@@ -12,11 +12,13 @@ import {
     reachesRecordOneOf,
 } from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { inArray } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
+import { buildErrorMessageForAttribute } from 'validup';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { roleAttributeSchema } from './schema.ts';
@@ -137,10 +139,32 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
     ): Promise<RoleAttribute> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
+        // A body may name the owner through the `role` relation, but only its
+        // ID is taken: with no join column to resolve it from,
+        // `validateJoinColumns` keeps such an object VERBATIM, and its
+        // `realmId` would then gate ROLE_UPDATE against a realm of the
+        // caller's choosing. Reduced to the id, the realm comes from the row
+        // the join-column validation loads. A `roleId` alongside it wins.
+        if (typeof data.role !== 'undefined') {
+            const relationId = isObject(data.role) ? data.role.id : undefined;
+            data.roleId = data.roleId || relationId;
+        }
+
+        delete data.role;
+        delete data.realmId;
+
+        if (typeof data.roleId !== 'string') {
+            throw new ValidationError(buildErrorMessageForAttribute('roleId'));
+        }
+
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
             throw new ValidationError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
+        }
+
+        if (!isObject(data.role)) {
+            throw new EntityNotFoundError();
         }
 
         data.realmId = data.role.realmId;

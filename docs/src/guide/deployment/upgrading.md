@@ -7,6 +7,53 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.69)
 
+### Single-record checks are matched against the record's realm
+
+Every check on one stored record now names that record's realm, so a grant's
+realm scope is applied where it used to neutral-pass.
+
+**May need action**
+
+- **Realm update and delete are checked for realm reach.** A realm's own realm
+  is the realm itself, so a `realm_update` or `realm_delete` grant at the
+  default `own` reach now manages only the actor's own realm, and one at
+  `realmScope: none` manages none. Re-grant it at `any` where an actor manages
+  other realms. The built-in `admin` role already holds both at `any`.
+- **Self-manage grants are checked for realm reach.** A user or client editing
+  itself, rotating its own client secret or writing its own user attributes is
+  now matched against its own realm. A `user_self_manage` or
+  `client_self_manage` grant at `own`, `ownOrNull` or `any` keeps working; one
+  stored at `realmScope: none` (which reaches nothing) no longer permits
+  self-edits. Re-grant it at `own` where self-service is intended.
+- **A role attribute takes its realm from the role it is attached to.**
+  `POST /role-attributes` names the role by `roleId` (or by the `id` of a
+  `role` object, `roleId` winning). A `realmId` inside a `role` object is
+  ignored, so an attribute can no longer be written onto a role outside the
+  actor's reach, and a body naming no role answers `400`.
+- **`@authup/server-kit` integrators.** `AbstractEntityService.resourceRealmMatch`
+  is removed and `evaluateUpdate` requires a `{ realm: (row) => ... }`
+  resolver. Use `evaluateRecord`, `evaluateRecordOneOf` and
+  `evaluateRecordUpdate` from `@authup/access`, which refuse an undefined
+  realm instead of skipping the realm check.
+
+### A token's scope restricts its grants, never its identity
+
+A bearer whose token lacks the `global` scope is now evaluated **with** its
+identity and **without** its grants. Before, the identity itself was withheld.
+
+**May need action**
+
+- A permission or policy whose tree reads only the identity (an `identity`,
+  `realmMatch`, `date` or `time` policy, with no permission-binding policy) now
+  evaluates for such a token instead of denying. Every permission bound to the
+  default `system.default` policy still denies, since that policy needs a
+  grant. Check operator-defined permissions that were unbound from
+  `system.default` if a scope-restricted token must not reach them.
+- `POST /permissions/:id/check` and `POST /policies/:id/check` without an
+  `identity` evaluate such a token as itself with no grants, rather than with
+  no identity (the beta.66 note below describes the behaviour before this
+  release). Naming another subject still requires `permission_check`.
+
 ### Server adapters verify tokens through vouchly
 
 `@authup/server-adapter-kit` (and with it the node, web and socket.io adapters)
@@ -214,17 +261,6 @@ the ones that can break an existing setup come first.
   writes too when the request is https (behind a TLS-terminating proxy, send
   `X-Forwarded-Proto: https`). Send `Strict-Transport-Security` from your
   reverse proxy.
-- **Realm update and delete are checked for realm reach.** A realm's own realm
-  is the realm itself, so a `realm_update` or `realm_delete` grant at the
-  default `own` reach now manages only the actor's own realm, and one at
-  `realmScope: none` manages none. Re-grant it at `any` where an actor manages
-  other realms. The built-in `admin` role already holds both at `any`.
-- **Self-manage grants are checked for realm reach.** A user or client editing
-  itself, rotating its own client secret or writing its own user attributes is
-  now matched against its own realm. A `user_self_manage` or
-  `client_self_manage` grant at `own`, `ownOrNull` or `any` keeps working; one
-  stored at `realmScope: none` (which reaches nothing) no longer permits
-  self-edits. Re-grant it at `own` where self-service is intended.
 
 **No action**
 
