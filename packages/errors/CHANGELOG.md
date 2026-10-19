@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([b483f08](https://github.com/authup/authup/commit/b483f08b23183dbfbe72f97c9f664a02a0cf7726))
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

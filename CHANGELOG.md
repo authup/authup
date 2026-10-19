@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter-kit:** verify tokens through vouchly ([#3745](https://github.com/authup/authup/issues/3745))
+* **server-adapter-kit:** ITokenVerifierCache is renamed to IVerifierCache and its get/set methods to getToken/setToken; implementations must also provide getJwk/setJwk. MemoryTokenVerifierCache and RedisTokenVerifierCache are renamed to MemoryVerifierCache and RedisVerifierCache.
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735))
+* **access:** a REALM_UPDATE grant at own (or ownOrNull) reach updates the actor's own realm only; before, the reach factor neutral-passed and such a grant updated every realm. resourceRealmMatch is deprecated.
+* **server-core:** a permission or policy whose tree only reads the identity (no permission-binding policy) now evaluates for a token without `global` instead of denying. Grant-bound permissions still deny, and naming another subject on the check routes still requires permission_check.
+
+### Features
+
+* **access:** record-reach helpers and a required realm on entity updates ([#3732](https://github.com/authup/authup/issues/3732)) ([9a46f98](https://github.com/authup/authup/commit/9a46f987d4d134f46862ecba7b633aa853b77928))
+* **server-adapter-kit:** cache signing keys in TokenVerifier ([#3739](https://github.com/authup/authup/issues/3739)) ([cf30274](https://github.com/authup/authup/commit/cf3027447aa2e1b8f46cd66aa7100a3c4a564c74))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#3747](https://github.com/authup/authup/issues/3747)) ([072e407](https://github.com/authup/authup/commit/072e40743474056fd6cb5c4bdf2ff912d172b2f0))
+* **deps:** patch vulnerable transitive dependencies ([#3721](https://github.com/authup/authup/issues/3721)) ([4e2003a](https://github.com/authup/authup/commit/4e2003acb86a5061f702a0f0913ee99257166ba5))
+* ensure consistent version for release ([b483f08](https://github.com/authup/authup/commit/b483f08b23183dbfbe72f97c9f664a02a0cf7726))
+* follow-ups from the README rewrite ([#3744](https://github.com/authup/authup/issues/3744)) ([#3750](https://github.com/authup/authup/issues/3750)) ([e79a2c6](https://github.com/authup/authup/commit/e79a2c6aeaa426c1d291cdaf7fb25770f4d2ebc5))
+* **server-adapter-kit:** reject altered token strings and short RSA keys ([#3743](https://github.com/authup/authup/issues/3743)) ([ec15ef2](https://github.com/authup/authup/commit/ec15ef2a5f22926245870da213d2e0f93f68175e))
+* **server-core:** let a token's scope restrict its grants, never its identity ([#3723](https://github.com/authup/authup/issues/3723)) ([37c8609](https://github.com/authup/authup/commit/37c8609954a0d348d5eadc5bf8b3752fcdbd2200))
+* **server-core:** never substitute the caller's bearer for a supplied token ([#3724](https://github.com/authup/authup/issues/3724)) ([ff650b6](https://github.com/authup/authup/commit/ff650b60082282e271617b8fd6fc59ca13bc2a01))
+* **server-core:** take a role attribute's realm from the stored role ([#3748](https://github.com/authup/authup/issues/3748)) ([2e2a826](https://github.com/authup/authup/commit/2e2a826328f30a20693e80226eeb73194d2e2e35))
+
+
+### Code Refactoring
+
+* **server-adapter-kit:** verify tokens through vouchly ([#3745](https://github.com/authup/authup/issues/3745)) ([2b23de4](https://github.com/authup/authup/commit/2b23de4bda0329d455bc23b5273b5b5cd3dc5a64))
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735)) ([ad33d06](https://github.com/authup/authup/commit/ad33d068f58184aaeb85e9a45f9a8a885f1eb414))
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

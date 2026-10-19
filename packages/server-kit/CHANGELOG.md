@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735))
+* **access:** a REALM_UPDATE grant at own (or ownOrNull) reach updates the actor's own realm only; before, the reach factor neutral-passed and such a grant updated every realm. resourceRealmMatch is deprecated.
+
+### Features
+
+* **access:** record-reach helpers and a required realm on entity updates ([#3732](https://github.com/authup/authup/issues/3732)) ([9a46f98](https://github.com/authup/authup/commit/9a46f987d4d134f46862ecba7b633aa853b77928))
+
+
+### Code Refactoring
+
+* **server-core:** evaluate single-record checks through the access record helpers ([#3735](https://github.com/authup/authup/issues/3735)) ([ad33d06](https://github.com/authup/authup/commit/ad33d068f58184aaeb85e9a45f9a8a885f1eb414))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/core-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/kit bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+    * @authup/specs bumped from ^1.0.0-beta.69 to ^1.0.0-beta.70
+
 ## [1.0.0-beta.69](https://github.com/authup/authup/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2026-10-14)
 
 

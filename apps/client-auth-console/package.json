@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-auth-console",
-    "version": "1.0.0-beta.69",
+    "version": "1.0.0-beta.70",
     "type": "module",
     "license": "AGPL-3.0-only",
     "description": "Authup's hosted login, consent, registration, password recovery and device pages, as a server-rendered Vue bundle.",
@@ -25,15 +25,15 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.69"
+        "@authup/core-http-kit": "^1.0.0-beta.70"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.69",
-        "@authup/client-web-kit-theme": "^1.0.0-beta.69",
-        "@authup/client-web-theme": "^1.0.0-beta.69",
-        "@authup/core-kit": "^1.0.0-beta.69",
-        "@authup/i18n": "^1.0.0-beta.69",
-        "@authup/kit": "^1.0.0-beta.69",
+        "@authup/client-web-kit": "^1.0.0-beta.70",
+        "@authup/client-web-kit-theme": "^1.0.0-beta.70",
+        "@authup/client-web-theme": "^1.0.0-beta.70",
+        "@authup/core-kit": "^1.0.0-beta.70",
+        "@authup/i18n": "^1.0.0-beta.70",
+        "@authup/kit": "^1.0.0-beta.70",
         "@fontsource/asap": "^5.3.0",
         "@fontsource/nunito": "^5.3.0",
         "@iconify-json/fa6-brands": "^1.2.0",
