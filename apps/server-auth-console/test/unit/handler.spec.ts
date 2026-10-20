@@ -441,6 +441,178 @@ describe('createHandler server-side fetch', () => {
         }
     });
 
+    it('should hand the render a client based on the public url that dials the internal one', async () => {
+        // the render turns urls derived from the client's base into markup,
+        // and hydration does not correct an attribute: based on the internal
+        // address, the identity provider buttons pointed at 127.0.0.1:3000
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'client/.vite/ssr-manifest.json': '{}',
+            'server/server.js': 'export const CONTRACT_VERSION = 5; ' +
+                'export async function render(ctx) { ' +
+                'await ctx.httpClient.status.get(); ' +
+                'return [`render:${ctx.httpClient.getBaseURL()}|' +
+                '${ctx.httpClient.identityProvider.getAuthorizeUri("11111111-1111-1111-1111-111111111111")}`, ""]; }',
+        });
+
+        seen.length = 0;
+        const local = serve(await createHandler({
+            ...await resolveConfig({ publicUrl: 'https://idp.example.com/auth', path: root }),
+            apiInternalUrl: apiURL,
+        }), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/logout`);
+
+            expect(response.status).toEqual(200);
+
+            const body = await response.text();
+
+            expect(body).toContain('render:https://idp.example.com/auth|' +
+                'https://idp.example.com/auth/identity-providers/11111111-1111-1111-1111-111111111111/authorize-out');
+            expect(body).not.toContain(apiURL);
+            expect(seen).toContain('/');
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should not name the internal address when a call inside the render fails', async () => {
+        // a failure raised inside the render never passes through
+        // failWithoutAddress, so the message routup serves is hapic's own
+        const internal = 'http://127.0.0.1:1';
+        const root = await writeBundle({
+            'client/index.html': SHELL,
+            'client/.vite/ssr-manifest.json': '{}',
+            'server/server.js': 'export const CONTRACT_VERSION = 5; ' +
+                'export async function render(ctx) { await ctx.httpClient.status.get(); return ["", ""]; }',
+        });
+
+        const local = serve(await createHandler({
+            ...await resolveConfig({ publicUrl: 'https://idp.example.com', path: root }),
+            apiInternalUrl: internal,
+        }), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/logout`);
+
+            expect(response.status).toEqual(500);
+
+            const body = await response.text();
+
+            expect(body).not.toContain(internal);
+            expect(body).not.toContain('127.0.0.1:1');
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should point the identity provider buttons at the public url', async () => {
+        // the reported symptom, through the built bundle: the login form of
+        // /authorize renders the realm's providers server-side
+        const providerId = '22222222-2222-2222-2222-222222222222';
+        const realmId = '33333333-3333-3333-3333-333333333333';
+        const clientId = '44444444-4444-4444-4444-444444444444';
+        const requested : string[] = [];
+
+        const app = new App();
+        app.use(defineCoreHandler({
+            method: 'get',
+            path: '/authorize/info',
+            fn: () => ({
+                codeRequest: {
+                    response_type: 'code',
+                    client_id: clientId,
+                    realm_id: realmId,
+                    redirect_uri: 'https://app.example.com/cb',
+                    scope: 'openid',
+                    state: 'state',
+                },
+                client: {
+                    id: clientId,
+                    name: 'app',
+                    displayName: null,
+                    builtIn: false,
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                },
+                realm: {
+                    id: realmId, 
+                    name: 'master', 
+                    displayName: null, 
+                },
+                scopes: [],
+                redirectUriVerified: true,
+                features: {
+                    registration: false,
+                    passwordRecovery: false,
+                    emailVerification: false,
+                },
+                requestPath: '/authorize',
+            }),
+        }));
+        app.use(defineCoreHandler({
+            method: 'get',
+            path: '/identity-providers',
+            fn: (event) => {
+                requested.push(new URL(event.request.url).pathname);
+
+                return {
+                    data: [{
+                        id: providerId,
+                        name: 'corp',
+                        displayName: 'Corp',
+                        protocol: 'oauth2',
+                        enabled: true,
+                        realmId,
+                    }],
+                    meta: { total: 1 },
+                };
+            },
+        }));
+        app.use(defineCoreHandler({
+            fn: (event) => {
+                requested.push(new URL(event.request.url).pathname);
+
+                return { data: [], meta: { total: 0 } };
+            },
+        }));
+
+        const stub = serve(app, { port: 0, silent: true });
+        await stub.ready();
+        const stubURL = (stub.url ?? '').replace(/\/+$/, '');
+
+        const local = serve(await createHandler({
+            // unreachable, so any request escaping to the public address fails
+            // the render instead of passing unnoticed
+            ...await resolveConfig({ publicUrl: 'https://idp.example.com/auth' }),
+            apiInternalUrl: stubURL,
+        }), { port: 0, silent: true });
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/authorize?client_id=${clientId}`);
+
+            expect(response.status).toEqual(200);
+
+            const body = await response.text();
+
+            expect(requested).toContain('/identity-providers');
+            expect(body).toContain(
+                `href="https://idp.example.com/auth/identity-providers/${providerId}/authorize-out?codeRequest=`,
+            );
+            expect(body).not.toContain(stubURL);
+            expect(body).not.toContain('127.0.0.1');
+        } finally {
+            await local.close(true);
+            await stub.close(true);
+        }
+    });
+
     it('should render the device page with the normalized user code', async () => {
         const config = {
             ...await resolveConfig({ publicUrl: 'https://example.com' }),

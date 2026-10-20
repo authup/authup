@@ -1523,8 +1523,9 @@ API. The six page GETs became a stateless hop:
     but left live is a refresh token nothing holds.
   - **never a write.** The server install gets no-op cookie writers and no
     `preferences`, since the preference sync writes user attributes.
-  - **one client per render** (`createAPIClient(config)`, over
-    `apiInternalUrl`), because the store puts the visitor's bearer on it.
+  - **one client per render** (`createAPIClient(config)`: based on the
+    public `apiUrl`, dialed against `apiInternalUrl` at the transport),
+    because the store puts the visitor's bearer on it.
   - **the MFA status and the consent decision are fetched ONCE, server
     side, and handed over** through the hydration store
     (`authup:authorize:mfa:<session>:<user>:<acr>`, since the second factor is stamped on the session, and `authup:authorize:consent:<user>:<client>:<scopes>`);
@@ -1593,7 +1594,7 @@ API. The six page GETs became a stateless hop:
   becomes the hydration payload's `baseURL`, from which the console derives
   its HTTP client and its cookie path, so it must be the address a visitor
   can reach. `Config.apiInternalUrl` is the deployment's own, and it is what
-  `createAPIClient` dispatches against. The second is the document key
+  `createAPIClient`'s transport dials. The second is the document key
   `internalUrl` (`INTERNAL_URL`, declared at the root of `authup.yml` next
   to `publicUrl` in `@authup/server-config`), whose `resolve` falls back to
   `publicUrl`, so a deployment reachable at one address from both sides
@@ -1623,14 +1624,22 @@ API. The six page GETs became a stateless hop:
   the configuration that produced this issue. The address the CLI DERIVES
   carries NO path: server-core mounts every route root-relative, since the
   proxy strips `publicUrl`'s prefix before a request arrives, so a self-call
-  must not re-add it (the same subtraction
-  `createPublicToInternalURLRewriter` makes). A CONFIGURED `internalUrl` may
+  must not re-add it (the same subtraction server-core's internal client
+  makes). A CONFIGURED `internalUrl` may
   carry one, and it means there what it means on `publicUrl`: an internal
   proxy that strips a prefix. The zod type is deliberately the same `z.url()`
-  for both. Unlike that rewriter the swap here is on `baseURL` rather than at
-  the transport layer, because nothing derived from it reaches a caller:
-  there is no `redirect_uri` to be compared byte for byte at redemption.
-  server-core's own internal client is deliberately NOT repointed at the
+  for both. The swap is at the TRANSPORT, never on `baseURL`: since #3662 the
+  client is handed to the SSR render, where `getAuthorizeUri` feeds the
+  identity provider buttons' `href` and hapic's error message can reach a
+  500 body, and hydration does not correct an attribute. So the client keeps
+  `apiUrl` as its base and `createRebasedTransport(apiUrl, apiInternalUrl)`
+  (`@authup/core-http-kit`) moves each request at dispatch. It matches the
+  base as a STRING prefix on a segment boundary, in both forms a client
+  produces (hapic's raw join and the WHATWG href of the absolute OAuth2
+  endpoints), and concatenates the remainder onto the internal base, keeping
+  that base's path: parsing the request url first would resolve an unencoded
+  `../` in an id before the match and dial the public address, which the
+  differential spec in core-http-kit pins. server-core's own internal client is deliberately NOT repointed at the
   key: it resolves its actual listen address per request, which is
   strictly better than any configured value, and the two static consoles
   never read it, since they hand `apiUrl` to the browser and call nothing
@@ -1758,9 +1767,10 @@ server-core keeps one client for calls to its own API, registered under
 login's token exchange** (`ConsoleLogin.callback` redeeming the authorization
 code).
 
-Its hapic `FetchTransport` rewrites every request targeting `publicUrl`
-(origin plus sub-path prefix, wildcard listen hosts normalized to loopback)
-onto the server's own listen address (`HTTPInjectionKey.Server` ->
+Its transport (`createRebasedTransport` from `@authup/core-http-kit`, the one
+the auth console's render client uses) rewrites every request targeting
+`publicUrl` (origin plus sub-path prefix) onto the ORIGIN of the server's own
+listen address (`toDialableOrigin`, wildcard hosts normalized to loopback) (`HTTPInjectionKey.Server` ->
 `server.url`, resolved lazily per request), so a self-call never round-trips
 through the reverse proxy: no TLS (a self-signed `publicUrl` certificate
 would fail Node's fetch with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`) and no
@@ -3176,8 +3186,8 @@ apps/server-auth-console/src/       : the SSR console service
                                       the boot-time CONTRACT_VERSION check
   payload.ts                        : the anonymous page reads (authorize info, status features), the forwarded
                                       access-token cookie (readRenderCookies) + the
-                                      workflow-page payload assembly. createAPIClient dispatches against
-                                      config.apiInternalUrl, never the browser-facing config.apiUrl
+                                      workflow-page payload assembly. createAPIClient is based on
+                                      config.apiUrl and its transport dials config.apiInternalUrl
   resolve.ts                        : resolvePackagePath/resolveDistPath (pure: the substituted distPath first,
                                       else the locter locateUp resolution of @authup/client-auth-console
                                       anchored on this package; the memo lives in the renderer)
@@ -3246,8 +3256,8 @@ adapters/http/constants.ts          : ADMIN_CONSOLE_SEGMENT (console/admin) and 
                                       config.authConsoleUrl alone
 
 adapters/http/internal-client/      : the loopback client for calls to this server's own API
-  module.ts                         : createInternalHttpClient + createPublicToInternalURLRewriter (transport-level
-                                      rewrite onto the own listen address; baseURL stays publicUrl)
+  module.ts                         : createInternalHttpClient + toDialableOrigin (transport-level rewrite onto
+                                      the own listen address via createRebasedTransport; baseURL stays publicUrl)
   types.ts                          : InternalHttpClientContext { publicURL, internalURL }
 
 adapters/http/request/helpers/

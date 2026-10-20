@@ -6,7 +6,7 @@
  */
 
 import type { AuthorizeInfo, StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
-import { Client, CookieName } from '@authup/core-http-kit';
+import { Client, CookieName, createRebasedTransport } from '@authup/core-http-kit';
 import { isUUID } from '@authup/kit';
 import { OAuth2UIColorMode } from '@authup/specs';
 import { useRequestCookie } from '@routup/basic/cookie';
@@ -21,28 +21,32 @@ import type { Config } from './types';
  * render's own, made with the visitor's forwarded access token (see
  * `readRenderCookies`) through a client built per render.
  *
- * It dispatches against `apiInternalUrl`, never the browser-facing `apiUrl`:
- * this is a server-side call, so it must not depend on the public address
- * resolving from inside the deployment. Unlike server-core's own internal
- * client the swap is on `baseURL` rather than at the transport layer,
- * because nothing derived from it reaches a caller -- there is no
- * `redirect_uri` here to be compared byte for byte later.
+ * Its base url is the browser-facing `apiUrl`, and only the dispatch goes to
+ * `apiInternalUrl`, at the transport layer, the same split server-core's own
+ * internal client makes. The client is handed to the SSR render (#3662),
+ * where everything derived from its base url becomes markup: the identity
+ * provider buttons rendered `href="http://127.0.0.1:3000/..."`, which
+ * hydration never corrects. Dialing the internal address keeps the call off
+ * the public route, so it does not depend on the public address resolving
+ * from inside the deployment (#3550).
  */
 export function createAPIClient(config: Config) : Client {
-    return new Client({ baseURL: config.apiInternalUrl });
+    return new Client({
+        baseURL: config.apiUrl,
+        transport: createRebasedTransport(config.apiUrl, config.apiInternalUrl),
+    });
 }
 
 /**
  * Report an outbound failure to the operator and raise one the visitor may
  * see, which is deliberately not the same error.
  *
- * hapic embeds the resolved request URL in its message, and this service has
- * no error middleware: routup answers with `event.error.message` verbatim, on
- * the public login page. That URL is `apiInternalUrl`, which on a split
- * deployment names a service on the operator's own network, so an API that is
- * merely down would publish its internal address to every anonymous visitor.
- * It was harmless while the value was `publicUrl`, an address the browser
- * already had.
+ * This service has no error middleware: routup answers with
+ * `event.error.message` verbatim, on the public login page. hapic's own
+ * message names the public request url, but the network error it wraps names
+ * the address that was dialed, `apiInternalUrl`, which on a split deployment
+ * is a service on the operator's own network. So a failure is never passed
+ * through as it was raised.
  *
  * The rule and the remedy are server-core's own (`sanitizeError` /
  * `describeError`): the caller gets a message it can act on, the detail goes
