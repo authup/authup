@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Features
+
+* **client-web-kit:** accept a client function as httpClient ([#3758](https://github.com/authup/authup/issues/3758)) ([2f004f6](https://github.com/authup/authup/commit/2f004f602fb32057f8262a63b9a7a626b39f69f7))
+
+
+### Bug Fixes
+
+* **client-web-nuxt:** keep user-facing urls public when serverApiURL is set ([#3756](https://github.com/authup/authup/issues/3756)) ([a1699d2](https://github.com/authup/authup/commit/a1699d27389bd6b65477c3a62b0d615a409ad94d)), closes [#3754](https://github.com/authup/authup/issues/3754)
+* **core-http-kit:** reject token endpoint errors instead of refreshing ([#3759](https://github.com/authup/authup/issues/3759)) ([b54b8ef](https://github.com/authup/authup/commit/b54b8ef3be29b56fa5822b1512c7ddf353a6bcb2))
+* **deps:** bump @node-rs/bcrypt from 1.10.9 to 2.0.0 in the majorprod group across 1 directory ([#3727](https://github.com/authup/authup/issues/3727)) ([4f69422](https://github.com/authup/authup/commit/4f6942258d0037320f07ffc55ecdfdb1d106e92b))
+* ensure consistent version for release ([fef42da](https://github.com/authup/authup/commit/fef42da2ee5197d92d1196409b321826f36e7cc3))
+* **server-auth-console:** render identity provider links with the public url ([#3753](https://github.com/authup/authup/issues/3753)) ([b2cd648](https://github.com/authup/authup/commit/b2cd64871620a27e589d963f311f6dbdcbc3b1c0))
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 

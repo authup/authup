@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Bug Fixes
+
+* **deps:** bump @node-rs/bcrypt from 1.10.9 to 2.0.0 in the majorprod group across 1 directory ([#3727](https://github.com/authup/authup/issues/3727)) ([4f69422](https://github.com/authup/authup/commit/4f6942258d0037320f07ffc55ecdfdb1d106e92b))
+* ensure consistent version for release ([fef42da](https://github.com/authup/authup/commit/fef42da2ee5197d92d1196409b321826f36e7cc3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/core-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/specs bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 

@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Features
+
+* **client-web-kit:** accept a client function as httpClient ([#3758](https://github.com/authup/authup/issues/3758)) ([2f004f6](https://github.com/authup/authup/commit/2f004f602fb32057f8262a63b9a7a626b39f69f7))
+
+
+### Bug Fixes
+
+* **client-web-nuxt:** keep user-facing urls public when serverApiURL is set ([#3756](https://github.com/authup/authup/issues/3756)) ([a1699d2](https://github.com/authup/authup/commit/a1699d27389bd6b65477c3a62b0d615a409ad94d)), closes [#3754](https://github.com/authup/authup/issues/3754)
+* ensure consistent version for release ([fef42da](https://github.com/authup/authup/commit/fef42da2ee5197d92d1196409b321826f36e7cc3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/client-web-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/core-http-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 

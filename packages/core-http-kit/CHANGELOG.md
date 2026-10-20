@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Bug Fixes
+
+* **core-http-kit:** reject token endpoint errors instead of refreshing ([#3759](https://github.com/authup/authup/issues/3759)) ([b54b8ef](https://github.com/authup/authup/commit/b54b8ef3be29b56fa5822b1512c7ddf353a6bcb2))
+* **server-auth-console:** render identity provider links with the public url ([#3753](https://github.com/authup/authup/issues/3753)) ([b2cd648](https://github.com/authup/authup/commit/b2cd64871620a27e589d963f311f6dbdcbc3b1c0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/core-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/specs bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 

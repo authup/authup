@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-nuxt",
     "type": "module",
-    "version": "1.0.0-beta.70",
+    "version": "1.0.0-beta.71",
     "description": "Nuxt module that signs your app in with Authup and guards its routes by login state and permission.",
     "license": "Apache-2.0",
     "repository": {
@@ -32,10 +32,10 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.70",
-        "@authup/client-web-kit": "^1.0.0-beta.70",
-        "@authup/core-http-kit": "^1.0.0-beta.70",
-        "@authup/kit": "^1.0.0-beta.70",
+        "@authup/access": "^1.0.0-beta.71",
+        "@authup/client-web-kit": "^1.0.0-beta.71",
+        "@authup/core-http-kit": "^1.0.0-beta.71",
+        "@authup/kit": "^1.0.0-beta.71",
         "@nuxt/kit": "^4.6.1",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"

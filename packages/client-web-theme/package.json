@@ -1,7 +1,7 @@
 {
   "name": "@authup/client-web-theme",
   "type": "module",
-  "version": "1.0.0-beta.70",
+  "version": "1.0.0-beta.71",
   "description": "Authup's own look for vuecs and @authup/client-web-kit: brand colors, surfaces and console chrome on Tailwind v4.",
   "license": "Apache-2.0",
   "exports": {
@@ -50,7 +50,7 @@
   },
   "homepage": "https://github.com/authup/authup#readme",
   "dependencies": {
-    "@authup/client-web-kit-theme": "^1.0.0-beta.70"
+    "@authup/client-web-kit-theme": "^1.0.0-beta.71"
   },
   "devDependencies": {
     "@vuecs/button": "^1.4.2",

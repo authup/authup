@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Bug Fixes
+
+* **core-http-kit:** reject token endpoint errors instead of refreshing ([#3759](https://github.com/authup/authup/issues/3759)) ([b54b8ef](https://github.com/authup/authup/commit/b54b8ef3be29b56fa5822b1512c7ddf353a6bcb2))
+* ensure consistent version for release ([fef42da](https://github.com/authup/authup/commit/fef42da2ee5197d92d1196409b321826f36e7cc3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 
