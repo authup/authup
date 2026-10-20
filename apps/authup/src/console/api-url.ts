@@ -32,8 +32,8 @@ export type InternalApiUrlContext = {
  *
  * No path is carried, because server-core mounts every route root-relative:
  * the proxy strips `publicUrl`'s prefix before a request arrives, so a
- * self-call must not re-add it. Same rule as
- * `createPublicToInternalURLRewriter` in server-core, which subtracts it.
+ * self-call must not re-add it. Same rule as server-core's internal client,
+ * whose `createRebasedTransport` subtracts it.
  */
 export function buildInternalUrl(host: string, port: number) : string {
     // A wildcard listen address is not dialable; loop back explicitly, as

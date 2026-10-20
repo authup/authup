@@ -1624,8 +1624,8 @@ API. The six page GETs became a stateless hop:
   the configuration that produced this issue. The address the CLI DERIVES
   carries NO path: server-core mounts every route root-relative, since the
   proxy strips `publicUrl`'s prefix before a request arrives, so a self-call
-  must not re-add it (the same subtraction
-  `createPublicToInternalURLRewriter` makes). A CONFIGURED `internalUrl` may
+  must not re-add it (the same subtraction server-core's internal client
+  makes). A CONFIGURED `internalUrl` may
   carry one, and it means there what it means on `publicUrl`: an internal
   proxy that strips a prefix. The zod type is deliberately the same `z.url()`
   for both. The swap is at the TRANSPORT, never on `baseURL`: the client is
@@ -1769,9 +1769,10 @@ server-core keeps one client for calls to its own API, registered under
 login's token exchange** (`ConsoleLogin.callback` redeeming the authorization
 code).
 
-Its hapic `FetchTransport` rewrites every request targeting `publicUrl`
-(origin plus sub-path prefix, wildcard listen hosts normalized to loopback)
-onto the server's own listen address (`HTTPInjectionKey.Server` ->
+Its transport (`createRebasedTransport` from `@authup/core-http-kit`, the one
+the auth console's render client uses) rewrites every request targeting
+`publicUrl` (origin plus sub-path prefix) onto the ORIGIN of the server's own
+listen address (`toDialableOrigin`, wildcard hosts normalized to loopback) (`HTTPInjectionKey.Server` ->
 `server.url`, resolved lazily per request), so a self-call never round-trips
 through the reverse proxy: no TLS (a self-signed `publicUrl` certificate
 would fail Node's fetch with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`) and no
@@ -3257,8 +3258,8 @@ adapters/http/constants.ts          : ADMIN_CONSOLE_SEGMENT (console/admin) and 
                                       config.authConsoleUrl alone
 
 adapters/http/internal-client/      : the loopback client for calls to this server's own API
-  module.ts                         : createInternalHttpClient + createPublicToInternalURLRewriter (transport-level
-                                      rewrite onto the own listen address; baseURL stays publicUrl)
+  module.ts                         : createInternalHttpClient + toDialableOrigin (transport-level rewrite onto
+                                      the own listen address via createRebasedTransport; baseURL stays publicUrl)
   types.ts                          : InternalHttpClientContext { publicURL, internalURL }
 
 adapters/http/request/helpers/

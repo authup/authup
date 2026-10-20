@@ -5,54 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '@authup/core-http-kit';
+import { Client, createRebasedTransport } from '@authup/core-http-kit';
 import type { IClient } from '@authup/core-http-kit';
-import { FetchTransport, fetch } from 'hapic';
 import type { InternalHttpClientContext } from './types.ts';
 
 /**
- * Build a rewriter that maps URLs under the public base URL
- * (scheme://host[/prefix]) onto the server's own listen address. URLs
- * outside the public origin/prefix pass through untouched.
+ * The origin a listen address is dialed at. A wildcard listen address
+ * (0.0.0.0 / [::]) is not reliably dialable, so it loops back explicitly.
  */
-export function createPublicToInternalURLRewriter(
-    publicURL: string,
-    internalURL: string,
-) : (url: string) => string {
-    const publicParsed = new URL(publicURL);
-    const internalParsed = new URL(internalURL);
-    // a wildcard listen address (0.0.0.0 / [::]) is not reliably dialable —
-    // loop back explicitly
-    if (internalParsed.hostname === '0.0.0.0' || internalParsed.hostname === '[::]') {
-        internalParsed.hostname = '127.0.0.1';
+export function toDialableOrigin(url: string) : string {
+    const parsed = new URL(url);
+    if (parsed.hostname === '0.0.0.0' || parsed.hostname === '[::]') {
+        parsed.hostname = '127.0.0.1';
     }
-    const basePath = publicParsed.pathname.replace(/\/+$/, '');
 
-    return (url: string) => {
-        let parsed : URL;
-        try {
-            parsed = new URL(url);
-        } catch {
-            return url;
-        }
-
-        if (parsed.origin !== publicParsed.origin) {
-            return url;
-        }
-
-        let { pathname } = parsed;
-        if (basePath) {
-            if (pathname === basePath) {
-                pathname = '/';
-            } else if (pathname.startsWith(`${basePath}/`)) {
-                pathname = pathname.substring(basePath.length);
-            } else {
-                return url;
-            }
-        }
-
-        return new URL(pathname + parsed.search, internalParsed.origin).href;
-    };
+    return parsed.origin;
 }
 
 /**
@@ -67,10 +34,8 @@ export function createPublicToInternalURLRewriter(
  * `redirect_uri` in particular is compared byte for byte at redemption.
  */
 export function createInternalHttpClient(ctx: InternalHttpClientContext) : IClient {
-    const rewriteURL = createPublicToInternalURLRewriter(ctx.publicURL, ctx.internalURL);
-
     return new Client({
         baseURL: ctx.publicURL,
-        transport: new FetchTransport({ fetch: (input, init) => fetch(rewriteURL(input), init) }),
+        transport: createRebasedTransport(ctx.publicURL, toDialableOrigin(ctx.internalURL)),
     });
 }

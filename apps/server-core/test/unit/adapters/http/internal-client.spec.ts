@@ -5,15 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createBaseURLRewriter } from '@authup/core-http-kit';
 import { describe, expect, it } from 'vitest';
 import {
     createInternalHttpClient,
-    createPublicToInternalURLRewriter,
+    toDialableOrigin,
 } from '../../../../src/adapters/http/internal-client/index.ts';
 
-describe('createPublicToInternalURLRewriter', () => {
+// what createInternalHttpClient's transport applies to every request
+function createRewriter(publicURL: string, internalURL: string) {
+    return createBaseURLRewriter(publicURL, toDialableOrigin(internalURL));
+}
+
+describe('internal client url rewrite', () => {
     it('rewrites urls under a prefixed public url onto the internal address', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://localhost:3010/',
         );
@@ -23,7 +29,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('rewrites the bare prefix to the internal root', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://localhost:3010/',
         );
@@ -32,7 +38,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('rewrites urls under a prefix-less public url', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://auth.example.com',
             'http://localhost:3010/',
         );
@@ -41,7 +47,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('normalizes a trailing slash on the public url', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth/',
             'http://localhost:3010/',
         );
@@ -50,7 +56,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('leaves urls with a foreign origin untouched', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://localhost:3010/',
         );
@@ -60,7 +66,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('leaves same-origin urls outside the prefix untouched', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://localhost:3010/',
         );
@@ -74,7 +80,7 @@ describe('createPublicToInternalURLRewriter', () => {
     });
 
     it('normalizes a wildcard internal listen address to loopback', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://0.0.0.0:64331/',
         );
@@ -85,7 +91,7 @@ describe('createPublicToInternalURLRewriter', () => {
     it('normalizes an ipv6 wildcard internal listen address to loopback', () => {
         // WHATWG URL serializes an IPv6 hostname WITH brackets:
         // new URL('http://[::]:64331/').hostname === '[::]'
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://[::]:64331/',
         );
@@ -93,8 +99,21 @@ describe('createPublicToInternalURLRewriter', () => {
         expect(rewrite('https://hub.local/auth/realms')).toEqual('http://127.0.0.1:64331/realms');
     });
 
+    it('keeps the internal authority when the remainder starts with two slashes', () => {
+        const rewrite = createRewriter(
+            'https://hub.local',
+            'http://localhost:3010/',
+        );
+
+        expect(new URL(rewrite('https://hub.local//evil.test/x')).host).toEqual('localhost:3010');
+    });
+
+    it('drops a path on the listen address', () => {
+        expect(toDialableOrigin('http://0.0.0.0:3000/some/path')).toEqual('http://127.0.0.1:3000');
+    });
+
     it('leaves non-absolute input untouched', () => {
-        const rewrite = createPublicToInternalURLRewriter(
+        const rewrite = createRewriter(
             'https://hub.local/auth',
             'http://localhost:3010/',
         );
