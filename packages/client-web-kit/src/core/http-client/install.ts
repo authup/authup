@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '@authup/core-http-kit';
-import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
+import { buildHTTPClient } from './build';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
 import { injectHTTPClientAuthenticationHook } from './authentication-hook';
@@ -17,7 +16,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         return;
     }
 
-    const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL, transport: options.transport });
+    const client = buildHTTPClient(options);
 
     const authenticationHook = injectHTTPClientAuthenticationHook(app);
     authenticationHook.attach(client);

@@ -61,7 +61,6 @@ export function install(app: App, options: Options): void {
         pinia: options.pinia,
         baseURL: options.baseURL,
         httpClient: options.httpClient,
-        transport: options.transport,
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
@@ -75,7 +74,6 @@ export function install(app: App, options: Options): void {
         pinia: options.pinia,
         baseURL: options.baseURL,
         httpClient: options.httpClient,
-        transport: options.transport,
         isServer: options.isServer,
     });
 
@@ -83,7 +81,6 @@ export function install(app: App, options: Options): void {
         pinia: options.pinia,
         baseURL: options.baseURL,
         httpClient: options.httpClient,
-        transport: options.transport,
         isServer: options.isServer,
     });
 

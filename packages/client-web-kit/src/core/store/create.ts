@@ -15,15 +15,14 @@ import {
     createAuthorizationCheckEvaluator,
 } from '@authup/access';
 import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
-import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
-import { Client } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error';
+import { buildHTTPClient } from '../http-client/build';
 import { isServerRuntime } from '../hydration/value';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
@@ -82,7 +81,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 }
 
 export function createStore(context: StoreCreateContext) {
-    const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL, transport: context.transport });
+    const client = buildHTTPClient(context);
 
     // State rather than a local flag, so a server-side cookie read is carried
     // to the client in the pinia payload and not repeated there.
