@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
+
+
+### Bug Fixes
+
+* **server-auth-console:** render identity provider links with the public url ([#3753](https://github.com/authup/authup/issues/3753)) ([b2cd648](https://github.com/authup/authup/commit/b2cd64871620a27e589d963f311f6dbdcbc3b1c0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/client-web-theme bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/core-kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/i18n bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+    * @authup/kit bumped from ^1.0.0-beta.70 to ^1.0.0-beta.71
+
 ## [1.0.0-beta.70](https://github.com/authup/authup/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2026-10-19)
 
 

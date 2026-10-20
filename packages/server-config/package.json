@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-config",
     "type": "module",
-    "version": "1.0.0-beta.70",
+    "version": "1.0.0-beta.71",
     "description": "Every key of authup.yml, declared once: path, environment variable, default, reader and zod type.",
     "license": "Apache-2.0",
     "exports": {
@@ -49,9 +49,9 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-kit": "^1.0.0-beta.70",
-        "@authup/kit": "^1.0.0-beta.70",
-        "@authup/server-config-kit": "^1.0.0-beta.70",
+        "@authup/core-kit": "^1.0.0-beta.71",
+        "@authup/kit": "^1.0.0-beta.71",
+        "@authup/server-config-kit": "^1.0.0-beta.71",
         "confinity": "^2.0.1",
         "envix": "^1.5.0",
         "zod": "^4.6.7"
