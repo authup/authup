@@ -1523,8 +1523,9 @@ API. The six page GETs became a stateless hop:
     but left live is a refresh token nothing holds.
   - **never a write.** The server install gets no-op cookie writers and no
     `preferences`, since the preference sync writes user attributes.
-  - **one client per render** (`createAPIClient(config)`, over
-    `apiInternalUrl`), because the store puts the visitor's bearer on it.
+  - **one client per render** (`createAPIClient(config)`: based on the
+    public `apiUrl`, dialed against `apiInternalUrl` at the transport),
+    because the store puts the visitor's bearer on it.
   - **the MFA status and the consent decision are fetched ONCE, server
     side, and handed over** through the hydration store
     (`authup:authorize:mfa:<session>:<user>:<acr>`, since the second factor is stamped on the session, and `authup:authorize:consent:<user>:<client>:<scopes>`);
@@ -1593,7 +1594,7 @@ API. The six page GETs became a stateless hop:
   becomes the hydration payload's `baseURL`, from which the console derives
   its HTTP client and its cookie path, so it must be the address a visitor
   can reach. `Config.apiInternalUrl` is the deployment's own, and it is what
-  `createAPIClient` dispatches against. The second is the document key
+  `createAPIClient`'s transport dials. The second is the document key
   `internalUrl` (`INTERNAL_URL`, declared at the root of `authup.yml` next
   to `publicUrl` in `@authup/server-config`), whose `resolve` falls back to
   `publicUrl`, so a deployment reachable at one address from both sides
@@ -1627,10 +1628,20 @@ API. The six page GETs became a stateless hop:
   `createPublicToInternalURLRewriter` makes). A CONFIGURED `internalUrl` may
   carry one, and it means there what it means on `publicUrl`: an internal
   proxy that strips a prefix. The zod type is deliberately the same `z.url()`
-  for both. Unlike that rewriter the swap here is on `baseURL` rather than at
-  the transport layer, because nothing derived from it reaches a caller:
-  there is no `redirect_uri` to be compared byte for byte at redemption.
-  server-core's own internal client is deliberately NOT repointed at the
+  for both. The swap is at the TRANSPORT, never on `baseURL`: the client is
+  handed to the SSR render, which turns values derived from its base url
+  into markup (`getAuthorizeUri` for the identity provider buttons, the
+  absolute OAuth2 endpoints, hapic's error message), and hydration does not
+  correct an attribute, so a client based on `apiInternalUrl` rendered
+  `href="http://127.0.0.1:3000/..."` on every federated login button. The
+  client keeps `apiUrl` as its base and `createRebasedTransport(apiUrl,
+  apiInternalUrl)` (`@authup/core-http-kit`) moves each request at dispatch.
+  It matches the base as a STRING prefix on a segment boundary, in both
+  forms a client produces (hapic's raw join and the WHATWG href of the
+  absolute endpoints), and concatenates the remainder onto the internal
+  base, keeping that base's path: parsing the request url first would
+  resolve an unencoded `../` in an id before the match and dial the public
+  address, which the differential spec in core-http-kit pins. server-core's own internal client is deliberately NOT repointed at the
   key: it resolves its actual listen address per request, which is
   strictly better than any configured value, and the two static consoles
   never read it, since they hand `apiUrl` to the browser and call nothing
@@ -3176,8 +3187,8 @@ apps/server-auth-console/src/       : the SSR console service
                                       the boot-time CONTRACT_VERSION check
   payload.ts                        : the anonymous page reads (authorize info, status features), the forwarded
                                       access-token cookie (readRenderCookies) + the
-                                      workflow-page payload assembly. createAPIClient dispatches against
-                                      config.apiInternalUrl, never the browser-facing config.apiUrl
+                                      workflow-page payload assembly. createAPIClient is based on
+                                      config.apiUrl and its transport dials config.apiInternalUrl
   resolve.ts                        : resolvePackagePath/resolveDistPath (pure: the substituted distPath first,
                                       else the locter locateUp resolution of @authup/client-auth-console
                                       anchored on this package; the memo lives in the renderer)

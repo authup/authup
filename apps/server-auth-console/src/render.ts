@@ -142,8 +142,9 @@ export function createRenderPage(distPath?: string) : RenderPage {
                 payload,
                 // One client per render: it carries the visitor's bearer once the
                 // store has resolved their session, so it must never outlive the
-                // request. Built against the internal address like every other
-                // server-side call (#3550).
+                // request. Its base url is the public `apiUrl`, so every href
+                // the render derives from it is the browser's; only its
+                // transport dials the internal address (#3550).
                 httpClient: sessionForwarding.observe(createAPIClient(config)),
                 cookies: release ? cookies : {},
             });

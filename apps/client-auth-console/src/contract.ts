@@ -103,6 +103,11 @@ export type RenderContext = {
      * constructed from payload.config.baseURL (host self-call rewrite,
      * test injection). It carries the visitor's bearer once their session
      * resolved, so a host must build one per render and never share it.
+     *
+     * Its base url must be payload.config.baseURL: the app renders urls
+     * derived from it (the identity provider buttons), and hydration does
+     * not correct an attribute. A host that dials another address does so
+     * in the client's transport.
      */
     httpClient?: IClient,
     /**

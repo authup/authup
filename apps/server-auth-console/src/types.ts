@@ -69,6 +69,10 @@ export type Config = {
      * answers at one address from both sides. The composed `authup start`
      * overrides it with its own listen address unless the document named one,
      * the same self-call rule server-core's internal client follows.
+     *
+     * It is only ever DIALED: the API client keeps {@link apiUrl} as its base
+     * url and moves requests here at the transport, because the render turns
+     * values derived from the base url into markup.
      */
     apiInternalUrl: string,
     /**
