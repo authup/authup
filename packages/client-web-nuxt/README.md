@@ -56,7 +56,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Every option except `serverApiURL` lands in the public `runtimeConfig.public.authup`, so `NUXT_PUBLIC_AUTHUP_API_URL` overrides `apiURL` at runtime. `serverApiURL` goes to the private `runtimeConfig.authup` and is overridden with `NUXT_AUTHUP_SERVER_API_URL`.
+Every option except `serverApiURL` lands in the public `runtimeConfig.public.authup`, so `NUXT_PUBLIC_AUTHUP_API_URL` overrides `apiURL` at runtime. `serverApiURL` goes to the private `runtimeConfig.authup` and is overridden with `NUXT_AUTHUP_SERVER_API_URL`. It only changes where the server render sends its requests: every URL the kit's client derives from the API URL (identity provider links, the OAuth2 endpoints) keeps the public one, since hydration does not correct a rendered `href`. A `buildAuthorizeURL` call takes its base from you, so pass it the public `apiURL`.
 
 ### Install vuecs after the kit
 
@@ -134,7 +134,7 @@ Set under the `authup` key of `nuxt.config`:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `apiURL` | `string` | `http://localhost:3001` | API URL for the browser, and for the server when nothing more specific is set. |
-| `serverApiURL` | `string` | `apiURL` | API URL for the server render. Private runtime config only. |
+| `serverApiURL` | `string` | `apiURL` | Address the server render dials. URLs the kit renders keep the public API URL. Private runtime config only. |
 | `apiURLRuntimeKey` | `string` | none | Path into the runtime config to read the API URL from: the whole runtime config on the server, the public one in the browser. `serverApiURL` still wins on the server. |
 | `cookieDomain` | `string` | host only | `Domain` attribute of the session cookies. `127.0.0.1` is written as `localhost`. |
 | `cookieDomainRuntimeKey` | `string` | none | Path into the public runtime config to read the cookie domain from. |

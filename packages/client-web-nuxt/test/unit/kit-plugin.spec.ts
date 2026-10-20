@@ -16,6 +16,14 @@ import {
 const state = vi.hoisted(() => ({
     installOptions: undefined as Record<string, unknown> | undefined,
     requestURL: 'http://localhost:3000/',
+    transport: { dispatch: async () => new Response() },
+}));
+
+vi.mock('../../src/runtime/helpers/http-client', () => ({
+    buildHTTPClientOptions: () => ({
+        baseURL: 'https://auth.example.com',
+        transport: state.transport,
+    }),
 }));
 
 vi.mock('@authup/client-web-kit', async (importOriginal) => ({
@@ -55,6 +63,14 @@ describe('runtime/plugins/kit', () => {
     it('marks the store cookies secure for an https request', async () => {
         const options = await runPlugin('https://app.example.com/users');
         expect(options?.cookieSecure).toBe(true);
+    });
+
+    it('hands the kit a transport, never a client the hook would share', async () => {
+        const options = await runPlugin('https://app.example.com/users');
+
+        expect(options?.baseURL).toEqual('https://auth.example.com');
+        expect(options?.transport).toBe(state.transport);
+        expect(options?.httpClient).toBeUndefined();
     });
 
     it('leaves the store cookies non-secure for a plain http request', async () => {

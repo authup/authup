@@ -13,7 +13,6 @@ import {
     LOCALE_UNSET,
     install,
 } from '@authup/client-web-kit';
-import { API_URL_DEFAULT } from '@authup/core-http-kit';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { getPathValue } from 'pathtrace';
 import type { Pinia } from 'pinia';
@@ -26,6 +25,7 @@ import {
     useRequestURL,
     useRuntimeConfig,
 } from '#imports';
+import { buildHTTPClientOptions } from '../helpers/http-client';
 import type { RuntimeOptions } from '../types';
 
 /**
@@ -118,48 +118,13 @@ function buildCookieName(runtimeConfig: RuntimeConfig) : (key: string) => string
     return (key) => `${options.cookiePrefix}${key}`;
 }
 
-function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
-    const options = runtimeConfig.public.authup as RuntimeOptions;
-
-    let url: string | undefined;
-
-    if (import.meta.server) {
-        if (options.apiURLRuntimeKey) {
-            const pathValue = getPathValue(runtimeConfig, options.apiURLRuntimeKey);
-            if (typeof pathValue === 'string') {
-                url = pathValue;
-            }
-        }
-
-        const serverOptions = runtimeConfig.authup as Pick<RuntimeOptions, 'serverApiURL'> | undefined;
-        if (serverOptions?.serverApiURL) {
-            url = serverOptions.serverApiURL;
-        }
-    }
-
-    if (!url) {
-        if (options.apiURL) {
-            url = options.apiURL;
-        }
-
-        if (options.apiURLRuntimeKey) {
-            const pathValue = getPathValue(runtimeConfig.public, options.apiURLRuntimeKey);
-            if (typeof pathValue === 'string') {
-                url = pathValue;
-            }
-        }
-    }
-
-    return url || API_URL_DEFAULT;
-}
-
 export default defineNuxtPlugin({
     name: 'authup:kit',
     dependsOn: ['pinia'],
     setup(ctx) {
         const runtimeConfig = useRuntimeConfig();
 
-        const baseURL = buildApiUrl(runtimeConfig);
+        const { baseURL, transport } = buildHTTPClientOptions(runtimeConfig, import.meta.server);
         // The host's configured cookie options win over the kit's defaults.
         const cookieOptions = buildCookieOptions(runtimeConfig);
         // One function for all three, because a prefix on the write but not on
@@ -169,6 +134,7 @@ export default defineNuxtPlugin({
         install(ctx.vueApp, {
             pinia: ctx.$pinia as Pinia,
             baseURL,
+            transport,
             // A refresh during the server render rotates the token cookies
             // too, and the kit cannot see the scheme without a window.
             cookieSecure: useRequestURL().protocol === 'https:',
