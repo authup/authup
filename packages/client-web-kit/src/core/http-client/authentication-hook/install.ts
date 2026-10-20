@@ -28,6 +28,14 @@ export function installHTTPClientAuthenticationHook(
 
     let refreshTokenInUse : string | null = null;
 
+    // Kept apart from the client the hook is attached to (unless a host
+    // shares one through `httpClient`): a 401 from `/token` on the attached
+    // client would wait on the very refresh it belongs to.
+    const buildClient = () : IClient => options.httpClient ?? new Client({
+        baseURL: options.baseURL,
+        transport: options.transport,
+    });
+
     const hook = new ClientAuthenticationHook({
         tokenCreator: () => {
             if (!refreshToken.value) {
@@ -36,7 +44,7 @@ export function installHTTPClientAuthenticationHook(
 
             refreshTokenInUse = refreshToken.value;
 
-            const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
+            const client = buildClient();
             return client.token.createWithRefreshToken({ refresh_token: refreshTokenInUse });
         },
         timer: !options.isServer,
@@ -63,7 +71,7 @@ export function installHTTPClientAuthenticationHook(
             // The dropped grant's tokens were never written to the store, so
             // no later logout() could reach them — revoke them best-effort
             // instead of orphaning a live server session.
-            const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
+            const client = buildClient();
             Promise.resolve()
                 .then(() => client.token.revoke({ token: response.access_token }))
                 .catch(() => { /* best-effort */ });
