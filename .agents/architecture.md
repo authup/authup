@@ -5078,8 +5078,10 @@ attaches core-http-kit's `ClientAuthenticationHook` (`timer: false`) with a
 creator that refreshes under a lock file (`hosts.lock`, stale after 30 s) and
 re-reads the store first, adopting a rotation another process saved instead of
 replaying the refresh token into strict rotation's family revoke; the refresh
-grant itself runs on a second, hook-less `Client`, since a 401 at `/token`
-would otherwise re-enter the hook's own in-flight refresh promise. `logout`
+grant itself runs on a second, hook-less `Client`. The hook rejects a failed response
+whose body carries an RFC 6749 §5.2 token error in `error` without refreshing
+(`isOAuth2TokenErrorCode`, #3757), but a `/token` 401 without that body would
+still re-enter the hook's own in-flight refresh promise. `logout`
 revokes both tokens at `POST /token/revoke` and forgets the host, and
 deliberately never calls `DELETE /sessions/@me`: the device grant's tokens
 ride the approving browser's `auth_sessions` row. `whoami` reads

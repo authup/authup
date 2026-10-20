@@ -33,6 +33,20 @@ import {
     type OAuth2ScopeError,
     type OAuth2ServerError,
 } from './error/index.ts';
+import { OAuth2ErrorCode } from './constants.ts';
+
+/**
+ * Whether the code is one of the errors RFC 6749 §5.2 defines for a
+ * token endpoint response, read from the response body's `error` field.
+ */
+export function isOAuth2TokenErrorCode(code: unknown) {
+    return code === OAuth2ErrorCode.INVALID_REQUEST ||
+        code === OAuth2ErrorCode.INVALID_CLIENT ||
+        code === OAuth2ErrorCode.INVALID_GRANT ||
+        code === OAuth2ErrorCode.UNAUTHORIZED_CLIENT ||
+        code === OAuth2ErrorCode.UNSUPPORTED_GRANT_TYPE ||
+        code === OAuth2ErrorCode.INVALID_SCOPE;
+}
 
 export function isOAuth2Error(input: unknown): input is OAuth2Error {
     if (matchesInstanceof(input, OAUTH2_ERROR_INSTANCE)) {

@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import { isJWKErrorCode, isJWTErrorCode } from '@authup/specs';
+import { isJWKErrorCode, isJWTErrorCode, isOAuth2TokenErrorCode } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { EventEmitter } from '@posva/event-emitter';
 import type { AuthorizationHeader, IClient as IBaseClient } from 'hapic';
@@ -19,7 +19,7 @@ import {
     stringifyAuthorizationHeader,
     unsetHeader,
 } from 'hapic';
-import { getClientErrorCode } from '../helpers';
+import { getClientErrorCode, getClientOAuth2ErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
 import { ClientAuthenticationHookEventName } from './constants';
 import type { ClientAuthenticationHookEvents, ClientAuthenticationHookOptions } from './types';
@@ -123,6 +123,12 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
                         const currentState = getClientRequestRetryState(request);
                         if (currentState.retryCount > 0) {
+                            return Promise.reject(err);
+                        }
+
+                        // A token endpoint refusing a grant: refreshing would wait on
+                        // the refresh this request may itself belong to.
+                        if (isOAuth2TokenErrorCode(getClientOAuth2ErrorCode(err))) {
                             return Promise.reject(err);
                         }
 
