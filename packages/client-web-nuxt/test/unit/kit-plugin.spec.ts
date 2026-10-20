@@ -16,13 +16,13 @@ import {
 const state = vi.hoisted(() => ({
     installOptions: undefined as Record<string, unknown> | undefined,
     requestURL: 'http://localhost:3000/',
-    transport: { dispatch: async () => new Response() },
+    httpClient: () => ({}) as never,
 }));
 
 vi.mock('../../src/runtime/helpers/http-client', () => ({
     buildHTTPClientOptions: () => ({
         baseURL: 'https://auth.example.com',
-        transport: state.transport,
+        httpClient: state.httpClient,
     }),
 }));
 
@@ -65,12 +65,11 @@ describe('runtime/plugins/kit', () => {
         expect(options?.cookieSecure).toBe(true);
     });
 
-    it('hands the kit a transport, never a client the hook would share', async () => {
+    it('hands the kit the client function', async () => {
         const options = await runPlugin('https://app.example.com/users');
 
         expect(options?.baseURL).toEqual('https://auth.example.com');
-        expect(options?.transport).toBe(state.transport);
-        expect(options?.httpClient).toBeUndefined();
+        expect(options?.httpClient).toBe(state.httpClient);
     });
 
     it('leaves the store cookies non-secure for a plain http request', async () => {

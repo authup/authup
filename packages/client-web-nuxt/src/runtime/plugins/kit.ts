@@ -124,7 +124,7 @@ export default defineNuxtPlugin({
     setup(ctx) {
         const runtimeConfig = useRuntimeConfig();
 
-        const { baseURL, transport } = buildHTTPClientOptions(runtimeConfig, import.meta.server);
+        const { baseURL, httpClient } = buildHTTPClientOptions(runtimeConfig, import.meta.server);
         // The host's configured cookie options win over the kit's defaults.
         const cookieOptions = buildCookieOptions(runtimeConfig);
         // One function for all three, because a prefix on the write but not on
@@ -134,7 +134,7 @@ export default defineNuxtPlugin({
         install(ctx.vueApp, {
             pinia: ctx.$pinia as Pinia,
             baseURL,
-            transport,
+            httpClient,
             // A refresh during the server render rotates the token cookies
             // too, and the kit cannot see the scheme without a window.
             cookieSecure: useRequestURL().protocol === 'https:',
