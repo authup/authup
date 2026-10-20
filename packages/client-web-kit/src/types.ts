@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions, IClient } from '@authup/core-http-kit';
+import type { HTTPClientInput } from './core/http-client/types';
 import type { Pinia } from 'pinia';
 import type { HydrationStore } from './core/hydration';
 import type { StorePreferences } from './core/store';
@@ -98,20 +98,16 @@ export type CookieGetFn = (
 export type Options = {
     baseURL: string,
     /**
-     * Pre-built HTTP client used instead of constructing one from baseURL.
-     * Covers the store, the authentication hook and the provided client.
+     * The client the kit uses instead of `new Client({ baseURL })`: one
+     * instance for every consumer, or a function the kit calls once per
+     * consumer (the store, the provided client, the authentication hook's
+     * refresh and revoke). Prefer the function, returning a NEW client per
+     * call: with one instance the hook's refresh runs on the client the hook
+     * is attached to, where a 401 from `/token` waits on its own refresh. A
+     * server render uses it to keep the base url public while dialing an
+     * internal address (`createRebasedTransport`).
      */
-    httpClient?: IClient,
-    /**
-     * Transport every client the kit builds from `baseURL` dispatches
-     * through. Unlike `httpClient` it keeps those clients separate, which
-     * the refresh depends on: the hook's token request must not run on the
-     * client the hook is attached to, or a 401 from `/token` waits on its
-     * own refresh. A server render passes `createRebasedTransport` here to
-     * dial an internal address while every url derived from `baseURL`
-     * stays public.
-     */
-    transport?: ClientOptions['transport'],
+    httpClient?: HTTPClientInput,
 
     realtime?: boolean,
     realtimeURL?: string,

@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions } from '@authup/core-http-kit';
+import { Client } from '@authup/core-http-kit';
+import type { ClientOptions, IClient } from '@authup/core-http-kit';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { createApp, h } from 'vue';
 import {
+    buildHTTPClient,
     injectHTTPClient,
     injectHTTPClientAuthenticationHook,
     installHTTPClient,
@@ -57,11 +59,15 @@ function buildApp(transport: Transport) {
     const app = createApp({ render: () => h('div') });
     app.use(pinia);
 
-    const baseURL = 'https://auth.example.com/';
+    const clients : IClient[] = [];
+    const httpClient = () => {
+        const client = new Client({ baseURL: 'https://auth.example.com/', transport });
+        clients.push(client);
+        return client;
+    };
 
     installStore(app, {
-        baseURL,
-        transport,
+        httpClient,
         pinia,
         cookieGet: noop,
         cookieSet: noop,
@@ -75,27 +81,43 @@ function buildApp(transport: Transport) {
     store.refreshToken = 'rt-1';
 
     installHTTPClientAuthenticationHook(app, {
-        baseURL,
-        transport,
+        httpClient,
         pinia,
         isServer: true,
     });
 
     installHTTPClient(app, {
-        baseURL,
-        transport,
+        httpClient,
         pinia,
         isServer: true,
     });
 
     return {
         store,
+        clients,
         hook: injectHTTPClientAuthenticationHook(app),
         client: injectHTTPClient(app),
     };
 }
 
-describe('core/http-client/transport', () => {
+describe('core/http-client/build', () => {
+    it('calls a client function once per call', () => {
+        const httpClient = () => new Client({ baseURL: 'https://auth.example.com/' });
+
+        expect(buildHTTPClient({ httpClient })).not.toBe(buildHTTPClient({ httpClient }));
+    });
+
+    it('returns a client instance as it is', () => {
+        const httpClient = new Client({ baseURL: 'https://auth.example.com/' });
+
+        expect(buildHTTPClient({ httpClient })).toBe(httpClient);
+    });
+
+    it('builds a client from baseURL without httpClient', () => {
+        expect(buildHTTPClient({ baseURL: 'https://auth.example.com/' }).getBaseURL())
+            .toEqual('https://auth.example.com/');
+    });
+
     it('dispatches the provided client and the hook\'s refresh through it', async () => {
         const { transport, urls } = createUnauthorizedTransport();
         const { client } = buildApp(transport);
@@ -115,7 +137,18 @@ describe('core/http-client/transport', () => {
         expect(urls.some((url) => url.endsWith('/token/revoke'))).toBe(true);
     });
 
-    it('keeps the refresh off the hooked client, so a 401 from /token settles', async () => {
+    it('refreshes on a client other than the one the hook is attached to', async () => {
+        const { transport } = createUnauthorizedTransport();
+        const { client, clients } = buildApp(transport);
+        const before = clients.length;
+
+        await settlesWithin(client.realm.getMany(), 2000);
+
+        expect(clients.length).toBeGreaterThan(before);
+        expect(clients.slice(before)).not.toContain(client);
+    });
+
+    it('settles a 401 from /token during a refresh', async () => {
         const { transport } = createUnauthorizedTransport();
         const { client, hook } = buildApp(transport);
 

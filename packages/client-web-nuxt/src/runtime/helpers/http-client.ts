@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { API_URL_DEFAULT, createRebasedTransport } from '@authup/core-http-kit';
-import type { ClientOptions } from '@authup/core-http-kit';
+import type { HTTPClientInput } from '@authup/client-web-kit';
+import { API_URL_DEFAULT, Client, createRebasedTransport } from '@authup/core-http-kit';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { getPathValue } from 'pathtrace';
 import type { RuntimeOptions } from '../types';
 
 export type HTTPClientOptions = {
     baseURL: string,
-    transport?: ClientOptions['transport']
+    httpClient?: HTTPClientInput
 };
 
 function readPublicApiURL(runtimeConfig: RuntimeConfig) : string {
@@ -56,15 +56,10 @@ function readServerApiURL(runtimeConfig: RuntimeConfig) : string | undefined {
 /**
  * The kit's base url is the PUBLIC api url on both sides, because everything
  * derived from it is user-facing: the identity provider buttons, the absolute
- * OAuth2 endpoints and hapic's error messages. A server
- * render only DIALS the server url, through a rebased transport, so a
- * rendered href never names an address the browser cannot reach (hydration
- * does not correct attributes).
- *
- * A transport rather than a pre-built client: the kit builds its store, its
- * hook-attached client and the hook's refresh client separately, and a
- * shared client would put the refresh request on the client the hook is
- * attached to, where a 401 from `/token` waits on its own refresh.
+ * OAuth2 endpoints and hapic's error messages. A server render only DIALS
+ * the server url, through a rebased transport, so a rendered href never
+ * names an address the browser cannot reach (hydration does not correct
+ * attributes). A function, so the kit gets a new client per consumer.
  */
 export function buildHTTPClientOptions(
     runtimeConfig: RuntimeConfig,
@@ -80,8 +75,10 @@ export function buildHTTPClientOptions(
         return { baseURL };
     }
 
+    const transport = createRebasedTransport(baseURL, serverURL);
+
     return {
         baseURL,
-        transport: createRebasedTransport(baseURL, serverURL),
+        httpClient: () => new Client({ baseURL, transport }),
     };
 }

@@ -7,6 +7,7 @@
 
 export * from './authentication-hook';
 
+export * from './build';
 export * from './singleton';
 export * from './install';
 export * from './types';

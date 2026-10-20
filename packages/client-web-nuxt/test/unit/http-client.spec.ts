@@ -13,6 +13,7 @@ import {
     it,
 } from 'vitest';
 import { API_URL_DEFAULT, Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { buildHTTPClientOptions } from '../../src/runtime/helpers/http-client';
 import type { HTTPClientOptions } from '../../src/runtime/helpers/http-client';
@@ -23,8 +24,10 @@ const SERVER_URL = 'http://authup:3000';
 /**
  * The client the kit builds from these options, at each of its three sites.
  */
-function buildClient(options: HTTPClientOptions) : Client {
-    return new Client({ baseURL: options.baseURL, transport: options.transport });
+function buildClient(options: HTTPClientOptions) : IClient {
+    return typeof options.httpClient === 'function' ?
+        options.httpClient() :
+        new Client({ baseURL: options.baseURL });
 }
 
 function buildRuntimeConfig(
@@ -72,8 +75,22 @@ describe('runtime/helpers/http-client', () => {
         );
 
         expect(options.baseURL).toEqual(PUBLIC_URL);
-        expect(options.transport).toBeDefined();
+        expect(typeof options.httpClient).toEqual('function');
         expect(buildClient(options).getBaseURL()).toEqual(PUBLIC_URL);
+    });
+
+    it('returns a new client on every call', () => {
+        const options = buildHTTPClientOptions(
+            buildRuntimeConfig({ apiURL: PUBLIC_URL }, { authup: { serverApiURL: SERVER_URL } }),
+            true,
+        );
+
+        const { httpClient } = options;
+        if (typeof httpClient !== 'function') {
+            throw new Error('expected a client function');
+        }
+
+        expect(httpClient()).not.toBe(httpClient());
     });
 
     it('renders identity provider links with the public url', () => {

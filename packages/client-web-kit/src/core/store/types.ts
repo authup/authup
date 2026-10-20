@@ -14,7 +14,8 @@ import type {
     _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { Realm, User } from '@authup/core-kit';
-import type { ClientOptions, IClient } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
+import type { HTTPClientInput } from '../http-client/types';
 import type { Ref } from 'vue';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
@@ -64,8 +65,7 @@ export type StoreDefinition = BaseStoreDefinition<
 
 export type StoreCreateContext = {
     baseURL?: string,
-    httpClient?: IClient,
-    transport?: ClientOptions['transport'],
+    httpClient?: HTTPClientInput,
     dispatcher: StoreDispatcher,
     /**
      * Authenticate on the server-issued session cookie instead of a token
@@ -89,8 +89,7 @@ export type StoreLoginContext = {
 
 export type StoreInstallOptions = {
     baseURL?: string,
-    httpClient?: IClient,
-    transport?: ClientOptions['transport'],
+    httpClient?: HTTPClientInput,
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn,

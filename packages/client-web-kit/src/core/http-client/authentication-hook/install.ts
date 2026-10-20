@@ -5,12 +5,12 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, ClientAuthenticationHook, ClientAuthenticationHookEventName } from '@authup/core-http-kit';
-import type { IClient } from '@authup/core-http-kit';
+import { ClientAuthenticationHook, ClientAuthenticationHookEventName } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { storeToRefs } from 'pinia';
 import { hasHTTPClientAuthenticationHook, provideHTTPClientAuthenticationHook } from './singleton';
 import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../../store';
+import { buildHTTPClient } from '../build';
 import type { HTTPClientAuthenticationHookInstallOptions } from './types';
 
 export function installHTTPClientAuthenticationHook(
@@ -28,13 +28,10 @@ export function installHTTPClientAuthenticationHook(
 
     let refreshTokenInUse : string | null = null;
 
-    // Kept apart from the client the hook is attached to (unless a host
-    // shares one through `httpClient`): a 401 from `/token` on the attached
-    // client would wait on the very refresh it belongs to.
-    const buildClient = () : IClient => options.httpClient ?? new Client({
-        baseURL: options.baseURL,
-        transport: options.transport,
-    });
+    // A new instance per call unless the host passed one instance: the
+    // refresh must not run on the client the hook is attached to, or a 401
+    // from `/token` waits on the very refresh it belongs to.
+    const buildClient = () => buildHTTPClient(options);
 
     const hook = new ClientAuthenticationHook({
         tokenCreator: () => {
