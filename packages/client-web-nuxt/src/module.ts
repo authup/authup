@@ -82,3 +82,4 @@ export default defineNuxtModule<ModuleOptions>({
         });
     },
 });
+
