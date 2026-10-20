@@ -8,5 +8,5 @@
 import { hash as hashMethod } from '@node-rs/bcrypt';
 
 export async function hash(str: string, rounds: number = 10) : Promise<string> {
-    return hashMethod(str, rounds);
+    return hashMethod(str, { cost: rounds });
 }
