@@ -20,7 +20,8 @@ export const HTTPInjectionKey : {
     App: new TypedToken<IApp>('IApp'),
     Server: new TypedToken<HTTPServer>('Server'),
     /**
-     * HTTP client for the SSR'd UI pages. `HTTPModule.setup` registers a
+     * HTTP client for this server's calls to its own API (today the console
+     * login's token exchange). `HTTPModule.setup` registers a
      * default whose transport dispatches against the server's own listen
      * address (see `createInternalHttpClient`); a registration made
      * BEFORE setup wins (test injection). Register it with a

@@ -1628,20 +1628,18 @@ API. The six page GETs became a stateless hop:
   makes). A CONFIGURED `internalUrl` may
   carry one, and it means there what it means on `publicUrl`: an internal
   proxy that strips a prefix. The zod type is deliberately the same `z.url()`
-  for both. The swap is at the TRANSPORT, never on `baseURL`: the client is
-  handed to the SSR render, which turns values derived from its base url
-  into markup (`getAuthorizeUri` for the identity provider buttons, the
-  absolute OAuth2 endpoints, hapic's error message), and hydration does not
-  correct an attribute, so a client based on `apiInternalUrl` rendered
-  `href="http://127.0.0.1:3000/..."` on every federated login button. The
-  client keeps `apiUrl` as its base and `createRebasedTransport(apiUrl,
-  apiInternalUrl)` (`@authup/core-http-kit`) moves each request at dispatch.
-  It matches the base as a STRING prefix on a segment boundary, in both
-  forms a client produces (hapic's raw join and the WHATWG href of the
-  absolute endpoints), and concatenates the remainder onto the internal
-  base, keeping that base's path: parsing the request url first would
-  resolve an unencoded `../` in an id before the match and dial the public
-  address, which the differential spec in core-http-kit pins. server-core's own internal client is deliberately NOT repointed at the
+  for both. The swap is at the TRANSPORT, never on `baseURL`: since #3662 the
+  client is handed to the SSR render, where `getAuthorizeUri` feeds the
+  identity provider buttons' `href` and hapic's error message can reach a
+  500 body, and hydration does not correct an attribute. So the client keeps
+  `apiUrl` as its base and `createRebasedTransport(apiUrl, apiInternalUrl)`
+  (`@authup/core-http-kit`) moves each request at dispatch. It matches the
+  base as a STRING prefix on a segment boundary, in both forms a client
+  produces (hapic's raw join and the WHATWG href of the absolute OAuth2
+  endpoints), and concatenates the remainder onto the internal base, keeping
+  that base's path: parsing the request url first would resolve an unencoded
+  `../` in an id before the match and dial the public address, which the
+  differential spec in core-http-kit pins. server-core's own internal client is deliberately NOT repointed at the
   key: it resolves its actual listen address per request, which is
   strictly better than any configured value, and the two static consoles
   never read it, since they hand `apiUrl` to the browser and call nothing

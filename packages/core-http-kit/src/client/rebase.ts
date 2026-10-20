@@ -27,11 +27,14 @@ function isSegmentBoundary(char: string) : boolean {
  * The match is on strings rather than on parsed urls, because a client
  * produces exactly two forms: hapic joins the raw base string with the
  * request path, and the absolute OAuth2 endpoints are WHATWG serializations
- * of the base. Parsing the request url instead would resolve dot segments
- * (an unencoded `../` in an id) BEFORE the match and could leave the prefix,
- * sending the request to the public address. Concatenating onto `to` instead
- * of resolving relative to it also means a remainder starting with `//` can
- * never move the authority.
+ * of the base. Only those two spellings are recognised; a url naming the same
+ * origin another way (an explicit default port, other host case) is left as
+ * it is and dialed at that address. Parsing the request url instead would
+ * resolve dot segments (an unencoded `../` in an id) BEFORE the match and
+ * could leave the prefix, sending the request to the public address; matched
+ * first, they resolve against `to` exactly as they would on a client based
+ * on it. Concatenating onto `to` instead of resolving relative to it also
+ * means a remainder starting with `//` can never move the authority.
  */
 export function createBaseURLRewriter(from: string, to: string) : (url: string) => string {
     const target = trimTrailingSlashes(to);
