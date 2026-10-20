@@ -180,10 +180,12 @@ describe('src/hook (refresh on the hooked client)', () => {
         const first = client.realm.getMany();
         const second = client.user.getMany();
 
-        // let both requests fail and join the refresh before it answers
-        await new Promise((resolve) => {
-            setTimeout(resolve, 20);
-        });
+        // both requests failed and the refresh is waiting on /token
+        while (requests.length < 3) {
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1);
+            });
+        }
         tokenGate.resolve();
 
         expect(await settlesWithin(first, 1000)).toEqual('resolved');

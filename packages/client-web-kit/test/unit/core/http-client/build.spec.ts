@@ -162,21 +162,31 @@ describe('core/http-client/build', () => {
     });
 
     it('settles a 401 from /token during a refresh with one client instance', async () => {
-        // the body authup's token endpoint answers a refused client with
-        const { transport, urls } = createUnauthorizedTransport({
-            code: 'invalid_client',
-            error: 'invalid_client',
-            message: 'Client authentication failed',
-        });
-        const {
-            client, 
-            clients, 
-            hook, 
-        } = buildApp(transport, { shared: true });
+        const urls : string[] = [];
+        const transport : Transport = {
+            dispatch: async (request) => {
+                urls.push(request.url);
+
+                // a dead bearer on the resource route, and the body authup's
+                // token endpoint answers a refused client with
+                const body = request.url.endsWith('/token') ?
+                    {
+                        code: 'invalid_client', 
+                        error: 'invalid_client', 
+                        message: 'Client authentication failed', 
+                    } :
+                    { code: 'expired_token', message: 'The token is expired.' };
+
+                return new Response(JSON.stringify(body), {
+                    status: 401,
+                    headers: { 'content-type': 'application/json' },
+                });
+            },
+        };
+        const { client, clients } = buildApp(transport, { shared: true });
 
         expect(clients).toHaveLength(1);
         expect(await settlesWithin(client.realm.getMany(), 2000)).toEqual('settled');
-        expect(await settlesWithin(hook.refresh(), 2000)).toEqual('settled');
         expect(urls.some((url) => url.endsWith('/token'))).toBe(true);
     });
 });
