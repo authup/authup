@@ -8,5 +8,6 @@
 export * from './constants';
 export * from './helper';
 export * from './module';
+export * from './rebase';
 export * from './registry';
 export * from './type';
