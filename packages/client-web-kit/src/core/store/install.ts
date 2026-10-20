@@ -34,6 +34,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         () => createStore({
             baseURL: options.baseURL,
             httpClient: options.httpClient,
+            transport: options.transport,
             dispatcher: storeDispatcher,
             cookieSession: options.cookieSession,
             preferences: options.preferences,

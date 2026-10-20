@@ -258,6 +258,7 @@ The second argument of `install(app, options)`:
 |---|---|---|---|
 | `baseURL` | `string` | (required) | URL of the Authup API. |
 | `httpClient` | `IClient` | built from `baseURL` | A pre-built `@authup/core-http-kit` client, used by the store, the renewal hook and the provided client. |
+| `transport` | `ClientOptions['transport']` | fetch | Transport for every client the kit builds from `baseURL`. A server render passes `createRebasedTransport(baseURL, internalURL)` to dial an internal address while rendered URLs stay public. Prefer it to a shared `httpClient` there: a 401 from `/token` on the client the renewal hook is attached to waits on its own refresh. |
 | `pinia` | `Pinia` | the active Pinia | Pinia instance the store is registered on. |
 | `isServer` | `boolean` | `false` | Set during a server render; disables the background refresh timer. |
 | `components` | `boolean \| string[]` | not registered | Register every entity component globally, or the named ones. |

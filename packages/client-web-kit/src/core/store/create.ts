@@ -82,7 +82,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 }
 
 export function createStore(context: StoreCreateContext) {
-    const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
+    const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL, transport: context.transport });
 
     // State rather than a local flag, so a server-side cookie read is carried
     // to the client in the pinia payload and not repeated there.

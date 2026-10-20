@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IClient } from '@authup/core-http-kit';
+import type { ClientOptions, IClient } from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
 import type { HydrationStore } from './core/hydration';
 import type { StorePreferences } from './core/store';
@@ -102,6 +102,16 @@ export type Options = {
      * Covers the store, the authentication hook and the provided client.
      */
     httpClient?: IClient,
+    /**
+     * Transport every client the kit builds from `baseURL` dispatches
+     * through. Unlike `httpClient` it keeps those clients separate, which
+     * the refresh depends on: the hook's token request must not run on the
+     * client the hook is attached to, or a 401 from `/token` waits on its
+     * own refresh. A server render passes `createRebasedTransport` here to
+     * dial an internal address while every url derived from `baseURL`
+     * stays public.
+     */
+    transport?: ClientOptions['transport'],
 
     realtime?: boolean,
     realtimeURL?: string,
