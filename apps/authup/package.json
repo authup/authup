@@ -88,6 +88,6 @@
         "vitest": "^5.0.3"
     },
     "optionalDependencies": {
-        "@napi-rs/keyring": "^2.1.1"
+        "@napi-rs/keyring": "^2.1.2"
     }
 }
