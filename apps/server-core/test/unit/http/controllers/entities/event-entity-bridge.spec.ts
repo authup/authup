@@ -44,6 +44,7 @@ describe('event (entity-CRUD bridge)', () => {
     const suite = createTestApplication();
 
     let adminUserId: string;
+    let masterRealmId: string;
 
     beforeAll(async () => {
         await suite.setup();
@@ -51,6 +52,7 @@ describe('event (entity-CRUD bridge)', () => {
         // Another spec on the shared database may create an `admin` in a
         // foreign realm, so the lookup is scoped to the master realm.
         const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
+        masterRealmId = master.id;
         const { data } = await suite.client.user.getMany({
             filters: {
                 name: 'admin',
@@ -163,7 +165,7 @@ describe('event (entity-CRUD bridge)', () => {
         const actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
-        const { data: role } = await actor.role.create(createFakeRole());
+        const { data: role } = await actor.role.create(createFakeRole({ realmId: user.realmId }));
 
         // the login row names the session the bearer belongs to
         const login = await suite.client.event.getMany({
@@ -211,7 +213,7 @@ describe('event (entity-CRUD bridge)', () => {
 
     it('keeps a foreign-realm entity row hidden from an own-scoped reader', async () => {
         // an entity row in the reader's own realm (master) — the control
-        const { data: ownRole } = await suite.client.role.create(createFakeRole());
+        const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: masterRealmId }));
 
         // an entity row in a foreign realm (B)
         const { data: realmB } = await suite.client.realm.create(createFakeRealm());

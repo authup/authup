@@ -218,20 +218,28 @@ describe('core/entities/scope/service', () => {
     });
 
     describe('realm defaulting', () => {
-        it('should set realmId for non-master realm actor on create', async () => {
-            const realmId = randomUUID();
-            const actor = createNonMasterRealmActor(realmId);
+        it('should create a global row when realmId is absent', async () => {
+            const result = await service.create({ name: 'scope-no-realm' }, createNonMasterRealmActor(randomUUID()));
 
-            const result = await service.create({ name: 'realm-scope' }, actor);
-            expect(result.realmId).toBe(realmId);
+            expect(result.realmId).toBeNull();
         });
 
-        it('should set realmId to master realm for master realm actor on create', async () => {
+        it('should treat realmId: null like an absent realmId', async () => {
             const actor = createMasterRealmActor();
-            const masterRealmId = actor.identity!.data.realmId;
 
-            const result = await service.create({ name: 'global-scope' }, actor);
-            expect(result.realmId).toBe(masterRealmId);
+            const absent = await service.create({ name: 'scope-absent' }, actor);
+            const explicit = await service.create({ name: 'scope-explicit', realmId: null }, actor);
+
+            expect(absent.realmId).toBeNull();
+            expect(explicit.realmId).toBeNull();
+        });
+
+        it('should evaluate the create gate against the global realm when realmId is absent', async () => {
+            const actor = createMasterRealmActor();
+
+            await service.create({ name: 'scope-gated' }, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.SCOPE_CREATE).at(-1)).toBeNull();
         });
 
         it('should preserve realmId: null when explicitly provided on create', async () => {
@@ -272,6 +280,64 @@ describe('core/entities/scope/service', () => {
             await expect(
                 service.delete(entity.id, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+    });
+
+    describe('save by name scoped to a realm', () => {
+        async function seedPair() {
+            const master = await realmRepository.resolve(undefined, true);
+            const seedEntity = (name: string, realmId: string | null) => repository.seed(createFakeScope({ name, realmId }));
+            // the realm row comes first, so an unscoped lookup would find it
+            const scoped = seedEntity('name-scoped', master.id);
+            const global = seedEntity('name-scoped', null);
+
+            return {
+                master, 
+                global, 
+                scoped, 
+            };
+        }
+
+        it('should address the global row when realmId is absent', async () => {
+            const { global, scoped } = await seedPair();
+
+            const { entity, created } = await service.save('name-scoped', { description: 'changed' }, createAllowAllActor());
+
+            expect(created).toBe(false);
+            expect(entity.id).toBe(global.id);
+            expect(scoped.description).not.toBe('changed');
+        });
+
+        it('should address the global row when realmId is null', async () => {
+            const { global } = await seedPair();
+
+            const { entity } = await service.save('name-scoped', { description: 'changed', realmId: null }, createAllowAllActor());
+
+            expect(entity.id).toBe(global.id);
+        });
+
+        it('should address the realm row when realmId is given', async () => {
+            const { master, scoped } = await seedPair();
+
+            const { entity } = await service.save('name-scoped', { description: 'changed', realmId: master.name }, createAllowAllActor());
+
+            expect(entity.id).toBe(scoped.id);
+        });
+
+        it('should look a uuid key up by id alone', async () => {
+            const { scoped } = await seedPair();
+
+            const { entity } = await service.save(scoped.id, { description: 'changed' }, createAllowAllActor());
+
+            expect(entity.id).toBe(scoped.id);
+        });
+
+        it('should refuse a realm key that does not resolve', async () => {
+            await seedPair();
+
+            await expect(
+                service.save('name-scoped', { description: 'changed', realmId: 'unknown-realm' }, createAllowAllActor(), { updateOnly: true }),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
     });
 });

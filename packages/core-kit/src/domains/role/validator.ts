@@ -58,7 +58,10 @@ export class RoleValidator extends Container<
 
         this.mount(
             'clientId',
-            { optional: true },
+            {
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
+            },
             createValidator(z.uuid().nullable()),
         );
 

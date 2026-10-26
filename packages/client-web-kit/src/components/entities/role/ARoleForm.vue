@@ -115,6 +115,12 @@ export default defineComponent({
                 form.realmId = props.realmId;
             }
 
+            // no value on create would mean a global row, so a realm-bound
+            // actor's realm is sent explicitly
+            if (!isEditing.value && !form.realmId && realmLock.value) {
+                form.realmId = realmLock.value;
+            }
+
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);
             }
@@ -136,7 +142,10 @@ export default defineComponent({
                 return;
             }
 
-            await manager.createOrUpdate(form);
+            await manager.createOrUpdate({
+                ...form,
+                realmId: form.realmId || null,
+            });
         };
 
         const translationsDefault = useTranslations(

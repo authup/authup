@@ -13,8 +13,9 @@ import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2AuthorizationStateManager, 
+    IOAuth2AuthorizationStateManager,
     IOAuth2FederatedLoginService, 
+    IRealmRepository, 
 } from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {
@@ -32,6 +33,7 @@ export type IdentityProviderControllerContext = {
     options: IdentityProviderControllerOptions,
 
     repository: IIdentityProviderRepository,
+    realmRepository: Pick<IRealmRepository, 'resolve'>,
 
     accountManager: IIdentityProviderAccountManager,
     linkStore: IIdentityProviderAccountLinkStore,

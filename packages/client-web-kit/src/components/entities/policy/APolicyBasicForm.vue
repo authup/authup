@@ -60,7 +60,7 @@ export default defineComponent({
             invert: false,
             displayName: '',
             description: '',
-            realmId: '',
+            realmId: null as string | null,
             type: '',
         });
 
@@ -110,6 +110,13 @@ export default defineComponent({
 
         if (form.name.length === 0) {
             form.name = generateName(nameSeed);
+        }
+
+        // no value on create would mean a global row, so a realm-bound
+        // actor's realm is sent explicitly, and an untouched picker sends
+        // null rather than an empty string
+        if (!isEditing.value && !form.realmId) {
+            form.realmId = realmId.value || null;
         }
 
         // `type` is the policy discriminator owned by the parent
@@ -249,7 +256,7 @@ export default defineComponent({
                     </template>
                     <ARealmPicker
                         :value="v.fields.realmId.$model.value"
-                        @change="(value: string[]) => { v.fields.realmId.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
+                        @change="(value: string[]) => { v.fields.realmId.$model.value = value[0] || null; }"
                     />
                 </VCFormGroup>
             </IFieldValidation>

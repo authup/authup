@@ -296,7 +296,7 @@ export class ClientValidator extends Container<Client> {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
             },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().nullable()),
         );
 
         // deliberately NOT mounted for CREATE/UPDATE — no API caller may

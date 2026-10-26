@@ -15,6 +15,7 @@ import {
 import { createTestApplication } from '../../../../app';
 import { PermissionName } from '@authup/core-kit';
 import {
+    createFakeClient,
     createFakeRole,
     createFakeUser,
     expectClientError,
@@ -172,5 +173,22 @@ describe('src/http/controllers/role', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
+    });
+    it('should keep the owning client of a role on update', async () => {
+        const { data: owner } = await suite.client.client.create(createFakeClient());
+        const { data: other } = await suite.client.client.create(createFakeClient());
+
+        const { data: role } = await suite.client.role.create(createFakeRole({ clientId: owner.id }));
+        expect(role.clientId).toEqual(owner.id);
+
+        // a request body: the update payload type does not carry clientId
+        const body: Record<string, any> = { description: 'moved', clientId: other.id };
+        const { data: updated } = await suite.client.role.update(role.id, body);
+
+        expect(updated.description).toEqual('moved');
+        expect(updated.clientId).toEqual(owner.id);
+
+        const { data: read } = await suite.client.role.getOne(role.id);
+        expect(read.clientId).toEqual(owner.id);
     });
 });

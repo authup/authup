@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -122,6 +122,7 @@ describe('junction entities (realm isolation)', () => {
         await suite.setup();
 
         const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+        const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
 
         // global members, bindable from either realm — so the junction rows differ
         // only in their OWNER realm, which is what the gate reads
@@ -131,7 +132,7 @@ describe('junction entities (realm isolation)', () => {
         );
         const { data: globalScope } = await suite.client.scope.create(createFakeScope({ realmId: null }));
 
-        const { data: ownRole } = await suite.client.role.create(createFakeRole());
+        const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: master.id }));
         const { data: foreignRole } = await suite.client.role.create(createFakeRole({ realmId: realmB.id }));
         foreignRoleId = foreignRole.id;
 
@@ -143,7 +144,7 @@ describe('junction entities (realm isolation)', () => {
             createFakeClient({ realmId: realmB.id }),
         );
 
-        const { data: ownPermission } = await suite.client.permission.create(createFakePermission());
+        const { data: ownPermission } = await suite.client.permission.create(createFakePermission({ realmId: master.id }));
         const { data: foreignPermission } = await suite.client.permission.create(
             createFakePermission({ realmId: realmB.id }),
         );

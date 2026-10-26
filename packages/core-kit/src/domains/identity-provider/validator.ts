@@ -60,7 +60,7 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
                 group: ValidatorGroup.CREATE,
                 optional: true,
             },
-            createValidator(zod.uuid()),
+            createValidator(zod.uuid().nullable()),
         );
 
         this.mount('protocol', createValidator(zod.enum(IdentityProviderProtocol)));

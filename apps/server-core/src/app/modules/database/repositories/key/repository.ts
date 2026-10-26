@@ -21,7 +21,7 @@ import {
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
-import { validateEntityJoinColumns } from 'typeorm-extension';
+import { isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
@@ -41,7 +41,6 @@ import {
 import {
     applyRealmScopeSelect,
     hasUnmatchableId,
-    isEntityUnique,
     translateWhereConditions,
 } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';

@@ -541,8 +541,9 @@ export class TokenController {
      * dual-mounted entity controllers apply. The body is cached per request,
      * so every grant reads the stamped value.
      *
-     * The route realm must exist: the resolver passes a UUID through
-     * unchecked, and the body hint would otherwise fall back to master.
+     * The route realm must exist, or the body hint would fall back to
+     * master. The resolver middleware already answers 404 for an unknown
+     * realm; the lookup here keeps the handler correct on its own.
      * It scopes NAME resolution only, like the body hint; a user or client
      * addressed by UUID still resolves in its own realm.
      */

@@ -1098,7 +1098,7 @@ The options (`EntityRepositoryAdapterOptions`): `alias`, `target`, `entity`; `re
 - **Extension runs on reads that answer a caller, never on the read a write loads through.** `findMany`, `findOneById`, `findOneByName` and the protected `findOneWithQuery` call the overridable `extendMany` / `extendOne` (no-ops by default); `findOneBy` and `findManyBy` never do. That is the extra-attribute read/write rule as structure rather than convention: policy and user load their attributes there, identity-provider loads and decrypts its secrets on single reads only, since its list is the anonymous login surface.
 - **A name lookup scoped to an unknown realm matches nothing** (`IRealmRepository.resolveId`, fail closed), and a non-uuid id is "no row" before the query (`hasUnmatchableId`, #3650: every by-id lookup returns `null` for it, so every dialect answers 404 where postgres would otherwise refuse the bind with `22P02`; filter operands get the same treatment from the rapiq adapter, #3647).
 - **Every write answers a unique-index refusal with `EntityConflictError` (409)**, the losing side of a race `checkUniqueness` cannot close. `save` runs through the protected `persist(write)`, and so does every write an adapter adds besides it (policy and identity-provider `saveWithEA`, which the services and the policy provisioner write through); a new write that skips `persist` answers the race with a 500 again. Recognizable by `isEntityConflictError`, which `ensurePath` and the federated account manager rely on to re-read the winner. `checkUniqueness` throws the same error, so a caller sees one conflict type whichever of the two caught the duplicate.
-- `validateJoinColumns` / `checkUniqueness` run over `target`; an adapter overriding one calls `super` (the attribute adapters refuse a non-uuid owner first).
+- `validateJoinColumns` / `checkUniqueness` run over `target`; an adapter overriding one calls `super` (the attribute adapters refuse a non-uuid owner first). `checkUniqueness` is typeorm-extension's `isEntityUnique`: a column of a unique key the input does not carry takes the stored row's value, so an update (whose payload never carries `realmId`) is checked in the stored row's realm and client, and a global row of the same name does not conflict with a realm row keeping its name.
 
 Deliberately NOT on the base: `transaction()` (user, client, path; path runs through its own retrying runner) and everything entity-specific (`getBoundPermissions`, `findOneWithSecret`, `saveWithEA`, `findDescendants`). Key, realm, event, user-authenticator and identity-provider-account do not extend it: they are mostly bespoke (key mints and KEK-wraps material, realm resolves keys, event and user-authenticator are append- or owner-shaped). Pinned by `test/unit/app/modules/database/entity-repository.spec.ts` against the suite database, so it runs on every dialect.
 
@@ -1197,10 +1197,8 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
         await this.repository.validateJoinColumns(validated);
 
-        // Realm defaulting: always default to actor's realm
-        if (!validated.realmId && actor.identity) {
-            validated.realmId = this.getActorRealmId(actor) || null;
-        }
+        // No realm defaulting: role is global-capable, so no value is a global
+        // row (see Realm Defaulting)
 
         // evaluateRecord from @authup/access: the record realm is named, never
         // derived from a realmMatch policy data key
@@ -1227,7 +1225,7 @@ Service responsibility:
 - Input validation using validators from `@authup/core-kit` (e.g., `RoleValidator`, `UserValidator`)
 - Join column validation via `repository.validateJoinColumns()`
 - Uniqueness checks via `repository.checkUniqueness()`
-- Realm defaulting, built-in entity protection, name-lock enforcement
+- Realm defaulting (realm-bound entities only), built-in entity protection, name-lock enforcement
 - Entity creation, merging, and persistence
 - Returns domain objects (no HTTP response formatting)
 
@@ -3652,15 +3650,106 @@ only the reads were open.
 
 ### Realm Defaulting
 
-All entity services default `realmId` to the actor's realm when not provided:
+**No value (absent or `null`) means the same thing on create, and the entity
+type decides what.** A JSON body that omits `realmId` and one that sends
+`realmId: null` are one input, because the difference does not survive common
+serializers (Play JSON, Jackson `NON_NULL` and many form encoders drop a null
+field), and a request whose meaning depends on it punishes exactly those
+clients.
 
-```typescript
-if (!validated.realmId && actor.identity) {
-    validated.realmId = this.getActorRealmId(actor) || null;
-}
-```
+- **Global-capable** (`permission`, `role`, `scope`, `policy`): no value is a
+  **global** row (`realmId: null`). The services do not default the realm;
+  `evaluateRecord(..., { realm: validated.realmId ?? null })` decides whether
+  the actor may create a global row, so a `realm_admin` (its CUD grants at
+  `own` reach) that omits the realm gets 403 and must send its realm id. The
+  kit forms therefore always send the realm explicitly, a uuid or `null`,
+  never `''`.
+  **The exception is a `permission` or `role` naming an owning client**
+  (`clientId`): no value then takes the client's realm, and a realm other
+  than the client's is refused with a `ValidationError`. A client is always
+  realm-bound, so a client-owned row in another realm (or global) could never
+  be held by that client. `applyOwningClientRealm`
+  (`core/entities/client/owner-realm.ts`) reads the `client` relation
+  `validateJoinColumns` loaded and runs AFTER the create gate, which is
+  evaluated against the client's realm whatever `realmId` the body sent: a
+  caller that may not create in that realm gets 403 either way, so the
+  mismatch 400 tells nothing about a foreign client's realm to anyone but a
+  caller who may create there.
+  A custom permission created global reaches the built-in (global)
+  `realm_admin` only at the next boot: provisioning resolves its
+  `globalPermissions: ['*']` to every row with `realmId` and `clientId` both
+  null, minus `REALM_ADMIN_EXCLUDED_PERMISSIONS`, while
+  `PermissionService.assignToRealmAdminRoles` on create skips a non-built-in
+  global permission and grants a realm-scoped one (every client-owned one
+  included) only to a `realm_admin` role of that realm.
+- **Realm-bound** (`client`, `user`, `path`, `identity-provider`): no value is the **actor's
+  realm** (`getActorRealmId`), checked as `!validated.realmId`; a path whose
+  actor has no realm is refused with a `ValidationError`. Their validators
+  mount `realmId` as `z.uuid().nullable()` (CREATE and PROVISIONING; the
+  identity-provider validator CREATE only), and `UserService.save`,
+  `ClientService.save`, `PathService.create` and
+  `IdentityProviderController.write()` delete a `null` right after
+  validation, before `validateJoinColumns`: `realm_id` is
+  NOT NULL on those tables, and typeorm-extension skips a null only on a
+  nullable join column, so a null reaching the lookup answered 500.
 
-To create a global entity (`realmId: null`), the caller must explicitly pass `realmId: null`. The policy engine controls whether the actor is authorized to do so.
+Two alternatives are rejected. Keeping absent = actor's realm and null =
+global, documented: the distinction is the defect. Deriving the default from
+the actor's reach (global when it may create global rows, else its realm):
+the same request would then mean different things per caller.
+
+The defaulting is create-only: `realmId` is never mounted for `UPDATE` (see
+below), and provisioning writes through repositories with the realm always
+stated. The LOOKUP of a global-capable `save()` follows the same rule, so
+`PUT /<entity>/:key` and `POST /<entity>/:key` (`update()` is
+`save({ updateOnly: true })`) address a row like this:
+
+- a string `realmId` is resolved and the lookup is scoped to it; a key that
+  names no realm is refused with a `ValidationError` (400, `resolveBodyRealm`
+  in `core/entities/realm/helpers.ts`), never an unscoped lookup, while a realm
+  that exists but holds no such row answers 404 (or, for a name upsert,
+  creates it). On `permission` and `role` a NAME key additionally pins
+  `clientId` to the body's `clientId` or `null`, since the row is unique over
+  `(name, clientId, realmId)`;
+- no value with a NAME key looks up `realmId: null`, the global row
+  (`findOneBy` maps `null` onto `IS NULL`), and a name upsert creates it there;
+  on `permission` and `role` that lookup also pins `clientId: null`, so it never
+  addresses a client-owned row of the same name, while a body naming a
+  `clientId` looks up that client's realm and that client instead, the row
+  create would write. That lookup runs only after a `preEvaluateOneOf` over
+  the entity's CREATE and UPDATE permissions, so a caller who may write
+  neither cannot use it to probe which clients exist, and it loads the client
+  through `validateJoinColumns`, so a client id that names no client is
+  refused with 400 like on create;
+- no value with a UUID key looks up by id alone.
+
+The four branches of `permission` and `role` are one helper,
+`findClientOwnedRowForSave` (`core/entities/client/owner-realm.ts`, next to
+`applyOwningClientRealm`), parameterised by the entity's permission names.
+`scope` and `policy` own no client and spell the three remaining branches
+inline.
+
+The realm-bound `user`, `client` and `identity-provider` (the last in
+`IdentityProviderController.write()`, which has no service) follow the same
+principle with their own default: a NAME key without a realm (absent or
+`null`) is scoped to the actor's realm, the realm a create with the same body would write, so
+`PUT /users/alice` from a master admin never reaches an `alice` of another
+realm and creates the master one instead. An actor without a realm matches
+nothing there, and the create that follows refuses it as a create would. A
+UUID key without a realm stays a by-id lookup, which is how the consoles and
+the CLI update a row.
+
+So a name-keyed update of a realm-scoped row without a realm answers 404 (or,
+on `PUT`, creates a global row), and the caller names the realm in the body
+or, for `permission` and `policy`, through the nested
+`/realms/:realmId/<entity>` mount, whose route realm overwrites the body
+(`applyRouteRealmIDToBody`). `role` and `scope` are mounted flat only. Every
+name branch on `permission` and `role` pins `clientId`, so a name addresses
+exactly the row a create with the same body would write.
+
+A policy created with a `parentId` and no `realmId` is global like any other
+policy. There is deliberately no parent/child realm check: a global policy may
+be a building block under a realm's composite parent.
 
 ### Realm immutability (an entity never moves between realms)
 
@@ -3668,6 +3757,16 @@ An entity's realm is fixed at creation. Every entity validator mounts `realmId`
 for `CREATE` / `PROVISIONING` only, so a `realmId` submitted on `POST /<entity>/:id`
 is silently stripped by the validator and `merge()` never sees it. There is no
 "move to another realm" operation and none is planned.
+
+The owning client of a permission or a role is fixed the same way: both
+validators mount `clientId` for `CREATE` / `PROVISIONING` only. An update
+body may still carry it: a name-keyed update reads `data.clientId` (with
+`realmId`) in `findClientOwnedRowForSave` to pick the row, before the
+validator strips it, which is why `PermissionUpdatePayload` /
+`RoleUpdatePayload` keep the field. A client-owned row
+takes its client's realm (`applyOwningClientRealm`, which compares the two
+realm ids case-insensitively), so changing the owner on update would be a
+realm move by another name. Ownership changes by re-creating the row.
 
 The reason is denormalization. A user's realm is copied into
 `auth_user_roles.user_realm_id`, `auth_user_permissions.user_realm_id` and
@@ -3689,9 +3788,13 @@ Consequences to keep in mind when touching these paths:
   `POST /users/:id` answers `404` rather than moving the row. That is also the
   correct answer for the nested `/realms/:realmId/users/:id` mount (the row is
   not in that realm), and it deliberately reveals nothing about the row's real
-  realm.
+  realm. A body `realmId` that names no realm is refused with 400 on every
+  entity, and a route realm that names none answers 404 from the realm
+  resolver: dropping the predicate instead would address the row of whichever
+  realm holds the name.
 - The `PUT /<entity>/:key` upsert takes the same scoped lookup, so a foreign
-  realm key makes it miss. **Only a NAME key may then create** ("ensure an
+  realm key makes it miss (on a global-capable entity a name key with no realm
+  is scoped to the global row, see *Realm Defaulting*). **Only a NAME key may then create** ("ensure an
   entity with this name exists in this realm"); a UUID key addresses one
   specific row, so a miss is `EntityNotFoundError` instead. Without that rule
   the upsert answered a realm change by writing a **second** row (a fresh id,
@@ -3708,8 +3811,11 @@ Consequences to keep in mind when touching these paths:
   `system.client-names-self-manage`) list `realmId` as well, so the strip is
   backed by an explicit policy rejection on the self-edit path.
 
-Pinned by *should strip realmId at UPDATE for realm bound entities*
-(`packages/core-kit/test/unit/domains/validator-groups.spec.ts`) and *should not
+Pinned by *should strip realmId at UPDATE for realm bound entities* and
+*should strip clientId at UPDATE for client ownable entities*
+(`packages/core-kit/test/unit/domains/validator-groups.spec.ts`), *should keep
+the owning client of a role on update*
+(`apps/server-core/test/unit/http/controllers/entities/role.spec.ts`) and *should not
 move the user to another realm*
 (`apps/server-core/test/unit/core/entities/user/service.spec.ts`).
 
@@ -3844,7 +3950,7 @@ This applies to the controllers that read realm context: `client`, `user`, `perm
 
 **Request flow**:
 
-1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId/:nested', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`, AHEAD of the authorization middleware, which needs the route realm to resolve a Basic name) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolveId()` (UUID pass-through: no existence check; names resolve canonically), and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm name → `EntityNotFoundError` → 404; an unknown realm UUID passes through and fails closed at the repository predicate below.
+1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId/:nested', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`, AHEAD of the authorization middleware, which needs the route realm to resolve a Basic name) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolve()` (a UUID through the 60s-cached by-id lookup, a name canonically), and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. A realm that does not exist answers `EntityNotFoundError` → 404 whether the route names it by UUID or by name.
 2. The decorator-mounted route subsequently re-extracts `:realmId` from the URL into `event.params.realmId`, clobbering the raw URL value with itself: this is why the resolved UUID is stored on `event.store`, not `event.params`.
 3. Controllers read the realm via `getRequestRealmID(event)` (helper in `adapters/http/request/helpers/realm-id.ts`), which prefers the stashed UUID and falls back to `event.params.realmId` for cases where the middleware didn't run.
 
@@ -4621,11 +4727,9 @@ than guarded:
   inside them: a console user's grants owned by ANY client apply. That is the fail-open above
   read from the other side, and it is deliberate: narrowing it would stop the consoles and
   Basic binding client-owned permissions at all;
-- an actor holding `ROLE_UPDATE` / `PERMISSION_UPDATE` can change a row's `clientId`, and
-  one acting through an X token can assign itself an unowned role carrying grants it
+- an actor acting through an X token can assign itself an unowned role carrying grants it
   holds only through X: delegation checks what the actor holds, not where it applies.
-  Such a change reaches a user's grants after the 60 s owned-roles / owned-permissions
-  query cache. Removing a user's role or permission junction takes effect at
+  A user's owned roles and permissions are read through a 60 s query cache. Removing a user's role or permission junction takes effect at
   once (its subscriber drops those keys), and so does deleting a role, whose
   subscriber drops the role's owned-permissions key because the junction rows
   go by cascade without a subscriber of their own; deleting a whole permission
@@ -7753,8 +7857,8 @@ The three realm-resolving grants (`password`, `authorization_code`,
   over a body `realm_id` / `realm_name` for every grant and for introspection's
   client authentication (the entity controllers' route-wins rule). A route
   realm that does not exist answers 404 on every route of the mount, revoke
-  included (a name from the resolver, a UUID from the handler, since the
-  resolver passes UUIDs through) instead of the body hint's fallback to
+  included (from the resolver middleware; the handler repeats the lookup so
+  it stays correct on its own) instead of the body hint's fallback to
   master. An array body is refused (`invalid_request`), since it could not
   carry the stamp. Like the body hint it scopes NAME
   resolution only: a user or client addressed by UUID still resolves in its

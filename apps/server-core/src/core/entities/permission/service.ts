@@ -32,6 +32,7 @@ import type { IRoleRepository } from '../role/types.ts';
 import type { IRolePermissionRepository } from '../role-permission/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
+import { applyOwningClientRealm, findClientOwnedRowForSave } from '../client/owner-realm.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { permissionSchema } from './schema.ts';
@@ -173,27 +174,20 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }> {
         let group: string;
 
-        const realm = typeof data.realmId === 'string' ?
-            await this.realmRepository.resolve(data.realmId) :
-            undefined;
-
         let entity: Permission | null | undefined;
         if (idOrName) {
-            const where: Record<string, any> = {};
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
-            }
-
-            if (realm) {
-                where.realmId = realm.id;
-            }
-
-            entity = await this.repository.findOneBy(where);
+            entity = await findClientOwnedRowForSave(idOrName, data, {
+                repository: this.repository,
+                realmRepository: this.realmRepository,
+                actor,
+                permissionNames: [
+                    PermissionName.PERMISSION_CREATE,
+                    PermissionName.PERMISSION_UPDATE,
+                ],
+            });
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
@@ -241,15 +235,21 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             };
         }
 
-        if (!isPropertySet(validated, 'realmId') && actor.identity) {
-            validated.realmId = this.getActorRealmId(actor) || null;
-        }
+        // The create gate runs before a realm mismatch is reported: a caller
+        // that may not create in the owning client's realm learns nothing
+        // about that realm, whatever realmId it sent.
+        const realm = validated.client ?
+            validated.client.realmId :
+            validated.realmId ?? null;
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_CREATE,
-            realm: validated.realmId ?? null,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
+            realm,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: realm } },
         });
+
+        applyOwningClientRealm(validated);
+        validated.realmId = validated.realmId ?? null;
 
         await this.repository.checkUniqueness(validated);
 

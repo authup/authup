@@ -79,7 +79,7 @@ describe('realm isolation (field projection)', () => {
         });
         foreignClientId = foreignClient.id;
 
-        const { data: ownRole } = await suite.client.role.create({ name: 'realm-iso-own-role' });
+        const { data: ownRole } = await suite.client.role.create({ name: 'realm-iso-own-role', realmId: ownUser.realmId });
         const { data: ownRoleAttribute } = await suite.client.roleAttribute.create({
             ...createFakeRoleAttribute(),
             roleId: ownRole.id,

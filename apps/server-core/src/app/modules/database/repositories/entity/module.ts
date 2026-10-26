@@ -15,11 +15,10 @@ import type {
     Repository,
     SelectQueryBuilder,
 } from 'typeorm';
-import { isDatabaseUniqueViolationError, validateEntityJoinColumns } from 'typeorm-extension';
+import { isDatabaseUniqueViolationError, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import {
     applyJunctionRealmScopeSelect,
     hasUnmatchableId,
-    isEntityUnique,
     translateWhereConditions,
 } from '../helpers.ts';
 import { applyQuery, fetchMany } from '../query.ts';

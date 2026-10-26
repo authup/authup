@@ -10,6 +10,7 @@ import {
     PermissionName,
     ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
+import type { Role } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
@@ -302,22 +303,42 @@ describe('core/entities/role/service', () => {
     });
 
     describe('realm defaulting', () => {
-        it('should set realmId for non-master realm actor on create', async () => {
-            const realmId = randomUUID();
-            const actor = createNonMasterRealmActor(realmId);
+        it('should create a global row when realmId is absent', async () => {
+            const result = await service.create({ name: 'role-no-realm' }, createNonMasterRealmActor(randomUUID()));
 
-            const result = await service.create({ name: 'realm-role' }, actor);
-
-            expect(result.realmId).toBe(realmId);
+            expect(result.realmId).toBeNull();
         });
 
-        it('should set realmId to master realm for master realm actor on create', async () => {
+        it('should treat realmId: null like an absent realmId', async () => {
             const actor = createMasterRealmActor();
-            const masterRealmId = actor.identity!.data.realmId;
 
-            const result = await service.create({ name: 'global-role' }, actor);
+            const absent = await service.create({ name: 'role-absent' }, actor);
+            const explicit = await service.create({ name: 'role-explicit', realmId: null }, actor);
 
-            expect(result.realmId).toBe(masterRealmId);
+            expect(absent.realmId).toBeNull();
+            expect(explicit.realmId).toBeNull();
+        });
+
+        it('should evaluate the create gate against the global realm when realmId is absent', async () => {
+            const actor = createMasterRealmActor();
+
+            await service.create({ name: 'role-gated' }, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.ROLE_CREATE).at(-1)).toBeNull();
+        });
+
+        it('should upsert a global row by name when realmId is absent', async () => {
+            const actor = createMasterRealmActor();
+
+            const first = await service.save('upsert-role', { name: 'upsert-role' }, actor);
+
+            expect(first.created).toBe(true);
+            expect(first.entity.realmId).toBeNull();
+
+            const second = await service.save('upsert-role', { name: 'upsert-role' }, actor);
+
+            expect(second.created).toBe(false);
+            expect(second.entity.id).toBe(first.entity.id);
         });
 
         it('should not override explicit realmId', async () => {
@@ -358,6 +379,64 @@ describe('core/entities/role/service', () => {
             );
 
             expect(result.realmId).toBeNull();
+        });
+        describe('owning client', () => {
+            const clientId = randomUUID();
+            const clientRealmId = randomUUID();
+
+            beforeEach(() => {
+                repository.onValidateJoinColumns((input) => {
+                    if (input.clientId === clientId) {
+                        input.client = { id: clientId, realmId: clientRealmId } as Role['client'];
+                    }
+                });
+            });
+
+            it('should take the client realm when realmId is absent', async () => {
+                const actor = createMasterRealmActor();
+
+                const result = await service.create({ name: 'role-client-owned', clientId }, actor);
+
+                expect(result.realmId).toBe(clientRealmId);
+                expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.ROLE_CREATE).at(-1)).toBe(clientRealmId);
+            });
+
+            it('should take the client realm when realmId is null', async () => {
+                const result = await service.create(
+                    {
+                        name: 'role-client-null',
+                        clientId,
+                        realmId: null,
+                    },
+                    createMasterRealmActor(),
+                );
+
+                expect(result.realmId).toBe(clientRealmId);
+            });
+
+            it('should accept the client realm when given', async () => {
+                const result = await service.create(
+                    {
+                        name: 'role-client-match',
+                        clientId,
+                        realmId: clientRealmId,
+                    },
+                    createMasterRealmActor(),
+                );
+
+                expect(result.realmId).toBe(clientRealmId);
+            });
+
+            it('should refuse a realm other than the client realm', async () => {
+                await expect(service.create(
+                    {
+                        name: 'role-client-mismatch',
+                        clientId,
+                        realmId: randomUUID(),
+                    },
+                    createMasterRealmActor(),
+                )).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+            });
         });
     });
 
@@ -410,6 +489,116 @@ describe('core/entities/role/service', () => {
             const result = await service.delete(entity.id, createAllowAllActor());
 
             expect(result.id).toBe(entity.id);
+        });
+    });
+
+    describe('save by name scoped to a realm', () => {
+        async function seedPair() {
+            const master = await realmRepository.resolve(undefined, true);
+            const seedEntity = (name: string, realmId: string | null) => repository.seed(createFakeRole({ name, realmId }));
+            // the realm row comes first, so an unscoped lookup would find it
+            const scoped = seedEntity('name-scoped', master.id);
+            const global = seedEntity('name-scoped', null);
+
+            return {
+                master, 
+                global, 
+                scoped, 
+            };
+        }
+
+        it('should address the global row when realmId is absent', async () => {
+            const { global, scoped } = await seedPair();
+
+            const { entity, created } = await service.save('name-scoped', { description: 'changed' }, createAllowAllActor());
+
+            expect(created).toBe(false);
+            expect(entity.id).toBe(global.id);
+            expect(scoped.description).not.toBe('changed');
+        });
+
+        it('should address the global row when realmId is null', async () => {
+            const { global } = await seedPair();
+
+            const { entity } = await service.save('name-scoped', { description: 'changed', realmId: null }, createAllowAllActor());
+
+            expect(entity.id).toBe(global.id);
+        });
+
+        it('should address the realm row when realmId is given', async () => {
+            const { master, scoped } = await seedPair();
+
+            const { entity } = await service.save('name-scoped', { description: 'changed', realmId: master.name }, createAllowAllActor());
+
+            expect(entity.id).toBe(scoped.id);
+        });
+
+        it('should look a uuid key up by id alone', async () => {
+            const { scoped } = await seedPair();
+
+            const { entity } = await service.save(scoped.id, { description: 'changed' }, createAllowAllActor());
+
+            expect(entity.id).toBe(scoped.id);
+        });
+
+        it('should refuse a realm key that does not resolve', async () => {
+            await seedPair();
+
+            await expect(
+                service.save('name-scoped', { description: 'changed', realmId: 'unknown-realm' }, createAllowAllActor(), { updateOnly: true }),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+    });
+    describe('save by name with an owning client', () => {
+        it('should not address a client owned row when no client is given', async () => {
+            const owned = repository.seed(createFakeRole({
+                name: 'name-owned',
+                realmId: null,
+                clientId: randomUUID(),
+            }));
+
+            const { entity, created } = await service.save('name-owned', { name: 'name-owned', description: 'changed' }, createMasterRealmActor());
+
+            expect(created).toBe(true);
+            expect(entity.id).not.toEqual(owned.id);
+            expect(entity.clientId ?? null).toBeNull();
+            expect(owned.description).not.toEqual('changed');
+        });
+
+        it('should address the client owned row when its client is given', async () => {
+            const clientId = randomUUID();
+            const clientRealmId = randomUUID();
+            repository.onValidateJoinColumns((input) => {
+                if (input.clientId === clientId) {
+                    input.client = { id: clientId, realmId: clientRealmId } as Role['client'];
+                }
+            });
+            const global = repository.seed(createFakeRole({ name: 'name-owned', realmId: null }));
+            const owned = repository.seed(createFakeRole({
+                name: 'name-owned',
+                realmId: clientRealmId,
+                clientId,
+            }));
+
+            const { entity, created } = await service.save(
+                'name-owned',
+                { description: 'changed', clientId },
+                createMasterRealmActor(),
+            );
+
+            expect(created).toBe(false);
+            expect(entity.id).toEqual(owned.id);
+            expect(global.description).not.toEqual('changed');
+        });
+
+        it('should not look the client up for a caller who may not write', async () => {
+            let lookups = 0;
+            repository.onValidateJoinColumns(() => {
+                lookups++;
+            });
+
+            await expect(service.save('name-owned', { clientId: randomUUID() }, createDenyAllActor())).rejects.toThrow();
+            expect(lookups).toBe(0);
         });
     });
 });

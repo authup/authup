@@ -837,6 +837,22 @@ describe('core/entities/client/service', () => {
             expect(created).toBe(false);
         });
 
+        it('should refuse a realm key that does not resolve', async () => {
+            const master = realmRepository.getMasterRealm();
+            const entity = repository.seed(createFakeClient({ name: 'realm-scoped-client', realmId: master.id }));
+
+            await expect(
+                service.save(
+                    'realm-scoped-client',
+                    { displayName: 'changed', realmId: randomUUID() },
+                    createAllowAllActor(),
+                    { updateOnly: true },
+                ),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+            expect((await repository.findOneById(entity.id))!.displayName).not.toBe('changed');
+        });
+
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),

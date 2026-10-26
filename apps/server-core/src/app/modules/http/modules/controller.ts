@@ -685,6 +685,7 @@ export class HTTPControllerModule {
             },
 
             repository,
+            realmRepository: new RealmRepositoryAdapter(realmRepository),
             accountManager,
             linkStore,
 

@@ -24,11 +24,13 @@ export class RealmResolverMiddleware {
             return;
         }
 
-        const realmId = await this.realmRepository.resolveId(value);
-        if (!realmId) {
+        // A UUID key is looked up too (cached by id): an unknown realm in the
+        // route answers 404 whichever way it is named.
+        const realm = await this.realmRepository.resolve(value);
+        if (!realm) {
             throw new EntityNotFoundError(`realm '${value}' not found`);
         }
 
-        setRequestRealmID(event, realmId);
+        setRequestRealmID(event, realm.id);
     }
 }
