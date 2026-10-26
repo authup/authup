@@ -44,9 +44,9 @@ const clientB = 'c641912c-21e5-4cb4-84b6-169e2b2bb026';
 type Policy = { type: string, [key: string]: unknown };
 type Definition = {
     name: string,
-    realm_id: string | null,
-    client_id: string | null,
-    decision_strategy: string | null,
+    realmId: string | null,
+    clientId: string | null,
+    decisionStrategy: string | null,
     policies: string[] | null,
 };
 type Grant = {
@@ -82,9 +82,9 @@ const identity : IdentityPolicyData = {
 function definition(policies: string[] | null = ['binding'], overrides: Partial<Definition> = {}) : Definition {
     return {
         name: 'event_read',
-        realm_id: null,
-        client_id: null,
-        decision_strategy: null,
+        realmId: null,
+        clientId: null,
+        decisionStrategy: null,
         policies,
         ...overrides,
     };
@@ -250,8 +250,8 @@ describe('authorization catalog consumer', () => {
         const evaluator = await build({
             catalog: catalog([
                 definition(),
-                definition(['binding'], { realm_id: realmA, client_id: clientA }),
-                definition(['binding'], { realm_id: realmB, client_id: clientA }),
+                definition(['binding'], { realmId: realmA, clientId: clientA }),
+                definition(['binding'], { realmId: realmB, clientId: clientA }),
             ]),
             grants: grants(
                 { realm_scope: 'own', policies: [] },
@@ -388,7 +388,7 @@ describe('authorization catalog consumer', () => {
             catalog: catalog([
                 definition(),
                 definition(null, { name: 'event_delete' }),
-                definition(null, { realm_id: realmA }),
+                definition(null, { realmId: realmA }),
             ]),
             grants: grants(
                 {
@@ -626,13 +626,45 @@ describe('authorization catalog consumer', () => {
         await expect(build({ grants: { name: 'event_read' } })).rejects.toThrow();
     });
 
+    it('reads the catalog in camelCase and the introspected grants in snake_case', async () => {
+        const evaluator = await build({
+            catalog: catalog([definition(['binding'], { realmId: realmA, clientId: clientA })]),
+            grants: grants({
+                realm_id: realmA,
+                client_id: clientA,
+                realm_scope: 'own',
+                policies: [],
+            }),
+        });
+
+        await expect(evaluator.evaluate({
+            name: 'event_read',
+            realmId: realmA,
+            clientId: clientA,
+            data: resource(realmA),
+        })).resolves.toBeUndefined();
+
+        await expect(build({
+            catalog: {
+                policies: { binding: { type: 'permissionBinding' } },
+                permissions: [{
+                    name: 'event_read',
+                    realm_id: null,
+                    client_id: null,
+                    decision_strategy: null,
+                    policies: ['binding'],
+                }],
+            },
+        })).rejects.toThrow();
+    });
+
     it('composes several definition policies with the permission decision strategy', async () => {
         const policies = {
             binding: { type: 'permissionBinding' },
             clients: { type: 'identity', types: ['client'] },
         };
-        const unanimous = catalog([definition(['binding', 'clients'], { decision_strategy: 'unanimous' })], policies);
-        const affirmative = catalog([definition(['binding', 'clients'], { decision_strategy: 'affirmative' })], policies);
+        const unanimous = catalog([definition(['binding', 'clients'], { decisionStrategy: 'unanimous' })], policies);
+        const affirmative = catalog([definition(['binding', 'clients'], { decisionStrategy: 'affirmative' })], policies);
 
         expect(await allowed(await build({ catalog: unanimous }), resource(realmB))).toBe(false);
         expect(await allowed(await build({ catalog: affirmative }), resource(realmB))).toBe(true);

@@ -13,6 +13,7 @@ import {
     vi,
 } from 'vitest';
 import type {
+    AuthorizationCheckRealms,
     IPermissionEvaluator,
     IdentityPolicyData,
     PermissionEvaluationContext,
@@ -32,6 +33,7 @@ import { FakeIdentityPermissionProvider } from '../helpers/fake-identity-permiss
 const REALM_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const FOREIGN_REALM_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb099';
 const CLIENT_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
+const FOREIGN_CLIENT_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb026';
 
 const systemDefault = {
     id: 'policy-default',
@@ -125,12 +127,17 @@ async function visible(
     return { identity: withGrants, decorate: decorateWith(withGrants) };
 }
 
-function grant(name: string, realmScope: `${RealmScope}`) : PermissionPolicyBinding {
+function grant(
+    name: string,
+    realmScope: `${RealmScope}`,
+    overrides: Record<string, any> = {},
+) : PermissionPolicyBinding {
     return {
         permission: {
-            name, 
-            realmId: null, 
-            clientId: null, 
+            name,
+            realmId: null,
+            clientId: null,
+            ...overrides,
         },
         realmScope,
     };
@@ -156,7 +163,7 @@ describe('core/authorization/check', () => {
         const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
         expect(result).toEqual([
-            { name: 'user_update', realms: [REALM_ID, null] },
+            { name: 'user_update', targetRealms: [REALM_ID, null] },
         ]);
     });
 
@@ -186,7 +193,7 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, await visible(ctx));
 
-        expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
+        expect(result).toEqual([{ name: 'user_update', targetRealms: [REALM_ID] }]);
     });
 
     it('answers a named foreign realm only for an any grant', async () => {
@@ -200,10 +207,10 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             ...await visible(ctx),
-            realms: [FOREIGN_REALM_ID],
+            targetRealms: [FOREIGN_REALM_ID],
         });
 
-        expect(result).toEqual([{ name: 'realm_read', realms: [FOREIGN_REALM_ID] }]);
+        expect(result).toEqual([{ name: 'realm_read', targetRealms: [FOREIGN_REALM_ID] }]);
     });
 
     it('omits a permission reaching none of the requested realms', async () => {
@@ -214,7 +221,7 @@ describe('core/authorization/check', () => {
         expect(result).toEqual([]);
     });
 
-    it('omits a requested name with no global definition', async () => {
+    it('omits a requested name with no selected definition', async () => {
         const ctx = setup([definition('user_update')], [grant('user_update', RealmScope.OWN)]);
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
@@ -222,7 +229,7 @@ describe('core/authorization/check', () => {
             names: ['user_update', 'not_a_permission'],
         });
 
-        expect(result).toEqual([{ name: 'user_update', realms: [REALM_ID] }]);
+        expect(result).toEqual([{ name: 'user_update', targetRealms: [REALM_ID] }]);
     });
 
     // The identity reaches the WHOLE tree, not only the permission-binding
@@ -251,7 +258,7 @@ describe('core/authorization/check', () => {
         const ctx = setup([identityOnly], []);
 
         const { permissions: held } = await buildAuthorizationCheck(ctx, await visible(ctx));
-        expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
+        expect(held).toEqual([{ name: 'user_read', targetRealms: [REALM_ID, null] }]);
 
         // the same tree denies an identity the policy does not admit, which is
         // the proof the policy is evaluating the data rather than ignoring it
@@ -300,11 +307,11 @@ describe('core/authorization/check', () => {
 
         const { permissions: held } = await buildAuthorizationCheck(ctx, {
             identity,
-            realms: RealmScope.OWN,
+            targetRealms: RealmScope.OWN,
             decorate: decorateWith(undefined),
         });
 
-        expect(held).toEqual([{ name: 'user_read', realms: [REALM_ID] }]);
+        expect(held).toEqual([{ name: 'user_read', targetRealms: [REALM_ID] }]);
     });
 
     it('answers nothing for a credential whose scopes withhold the identity', async () => {
@@ -323,10 +330,10 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             ...await visible(ctx),
-            realms: RealmScope.OWN,
+            targetRealms: RealmScope.OWN,
         });
 
-        expect(result).toEqual([{ name: 'user_read', realms: [REALM_ID] }]);
+        expect(result).toEqual([{ name: 'user_read', targetRealms: [REALM_ID] }]);
     });
 
     it('echoes an explicit realm list verbatim and deduplicates it', async () => {
@@ -334,15 +341,15 @@ describe('core/authorization/check', () => {
 
         const { permissions: result } = await buildAuthorizationCheck(ctx, {
             ...await visible(ctx),
-            realms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
+            targetRealms: [FOREIGN_REALM_ID, FOREIGN_REALM_ID, null],
         });
 
         expect(result).toEqual([
-            { name: 'user_read', realms: [FOREIGN_REALM_ID, null] },
+            { name: 'user_read', targetRealms: [FOREIGN_REALM_ID, null] },
         ]);
     });
 
-    it('skips a realm- or client-scoped definition, which no gate can resolve either', async () => {
+    it('selects the global definitions alone by default', async () => {
         const ctx = setup(
             [
                 definition('user_read'),
@@ -351,8 +358,8 @@ describe('core/authorization/check', () => {
             ],
             [
                 grant('user_read', RealmScope.ANY),
-                grant('tenant_thing', RealmScope.ANY),
-                grant('client_thing', RealmScope.ANY),
+                grant('tenant_thing', RealmScope.ANY, { realmId: REALM_ID }),
+                grant('client_thing', RealmScope.ANY, { clientId: CLIENT_ID }),
             ],
         );
 
@@ -361,6 +368,231 @@ describe('core/authorization/check', () => {
         expect(result.map((entry) => entry.name)).toEqual(['user_read']);
     });
 
+    describe('owned definitions', () => {
+        it.each<[string, AuthorizationCheckRealms]>([
+            ['own', RealmScope.OWN],
+            ['ownOrNull', RealmScope.OWN_OR_NULL],
+            ['an explicit id', [REALM_ID]],
+        ])('selects a realm-owned definition by %s', async (_, realms) => {
+            const ctx = setup(
+                [definition('mtb_query_submit', { realmId: REALM_ID })],
+                [grant('mtb_query_submit', RealmScope.OWN_OR_NULL, { realmId: REALM_ID })],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms,
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'mtb_query_submit', 
+                    realmId: REALM_ID, 
+                    targetRealms: [REALM_ID, null], 
+                },
+            ]);
+        });
+
+        it('answers a realm-owned definition for every target realm its grant reaches', async () => {
+            const ctx = setup(
+                [definition('mtb_query_submit', { realmId: REALM_ID })],
+                [grant('mtb_query_submit', RealmScope.ANY, { realmId: REALM_ID })],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: [REALM_ID],
+                targetRealms: [REALM_ID, FOREIGN_REALM_ID, null],
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'mtb_query_submit',
+                    realmId: REALM_ID,
+                    targetRealms: [REALM_ID, FOREIGN_REALM_ID, null],
+                },
+            ]);
+        });
+
+        it('selects a client-owned definition by an explicit client id', async () => {
+            const ctx = setup(
+                [
+                    definition('report_export', { clientId: CLIENT_ID }),
+                    definition('report_export', { realmId: REALM_ID, clientId: CLIENT_ID }),
+                ],
+                [
+                    grant('report_export', RealmScope.OWN, { clientId: CLIENT_ID }),
+                    grant('report_export', RealmScope.OWN, { realmId: REALM_ID, clientId: CLIENT_ID }),
+                ],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: RealmScope.OWN_OR_NULL,
+                clients: [CLIENT_ID],
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'report_export', 
+                    clientId: CLIENT_ID, 
+                    targetRealms: [REALM_ID], 
+                },
+                {
+                    name: 'report_export',
+                    realmId: REALM_ID,
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID],
+                },
+            ]);
+        });
+
+        it('resolves the own client selector to the token client', async () => {
+            const ctx = setup(
+                [
+                    definition('report_export', { clientId: CLIENT_ID }),
+                    definition('report_export', { clientId: FOREIGN_CLIENT_ID }),
+                ],
+                [
+                    grant('report_export', RealmScope.OWN, { clientId: CLIENT_ID }),
+                    grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID }),
+                ],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                clients: RealmScope.OWN,
+                clientId: CLIENT_ID,
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'report_export', 
+                    clientId: CLIENT_ID, 
+                    targetRealms: [REALM_ID], 
+                },
+            ]);
+        });
+
+        // A client subject's grants are never narrowed to its token client,
+        // so `own` must not narrow them either.
+        it('resolves the own client selector to every granted client for a client subject', async () => {
+            const ctx = setup(
+                [definition('report_export', { clientId: FOREIGN_CLIENT_ID })],
+                [grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID })],
+            );
+
+            const clientIdentity : IdentityPolicyData = {
+                type: 'client',
+                id: CLIENT_ID,
+                realmId: REALM_ID,
+                realmName: 'tenant',
+                clientId: CLIENT_ID,
+            };
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx, clientIdentity),
+                clients: RealmScope.OWN_OR_NULL,
+                clientId: CLIENT_ID,
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'report_export',
+                    clientId: FOREIGN_CLIENT_ID,
+                    targetRealms: [REALM_ID],
+                },
+            ]);
+        });
+
+        // Without a token client (the console cookie, Basic) the request's
+        // grants are not narrowed to one client, so `own` must not be either.
+        it('resolves the own client selector to every granted client without a token client', async () => {
+            const ctx = setup(
+                [
+                    definition('user_read'),
+                    definition('report_export', { clientId: CLIENT_ID }),
+                    definition('report_export', { clientId: FOREIGN_CLIENT_ID }),
+                ],
+                [
+                    grant('user_read', RealmScope.OWN),
+                    grant('report_export', RealmScope.OWN, { clientId: CLIENT_ID }),
+                    grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID }),
+                ],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                clients: RealmScope.OWN_OR_NULL,
+            });
+
+            expect(result).toEqual([
+                { name: 'user_read', targetRealms: [REALM_ID] },
+                {
+                    name: 'report_export', 
+                    clientId: CLIENT_ID, 
+                    targetRealms: [REALM_ID], 
+                },
+                {
+                    name: 'report_export', 
+                    clientId: FOREIGN_CLIENT_ID, 
+                    targetRealms: [REALM_ID], 
+                },
+            ]);
+        });
+
+        // One name in three namespaces: each entry answers its own
+        // definition's grants, none overwrites another.
+        it('answers a name per definition it is shared by', async () => {
+            const ctx = setup(
+                [
+                    definition('report_export'),
+                    definition('report_export', { realmId: REALM_ID }),
+                    definition('report_export', { realmId: REALM_ID, clientId: CLIENT_ID }),
+                ],
+                [
+                    grant('report_export', RealmScope.OWN, { realmId: REALM_ID }),
+                    grant('report_export', RealmScope.OWN_OR_NULL, { realmId: REALM_ID, clientId: CLIENT_ID }),
+                ],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                names: ['report_export'],
+                realms: RealmScope.OWN_OR_NULL,
+                clients: [CLIENT_ID, null],
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'report_export', 
+                    realmId: REALM_ID, 
+                    targetRealms: [REALM_ID], 
+                },
+                {
+                    name: 'report_export',
+                    realmId: REALM_ID,
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID, null],
+                },
+            ]);
+        });
+
+        it('selects nothing for an unknown realm or client id', async () => {
+            const ctx = setup(
+                [definition('mtb_query_submit', { realmId: REALM_ID })],
+                [grant('mtb_query_submit', RealmScope.ANY, { realmId: REALM_ID })],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: [FOREIGN_REALM_ID],
+                clients: [FOREIGN_CLIENT_ID, null],
+            });
+
+            expect(result).toEqual([]);
+        });
+    });
 
     it('answers nothing when the identity has no realm to resolve own against', async () => {
         const ctx = setup([definition('user_read')], [grant('user_read', RealmScope.ANY)]);
@@ -371,7 +603,7 @@ describe('core/authorization/check', () => {
                 realmId: null,
                 realmName: null,
             }),
-            realms: RealmScope.OWN,
+            targetRealms: RealmScope.OWN,
         });
 
         expect(result).toEqual([]);
@@ -429,7 +661,7 @@ describe('core/authorization/check', () => {
 
             const result = await buildAuthorizationCheck(ctx, await visible(ctx));
 
-            expect(result.permissions).toEqual([{ name: 'user_read', realms: [REALM_ID, null] }]);
+            expect(result.permissions).toEqual([{ name: 'user_read', targetRealms: [REALM_ID, null] }]);
             // the minute after the end: the evaluator compares at minute precision
             expect(result.expiresAt).toEqual(new Date(2024, 3, 17, 16, 1));
         });
@@ -448,7 +680,7 @@ describe('core/authorization/check', () => {
             const ctx = setup([[definition('user_read')[0], policies()]], []);
 
             const result = await buildAuthorizationCheck(ctx, {
-                realms: [null],
+                targetRealms: [null],
                 decorate: decorateWith(undefined),
             });
 
@@ -488,6 +720,45 @@ describe('core/authorization/check', () => {
             expect(result.expiresAt).toEqual(at(8));
         });
 
+        // The grant that decides a pair is the one naming its definition: a
+        // grant of the same name in another namespace does not make a denied
+        // realm-owned pair's window the caller's business.
+        it('reports no expiry for a grant-bound owned definition granted in another namespace only', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('report_export', { realmId: REALM_ID })[0], [officeHours, systemDefault]]],
+                [grant('report_export', RealmScope.OWN_OR_NULL)],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: [REALM_ID],
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toBeUndefined();
+        });
+
+        it('reports the expiry of a grant-bound owned definition the caller holds', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(at(6));
+
+            const ctx = setup(
+                [[definition('report_export', { realmId: REALM_ID })[0], [officeHours, systemDefault]]],
+                [grant('report_export', RealmScope.OWN_OR_NULL, { realmId: REALM_ID })],
+            );
+
+            const result = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: [REALM_ID],
+            });
+
+            expect(result.permissions).toEqual([]);
+            expect(result.expiresAt).toEqual(at(8));
+        });
+
         it('reports the expiry of an identity-free definition to an anonymous caller', async () => {
             vi.useFakeTimers({ toFake: ['Date'] });
             vi.setSystemTime(at(6));
@@ -495,7 +766,7 @@ describe('core/authorization/check', () => {
             const ctx = setup([[definition('office_open')[0], [officeHours]]], []);
 
             const result = await buildAuthorizationCheck(ctx, {
-                realms: [null],
+                targetRealms: [null],
                 decorate: decorateWith(undefined),
             });
 

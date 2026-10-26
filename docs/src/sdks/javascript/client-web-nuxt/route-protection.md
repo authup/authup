@@ -64,3 +64,14 @@ export default defineComponent({
 });
 ```
 
+Any one entry passing admits the page. A bare name checks the global permission definition. A permission owned by a realm or a client is named by an object carrying the owner ids, and both forms may be mixed in one list:
+
+```typescript
+definePageMeta({
+    requirePermissions: [
+        PermissionName.CLIENT_UPDATE,
+        { name: 'mtb_query_submit', realmId: '<realm id>' },
+        { name: 'mtb_query_read', clientId: '<client id>' },
+    ],
+});
+```

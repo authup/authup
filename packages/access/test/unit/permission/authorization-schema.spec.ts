@@ -50,9 +50,9 @@ describe('permission/authorization/schema', () => {
         const parsed = await parseCatalog(createCatalog(
             [{
                 name: 'user_update',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: 'unanimous',
+                realmId: null,
+                clientId: null,
+                decisionStrategy: 'unanimous',
                 policies: ['a'],
             }],
             {
@@ -71,17 +71,17 @@ describe('permission/authorization/schema', () => {
     it('accepts a definition that names no policy, and one carrying the null tombstone', async () => {
         await expect(parseCatalog(createCatalog([{
             name: 'user_read',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: null,
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
             policies: [],
         }]))).resolves.toBeDefined();
 
         const tombstoned = await parseCatalog(createCatalog([{
             name: 'user_read',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: null,
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
             policies: null,
         }]));
 
@@ -91,9 +91,9 @@ describe('permission/authorization/schema', () => {
     it('refuses a definition id that no policy declares', async () => {
         const issues = await issuesOf(() => parseCatalog(createCatalog([{
             name: 'user_update',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: 'unanimous',
+            realmId: null,
+            clientId: null,
+            decisionStrategy: 'unanimous',
             policies: ['missing'],
         }])));
 
@@ -105,9 +105,9 @@ describe('permission/authorization/schema', () => {
     it('refuses an id that only a prototype member of the policy record answers', async () => {
         const issues = await issuesOf(() => parseCatalog(createCatalog([{
             name: 'user_update',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: null,
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
             policies: ['constructor'],
         }])));
 
@@ -118,16 +118,16 @@ describe('permission/authorization/schema', () => {
         const issues = await issuesOf(() => parseCatalog(createCatalog([
             {
                 name: 'user_read',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: [],
             },
             {
                 name: '',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: [],
             },
         ])));
@@ -138,9 +138,9 @@ describe('permission/authorization/schema', () => {
     it('strips grants from a definition: they are no longer part of the catalog', async () => {
         const parsed = await parseCatalog(createCatalog([{
             name: 'user_read',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: null,
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
             policies: [],
             grants: [{ realm_scope: 'any', policies: [] }],
         }]));

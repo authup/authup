@@ -152,9 +152,9 @@ export async function createAuthorizationEvaluator(
     for (const [index, entry] of catalog.permissions.entries()) {
         const permission : BasePermission = {
             name: entry.name,
-            realmId: entry.realm_id,
-            clientId: entry.client_id,
-            decisionStrategy: entry.decision_strategy ?? undefined,
+            realmId: entry.realmId,
+            clientId: entry.clientId,
+            decisionStrategy: entry.decisionStrategy ?? undefined,
         };
         const key = buildPermissionKey(permission);
         if (permissions.has(key)) {
@@ -327,7 +327,8 @@ export async function createAuthorizationEvaluator(
 
 /**
  * An `IPermissionEvaluator` over the answer `POST /authorization/check`
- * served: the caller's own verdicts, paired with the realms they hold in.
+ * served: the caller's own verdicts, keyed by the permission namespace
+ * `(name, realmId, clientId)` and paired with the target realms they hold in.
  *
  * It is what a PUBLIC client gets where the catalog is out of reach. A public
  * client holds no secret, so it can obtain no `client_credentials` token and
@@ -358,7 +359,14 @@ export async function createAuthorizationCheckEvaluator(
 
     const verdicts = new Map<string, Set<string | null>>();
     for (const permission of permissions) {
-        verdicts.set(permission.name, new Set<string | null>(permission.realms));
+        verdicts.set(
+            buildPermissionKey({
+                name: permission.name,
+                realmId: permission.realmId ?? null,
+                clientId: permission.clientId ?? null,
+            }),
+            new Set<string | null>(permission.targetRealms),
+        );
     }
 
     // The server resolves `own` / `ownOrNull` to the identity's realm ID, while
@@ -392,12 +400,22 @@ export async function createAuthorizationCheckEvaluator(
         return false;
     };
 
-    const holds = (name: string, data?: PolicyData) : boolean => {
-        const realms = verdicts.get(name);
+    // A definition is matched by the context's realm and client, the
+    // permission's own namespace, so a bare name matches the global one only.
+    const holds = (
+        ctx: PermissionEvaluationContext | PermissionCompileContext,
+        name: string,
+    ) : boolean => {
+        const realms = verdicts.get(buildPermissionKey({
+            name,
+            realmId: ctx.realmId ?? null,
+            clientId: ctx.clientId ?? null,
+        }));
         if (!realms) {
             return false;
         }
 
+        const { data } = ctx;
         if (!data || !data.has(BuiltInPolicyType.REALM_MATCH)) {
             // No resource realm named, so the question is whether the
             // permission is held at all, which it is: an entry only exists
@@ -425,7 +443,7 @@ export async function createAuthorizationCheckEvaluator(
 
     const assertEvery = async (ctx: PermissionEvaluationContext) : Promise<void> => {
         for (const name of names(ctx)) {
-            if (!holds(name, ctx.data)) {
+            if (!holds(ctx, name)) {
                 throw PermissionError.evaluationFailed(ctx.name);
             }
         }
@@ -434,7 +452,7 @@ export async function createAuthorizationCheckEvaluator(
     const assertSome = async (ctx: PermissionEvaluationContext) : Promise<void> => {
         const list = names(ctx);
         for (const name of list) {
-            if (holds(name, ctx.data)) {
+            if (holds(ctx, name)) {
                 return;
             }
         }
@@ -452,7 +470,7 @@ export async function createAuthorizationCheckEvaluator(
             // lowered into a query. `deny` is still sound and worth answering:
             // a name held in no requested realm cannot match a row either.
             const list = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
-            if (list.some((name) => holds(name, ctx.data))) {
+            if (list.some((name) => holds(ctx, name))) {
                 return { verdict: 'post' };
             }
 

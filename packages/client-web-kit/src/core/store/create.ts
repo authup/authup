@@ -469,11 +469,13 @@ export function createStore(context: StoreCreateContext) {
     };
 
     /**
-     * The verdicts, asked about the two realms this session knows at staging:
-     * its own and the global rows, which is the reach a realm administrator's
-     * reads are held at and what a console gates on. A realm the request never
-     * named is fail-closed in the evaluator, so a surface that later asks about
-     * a third realm needs its own call rather than a wider answer here.
+     * The verdicts for the definitions global or owned by this session's
+     * realm or client, each asked about the two target realms this session
+     * knows at staging: its own and the global rows, which is the reach a
+     * realm administrator's reads are held at and what a console gates on. A
+     * realm the request never named is fail-closed in the evaluator, so a
+     * surface that later asks about a third realm needs its own call rather
+     * than a wider answer here.
      *
      * A `404` (a server predating the route) memoizes as null and lands on the
      * name-only view, so a console newer than its server keeps working. Any
@@ -485,7 +487,11 @@ export function createStore(context: StoreCreateContext) {
     }> => {
         try {
             const { data, maxAge } = await client.authorization.checkWithMaxAge(
-                { realms: RealmScope.OWN_OR_NULL },
+                {
+                    realms: RealmScope.OWN_OR_NULL,
+                    clients: RealmScope.OWN_OR_NULL,
+                    targetRealms: RealmScope.OWN_OR_NULL,
+                },
                 token ? { authorizationHeader: { type: 'Bearer', token } } : undefined,
             );
 
@@ -567,11 +573,13 @@ export function createStore(context: StoreCreateContext) {
         if (permissions) {
             try {
                 verdicts = permissions
-                    .map((entry) => [
+                    .map((entry) => JSON.stringify([
                         entry.name,
-                        [...entry.realms].sort((x, y) => String(x).localeCompare(String(y))),
-                    ])
-                    .sort((x, y) => String(x[0]).localeCompare(String(y[0])));
+                        entry.realmId ?? null,
+                        entry.clientId ?? null,
+                        [...entry.targetRealms].sort((x, y) => String(x).localeCompare(String(y))),
+                    ]))
+                    .sort();
             } catch {
                 verdicts = ['invalid', permissions];
             }

@@ -6,10 +6,14 @@
  */
 
 import type {
+    AuthorizationCheckClients,
     AuthorizationCheckPermission,
     AuthorizationCheckPermissions,
+    AuthorizationCheckRealms,
+    BasePermission,
     BasePolicy,
     IPermissionEvaluator,
+    IdentityPolicyData,
     PermissionPolicyBinding,
 } from '@authup/access';
 import {
@@ -20,6 +24,7 @@ import {
     PolicyDefaultEvaluators,
     PolicyEngine,
     RealmScope,
+    buildPermissionKey,
     createPolicyTransitionCollector,
     definePolicyData,
     isPermissionError,
@@ -34,7 +39,17 @@ import type {
 } from './types.ts';
 
 /**
- * Resolve the realms to evaluate against.
+ * Deduplicate a verbatim selector list: a repeated entry would cost an
+ * evaluation and be answered twice, and a caller repeating one asks the same
+ * question.
+ */
+function dedupe(items: Array<string | null | undefined>) : Array<string | null> {
+    return [...new Set<string | null>(items.map((item) => item ?? null))];
+}
+
+/**
+ * Resolve a realm selector, for the realms owning the definitions as well as
+ * for the realms they are checked against.
  *
  * A symbolic selector is resolved against the caller's own identity, so a
  * caller needs to know nothing about itself to ask the question it means. An
@@ -48,22 +63,47 @@ import type {
  * scope but `any`, so the verdicts come out the same way either route.
  */
 function resolveRealms(
-    request: AuthorizationCheckRequest,
+    realms: AuthorizationCheckRealms,
+    identity?: IdentityPolicyData,
 ) : Array<string | null> {
-    const { realms } = request;
-
     if (Array.isArray(realms)) {
-        // Deduplicate: a repeated realm would cost an evaluation and be
-        // answered twice, and a caller repeating one asks the same question.
-        return [...new Set<string | null>(realms.map((realm) => realm ?? null))];
+        return dedupe(realms);
     }
 
-    const own = request.identity?.realmId ?? null;
+    const own = identity?.realmId ?? null;
     if (realms === RealmScope.OWN) {
         return own === null ? [] : [own];
     }
 
     return own === null ? [null] : [own, null];
+}
+
+/**
+ * Resolve a client selector. `own` mirrors how the request's grants are
+ * resolved (#3597): for a user with a token client, that client, whose grants
+ * are the only client-owned ones the request carries; otherwise (a client
+ * subject, whose grants are never narrowed, or no token client at all: the
+ * console session cookie, Basic), every client the identity holds a grant of.
+ * An explicit list is taken verbatim, like a realm list.
+ */
+function resolveClients(
+    clients: AuthorizationCheckClients,
+    request: AuthorizationCheckRequest,
+) : Array<string | null> {
+    if (Array.isArray(clients)) {
+        return dedupe(clients);
+    }
+
+    let own : Array<string | null>;
+    if (request.clientId && request.identity?.type === 'user') {
+        own = [request.clientId];
+    } else {
+        own = dedupe((request.identity?.grants ?? [])
+            .map((grant) => grant.permission.clientId)
+            .filter((clientId) => !!clientId));
+    }
+
+    return clients === RealmScope.OWN ? own : [...own, null];
 }
 
 /**
@@ -100,8 +140,8 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
 }
 
 /**
- * Evaluate the caller's own permissions against the requested realms and
- * answer the pairs that hold.
+ * Evaluate the caller's own permissions against the requested target realms
+ * and answer the pairs that hold.
  *
  * Cost is what makes this shape possible. `PermissionEvaluator` resolves a
  * definition per name, and the database provider's `findOne` carries an
@@ -114,10 +154,15 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
  * once by the controller, ride on its identity into every evaluation. Two
  * bulk reads plus one grant load, and the rest is in memory.
  *
- * Only GLOBAL definitions are evaluated, because that is what every gate in
- * this process evaluates: a request resolves a permission with a null realm
- * and a null client, so a realm- or client-scoped row is no more reachable by
- * a check than by a gate.
+ * Which definitions are evaluated is the request's `realms` and `clients`: a
+ * definition is identified by (name, realmId, clientId), so the realm and the
+ * client OWNING it are a namespace, kept apart from the target realm it is
+ * checked against. Every piece of state below is keyed by that triple
+ * (`buildPermissionKey`), and each evaluation names the definition's realm
+ * and client, so the memory provider resolves that definition rather than a
+ * same-named global one. Selecting another client's definitions discloses
+ * nothing: the grants are the request's own, narrowed the way every gate of
+ * the request reads them (#3597).
  *
  * `request.decorate` is what keeps this honest about the caller's SCOPES.
  * server-core attaches identity policy data only when the credential's scopes
@@ -127,22 +172,30 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
  * evaluator's own wrapper, so the condition is inherited rather than restated.
  *
  * A `date` or `time` policy settles against the clock, so the answer is a
- * snapshot. Every (name, realm) pair hands a collector of its own down the
- * walk it already runs, and `expiresAt` is the earliest instant among the
- * pairs whose clock could actually move THIS caller's answer (see
+ * snapshot. Every (definition, target realm) pair hands a collector of its
+ * own down the walk it already runs, and `expiresAt` is the earliest instant
+ * among the pairs whose clock could actually move THIS caller's answer (see
  * `affectsCaller`). It is absent when no such pair depends on the clock.
  */
 export async function buildAuthorizationCheck(
     ctx: AuthorizationCheckBuilderContext,
     request: AuthorizationCheckRequest,
 ) : Promise<AuthorizationCheckResult> {
+    const realms = new Set(resolveRealms(request.realms ?? [null], request.identity));
+    const clients = new Set(resolveClients(request.clients ?? [null], request));
+    const names = request.names ? new Set(request.names) : undefined;
+
     const definitions = await ctx.catalogRepository.findDefinitions();
 
     const bindings : PermissionPolicyBinding[] = [];
-    const names : string[] = [];
+    const selected : BasePermission[] = [];
     const grantGated = new Set<string>();
     for (const [permission, policies] of definitions) {
-        if (permission.realmId || permission.clientId) {
+        if (
+            !realms.has(permission.realmId ?? null) ||
+            !clients.has(permission.clientId ?? null) ||
+            (names && !names.has(permission.name))
+        ) {
             continue;
         }
 
@@ -150,7 +203,7 @@ export async function buildAuthorizationCheck(
             permission,
             policies: policies.length > 0 ? policies : undefined,
         });
-        names.push(permission.name);
+        selected.push(permission);
 
         // The definition's policies are combined under its own decision
         // strategy, the way the evaluator composes them.
@@ -159,19 +212,12 @@ export async function buildAuthorizationCheck(
             decisionStrategy: permission.decisionStrategy || DecisionStrategy.UNANIMOUS,
             children: policies,
         })) {
-            grantGated.add(permission.name);
+            grantGated.add(buildPermissionKey(permission));
         }
     }
 
-    // A requested name with no global definition is left in: the evaluator
-    // denies it by itself, and dropping it here would only move the same
-    // absence one step earlier.
-    const requested = request.names ?
-        [...new Set(request.names)] :
-        names;
-
-    const realms = resolveRealms(request);
-    if (requested.length === 0 || realms.length === 0) {
+    const targetRealms = resolveRealms(request.targetRealms ?? RealmScope.OWN_OR_NULL, request.identity);
+    if (selected.length === 0 || targetRealms.length === 0) {
         return { permissions: [] };
     }
 
@@ -193,8 +239,8 @@ export async function buildAuthorizationCheck(
     // permission the caller cannot hold, and have it refetch at them for
     // nothing. Every other denied pair keeps its transition, so no report
     // that could matter is dropped.
-    const affectsCaller = async (name: string) : Promise<boolean> => {
-        if (!grantGated.has(name)) {
+    const affectsCaller = async (key: string) : Promise<boolean> => {
+        if (!grantGated.has(key)) {
             return true;
         }
 
@@ -202,9 +248,7 @@ export async function buildAuthorizationCheck(
             return false;
         }
 
-        return grants.some((grant) => grant.permission.name === name &&
-            !grant.permission.realmId &&
-            !grant.permission.clientId);
+        return grants.some((grant) => buildPermissionKey(grant.permission) === key);
     };
 
     const evaluator : IPermissionEvaluator = request.decorate(new PermissionEvaluator({
@@ -215,24 +259,33 @@ export async function buildAuthorizationCheck(
     const transitions = createPolicyTransitionCollector();
 
     const result : AuthorizationCheckPermissions = [];
-    for (const name of requested) {
+    for (const permission of selected) {
+        const { name } = permission;
+        const realmId = permission.realmId ?? null;
+        const clientId = permission.clientId ?? null;
+        const key = buildPermissionKey(permission);
+
         const held : Array<string | null> = [];
 
-        for (const realm of realms) {
+        for (const targetRealm of targetRealms) {
             const pairTransitions = createPolicyTransitionCollector();
             let passed = false;
 
             try {
                 await evaluator.preEvaluate({
                     name,
+                    // The definition's own namespace, or the provider would
+                    // resolve a same-named global definition instead.
+                    realmId,
+                    clientId,
                     // The identity, with its grants, is placed by `decorate`,
                     // which asserts the one the request was resolved as, or
                     // none when the caller's scopes withhold it.
-                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realm }),
+                    data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: targetRealm }),
                     options: { transitions: pairTransitions },
                 });
 
-                held.push(realm);
+                held.push(targetRealm);
                 passed = true;
             } catch (e) {
                 // A denial is the answer, and so is a policy the engine refused
@@ -247,22 +300,27 @@ export async function buildAuthorizationCheck(
 
                 if (isPolicyError(e)) {
                     ctx.logger?.warn(
-                        `Treated ${name} as denied in realm ${realm ?? 'global'} while building the authorization ` +
-                        `check: ${e.message}.`,
+                        `Treated ${key} as denied in realm ${targetRealm ?? 'global'} while building the ` +
+                        `authorization check: ${e.message}.`,
                     );
                 }
             }
 
             if (
                 pairTransitions.next &&
-                (passed || await affectsCaller(name))
+                (passed || await affectsCaller(key))
             ) {
                 transitions.report(pairTransitions.next);
             }
         }
 
         if (held.length > 0) {
-            result.push({ name, realms: held } satisfies AuthorizationCheckPermission);
+            result.push({
+                name,
+                ...(realmId ? { realmId } : {}),
+                ...(clientId ? { clientId } : {}),
+                targetRealms: held,
+            } satisfies AuthorizationCheckPermission);
         }
     }
 

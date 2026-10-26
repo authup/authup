@@ -82,4 +82,29 @@ describe('core/permission-check (cookie mode)', () => {
         expect(store.accessToken).toBeNull();
         expect(outcome.value).toBe(true);
     });
+
+    it('should check a realm-owned definition once the cookie session has landed', async () => {
+        const store = buildStore();
+
+        let owned!: Ref<boolean>;
+        let bare!: Ref<boolean>;
+        mount(defineComponent({
+            setup() {
+                const checker = createPermissionCheckerReactiveFn({ store });
+                owned = checker({ name: 'owned_read', realmId: AUTHORIZATION_REALM });
+                bare = checker({ name: 'owned_read' });
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+        expect(owned.value).toBe(false);
+
+        await store.resolve();
+        await flushPromises();
+
+        expect(owned.value).toBe(true);
+        expect(bare.value).toBe(false);
+    });
 });

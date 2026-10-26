@@ -112,7 +112,7 @@ The global `authup` middleware runs on every navigation:
 2. Otherwise it awaits `store.resolve()`. On failure it signs out and sends the user to `loginRoute` with `redirect` set to the page they asked for.
 3. `requireLoggedIn` (on the route or any parent) sends a signed-out user to `loginRoute`.
 4. `requireLoggedOut` signs out a signed-in user and lets the navigation continue.
-5. `requirePermissions` (a name or a list; any one of them passes) sends a denied user back to the page they came from, home after a fresh login, or to `loginRoute` when they were denied the page they are on.
+5. `requirePermissions` (a name, a `{ name, realmId?, clientId? }` object for a realm- or client-owned permission, or a list of either; any one of them passes) sends a denied user back to the page they came from, home after a fresh login, or to `loginRoute` when they were denied the page they are on.
 
 The `authup:session-expiry` plugin also sends the user to `loginRoute` when a background refresh fails on a page that requires login.
 

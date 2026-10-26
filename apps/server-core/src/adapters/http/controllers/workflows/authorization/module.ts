@@ -33,6 +33,7 @@ import {
     RequestPermissionEvaluator,
     buildActorContext,
     useRequestPolicyGrants,
+    useRequestTokenPayload,
 } from '../../../request/index.ts';
 
 export type AuthorizationControllerContext = AuthorizationCatalogBuilderContext &
@@ -56,8 +57,8 @@ AuthorizationCheckBuilderContext;
  * the CONFIGURATION here rather than the row: a definition out of reach still
  * travels, with `policies: null`, and a tree out of reach as a node no
  * consumer can project. So what a foreign realm still discloses is the
- * identifier tuple of a definition (`name`, `realm_id`, `client_id`,
- * `decision_strategy`) and the id of a policy, where those reads disclose
+ * identifier tuple of a definition (`name`, `realmId`, `clientId`,
+ * `decisionStrategy`) and the id of a policy, where those reads disclose
  * neither. That is the price of the key space staying whole: an ABSENT
  * definition has to keep meaning exactly one thing, that the consumer's copy
  * is older than the definition, which is the one signal a refetch answers.
@@ -155,9 +156,10 @@ export class AuthorizationController {
     }
 
     /**
-     * The caller's OWN verdicts, paired with the realms they hold in: every
-     * global permission definition, or the subset the body names, evaluated
-     * against the realms the body asks about.
+     * The caller's OWN verdicts, paired with the target realms they hold in:
+     * every permission definition the body's realms and clients select (the
+     * global ones when it selects neither), or the subset of them it names,
+     * evaluated against the target realms the body asks about.
      *
      * Unlike the catalog above it carries NO permission gate and NO login gate,
      * and that asymmetry is the point rather than an oversight. The catalog
@@ -230,6 +232,9 @@ export class AuthorizationController {
         const { permissions, expiresAt } = await buildAuthorizationCheck(this.ctx, {
             names: payload.names,
             realms: payload.realms,
+            clients: payload.clients,
+            targetRealms: payload.targetRealms,
+            clientId: useRequestTokenPayload(event)?.client_id,
             identity,
             decorate: (
                 evaluator,

@@ -138,6 +138,7 @@ const canDelete = await reachesRecord(evaluator, { name: 'user_delete', realm: n
 | `['<id>', null]` | A row spanning several realms; every one must be reached |
 | `undefined` | Throws: a missing realm is a bug, never "global" |
 
+- `realmId` and `clientId` name the realm and client OWNING the permission definition, not the record's realm. Absent means a global definition; an owned one is unreachable without them.
 - `data` is a `PolicyData` or a plain record and must not carry `realmMatch` itself; the helper sets it from `realm`. It is cloned, never written to.
 - `reachesRecord*` returns `false` for a `PermissionError` and rethrows anything else.
 - `evaluateRecordUpdate(evaluator, { name, current, next })` evaluates the stored row and the updated row, so an update can neither move a row into reach nor out of it.
@@ -163,9 +164,17 @@ const evaluator = await createAuthorizationCheckEvaluator({
 });
 
 const canEdit = await reachesRecord(evaluator, { name: 'user_update', realm: 'acme' });
+
+// a definition owned by a realm or a client is named with its owner
+const canExport = await reachesRecord(evaluator, {
+    name: 'report_export',
+    realmId: '4c8e0f9e-6c0a-4b1e-9d31-2a6f0b1c7e11',
+    clientId: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+    realm: 'acme',
+});
 ```
 
-The answer lists each permission with the realms it holds in; a missing entry is a denial. A record realm matches its own entry, or the identity's own realm by id or by name. A realm the request did not ask about denies. The result is an upper bound: the server still decides each row.
+The answer lists each permission definition, identified by `name`, `realmId` and `clientId`, with the target realms it holds in; a missing entry is a denial. A record realm matches its own entry, or the identity's own realm by id or by name. A realm the request did not ask about denies. The result is an upper bound: the server still decides each row.
 
 ## Realm reach
 

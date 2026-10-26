@@ -20,10 +20,20 @@ future column (a divergence the `synchronize()`-based sqlite tests would not cat
 since they stay self-consistent) and to a single global point of failure. TypeORM
 still translates camelCase property paths (`role.realmId`, `entity.createdAt`) onto
 those columns, so repository query-builder strings use property paths, not column
-names. The OAuth2/OIDC protocol surface (endpoint params, JWT claims,
-introspection/discovery fields) and JWT payloads are **frozen snake_case**, as are
-table names, enum string values (permission/role/scope/event names), env vars, and
-config keys.
+names.
+
+**The casing rule: snake_case only where a spec defines the key; everything authup
+defines is camelCase** (#3769). The OAuth2/OIDC protocol surface (endpoint params, JWT
+claims, introspection/discovery fields) and JWT payloads are **frozen snake_case**, and so
+is an authup key riding a spec-defined response next to the spec's own members (the
+introspection's `permissions` grant list, `sub_kind`, `realm_name`). Everything else authup
+defines is camelCase, including the non-CRUD routes a resource server reads: the
+authorization catalog (`GET /authorization`) and the batch check
+(`POST /authorization/check`) are management API for casing purposes, since neither is
+part of OAuth2/OIDC. Treating those two as protocol extensions and keeping them snake_case
+was rejected: no spec defines them, and it would split the management API's casing by
+audience. Table names, enum string values (permission/role/scope/event names), env vars
+and config keys stay as they are.
 
 ## apps/server-core
 
@@ -4099,9 +4109,11 @@ them is a route of its own. `GET /authorization`
 (`adapters/http/controllers/workflows/authorization/`, `Cache-Control: private, no-cache`)
 answers the IDENTITY-FREE `AuthorizationCatalog`
 (declared in `@authup/access` next to its zod schema and its consumer
-`createAuthorizationEvaluator`): every permission definition with its junction policy ids
-and its `decisionStrategy`, and each policy tree ONCE under `policies`, keyed by the tree's
-id, whether a definition or a grant names it. It is one document per CREDENTIAL, which is
+`createAuthorizationEvaluator`): every permission definition as
+`{ name, realmId, clientId, decisionStrategy, policies }` (its junction policy ids), and
+each policy tree ONCE under `policies`, keyed by the tree's id, whether a definition or a
+grant names it. The keys are camelCase because authup defines them (see *Naming split*,
+#3769); the zod schema refuses a document in the old snake_case shape. It is one document per CREDENTIAL, which is
 what a consumer caches it by, and it is an upper bound on what may be asked rather than
 an entitlement (the `GET /schemas` posture): every decision it feeds runs over the caller's
 own grants. **Its gate is the gate of the entity reads it aggregates, in both
@@ -4122,8 +4134,8 @@ package's own test), which is how a grant naming it is dropped rather than read 
 An ABSENT definition has to keep meaning exactly one thing, that the consumer's copy is
 older than the definition, since that is the one signal a refetch answers. **So a foreign
 realm still discloses more here than through those reads**, which return the row to
-nobody: the identifier tuple of every definition (`name`, `realm_id`, `client_id`,
-`decision_strategy`) and the id of every policy key. That is the price of the key space
+nobody: the identifier tuple of every definition (`name`, `realmId`, `clientId`,
+`decisionStrategy`) and the id of every policy key. That is the price of the key space
 staying whole, and it is the trade to re-open if the tuple ever carries something the
 identifiers do not. The reach test asks about the REALM alone, so a read grant restricted
 by an ATTRIBUTES junction policy has no row to evaluate against, denies every realm and
@@ -4215,7 +4227,9 @@ global rows.
 The GRANTS ride the introspection: `permissions` on `POST /token/introspect` and on
 `GET /sessions/@me/introspect` is the identity's grant list, one entry per junction row
 with the definition it names (`name`, `realm_id`, `client_id`), the grant's own
-`realm_scope` and the ids of its junction policy trees (`resolveIntrospectionSubject`,
+`realm_scope` and the ids of its junction policy trees, snake_case because the list rides
+an RFC 7662 response next to spec-defined members (`createAuthorizationEvaluator` maps it
+onto the catalog's camelCase keys) (`resolveIntrospectionSubject`,
 `core/oauth2/introspection/`, the one owner of the projection, so the two endpoints
 cannot drift). A grant whose tree the catalog cannot carry is dropped there too, with a
 warning, since the server fails such a grant closed itself. The projection is the grants the
@@ -4327,28 +4341,51 @@ own policies, or unbinding `system.default` from it afterwards. What bounds an
 unauthenticated caller's cost is the body caps plus the rate-limit middleware's
 anonymous bucket, the pair every other anonymous route here rests on.
 
-Body `{ names?, realms? }`, both optional, and an empty body is the point: a caller that
-names nothing asks about every definition, so it never maintains a list in step with its
-own UI, where a name missing from a request would fail silently as a control that
-quietly disappears. `realms` is `own`, `ownOrNull` (the default) or an explicit list,
-`null` for the global rows. A symbolic selector resolves against the caller's own
-identity; an explicit list has no realm key RESOLVED, so the server discloses no realm's
-existence and the caller matches the answer against its own input with no resolution step.
-`resolveRealms` transforms it in exactly one way, a duplicate drop that keeps the first
-occurrence and the order (a repeated realm would cost an evaluation and be answered
-twice), so a caller comparing the answer to its own input by identity must expect its own
-duplicates to be absent. `any` is deliberately not offered: a caller that
-cares about another realm names it. Caps are 256 names and 4 realms: the route is ungated
-and each (name, realm) pair costs one synchronous policy-tree walk, and the realm count is
-the half a CALLER controls, since an unresolvable name is refused before any walk. Four
-covers the own realm, the global rows and two named ones.
+Body `{ names?, realms?, clients?, targetRealms? }`, all optional, and an empty body is
+the point: a caller that names nothing asks about every definition it selects, so it never
+maintains a list in step with its own UI, where a name missing from a request would fail
+silently as a control that quietly disappears. Two different realms are involved and the
+body keeps them apart (#3769). **`realms` and `clients` select which DEFINITIONS are
+evaluated**: a definition is identified by `(name, realmId, clientId)`, the unique key of
+`auth_permissions`, so master's `mtb_query_submit` and realm B's are two permissions, and
+a client may own one with or without a realm. **`targetRealms` is where each selected
+definition is checked against**, the resource realm the grant's `realm_scope` decides.
+Both realm selectors take `own`, `ownOrNull` or an explicit list (`null` for the global
+rows); `clients` takes the same forms, where `own` mirrors how the request's grants are
+resolved (`getForToken`, #3597): the token's client for a USER subject whose request
+carries one, otherwise every client the identity holds a grant of. That covers a client
+subject (its token never narrows, so a client granted another client's permission keeps
+it) and a request without a token client (the console session cookie, Basic), where
+client-owned permissions that apply in the served consoles stay visible. Defaults are `realms: [null]`,
+`clients: [null]` (the global definitions only) and `targetRealms: 'ownOrNull'`. A
+symbolic selector resolves against the caller's own identity; an explicit list has no
+realm or client key RESOLVED, so the server discloses no realm's or client's existence
+(an unknown id selects nothing and the answer is an empty 200) and the caller matches the
+answer against its own input with no resolution step. An explicit FOREIGN realm or client
+id is accepted rather than filtered: the verdict is still decided over the caller's own
+grants as the request resolves them, so a permission owned by client X passes only
+through a token issued to X, and a foreign definition the caller passes without a grant
+(no identity-bound policy) is the same disclosure a global definition makes today. Each list is transformed in
+exactly one way, a duplicate drop that keeps the first occurrence and the order (a
+repeated entry would cost an evaluation and be answered twice), so a caller comparing the
+answer to its own input by identity must expect its own duplicates to be absent. `any` is
+deliberately not offered: a caller that cares about another realm names it. Answering a
+realm-owned definition only for its own realm was rejected: it fuses the two realms,
+under-reports an `any` grant and cannot tell two realms' same-named definitions apart.
+Caps are 256 names and 4 entries per selector: the route is ungated and each
+(definition, target realm) pair costs one synchronous policy-tree walk, and the selector
+sizes are the half a CALLER controls, since an unresolvable name is refused before any
+walk. Four covers the own realm, the global rows and two named ones.
 
 The answer is the bare array `AuthorizationCheckPermissions`
-(`{ name, realms }[]`, `@authup/access`), with no envelope and no `version` field
-(conventions.md -> *Response Versioning*). Only a permission reaching at least one
-requested realm appears, so ABSENT means denied, and a `realmMatch` naming a realm the
-request never asked about is then fail-closed for free: it is in no entry's list, and a
-gate never needs "unknown" apart from "denied". It is an upper bound on what may be
+(`{ name, realmId?, clientId?, targetRealms }[]`, `@authup/access`, camelCase like every
+key authup defines; `realmId` and `clientId` are omitted when null), with no envelope and
+no `version` field (conventions.md -> *Response Versioning*). Entries are unique by
+`(name, realmId, clientId)`: without the owner, a client-owned and a global
+`report_export` would collapse into one. Only a definition reaching at least one
+requested target realm appears, so ABSENT means denied, and a `realmMatch` naming a realm
+the request never asked about is then fail-closed for free: it is in no entry's list, and
+a gate never needs "unknown" apart from "denied". It is an upper bound on what may be
 ATTEMPTED rather than an entitlement, the posture the catalog and `GET /schemas` take:
 it is a pre-gate, so a grant whose junction policy needs a resource row passes here and
 is still decided per row.
@@ -4363,8 +4400,13 @@ are loaded once by the controller and ride on its identity into every pair: two 
 reads plus one grant load, and the rest is in memory. One `identity` does both jobs: it
 always resolves the realm selectors and is always placed for policy evaluation,
 carrying the grants `useRequestPolicyGrants` allows. A token without `global` carries
-none, so it loads nothing and cannot fail on a load nothing would read. Only GLOBAL definitions are evaluated, because that is what every gate in
-this process evaluates.
+none, so it loads nothing and cannot fail on a load nothing would read. **Everything
+downstream is keyed by the definition, never by its name**: only the selected definitions
+are loaded into the memory provider, each `preEvaluate` passes the definition's own
+`realmId` and `clientId` so the provider resolves that definition and not a global one of
+the same name, and the grant lookup behind the expiry rule below counts a grant only for
+the exact `(name, realmId, clientId)`. Keyed by name, a realm-owned grant would have
+leaked onto an ungranted global permission of the same name, or the reverse.
 
 **A failed GRANT LOAD fails the request, never answers as a denial.** It is the one
 failure a verdict cannot be derived from. Inside the engine it would be invisible:
@@ -4416,10 +4458,10 @@ short-circuited subtree needs no report: it only matters once an evaluated sibli
 flips, and that sibling reports its own instant. The end is reported as the end plus 60 s of
 elapsed time, never as the local minute after it: on a DST fall-back day an end just
 before the repeated hour would otherwise name its second occurrence, an hour after the
-real flip. `buildAuthorizationCheck` hands every (name, realm) pair a collector of its own
+real flip. `buildAuthorizationCheck` hands every (definition, target realm) pair a collector of its own
 (`createPolicyTransitionCollector()`) and keeps a pair's instant only when the pair's
 clock can move THIS caller's answer: the pair is held; or it is denied and the caller has
-an identity holding a grant for that permission (read through the same memoized grant
+an identity holding a grant for that exact definition (read through the same memoized grant
 load, so a failed load is re-raised as everywhere else); or it is denied and its
 definition does not deny every grant-less caller. `deniesWithoutGrant` decides the last:
 a non-inverted binding node reached only through non-inverted composites that cannot pass
@@ -4438,18 +4480,24 @@ revalidating it first; `max-age` only carries the number, chosen over a custom h
 relative (immune to clock skew) and CORS-safelisted.
 
 `createAuthorizationCheckEvaluator({ permissions, identity })` (`@authup/access`, next to
-`createAuthorizationEvaluator`) is the consumer. It picks the realm class from
-`data.realmMatch`: absent passes if any requested realm did, `null` is the global rows,
+`createAuthorizationEvaluator`) is the consumer. It looks an entry up by the evaluation
+context's `realmId` and `clientId` (the permission's binding realm and client, already
+part of `PermissionEvaluationContext`), so a bare name matches the global definition only
+and an owned one is asked for by its owner. It then picks the target realm class from
+`data.realmMatch`: absent passes if any requested target realm did, `null` is the global rows,
 a value equal to the identity's realm id OR NAME is its own realm (the server resolves a
 symbolic selector to the id, and the reach comparison it makes accepts either, so the
 consumer has to as well), an array needs every member, and anything else denies.
 `evaluate` answers the pre-gate verdict as the upper bound it is, the same bound the
 name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
-a name it does not hold.
+a definition it does not hold.
 
-The kit reads it at `realms: 'ownOrNull'` as its ONLY authorization source, memoized by
-the subject, scope and grants of the introspection it was fetched for (below). One visible
-behaviour change: a bare name is the union of the requested realms, so a
+The kit reads it with all three selectors at `'ownOrNull'` as its ONLY authorization
+source, memoized by the subject, scope and grants of the introspection it was fetched for
+(below). `usePermissionCheck({ name, realmId?, clientId? })` asks for an owned definition
+by real ids only; there is no `own` shorthand, since the caller knows which owner it
+means. One visible
+behaviour change: a bare name is the union of the requested target realms, so a
 `realmScope: none` grant stops passing, where a realm-less pre-gate neutral-passes reach
 and lets it enable a control it can never use. There is deliberately no counterpart on `POST /policies/:id/check`: the shape
 rests on the permission universe being enumerable, and policy names are operator-created

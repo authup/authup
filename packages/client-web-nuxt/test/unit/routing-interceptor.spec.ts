@@ -326,4 +326,56 @@ describe('RoutingInterceptor', () => {
             expect(result?.hash).toEqual('#row-7');
         });
     });
+
+    describe('owned permission requirements', () => {
+        const route = (requirements: unknown) => createRoute({
+            path: '/queries',
+            matched: [{ meta: { [RouteMetaKey.REQUIRE_PERMISSIONS]: requirements } }],
+        } as never);
+
+        it('should evaluate each owner separately and admit when one passes', async () => {
+            const preEvaluateOneOf = vi.fn(async (ctx: { realmId?: string | null }) => {
+                if (!ctx.realmId) {
+                    throw new Error('denied');
+                }
+            });
+            const { interceptor } = createInterceptor({ permissionEvaluator: { preEvaluateOneOf } });
+
+            const result = await interceptor.execute(
+                route([
+                    'user_read',
+                    { name: 'mtb_query_submit', realmId: 'realm-id' },
+                    { name: 'mtb_query_read', realmId: 'realm-id' },
+                ]),
+                createRoute({ path: '/' }),
+            );
+
+            expect(result).toBeUndefined();
+            expect(preEvaluateOneOf).toHaveBeenCalledTimes(2);
+            expect(preEvaluateOneOf.mock.calls[0]?.[0]).toMatchObject({ name: ['user_read'] });
+            expect(preEvaluateOneOf.mock.calls[1]?.[0]).toMatchObject({
+                name: ['mtb_query_submit', 'mtb_query_read'],
+                realmId: 'realm-id',
+            });
+        });
+
+        it('should deny when no owner passes', async () => {
+            const preEvaluateOneOf = vi.fn(async () => {
+                throw new Error('denied');
+            });
+            const { interceptor } = createInterceptor({ permissionEvaluator: { preEvaluateOneOf } });
+
+            const result = await interceptor.execute(
+                route({ name: 'mtb_query_submit', clientId: 'client-id' }),
+                createRoute({ path: '/roles' }),
+            );
+
+            expect(result?.path).toEqual('/roles');
+            expect(preEvaluateOneOf).toHaveBeenCalledWith(expect.objectContaining({
+                name: ['mtb_query_submit'],
+                clientId: 'client-id',
+            }));
+        });
+    });
 });
+

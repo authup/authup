@@ -24,7 +24,7 @@ import type { Options } from '../../../../src/types';
 
 const noop = () => undefined;
 
-function mountCheck(name: string) {
+function mountCheck(name: string, owner: { realmId?: string, clientId?: string } = {}) {
     const pinia = createPinia();
     const httpClient = createFakeClient({ handlers: {} });
 
@@ -39,7 +39,7 @@ function mountCheck(name: string) {
     };
 
     return mount(APermissionCheck, {
-        props: { name },
+        props: { name, ...owner },
         slots: { default: () => h('div', { class: 'permission-gated' }) },
         global: { plugins: [pinia, [vuecs, {}], [{ install }, options]] },
     });
@@ -116,5 +116,20 @@ describe('components/entities/permission-check', () => {
 
         expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
         expect(wrapper.find('.permission-gated').exists()).toBe(false);
+    });
+
+    it('should pass the owner ids of the definition to the evaluation', async () => {
+        const spy = vi.spyOn(PermissionEvaluator.prototype, 'preEvaluateOneOf')
+            .mockResolvedValue(undefined);
+
+        const wrapper = mountCheck('mtb_query_submit', { realmId: 'realm-id', clientId: 'client-id' });
+        await flushPromises();
+
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+            name: 'mtb_query_submit',
+            realmId: 'realm-id',
+            clientId: 'client-id',
+        }));
+        expect(wrapper.find('.permission-gated').exists()).toBe(true);
     });
 });

@@ -199,6 +199,66 @@ describe('http/controllers/security (token client narrowing)', () => {
             expect(holds).toEqual([true, false]);
         });
 
+        // `own` is the token client when there is one, and every client the
+        // identity holds a grant of when there is none, so a client-owned
+        // definition is selected exactly where its grant applies.
+        it('should select client-owned definitions by the own client selector', async () => {
+            const entries = await Promise.all([tokens.x, tokens.y, tokens.none].map(async (token) => {
+                const response = await httpRequest(suite, 'POST', '/authorization/check', {
+                    headers: { ...bearer(token), 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        names: [permissionX.name],
+                        realms: 'ownOrNull',
+                        clients: 'own',
+                    }),
+                });
+                expect(response.status).toEqual(200);
+
+                return response.json();
+            }));
+
+            const expected = [{
+                name: permissionX.name,
+                ...(permissionX.realmId ? { realmId: permissionX.realmId } : {}),
+                clientId: clientX.id,
+                targetRealms: expect.any(Array),
+            }];
+            expect(entries).toEqual([expected, [], expected]);
+        });
+
+        // A client subject's grants are never narrowed to its token client, so
+        // a grant of a definition another client owns applies, and `own` has
+        // to select that definition too.
+        it('should select a foreign client-owned definition for a client subject', async () => {
+            const clientZ = await createConfidentialClient();
+            await suite.client.clientPermission.create({
+                clientId: clientZ.id,
+                permissionId: permissionX.id,
+            });
+
+            const grant = await suite.client.token.createWithClientCredentials({
+                client_id: clientZ.id,
+                client_secret: secret,
+            });
+
+            const response = await httpRequest(suite, 'POST', '/authorization/check', {
+                headers: { ...bearer(grant.access_token), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    names: [permissionX.name],
+                    realms: 'ownOrNull',
+                    clients: 'ownOrNull',
+                }),
+            });
+            expect(response.status).toEqual(200);
+
+            expect(await response.json()).toEqual([{
+                name: permissionX.name,
+                ...(permissionX.realmId ? { realmId: permissionX.realmId } : {}),
+                clientId: clientX.id,
+                targetRealms: expect.any(Array),
+            }]);
+        });
+
         it('should answer the permission check route with the grants the token reaches', async () => {
             const { data: roleRead } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
 

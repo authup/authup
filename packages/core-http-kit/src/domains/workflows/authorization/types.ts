@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationCatalog, AuthorizationCheckPermissions, AuthorizationCheckRealms } from '@authup/access';
+import type {
+    AuthorizationCatalog,
+    AuthorizationCheckClients,
+    AuthorizationCheckPermissions,
+    AuthorizationCheckRealms,
+} from '@authup/access';
 import type { AuthorizationHeader } from 'hapic';
 
 export type AuthorizationRequestOptions = {
@@ -25,11 +30,21 @@ export type AuthorizationCheckPayload = {
      */
     names?: string[],
     /**
-     * Which resource realms to check against. Omitted, `ownOrNull`: the
-     * identity's own realm plus the global rows every realm shares, which is
-     * the reach a realm administrator's reads are held at.
+     * Which realms own the definitions to evaluate. Omitted, `[null]`: the
+     * definitions owned by no realm.
      */
     realms?: AuthorizationCheckRealms,
+    /**
+     * Which clients own the definitions to evaluate. Omitted, `[null]`: the
+     * definitions owned by no client.
+     */
+    clients?: AuthorizationCheckClients,
+    /**
+     * Which resource realms each definition is checked against. Omitted,
+     * `ownOrNull`: the identity's own realm plus the global rows every realm
+     * shares, which is the reach a realm administrator's reads are held at.
+     */
+    targetRealms?: AuthorizationCheckRealms,
 };
 
 export type AuthorizationCheckResponse = {
@@ -53,8 +68,12 @@ export interface IAuthorizationAPI {
     get(options?: AuthorizationRequestOptions) : Promise<AuthorizationCatalog>;
 
     /**
-     * The caller's OWN verdicts, paired with the realms they hold in, which
-     * `POST /authorization/check` serves to any authenticated credential.
+     * The caller's OWN verdicts, which `POST /authorization/check` serves to
+     * any caller. `realms` and `clients` select the definitions by their
+     * owners, `targetRealms` the resource realms each one is checked against.
+     * Every entry names one definition, carrying `realmId` / `clientId` when
+     * its owner is not null, with the target realms its verdict holds in; a
+     * definition absent from the answer is denied.
      *
      * This is what a public client reads where the catalog is out of reach: it
      * holds no secret, so it can obtain no `client_credentials` token and has

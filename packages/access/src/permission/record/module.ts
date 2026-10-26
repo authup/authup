@@ -63,6 +63,8 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
 function buildEvaluationContext(ctx: RecordEvaluationContext): PermissionEvaluationContext {
     return {
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         data: buildRecordData(ctx.name, ctx),
         options: ctx.options,
     };
@@ -136,12 +138,16 @@ export async function evaluateRecordUpdate(
         realm: ctx.current.realm,
         data: ctx.current.data,
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         options: ctx.options,
     });
     await evaluateRecord(evaluator, {
         realm: ctx.next.realm,
         data: ctx.next.data,
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         options: ctx.options,
     });
 }

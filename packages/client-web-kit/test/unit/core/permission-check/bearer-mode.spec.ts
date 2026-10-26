@@ -125,4 +125,25 @@ describe('core/permission-check (bearer mode)', () => {
         expect(foreign.value).toBe(false);
         expect(unknown.value).toBe(true);
     });
+
+    // A bare name reaches the global definition only, so a definition the
+    // realm owns is checked by naming its owner (#3769).
+    it('checks a realm-owned definition only when the check names its realm', async () => {
+        const store = buildStore();
+        await store.login({ name: 'admin', password: 'start123' });
+
+        const owned = await runCheck(store, { name: 'owned_read', realmId: AUTHORIZATION_REALM });
+        const bare = await runCheck(store, { name: 'owned_read' });
+        const foreign = await runCheck(store, { name: 'owned_read', realmId: 'realm-2' });
+        const client = await runCheck(store, {
+            name: 'owned_read',
+            realmId: AUTHORIZATION_REALM,
+            clientId: 'client-1',
+        });
+
+        expect(owned.value).toBe(true);
+        expect(bare.value).toBe(false);
+        expect(foreign.value).toBe(false);
+        expect(client.value).toBe(false);
+    });
 });

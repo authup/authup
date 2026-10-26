@@ -20,7 +20,7 @@ import type { Pinia } from 'pinia';
 import { BuiltInPolicyType, type IdentityPolicyData, definePolicyData } from '@authup/access';
 import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
-import type { RuntimeOptions } from '../types';
+import type { RoutePermissionRequirement, RuntimeOptions } from '../types';
 
 /**
  * Base for resolving a post-login destination. Any origin works; it exists
@@ -320,25 +320,58 @@ export class RoutingInterceptor {
                 continue;
             }
 
-            let permissions : string[] = [];
-            if (match.meta[RouteMetaKey.REQUIRE_PERMISSIONS]) {
-                if (Array.isArray(match.meta[RouteMetaKey.REQUIRE_PERMISSIONS])) {
-                    permissions = match.meta[RouteMetaKey.REQUIRE_PERMISSIONS];
-                } else if (typeof match.meta[RouteMetaKey.REQUIRE_PERMISSIONS] === 'string') {
-                    permissions = [match.meta[RouteMetaKey.REQUIRE_PERMISSIONS]];
-                }
+            const value = match.meta[RouteMetaKey.REQUIRE_PERMISSIONS] as
+                RoutePermissionRequirement | RoutePermissionRequirement[] | undefined;
+            let requirements : RoutePermissionRequirement[] = [];
+            if (Array.isArray(value)) {
+                requirements = value;
+            } else if (value) {
+                requirements = [value];
             }
 
-            if (permissions.length === 0) {
+            if (requirements.length === 0) {
                 continue;
             }
 
-            try {
-                await this.store.permissionEvaluator.preEvaluateOneOf({
-                    name: permissions,
-                    data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
-                });
-            } catch {
+            // preEvaluateOneOf takes one owner per call, so the entries are
+            // grouped by owner and any passing group admits the route.
+            const groups = new Map<string, {
+                realmId?: string | null,
+                clientId?: string | null,
+                names: string[]
+            }>();
+            for (const requirement of requirements) {
+                const entry = typeof requirement === 'string' ? { name: requirement } : requirement;
+                const key = `${entry.realmId || ''}:${entry.clientId || ''}`;
+                let group = groups.get(key);
+                if (!group) {
+                    group = {
+                        realmId: entry.realmId,
+                        clientId: entry.clientId,
+                        names: [],
+                    };
+                    groups.set(key, group);
+                }
+                group.names.push(entry.name);
+            }
+
+            let permitted = false;
+            for (const group of groups.values()) {
+                try {
+                    await this.store.permissionEvaluator.preEvaluateOneOf({
+                        name: group.names,
+                        realmId: group.realmId,
+                        clientId: group.clientId,
+                        data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
+                    });
+                    permitted = true;
+                    break;
+                } catch {
+                    // the next owner may still admit the route
+                }
+            }
+
+            if (!permitted) {
                 return false;
             }
         }

@@ -30,7 +30,7 @@ are narrowed. Reach removes the policy configuration rather than the entry: a
 definition outside your reach arrives with `policies: null` and denies, and a
 policy tree outside it arrives as a node no consumer can project, which drops
 the grants naming it. A foreign realm's definitions therefore still appear,
-carrying their `name`, `realm_id`, `client_id` and `decision_strategy` with no
+carrying their `name`, `realmId`, `clientId` and `decisionStrategy` with no
 policies, so that an absent definition keeps its one meaning: your copy is
 older than the server's. Cache the answer per credential rather than per
 process, and give a resource server serving several realms a credential whose
@@ -196,9 +196,10 @@ The catalog (`GET /authorization`):
   tree's id and present once. A node carries its `type`, its configuration
   keys, `invert` and, for a composite, its `children` inline. It is the output
   of that type's validator: no entity columns.
-- `permissions`: one entry per definition with `name`, `realm_id`, `client_id`,
-  `decision_strategy` and the definition's `policies` (ids), sorted by
-  permission key.
+- `permissions`: one entry per definition with `name`, `realmId`, `clientId`,
+  `decisionStrategy` and the definition's `policies` (ids), sorted by
+  permission key. The catalog is camelCase like every key Authup defines; the
+  grants below stay snake_case because they ride the introspection response.
 - Nullable fields are required. An empty `policies` list means no restriction
   at that layer. `policies` is `null` when the server could not project one of
   the definition's trees (a policy type the catalog does not carry, or a
@@ -260,35 +261,71 @@ public client reads verdicts rather than configuration.
 
 ```typescript
 const permissions = await client.authorization.check(
-    { realms: 'ownOrNull' },
+    { realms: 'ownOrNull', clients: 'ownOrNull', targetRealms: 'ownOrNull' },
     { authorizationHeader: { type: 'Bearer', token: accessToken } },
 );
-// [{ name: 'user_read', realms: ['<your realm id>', null] }]
+// [
+//   { name: 'user_read', targetRealms: ['<your realm id>', null] },
+//   { name: 'report_export', realmId: '<your realm id>', targetRealms: ['<your realm id>'] },
+// ]
 
 const evaluator = await createAuthorizationCheckEvaluator({ permissions, identity });
 await evaluator.preEvaluateOneOf({ name: 'user_read' });
+// an owned definition is asked for by its owner
+await evaluator.preEvaluateOneOf({ name: 'report_export', realmId: '<your realm id>' });
 ```
 
-`POST /authorization/check` needs an identity and no permission. Both body
-members are optional:
+`POST /authorization/check` needs no permission and no login (an anonymous
+caller is answered too, and only a definition whose policies need no identity
+can pass for it). Every body member is optional:
 
 - `names` restricts the check to a subset. Omit it and every definition is
   checked, which is the point: a client that names what it checks has to keep
   that list in step with its own UI, and a name missing from the request fails
   silently as a control that quietly disappears.
-- `realms` is `own`, `ownOrNull` (the default) or an explicit list, with `null`
-  for the global rows every realm shares. A symbolic selector resolves against
-  your own identity. An explicit list has no realm key RESOLVED: each member is
-  evaluated and echoed as you sent it, so the answer discloses no realm's
-  existence and you match it against your own input. The one transformation is
-  a duplicate drop, keeping the first occurrence and the order, since a
-  repeated realm asks the same question twice.
-  There is no `any`: name the realm you care about. At most 256 names and 4
-  realms per call.
+- `realms` and `clients` select which DEFINITIONS are evaluated. A definition
+  is identified by its name and its owner, so a realm's `report_export` and the
+  global one are two permissions. Each is `own`, `ownOrNull` or an explicit
+  list, with `null` for the definitions no realm (or no client) owns; both
+  default to `[null]`, the global definitions only. `clients: 'own'` is the
+  client your token was issued to when a user signed in through one. For a
+  client subject, and for a request without a token client (a console session,
+  Basic), it is every client you hold a grant of.
+- `targetRealms` is where each selected definition is checked against: `own`,
+  `ownOrNull` (the default) or an explicit list, with `null` for the global rows
+  every realm shares.
 
-A permission that reaches none of the requested realms is **absent** from the
-answer, so absent means denied, and a check carrying a `realmMatch` for a realm
-you never asked about denies too. Ask about the realms your UI will ask about.
+A symbolic selector resolves against your own identity. An explicit list has no
+key RESOLVED: each member is evaluated and echoed as you sent it, so the answer
+discloses no realm's or client's existence (an unknown id selects nothing) and
+you match it against your own input. The one transformation is a duplicate drop,
+keeping the first occurrence and the order, since a repeated entry asks the same
+question twice. There is no `any`: name the realm you care about. At most 256
+names and 4 entries per selector.
+
+Each entry of the answer is `{ name, realmId?, clientId?, targetRealms }`:
+`realmId` and `clientId` name the definition's owner and are omitted when null,
+and entries are unique by name and owner. A definition that reaches none of the
+requested target realms is **absent** from the answer, so absent means denied,
+and a check carrying a `realmMatch` for a realm you never asked about denies
+too. Ask about the realms your UI will ask about. The evaluator matches an entry
+by the `realmId` and `clientId` you pass, so a bare name matches the global
+definition only.
+
+Every check that gates an owned permission names its owner by id, and the
+record helpers take the same two fields next to the record's own `realm`:
+
+```typescript
+await reachesRecord(evaluator, {
+    name: 'report_export',
+    realmId: '<owning realm id>', // owner of the definition
+    realm: report.realmId, // realm of the record
+});
+```
+
+The kit forwards them too: `usePermissionCheck({ name, realmId, clientId })`,
+the `realmId` / `clientId` props of `APermissionCheck`, and a route-meta entry
+`{ name, realmId?, clientId? }` in `@authup/client-web-nuxt`.
 
 The answer is `Cache-Control: private, no-cache`, plus `max-age=N` when a `date`
 or `time` policy in an evaluated tree could change a verdict for you: N is the
@@ -305,5 +342,5 @@ Two limits to hold on to:
   for coarse gating of nav items, buttons and routes. A resource server
   deciding access to its own rows wants the catalog, which can evaluate those
   policies against the row and lower a collection query through `compile()`.
-- **A bare name means "in at least one requested realm".** A `realmScope: none`
+- **A bare name means "in at least one requested target realm".** A `realmScope: none`
   grant therefore does not pass, where a realm-less check would let it through.

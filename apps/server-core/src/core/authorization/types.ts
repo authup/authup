@@ -6,6 +6,7 @@
  */
 
 import type {
+    AuthorizationCheckClients,
     AuthorizationCheckPermissions,
     AuthorizationCheckRealms,
     BasePermission,
@@ -65,20 +66,38 @@ export type AuthorizationCheckBuilderContext = {
 
 export type AuthorizationCheckRequest = {
     /**
-     * The permission namespaces to check. Omitted, every global definition is
+     * The permission names to check. Omitted, every selected definition is
      * checked, so a caller never maintains a list in step with its own UI.
      */
     names?: string[],
     /**
-     * Which resource realms to check against, symbolic or verbatim. Omitted,
-     * `ownOrNull`.
+     * Which realms own the definitions to check, symbolic or verbatim.
+     * Omitted, `[null]`.
      */
     realms?: AuthorizationCheckRealms,
     /**
+     * Which clients own the definitions to check, symbolic or verbatim.
+     * Omitted, `[null]`.
+     */
+    clients?: AuthorizationCheckClients,
+    /**
+     * Which resource realms each definition is checked against, symbolic or
+     * verbatim. Omitted, `ownOrNull`.
+     */
+    targetRealms?: AuthorizationCheckRealms,
+    /**
+     * The client the request's token was issued for, absent when the request
+     * carries none (the console session cookie, Basic). It is what a symbolic
+     * client selector resolves to, the way the request's grants are narrowed
+     * (#3597).
+     */
+    clientId?: string,
+    /**
      * The caller's identity. It resolves a symbolic realm selector, and when
      * policies may see it (the caller's scopes include `global`) it carries
-     * its grants, which decide whether a denied pair's expiry concerns the
-     * caller. The evaluation itself reads the identity through `decorate`,
+     * its grants, which resolve a symbolic client selector of a request
+     * without a token client and decide whether a denied pair's expiry
+     * concerns the caller. The evaluation itself reads the identity through `decorate`,
      * under the scope condition that belongs there.
      */
     identity?: IdentityPolicyData,
@@ -109,4 +128,6 @@ export type AuthorizationCheckResult = {
 export type AuthorizationCheckPayload = {
     names?: string[],
     realms?: AuthorizationCheckRealms,
+    clients?: AuthorizationCheckClients,
+    targetRealms?: AuthorizationCheckRealms,
 };

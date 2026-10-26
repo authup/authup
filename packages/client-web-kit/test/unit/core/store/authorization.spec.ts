@@ -31,6 +31,12 @@ const INTROSPECTION = {
     permissions: buildAuthorizationGrants(),
 };
 
+const CHECK_BODY = {
+    realms: 'ownOrNull',
+    clients: 'ownOrNull',
+    targetRealms: 'ownOrNull',
+};
+
 const GRANT_RESPONSE = {
     access_token: 'xyz',
     token_type: 'Bearer',
@@ -89,7 +95,7 @@ describe('core/store (authorization)', () => {
         const requests = findRequests(httpClient, '/authorization/check');
         expect(requests).toHaveLength(1);
         expect(requests[0].headers.authorization).toEqual('Bearer xyz');
-        expect(requests[0].body).toEqual({ realms: 'ownOrNull' });
+        expect(requests[0].body).toEqual(CHECK_BODY);
         expect(findRequests(httpClient, '/authorization')).toHaveLength(0);
         expect(store.permissionEvaluator).toBe(evaluator);
 
@@ -154,7 +160,7 @@ describe('core/store (authorization)', () => {
 
         // it asks about the identity's own realm plus the global rows
         const [request] = findRequests(httpClient, '/authorization/check');
-        expect(request?.body).toEqual({ realms: 'ownOrNull' });
+        expect(request?.body).toEqual(CHECK_BODY);
     });
 
     // Unlike the catalog it is per IDENTITY, and a revalidation naming a
@@ -167,7 +173,7 @@ describe('core/store (authorization)', () => {
             'POST /token/introspect': () => ({ ...INTROSPECTION, sub: subject }),
             'POST /authorization/check': () => (subject === AUTHORIZATION_SUBJECT ?
                 buildAuthorizationCheck() :
-                [{ name: 'other_only', realms: [AUTHORIZATION_REALM] }]),
+                [{ name: 'other_only', targetRealms: [AUTHORIZATION_REALM] }]),
         });
 
         await store.login({ name: 'admin', password: 'start123' });

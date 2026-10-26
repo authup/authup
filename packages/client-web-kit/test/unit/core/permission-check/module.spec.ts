@@ -11,11 +11,11 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { User } from '@authup/core-kit';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, defineStore } from 'pinia';
-import { 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+import {
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
 import type { Ref } from 'vue';
 import { defineComponent, h } from 'vue';
@@ -76,6 +76,27 @@ describe('core/permission-check', () => {
         });
 
         expect(outcome.value).toBe(true);
+    });
+
+    it('should pass the owner ids of the definition through', async () => {
+        const store = buildStore();
+        store.setUser({ id: 'user-id' } as User);
+
+        const spy = vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
+            .mockResolvedValue(undefined);
+
+        await runCheck(store, {
+            name: 'mtb_query_submit',
+            realmId: 'realm-id',
+            clientId: 'client-id',
+        });
+
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        const [evaluationContext] = spy.mock.calls[0];
+        expect(evaluationContext.name).toEqual('mtb_query_submit');
+        expect(evaluationContext.realmId).toEqual('realm-id');
+        expect(evaluationContext.clientId).toEqual('client-id');
     });
 
     it('should omit realm fields when the store has no realm', async () => {

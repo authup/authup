@@ -35,9 +35,9 @@ export const authorizationPolicySchema = z.looseObject({ type: z.string().min(1)
  */
 export const authorizationDefinitionSchema = z.object({
     name: z.string().min(1),
-    realm_id: namespaceId,
-    client_id: namespaceId,
-    decision_strategy: z.enum(DecisionStrategy).nullable(),
+    realmId: namespaceId,
+    clientId: namespaceId,
+    decisionStrategy: z.enum(DecisionStrategy).nullable(),
     policies: z.array(id).nullable(),
 });
 
@@ -167,13 +167,15 @@ export async function parseAuthorizationEvaluatorInput(
 }
 
 /**
- * One verdict: the permission namespace and the requested realms it holds in.
- * A realm value is a realm key the caller itself supplied, or `null` for the
- * global rows, so nothing here is resolved or looked up.
+ * One verdict: the permission namespace and the requested target realms it
+ * holds in. A realm value is a realm key the caller itself supplied, or `null`
+ * for the global rows, so nothing here is resolved or looked up.
  */
 export const authorizationCheckPermissionSchema = z.object({
     name: z.string().min(1),
-    realms: z.array(z.string().min(1).nullable()).min(1),
+    realmId: namespaceId.optional(),
+    clientId: namespaceId.optional(),
+    targetRealms: z.array(z.string().min(1).nullable()).min(1),
 });
 
 export const authorizationCheckPermissionsSchema = z.array(authorizationCheckPermissionSchema);

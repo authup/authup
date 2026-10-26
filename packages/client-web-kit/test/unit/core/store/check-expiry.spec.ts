@@ -457,4 +457,44 @@ describe('core/store (check expiry)', () => {
         await expect(store.permissionEvaluator.preEvaluateOneOf({ name: 'user_read' })).rejects.toThrow();
         expect(outcome.value).toBe(false);
     });
+
+    // Two answers differing only in which namespace a name is owned by are
+    // different verdicts, while the same entries in another order are not.
+    it('compares the verdicts by definition namespace, not by name', async () => {
+        let permissions = buildAuthorizationCheck();
+        const { store, checks } = buildStore(() => ({ permissions, maxAge: 60 }));
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        let owned!: Ref<boolean>;
+        mount(defineComponent({
+            setup() {
+                const checker = createPermissionCheckerReactiveFn({ store });
+                owned = checker({ name: 'owned_read', realmId: AUTHORIZATION_REALM });
+
+                return () => h('div');
+            },
+        }));
+
+        await flushPromises();
+        expect(owned.value).toBe(true);
+
+        permissions = [...buildAuthorizationCheck()].reverse();
+        await vi.advanceTimersByTimeAsync(60_000);
+        await flushPromises();
+
+        expect(checks()).toBe(2);
+        expect(store.permissionRevision).toBe(0);
+        expect(owned.value).toBe(true);
+
+        permissions = buildAuthorizationCheck().map((entry) => (entry.realmId ?
+            { ...entry, realmId: 'realm-2' } :
+            entry));
+        await vi.advanceTimersByTimeAsync(60_000);
+        await flushPromises();
+
+        expect(checks()).toBe(3);
+        expect(store.permissionRevision).toBe(1);
+        expect(owned.value).toBe(false);
+    });
 });

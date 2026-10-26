@@ -19,6 +19,17 @@ A permission check evaluates two layers, both of which must pass:
    permission form a **disjunction**: access is granted iff some grant passes both of
    its own factors.
 
+A permission definition is identified by `(name, realmId, clientId)`, the unique key of
+`auth_permissions`: a realm's or a client's `report_export` is a different permission than
+the global one. The `realmId` and `clientId` of an evaluation context name that DEFINITION;
+the realm of the resource the permission is attempted on travels separately, under the
+`realmMatch` data key, and is what a grant's `realmScope` is matched against. The two
+consumers outside the server keep the same split: `createAuthorizationEvaluator` reads the
+catalog's definitions by their owner, and `createAuthorizationCheckEvaluator` keys the
+`POST /authorization/check` verdicts by `(name, realmId, clientId)`, so a bare name matches
+the global definition only and the kit's `usePermissionCheck({ name, realmId, clientId })`
+asks for an owned one by its owner's ids.
+
 ## Tri-state evaluation
 
 The engine is tri-state: a policy settles **true**, settles **false**, or stays
@@ -96,6 +107,8 @@ rows).
 | Grant aggregation & dominance | `packages/access/src/permission/helpers/` |
 | Realm reach (`realmScope`) | `packages/access/src/permission/realm-scope/` |
 | Server-core binding evaluator (Layer 2) | `apps/server-core/src/core/security/policy/evaluator.ts` |
+| Catalog and batch check consumers | `packages/access/src/permission/authorization/` |
+| Batch check (`POST /authorization/check`) | `apps/server-core/src/core/authorization/check.ts` |
 
 The authoritative, always-current deep-dive is the repository's agent documentation:
 [`.agents/architecture.md`](https://github.com/authup/authup/blob/master/.agents/architecture.md)

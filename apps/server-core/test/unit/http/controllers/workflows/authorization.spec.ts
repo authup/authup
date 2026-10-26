@@ -67,7 +67,9 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect(catalog.permissions.filter((permission) => permission.policies === null)).toEqual([]);
 
         const userRead = catalog.permissions.find((permission) => permission.name === PermissionName.USER_READ);
-        expect(userRead).toMatchObject({ realm_id: null, client_id: null });
+        expect(userRead).toMatchObject({ realmId: null, clientId: null });
+        expect(userRead).toHaveProperty('decisionStrategy');
+        expect(userRead).not.toHaveProperty('realm_id');
         expect(userRead?.policies).toHaveLength(1);
 
         const defaultPolicyId = userRead!.policies![0]!;
@@ -215,7 +217,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const catalog : AuthorizationCatalog = await response.json();
         const entry = catalog.permissions.find((item) => item.name === foreign.name);
         expect(entry).toBeDefined();
-        expect(entry!.realm_id).toEqual(realm.id);
+        expect(entry!.realmId).toEqual(realm.id);
         expect(entry!.policies).toBeNull();
         expect(catalog.policies).not.toHaveProperty(policy.id);
 

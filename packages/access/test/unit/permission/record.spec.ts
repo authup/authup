@@ -14,6 +14,7 @@ import {
     PolicyData,
     PolicyDefaultEvaluators,
     PolicyEngine,
+    createAuthorizationCheckEvaluator,
     createAuthorizationEvaluator,
     definePolicyWithType,
     evaluateRecord,
@@ -27,6 +28,7 @@ import {
 
 const realmA = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';
+const clientA = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
 
 const identity : IdentityPolicyData = {
     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -49,9 +51,9 @@ function build(grants: {
             },
             permissions: ['event_read', 'event_delete'].map((name) => ({
                 name,
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: ['binding'],
             })),
         },
@@ -270,6 +272,53 @@ describe('src/permission/record', () => {
             await build([{ name: 'event_delete', realm_scope: 'any' }]),
             ['event_read', 'event_delete'],
         )).toBe(true);
+    });
+
+    it('reaches an owned definition only when the owner is named', async () => {
+        const evaluator = await createAuthorizationCheckEvaluator({
+            permissions: [
+                {
+                    name: 'report_export',
+                    realmId: realmA,
+                    clientId: clientA,
+                    targetRealms: [realmA],
+                },
+            ],
+            identity,
+        });
+
+        expect(await reachesRecord(evaluator, {
+            name: 'report_export',
+            realmId: realmA,
+            clientId: clientA,
+            realm: realmA,
+        })).toBe(true);
+        await expect(evaluateRecordOneOf(evaluator, {
+            name: ['report_export'],
+            realmId: realmA,
+            clientId: clientA,
+            realm: realmA,
+        })).resolves.toBeUndefined();
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'report_export',
+            realmId: realmA,
+            clientId: clientA,
+            current: { realm: realmA },
+            next: { realm: realmA },
+        })).resolves.toBeUndefined();
+
+        expect(await reachesRecord(evaluator, { name: 'report_export', realm: realmA })).toBe(false);
+        expect(await reachesRecord(evaluator, {
+            name: 'report_export',
+            realmId: realmA,
+            realm: realmA,
+        })).toBe(false);
+        expect(await reachesRecord(evaluator, {
+            name: 'report_export',
+            realmId: realmA,
+            clientId: clientA,
+            realm: realmB,
+        })).toBe(false);
     });
 
     it('propagates anything that is not a permission error', async () => {

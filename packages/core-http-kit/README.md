@@ -183,8 +183,9 @@ const permissions = await client.authorization.check({ names: ['user_read', 'use
 const canUpdate = permissions.some((permission) => permission.name === 'user_update');
 ```
 
-- Omit `names` to check every permission. `realms` defaults to `ownOrNull` (the caller's realm plus global rows); pass `own` or a list of realm ids (`null` for global).
-- Only permissions the caller holds in at least one requested realm appear, so absent means denied.
+- Omit `names` to check every permission. `realms` and `clients` pick which definitions are evaluated by the realm and client that own them; both default to `[null]` (definitions owned by no realm and no client). Pass `own`, `ownOrNull` or a list of ids (`null` for unowned).
+- `targetRealms` picks the resource realms each definition is checked against. It defaults to `ownOrNull` (the caller's realm plus global rows); pass `own` or a list of realm ids (`null` for global).
+- Each entry carries `name`, the owning `realmId` / `clientId` (omitted when null) and the `targetRealms` it holds in. Only definitions the caller holds in at least one requested target realm appear, so absent means denied.
 - `checkWithMaxAge()` also returns `maxAge`, the seconds until a date or time policy could change the answer.
 - `client.authorization.get()` reads the identity-free permission catalog instead. It needs one of `permission_read`, `permission_update` or `permission_delete`.
 

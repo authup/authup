@@ -34,9 +34,9 @@ export function buildAuthorizationCatalog(
         },
         permissions: [{
             name: 'user_read',
-            realm_id: null,
-            client_id: null,
-            decision_strategy: null,
+            realmId: null,
+            clientId: null,
+            decisionStrategy: null,
             policies: ['default'],
         }],
         ...overrides,
@@ -60,8 +60,16 @@ export function buildAuthorizationGrants() : OAuth2TokenPermission[] {
 /**
  * The verdicts `POST /authorization/check` answers for the same definition:
  * held in the identity's own realm and not globally, which is what the
- * catalog's `own` grant evaluates to.
+ * catalog's `own` grant evaluates to. Next to it, a definition the
+ * identity's realm owns, which only a check naming that realm reaches.
  */
 export function buildAuthorizationCheck() : AuthorizationCheckPermissions {
-    return [{ name: 'user_read', realms: [AUTHORIZATION_REALM] }];
+    return [
+        { name: 'user_read', targetRealms: [AUTHORIZATION_REALM] },
+        {
+            name: 'owned_read', 
+            realmId: AUTHORIZATION_REALM, 
+            targetRealms: [AUTHORIZATION_REALM], 
+        },
+    ];
 }

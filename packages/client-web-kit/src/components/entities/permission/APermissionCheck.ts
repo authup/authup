@@ -22,6 +22,8 @@ export const APermissionCheck = defineComponent({
             type: [String, Array] as PropType<string | string[]>,
             required: true,
         },
+        realmId: { type: String as PropType<string | null> },
+        clientId: { type: String as PropType<string | null> },
         input: { type: Object as PropType<Record<string, any>> },
         options: { type: Object as PropType<PermissionEvaluationOptions> },
     },
@@ -35,6 +37,8 @@ export const APermissionCheck = defineComponent({
         // re-triggers the evaluation.
         const isPermitted = fn(() => ({
             name: props.name,
+            realmId: props.realmId,
+            clientId: props.clientId,
             data: definePolicyData(props.input),
             options: props.options,
         }));
