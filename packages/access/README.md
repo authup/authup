@@ -142,7 +142,7 @@ const canDelete = await reachesRecord(evaluator, { name: 'user_delete', realm: n
 - `data` is a `PolicyData` or a plain record and must not carry `realmMatch` itself; the helper sets it from `realm`. It is cloned, never written to.
 - `reachesRecord*` returns `false` for a `PermissionError` and rethrows anything else.
 - `evaluateRecordUpdate(evaluator, { name, current, next })` evaluates the stored row and the updated row, so an update can neither move a row into reach nor out of it.
-- `hasUnboundedReach(evaluator, name)` is true when `compile` answers `allow`: an `any` grant with no narrowing policy.
+- `hasUnboundedReach(evaluator, name, owner?)` is true when `compile` answers `allow`: an `any` grant with no narrowing policy. Pass `{ realmId, clientId }` as `owner` for an owned definition.
 
 ### Use the batch check answer
 

@@ -274,6 +274,32 @@ describe('src/permission/record', () => {
         )).toBe(true);
     });
 
+    it('reports unbounded reach of an owned definition only when its owner is named', async () => {
+        const evaluator = await createAuthorizationEvaluator({
+            catalog: {
+                policies: { binding: { type: 'permissionBinding' } },
+                permissions: [{
+                    name: 'event_read',
+                    realmId: realmA,
+                    clientId: null,
+                    decisionStrategy: null,
+                    policies: ['binding'],
+                }],
+            },
+            grants: [{
+                name: 'event_read',
+                realm_id: realmA,
+                client_id: null,
+                realm_scope: 'any',
+                policies: [],
+            }],
+            identity,
+        });
+
+        expect(await hasUnboundedReach(evaluator, 'event_read', { realmId: realmA })).toBe(true);
+        expect(await hasUnboundedReach(evaluator, 'event_read')).toBe(false);
+    });
+
     it('reaches an owned definition only when the owner is named', async () => {
         const evaluator = await createAuthorizationCheckEvaluator({
             permissions: [
