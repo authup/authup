@@ -8,6 +8,7 @@
 import type { DecisionStrategy } from '@authup/kit';
 import type { IdentityPolicyData, PolicyEvaluators, PolicyValidators } from '../../policy';
 import type { RealmScope } from '../realm-scope';
+import type { AUTHORIZATION_CHECK_GRANTED } from './constants';
 
 /**
  * One policy tree node as it travels: the type's configuration keys (the output
@@ -103,26 +104,41 @@ export type AuthorizationEvaluatorOptions = {
 };
 
 /**
- * A selector of the batch check: which realms or clients it addresses.
+ * Which resource realms each definition of a batch check is checked against
+ * (`targetRealms`).
  *
  * A string is SYMBOLIC and resolved server-side against the caller's own
- * identity: `own` is the identity's own realm or client, `ownOrNull` adds
- * `null`, the global (unowned) side. An array is taken VERBATIM: the server
- * resolves no key, so it discloses no realm's or client's existence and the
- * caller matches the answer against its own input with no resolution step of
- * its own.
+ * identity: `own` is the identity's own realm, `ownOrNull` adds `null`, the
+ * global rows. An array is taken VERBATIM: the server resolves no key, so it
+ * discloses no realm's existence and the caller matches the answer against
+ * its own input with no resolution step of its own.
  *
  * String versus array is what discriminates the two forms, so `own` stays
  * unambiguous even though it is a legal realm name.
  */
-export type AuthorizationCheckSelector = `${RealmScope.OWN}` |
+export type AuthorizationCheckTargetRealms = `${RealmScope.OWN}` |
 `${RealmScope.OWN_OR_NULL}` |
 Array<string | null>;
 
 /**
- * Which realms a batch check addresses: the realms owning the definitions
- * to evaluate (`realms`), or the resource realms each definition is checked
- * against (`targetRealms`).
+ * Which owners the definitions a batch check evaluates belong to: the owner
+ * realms (`realms`) or the owner clients (`clients`). Both read the same way.
+ *
+ * - `own`: the caller's own realm, or the client the request's token was
+ *   issued for. A request without a token client (the console session
+ *   cookie, Basic) has no own client.
+ * - `ownOrNull`: `own` plus `null`, the global (unowned) side.
+ * - `granted` (`AUTHORIZATION_CHECK_GRANTED`): the owners of every definition
+ *   the identity holds a grant of, plus `own` and `null`, so a superset of
+ *   `ownOrNull`. It is how a caller reaches a definition owned by a realm or
+ *   client other than its own, without knowing that owner in advance.
+ * - an array: taken VERBATIM, like a target realm list.
+ */
+export type AuthorizationCheckSelector = AuthorizationCheckTargetRealms |
+`${typeof AUTHORIZATION_CHECK_GRANTED}`;
+
+/**
+ * Which realms own the definitions a batch check evaluates (`realms`).
  */
 export type AuthorizationCheckRealms = AuthorizationCheckSelector;
 

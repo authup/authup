@@ -261,7 +261,7 @@ public client reads verdicts rather than configuration.
 
 ```typescript
 const permissions = await client.authorization.check(
-    { realms: 'ownOrNull', clients: 'ownOrNull', targetRealms: 'ownOrNull' },
+    { realms: 'granted', clients: 'granted', targetRealms: 'ownOrNull' },
     { authorizationHeader: { type: 'Bearer', token: accessToken } },
 );
 // [
@@ -285,12 +285,13 @@ can pass for it). Every body member is optional:
   silently as a control that quietly disappears.
 - `realms` and `clients` select which DEFINITIONS are evaluated. A definition
   is identified by its name and its owner, so a realm's `report_export` and the
-  global one are two permissions. Each is `own`, `ownOrNull` or an explicit
-  list, with `null` for the definitions no realm (or no client) owns; both
-  default to `[null]`, the global definitions only. `clients: 'own'` is the
-  client your token was issued to when a user signed in through one. For a
-  client subject, and for a request without a token client (a console session,
-  Basic), it is every client you hold a grant of.
+  global one are two permissions. Both default to `[null]`, the global
+  definitions only, and both take the same values. `own` is your own realm, or
+  the client your token was issued to (nothing without one: a console session,
+  Basic). `ownOrNull` adds `null`, the definitions no realm (or no client)
+  owns. `granted` adds, on top of `ownOrNull`, the owner of every definition
+  you hold a grant of, so a permission another realm or client owns is reached
+  without naming its owner. An explicit list is taken as given.
 - `targetRealms` is where each selected definition is checked against: `own`,
   `ownOrNull` (the default) or an explicit list, with `null` for the global rows
   every realm shares.

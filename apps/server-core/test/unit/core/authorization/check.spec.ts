@@ -372,6 +372,7 @@ describe('core/authorization/check', () => {
         it.each<[string, AuthorizationCheckRealms]>([
             ['own', RealmScope.OWN],
             ['ownOrNull', RealmScope.OWN_OR_NULL],
+            ['granted', 'granted'],
             ['an explicit id', [REALM_ID]],
         ])('selects a realm-owned definition by %s', async (_, realms) => {
             const ctx = setup(
@@ -474,12 +475,18 @@ describe('core/authorization/check', () => {
             ]);
         });
 
-        // A client subject's grants are never narrowed to its token client,
-        // so `own` must not narrow them either.
-        it('resolves the own client selector to every granted client for a client subject', async () => {
+        // `own` is the token client for every subject kind, a client subject
+        // included: nothing falls back to the grants any more.
+        it('resolves the own client selector to the token client for a client subject', async () => {
             const ctx = setup(
-                [definition('report_export', { clientId: FOREIGN_CLIENT_ID })],
-                [grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID })],
+                [
+                    definition('report_export', { clientId: CLIENT_ID }),
+                    definition('report_export', { clientId: FOREIGN_CLIENT_ID }),
+                ],
+                [
+                    grant('report_export', RealmScope.OWN, { clientId: CLIENT_ID }),
+                    grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID }),
+                ],
             );
 
             const clientIdentity : IdentityPolicyData = {
@@ -499,15 +506,37 @@ describe('core/authorization/check', () => {
             expect(result).toEqual([
                 {
                     name: 'report_export',
-                    clientId: FOREIGN_CLIENT_ID,
+                    clientId: CLIENT_ID,
                     targetRealms: [REALM_ID],
                 },
             ]);
         });
 
-        // Without a token client (the console cookie, Basic) the request's
-        // grants are not narrowed to one client, so `own` must not be either.
-        it('resolves the own client selector to every granted client without a token client', async () => {
+        // Without a token client (the console cookie, Basic) there is no own
+        // client to name, whatever the identity holds grants of.
+        it('selects no client for the own client selector without a token client', async () => {
+            const ctx = setup(
+                [
+                    definition('user_read'),
+                    definition('report_export', { clientId: CLIENT_ID }),
+                ],
+                [
+                    grant('user_read', RealmScope.OWN),
+                    grant('report_export', RealmScope.OWN, { clientId: CLIENT_ID }),
+                ],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                clients: RealmScope.OWN_OR_NULL,
+            });
+
+            expect(result).toEqual([
+                { name: 'user_read', targetRealms: [REALM_ID] },
+            ]);
+        });
+
+        it('resolves the granted client selector to every client a grant names', async () => {
             const ctx = setup(
                 [
                     definition('user_read'),
@@ -523,20 +552,123 @@ describe('core/authorization/check', () => {
 
             const { permissions: result } = await buildAuthorizationCheck(ctx, {
                 ...await visible(ctx),
-                clients: RealmScope.OWN_OR_NULL,
+                clients: 'granted',
             });
 
             expect(result).toEqual([
                 { name: 'user_read', targetRealms: [REALM_ID] },
                 {
-                    name: 'report_export', 
-                    clientId: CLIENT_ID, 
-                    targetRealms: [REALM_ID], 
+                    name: 'report_export',
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID],
                 },
                 {
-                    name: 'report_export', 
-                    clientId: FOREIGN_CLIENT_ID, 
-                    targetRealms: [REALM_ID], 
+                    name: 'report_export',
+                    clientId: FOREIGN_CLIENT_ID,
+                    targetRealms: [REALM_ID],
+                },
+            ]);
+        });
+
+        // `granted` is a superset of `ownOrNull`: the token client is selected
+        // even when no grant names it, so a definition anybody may attempt
+        // (no policy) owned by it is answered.
+        it('keeps the token client in the granted client selector', async () => {
+            const ctx = setup(
+                [
+                    [{
+                        name: 'report_view', 
+                        realmId: null, 
+                        clientId: CLIENT_ID, 
+                    }, []],
+                    definition('report_export', { clientId: FOREIGN_CLIENT_ID }),
+                ],
+                [grant('report_export', RealmScope.OWN, { clientId: FOREIGN_CLIENT_ID })],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                clients: 'granted',
+                clientId: CLIENT_ID,
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'report_view',
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID, null],
+                },
+                {
+                    name: 'report_export',
+                    clientId: FOREIGN_CLIENT_ID,
+                    targetRealms: [REALM_ID],
+                },
+            ]);
+        });
+
+        // A user of one realm holding a grant of a definition another realm
+        // owns: `ownOrNull` never selects it, `granted` does (#3769).
+        it('selects a foreign-realm-owned definition by the granted realm selector', async () => {
+            const ctx = setup(
+                [definition('mtb_query_submit', { realmId: FOREIGN_REALM_ID })],
+                [grant('mtb_query_submit', RealmScope.OWN_OR_NULL, { realmId: FOREIGN_REALM_ID })],
+            );
+
+            const { permissions: own } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: RealmScope.OWN_OR_NULL,
+            });
+            expect(own).toEqual([]);
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: 'granted',
+            });
+
+            expect(result).toEqual([
+                {
+                    name: 'mtb_query_submit',
+                    realmId: FOREIGN_REALM_ID,
+                    targetRealms: [REALM_ID, null],
+                },
+            ]);
+        });
+
+        // With no grants to read (none held, or scopes withholding them)
+        // `granted` is `ownOrNull`.
+        it('resolves the granted realm selector to own and null without grants', async () => {
+            const ctx = setup(
+                [
+                    [{
+                        name: 'report_view', 
+                        realmId: null, 
+                        clientId: null, 
+                    }, []],
+                    [{
+                        name: 'report_view', 
+                        realmId: REALM_ID, 
+                        clientId: null, 
+                    }, []],
+                    [{
+                        name: 'report_view', 
+                        realmId: FOREIGN_REALM_ID, 
+                        clientId: null, 
+                    }, []],
+                ],
+                [],
+            );
+
+            const { permissions: result } = await buildAuthorizationCheck(ctx, {
+                ...await visible(ctx),
+                realms: 'granted',
+            });
+
+            expect(result).toEqual([
+                { name: 'report_view', targetRealms: [REALM_ID, null] },
+                {
+                    name: 'report_view',
+                    realmId: REALM_ID,
+                    targetRealms: [REALM_ID, null],
                 },
             ]);
         });

@@ -24,13 +24,18 @@ to the request and the response.
 - **`realms` is renamed to `targetRealms`**, in the request and in each answer entry. It
   keeps its meaning: the resource realms each permission is checked against (`own`,
   `ownOrNull`, the default, or a list of realm ids and `null`).
-- **`realms` and `clients` now select which definitions are evaluated.** Each takes
-  `own`, `ownOrNull` or a list of ids and `null`, and both default to `[null]`, the global
-  definitions only, so a request naming neither gets the answer it got before.
-  `clients: 'own'` is the client the token was issued to when a user signs in through
-  one. For a client subject, and for a request without a token client (a console
-  session, Basic), it is every client the identity holds a grant of. A list is taken as
-  given and capped at 4 entries; an unknown id selects nothing.
+- **`realms` and `clients` now select which definitions are evaluated.** Both read the
+  same way and default to `[null]`, the global definitions only, so a request naming
+  neither gets the answer it got before:
+  - `own` is the caller's own realm, or the client the request's token was issued to
+    (for a user and a client subject alike). A request without a token client (a
+    console session, Basic) has no own client.
+  - `ownOrNull` adds `null`, the unowned definitions.
+  - `granted` adds, on top of `ownOrNull`, the realm or client owning every definition
+    the identity holds a grant of. It is how a user of one realm reaches a permission
+    another realm (or client) owns without naming that owner; the kit store asks for
+    it on both selectors. `targetRealms` does not accept it.
+  - A list is taken as given and capped at 4 entries; an unknown id selects nothing.
 - **Each answer entry names its definition**: `{ name, realmId?, clientId?, targetRealms }`,
   with `realmId` and `clientId` omitted when null. One name may now appear several times,
   once per owner, so key your lookups by name and owner. With `@authup/access`,

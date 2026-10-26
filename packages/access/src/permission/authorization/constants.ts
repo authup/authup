@@ -18,3 +18,11 @@
  * test.
  */
 export const AUTHORIZATION_POLICY_WITHHELD_TYPE = 'withheld';
+
+/**
+ * The symbolic owner selector of the batch check that selects the owners of
+ * every definition the caller holds a grant of, plus its own and `null`. Only
+ * `realms` and `clients` accept it: `targetRealms` names resource realms, and
+ * a grant says nothing about where a resource lives.
+ */
+export const AUTHORIZATION_CHECK_GRANTED = 'granted';

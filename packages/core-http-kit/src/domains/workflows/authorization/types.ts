@@ -10,6 +10,7 @@ import type {
     AuthorizationCheckClients,
     AuthorizationCheckPermissions,
     AuthorizationCheckRealms,
+    AuthorizationCheckTargetRealms,
 } from '@authup/access';
 import type { AuthorizationHeader } from 'hapic';
 
@@ -31,12 +32,20 @@ export type AuthorizationCheckPayload = {
     names?: string[],
     /**
      * Which realms own the definitions to evaluate. Omitted, `[null]`: the
-     * definitions owned by no realm.
+     * definitions owned by no realm. `own` is the identity's realm,
+     * `ownOrNull` adds `null`, and `granted` adds the realm of every
+     * definition the identity holds a grant of on top, so a definition owned
+     * by another realm is reached without naming that realm. A list is taken
+     * verbatim.
      */
     realms?: AuthorizationCheckRealms,
     /**
      * Which clients own the definitions to evaluate. Omitted, `[null]`: the
-     * definitions owned by no client.
+     * definitions owned by no client. `own` is the client the request's token
+     * was issued for (nothing without one: the console session cookie,
+     * Basic), `ownOrNull` adds `null`, and `granted` adds the client of every
+     * definition the identity holds a grant of on top. A list is taken
+     * verbatim.
      */
     clients?: AuthorizationCheckClients,
     /**
@@ -44,7 +53,7 @@ export type AuthorizationCheckPayload = {
      * `ownOrNull`: the identity's own realm plus the global rows every realm
      * shares, which is the reach a realm administrator's reads are held at.
      */
-    targetRealms?: AuthorizationCheckRealms,
+    targetRealms?: AuthorizationCheckTargetRealms,
 };
 
 export type AuthorizationCheckResponse = {

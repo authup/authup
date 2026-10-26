@@ -10,6 +10,7 @@ import type {
     AuthorizationCheckPermission,
     AuthorizationCheckPermissions,
     AuthorizationCheckRealms,
+    AuthorizationCheckTargetRealms,
     BasePermission,
     BasePolicy,
     IPermissionEvaluator,
@@ -17,6 +18,7 @@ import type {
     PermissionPolicyBinding,
 } from '@authup/access';
 import {
+    AUTHORIZATION_CHECK_GRANTED,
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PermissionEvaluator,
@@ -48,8 +50,8 @@ function dedupe(items: Array<string | null | undefined>) : Array<string | null> 
 }
 
 /**
- * Resolve a realm selector, for the realms owning the definitions as well as
- * for the realms they are checked against.
+ * Resolve a target realm selector: the resource realms each definition is
+ * checked against.
  *
  * A symbolic selector is resolved against the caller's own identity, so a
  * caller needs to know nothing about itself to ask the question it means. An
@@ -62,8 +64,8 @@ function dedupe(items: Array<string | null | undefined>) : Array<string | null> 
  * further down: `realmScopeMatches` already denies such an identity every
  * scope but `any`, so the verdicts come out the same way either route.
  */
-function resolveRealms(
-    realms: AuthorizationCheckRealms,
+function resolveTargetRealms(
+    realms: AuthorizationCheckTargetRealms,
     identity?: IdentityPolicyData,
 ) : Array<string | null> {
     if (Array.isArray(realms)) {
@@ -79,31 +81,42 @@ function resolveRealms(
 }
 
 /**
- * Resolve a client selector. `own` mirrors how the request's grants are
- * resolved (#3597): for a user with a token client, that client, whose grants
- * are the only client-owned ones the request carries; otherwise (a client
- * subject, whose grants are never narrowed, or no token client at all: the
- * console session cookie, Basic), every client the identity holds a grant of.
- * An explicit list is taken verbatim, like a realm list.
+ * Resolve an owner selector, realm or client alike, given what `own` names
+ * (`null` when there is nothing to name) and the owners the identity's grants
+ * name.
+ *
+ * - `own`: the own owner, or nothing.
+ * - `ownOrNull`: `own` plus `null`.
+ * - `granted`: the owners of every definition the identity holds a grant of,
+ *   plus `ownOrNull`. The grants are the request's own (a user's are
+ *   narrowed to the token client, #3597), so it reaches exactly the owned
+ *   definitions the request can be granted.
+ * - a list: taken verbatim, deduplicated.
  */
-function resolveClients(
-    clients: AuthorizationCheckClients,
-    request: AuthorizationCheckRequest,
+function resolveOwners(
+    selector: AuthorizationCheckRealms | AuthorizationCheckClients,
+    own: string | null,
+    granted: () => Array<string | null | undefined>,
 ) : Array<string | null> {
-    if (Array.isArray(clients)) {
-        return dedupe(clients);
+    if (Array.isArray(selector)) {
+        return dedupe(selector);
     }
 
-    let own : Array<string | null>;
-    if (request.clientId && request.identity?.type === 'user') {
-        own = [request.clientId];
-    } else {
-        own = dedupe((request.identity?.grants ?? [])
-            .map((grant) => grant.permission.clientId)
-            .filter((clientId) => !!clientId));
+    const owners : Array<string | null> = own === null ? [] : [own];
+    if (selector === RealmScope.OWN) {
+        return owners;
     }
 
-    return clients === RealmScope.OWN ? own : [...own, null];
+    owners.push(null);
+    if (selector === AUTHORIZATION_CHECK_GRANTED) {
+        for (const owner of granted()) {
+            if (owner) {
+                owners.push(owner);
+            }
+        }
+    }
+
+    return dedupe(owners);
 }
 
 /**
@@ -181,8 +194,17 @@ export async function buildAuthorizationCheck(
     ctx: AuthorizationCheckBuilderContext,
     request: AuthorizationCheckRequest,
 ) : Promise<AuthorizationCheckResult> {
-    const realms = new Set(resolveRealms(request.realms ?? [null], request.identity));
-    const clients = new Set(resolveClients(request.clients ?? [null], request));
+    const heldGrants = request.identity?.grants ?? [];
+    const realms = new Set(resolveOwners(
+        request.realms ?? [null],
+        request.identity?.realmId ?? null,
+        () => heldGrants.map((grant) => grant.permission.realmId),
+    ));
+    const clients = new Set(resolveOwners(
+        request.clients ?? [null],
+        request.clientId ?? null,
+        () => heldGrants.map((grant) => grant.permission.clientId),
+    ));
     const names = request.names ? new Set(request.names) : undefined;
 
     const definitions = await ctx.catalogRepository.findDefinitions();
@@ -216,7 +238,7 @@ export async function buildAuthorizationCheck(
         }
     }
 
-    const targetRealms = resolveRealms(request.targetRealms ?? RealmScope.OWN_OR_NULL, request.identity);
+    const targetRealms = resolveTargetRealms(request.targetRealms ?? RealmScope.OWN_OR_NULL, request.identity);
     if (selected.length === 0 || targetRealms.length === 0) {
         return { permissions: [] };
     }

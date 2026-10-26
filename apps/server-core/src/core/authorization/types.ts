@@ -9,6 +9,7 @@ import type {
     AuthorizationCheckClients,
     AuthorizationCheckPermissions,
     AuthorizationCheckRealms,
+    AuthorizationCheckTargetRealms,
     BasePermission,
     BasePolicy,
     IPermissionEvaluator,
@@ -84,19 +85,19 @@ export type AuthorizationCheckRequest = {
      * Which resource realms each definition is checked against, symbolic or
      * verbatim. Omitted, `ownOrNull`.
      */
-    targetRealms?: AuthorizationCheckRealms,
+    targetRealms?: AuthorizationCheckTargetRealms,
     /**
      * The client the request's token was issued for, absent when the request
-     * carries none (the console session cookie, Basic). It is what a symbolic
-     * client selector resolves to, the way the request's grants are narrowed
-     * (#3597).
+     * carries none (the console session cookie, Basic). It is what the `own`
+     * client selector resolves to, whatever the subject kind; without one,
+     * `own` selects no client.
      */
     clientId?: string,
     /**
      * The caller's identity. It resolves a symbolic realm selector, and when
      * policies may see it (the caller's scopes include `global`) it carries
-     * its grants, which resolve a symbolic client selector of a request
-     * without a token client and decide whether a denied pair's expiry
+     * its grants, which resolve the `granted` realm and client selectors
+     * and decide whether a denied pair's expiry
      * concerns the caller. The evaluation itself reads the identity through `decorate`,
      * under the scope condition that belongs there.
      */
@@ -129,5 +130,5 @@ export type AuthorizationCheckPayload = {
     names?: string[],
     realms?: AuthorizationCheckRealms,
     clients?: AuthorizationCheckClients,
-    targetRealms?: AuthorizationCheckRealms,
+    targetRealms?: AuthorizationCheckTargetRealms,
 };

@@ -308,6 +308,52 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         ]);
     });
 
+    // A user of one realm holding a grant of a definition the master realm
+    // owns: `ownOrNull` selects no master-owned definition for it, `granted`
+    // selects every owner its grants name (#3769).
+    it('answers a foreign-realm-owned definition through the granted realm selector', async () => {
+        const password = 'start123-check-granted';
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: master } = await suite.client.realm.getOne('master');
+        const { data: user } = await suite.client.user.create(createFakeUser({ password, realmId: realm.id }));
+        const { data: owned } = await suite.client.permission.create({
+            ...createFakePermission(),
+            realmId: master.id,
+        });
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: owned.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const grant = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_id: realm.id,
+        });
+        const headers = { Authorization: `Bearer ${grant.access_token}` };
+
+        const own = await postCheck(suite, { names: [owned.name], realms: RealmScope.OWN_OR_NULL }, headers);
+        expect(own.status).toBe(200);
+        expect(await own.json()).toEqual([]);
+
+        const granted = await postCheck(suite, { names: [owned.name], realms: 'granted' }, headers);
+        expect(granted.status).toBe(200);
+        expect(await granted.json()).toEqual([
+            {
+                name: owned.name,
+                realmId: master.id,
+                targetRealms: [realm.id, null],
+            },
+        ]);
+    });
+
+    it('refuses granted as a target realm selector', async () => {
+        const response = await postCheck(suite, { targetRealms: 'granted' });
+
+        expect(response.status).toBe(400);
+    });
+
     // The payoff of the anonymous case above: a definition restricted by a
     // DATE window alone needs no identity, so it is answerable to a caller
     // that has none. Created at runtime, so `assignDefaultPolicy`'s boot-time

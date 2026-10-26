@@ -4330,7 +4330,7 @@ attempt, so "may I" has an answer before anyone signs in and a login gate would 
 withhold it. Everything identity-bound denies by itself:
 `IdentityPermissionBindingPolicyEvaluator` deliberately omits IDENTITY from its
 `requires`, so a missing one is a settled `DATA_MISSING` deny rather than a pending
-permit, and with no identity there is no grant load either. `resolveRealms` needs no special case either: a realm-less caller
+permit, and with no identity there is no grant load either. `resolveTargetRealms` needs no special case either: a realm-less caller
 resolves `own` to nothing and `ownOrNull` to the global rows alone, which is the reach
 `realmScopeMatches` already grants such an identity. A default deployment therefore
 answers an anonymous caller an EMPTY set, because `PermissionService.create` binds the
@@ -4350,13 +4350,20 @@ evaluated**: a definition is identified by `(name, realmId, clientId)`, the uniq
 `auth_permissions`, so master's `mtb_query_submit` and realm B's are two permissions, and
 a client may own one with or without a realm. **`targetRealms` is where each selected
 definition is checked against**, the resource realm the grant's `realm_scope` decides.
-Both realm selectors take `own`, `ownOrNull` or an explicit list (`null` for the global
-rows); `clients` takes the same forms, where `own` mirrors how the request's grants are
-resolved (`getForToken`, #3597): the token's client for a USER subject whose request
-carries one, otherwise every client the identity holds a grant of. That covers a client
-subject (its token never narrows, so a client granted another client's permission keeps
-it) and a request without a token client (the console session cookie, Basic), where
-client-owned permissions that apply in the served consoles stay visible. Defaults are `realms: [null]`,
+The two OWNER selectors (`realms`, `clients`) read the same way: `own` is the caller's
+realm, or the request's TOKEN client for any subject kind (nothing without one: the
+console session cookie, Basic); `ownOrNull` adds `null`; `granted`
+(`AUTHORIZATION_CHECK_GRANTED`) adds, on top of `ownOrNull`, the owner of every
+definition the identity's grants name (`identity.grants`, already narrowed to the token
+client for a user, #3597; none when the scopes withhold the identity, so it collapses to
+`ownOrNull`); an explicit list is taken verbatim. `granted` is what reaches a definition
+another realm or client owns without the caller knowing that owner, so a user of realm B
+holding a grant of master's definition gets that entry, and it covers a client subject
+granted another client's permission and the served consoles, whose cookie carries no
+token client. A grant fallback inside `own` was rejected: `own` then meant two things
+depending on whether a token client was present. `targetRealms` takes `own`,
+`ownOrNull` or a list only (`AuthorizationCheckTargetRealms`), since a grant names a
+definition's owner, not where a resource lives. Defaults are `realms: [null]`,
 `clients: [null]` (the global definitions only) and `targetRealms: 'ownOrNull'`. A
 symbolic selector resolves against the caller's own identity; an explicit list has no
 realm or client key RESOLVED, so the server discloses no realm's or client's existence
@@ -4492,7 +4499,8 @@ consumer has to as well), an array needs every member, and anything else denies.
 name-only fallback it replaces already had, and `compile` answers `post`, or `deny` for
 a definition it does not hold.
 
-The kit reads it with all three selectors at `'ownOrNull'` as its ONLY authorization
+The kit reads it with `realms: 'granted'`, `clients: 'granted'` and
+`targetRealms: 'ownOrNull'` as its ONLY authorization
 source, memoized by the subject, scope and grants of the introspection it was fetched for
 (below). `usePermissionCheck({ name, realmId?, clientId? })` asks for an owned definition
 by real ids only; there is no `own` shorthand, since the caller knows which owner it

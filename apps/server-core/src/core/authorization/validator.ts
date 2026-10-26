@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RealmScope } from '@authup/access';
+import { AUTHORIZATION_CHECK_GRANTED, RealmScope } from '@authup/access';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -40,13 +40,23 @@ export const AUTHORIZATION_CHECK_NAMES_MAX = 256;
 export const AUTHORIZATION_CHECK_SELECTOR_MAX = 4;
 
 /**
- * A realm or client selector: symbolic, or a verbatim list of ids and/or
- * `null`. An id is never resolved, so an unknown one selects nothing.
+ * A target realm selector: symbolic, or a verbatim list of ids and/or `null`.
+ * An id is never resolved, so an unknown one selects nothing.
  */
-export const authorizationCheckSelectorSchema = z.union([
+export const authorizationCheckTargetRealmsSchema = z.union([
     z.literal(RealmScope.OWN),
     z.literal(RealmScope.OWN_OR_NULL),
     z.array(z.string().min(1).nullable()).max(AUTHORIZATION_CHECK_SELECTOR_MAX),
+]);
+
+/**
+ * An owner (realm or client) selector: a target realm selector, or `granted`,
+ * which only an owner selector accepts, since a grant names the owner of a
+ * definition and says nothing about where a resource lives.
+ */
+export const authorizationCheckSelectorSchema = z.union([
+    authorizationCheckTargetRealmsSchema,
+    z.literal(AUTHORIZATION_CHECK_GRANTED),
 ]);
 
 /**
@@ -65,6 +75,6 @@ export class AuthorizationCheckValidator extends Container<AuthorizationCheckPay
         ));
         this.mount('realms', createValidator(authorizationCheckSelectorSchema.optional()));
         this.mount('clients', createValidator(authorizationCheckSelectorSchema.optional()));
-        this.mount('targetRealms', createValidator(authorizationCheckSelectorSchema.optional()));
+        this.mount('targetRealms', createValidator(authorizationCheckTargetRealmsSchema.optional()));
     }
 }

@@ -11,6 +11,7 @@ import type {
     IdentityPolicyData,
 } from '@authup/access';
 import {
+    AUTHORIZATION_CHECK_GRANTED,
     RealmScope,
     createAuthorizationCheckEvaluator,
 } from '@authup/access';
@@ -469,10 +470,13 @@ export function createStore(context: StoreCreateContext) {
     };
 
     /**
-     * The verdicts for the definitions global or owned by this session's
-     * realm or client, each asked about the two target realms this session
-     * knows at staging: its own and the global rows, which is the reach a
-     * realm administrator's reads are held at and what a console gates on. A
+     * The verdicts for the global definitions, the ones owned by this
+     * session's realm or client, and the ones owned by whatever realm or
+     * client the session holds a grant of (`granted`), so a user of one realm
+     * granted a permission another realm owns gets that entry too. Each is
+     * asked about the two target realms this session knows at staging: its
+     * own and the global rows, which is the reach a realm administrator's
+     * reads are held at and what a console gates on. A
      * realm the request never named is fail-closed in the evaluator, so a
      * surface that later asks about a third realm needs its own call rather
      * than a wider answer here.
@@ -488,8 +492,8 @@ export function createStore(context: StoreCreateContext) {
         try {
             const { data, maxAge } = await client.authorization.checkWithMaxAge(
                 {
-                    realms: RealmScope.OWN_OR_NULL,
-                    clients: RealmScope.OWN_OR_NULL,
+                    realms: AUTHORIZATION_CHECK_GRANTED,
+                    clients: AUTHORIZATION_CHECK_GRANTED,
                     targetRealms: RealmScope.OWN_OR_NULL,
                 },
                 token ? { authorizationHeader: { type: 'Bearer', token } } : undefined,

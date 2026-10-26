@@ -174,7 +174,7 @@ const canExport = await reachesRecord(evaluator, {
 });
 ```
 
-The answer lists each permission definition, identified by `name`, `realmId` and `clientId`, with the target realms it holds in; a missing entry is a denial. A record realm matches its own entry, or the identity's own realm by id or by name. A realm the request did not ask about denies. The result is an upper bound: the server still decides each row.
+The answer lists each permission definition, identified by `name`, `realmId` and `clientId`, with the target realms it holds in; a missing entry is a denial. Which owned definitions it covers is the request's `realms` / `clients` selectors: `own`, `ownOrNull`, `granted` (the owner of every definition the identity holds a grant of, on top of `ownOrNull`) or a list of ids. A record realm matches its own entry, or the identity's own realm by id or by name. A realm the request did not ask about denies. The result is an upper bound: the server still decides each row.
 
 ## Realm reach
 

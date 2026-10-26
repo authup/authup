@@ -31,9 +31,11 @@ const INTROSPECTION = {
     permissions: buildAuthorizationGrants(),
 };
 
+// `granted` on both owner selectors, so a definition another realm or client
+// owns reaches the store when the session holds a grant of it (#3769).
 const CHECK_BODY = {
-    realms: 'ownOrNull',
-    clients: 'ownOrNull',
+    realms: 'granted',
+    clients: 'granted',
     targetRealms: 'ownOrNull',
 };
 

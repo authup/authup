@@ -28,7 +28,10 @@ consumers outside the server keep the same split: `createAuthorizationEvaluator`
 catalog's definitions by their owner, and `createAuthorizationCheckEvaluator` keys the
 `POST /authorization/check` verdicts by `(name, realmId, clientId)`, so a bare name matches
 the global definition only and the kit's `usePermissionCheck({ name, realmId, clientId })`
-asks for an owned one by its owner's ids.
+asks for an owned one by its owner's ids. Which owned definitions the route evaluates at all
+is the request's `realms` / `clients` selectors; the kit asks for `granted` on both, the
+owners of every definition the identity holds a grant of plus its own realm and token
+client, so a grant of a definition another realm owns reaches the console.
 
 ## Tri-state evaluation
 

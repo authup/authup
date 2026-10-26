@@ -186,7 +186,7 @@ export class AuthorizationController {
      * DATA_MISSING deny rather than a pending permit, and every built-in
      * definition is bound to the global `system.default`, whose identity child
      * carries that rule. So a default deployment answers an anonymous caller
-     * an empty set, and no grant is loaded for one. `resolveRealms`
+     * an empty set, and no grant is loaded for one. `resolveTargetRealms`
      * needs no special case either: a realm-less caller resolves `own` to
      * nothing and `ownOrNull` to the global rows alone, which is what
      * `realmScopeMatches` already grants such an identity.
