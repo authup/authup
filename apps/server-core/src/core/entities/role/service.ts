@@ -12,7 +12,7 @@ import {
     reachesRecordOneOf,
 } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
-import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
+import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
@@ -24,6 +24,7 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleRepository, IRoleService } from './types.ts';
+import { applyOwningClientRealm, findClientOwnedRowForSave } from '../client/owner-realm.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { roleSchema } from './schema.ts';
@@ -147,27 +148,20 @@ export class RoleService extends AbstractEntityService implements IRoleService {
     }> {
         let group: string;
 
-        const realm = typeof data.realmId === 'string' ?
-            await this.realmRepository.resolve(data.realmId) :
-            undefined;
-
         let entity: Role | null | undefined;
         if (idOrName) {
-            const where: Record<string, any> = {};
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
-            }
-
-            if (realm) {
-                where.realmId = realm.id;
-            }
-
-            entity = await this.repository.findOneBy(where);
+            entity = await findClientOwnedRowForSave(idOrName, data, {
+                repository: this.repository,
+                realmRepository: this.realmRepository,
+                actor,
+                permissionNames: [
+                    PermissionName.ROLE_CREATE,
+                    PermissionName.ROLE_UPDATE,
+                ],
+            });
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
@@ -208,15 +202,21 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             };
         }
 
-        if (!isPropertySet(validated, 'realmId') && actor.identity) {
-            validated.realmId = this.getActorRealmId(actor) || null;
-        }
+        // The create gate runs before a realm mismatch is reported: a caller
+        // that may not create in the owning client's realm learns nothing
+        // about that realm, whatever realmId it sent.
+        const realm = validated.client ?
+            validated.client.realmId :
+            validated.realmId ?? null;
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_CREATE,
-            realm: validated.realmId ?? null,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
+            realm,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: realm } },
         });
+
+        applyOwningClientRealm(validated);
+        validated.realmId = validated.realmId ?? null;
 
         await this.repository.checkUniqueness(validated);
 

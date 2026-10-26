@@ -167,7 +167,7 @@ export class UserValidator extends Container<User> {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
             },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().nullable()),
         );
 
         // Unlike realmId above, a folder is not fixed at creation: a user

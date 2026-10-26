@@ -145,6 +145,7 @@ export default defineComponent({
                 const data: Record<string, unknown> = {
                     ...form,
                     decisionStrategy: form.decisionStrategy || null,
+                    realmId: form.realmId || null,
                 };
 
                 await manager.createOrUpdate(data);

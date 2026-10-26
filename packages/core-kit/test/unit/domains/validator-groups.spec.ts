@@ -9,8 +9,12 @@ import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
 import {
     ClientValidator,
+    IdentityProviderValidator,
+    PathValidator,
+    PermissionValidator,
     PolicyValidator,
     RealmValidator,
+    RoleValidator,
     UserValidator,
 } from '../../../src';
 
@@ -90,6 +94,56 @@ describe('domains/validator-groups', () => {
             );
             expect(updated).not.toHaveProperty('realmId');
         }
+    });
+
+    it('should strip clientId at UPDATE for client ownable entities', async () => {
+        const clientId = '3c6e1a2b-7d4f-4e8a-9b1c-2d5f8e0a6b47';
+
+        const validators = [new PermissionValidator(), new RoleValidator()];
+        for (const validator of validators) {
+            const created = await validator.run(
+                { name: 'foo', clientId },
+                { group: ValidatorGroup.CREATE },
+            );
+            expect(created.clientId).toEqual(clientId);
+
+            const provisioned = await validator.run(
+                { name: 'foo', clientId },
+                { group: ValidatorGroup.PROVISIONING },
+            );
+            expect(provisioned.clientId).toEqual(clientId);
+
+            const updated = await validator.run(
+                { displayName: 'Foo', clientId },
+                { group: ValidatorGroup.UPDATE },
+            );
+            expect(updated).not.toHaveProperty('clientId');
+        }
+    });
+
+    it('should accept realmId: null at CREATE for realm bound entities', async () => {
+        // a request body, which the entity types do not describe
+        const input: Record<string, any> = {
+            name: 'foo',
+            email: 'foo@example.com',
+            realmId: null,
+        };
+
+        const validators = [new UserValidator(), new ClientValidator(), new PathValidator()];
+        for (const validator of validators) {
+            const created = await validator.run(input, { group: ValidatorGroup.CREATE });
+            expect(created.realmId).toBeNull();
+        }
+
+        const provider = await new IdentityProviderValidator().run(
+            {
+                ...input,
+                enabled: true,
+                protocol: 'oauth2',
+            },
+            { group: ValidatorGroup.CREATE },
+        );
+        expect(provider.realmId).toBeNull();
     });
 
     it('should mount the client secret storage modes at CREATE and PROVISIONING only', async () => {

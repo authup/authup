@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Realm } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { ValidationError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { IRealmRepository } from '../../../../../src/core/entities/realm/types.ts';
 import { FakeEntityRepository } from '@authup/server-test-kit';
@@ -57,6 +58,15 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
         }
 
         return null;
+    }
+
+    async resolveOrFail(key: string): Promise<Realm> {
+        const entity = await this.resolve(key);
+        if (!entity) {
+            throw new ValidationError(`The realmId '${key}' does not reference an existing realm.`);
+        }
+
+        return entity;
     }
 
     getMasterRealm(): Realm {

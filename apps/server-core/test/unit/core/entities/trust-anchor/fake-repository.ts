@@ -18,9 +18,13 @@ export class FakeTrustAnchorRepository extends FakeEntityRepository<TrustAnchor>
     }
 
     override async checkUniqueness(data: Partial<TrustAnchor>, existing?: TrustAnchor): Promise<void> {
+        // A column the input does not define keeps its stored value, like
+        // the adapter's check.
+        const name = data.name !== undefined ? data.name : existing?.name;
+        const realmId = data.realmId !== undefined ? data.realmId : existing?.realmId;
         const conflict = this.getAll().find(
-            (entity) => entity.name === data.name &&
-                entity.realmId === data.realmId &&
+            (entity) => entity.name === name &&
+                entity.realmId === realmId &&
                 (!existing || entity.id !== existing.id),
         );
 

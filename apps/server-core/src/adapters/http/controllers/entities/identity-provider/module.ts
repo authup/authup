@@ -84,6 +84,7 @@ import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IOAuth2FederatedLoginService,
+    IRealmRepository,
     IdentityProviderIdentity,
     OAuth2AuthorizationState, 
     OAuth2AuthorizationStateLink, 
@@ -105,11 +106,11 @@ import {
 import {
     applyRouteRealmIDToBody,
     buildActorContext,
-    getBodyRealmID,
     getRequestParamID,
     getRequestRealmID,
     isSameOriginRequest,
     useRequestEventContext,
+    useRequestIdentity,
     useRequestIdentityOrFail,
     useRequestParamID,
     useRequestPermissionEvaluator,
@@ -125,6 +126,8 @@ export class IdentityProviderController {
     protected options: IdentityProviderControllerOptions;
 
     protected repository: IIdentityProviderRepository;
+
+    protected realmRepository: Pick<IRealmRepository, 'resolveOrFail'>;
 
     protected accountManager: IIdentityProviderAccountManager;
 
@@ -150,6 +153,7 @@ export class IdentityProviderController {
         this.statsService = ctx.statsService;
         this.options = ctx.options;
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
         this.accountManager = ctx.accountManager;
         this.linkStore = ctx.linkStore;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
@@ -566,7 +570,6 @@ export class IdentityProviderController {
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);
         applyRouteRealmIDToBody(event, body);
-        const realmId = getRequestRealmID(event) ?? getBodyRealmID(body);
 
         let entity: IdentityProvider | null | undefined;
         if (id) {
@@ -577,11 +580,26 @@ export class IdentityProviderController {
                 where.name = id;
             }
 
-            if (realmId) {
-                where.realmId = realmId;
+            if (typeof body.realmId === 'string') {
+                // A realm key that does not resolve is refused: dropping the
+                // predicate would address a row of whichever realm holds the
+                // name.
+                const realm = await this.realmRepository.resolveOrFail(body.realmId);
+                where.realmId = realm.id;
+                entity = await this.repository.findOneBy(where);
+            } else if (where.id) {
+                // A UUID key names one specific row and needs no realm.
+                entity = await this.repository.findOneBy(where);
+            } else {
+                // Without a realm a name key addresses the row a create with
+                // the same body would write: the actor's realm. An actor
+                // without one cannot create here either, so it matches
+                // nothing.
+                const actorRealmId = useRequestIdentity(event)?.realmId;
+                entity = actorRealmId ?
+                    await this.repository.findOneBy({ ...where, realmId: actorRealmId }) :
+                    null;
             }
-
-            entity = await this.repository.findOneBy(where);
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -607,6 +625,14 @@ export class IdentityProviderController {
 
         const attributesValidator = new IdentityProviderAttributesValidator();
         const attributes = await attributesValidator.run(body);
+
+        // A provider is realm-bound, so null is "no value" like an absent
+        // key: the actor realm fills it below. Dropping it also keeps the
+        // join-column lookup off a null on a non-nullable column.
+        if (data.realmId === null) {
+            const input: Partial<IdentityProvider> = data;
+            delete input.realmId;
+        }
 
         await this.repository.validateJoinColumns(data);
 

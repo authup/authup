@@ -55,6 +55,92 @@ to the request and the response.
   resource server upgrades `@authup/access` together with the server. The grant list on
   the introspection response (`permissions`) is unchanged and stays snake_case.
 
+### A missing `realmId` creates a global permission, role, scope or policy
+
+On create, a body that omits `realmId` and one that sends `realmId: null` now
+mean the same thing. For permissions, roles, scopes and policies that is a
+global row; a missing `realmId` used to put the row into the realm of the
+caller. Users, clients, paths and identity providers keep landing in the
+realm of the caller without a realm, and now accept `realmId: null` on create
+as well, with the same meaning (it used to be refused as an invalid uuid).
+
+**May need action**
+
+- **Scripts and integrations that create these four entities without
+  `realmId`.** They now create global rows. To keep creating them in a realm,
+  send that realm's id as `realmId`, or use the nested route
+  (`/realms/:realmId/permissions`, `/realms/:realmId/policies`) where one
+  exists.
+- **Realm admins.** Creating a global row needs a create grant that reaches
+  global rows (`realmScope: ownOrNull` or `any`); the built-in `realm_admin`
+  role holds its create grants at `own`. A realm admin that omits `realmId`
+  is therefore refused with `403` and must send its realm id. The admin
+  console already does.
+- **Updates and upserts by name address the global row.** A
+  `PUT /<entity>/<name>` or `POST /<entity>/<name>` of a permission, role,
+  scope or policy without `realmId` now looks up the global row of that name
+  only. An integration that relied on such a call reaching the row of its own
+  realm gets `404` on `POST`, and on `PUT` creates a global row instead. Send
+  `realmId` in the body, or use the nested route
+  (`/realms/:realmId/permissions/<name>`, `/realms/:realmId/policies/<name>`)
+  where one exists. A key that is a uuid is unaffected.
+- **A `realmId` that names no realm is refused.** An update or upsert
+  (`PUT` / `POST /<entity>/<key>` of a user, client, identity provider,
+  permission, role, scope or policy) whose body names a realm that does not
+  exist answers `400`; for users, clients and identity providers it used to
+  look the name up in every realm. A realm that exists but holds no such row
+  still answers `404` (or creates it on a name `PUT`).
+- **A user, client or identity provider name without `realmId` addresses the
+  caller's realm.** `PUT /users/<name>`, `POST /users/<name>` and the same
+  calls on `/clients` and `/identity-providers` without `realmId` (or with
+  `null`) used to look the name up in every realm and could update the row of
+  another realm. They now look it up in the realm of the caller only, the
+  realm a create with the same body would write: a `PUT` creates the row there
+  when that realm holds none, a `POST` answers `404`. Send `realmId`, or
+  address the row by its uuid, which is unaffected.
+- **An unknown realm in the route answers `404` for a uuid too.**
+  `/realms/<uuid>/...` with a uuid that names no realm used to pass through and
+  answer as if the realm were empty; it is now refused like an unknown realm
+  name.
+- **A name upsert with a `realmId` addresses the row owned by no client.**
+  `PUT /roles/<name>` (and the same for permissions) with a `realmId` and no
+  `clientId` addresses that realm's role of that name owned by no client, even
+  when a client-owned role of the same name exists there; send `clientId` to
+  address the owned one.
+- **An update keeps its name across realms.** Updating a realm's role,
+  permission, scope or policy while sending its unchanged name no longer
+  answers `409` when a global row of the same name exists.
+- **Client-owned permissions and roles follow their client.** A permission
+  or role created with a `clientId` and no `realmId` lands in the client's
+  realm, and one whose `realmId` differs from the client's realm is refused
+  with `400`. A name upsert carrying a `clientId` and no `realmId` addresses
+  that client's row in that realm; one without a `clientId` addresses only the
+  row of that name owned by no client.
+- **The owning client of a permission or role can no longer be changed.**
+  `clientId` is create-only, like `realmId`: an update cannot change the
+  owner. A name-keyed update still uses `clientId`, together with `realmId`,
+  to pick the row it addresses, so `PermissionUpdatePayload` and
+  `RoleUpdatePayload` keep both fields. To give a permission or role another
+  owner, delete it, create it again with the new `clientId` and re-assign the
+  grants that referenced the old row.
+- **Custom permissions created without `realmId` reach every realm admin.** A
+  permission that is not built in, has no realm and names no `clientId` is
+  global. The built-in `realm_admin` role is not granted it on create; it
+  picks it up when the server next starts, since provisioning grants
+  `realm_admin` every global permission without an owning client (realm
+  create, update and delete excepted) at `realmScope: ownOrNull`. From then
+  on every realm admin can use it inside its own realm. Create it with a
+  `realmId` to keep it to one realm. A permission with a realm, which
+  includes every client-owned one, is not granted to the built-in
+  `realm_admin` at all.
+- **Rows created under the old rule are not moved.** A permission, role, scope
+  or policy that an integration meant to be global but that landed in the
+  caller's realm (typically `master`) stays there, since `realmId` cannot be
+  changed on update. Find them with
+  `GET /permissions?filter[realmId]=<master realm id>` (and the same filter on
+  `/roles`, `/scopes`, `/policies`), then delete each one and create it again
+  without `realmId`. Re-assign the grants that referenced the old row.
+
 ## v1.0.0-beta.70 (was: next release after v1.0.0-beta.69)
 
 ### Single-record checks are matched against the record's realm

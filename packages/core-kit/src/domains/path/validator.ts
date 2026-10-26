@@ -78,7 +78,7 @@ export class PathValidator extends Container<
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
             },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().nullable()),
         );
     }
 }

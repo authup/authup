@@ -12,7 +12,7 @@ import {
     reachesRecordOneOf,
 } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
-import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
+import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
@@ -146,10 +146,6 @@ export class ScopeService extends AbstractEntityService implements IScopeService
     }> {
         let group: string;
 
-        const realm = typeof data.realmId === 'string' ?
-            await this.realmRepository.resolve(data.realmId) :
-            undefined;
-
         let entity: Scope | null | undefined;
         if (idOrName) {
             const where: Record<string, any> = {};
@@ -159,11 +155,22 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 where.name = idOrName;
             }
 
-            if (realm) {
-                where.realmId = realm.id;
-            }
+            if (typeof data.realmId === 'string') {
+                // A realm key that does not resolve is refused: dropping the
+                // predicate would address a row of whichever realm holds the
+                // name.
+                const realm = await this.realmRepository.resolveOrFail(data.realmId);
+                entity = await this.repository.findOneBy({ ...where, realmId: realm.id });
+            } else {
+                // No realm value means global on create, so a name key
+                // without one addresses the global row. A UUID key names
+                // one specific row and needs no realm.
+                if (!where.id) {
+                    where.realmId = null;
+                }
 
-            entity = await this.repository.findOneBy(where);
+                entity = await this.repository.findOneBy(where);
+            }
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -205,9 +212,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             };
         }
 
-        if (!isPropertySet(validated, 'realmId') && actor.identity) {
-            validated.realmId = this.getActorRealmId(actor) || null;
-        }
+        validated.realmId = validated.realmId ?? null;
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.SCOPE_CREATE,

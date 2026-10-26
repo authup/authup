@@ -22,9 +22,13 @@ export class FakeKeyRepository extends FakeEntityRepository<Key> implements IKey
     public countBlobReferencesCalls: string[] = [];
 
     override async checkUniqueness(data: Partial<Key>, existing?: Key): Promise<void> {
+        // A column the input does not define keeps its stored value, like
+        // the adapter's check.
+        const name = data.name !== undefined ? data.name : existing?.name;
+        const realmId = data.realmId !== undefined ? data.realmId : existing?.realmId;
         const conflict = this.getAll().find(
-            (entity) => entity.name === data.name &&
-                entity.realmId === data.realmId &&
+            (entity) => entity.name === name &&
+                entity.realmId === realmId &&
                 (!existing || entity.id !== existing.id),
         );
 

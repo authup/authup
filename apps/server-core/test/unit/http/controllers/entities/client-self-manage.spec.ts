@@ -82,10 +82,15 @@ describe('http/controllers/client (self-manage)', () => {
         expect(response.baseUrl).toBe('https://example.test');
     });
 
-    it('should silently strip self-update of realm_id (validator drops on UPDATE)', async () => {
+    it('should not move itself through a self-update of realm_id', async () => {
         const originalRealmId = entity.realmId;
-        const { data: response } = await selfClient.client.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<ClientEntity>);
+        // a realm key scopes the lookup, and one naming no realm is refused
+        await expectClientError(
+            () => selfClient.client.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<ClientEntity>),
+            { status: 400 },
+        );
 
+        const { data: response } = await selfClient.client.update(entity.id, { realmId: originalRealmId } as Partial<ClientEntity>);
         expect(response.realmId).toBe(originalRealmId);
     });
 

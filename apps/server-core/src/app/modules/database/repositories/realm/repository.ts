@@ -8,7 +8,7 @@
 import type { Realm } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import { REALM_MASTER_NAME  } from '@authup/core-kit';
-import { InternalError } from '@authup/errors';
+import { InternalError, ValidationError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
@@ -140,6 +140,15 @@ export class RealmRepositoryAdapter implements IRealmRepository {
             if (!entity) {
                 throw new InternalError('The master realm could not be resolved.');
             }
+        }
+
+        return entity;
+    }
+
+    async resolveOrFail(key: string): Promise<Realm> {
+        const entity = await this.resolve(key);
+        if (!entity) {
+            throw new ValidationError(`The realmId '${key}' does not reference an existing realm.`);
         }
 
         return entity;

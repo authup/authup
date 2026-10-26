@@ -67,12 +67,16 @@ describe('src/http/controllers/realm-scoped', () => {
             expect(response.status).toEqual(404);
         });
 
-        it('should fail closed on name lookups under an unknown realm UUID', async () => {
+        it('should 404 on unknown realm UUID in path', async () => {
+            const response = await httpRequest(suite, 'GET', `/realms/${randomUUID()}/users`, { headers: { Authorization: basicAuth } });
+
+            expect(response.status).toEqual(404);
+        });
+
+        it('should fail closed on name lookups under another realm', async () => {
             const { data: user } = await suite.client.user.create(createFakeUser());
 
-            // unknown realm UUID passes the middleware unverified; the
-            // repository predicate must fail closed instead of matching the
-            // same-named entity from another realm
+            // an unknown realm UUID is refused by the resolver middleware
             let response = await httpRequest(suite, 'GET', `/realms/${randomUUID()}/users/${user.name}`, { headers: { Authorization: basicAuth } });
             expect(response.status).toEqual(404);
 

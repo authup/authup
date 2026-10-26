@@ -90,9 +90,19 @@ The system only manages built-in policies. Users can create and assign custom po
 Authup distinguishes between **global** and **realm-scoped** entities:
 
 - **Global entities** (permissions, roles, scopes, policies) can have `realmId = null`: they exist outside any realm and are reusable across all realms.
-- **Realm-scoped entities** (users, clients) always belong to a specific realm.
+- **Realm-scoped entities** (users, clients, paths) always belong to a specific realm.
 
-To create a global entity via the API, explicitly pass `realmId: null`. If omitted, `realmId` defaults to the actor's realm.
+On create, a missing `realmId` and `realmId: null` mean the same thing, and the entity type decides what:
+
+- a permission, role, scope or policy created without a realm is **global**. To create one inside a realm, pass that realm's id as `realmId`. Creating a global entity needs a create grant that reaches global rows (`realmScope: ownOrNull` or `any`), so a realm admin, whose create grants sit at `own`, is refused with `403` when it omits `realmId`.
+- a user, client or path created without a realm lands in the **realm of the caller**.
+- a permission or role owned by a client (`clientId`) and created without a realm lands in the **realm of that client**. A `realmId` other than the client's realm is refused with `400`.
+
+`realmId` is set once, on create: an update never moves an entity to another realm. The owning `clientId` of a permission or role is set once as well: an update cannot change it (to change it, create the entity again), but a name-keyed update still uses it, together with `realmId`, to pick the row. The no-realm rule also decides which row a name addresses: `PUT` or `POST /roles/<name>` (and the same for permissions, scopes and policies) without a `realmId` addresses the **global** row of that name owned by no client, or, for a permission or role whose body names a `clientId`, the row of that name owned by that client in its realm. To address a realm's row by name, send its id as `realmId`, or use the nested route `/realms/:realmId/permissions` or `/realms/:realmId/policies` where one exists. A uuid key without `realmId` addresses its row in whichever realm it lives. A name key with a `realmId` addresses that realm's row owned by the `clientId` the body names, or by no client when it names none. A `realmId` that names no realm is refused with `400`.
+
+A policy created with a `parentId` and no `realmId` is global, like any other policy created without a realm. Its realm is not checked against the parent's: a global policy may serve as a building block under a realm's composite policy.
+
+A custom permission created without a realm and without a `clientId` is global. The built-in `realm_admin` role is not granted it on create, but picks it up at `ownOrNull` reach on the next start, when provisioning grants it every global permission that no client owns (realm create, update and delete excepted). From then on every realm admin can use it inside its own realm. A permission with a realm, which includes every client-owned one, is not granted to the built-in `realm_admin`.
 
 ### Realm reach (`realmScope`)
 

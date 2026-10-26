@@ -245,10 +245,6 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }> {
         let group: string;
 
-        const realm = typeof data.realmId === 'string' ?
-            await this.realmRepository.resolve(data.realmId) :
-            undefined;
-
         let entity: Client | null | undefined;
         if (idOrName) {
             const where: Record<string, any> = {};
@@ -258,11 +254,26 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 where.name = idOrName;
             }
 
-            if (realm) {
+            if (typeof data.realmId === 'string') {
+                // A realm key that does not resolve is refused: dropping the
+                // predicate would address a row of whichever realm holds the
+                // name.
+                const realm = await this.realmRepository.resolveOrFail(data.realmId);
                 where.realmId = realm.id;
+                entity = await this.repository.findOneWithSecret(where);
+            } else if (where.id) {
+                // A UUID key names one specific row and needs no realm.
+                entity = await this.repository.findOneWithSecret(where);
+            } else {
+                // Without a realm a name key addresses the row a create with
+                // the same body would write: the actor's realm. An actor
+                // without one cannot create here either, so it matches
+                // nothing.
+                const actorRealmId = this.getActorRealmId(actor);
+                entity = actorRealmId ?
+                    await this.repository.findOneWithSecret({ ...where, realmId: actorRealmId }) :
+                    null;
             }
-
-            entity = await this.repository.findOneWithSecret(where);
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -294,6 +305,14 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         const validated = await this.validator.run(data, { group });
+
+        // A realm-bound row always has a realm, so null is "no value" like an
+        // absent key: the actor realm fills it below. Dropping it also keeps
+        // the join-column lookup off a null on a non-nullable column.
+        if (validated.realmId === null) {
+            const input: Partial<Client> = validated;
+            delete input.realmId;
+        }
 
         // Reserve the system-provisioned client names (`system`, the console
         // clients) so an API caller can't create or rename a client onto them: that would

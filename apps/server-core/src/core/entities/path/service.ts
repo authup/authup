@@ -142,6 +142,14 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
+        // A realm-bound row always has a realm, so null is "no value" like an
+        // absent key: the actor realm fills it below. Dropping it also keeps
+        // the join-column lookup off a null on a non-nullable column.
+        if (validated.realmId === null) {
+            const input: Partial<Path> = validated;
+            delete input.realmId;
+        }
+
         await this.repository.validateJoinColumns(validated);
 
         if (!isPropertySet(validated, 'realmId') || !validated.realmId) {

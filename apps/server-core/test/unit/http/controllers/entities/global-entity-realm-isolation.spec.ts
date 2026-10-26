@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
-import { PermissionName, ROLE_REALM_ADMIN_NAME } from '@authup/core-kit';
+import { PermissionName, REALM_MASTER_NAME, ROLE_REALM_ADMIN_NAME } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -80,29 +80,30 @@ describe('global-capable entities (realm isolation)', () => {
         await suite.setup();
 
         const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+        const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
 
-        const { data: ownRole } = await suite.client.role.create(createFakeRole());
+        const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: master.id }));
         ownRoleId = ownRole.id;
         const { data: foreignRole } = await suite.client.role.create(
             createFakeRole({ realmId: realmB.id }),
         );
         foreignRoleId = foreignRole.id;
 
-        const { data: ownScope } = await suite.client.scope.create(createFakeScope());
+        const { data: ownScope } = await suite.client.scope.create(createFakeScope({ realmId: master.id }));
         ownScopeId = ownScope.id;
         const { data: foreignScope } = await suite.client.scope.create(
             createFakeScope({ realmId: realmB.id }),
         );
         foreignScopeId = foreignScope.id;
 
-        const { data: ownPermission } = await suite.client.permission.create(createFakePermission());
+        const { data: ownPermission } = await suite.client.permission.create(createFakePermission({ realmId: master.id }));
         ownPermissionId = ownPermission.id;
         const { data: foreignPermission } = await suite.client.permission.create(
             createFakePermission({ realmId: realmB.id }),
         );
         foreignPermissionId = foreignPermission.id;
 
-        const { data: ownPolicy } = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: ownPolicy } = await suite.client.policy.create(createFakeTimePolicy({ realmId: master.id }));
         ownPolicyId = ownPolicy.id;
         const { data: foreignPolicy } = await suite.client.policy.create(
             createFakeTimePolicy({ realmId: realmB.id }),
