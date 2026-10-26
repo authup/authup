@@ -102,7 +102,6 @@ import {
     identityProviderSchema, 
     isRealmReachable,
     normalizeDeviceUserCode, 
-    resolveBodyRealm,
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -128,7 +127,7 @@ export class IdentityProviderController {
 
     protected repository: IIdentityProviderRepository;
 
-    protected realmRepository: Pick<IRealmRepository, 'resolve'>;
+    protected realmRepository: Pick<IRealmRepository, 'resolveOrFail'>;
 
     protected accountManager: IIdentityProviderAccountManager;
 
@@ -585,7 +584,7 @@ export class IdentityProviderController {
                 // A realm key that does not resolve is refused: dropping the
                 // predicate would address a row of whichever realm holds the
                 // name.
-                const realm = await resolveBodyRealm(this.realmRepository, body.realmId);
+                const realm = await this.realmRepository.resolveOrFail(body.realmId);
                 where.realmId = realm.id;
                 entity = await this.repository.findOneBy(where);
             } else if (where.id) {

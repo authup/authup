@@ -9,7 +9,6 @@ import { isUUID } from '@authup/kit';
 import { ValidationError } from '@authup/errors';
 import type { Client } from '@authup/core-kit';
 import type { ActorContext, IEntityRepository } from '@authup/server-kit';
-import { resolveBodyRealm } from '../realm/helpers.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 
 type ClientOwnedInput = {
@@ -53,7 +52,7 @@ type ClientOwnedRow = {
 
 export type ClientOwnedRowLookupContext<T extends ClientOwnedRow> = {
     repository: Pick<IEntityRepository<T>, 'findOneBy' | 'validateJoinColumns'>,
-    realmRepository: Pick<IRealmRepository, 'resolve'>,
+    realmRepository: Pick<IRealmRepository, 'resolveOrFail'>,
     actor: ActorContext,
     /**
      * The permissions a caller needs to write the entity at all (create and
@@ -84,7 +83,7 @@ export async function findClientOwnedRowForSave<T extends ClientOwnedRow>(
         { name: key };
 
     if (typeof data.realmId === 'string') {
-        const realm = await resolveBodyRealm(ctx.realmRepository, data.realmId);
+        const realm = await ctx.realmRepository.resolveOrFail(data.realmId);
         return ctx.repository.findOneBy({
             ...where,
             realmId: realm.id,

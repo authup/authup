@@ -33,7 +33,7 @@ export type IdentityProviderControllerContext = {
     options: IdentityProviderControllerOptions,
 
     repository: IIdentityProviderRepository,
-    realmRepository: Pick<IRealmRepository, 'resolve'>,
+    realmRepository: Pick<IRealmRepository, 'resolveOrFail'>,
 
     accountManager: IIdentityProviderAccountManager,
     linkStore: IIdentityProviderAccountLinkStore,

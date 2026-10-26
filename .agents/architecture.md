@@ -3705,8 +3705,8 @@ stated. The LOOKUP of a global-capable `save()` follows the same rule, so
 `save({ updateOnly: true })`) address a row like this:
 
 - a string `realmId` is resolved and the lookup is scoped to it; a key that
-  names no realm is refused with a `ValidationError` (400, `resolveBodyRealm`
-  in `core/entities/realm/helpers.ts`), never an unscoped lookup, while a realm
+  names no realm is refused with a `ValidationError` (400,
+  `IRealmRepository.resolveOrFail`), never an unscoped lookup, while a realm
   that exists but holds no such row answers 404 (or, for a name upsert,
   creates it). On `permission` and `role` a NAME key additionally pins
   `clientId` to the body's `clientId` or `null`, since the row is unique over

@@ -21,7 +21,6 @@ import {
 } from '@authup/core-kit';
 import type { User } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { resolveBodyRealm } from '../realm/helpers.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository } from '../path/types.ts';
 import type { EventRequestContext } from '../event/types.ts';
@@ -238,7 +237,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 // A realm key that does not resolve is refused: dropping the
                 // predicate would address a row of whichever realm holds the
                 // name.
-                const realm = await resolveBodyRealm(this.realmRepository, data.realmId);
+                const realm = await this.realmRepository.resolveOrFail(data.realmId);
                 where.realmId = realm.id;
                 entity = await this.repository.findOneBy(where);
             } else if (where.id) {

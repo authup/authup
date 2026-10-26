@@ -39,7 +39,7 @@ import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
-import { isRealmReachable, resolveBodyRealm } from '../realm/helpers.ts';
+import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
 
@@ -258,7 +258,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 // A realm key that does not resolve is refused: dropping the
                 // predicate would address a row of whichever realm holds the
                 // name.
-                const realm = await resolveBodyRealm(this.realmRepository, data.realmId);
+                const realm = await this.realmRepository.resolveOrFail(data.realmId);
                 where.realmId = realm.id;
                 entity = await this.repository.findOneWithSecret(where);
             } else if (where.id) {

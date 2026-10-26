@@ -25,6 +25,14 @@ export interface IRealmRepository extends IEntityRepository<Realm> {
      * closed (return null / [] / throw), never drop the predicate.
      */
     resolveId(key: string): Promise<string | null>;
+
+    /**
+     * Resolve the realm a request BODY names (id or name). A key that names
+     * no realm is a malformed request rather than a missing row.
+     *
+     * @throws ValidationError when the key references no existing realm.
+     */
+    resolveOrFail(key: string): Promise<Realm>;
 }
 
 export interface IRealmService {
