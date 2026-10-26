@@ -14,9 +14,9 @@ const catalog = {
     policies: { binding: { type: 'permissionBinding' } },
     permissions: [{
         name: 'user_read',
-        realm_id: null,
-        client_id: null,
-        decision_strategy: null,
+        realmId: null,
+        clientId: null,
+        decisionStrategy: null,
         policies: ['binding'],
     }],
 };
@@ -44,7 +44,14 @@ describe('src/domains/workflows/authorization', () => {
     });
 
     describe('check', () => {
-        const permissions = [{ name: 'user_read', realms: [null] }];
+        const permissions = [
+            { name: 'user_read', targetRealms: [null] },
+            {
+                name: 'mtb_query_submit', 
+                realmId: 'realm-a', 
+                targetRealms: ['realm-a'], 
+            },
+        ];
 
         function createClient(cacheControl?: string) {
             const headers : Record<string, string> = {};
@@ -80,6 +87,22 @@ describe('src/domains/workflows/authorization', () => {
             const client = createClient('private, s-max-age=60');
 
             await expect(client.authorization.checkWithMaxAge()).resolves.toEqual({ data: permissions });
+        });
+
+        it('posts the definition and target selectors as given', async () => {
+            const client = createFakeClient({ handlers: { 'POST /authorization/check': () => permissions } });
+
+            const payload = {
+                names: ['mtb_query_submit'],
+                realms: ['realm-a', null],
+                clients: 'own' as const,
+                targetRealms: 'ownOrNull' as const,
+            };
+
+            await expect(client.authorization.check(payload)).resolves.toEqual(permissions);
+            expect(client.requests[0].method).toEqual('POST');
+            expect(client.requests[0].url).toEqual('authorization/check');
+            expect(client.requests[0].body).toEqual(payload);
         });
 
         it('keeps answering the bare array', async () => {

@@ -8,7 +8,7 @@
 import { isObject } from '@authup/kit';
 import { BuiltInPolicyType, PolicyData } from '../../policy';
 import { isPermissionError } from '../error';
-import type { IPermissionEvaluator, PermissionEvaluationContext } from '../evaluator';
+import type { IPermissionEvaluator, PermissionCompileContext, PermissionEvaluationContext } from '../evaluator';
 import type {
     RecordEvaluationContext,
     RecordTarget,
@@ -63,6 +63,8 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
 function buildEvaluationContext(ctx: RecordEvaluationContext): PermissionEvaluationContext {
     return {
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         data: buildRecordData(ctx.name, ctx),
         options: ctx.options,
     };
@@ -136,12 +138,16 @@ export async function evaluateRecordUpdate(
         realm: ctx.current.realm,
         data: ctx.current.data,
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         options: ctx.options,
     });
     await evaluateRecord(evaluator, {
         realm: ctx.next.realm,
         data: ctx.next.data,
         name: ctx.name,
+        realmId: ctx.realmId,
+        clientId: ctx.clientId,
         options: ctx.options,
     });
 }
@@ -152,12 +158,18 @@ export async function evaluateRecordUpdate(
  * verdict, so it relies on the binding policy (`system.default`) being bound
  * to the permission: without it a grant's reach is never evaluated and any
  * grant compiles to `allow`. Fail-closed: a policy-bearing `any` grant
- * compiles to `conditional` and reads as `false`.
+ * compiles to `conditional` and reads as `false`. `owner` names the realm and
+ * client owning the definition; absent, the global definition is compiled.
  */
 export async function hasUnboundedReach(
     evaluator: IPermissionEvaluator,
     name: string | string[],
+    owner: Pick<PermissionCompileContext, 'realmId' | 'clientId'> = {},
 ): Promise<boolean> {
-    const result = await evaluator.compile({ name });
+    const result = await evaluator.compile({
+        name,
+        realmId: owner.realmId,
+        clientId: owner.clientId,
+    });
     return result.verdict === 'allow';
 }

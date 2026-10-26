@@ -19,7 +19,12 @@ import { PermissionName } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
 import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../app';
-import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
+import {
+    createFakePermission,
+    createFakeRealm,
+    createFakeUser,
+    httpRequest,
+} from '../../../../utils';
 
 function entryOf(result: AuthorizationCheckPermissions, name: string) {
     return result.find((item) => item.name === name);
@@ -99,8 +104,8 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const entry = entryOf(result, PermissionName.USER_UPDATE);
         expect(entry).toBeDefined();
         // `admin` holds `any`, so both requested realms pass
-        expect(entry!.realms).toHaveLength(2);
-        expect(entry!.realms).toContain(null);
+        expect(entry!.targetRealms).toHaveLength(2);
+        expect(entry!.targetRealms).toContain(null);
     });
 
     it('answers only the requested subset', async () => {
@@ -196,20 +201,20 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
         const headers = { Authorization: `Bearer ${grant.access_token}` };
 
-        const own = await postCheck(suite, { realms: RealmScope.OWN }, headers);
+        const own = await postCheck(suite, { targetRealms: RealmScope.OWN }, headers);
         expect(own.status).toBe(200);
         const ownResult : AuthorizationCheckPermissions = await own.json();
-        expect(entryOf(ownResult, PermissionName.USER_UPDATE)?.realms).toEqual([user.realmId]);
+        expect(entryOf(ownResult, PermissionName.USER_UPDATE)?.targetRealms).toEqual([user.realmId]);
 
         // `own` reaches neither a global row nor another realm's
-        const wider = await postCheck(suite, { realms: [null, foreignRealm.id] }, headers);
+        const wider = await postCheck(suite, { targetRealms: [null, foreignRealm.id] }, headers);
         expect(wider.status).toBe(200);
         expect(entryOf(await wider.json(), PermissionName.USER_UPDATE)).toBeUndefined();
 
         // and the answer is per realm rather than per name: a realm it reaches
         // still comes back in the same call that refuses the two it does not
-        const mixed = await postCheck(suite, { realms: [user.realmId, foreignRealm.id] }, headers);
-        expect(entryOf(await mixed.json(), PermissionName.USER_UPDATE)?.realms).toEqual([user.realmId]);
+        const mixed = await postCheck(suite, { targetRealms: [user.realmId, foreignRealm.id] }, headers);
+        expect(entryOf(await mixed.json(), PermissionName.USER_UPDATE)?.targetRealms).toEqual([user.realmId]);
     });
 
     it('answers the global rows too for an ownOrNull grant', async () => {
@@ -225,7 +230,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
         const result = await suite.client.authorization.check(undefined, { authorizationHeader: { type: 'Bearer', token: grant.access_token } });
 
-        expect(entryOf(result, PermissionName.USER_READ)?.realms).toEqual([user.realmId, null]);
+        expect(entryOf(result, PermissionName.USER_READ)?.targetRealms).toEqual([user.realmId, null]);
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
     });
 
@@ -237,13 +242,116 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const tooManyNames = await postCheck(suite, { names }, headers);
         expect(tooManyNames.status).toBe(400);
 
-        const realms = Array.from({ length: 5 }, () => randomUUID());
-        const tooManyRealms = await postCheck(suite, { realms }, headers);
-        expect(tooManyRealms.status).toBe(400);
+        const ids = Array.from({ length: 5 }, () => randomUUID());
+        for (const key of ['realms', 'clients', 'targetRealms']) {
+            const tooMany = await postCheck(suite, { [key]: ids }, headers);
+            expect(tooMany.status).toBe(400);
 
-        // `any` is not offered: a caller that wants another realm names it
-        const badSelector = await postCheck(suite, { realms: 'any' }, headers);
-        expect(badSelector.status).toBe(400);
+            // `any` is not offered: a caller that wants another realm or
+            // client names it
+            const badSelector = await postCheck(suite, { [key]: 'any' }, headers);
+            expect(badSelector.status).toBe(400);
+        }
+    });
+
+    // An explicit id is never resolved, so an unknown one is an empty
+    // selection rather than a 404 telling the caller what does not exist.
+    it('answers an unknown realm or client id with an empty selection', async () => {
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const headers = { Authorization: `Bearer ${grant.access_token}` };
+
+        const response = await postCheck(suite, {
+            realms: [randomUUID()],
+            clients: [randomUUID()],
+        }, headers);
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual([]);
+    });
+
+    // The dnpm-dip case: a realm-owned definition the caller is granted is
+    // answered once its realm is selected, under its own identity, and a
+    // same-named global definition the caller is not granted stays out.
+    it('answers a realm-owned definition selected by its realm', async () => {
+        const password = 'start123-check-realm-owned';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+        const { data: owned } = await suite.client.permission.create({
+            ...createFakePermission(),
+            realmId: user.realmId,
+        });
+        await suite.client.permission.create({
+            ...createFakePermission({ name: owned.name }),
+            realmId: null,
+        });
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: owned.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const grant = await suite.client.token.createWithPassword({ username: user.name, password });
+        const headers = { Authorization: `Bearer ${grant.access_token}` };
+
+        const globalOnly = await postCheck(suite, { names: [owned.name] }, headers);
+        expect(globalOnly.status).toBe(200);
+        expect(await globalOnly.json()).toEqual([]);
+
+        const selected = await postCheck(suite, { names: [owned.name], realms: RealmScope.OWN_OR_NULL }, headers);
+        expect(selected.status).toBe(200);
+        expect(await selected.json()).toEqual([
+            {
+                name: owned.name, 
+                realmId: user.realmId, 
+                targetRealms: [user.realmId, null], 
+            },
+        ]);
+    });
+
+    // A user of one realm holding a grant of a definition the master realm
+    // owns: `ownOrNull` selects no master-owned definition for it, `granted`
+    // selects every owner its grants name (#3769).
+    it('answers a foreign-realm-owned definition through the granted realm selector', async () => {
+        const password = 'start123-check-granted';
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: master } = await suite.client.realm.getOne('master');
+        const { data: user } = await suite.client.user.create(createFakeUser({ password, realmId: realm.id }));
+        const { data: owned } = await suite.client.permission.create({
+            ...createFakePermission(),
+            realmId: master.id,
+        });
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: owned.id,
+            realmScope: RealmScope.OWN_OR_NULL,
+        });
+
+        const grant = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_id: realm.id,
+        });
+        const headers = { Authorization: `Bearer ${grant.access_token}` };
+
+        const own = await postCheck(suite, { names: [owned.name], realms: RealmScope.OWN_OR_NULL }, headers);
+        expect(own.status).toBe(200);
+        expect(await own.json()).toEqual([]);
+
+        const granted = await postCheck(suite, { names: [owned.name], realms: 'granted' }, headers);
+        expect(granted.status).toBe(200);
+        expect(await granted.json()).toEqual([
+            {
+                name: owned.name,
+                realmId: master.id,
+                targetRealms: [realm.id, null],
+            },
+        ]);
+    });
+
+    it('refuses granted as a target realm selector', async () => {
+        const response = await postCheck(suite, { targetRealms: 'granted' });
+
+        expect(response.status).toBe(400);
     });
 
     // The payoff of the anonymous case above: a definition restricted by a
@@ -258,7 +366,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
 
         expect(response.status).toBe(200);
         const result : AuthorizationCheckPermissions = await response.json();
-        expect(entryOf(result, open)?.realms).toEqual([null]);
+        expect(entryOf(result, open)?.targetRealms).toEqual([null]);
         // the window is evaluated rather than ignored
         expect(entryOf(result, closed)).toBeUndefined();
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();

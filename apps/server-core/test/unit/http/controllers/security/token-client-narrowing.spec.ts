@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { Client, Permission, User } from '@authup/core-kit';
-import { PermissionName, ScopeName } from '@authup/core-kit';
+import { CLIENT_ADMIN_CONSOLE_NAME, PermissionName, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
@@ -17,8 +18,11 @@ import {
     expect,
     it,
 } from 'vitest';
+import { ConfigInjectionKey } from '../../../../../src/app';
+import { SESSION_COOKIE } from '../../../../../src/core';
 import { createTestApplication } from '../../../../app';
 import {
+    TestCookieJar,
     createFakeClient,
     createFakePermission,
     createFakeRole,
@@ -197,6 +201,148 @@ describe('http/controllers/security (token client narrowing)', () => {
             }));
 
             expect(holds).toEqual([true, false]);
+        });
+
+        // `own` is the token client, and nothing without one; `granted` is
+        // every client the request's grants name, so a client-owned
+        // definition is selected exactly where its grant applies.
+        it.each([
+            ['own', [true, false, false]],
+            ['granted', [true, false, true]],
+        ])('should select client-owned definitions by the %s client selector', async (clients, selected) => {
+            const entries = await Promise.all([tokens.x, tokens.y, tokens.none].map(async (token) => {
+                const response = await httpRequest(suite, 'POST', '/authorization/check', {
+                    headers: { ...bearer(token), 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        names: [permissionX.name],
+                        realms: 'ownOrNull',
+                        clients,
+                    }),
+                });
+                expect(response.status).toEqual(200);
+
+                return response.json();
+            }));
+
+            const expected = [{
+                name: permissionX.name,
+                ...(permissionX.realmId ? { realmId: permissionX.realmId } : {}),
+                clientId: clientX.id,
+                targetRealms: expect.any(Array),
+            }];
+            expect(entries).toEqual(selected.map((item) => (item ? expected : [])));
+        });
+
+        // A client subject's grants are never narrowed to its token client, so
+        // a grant of a definition another client owns applies. `own` names the
+        // subject's own token client alone; `granted` selects the other one.
+        it('should select a foreign client-owned definition for a client subject by granted', async () => {
+            const clientZ = await createConfidentialClient();
+            await suite.client.clientPermission.create({
+                clientId: clientZ.id,
+                permissionId: permissionX.id,
+            });
+
+            const grant = await suite.client.token.createWithClientCredentials({
+                client_id: clientZ.id,
+                client_secret: secret,
+            });
+
+            const entries = await Promise.all(['ownOrNull', 'granted'].map(async (clients) => {
+                const response = await httpRequest(suite, 'POST', '/authorization/check', {
+                    headers: { ...bearer(grant.access_token), 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        names: [permissionX.name],
+                        realms: 'ownOrNull',
+                        clients,
+                    }),
+                });
+                expect(response.status).toEqual(200);
+
+                return response.json();
+            }));
+
+            expect(entries).toEqual([[], [{
+                name: permissionX.name,
+                ...(permissionX.realmId ? { realmId: permissionX.realmId } : {}),
+                clientId: clientX.id,
+                targetRealms: expect.any(Array),
+            }]]);
+        });
+
+        // The console cookie carries no token, so there is no token client:
+        // `own` selects no client-owned definition, while `granted` still
+        // selects the one the user's grant names.
+        it('should select client-owned definitions for a cookie session by granted only', async () => {
+            const jar = new TestCookieJar();
+            const publicOrigin = new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin;
+            const segment = 'console/admin';
+
+            const cookieRequest = (method: string, path: string, options: Record<string, any> = {}) => {
+                const cookie = jar.header(path);
+
+                return httpRequest(suite, method, path, {
+                    ...options,
+                    headers: {
+                        'sec-fetch-site': 'same-origin',
+                        origin: publicOrigin,
+                        ...(options.headers ?? {}),
+                        ...(cookie ? { cookie } : {}),
+                    },
+                }).then((response) => {
+                    jar.store(response);
+
+                    return response;
+                });
+            };
+
+            const { data: realm } = await suite.client.realm.getOne('master');
+            const kick = await cookieRequest('GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+            expect(kick.status).toEqual(302);
+
+            const authorizeURL = new URL(kick.headers.get('location') as string);
+
+            const userClient = new HTTPClient({ baseURL: suite.baseURL });
+            userClient.setAuthorizationHeader({ type: 'Bearer', token: tokens.none });
+
+            const authorized = await userClient.authorize.confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: CLIENT_ADMIN_CONSOLE_NAME,
+                realm_id: realm.id,
+                redirect_uri: authorizeURL.searchParams.get('redirect_uri') as string,
+                scope: authorizeURL.searchParams.get('scope') as string,
+                state: authorizeURL.searchParams.get('state') as string,
+                code_challenge: authorizeURL.searchParams.get('code_challenge') as string,
+                code_challenge_method: authorizeURL.searchParams.get('code_challenge_method') as string,
+            });
+
+            const code = new URL(authorized.url).searchParams.get('code') as string;
+            const state = authorizeURL.searchParams.get('state') as string;
+
+            const callback = await cookieRequest('GET', `/${segment}/callback?code=${code}&state=${state}`, { redirect: 'manual' });
+            expect(callback.status).toEqual(302);
+            expect(jar.get(SESSION_COOKIE)).toBeDefined();
+
+            const entries = await Promise.all(['own', 'granted'].map(async (clients) => {
+                const response = await cookieRequest('POST', '/authorization/check', {
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        names: [permissionX.name],
+                        realms: 'ownOrNull',
+                        clients,
+                    }),
+                });
+                expect(response.status).toEqual(200);
+
+                return response.json();
+            }));
+
+            expect(entries).toEqual([[], [{
+                name: permissionX.name,
+                ...(permissionX.realmId ? { realmId: permissionX.realmId } : {}),
+                clientId: clientX.id,
+                targetRealms: expect.any(Array),
+            }]]);
         });
 
         it('should answer the permission check route with the grants the token reaches', async () => {

@@ -36,14 +36,25 @@ export type RecordTarget = {
     data?: PolicyData | PolicyInput;
 };
 
-export type RecordEvaluationContext = RecordTarget & {
+/** The permission a single-record check evaluates. */
+export type RecordPermission = {
     name: string | string[];
+    /**
+     * The realm OWNING the permission definition, distinct from `realm` (the
+     * record's realm). Absent or `null` names a global definition.
+     */
+    realmId?: string | null;
+    /**
+     * The client OWNING the permission definition. Absent or `null` names a
+     * definition no client owns.
+     */
+    clientId?: string | null;
     options?: PermissionEvaluationOptions;
 };
 
-export type RecordUpdateEvaluationContext = {
-    name: string | string[];
-    options?: PermissionEvaluationOptions;
+export type RecordEvaluationContext = RecordTarget & RecordPermission;
+
+export type RecordUpdateEvaluationContext = RecordPermission & {
     /** The stored row: the actor must reach it to change it at all. */
     current: RecordTarget;
     /** The updated row: it must stay in reach afterwards. */

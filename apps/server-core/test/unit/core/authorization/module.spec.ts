@@ -159,23 +159,23 @@ describe('core/authorization/module', () => {
             permissions: [
                 {
                     name: 'read',
-                    realm_id: null,
-                    client_id: null,
-                    decision_strategy: 'unanimous',
+                    realmId: null,
+                    clientId: null,
+                    decisionStrategy: 'unanimous',
                     policies: ['policy-default', 'policy-visible'],
                 },
                 {
                     name: 'write',
-                    realm_id: null,
-                    client_id: null,
-                    decision_strategy: null,
+                    realmId: null,
+                    clientId: null,
+                    decisionStrategy: null,
                     policies: ['policy-default'],
                 },
                 {
                     name: 'read',
-                    realm_id: realmId,
-                    client_id: clientId,
-                    decision_strategy: null,
+                    realmId,
+                    clientId,
+                    decisionStrategy: null,
                     policies: ['policy-visible'],
                 },
             ],
@@ -208,16 +208,16 @@ describe('core/authorization/module', () => {
         expect(catalog.permissions).toEqual([
             {
                 name: 'read',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: null,
             },
             {
                 name: 'write',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: ['policy-default'],
             },
         ]);
@@ -287,9 +287,9 @@ describe('core/authorization/module', () => {
         expect(catalog.permissions).toEqual([
             {
                 name: 'read',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: ['policy-default'],
             },
         ]);
@@ -329,16 +329,16 @@ describe('core/authorization/module', () => {
         expect(catalog.permissions).toEqual([
             {
                 name: 'write',
-                realm_id: null,
-                client_id: null,
-                decision_strategy: null,
+                realmId: null,
+                clientId: null,
+                decisionStrategy: null,
                 policies: ['policy-default'],
             },
             {
                 name: 'read',
-                realm_id: realmId,
-                client_id: null,
-                decision_strategy: null,
+                realmId,
+                clientId: null,
+                decisionStrategy: null,
                 policies: null,
             },
         ]);

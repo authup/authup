@@ -67,6 +67,17 @@ export type RuntimeOptions = {
     loginRoute?: string
 };
 
+/**
+ * One entry of the `requirePermissions` route meta. A bare name is the
+ * global definition; the object form names a definition owned by a realm
+ * and/or a client.
+ */
+export type RoutePermissionRequirement = string | {
+    name: string,
+    realmId?: string | null,
+    clientId?: string | null,
+};
+
 export type MiddlewareHookPayload = {
     to: {
         fullPath: string

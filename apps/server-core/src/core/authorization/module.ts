@@ -77,8 +77,8 @@ function compareKeys(a: string, b: string) : number {
 function definitionKey(definition: AuthorizationDefinition) : string {
     return buildPermissionKey({
         name: definition.name,
-        realmId: definition.realm_id,
-        clientId: definition.client_id,
+        realmId: definition.realmId,
+        clientId: definition.clientId,
     });
 }
 
@@ -170,14 +170,14 @@ export async function buildAuthorizationCatalog(
     for (const [permission, trees] of definitions) {
         const entry : AuthorizationDefinition = {
             name: permission.name,
-            realm_id: permission.realmId ?? null,
-            client_id: permission.clientId ?? null,
-            decision_strategy: permission.decisionStrategy ?? null,
+            realmId: permission.realmId ?? null,
+            clientId: permission.clientId ?? null,
+            decisionStrategy: permission.decisionStrategy ?? null,
             policies: [],
         };
         const key = definitionKey(entry);
 
-        if (!await canReach(entry.realm_id)) {
+        if (!await canReach(entry.realmId)) {
             entry.policies = null;
             permissions.push([key, entry]);
             continue;

@@ -6,3 +6,4 @@
  */
 
 export * from '../constants';
+export type { RoutePermissionRequirement } from '../types';

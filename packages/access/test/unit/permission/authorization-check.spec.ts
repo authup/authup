@@ -16,6 +16,7 @@ import {
 const REALM_ID = '2e0d4d2a-1b25-4a2a-9a9f-5a29b1a67b21';
 const REALM_NAME = 'tenant';
 const FOREIGN_REALM_ID = '9f3c0f4d-2a4b-4b8b-8b1e-1f2a3b4c5d6e';
+const CLIENT_ID = '5b1e7c2a-3d4f-4a6b-8c9d-0e1f2a3b4c5d';
 
 const identity : IdentityPolicyData = {
     type: 'user',
@@ -25,9 +26,9 @@ const identity : IdentityPolicyData = {
 };
 
 const result : AuthorizationCheckPermissions = [
-    { name: 'user_update', realms: [REALM_ID] },
-    { name: 'user_read', realms: [REALM_ID, null] },
-    { name: 'realm_read', realms: [REALM_ID, null, FOREIGN_REALM_ID] },
+    { name: 'user_update', targetRealms: [REALM_ID] },
+    { name: 'user_read', targetRealms: [REALM_ID, null] },
+    { name: 'realm_read', targetRealms: [REALM_ID, null, FOREIGN_REALM_ID] },
 ];
 
 async function buildEvaluator(input: AuthorizationCheckPermissions = result) {
@@ -154,7 +155,7 @@ describe('permission/authorization/check-evaluator', () => {
     it('refuses a malformed answer', async () => {
         await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read' }] })).rejects.toThrow();
 
-        await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read', realms: [] }] })).rejects.toThrow();
+        await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read', targetRealms: [] }] })).rejects.toThrow();
 
         await expect(createAuthorizationCheckEvaluator({ permissions: { user_read: ['x'] } })).rejects.toThrow();
     });
@@ -164,17 +165,94 @@ describe('permission/authorization/check-evaluator', () => {
     it('refuses a permission answered more than once', async () => {
         await expect(createAuthorizationCheckEvaluator({
             permissions: [
-                { name: 'user_read', realms: [REALM_ID] },
-                { name: 'user_read', realms: [null] },
+                { name: 'user_read', targetRealms: [REALM_ID] },
+                { name: 'user_read', targetRealms: [null] },
             ],
         })).rejects.toThrow(/permissions\[1\]\.name/);
     });
 
+    it('keeps one name of different namespaces apart', async () => {
+        await expect(createAuthorizationCheckEvaluator({
+            permissions: [
+                { name: 'user_read', targetRealms: [REALM_ID] },
+                {
+                    name: 'user_read', 
+                    realmId: REALM_ID, 
+                    targetRealms: [null], 
+                },
+                {
+                    name: 'user_read', 
+                    clientId: CLIENT_ID, 
+                    targetRealms: [null], 
+                },
+            ],
+        })).resolves.toBeDefined();
+    });
+
+    it('matches an owned definition by the realm and client of the context', async () => {
+        const evaluator = await buildEvaluator([
+            {
+                name: 'mtb_query_submit', 
+                realmId: REALM_ID, 
+                targetRealms: [REALM_ID], 
+            },
+            {
+                name: 'report_export', 
+                realmId: REALM_ID, 
+                clientId: CLIENT_ID, 
+                targetRealms: [REALM_ID], 
+            },
+            {
+                name: 'report_import', 
+                clientId: CLIENT_ID, 
+                targetRealms: [null], 
+            },
+        ]);
+
+        await expect(evaluator.preEvaluate({ name: 'mtb_query_submit', realmId: REALM_ID })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluate({
+            name: 'report_export',
+            realmId: REALM_ID,
+            clientId: CLIENT_ID,
+        })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluate({ name: 'report_import', clientId: CLIENT_ID })).resolves.toBeUndefined();
+
+        await expect(evaluator.preEvaluate({ name: 'mtb_query_submit' })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'mtb_query_submit', realmId: FOREIGN_REALM_ID })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'report_export', realmId: REALM_ID })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({ name: 'report_export', clientId: CLIENT_ID })).rejects.toThrow();
+        await expect(evaluator.compile({ name: 'report_import' })).resolves.toEqual({ verdict: 'deny' });
+        await expect(evaluator.compile({ name: 'report_import', clientId: CLIENT_ID })).resolves.toEqual({ verdict: 'post' });
+    });
+
+    it('matches a bare name against the global definition only', async () => {
+        const evaluator = await buildEvaluator([
+            {
+                name: 'user_read', 
+                realmId: REALM_ID, 
+                targetRealms: [REALM_ID], 
+            },
+            { name: 'user_read', targetRealms: [null] },
+        ]);
+
+        await expect(evaluator.preEvaluate({ name: 'user_read', data: withRealm(null) })).resolves.toBeUndefined();
+        await expect(evaluator.preEvaluate({ name: 'user_read', data: withRealm(REALM_ID) })).rejects.toThrow();
+        await expect(evaluator.preEvaluate({
+            name: 'user_read',
+            realmId: REALM_ID,
+            data: withRealm(REALM_ID),
+        })).resolves.toBeUndefined();
+    });
+
+    it('refuses the target realms under their former key', async () => {
+        await expect(createAuthorizationCheckEvaluator({ permissions: [{ name: 'user_read', realms: [REALM_ID] }] })).rejects.toThrow();
+    });
+
     it('does not adopt a later mutation of the answer it was given', async () => {
-        const mutable : AuthorizationCheckPermissions = [{ name: 'user_read', realms: [REALM_ID] }];
+        const mutable : AuthorizationCheckPermissions = [{ name: 'user_read', targetRealms: [REALM_ID] }];
         const evaluator = await createAuthorizationCheckEvaluator({ permissions: mutable, identity });
 
-        mutable.push({ name: 'client_delete', realms: [REALM_ID] });
+        mutable.push({ name: 'client_delete', targetRealms: [REALM_ID] });
 
         await expect(evaluator.preEvaluate({ name: 'client_delete' })).rejects.toThrow();
     });

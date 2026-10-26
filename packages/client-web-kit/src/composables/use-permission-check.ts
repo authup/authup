@@ -10,6 +10,11 @@ import type { Ref } from 'vue';
 import type { PermissionCheckState } from '../core';
 import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../core';
 
+/**
+ * A bare `name` checks the global definition. A definition a realm or a
+ * client owns is checked by passing the owner's `realmId` / `clientId`
+ * (ids, not names).
+ */
 export function usePermissionCheck(ctx: PermissionEvaluationContext) : Ref<boolean> {
     const checkFn = createPermissionCheckerReactiveFn();
 

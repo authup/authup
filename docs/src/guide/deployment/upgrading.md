@@ -5,6 +5,56 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.71)
+
+### `POST /authorization/check` answers realm- and client-owned permissions
+
+The batch check evaluated global permission definitions only, so a permission owned by a
+realm or a client never reached the answer, and `usePermissionCheck` denied it in every
+console even though the introspection listed the grant (#3769). The route now selects
+definitions by their owner and names that owner on every entry. This is a breaking change
+to the request and the response.
+
+**Action required**
+
+- **Upgrade the server and `@authup/client-web-kit` together.** An older kit against a
+  newer server, or the reverse, reads the wrong keys and lands on a deny-all evaluator,
+  so every permission-gated control disappears. Nuxt consumers bump
+  `@authup/client-web-kit` and `@authup/client-web-nuxt` in the same step.
+- **`realms` is renamed to `targetRealms`**, in the request and in each answer entry. It
+  keeps its meaning: the resource realms each permission is checked against (`own`,
+  `ownOrNull`, the default, or a list of realm ids and `null`).
+- **`realms` and `clients` now select which definitions are evaluated.** Both read the
+  same way and default to `[null]`, the global definitions only, so a request naming
+  neither gets the answer it got before:
+  - `own` is the caller's own realm, or the client the request's token was issued to
+    (for a user and a client subject alike). A request without a token client (a
+    console session, Basic) has no own client.
+  - `ownOrNull` adds `null`, the unowned definitions.
+  - `granted` adds, on top of `ownOrNull`, the realm or client owning every definition
+    the identity holds a grant of. It is how a user of one realm reaches a permission
+    another realm (or client) owns without naming that owner; the kit store asks for
+    it on both selectors. `targetRealms` does not accept it.
+  - A list is taken as given and capped at 4 entries; an unknown id selects nothing.
+- **Each answer entry names its definition**: `{ name, realmId?, clientId?, targetRealms }`,
+  with `realmId` and `clientId` omitted when null. One name may now appear several times,
+  once per owner, so key your lookups by name and owner. With `@authup/access`,
+  `createAuthorizationCheckEvaluator` does this for you.
+- **A bare name still checks the global definition only.** A check gating an owned
+  permission (one provisioned in a realm, or owned by a client) must name its owner by
+  id, or it stays denied:
+  - `usePermissionCheck({ name, realmId, clientId })` in `@authup/client-web-kit`, and
+    the `realmId` / `clientId` props of `APermissionCheck`;
+  - a route-meta entry `{ name, realmId?, clientId? }` instead of a plain name in
+    `@authup/client-web-nuxt`, alone or mixed with names in one array;
+  - the `realmId` / `clientId` fields of `evaluateRecord`, `evaluateRecordOneOf`,
+    `reachesRecord`, `reachesRecordOneOf` and `evaluateRecordUpdate` in `@authup/access`.
+- **`GET /authorization` is camelCase.** Each definition in the catalog carries
+  `realmId`, `clientId` and `decisionStrategy` instead of `realm_id`, `client_id` and
+  `decision_strategy`, and `@authup/access` refuses a catalog in the old shape, so a
+  resource server upgrades `@authup/access` together with the server. The grant list on
+  the introspection response (`permissions`) is unchanged and stays snake_case.
+
 ## v1.0.0-beta.70 (was: next release after v1.0.0-beta.69)
 
 ### Single-record checks are matched against the record's realm
