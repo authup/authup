@@ -31,6 +31,7 @@ import {
     computed,
     isRef,
     ref,
+    shallowRef,
     toRef,
     watch,
 } from 'vue';
@@ -176,15 +177,44 @@ function create<
         autoLoad: false,
     });
 
+    // The source buffers `set` / `clear` while a load is in flight and
+    // applies them once it settles. Until then the value written here is
+    // held as `staged`, so a read right after a write answers what was
+    // written rather than the record the write is about to replace.
+    const staged = shallowRef<{ value: RECORD | undefined }>();
+
+    // Raised while a changed query reloads: the held record answers the
+    // previous query, so it must not be read (or written against) as the
+    // record of the new one.
+    const superseded = ref(false);
+
+    watch(source.data, (value) => {
+        if (staged.value && staged.value.value === value) {
+            staged.value = undefined;
+        }
+    }, { flush: 'sync' });
+
     // Ten forms assign `manager.data.value = props.entity`, so the bridge is
     // writable: a record replaces the source's, `undefined` clears it.
     const entity = computed<RECORD | undefined>({
-        get: () => source.data.value,
+        get: () => {
+            if (staged.value) {
+                return staged.value.value;
+            }
+
+            return superseded.value ? undefined : source.data.value;
+        },
         set: (value) => {
+            staged.value = { value };
+
             if (value) {
                 source.set(value);
             } else {
                 source.clear();
+            }
+
+            if (source.data.value === value) {
+                staged.value = undefined;
             }
         },
     });
@@ -227,7 +257,7 @@ function create<
         // performed create (APermissionPolicyBindingButton's create mode, a
         // socket-originated create) would notify but leave the manager's data
         // unset, so the consumer never leaves the "no record" state.
-        source.set(value);
+        entity.value = value;
 
         if (ctx.setup && ctx.setup.emit) {
             ctx.setup.emit('created', value);
@@ -248,23 +278,31 @@ function create<
         }
     };
 
-    const updated = (value: Partial<RECORD>) => {
-        // A partial update lands on a copy: the source holds its record
-        // shallowly, so a write into the held object would reach no reader.
-        const current = source.data.value;
-        if (current) {
-            source.set(extendObject({ ...current }, value));
-        }
-
-        const next = source.data.value || value;
-
+    const notifyUpdated = (value: Partial<RECORD>) => {
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('updated', next as RECORD);
+            ctx.setup.emit('updated', value as RECORD);
         }
 
         if (ctx.onUpdated) {
-            ctx.onUpdated(next);
+            ctx.onUpdated(value);
         }
+    };
+
+    const updated = (value: Partial<RECORD>) => {
+        // A partial update lands on a copy: the source holds its record
+        // shallowly, so a write into the held object would reach no reader.
+        // The emit carries the record this write produced, never a read of
+        // the source, which still holds the previous one while a load is in
+        // flight.
+        const current = entity.value;
+        if (!current) {
+            notifyUpdated(value);
+            return;
+        }
+
+        const next = extendObject({ ...current }, value) as RECORD;
+        entity.value = next;
+        notifyUpdated(next);
     };
 
     const resolved = (value?: RECORD) => {
@@ -319,8 +357,8 @@ function create<
 
         await write(id, async () => {
             const response = await api(id, data);
-            source.set(response.data);
-            updated(response.data);
+            entity.value = response.data;
+            notifyUpdated(response.data);
         });
     };
 
@@ -333,7 +371,7 @@ function create<
 
         await write(id, async () => {
             const response = await api(id);
-            source.clear();
+            entity.value = undefined;
             deleted(response.data);
         });
     };
@@ -421,7 +459,14 @@ function create<
         resolved(initialEntity);
     }
 
+    let reloading : Promise<void> | undefined;
+
     const resolve = async (rctx: ResourceManagerResolveContext<RECORD> = {}) => {
+        if (reloading) {
+            await reloading;
+            return;
+        }
+
         if (entity.value) {
             return;
         }
@@ -457,8 +502,23 @@ function create<
 
                 // A changed query supersedes whatever is loading, so this is
                 // a load rather than ensure(), which would coalesce onto it.
+                // The held record answers the previous query: it is hidden
+                // until the reload settles, so nothing reads or deletes it
+                // as the record of the new one.
                 request = { query: queryFn() };
-                source.load().then(announce);
+                staged.value = undefined;
+                superseded.value = true;
+
+                const promise = source.load().then(() => {
+                    if (reloading !== promise) {
+                        return;
+                    }
+
+                    reloading = undefined;
+                    superseded.value = false;
+                    announce();
+                });
+                reloading = promise;
             },
             { immediate: true },
         );

@@ -9,7 +9,8 @@ import type { Role } from '@authup/core-kit';
 import type { FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, ref } from 'vue';
+import type { Ref } from 'vue';
 import type { EntityManager } from '../../../../src/components/utility';
 import {
     defineEntityManager,
@@ -18,7 +19,10 @@ import {
 } from '../../../../src/components/utility';
 import { mountKitComponent } from '../../../utils';
 
-function createRecord(capture: (manager: EntityManager<Role>) => void) {
+function createRecord(
+    capture: (manager: EntityManager<Role>) => void,
+    query?: Ref<string>,
+) {
     return defineComponent({
         props: defineEntityVProps<Role>(),
         emits: defineEntityVEmitOptions<Role>(),
@@ -28,6 +32,7 @@ function createRecord(capture: (manager: EntityManager<Role>) => void) {
                 props,
                 setup,
                 socket: false,
+                ...(query ? { query: () => ({ filters: { name: query.value } }) } : {}),
             });
 
             capture(manager);
@@ -149,5 +154,81 @@ describe('defineEntityManager', () => {
 
         await expect(manager!.resolveOrFail({ id: 'role-1' })).rejects.toBeInstanceOf(Error);
         expect(manager!.error.value).toBeDefined();
+    });
+
+    it('emits the record an update produced while a load is in flight', async () => {
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+
+        let manager : EntityManager<Role> | undefined;
+        const { wrapper } = mountKitComponent(
+            createRecord((value) => { manager = value; }),
+            {},
+            {
+                'GET /roles/:id': async (request: FakeRequest) => {
+                    await gate;
+                    return { data: buildRole(request.params.id, 'loaded'), meta: {} };
+                },
+            },
+        );
+
+        const loading = manager!.resolve({ id: 'role-1' });
+        await flushPromises();
+
+        // Both writes land while the read is in flight, so the source
+        // buffers them; the bridge and the emit still answer what was written.
+        manager!.data.value = buildRole('role-1', 'held');
+        expect(manager!.data.value?.name).toEqual('held');
+
+        manager!.updated({ name: 'renamed' } as Role);
+
+        const emitted = wrapper.emitted('updated')!;
+        expect(emitted[0][0]).toEqual({ id: 'role-1', name: 'renamed' });
+        expect(manager!.data.value?.name).toEqual('renamed');
+
+        release();
+        await loading;
+        await flushPromises();
+
+        expect(manager!.data.value?.name).toEqual('renamed');
+    });
+
+    it('clears the held record while a changed query reloads', async () => {
+        const gates : Array<() => void> = [];
+        const name = ref('first');
+
+        let manager : EntityManager<Role> | undefined;
+        mountKitComponent(
+            createRecord((value) => { manager = value; }, name),
+            {},
+            {
+                'GET /roles': async (request: FakeRequest) => {
+                    const url = new URL(request.url, 'http://fake.test');
+                    const filter = url.searchParams.get('filter') ?? '';
+                    if (filter.includes('second')) {
+                        const { promise, resolve } = Promise.withResolvers<void>();
+                        gates.push(resolve);
+                        await promise;
+                        return { data: [buildRole('role-2', 'second')], meta: { total: 1 } };
+                    }
+
+                    return { data: [buildRole('role-1', 'first')], meta: { total: 1 } };
+                },
+            },
+        );
+
+        await manager!.resolve({ query: { filters: { name: 'first' } } });
+        expect(manager!.data.value?.id).toEqual('role-1');
+
+        name.value = 'second';
+        await flushPromises();
+
+        expect(gates).toHaveLength(1);
+        expect(manager!.data.value).toBeUndefined();
+
+        const resolving = manager!.resolve();
+        gates[0]();
+        await resolving;
+
+        expect(manager!.data.value?.id).toEqual('role-2');
     });
 });
