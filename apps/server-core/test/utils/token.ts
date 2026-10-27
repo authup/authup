@@ -14,7 +14,8 @@ import type { TestHTTPApplication } from '../app';
 /**
  * A client bearing the admin's own access token re-signed with `scope`, which
  * by default withholds `global`, so it is answered as a scope-restricted bearer:
- * its identity, holding no grant. `payload` names the subject.
+ * its identity, holding no grant. `payload` names the subject, `token` is the
+ * re-signed access token itself.
  */
 export async function createScopeRestrictedClient(suite: TestHTTPApplication, scope = 'openid') {
     const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
@@ -40,5 +41,9 @@ export async function createScopeRestrictedClient(suite: TestHTTPApplication, sc
     const client = new Client({ baseURL: suite.baseURL });
     client.setAuthorizationHeader({ type: 'Bearer', token });
 
-    return { client, payload };
+    return {
+        client, 
+        payload, 
+        token, 
+    };
 }

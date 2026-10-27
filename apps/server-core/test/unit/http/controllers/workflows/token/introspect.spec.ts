@@ -30,6 +30,7 @@ import {
     createFakeClient,
     createFakeRole,
     createFakeUser,
+    createScopeRestrictedClient,
     expectClientError,
     httpRequest,
 } from '../../../../../utils';
@@ -136,6 +137,43 @@ describe('token-introspect', () => {
 
         expect(introspection.active).toBe(false);
         expect(introspection.permissions).toBeUndefined();
+    });
+
+    // #3749: without `global` a request made with the token evaluates no
+    // grants (#3723), so the introspection must not report any either, or a
+    // local evaluator built from it allows what the server denies.
+    it('should report no permissions for a live token without the global scope', async () => {
+        const { token } = await createScopeRestrictedClient(suite);
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token }, { authorizationHeaderInherit: true });
+
+        expect(introspection.active).toBe(true);
+        expect(introspection.scope).toEqual('openid');
+        expect(introspection.permissions).toEqual([]);
+    });
+
+    it('should report no permissions on the own introspection of a bearer without the global scope', async () => {
+        const { client } = await createScopeRestrictedClient(suite);
+
+        const introspection = await client.account.getSession();
+
+        expect(introspection.active).toBe(true);
+        expect(introspection.permissions).toEqual([]);
+    });
+
+    it('should report permissions for a live token carrying the global scope among others', async () => {
+        const { token, client } = await createScopeRestrictedClient(suite, 'openid global');
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token }, { authorizationHeaderInherit: true });
+        expect(introspection.active).toBe(true);
+        expect(introspection.permissions!.length).toBeGreaterThan(0);
+
+        const own = await client.account.getSession();
+        expect(own.permissions!.length).toBeGreaterThan(0);
     });
 
     it('should still report permissions for a live token', async () => {

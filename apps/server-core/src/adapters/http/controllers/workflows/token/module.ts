@@ -16,6 +16,7 @@ import {
     OAuth2RequestError,
     OAuth2TokenGrant,
     OAuth2TokenKind,
+    deserializeOAuth2Scope,
     isJWTError,
 } from '@authup/specs';
 import { 
@@ -296,6 +297,8 @@ export class TokenController {
                     client_id: payload.client_id,
                 },
                 active,
+                // the INTROSPECTED token's scopes: without `global` it carries no grants
+                scopes: payload.scope ? deserializeOAuth2Scope(payload.scope) : [],
             });
 
             // A subject of another realm than the token names: the token is

@@ -4342,12 +4342,16 @@ warning, since the server fails such a grant closed itself. The projection is th
 described token carries (`getForToken`: the introspected token on
 `POST /token/introspect`, the request's own on the GET), exactly what a request made with it
 evaluates, so a user's grants owned by another client are absent (see *A user's client-owned grants apply through that client's
-tokens*). **The
-list is NOT narrowed by the token's `scope`**, so a bearer holding no `global` scope
-reports its full grant set while the server denies it every `system.default`-bound
-permission (the request path evaluates it with no grants); a resource
-server that honours scopes applies that check itself. The IDENTITY is the same
-response's `sub`, `sub_kind`, `realm_id` and `realm_name`.
+tokens*), and a token whose `scope` lacks `global` reports an EMPTY list, since the request
+path evaluates it with no grants (`useRequestPolicyGrants`, #3723), so a local
+`createAuthorizationEvaluator` reaches the server's verdict without knowing the scope rule
+(#3749). The scopes are the described token's (its `scope` claim on `POST /token/introspect`,
+the request's own on the GET, where the console cookie carries `global`). Reporting the full
+set and leaving the scope check to every consumer was rejected: the projection would then
+contradict the endpoint's own definition, and a consumer that forgot the rule would allow
+what the server denies. The kit store is unaffected: its verdicts come from
+`POST /authorization/check`, which already evaluates such a bearer with no grants. The IDENTITY is the same response's `sub`, `sub_kind`, `realm_id` and
+`realm_name`.
 
 `createAuthorizationEvaluator({ catalog, grants?, identity? })` takes that triple and
 rebuilds the server's own raw binding model, the `PermissionPolicyBinding` structures
