@@ -8,8 +8,8 @@
 import type { ICondition, PaginationBuildInput } from '@rapiq/core';
 import type { EntityListQueryInput, QueryFiltersInput } from '../../../../core';
 import type {
+    ComputedRef,
     MaybeRef,
-    Ref,
     SetupContext,
     VNodeChild,
 } from 'vue';
@@ -114,10 +114,10 @@ export type EntityCollectionManager<T extends Record<string, any>> = {
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
-    data: Ref<T[]>,
-    busy: Ref<boolean>,
-    meta: Ref<ListMeta>,
-    total: Ref<number>,
+    data: ComputedRef<T[]>,
+    busy: ComputedRef<boolean>,
+    meta: ComputedRef<ListMeta>,
+    total: ComputedRef<number>,
 };
 
 export type EntityCollectionVSlots<T extends Record<string, any>> = {
