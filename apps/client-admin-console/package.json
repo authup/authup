@@ -68,7 +68,7 @@
         "chart.js": "^4.6.1",
         "cross-env": "^10.1.0",
         "date-fns": "^4.1.0",
-        "happy-dom": "^20.14.6",
+        "happy-dom": "^21.0.4",
         "ilingo": "^6.1.0",
         "pinia": "^4.1.0",
         "tailwindcss": "^4.3.1",
