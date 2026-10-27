@@ -44,6 +44,7 @@ import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
     useRequestIdentity,
+    useRequestScopes,
     useRequestSessionId,
     useRequestTokenPayload,
 } from '../../../request/index.ts';
@@ -109,7 +110,8 @@ export class SessionController {
      *
      * The permissions are the grants the request's own token carries (#3597),
      * what its request evaluation reads: narrowed to the bearer's client, not
-     * narrowed for the console cookie.
+     * narrowed for the console cookie. A bearer without the `global` scope
+     * reports none, as its requests evaluate none (#3749).
      */
     @DGet('/@me/introspect', [ForceLoggedInMiddleware])
     async getOwnIntrospection(
@@ -152,6 +154,7 @@ export class SessionController {
                 client_id: useRequestTokenPayload(event)?.client_id,
             },
             active: true,
+            scopes: useRequestScopes(event),
         });
         if (!subject) {
             return { active: false };
