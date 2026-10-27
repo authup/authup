@@ -470,18 +470,21 @@ function create<
     async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
         if (!getMany) return;
 
-        sequence++;
-        const current = sequence;
-
+        // Composed before the sequence moves: a composition that throws
+        // issues no request, so it must not mark the load already in flight
+        // as superseded, or its rows would land without the query they
+        // answer.
+        let composed : ComposedQuery;
         try {
-            pending = {
-                query: composeQuery(input, source.meta.pagination),
-                sequence: current,
-            };
+            composed = composeQuery(input, source.meta.pagination);
         } catch (e) {
             failed(isError(e) ? e : new Error('The entities could not be loaded.'));
             return;
         }
+
+        sequence++;
+        const current = sequence;
+        pending = { query: composed, sequence: current };
 
         loading++;
         try {
