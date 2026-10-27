@@ -30,7 +30,7 @@ import {
     mergeQueries,
 } from '@rapiq/core';
 import { defineDataCollection } from '@vuecs/data';
-import type { DataCollectionLoadResult, DataCollectionSnapshot } from '@vuecs/data';
+import type { DataCollectionLoadResult, DataCollectionSnapshot, DataLoadOutcome } from '@vuecs/data';
 import type { EntityListQueryInput } from '../../../../core';
 import type { VNodeChild } from 'vue';
 import {
@@ -81,6 +81,17 @@ type ComposedQuery = {
     interactive: Query
 };
 
+/**
+ * What the data source keeps between loads. `interactive` is the retained
+ * interactive query state (search filters, sort changes, ...), so pagination
+ * and loadAll continuations keep the current search without round-tripping
+ * query state through ListMeta; `query` is the composed query of the last
+ * applied load, read by the socket handler's sort check. Both ride the
+ * source's meta, which hands every load a draft based on the load still in
+ * flight and commits it only when that load applies.
+ */
+type SourceMeta = ListMeta & Partial<ComposedQuery>;
+
 function stripPagination(input: IQuery) : Query {
     return new Query({
         fields: input.fields,
@@ -121,22 +132,6 @@ function create<
     const getMany = domainAPI?.getMany ?
         domainAPI.getMany.bind(domainAPI) :
         undefined;
-
-    // Last composed query (IR) — read by the socket handler's sort check.
-    let query : IQuery | undefined;
-
-    // Interactive query state (search filters, sort changes, ...) retained
-    // across loads, so pagination / loadAll continuations keep the current
-    // search without round-tripping query state through ListMeta.
-    // Pagination is deliberately excluded — it lives in `meta`.
-    let interactive : IQuery | undefined;
-
-    // Interactive state of the most recently ISSUED load, set while it is
-    // in flight. A load issued before that one settled composes against it,
-    // so a sort or page change typed after a search still carries the
-    // search. Cleared once the latest load settles: on success its state is
-    // the committed one, on failure the committed one is the fallback.
-    let issued : IQuery | undefined;
 
     const resolveBaseQuery = () : IQuery => {
         let contextQuery : IQuery | undefined;
@@ -179,9 +174,9 @@ function create<
 
     function composeQuery(
         input: EntityListQueryInput<Entity<RECORD>>,
+        retained: IQuery | undefined,
         pagination: PaginationBuildInput | undefined,
     ) : ComposedQuery {
-        const retained = issued ?? interactive;
         let inputQuery : IQuery;
         let interactiveNext : Query;
 
@@ -287,16 +282,6 @@ function create<
     // key is derived from, so it must match the source's initial meta.
     const initialPagination : PaginationBuildInput = { limit: 10 };
 
-    // The composed query of the load in flight, handed from `load` to the
-    // source's loader. The source invokes its loader synchronously from
-    // `source.load()`, so the value read there is always this call's.
-    let pending : { query: ComposedQuery, sequence: number } | undefined;
-
-    // Monotonic per `load` call, mirroring the source's own latest-wins
-    // token: only the latest call may commit interactive state or report
-    // its failure.
-    let sequence = 0;
-
     // Offset pagination shifts when rows are inserted or reordered between
     // two page requests, so a walk can see one row twice. The first
     // occurrence is kept; a row without an identity is never dropped.
@@ -319,7 +304,7 @@ function create<
 
     // Walks every page when `loadAll` is set: the source replaces its data
     // wholesale, so the concatenation is assembled here rather than appended.
-    async function fetchAll(composed: Query) : Promise<DataCollectionLoadResult<RECORD, ListMeta>> {
+    async function fetchAll(composed: Query) : Promise<DataCollectionLoadResult<RECORD, SourceMeta>> {
         if (!getMany) {
             return { data: [] };
         }
@@ -368,51 +353,17 @@ function create<
         };
     }
 
-    async function loadPending() : Promise<DataCollectionLoadResult<RECORD, ListMeta>> {
-        const current = pending;
-        pending = undefined;
-        if (!current) {
+    // The draft meta of this call carries the query it composed.
+    async function loadQuery(draft: SourceMeta) : Promise<DataCollectionLoadResult<RECORD, SourceMeta>> {
+        if (!draft.query) {
             return { data: [] };
         }
 
-        const result = await fetchAll(current.query.query);
-
-        // Committed only once the request succeeded, and only by the latest
-        // call: a superseded response is dropped by the source, so its
-        // search must not become the retained one either.
-        if (current.sequence === sequence) {
-            interactive = current.query.interactive;
-            query = current.query.query;
-        }
-
-        return result;
-    }
-
-    // Socket and slot mutations arriving while a load is in flight wait for
-    // it to settle, so whether they applied can be read off the settled
-    // data instead of off rows the response is about to replace.
-    let loading = 0;
-    let deferred : (() => void)[] = [];
-
-    function drainDeferred() {
-        const operations = deferred;
-        deferred = [];
-        for (const operation of operations) {
-            operation();
-        }
-    }
-
-    function whenIdle(operation: () => void) {
-        if (loading > 0) {
-            deferred.push(operation);
-            return;
-        }
-
-        operation();
+        return fetchAll(draft.query);
     }
 
     // Snapshot handed over by the server render, adopted at most once.
-    let adopted : DataCollectionSnapshot<RECORD, ListMeta> | undefined;
+    let adopted : DataCollectionSnapshot<RECORD, SourceMeta> | undefined;
 
     const isServer = typeof window === 'undefined';
 
@@ -432,7 +383,7 @@ function create<
         }
 
         try {
-            const initial = composeQuery({}, initialPagination);
+            const initial = composeQuery({}, undefined, initialPagination);
 
             return {
                 key: `authup:collection:${context.type}${buildQueryString(initial.query)}`,
@@ -453,7 +404,7 @@ function create<
     // another request's rows if a host ever backs the store with something
     // outliving one request. Keeping the server path write-only makes that
     // leak impossible from here, independently of how a host wires the store.
-    function popSnapshot() : DataCollectionSnapshot<RECORD, ListMeta> | undefined {
+    function popSnapshot() : DataCollectionSnapshot<RECORD, SourceMeta> | undefined {
         if (isServer || !hydration || !handoff) {
             return undefined;
         }
@@ -468,14 +419,18 @@ function create<
         adopted = {
             data: snapshot.data,
             total: snapshot.total,
-            meta: { pagination: snapshot.pagination ?? initialPagination },
+            meta: {
+                pagination: snapshot.pagination ?? initialPagination,
+                interactive: handoff.initial.interactive,
+                query: handoff.initial.query,
+            },
         };
 
         return adopted;
     }
 
-    const source = defineDataCollection<RECORD, ListMeta>({
-        load: loadPending,
+    const source = defineDataCollection<RECORD, SourceMeta>({
+        load: loadQuery,
         initialMeta: { pagination: initialPagination },
         autoLoad: false,
         hydrate: popSnapshot,
@@ -493,10 +448,37 @@ function create<
     // The pagination UI reads total and busy off the meta object, so the
     // exposed meta folds the source's own state into the bag it keeps.
     const meta = computed<ListMeta>(() => ({
-        ...source.meta,
+        pagination: source.meta.pagination,
         total: total.value,
         busy: busy.value,
     }));
+
+    // Composes the query against the source's draft (the state of the load
+    // still in flight, else the committed one), so a sort or page change
+    // issued while a search is loading still carries the search. The draft
+    // is committed only when this load applies. A composition that throws
+    // issues no request, so it supersedes nothing.
+    async function run(input: EntityListQueryInput<Entity<RECORD>>) : Promise<DataLoadOutcome | undefined> {
+        if (!getMany) return undefined;
+
+        let outcome : Promise<DataLoadOutcome>;
+        try {
+            outcome = source.load((current) => ({
+                ...current,
+                ...composeQuery(input, current.interactive, current.pagination),
+            }));
+        } catch (e) {
+            failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+            return undefined;
+        }
+
+        const result = await outcome;
+        if (result.status === 'failed') {
+            failed(isError(result.error) ? result.error : new Error('The entities could not be loaded.'));
+        }
+
+        return result;
+    }
 
     // Never rejects: callers don't reliably handle rejections — most call
     // sites are fire-and-forget (the setup-time initial load below, template
@@ -505,44 +487,7 @@ function create<
     // emits `failed` and leaves the list as it was instead of throwing.
     // A load issued while another is in flight supersedes it.
     async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
-        if (!getMany) return;
-
-        // Composed before the sequence moves: a composition that throws
-        // issues no request, so it must not mark the load already in flight
-        // as superseded, or its rows would land without the query they
-        // answer.
-        let composed : ComposedQuery;
-        try {
-            composed = composeQuery(input, source.meta.pagination);
-        } catch (e) {
-            failed(isError(e) ? e : new Error('The entities could not be loaded.'));
-            return;
-        }
-
-        sequence++;
-        const current = sequence;
-        pending = { query: composed, sequence: current };
-        issued = composed.interactive;
-
-        loading++;
-        try {
-            await source.load();
-        } finally {
-            loading--;
-
-            if (current === sequence) {
-                issued = undefined;
-            }
-        }
-
-        if (loading === 0) {
-            drainDeferred();
-        }
-
-        if (current === sequence && source.error.value) {
-            const { value } = source.error;
-            failed(isError(value) ? value : new Error('The entities could not be loaded.'));
-        }
+        await run(input);
     }
 
     // Three paths for the initial load: adopt a server-rendered snapshot
@@ -559,13 +504,13 @@ function create<
             }
 
             onServerPrefetch(async () => {
-                await load();
+                const outcome = await run({});
 
                 // A failed render load leaves an empty list behind. Handing
                 // that over would strand the client on it (an adopted
                 // snapshot suppresses the load), so say nothing and let the
                 // browser fetch for itself.
-                if (source.error.value) {
+                if (outcome && outcome.status === 'failed') {
                     return;
                 }
 
@@ -581,10 +526,7 @@ function create<
             return;
         }
 
-        if (adopted && handoff) {
-            interactive = handoff.initial.interactive;
-            query = handoff.initial.query;
-
+        if (adopted) {
             return;
         }
 
@@ -594,53 +536,57 @@ function create<
 
     // The mutators apply only what changes the list: a create of a row
     // already present, an update or delete of a row that is not, are
-    // no-ops. Each emit fires only when its mutation applied.
+    // no-ops. A mutation arriving while a load is in flight is buffered by
+    // the source and replayed once the load settles, so each emit fires from
+    // `onSettled`, and only when its mutation applied.
     function created(entity: RECORD) {
-        whenIdle(() => {
-            if (source.findIndex(entity) !== -1) {
-                return;
-            }
+        source.create(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
 
-            source.create(entity);
+                if (context.onCreated) {
+                    context.onCreated(entity, meta.value);
+                }
 
-            if (context.onCreated) {
-                context.onCreated(entity, meta.value);
-            }
-
-            if (context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('created', entity);
-            }
+                if (context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('created', entity);
+                }
+            },
         });
     }
 
     function updated(entity: RECORD) {
-        whenIdle(() => {
-            if (source.findIndex(entity) === -1) {
-                return;
-            }
+        source.update(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
 
-            source.update(entity);
-
-            const next = data.value[source.findIndex(entity)];
-            if (next && context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('updated', next);
-            }
+                const next = data.value[source.findIndex(entity)];
+                if (next && context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('updated', next);
+                }
+            },
         });
     }
 
     function deleted(entity: RECORD) {
-        whenIdle(() => {
-            const index = source.findIndex(entity);
-            const previous = index === -1 ? undefined : data.value[index];
-            if (!previous) {
-                return;
-            }
+        // The held row is read up front: once the delete applied it is gone.
+        const index = source.findIndex(entity);
+        const previous = (index === -1 ? undefined : data.value[index]) ?? entity;
 
-            source.delete(entity);
+        source.delete(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
 
-            if (context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('deleted', previous);
-            }
+                if (context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('deleted', previous);
+                }
+            },
         });
     }
 
@@ -896,6 +842,7 @@ function create<
         };
 
         socketContext.onCreated = (entity) => {
+            const { query } = source.meta;
             const isSorted = query &&
                 isQuerySortedDescByDate(query.sorts) &&
                 meta.value?.pagination?.offset === 0;

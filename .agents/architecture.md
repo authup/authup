@@ -9851,32 +9851,56 @@ there is no `core/form/builders.ts` and no `buildForm*` render-function shims
   composition below, the entity-type dispatch (`pickEntityAPI`), the
   socket subscription, `render()`, `loadAll`'s page walk (next offset =
   previous offset plus rows returned, stopping on an empty page) and the
-  hydration key. **Loads are re-entrant, latest wins:** a load issued
-  while another is in flight supersedes it, the earlier response is
-  discarded, `busy` stays set until the latest settles, and the retained
-  interactive state (search, sorts) is committed inside the loader only
-  by the latest call after its request succeeded, so a superseded or
-  failed search never sticks. `failed` is emitted only for the latest
-  call. **Mutations** (socket events and the
+  hydration key. **The retained query state lives in the source's
+  meta.** Besides `pagination`, the meta carries `interactive` (search
+  filters, sorts) and `query` (the composed query of the last applied
+  load, read by the socket handler's sort check). Each load passes
+  `source.load()` an updater that composes against the draft it is
+  handed, and the loader sends the `query` of that draft. The source
+  bases a draft on the load still in flight, else on the committed meta,
+  and commits it only when the load applies, so a sort or page change
+  issued while a search is loading still carries the search, and a
+  superseded or failed search never sticks. The exposed `meta` is
+  `{ pagination, total, busy }`, and the hydration snapshot carries
+  pagination alone: the query state is rebuilt from the handoff key's
+  composition on adoption. **Loads are re-entrant, latest wins:** a load
+  issued while another is in flight supersedes it, the earlier response is
+  discarded, and `busy` stays set until the latest settles. `failed` is
+  emitted off the load OUTCOME, only when it is `failed` (never for a
+  `superseded` call). **Mutations** (socket events and the
   `slotProps.created/updated/deleted` callbacks) go through the source's
   `create` / `update` / `delete` (`dedupCreated`, `mergeOnUpdated`,
   `filterDeleted`), so an insert or delete adjusts `total` and the footer's
-  `meta.total` together; one arriving while a load is in flight is
-  deferred until it settles, so the "did it apply" check reads the
-  settled rows. Rows are held in a `shallowRef` (not deep-reactive) and
-  an update deep-merges a copy. **Single-emit contract:** `created` /
+  `meta.total` together. The source buffers one arriving while a load is
+  in flight and replays it once the load settles; the manager emits from
+  the mutator's `onSettled`, so whether it applied is read off the
+  settled rows. A `deleted` emit carries the row held when the delete was
+  called, falling back to the passed entity. Rows are held in a
+  `shallowRef` (not deep-reactive, nothing writes a row in place) and an
+  update deep-merges a copy. **Single-emit contract:** `created` /
   `updated` / `deleted` are emitted by the manager once, and only when
   the mutation applied: don't add a parallel `emit()` on the wrapper side
   or every mutation will fire twice and double-update Pinia stores.
   **Records** (`defineEntityManager`, `entity/record/module.ts`) sit on
   `defineDataRecord` the same way: the resolve precedence (`props.entity`
   ▷ `entityId` ▷ a single-row `getMany` over the context query) is the
-  loader, `resolve()` is `ensure()`, a changed context query reloads and
-  supersedes, `data` is a writable computed bridge (a record sets, an
-  `undefined` clears) so forms assigning `manager.data.value` keep
-  working, and writes run through `mutate` behind a separate in-flight
-  flag that still drops a double submit (`busy` is true during loads as
-  well as writes).
+  loader, the resolve context reaches it as the source's per-call input,
+  and `resolve()` is `ensure(input)`. `ensure` compares inputs with
+  `Object.is`, so equal contexts are handed over as one memoized object
+  (keyed by their JSON form), which is what lets a repeated resolve
+  coalesce onto the load in flight. `data` is a writable computed bridge
+  (a record sets, an `undefined` clears) so forms assigning
+  `manager.data.value` keep working; both write with `immediate`, so a
+  write landing during a load supersedes it and a read right after the
+  write answers it (a resolve whose load such a write superseded still
+  announces the written record). A changed context query clears the held
+  record immediately and reloads, so nothing reads or deletes the
+  previous query's record as the new one's, and a `resolve()` issued
+  meanwhile waits for the reload. The record source is `deep: true`, so
+  an in-place write (`APolicyParentAssignment`'s
+  `manager.data.value.parentId = ...`) re-renders. Writes run through
+  `mutate` behind a separate in-flight flag that still drops a double
+  submit (`busy` is true during loads as well as writes).
   **Query composition (rapiq IR, #3278):** the collection/record
   managers compose queries as the rapiq v2 IR (`IQuery`), never with a
   generic object merger. Typed authoring stays at the edges: pages and
@@ -10006,8 +10030,8 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   wire shape; `@vuecs/data` owns the adoption: the client passes the source a
   `hydrate` callback that pops the snapshot and maps it onto the source's own
   snapshot shape, and an adopted snapshot fires no load. The server never
-  passes `hydrate` (its path is write-only) and records the snapshot only when
-  the load set no error, so a failed server load leaves the client to fetch.
+  passes `hydrate` (its path is write-only) and records the snapshot unless the
+  load's outcome is `failed`, so a failed server load leaves the client to fetch.
 - **`usePermissionCheck`.** The permission evaluator awaits the policy engine,
   so a server-rendered subtree would hydrate against a fail-closed `false`
   where the markup shows an enabled control. It records its verdict through

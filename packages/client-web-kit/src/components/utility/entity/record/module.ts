@@ -31,7 +31,6 @@ import {
     computed,
     isRef,
     ref,
-    shallowRef,
     toRef,
     watch,
 } from 'vue';
@@ -68,9 +67,21 @@ function create<
 
     const error = ref<Error | undefined>(undefined);
 
-    // The context of the resolve the next load answers. A closure variable
-    // rather than source meta: meta is the source's output, this is input.
-    let request : ResourceManagerResolveContext<RECORD> = {};
+    // The resolve context reaches the loader as the source's per-call input.
+    // `ensure(input)` compares inputs by identity, so equal contexts are
+    // handed over as the same object: a resolve repeating the context of the
+    // load in flight coalesces onto it instead of superseding it.
+    let lastInputKey : string | undefined;
+    let lastInput : ResourceManagerResolveContext<RECORD> | undefined;
+    const toInput = (rctx: ResourceManagerResolveContext<RECORD>) => {
+        const key = JSON.stringify(rctx);
+        if (key !== lastInputKey || !lastInput) {
+            lastInputKey = key;
+            lastInput = rctx;
+        }
+
+        return lastInput;
+    };
 
     const buildQuery = (rctx: ResourceManagerResolveContext<RECORD>) : IQuery | undefined => {
         let query : IQuery | undefined;
@@ -113,8 +124,11 @@ function create<
     // context's), then a single-row query built from the context plus
     // props.queryFilters / props.queryFields. Never throws: a failed read is
     // recorded on `error`, as it was before the source existed.
-    const loadRecord = async () : Promise<DataRecordLoadResult<RECORD, EntityRecordMeta>> => {
-        const rctx = request;
+    const loadRecord = async (
+        _meta: EntityRecordMeta,
+        input?: ResourceManagerResolveContext<RECORD>,
+    ) : Promise<DataRecordLoadResult<RECORD, EntityRecordMeta>> => {
+        const rctx = input ?? {};
 
         if (ctx.props && ctx.props.entity) {
             return { data: ctx.props.entity, meta: { resolved: true } };
@@ -170,51 +184,28 @@ function create<
         ctx.props.entity :
         undefined;
 
-    const source = defineDataRecord<RECORD, EntityRecordMeta>({
+    // `deep` so an in-place write to the held record
+    // (`manager.data.value.parentId = ...`) re-renders.
+    const source = defineDataRecord<RECORD, EntityRecordMeta, ResourceManagerResolveContext<RECORD>>({
         load: loadRecord,
         initialMeta: { resolved: false },
         initialData: initialEntity,
         autoLoad: false,
+        deep: true,
     });
 
-    // The source buffers `set` / `clear` while a load is in flight and
-    // applies them once it settles. Until then the value written here is
-    // held as `staged`, so a read right after a write answers what was
-    // written rather than the record the write is about to replace.
-    const staged = shallowRef<{ value: RECORD | undefined }>();
-
-    // Raised while a changed query reloads: the held record answers the
-    // previous query, so it must not be read (or written against) as the
-    // record of the new one.
-    const superseded = ref(false);
-
-    watch(source.data, (value) => {
-        if (staged.value && staged.value.value === value) {
-            staged.value = undefined;
-        }
-    }, { flush: 'sync' });
-
     // Ten forms assign `manager.data.value = props.entity`, so the bridge is
-    // writable: a record replaces the source's, `undefined` clears it.
+    // writable: a record replaces the source's, `undefined` clears it. A
+    // write applies now, even while a load is in flight: the load is
+    // superseded, so its response cannot replace what was written, and a
+    // read right after the write answers it.
     const entity = computed<RECORD | undefined>({
-        get: () => {
-            if (staged.value) {
-                return staged.value.value;
-            }
-
-            return superseded.value ? undefined : source.data.value;
-        },
+        get: () => source.data.value,
         set: (value) => {
-            staged.value = { value };
-
             if (value) {
-                source.set(value);
+                source.set(value, { immediate: true });
             } else {
-                source.clear();
-            }
-
-            if (source.data.value === value) {
-                staged.value = undefined;
+                source.clear({ immediate: true });
             }
         },
     });
@@ -423,8 +414,8 @@ function create<
         socket = defineEntitySocketManager(socketContext);
     }
 
-    const announce = () => {
-        if (!source.meta.resolved) {
+    const announce = (force = false) => {
+        if (!force && !source.meta.resolved) {
             return;
         }
 
@@ -471,9 +462,11 @@ function create<
             return;
         }
 
-        request = rctx;
-        await source.ensure();
-        announce();
+        const outcome = await source.ensure(toInput(rctx));
+
+        // A write landing while the read was in flight superseded it and
+        // holds the record the read was asked for.
+        announce(outcome.status === 'superseded' && !!entity.value);
     };
 
     const resolveOrFail = async (resolveContext: ResourceManagerResolveContext<RECORD> = {}) => {
@@ -502,20 +495,17 @@ function create<
 
                 // A changed query supersedes whatever is loading, so this is
                 // a load rather than ensure(), which would coalesce onto it.
-                // The held record answers the previous query: it is hidden
-                // until the reload settles, so nothing reads or deletes it
+                // The held record answers the previous query: it is cleared
+                // before the reload starts, so nothing reads or deletes it
                 // as the record of the new one.
-                request = { query: queryFn() };
-                staged.value = undefined;
-                superseded.value = true;
+                source.clear({ immediate: true });
 
-                const promise = source.load().then(() => {
+                const promise = source.load(undefined, toInput({ query: queryFn() })).then(() => {
                     if (reloading !== promise) {
                         return;
                     }
 
                     reloading = undefined;
-                    superseded.value = false;
                     announce();
                 });
                 reloading = promise;

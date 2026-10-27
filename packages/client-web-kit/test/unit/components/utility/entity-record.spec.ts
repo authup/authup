@@ -64,6 +64,20 @@ describe('defineEntityManager', () => {
         expect(wrapper.text()).toEqual('none');
     });
 
+    it('re-renders an in-place write to the held record', async () => {
+        let manager : EntityManager<Role> | undefined;
+        const { wrapper } = mountKitComponent(createRecord((value) => { manager = value; }));
+
+        manager!.data.value = buildRole('role-1', 'admin');
+        await flushPromises();
+        expect(wrapper.text()).toEqual('admin');
+
+        manager!.data.value!.name = 'renamed';
+        await flushPromises();
+
+        expect(wrapper.text()).toEqual('renamed');
+    });
+
     it('drops a second create while the first is in flight', async () => {
         const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
