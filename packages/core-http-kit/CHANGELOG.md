@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* `realms` on POST /authorization/check now selects the definition realms; the former meaning is `targetRealms`, in the request and on each entry. GET /authorization answers realmId, clientId and decisionStrategy. Upgrade the server and @authup/client-web-kit together.
+
+### Features
+
+* check realm- and client-owned permissions in the batch authorization check ([#3770](https://github.com/authup/authup/issues/3770)) ([bff9f21](https://github.com/authup/authup/commit/bff9f21fce84cd6756578a55e203a784299fb53a)), closes [#3769](https://github.com/authup/authup/issues/3769)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/core-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/specs bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+
 ## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
 
 
