@@ -302,7 +302,7 @@
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991,
                     "description": "Requests per minute an authenticated user may make, counted per user.",
-                    "default": 6000,
+                    "default": 15000,
                     "x-authup-env": "RATE_LIMIT_USER_MAX"
                 },
                 "rateLimitClientMax": {
