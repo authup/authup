@@ -23,7 +23,10 @@ import { mountKitComponent } from '../../../utils';
 
 type SocketListener = (event: unknown) => void;
 
-function createCollection(capture: (manager: EntityCollectionManager<Role>) => void) {
+function createCollection(
+    capture: (manager: EntityCollectionManager<Role>) => void,
+    options: { loadAll?: boolean } = {},
+) {
     return defineComponent({
         props: defineEntityCollectionVProps<Role>(),
         emits: defineEntityCollectionVEmitOptions<Role>(),
@@ -32,6 +35,7 @@ function createCollection(capture: (manager: EntityCollectionManager<Role>) => v
                 type: 'role',
                 props,
                 setup,
+                loadAll: options.loadAll,
             });
             capture(manager);
 
@@ -51,7 +55,63 @@ function respond(rows: Partial<Role>[]) {
     };
 }
 
+function servePages(pages: (offset: number) => Partial<Role>[], total: number, offsets: number[]) {
+    return (req: FakeRequest) => {
+        const url = new URL(req.url, 'http://fake.test');
+        const limit = Number(url.searchParams.get('page[limit]') ?? 10);
+        const offset = Number(url.searchParams.get('page[offset]') ?? 0);
+        offsets.push(offset);
+
+        return {
+            data: pages(offset),
+            meta: {
+                total, 
+                limit, 
+                offset, 
+            },
+        };
+    };
+}
+
+function rangeOfRoles(from: number, to: number) : Partial<Role>[] {
+    const rows : Partial<Role>[] = [];
+    for (let i = from; i < to; i++) {
+        rows.push({ id: `role-${i}`, name: `role-${i}` });
+    }
+
+    return rows;
+}
+
 describe('defineEntityCollectionManager (data source)', () => {
+    it('a loadAll refresh walks from the first page again', async () => {
+        let manager : EntityCollectionManager<Role> | undefined;
+        const offsets : number[] = [];
+
+        const { wrapper } = mountKitComponent(
+            createCollection((value) => { manager = value; }, { loadAll: true }),
+            { loadOnSetup: false },
+            {
+                'GET /roles': servePages(
+                    (offset) => rangeOfRoles(offset, Math.min(offset + 10, 25)),
+                    25,
+                    offsets,
+                ),
+            },
+        );
+
+        await (wrapper.vm as any).load();
+        await flushPromises();
+        expect(manager?.data.value).toHaveLength(25);
+
+        offsets.length = 0;
+        await (wrapper.vm as any).load({ sorts: { name: 'ASC' } });
+        await flushPromises();
+
+        expect(offsets[0]).toEqual(0);
+        expect(manager?.data.value).toHaveLength(25);
+        expect(manager?.meta.value.pagination?.offset).toEqual(0);
+    });
+
     it('a load issued while another is in flight supersedes it', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
 

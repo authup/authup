@@ -296,7 +296,16 @@ function create<
             return { data: [] };
         }
 
-        let response = await getMany(composed);
+        // A walk always starts at the first row: the retained offset is the
+        // LAST page of the previous walk, so starting there would leave every
+        // row before it unfetched.
+        let response = await getMany(context.loadAll ?
+            mergeQueries(
+                new Query({ pagination: definePagination({ offset: 0 }) }),
+                composed,
+            ) :
+            composed);
+        const first = response.meta;
         const rows = [...response.data] as RECORD[];
 
         while (
@@ -324,8 +333,8 @@ function create<
             total: response.meta.total,
             meta: {
                 pagination: {
-                    limit: response.meta.limit,
-                    offset: response.meta.offset,
+                    limit: first.limit,
+                    offset: context.loadAll ? 0 : first.offset,
                 },
             },
         };
