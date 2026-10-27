@@ -138,6 +138,38 @@ describe('defineEntityCollectionManager (data source)', () => {
         );
     });
 
+    it('a load issued while a search is in flight keeps the search', async () => {
+        const filters : (string | null)[] = [];
+        const { promise: blocked, resolve: release } = Promise.withResolvers<void>();
+
+        const { wrapper } = mountKitComponent(
+            createCollection(() => undefined),
+            { loadOnSetup: false },
+            {
+                'GET /roles': async (req: FakeRequest) => {
+                    const url = new URL(req.url, 'http://fake.test');
+                    filters.push(url.searchParams.get('filter'));
+                    if (filters.length === 1) {
+                        await blocked;
+                    }
+
+                    return respond([{ id: 'role', name: 'role' }]);
+                },
+            },
+        );
+
+        const search = (wrapper.vm as any).load({ filters: { name: 'needle' } });
+        await flushPromises();
+        const sort = (wrapper.vm as any).load({ sorts: { name: 'ASC' } });
+        await flushPromises();
+
+        release();
+        await Promise.all([search, sort]);
+
+        expect(filters).toHaveLength(2);
+        expect(filters[1]).toContain('needle');
+    });
+
     it('a load issued while another is in flight supersedes it', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
 

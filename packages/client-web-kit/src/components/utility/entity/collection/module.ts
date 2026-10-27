@@ -131,6 +131,13 @@ function create<
     // Pagination is deliberately excluded — it lives in `meta`.
     let interactive : IQuery | undefined;
 
+    // Interactive state of the most recently ISSUED load, set while it is
+    // in flight. A load issued before that one settled composes against it,
+    // so a sort or page change typed after a search still carries the
+    // search. Cleared once the latest load settles: on success its state is
+    // the committed one, on failure the committed one is the fallback.
+    let issued : IQuery | undefined;
+
     const resolveBaseQuery = () : IQuery => {
         let contextQuery : IQuery | undefined;
         if (context.query) {
@@ -174,6 +181,7 @@ function create<
         input: EntityListQueryInput<Entity<RECORD>>,
         pagination: PaginationBuildInput | undefined,
     ) : ComposedQuery {
+        const retained = issued ?? interactive;
         let inputQuery : IQuery;
         let interactiveNext : Query;
 
@@ -229,11 +237,11 @@ function create<
                 typeof input.sort !== 'undefined';
 
             interactiveNext = new Query({
-                fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
+                fields: 'fields' in input ? inputQuery.fields : retained?.fields,
                 filters: filtersOverride ??
-                    ('filters' in input ? inputQuery.filters : interactive?.filters),
-                relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
-                sorts: sortsSupplied ? inputQuery.sorts : interactive?.sorts,
+                    ('filters' in input ? inputQuery.filters : retained?.filters),
+                relations: 'relations' in input ? inputQuery.relations : retained?.relations,
+                sorts: sortsSupplied ? inputQuery.sorts : retained?.sorts,
             });
         }
 
@@ -248,8 +256,8 @@ function create<
         // owns this. The very first load is exempt (nothing changed yet),
         // and an input carrying its own pagination still wins by merge
         // precedence below.
-        const filtersChanged = typeof interactive !== 'undefined' &&
-            serializeFilters(interactiveNext) !== serializeFilters(interactive);
+        const filtersChanged = typeof retained !== 'undefined' &&
+            serializeFilters(interactiveNext) !== serializeFilters(retained);
 
         const statePagination : PaginationBuildInput = {};
         if (typeof pagination?.limit === 'number') {
@@ -514,12 +522,17 @@ function create<
         sequence++;
         const current = sequence;
         pending = { query: composed, sequence: current };
+        issued = composed.interactive;
 
         loading++;
         try {
             await source.load();
         } finally {
             loading--;
+
+            if (current === sequence) {
+                issued = undefined;
+            }
         }
 
         if (loading === 0) {
