@@ -112,6 +112,32 @@ describe('defineEntityCollectionManager (data source)', () => {
         expect(manager?.meta.value.pagination?.offset).toEqual(0);
     });
 
+    it('a loadAll walk drops a row a shifted page repeats', async () => {
+        let manager : EntityCollectionManager<Role> | undefined;
+        const offsets : number[] = [];
+
+        const { wrapper } = mountKitComponent(
+            createCollection((value) => { manager = value; }, { loadAll: true }),
+            { loadOnSetup: false },
+            {
+                // A row inserted between the two requests shifts the second
+                // page back by one, so it repeats role-9.
+                'GET /roles': servePages(
+                    (offset) => (offset === 0 ? rangeOfRoles(0, 10) : rangeOfRoles(9, 19)),
+                    20,
+                    offsets,
+                ),
+            },
+        );
+
+        await (wrapper.vm as any).load();
+        await flushPromises();
+
+        expect(manager?.data.value.map((row) => row.id)).toEqual(
+            rangeOfRoles(0, 19).map((row) => row.id),
+        );
+    });
+
     it('a load issued while another is in flight supersedes it', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
 

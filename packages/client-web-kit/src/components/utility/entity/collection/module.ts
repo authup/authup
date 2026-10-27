@@ -289,6 +289,26 @@ function create<
     // its failure.
     let sequence = 0;
 
+    // Offset pagination shifts when rows are inserted or reordered between
+    // two page requests, so a walk can see one row twice. The first
+    // occurrence is kept; a row without an identity is never dropped.
+    function dedupeRows(rows: RECORD[]) : RECORD[] {
+        const seen = new Set<string | number>();
+
+        return rows.filter((row) => {
+            const key = source.getItemKey(row);
+            if (typeof key === 'undefined') {
+                return true;
+            }
+            if (seen.has(key)) {
+                return false;
+            }
+
+            seen.add(key);
+            return true;
+        });
+    }
+
     // Walks every page when `loadAll` is set: the source replaces its data
     // wholesale, so the concatenation is assembled here rather than appended.
     async function fetchAll(composed: Query) : Promise<DataCollectionLoadResult<RECORD, ListMeta>> {
@@ -329,7 +349,7 @@ function create<
         }
 
         return {
-            data: rows,
+            data: context.loadAll ? dedupeRows(rows) : rows,
             total: response.meta.total,
             meta: {
                 pagination: {
