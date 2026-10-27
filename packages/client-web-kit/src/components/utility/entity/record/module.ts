@@ -22,14 +22,16 @@ import {
     defineFilters,
     definePagination,
 } from '@rapiq/core';
+import { defineDataRecord } from '@vuecs/data';
+import type { DataRecordLoadResult } from '@vuecs/data';
 import { normalizeQueryInput } from '../../../../core/query';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
-    computed, 
-    isRef, 
-    ref, 
-    toRef, 
+    computed,
+    isRef,
+    ref,
+    toRef,
     watch,
 } from 'vue';
 import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core';
@@ -45,6 +47,15 @@ import type {
 } from './types';
 import { buildEntityVSlotProps } from './helpers';
 
+type EntityRecordMeta = {
+    /**
+     * Whether the load that produced the current state reached a verdict
+     * worth announcing as `resolved`. A failed by-id read with no query to
+     * fall back on does not.
+     */
+    resolved: boolean,
+};
+
 function create<
     TYPE extends keyof EntityTypeMap,
     RECORD extends EntityTypeMap[TYPE] & ObjectLiteral,
@@ -54,7 +65,130 @@ function create<
     const client = injectHTTPClient();
     const domainAPI = pickEntityAPI<TYPE, RECORD>(client, ctx.type);
 
-    const entity : Ref<RECORD | undefined> = ref(undefined);
+    const error = ref<Error | undefined>(undefined);
+
+    // The context of the resolve the next load answers. A closure variable
+    // rather than source meta: meta is the source's output, this is input.
+    let request : ResourceManagerResolveContext<RECORD> = {};
+
+    const buildQuery = (rctx: ResourceManagerResolveContext<RECORD>) : IQuery | undefined => {
+        let query : IQuery | undefined;
+        if (rctx.query) {
+            query = normalizeQueryInput(rctx.query);
+        }
+
+        if (!ctx.props) {
+            return query;
+        }
+
+        if (ctx.props.queryFilters) {
+            const current = query || new Query();
+            query = new Query({
+                fields: current.fields,
+                relations: current.relations,
+                sorts: current.sorts,
+                pagination: current.pagination,
+                filters: defineFilters(
+                    ctx.props.queryFilters as FiltersBuildInput | ICondition,
+                ),
+            });
+        }
+
+        if (ctx.props.queryFields) {
+            const current = query || new Query();
+            query = new Query({
+                filters: current.filters,
+                relations: current.relations,
+                sorts: current.sorts,
+                pagination: current.pagination,
+                fields: defineFields(ctx.props.queryFields as FieldsBuildInput<RapiqObjectLiteral>),
+            });
+        }
+
+        return query;
+    };
+
+    // Precedence: props.entity, then the id (props.entityId over the resolve
+    // context's), then a single-row query built from the context plus
+    // props.queryFilters / props.queryFields. Never throws: a failed read is
+    // recorded on `error`, as it was before the source existed.
+    const loadRecord = async () : Promise<DataRecordLoadResult<RECORD, EntityRecordMeta>> => {
+        const rctx = request;
+
+        if (ctx.props && ctx.props.entity) {
+            return { data: ctx.props.entity, meta: { resolved: true } };
+        }
+
+        if (!domainAPI) {
+            return { data: undefined, meta: { resolved: true } };
+        }
+
+        const query = buildQuery(rctx);
+        const id = (ctx.props && ctx.props.entityId) ?
+            ctx.props.entityId :
+            rctx.id;
+
+        if (id && domainAPI.getOne) {
+            try {
+                const response = await domainAPI.getOne(id, query);
+                return { data: response.data, meta: { resolved: true } };
+            } catch (e) {
+                if (e instanceof Error) {
+                    error.value = e;
+                }
+            }
+        }
+
+        if (query && domainAPI.getMany) {
+            try {
+                const response = await domainAPI.getMany(new Query({
+                    fields: query.fields,
+                    filters: query.filters,
+                    relations: query.relations,
+                    sorts: query.sorts,
+                    pagination: definePagination({ limit: 1 }),
+                }));
+
+                return {
+                    data: response.data.length === 1 ? response.data[0] : undefined,
+                    meta: { resolved: true },
+                };
+            } catch (e) {
+                if (e instanceof Error) {
+                    error.value = e;
+                }
+
+                return { data: undefined, meta: { resolved: false } };
+            }
+        }
+
+        return { data: undefined, meta: { resolved: false } };
+    };
+
+    const initialEntity = ctx.props && ctx.props.entity ?
+        ctx.props.entity :
+        undefined;
+
+    const source = defineDataRecord<RECORD, EntityRecordMeta>({
+        load: loadRecord,
+        initialMeta: { resolved: false },
+        initialData: initialEntity,
+        autoLoad: false,
+    });
+
+    // Ten forms assign `manager.data.value = props.entity`, so the bridge is
+    // writable: a record replaces the source's, `undefined` clears it.
+    const entity = computed<RECORD | undefined>({
+        get: () => source.data.value,
+        set: (value) => {
+            if (value) {
+                source.set(value);
+            } else {
+                source.clear();
+            }
+        },
+    });
+
     const entityId = computed<EntityID<RECORD> | undefined>(
         () => (
             entity.value ? entity.value.id as EntityID<RECORD> : undefined),
@@ -87,17 +221,13 @@ function create<
 
     const lockId = ref(undefined) as Ref<EntityID<RECORD> | undefined>;
 
-    if (ctx.props && ctx.props.entity) {
-        entity.value = ctx.props.entity;
-    }
-
     const created = (value: RECORD) => {
-        // Adopt the created record as the managed entity — consistent with updated()/deleted()
-        // and with create() (which sets entity.value before notifying). Without this, an
-        // externally-performed create (e.g. APermissionPolicyBindingButton's create mode, or a
-        // socket-originated create) would notify but leave the manager's data unset, so the
-        // consumer never transitions out of the "no record" state.
-        entity.value = value;
+        // Adopt the created record as the managed entity, consistent with
+        // updated()/deleted() and with create(). Without this an externally
+        // performed create (APermissionPolicyBindingButton's create mode, a
+        // socket-originated create) would notify but leave the manager's data
+        // unset, so the consumer never leaves the "no record" state.
+        source.set(value);
 
         if (ctx.setup && ctx.setup.emit) {
             ctx.setup.emit('created', value);
@@ -119,16 +249,21 @@ function create<
     };
 
     const updated = (value: Partial<RECORD>) => {
-        if (entity.value) {
-            extendObject(entity.value, value);
+        // A partial update lands on a copy: the source holds its record
+        // shallowly, so a write into the held object would reach no reader.
+        const current = source.data.value;
+        if (current) {
+            source.set(extendObject({ ...current }, value));
         }
 
+        const next = source.data.value || value;
+
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('updated', (entity.value || value) as RECORD);
+            ctx.setup.emit('updated', next as RECORD);
         }
 
         if (ctx.onUpdated) {
-            ctx.onUpdated(entity.value || value);
+            ctx.onUpdated(next);
         }
     };
 
@@ -152,84 +287,67 @@ function create<
         }
     };
 
-    const busy = ref(false);
+    // A write is guarded by its own flag rather than by the source's busy:
+    // loads stay re-entrant, while a double submit must still not write twice.
+    let writing = false;
 
-    const update = async (data: Partial<RECORD>) => {
-        if (!domainAPI?.update || busy.value || !entityId.value) {
-            return;
-        }
-
-        busy.value = true;
-        lockId.value = entityId.value;
+    const write = async (
+        id: EntityID<RECORD> | undefined,
+        fn: () => Promise<void>,
+    ) : Promise<void> => {
+        writing = true;
+        lockId.value = id;
 
         try {
-            const response = await domainAPI.update(
-                entityId.value,
-                data,
-            );
-
-            entity.value = response.data;
-
-            updated(response.data);
+            await source.mutate(fn);
         } catch (e) {
             if (e instanceof Error) {
                 failed(e);
             }
         } finally {
-            busy.value = false;
+            writing = false;
             lockId.value = undefined;
         }
+    };
+
+    const update = async (data: Partial<RECORD>) => {
+        const id = entityId.value;
+        const api = domainAPI?.update?.bind(domainAPI);
+        if (!api || writing || !id) {
+            return;
+        }
+
+        await write(id, async () => {
+            const response = await api(id, data);
+            source.set(response.data);
+            updated(response.data);
+        });
     };
 
     const remove = async () : Promise<void> => {
-        if (!domainAPI?.delete || busy.value || !entityId.value) {
+        const id = entityId.value;
+        const api = domainAPI?.delete?.bind(domainAPI);
+        if (!api || writing || !id) {
             return;
         }
 
-        busy.value = true;
-        lockId.value = entityId.value;
-
-        try {
-            const response = await domainAPI.delete(
-                entityId.value,
-            );
-
-            entity.value = undefined;
-
+        await write(id, async () => {
+            const response = await api(id);
+            source.clear();
             deleted(response.data);
-        } catch (e) {
-            if (e instanceof Error) {
-                failed(e);
-            }
-        } finally {
-            busy.value = false;
-            lockId.value = undefined;
-        }
+        });
     };
 
     const create = async (data: Partial<RECORD>) : Promise<void> => {
-        if (!domainAPI?.create || busy.value) {
+        const api = domainAPI?.create?.bind(domainAPI);
+        if (!api || writing) {
             return;
         }
 
-        busy.value = true;
-
-        lockId.value = undefined;
-
-        try {
-            const response = await domainAPI.create(data);
-
-            entity.value = response.data;
-
+        await write(undefined, async () => {
+            const response = await api(data);
             created(response.data);
-        } catch (e) {
-            if (e instanceof Error) {
-                failed(e);
-            }
-        } finally {
-            busy.value = false;
-            lockId.value = undefined;
-        }
+        });
     };
 
     const createOrUpdate = async (data: Partial<RECORD>) : Promise<void> => {
@@ -267,26 +385,16 @@ function create<
         socket = defineEntitySocketManager(socketContext);
     }
 
-    const error = ref<Error | undefined>(undefined);
-
-    const resolveByProps = () : boolean => {
-        if (!ctx.props) {
-            return false;
+    const announce = () => {
+        if (!source.meta.resolved) {
+            return;
         }
 
-        if (ctx.props.entity) {
-            entity.value = ctx.props.entity;
-
-            if (socket) {
-                socket.mount();
-            }
-
-            resolved(entity.value);
-
-            return true;
+        if (socket && entity.value) {
+            socket.mount();
         }
 
-        return false;
+        resolved(entity.value);
     };
 
     if (ctx.props) {
@@ -305,116 +413,22 @@ function create<
         });
     }
 
-    resolveByProps();
+    if (initialEntity) {
+        if (socket) {
+            socket.mount();
+        }
+
+        resolved(initialEntity);
+    }
 
     const resolve = async (rctx: ResourceManagerResolveContext<RECORD> = {}) => {
         if (entity.value) {
             return;
         }
 
-        let query : IQuery | undefined;
-        if (rctx.query) {
-            query = normalizeQueryInput(rctx.query);
-        }
-
-        let { id } = rctx;
-
-        if (ctx.props) {
-            if (resolveByProps()) {
-                return;
-            }
-
-            if (ctx.props.entity) {
-                entity.value = ctx.props.entity;
-
-                if (socket) {
-                    socket.mount();
-                }
-
-                resolved(entity.value);
-
-                return;
-            }
-
-            if (ctx.props.queryFilters) {
-                const current = query || new Query();
-                query = new Query({
-                    fields: current.fields,
-                    relations: current.relations,
-                    sorts: current.sorts,
-                    pagination: current.pagination,
-                    filters: defineFilters(
-                        ctx.props.queryFilters as FiltersBuildInput | ICondition,
-                    ),
-                });
-            }
-
-            if (ctx.props.queryFields) {
-                const current = query || new Query();
-                query = new Query({
-                    filters: current.filters,
-                    relations: current.relations,
-                    sorts: current.sorts,
-                    pagination: current.pagination,
-                    fields: defineFields(ctx.props.queryFields as FieldsBuildInput<RapiqObjectLiteral>),
-                });
-            }
-
-            if (ctx.props.entityId) {
-                id = ctx.props.entityId;
-            }
-        }
-
-        if (!domainAPI) {
-            resolved();
-
-            return;
-        }
-
-        if (id && domainAPI.getOne) {
-            try {
-                const response = await domainAPI.getOne(id, query);
-                entity.value = response.data;
-
-                if (socket) {
-                    socket.mount();
-                }
-
-                resolved(entity.value);
-
-                return;
-            } catch (e) {
-                if (e instanceof Error) {
-                    error.value = e;
-                }
-            }
-        }
-
-        if (query && domainAPI.getMany) {
-            try {
-                const response = await domainAPI.getMany(new Query({
-                    fields: query.fields,
-                    filters: query.filters,
-                    relations: query.relations,
-                    sorts: query.sorts,
-                    pagination: definePagination({ limit: 1 }),
-                }));
-
-                if (response.data.length === 1) {
-                    [entity.value] = response.data;
-
-                    if (socket) {
-                        socket.mount();
-                    }
-                }
-
-                resolved(entity.value);
-            } catch (e) {
-                if (e instanceof Error) {
-                    error.value = e;
-                }
-            }
-        }
+        request = rctx;
+        await source.ensure();
+        announce();
     };
 
     const resolveOrFail = async (resolveContext: ResourceManagerResolveContext<RECORD> = {}) => {
@@ -425,8 +439,7 @@ function create<
                 throw EntityRecordError.unresolvable();
             }
 
-            // eslint-disable-next-line no-throw-literal
-            throw error.value as Error;
+            throw error.value;
         }
     };
 
@@ -442,8 +455,10 @@ function create<
                     return;
                 }
 
-                entity.value = undefined;
-                resolve({ query: queryFn() });
+                // A changed query supersedes whatever is loading, so this is
+                // a load rather than ensure(), which would coalesce onto it.
+                request = { query: queryFn() };
+                source.load().then(announce);
             },
             { immediate: true },
         );
@@ -453,7 +468,7 @@ function create<
         resolve,
         resolveOrFail,
         lockId,
-        busy,
+        busy: source.busy,
         data: entity,
         error,
 
