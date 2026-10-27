@@ -1,7 +1,7 @@
 {
     "name": "@authup/specs",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "Constants, types and error classes for OAuth 2.0, OpenID Connect, JWT and JWK, as Authup uses them.",
     "license": "Apache-2.0",
     "exports": {
@@ -54,8 +54,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.71",
-        "@authup/kit": "^1.0.0-beta.71",
+        "@authup/errors": "^1.0.0-beta.72",
+        "@authup/kit": "^1.0.0-beta.72",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"
     },

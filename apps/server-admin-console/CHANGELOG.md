@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([93c44a5](https://github.com/authup/authup/commit/93c44a5a3d5b6f53b008ae64c4da4364ba1f7d25))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-admin-console bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-config bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-config-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-console-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+
 ## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
 
 

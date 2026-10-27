@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-account-console",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "The service that serves the Authup account console with its runtime configuration and theme.",
     "license": "AGPL-3.0-only",
     "bin": {
@@ -50,11 +50,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-account-console": "^1.0.0-beta.71",
-        "@authup/kit": "^1.0.0-beta.71",
-        "@authup/server-config": "^1.0.0-beta.71",
-        "@authup/server-config-kit": "^1.0.0-beta.71",
-        "@authup/server-console-kit": "^1.0.0-beta.71",
+        "@authup/client-account-console": "^1.0.0-beta.72",
+        "@authup/kit": "^1.0.0-beta.72",
+        "@authup/server-config": "^1.0.0-beta.72",
+        "@authup/server-config-kit": "^1.0.0-beta.72",
+        "@authup/server-console-kit": "^1.0.0-beta.72",
         "@ebec/http": "^4.3.2",
         "@routup/assets": "^5.0.0",
         "@routup/basic": "^3.0.1",

@@ -1,7 +1,7 @@
 {
     "name": "@authup/i18n",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "Authup's translation catalogs in English, German, French and Spanish, ready for an ilingo store.",
     "license": "Apache-2.0",
     "exports": {
@@ -50,9 +50,9 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.71",
-        "@authup/core-kit": "^1.0.0-beta.71",
-        "@authup/errors": "^1.0.0-beta.71",
+        "@authup/access": "^1.0.0-beta.72",
+        "@authup/core-kit": "^1.0.0-beta.72",
+        "@authup/errors": "^1.0.0-beta.72",
         "ilingo": "^6.2.0"
     },
     "devDependencies": {
