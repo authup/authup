@@ -213,7 +213,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         },
         rateLimitUserMax: {
             type: z.number().int().positive(),
-            default: 6000,
+            default: 15_000,
             description: 'Requests per minute an authenticated user may make, counted per user.',
             env: EnvironmentVariable.RATE_LIMIT_USER_MAX,
             readEnv: readEnvInt,

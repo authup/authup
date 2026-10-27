@@ -416,9 +416,9 @@ export default {
         /**
          * Requests per minute an authenticated user may make, per user.
          * env: RATE_LIMIT_USER_MAX
-         * default: 6000
+         * default: 15000
          */
-        rateLimitUserMax: 6000,
+        rateLimitUserMax: 15000,
 
         /**
          * Requests per minute an authenticated client may make, per client.

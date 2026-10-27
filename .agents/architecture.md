@@ -1569,7 +1569,7 @@ API. The six page GETs became a stateless hop:
   is bounded by the anonymous per-address budget below and the login
   throttle. After authentication a request counts against its
   identity (`user:<id>`, `client:<id>`) and an anonymous one against its
-  address, within `core.rateLimitUserMax` (6000), `rateLimitClientMax`
+  address, within `core.rateLimitUserMax` (15000), `rateLimitClientMax`
   (300000) and `rateLimitAnonymousMax` (1200); a numeric `max` in
   `core.middlewareRateLimit` replaces all three, which is why the budgets are
   keys of their own, so users sharing an address do not share a
