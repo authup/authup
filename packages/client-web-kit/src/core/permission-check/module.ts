@@ -45,14 +45,14 @@ function buildPermissionHydrationKey(
         [...ctx.name].sort().join(',') :
         ctx.name;
 
-    return [
+    return JSON.stringify([
         'authup:permission',
         identity.userId || '',
         identity.realmId || '',
         name,
         ctx.realmId || '',
         ctx.clientId || '',
-    ].join(':');
+    ]);
 }
 
 export function createPermissionCheckerReactiveFn(
