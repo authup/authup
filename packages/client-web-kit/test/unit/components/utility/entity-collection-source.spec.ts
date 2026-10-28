@@ -83,6 +83,42 @@ function rangeOfRoles(from: number, to: number) : Partial<Role>[] {
 }
 
 describe('defineEntityCollectionManager (data source)', () => {
+    it('renders in-place edits to a loaded row', async () => {
+        let manager : EntityCollectionManager<Role> | undefined;
+        const { wrapper } = mountKitComponent(
+            createCollection((value) => { manager = value; }),
+            {},
+            { 'GET /roles': () => respond([{ id: 'role-1', name: 'original' }]) },
+        );
+        await flushPromises();
+        expect(wrapper.text()).toContain('original');
+
+        const row = manager!.data.value[0];
+        row.name = 'edited';
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('edited');
+        expect(wrapper.text()).not.toContain('original');
+    });
+
+    it('updates a row already held by a consumer', async () => {
+        let manager : EntityCollectionManager<Role> | undefined;
+        const { wrapper } = mountKitComponent(
+            createCollection((value) => { manager = value; }),
+            {},
+            { 'GET /roles': () => respond([{ id: 'role-1', name: 'original' }]) },
+        );
+        await flushPromises();
+        const row = manager!.data.value[0];
+
+        manager!.handleUpdated({ ...row, name: 'updated' });
+        await flushPromises();
+
+        expect(row.name).toEqual('updated');
+        expect(manager!.data.value[0]).toBe(row);
+        expect(wrapper.text()).toContain('updated');
+    });
+
     it('a loadAll refresh walks from the first page again', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
         const offsets : number[] = [];

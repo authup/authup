@@ -434,6 +434,7 @@ function create<
         initialMeta: { pagination: initialPagination },
         autoLoad: false,
         hydrate: popSnapshot,
+        deep: true,
         dedupCreated: true,
         mergeOnUpdated: true,
         filterDeleted: true,

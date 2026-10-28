@@ -9875,9 +9875,9 @@ there is no `core/form/builders.ts` and no `buildForm*` render-function shims
   in flight and replays it once the load settles; the manager emits from
   the mutator's `onSettled`, so whether it applied is read off the
   settled rows. A `deleted` emit carries the row held when the delete was
-  called, falling back to the passed entity. Rows are held in a
-  `shallowRef` (not deep-reactive, nothing writes a row in place) and an
-  update deep-merges a copy. **Single-emit contract:** `created` /
+  called, falling back to the passed entity. The collection source uses
+  `deep: true`: in-place row edits re-render, and merged updates preserve
+  the reactive row identity held by picker children. **Single-emit contract:** `created` /
   `updated` / `deleted` are emitted by the manager once, and only when
   the mutation applied: don't add a parallel `emit()` on the wrapper side
   or every mutation will fire twice and double-update Pinia stores.
