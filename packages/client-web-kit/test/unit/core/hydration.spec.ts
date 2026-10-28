@@ -17,7 +17,7 @@ import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ili
 
 // must match what the server render writes (see hydration-ssr.spec.ts)
 const TRANSLATION_KEY = 'authup:translation:en:authupField:name::';
-const PERMISSION_KEY = 'authup:permission:::user_update::';
+const PERMISSION_KEY = '["authup:permission","","","user_update","",""]';
 
 const translated = defineComponent({
     setup() {

@@ -152,6 +152,12 @@ curl -X GET 'http://localhost:3000/permissions/user_read' \
 
 ## CREATE Record
 To create a new permission, send a POST request with the necessary details:
+
+Permission names are trimmed and lowercased, must be 3 to 128 characters long,
+and accept `a-z`, `0-9`, `-`, `_`, `.`, and `:`. For example, `run:read` and
+`agent:worker-1:approve` are valid permission names. Other entity names do not
+accept `:`.
+
 ```ssh
 curl -X POST 'http://localhost:3000/permissions' \
   -H 'Authorization: Bearer ***' \
