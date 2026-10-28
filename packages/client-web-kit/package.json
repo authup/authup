@@ -71,15 +71,16 @@
         "@rapiq/core": "^2.4.0",
         "@simplewebauthn/browser": "^14.0.0",
         "@validup/zod": "^2.0.1",
+        "@vuecs/data": "1.0.0-alpha.1",
         "@vuecs/icons-font-awesome": "^1.3.1",
         "@vueuse/integrations": "^15.0.0",
         "smob": "^1.6.1",
         "universal-cookie": "^8.1.2"
     },
     "devDependencies": {
-        "@rapiq/adapter-memory": "^2.4.0",
         "@ilingo/validup-vue": "^1.2.0",
         "@ilingo/vue": "^6.1.1",
+        "@rapiq/adapter-memory": "^2.4.0",
         "@types/node": "^26.6.5",
         "@validup/vue": "^2.0.1",
         "@vitejs/plugin-vue": "^6.0.10",

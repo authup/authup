@@ -278,6 +278,55 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
     });
 
     /**
+     * A load whose query cannot be composed issues no request, so it must
+     * not supersede the load already in flight: that load's rows land, and
+     * the interactive state it was composed with has to be retained with
+     * them, or a later pagination load drops its filter.
+     */
+    it('a load failing to compose does not supersede the load in flight', async () => {
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+        let gated = false;
+        const component = createCollectionComponent();
+        const { wrapper, httpClient } = mountKitComponent(component, {}, {
+            'GET /roles': async (req: FakeRequest) => {
+                const url = new URL(req.url, 'http://fake.test');
+                if (!gated && url.searchParams.get('filter')) {
+                    gated = true;
+                    await gate;
+                }
+
+                return {
+                    data: [],
+                    meta: {
+                        total: 0,
+                        limit: Number(url.searchParams.get('page[limit]') ?? 10),
+                        offset: Number(url.searchParams.get('page[offset]') ?? 0),
+                    },
+                };
+            },
+        });
+        await flushPromises();
+
+        const inFlight = (wrapper.vm as any).load({ filters: { name: 'admin' } });
+        await flushPromises();
+        expect(gated).toBe(true);
+
+        await (wrapper.vm as any).load({ sorts: { name: 'ASC' }, sort: { name: 'DESC' } });
+        expect(wrapper.emitted('failed')).toHaveLength(1);
+
+        release();
+        await inFlight;
+
+        await (wrapper.vm as any).load({ pagination: { offset: 10 } });
+
+        const requests = listRequests(httpClient.requests);
+        const last = requests[requests.length - 1];
+        expect(last.searchParams.get('page[offset]')).toEqual('10');
+        expect(last.searchParams.get('filter')).toEqual(requests[1].searchParams.get('filter'));
+        expect(last.searchParams.get('filter')).toBeTruthy();
+    });
+
+    /**
      * rapiq documents `{ sorts: props.sorts, sort: props.sort }` as a safe
      * spread migration wrapper: an undefined side never trips
      * KEY_AMBIGUOUS. Both keys are then own properties, so a presence

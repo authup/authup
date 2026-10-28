@@ -7,5 +7,4 @@
 
 export * from './component';
 export * from './options';
-export * from './handlers';
 export * from './search';

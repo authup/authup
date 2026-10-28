@@ -4130,12 +4130,14 @@ and the collection has to say whether it took the ask.** The manager reads
 its base query off its own `query` PROP on every load, and a prop is only
 updated when the parent re-renders, so a reload issued from a pre-flush
 watcher composes the query the page held BEFORE the narrowing settled and
-the list comes back unnarrowed. `load` is additionally a silent no-op while
-another load is in flight, which is the ordinary case here (the scope
-settles while the list is still fetching what it mounted with), so the
-manager exposes `busy` next to `load` and `data`: a caller waits for idle
-and then asks once, rather than asking and comparing `data` afterwards,
-which cannot tell its own load from the one already running. That wait
+the list comes back unnarrowed. A load issued while another is in flight
+supersedes it (the collection's loads are latest-wins), which is the
+ordinary case here: the scope settles while the list is still fetching what
+it mounted with. The page still waits for `busy` to clear and then asks
+once, rather than asking and comparing `data` afterwards, which cannot tell
+its own load from the one already running; the wait is no longer what keeps
+the narrowing from being dropped, but it keeps the page to one request per
+scope instead of cancelling the mount load on every settle. That wait
 carries no deadline, because any ceiling answers a folder with every row in
 the realm whenever the first load outlasts it; it ends on the two states
 that exist instead, `load` clearing `busy` in a `finally` and an unmounted
@@ -9845,11 +9847,64 @@ there is no `core/form/builders.ts` and no `buildForm*` render-function shims
   directly. It preserves the `{ header, body, item, footer, noMore,
   loading }` consumer-options shape and the
   `slotProps.created/updated/deleted` callback convention. This is the
-  permanent implementation, not a shim. **Single-emit contract:** the
-  callbacks delegate to the existing `ListHandlers` instance, which
-  already calls `context.setup.emit('created' | 'updated' | 'deleted',
-  ...)`: don't add a parallel `emit()` on the wrapper side or every
-  mutation will fire twice and double-update Pinia stores.
+  permanent implementation, not a shim. **The state container is
+  `@vuecs/data`'s `defineDataCollection`** (`autoLoad: false`): `data`,
+  `busy`, `total` and the load lifecycle are the source's, and the
+  manager exposes them as `ComputedRef`s (nothing writes a collection's
+  `data`). What stays in the kit is what is authup's: the rapiq query
+  composition below, the entity-type dispatch (`pickEntityAPI`), the
+  socket subscription, `render()`, `loadAll`'s page walk (next offset =
+  previous offset plus rows returned, stopping on an empty page) and the
+  hydration key. **The retained query state lives in the source's
+  meta.** Besides `pagination`, the meta carries `interactive` (search
+  filters, sorts) and `query` (the composed query of the last applied
+  load, read by the socket handler's sort check). Each load passes
+  `source.load()` an updater that composes against the draft it is
+  handed, and the loader sends the `query` of that draft. The source
+  bases a draft on the load still in flight, else on the committed meta,
+  and commits it only when the load applies, so a sort or page change
+  issued while a search is loading still carries the search, and a
+  superseded or failed search never sticks. The exposed `meta` is
+  `{ pagination, total, busy }`, and the hydration snapshot carries
+  pagination alone: the query state is rebuilt from the handoff key's
+  composition on adoption. **Loads are re-entrant, latest wins:** a load
+  issued while another is in flight supersedes it, the earlier response is
+  discarded, and `busy` stays set until the latest settles. `failed` is
+  emitted off the load OUTCOME, only when it is `failed` (never for a
+  `superseded` call). **Mutations** (socket events and the
+  `slotProps.created/updated/deleted` callbacks) go through the source's
+  `create` / `update` / `delete` (`dedupCreated`, `mergeOnUpdated`,
+  `filterDeleted`), so an insert or delete adjusts `total` and the footer's
+  `meta.total` together. The source buffers one arriving while a load is
+  in flight and replays it once the load settles; the manager emits from
+  the mutator's `onSettled`, so whether it applied is read off the
+  settled rows. A `deleted` emit carries the row held when the delete was
+  called, falling back to the passed entity. The collection source uses
+  `deep: true`: in-place row edits re-render, and merged updates preserve
+  the reactive row identity held by picker children. **Single-emit contract:** `created` /
+  `updated` / `deleted` are emitted by the manager once, and only when
+  the mutation applied: don't add a parallel `emit()` on the wrapper side
+  or every mutation will fire twice and double-update Pinia stores.
+  **Records** (`defineEntityManager`, `entity/record/module.ts`) sit on
+  `defineDataRecord` the same way: the resolve precedence (`props.entity`
+  ▷ `entityId` ▷ a single-row `getMany` over the context query) is the
+  loader, the resolve context reaches it as the source's per-call input,
+  and `resolve()` is `ensure(input)`. `ensure` compares inputs with
+  `Object.is`, so equal contexts are handed over as one memoized object
+  (keyed by their JSON form), which is what lets a repeated resolve
+  coalesce onto the load in flight. `data` is a writable computed bridge
+  (a record sets, an `undefined` clears) so forms assigning
+  `manager.data.value` keep working; both write with `immediate`, so a
+  write landing during a load supersedes it and a read right after the
+  write answers it (a resolve whose load such a write superseded still
+  announces the written record). A changed context query clears the held
+  record immediately and reloads, so nothing reads or deletes the
+  previous query's record as the new one's, and a `resolve()` issued
+  meanwhile waits for the reload. The record source is `deep: true`, so
+  an in-place write (`APolicyParentAssignment`'s
+  `manager.data.value.parentId = ...`) re-renders. Writes run through
+  `mutate` behind a separate in-flight flag that still drops a double
+  submit (`busy` is true during loads as well as writes).
   **Query composition (rapiq IR, #3278):** the collection/record
   managers compose queries as the rapiq v2 IR (`IQuery`), never with a
   generic object merger. Typed authoring stays at the edges: pages and
@@ -9975,7 +10030,12 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   request the load would send (`buildQueryString` over the composed query), so
   both sides derive it identically; a miss just loads normally. Collection
   snapshots are **consumed on read**, so a later client-side visit fetches fresh
-  rows instead of replaying the first render's.
+  rows instead of replaying the first render's. The kit owns the key and the
+  wire shape; `@vuecs/data` owns the adoption: the client passes the source a
+  `hydrate` callback that pops the snapshot and maps it onto the source's own
+  snapshot shape, and an adopted snapshot fires no load. The server never
+  passes `hydrate` (its path is write-only) and records the snapshot unless the
+  load's outcome is `failed`, so a failed server load leaves the client to fetch.
 - **`usePermissionCheck`.** The permission evaluator awaits the policy engine,
   so a server-rendered subtree would hydrate against a fail-closed `false`
   where the markup shows an enabled control. It records its verdict through
